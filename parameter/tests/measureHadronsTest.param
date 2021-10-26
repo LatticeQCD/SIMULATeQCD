@@ -1,0 +1,39 @@
+# 
+# measureHadronsTest.param                                                               
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#    Gaugefile: Name of input file
+#    config_nr: configuration number
+#       format: Format of the binary file.
+#   endianness: For output storage.
+#
+testmode = 1
+use_unit_conf = 1
+
+Lattice = 32 32 32 8
+Nodes = 1 1 1 1
+beta = 6.285
+Gaugefile = ../test_conf/l328f21b6285m0009875m0790a_019.995
+conf_nr = 10
+format = nersc
+endianness = auto
+measurements_dir = ./
+action = HISQ
+
+masses = 0.1
+mass_labels = l
+source_type = point
+source_coords = 0 0 0 0
+
+#Default params (can be changed!)
+
+#multiply_phases = 0 #this is needed if the loaded gauge field already has staggered phases
+
+cg_residue = 1e-26
+cg_max_iter = 1000
+measure_mesons = 1
+
+# naik_epsilons_individual =
+# cg_residues_individual = #use -1 for default
+# cg_max_iters_individual

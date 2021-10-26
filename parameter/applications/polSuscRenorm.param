@@ -1,0 +1,19 @@
+# 
+# polSuscRenorm.param
+# 
+# Example parameter file for main_polSuscRenorm.cu
+# 
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of nodes per direction
+#     mlight: Light quark mass label (OPTIONAL, for labelling plc output file)
+#   mstrange: Strange quark mass label (OPTIONAL, for labelling plc output file)
+#  Gaugefile: Configuration to be read in
+#
+Lattice   = 32 32 32 8
+Nodes     = 1  1  1  1
+beta      = 6.285
+mlight    = 0009875
+mstrange  = 0790
+stream    = 51
+conf_nr   = 26
+Gaugefile = ../test_conf/l328f21b6285m0009875m0790a_019.995

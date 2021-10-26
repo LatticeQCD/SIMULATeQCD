@@ -1,0 +1,13 @@
+# 
+# flt.param                                                               
+# 
+# Parameter file for main_flt.cu.
+#
+#     Lattice: Nx Ny Nz Nt
+#       Nodes: Number of nodes per direction
+#   Gaugefile: Configuration to be read in
+#
+Lattice  = 32 32 32 8
+Nodes    = 1  1  1  1
+beta     = 6.474
+Gaugefile = /home/battogtokh/configurations/beta_6474/flowed_101_50FT00250_s032t08_b06474

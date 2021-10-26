@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#Job parameters
+#SBATCH --job-name=runAllTests
+#SBATCH --output=./%x_%j.out
+#SBATCH --error=./%x_%j.err
+
+#Resources
+#SBATCH --time=00:30:00
+#SBATCH --partition=volta
+#SBATCH --qos=devel_gpu
+#SBATCH --ntasks=4
+#SBATCH --cores-per-socket=1
+#SBATCH --nodes=1
+#SBATCH --gres=gpu:4
+#SBATCH --gres-flags=enforce-binding
+
+echo -e "Start `date +"%F %T"` | $SLURM_JOB_ID $SLURM_JOB_NAME | `hostname` | `pwd` \n" 
+
+rm OUT_*
+rm runERR_*
+
+bash ../scripts/TEST_run.bash
+
+echo -e "End `date +"%F %T"` | $SLURM_JOB_ID $SLURM_JOB_NAME | `hostname` | `pwd` \n" 

@@ -1,0 +1,29 @@
+# 
+# GenerateQuenched.param                                                               
+#
+# parameter file for generateQuenched
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of nodes per direction
+#  Gaugefile: Configuration to be read in
+#     format: Format of the binary file.
+# endianness: For output storage.
+#
+Lattice    = 64 64 64 16
+Nodes      = 1 1 1 1
+beta       = 6.87361
+format     = nersc
+endianness = auto
+stream     = a
+output_dir = .
+nconfs     = 1000
+nsweeps_ORperHB  = 4
+nsweeps_HBwithOR = 500
+
+start = one
+nsweeps_thermal_HB_only  = 500
+nsweeps_thermal_HBwithOR = 4000
+
+#conf_nr = 500
+#prev_conf = conf_s064t16_b0687361_a_U000500
+#prev_rand = rand_s064t16_b0687361_a_U000500

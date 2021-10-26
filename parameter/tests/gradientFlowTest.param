@@ -1,0 +1,6 @@
+#
+# gradientFlowTest.param
+#
+#      Nodes: Number of nodes per direction
+#
+Nodes = 1 1 1 1

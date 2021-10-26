@@ -1,0 +1,10 @@
+# 
+# cudaIpcTest.param                                                               
+# 
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of sublattices per direction 
+#
+# Please always use exactly two nodes.
+#
+Lattice    = 24 24 24 24
+Nodes      = 2  1  1  1

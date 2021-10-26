@@ -1,0 +1,47 @@
+# 
+# sublatticeUpdates.param                                                               
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of nodes per direction
+#  Gaugefile: Configuration to be read in
+#     format: Format of input configuration
+# endianness: Endianness of input configuration
+#    conf_nr: Configuration number (optional); will appear in the name of output files
+#
+Lattice = 20 20 20 20
+Nodes = 1 1 1 1
+beta = 6.498
+Gaugefile = ../test_conf/l20t20b06498a_nersc.302500
+conf_nr = 302500
+format = nersc
+endianness = auto
+
+# the temporal extension of a sub lattice
+sublattice_lt = 6
+
+# how many times the observables are measured
+num_meas = 100
+
+# after how many sweeps(1 sweep = 1*HB + 4*OR) the observables will be measured for once
+num_update = 10
+
+# the minimum distance between the right boundary of the left sub-lattice and the left boundary of the right sub-lattice.
+# only for color-electric correlator
+min_dist = 0
+
+# the maximum mometum for EMT, directing only in z
+PzMax = 0
+
+# a magic value used to subtract the first a few useless digits appearing in the trace anomaly at zero momentum
+# does not contribute the bulk correlators. It helps to avoid the numerical problem and can be obtained by running
+# another programm "getMagicTraceAnomaly" on any of the configurations of the same lattice size and beta
+VacuumSubtractionHelper = 1.72
+
+# path of output files
+out_dir = ./
+        
+# compute energy-momentum tensor correlators. default to be 0
+EnergyMomentumTensorCorr = 0
+
+# compute color-electric correlator. default to be 0
+ColorElectricCorr = 0

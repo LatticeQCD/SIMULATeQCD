@@ -1,0 +1,78 @@
+# 
+# gradientFlow.param                                                               
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of nodes per direction
+#  Gaugefile: Configuration to be read in
+#     format: Format of input configuration
+# endianness: Endianness of input configuration
+#    conf_nr: Configuration number (optional); will appear in the name of output files
+#      force: Specify if you want to have the Wilson flow ("wilson") or Zeuthen flow ("zeuthen").
+#
+#  start_step_size: The (start) step size of the Runge Kutta integration.
+#        RK_method: Set to fixed_stepsize, adaptive_stepsize or adaptive_stepsize_allgpu (see wiki).
+#         accuracy: Specify the accuracy of the adaptive step size method.
+#
+#      measurements_dir: Measurement output directory
+# measurement_invervall: Flow time Interval which should be iterated.
+#  necessary_flow_times: Set the flow-times which should not be skipped by the fixed or adaptive stepsize
+#
+# ignore_fixed_startstepsize: ignore the fixed stepsize and infer stepsizes from necessary_flow_times. only use with
+#                             RK_method=fixed_stepsize
+#                  save_conf: Save the flowed configuration at each step? (0=no, 1=yes)
+#          save_at_flow_time: Save flowed configuration only for these flow times
+#
+Lattice    = 20 20 20 20
+Nodes      = 1 1 1 1
+beta       = 6.498
+Gaugefile  = ../test_conf/l20t20b06498a_nersc.302500
+format     = nersc
+endianness = auto
+conf_nr    = 302500
+force      = zeuthen
+
+start_step_size = 0.01
+RK_method       = adaptive_stepsize
+accuracy        = 0.01
+
+measurements_dir      = ./
+measurement_intervall = 0 1
+necessary_flow_times  = 0.25 0.5
+
+ignore_fixed_startstepsize = 0
+save_conf                  = 0
+save_at_flow_time          = 0 0.5 1
+
+#
+# Set to 1 if you want to measure any of these observables (or 0 if not):
+#
+plaquette                               = 1
+clover                                  = 0
+cloverTimeSlices                        = 0
+topCharge                               = 0
+topCharge_imp                           = 0
+topChargeTimeSlices                     = 0
+topChargeTimeSlices_imp                 = 0
+shear_bulk_corr_block                   = 0
+binsize                                 = 8    # binsize used in blocking method to measure EM tensor and/or topological charge density correlators
+ColorElectricCorrTimeSlices_naive       = 0
+ColorMagneticCorrTimeSlices_naive       = 0
+ColorElectricCorrTimeSlices_clover      = 0
+ColorMagneticCorrTimeSlices_clover      = 0
+PolyakovLoopCorrelator                  = 0
+topCharge_imp_block                     = 0    #using imp discretization
+energyMomentumTensorTracelessTimeSlices = 0
+energyMomentumTensorTracefullTimeSlices = 0
+RenormPolyakovSusc                      = 0
+
+#
+# For observables that need gauge fixing (such as the Polyakov loop correlators)
+#
+GaugeFixTol        = 1e-6 # When theta falls below this number, stop...
+GaugeFixNMax       = 9000 # ...or stop after a fixed number of steps; this way the program does not get stuck.
+GaugeFixNUnitarize = 20   # Re-unitarize every 20 steps.
+
+#
+# For observables using the correlator class
+#
+normFileDir = './' # The folder that the normalization file is located in.
