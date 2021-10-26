@@ -5,7 +5,7 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 
 
-*Like I Knew What I am Doing*
+*a SImple MUlti-GPU LATtice code for QCD calculations*
 
 
 SIMULATeQCD is a multi-GPU Lattice QCD framework that tries to make it simple and easy for physicists to implement lattice QCD formulas while still providing the best possible performance.
