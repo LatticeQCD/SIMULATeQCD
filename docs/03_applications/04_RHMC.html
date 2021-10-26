@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rational Hybrid Monte Carlo &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Code Base" href="../04_codeBase/codeBase.html" />
+    <link rel="prev" title="Multi-level algorithm" href="03_multiLevel.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="01_quenched.html">Generate quenched gauge configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_gradientFlow.html">Gradient Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_multiLevel.html">Multi-level algorithm</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Rational Hybrid Monte Carlo</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="applications.html">Applications</a> &raquo;</li>
+      <li>Rational Hybrid Monte Carlo</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/03_applications/04_RHMC.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="rational-hybrid-monte-carlo">
+<h1>Rational Hybrid Monte Carlo<a class="headerlink" href="#rational-hybrid-monte-carlo" title="Permalink to this headline"></a></h1>
+<p>The rational hybrid Monte Carlo class does the update of the gauge fields. The normal user will only have to call the constructor and two functions</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rhmc</span><span class="p">(</span><span class="n">RhmcParameters</span><span class="w"> </span><span class="n">rhmc_param</span><span class="p">,</span><span class="w"> </span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="n">onDevice</span><span class="p">,</span><span class="n">All</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeField</span><span class="p">,</span><span class="w"> </span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">rand_state</span><span class="p">)</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">init_ratapprox</span><span class="p">(</span><span class="n">RationalCoeff</span><span class="w"> </span><span class="n">rat</span><span class="p">)</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">update</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">metro</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">reverse</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The constructor has to be called with the usual template arguments and passed an instance of <code class="docutils literal notranslate"><span class="pre">RhmcParameters</span></code>, a the gauge field, and an <code class="docutils literal notranslate"><span class="pre">uint4</span></code> array with the rng state.
+The function <code class="docutils literal notranslate"><span class="pre">init_ratapprox</span></code> will set the coefficients for all the rational approximations and has to be called before update!
+The function update will generate one molecular dynamics trajectory, if no arguments are passed to <code class="docutils literal notranslate"><span class="pre">update()</span></code> it will also perform a Metropolis step after the trajectory. The Metropolis step can also be omitted by passing the argument <code class="docutils literal notranslate"><span class="pre">false</span></code> to update. This is handy in the beginning of thermalization. The second argument is <code class="docutils literal notranslate"><span class="pre">false</span></code> by default, passing <code class="docutils literal notranslate"><span class="pre">true</span></code> to update will make the updater to run the trajectory forward and backwards for testing if the integration is reversible.</p>
+<section id="update">
+<h2>Update<a class="headerlink" href="#update" title="Permalink to this headline"></a></h2>
+<p>The update routine saves a copy of the gauge field, applies the smearing to the gauge field (not implemented yes), builds the pseudo-fermion fields, generates the conjugate momenta and calculates the Hamiltonian.
+Then it starts the molecular dynamics evolution by calling <code class="docutils literal notranslate"><span class="pre">integrate()</span></code> from the integrator class (the integrator object is instantiated by the rhmc constructor). After the MD trajectory the new Hamiltonian is calculated and - depending on the arguments - the Metropolis step is done.</p>
+</section>
+<section id="todo">
+<h2>TODO<a class="headerlink" href="#todo" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>For now, there is no energy density array that can be reduced. But the different parts of the Hamiltonian are reduced separately. This is not ideal, can be changed when there is a floatT field with a <code class="docutils literal notranslate"><span class="pre">constructAtBulk()</span></code> member function.</p></li>
+<li><p>Hisq smearing is incooporated yet.</p></li>
+<li><p>The function generating the gaussian matrices does not use the operator syntax yet. This is for compatibility with the old code.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Lukas Mazur.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

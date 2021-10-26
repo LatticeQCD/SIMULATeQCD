@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gaugefield &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Spinorfield" href="07_spinorfield.html" />
+    <link rel="prev" title="Functor/operator() syntax" href="05_functorSyntax.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="codeBase.html">Code Base</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="01_indexer.html">Indexer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_fileWriter.html">File Writer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_latticeContainer.html">Lattice Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_communicationBase.html">CommunicationBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_functorSyntax.html">Functor/operator() syntax</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Gaugefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_spinorfield.html">Spinorfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="08_topology.html">Topology</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code Base</a> &raquo;</li>
+      <li>Gaugefield</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/04_codeBase/06_gaugefield.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="gaugefield">
+<h1>Gaugefield<a class="headerlink" href="#gaugefield" title="Permalink to this headline"></a></h1>
+<p>Gaugefield provides a template who has data member <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> to store the gauge links for all the sites on a 4D lattice. Each link is a SU<span class="math notranslate nohighlight">\((\)</span>3<span class="math notranslate nohighlight">\()\)</span> matrix of data type <code class="docutils literal notranslate"><span class="pre">GSU3</span></code> . One could use the indexer <code class="docutils literal notranslate"><span class="pre">GIndexer&lt;All,</span> <span class="pre">HaloDepth&gt;</span></code> to reach any link, including those in the halo. Usually before or after a lattice calculation one needs to read in or write out the gauge fields from/to a file, and this can be done by the <code class="docutils literal notranslate"><span class="pre">readconf_nersc</span></code> and <code class="docutils literal notranslate"><span class="pre">writeconf_nersc</span></code> function members of this template. &#64;writeconf_nersc&#64; takes the optional parameter &#64;diskprec&#64;, which can be set to either 1 or 2 for single or double precision, respectively. There are also several function members</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">one();</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">random(uint4*</span> <span class="pre">rand_state);</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gauss(uint4*</span> <span class="pre">rand_state);</span></code></p></li>
+</ul>
+<p>initiating the gauge links to some special numbers like unity, random numbers or gaussian algebra elements. Function <code class="docutils literal notranslate"><span class="pre">swap_memory(Gaugefield&lt;floatT,</span> <span class="pre">onDevice,</span> <span class="pre">HaloDepth,comp&gt;</span> <span class="pre">&amp;gauge)</span></code> could swap two gauge fields <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> and <code class="docutils literal notranslate"><span class="pre">gauge</span></code>.  Since the gauge links <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> are <code class="docutils literal notranslate"><span class="pre">protected</span></code>, one can only visit them via <code class="docutils literal notranslate"><span class="pre">getAccessor()</span></code>. Gaugefield template also provides overloading for <code class="docutils literal notranslate"><span class="pre">=</span></code>, so that one could easily copy one gauge field to another. And the gauge links should always be unitary, so a <code class="docutils literal notranslate"><span class="pre">su3latunitarize</span></code> function is given.</p>
+<p>Besides all the functions mentioned above, there are a bunch of  convenient iterators with which one could perform operations on each of the link considered:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullAllMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo in all 4 (spacetime) directions.</span>
+
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="n">deviceStream</span><span class="o">&lt;</span><span class="n">onDevice</span><span class="o">&gt;</span><span class="w"> </span><span class="n">iterateOverBulkAllMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">useStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo in all 4 (spacetime) directions.</span>
+
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullLoopMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo for the first &quot;Nloops&quot; (default 4) directions.</span>
+
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverBulkLoopMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo for the first &quot;Nloops&quot; (default 4) directions.</span>
+
+
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullAtMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w">  </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo in a specific direction &quot;Mu&quot;.</span>
+
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverBulkAtMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo in a specific direction &quot;Mu&quot;.</span>
+
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateWithConst</span><span class="p">(</span><span class="n">Object</span><span class="w"> </span><span class="n">ob</span><span class="p">);</span><span class="w"> </span><span class="c1">//set all links including those in the halo in all 4 (spacetime) directions to a constant value &quot;ob&quot;.</span>
+</pre></div>
+</div>
+<p>If the above explanation does not clear up your confusion, write an email to htshu&#64;physik.uni-bielefeld.de</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Lukas Mazur.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

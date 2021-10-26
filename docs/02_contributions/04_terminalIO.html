@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terminal output &amp; terminating the program &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to use an input parameter file" href="05_inputParameter.html" />
+    <link rel="prev" title="How to organize new files" href="03_organizeFiles.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="01_codeStyle.html">How to write clean and readable code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_git.html">How to use git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_organizeFiles.html">How to organize new files</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Terminal output &amp; terminating the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_inputParameter.html">How to use an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="08_testing.html">Testing the code</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>Terminal output &amp; terminating the program</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/02_contributions/04_terminalIO.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="terminal-output-terminating-the-program">
+<h1>Terminal output &amp; terminating the program<a class="headerlink" href="#terminal-output-terminating-the-program" title="Permalink to this headline"></a></h1>
+<p>Instead of using <code class="docutils literal notranslate"><span class="pre">printf</span></code> or <code class="docutils literal notranslate"><span class="pre">std::cout</span></code>, we use a custom <code class="docutils literal notranslate"><span class="pre">Logger</span></code> class to print statements in a nicely formatted way.
+There are two global instances of the class “Logger” that are automatically created when you include files of the base that include “logging.h” (which basically all of them do).
+These two classes are called <code class="docutils literal notranslate"><span class="pre">stdLogger</span></code> and <code class="docutils literal notranslate"><span class="pre">rootLogger</span></code>.</p>
+<section id="printing-a-statement">
+<h2>Printing a statement<a class="headerlink" href="#printing-a-statement" title="Permalink to this headline"></a></h2>
+<p>is as simple as</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rootLogger</span><span class="p">.</span><span class="n">info</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Some information about the currently running program.&quot;</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This will output the statement <strong>on the root process only</strong> in a nicely formatted way with timestamp and also append a newline (no more <code class="docutils literal notranslate"><span class="pre">std::endl</span></code> or \n’s that clutter the code).
+If you want to output something from every process you can use <strong>stdLogger</strong>.</p>
+<p>These are some of the different Logger levels you can choose from:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">alloc</span><span class="p">,</span><span class="w"> </span><span class="n">debug</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">warn</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">fatal</span><span class="w"> </span>
+</pre></div>
+</div>
+</section>
+<section id="when-to-use-logger-error">
+<h2>When to use Logger.error()<a class="headerlink" href="#when-to-use-logger-error" title="Permalink to this headline"></a></h2>
+<p>Use this when <strong>something goes wrong that can work in principle</strong> but the <strong>program can still continue</strong> and no runtime exception has to be thrown.
+Example:</p>
+<ul class="simple">
+<li><p>one subroutine of a test gives the wrong results, but others after it may still be correct</p></li>
+</ul>
+</section>
+<section id="terminating-the-program-in-case-of-error">
+<h2>Terminating the program in case of error<a class="headerlink" href="#terminating-the-program-in-case-of-error" title="Permalink to this headline"></a></h2>
+<p>The way to close your program at runtime because of an error is</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">throw</span><span class="w"> </span><span class="n">ParallelGPUCode_error</span><span class="p">(</span><span class="s">&quot;Put&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;your&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;error message here&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This will call rootLogger.fatal() and write out the error message, then <code class="docutils literal notranslate"><span class="pre">throw</span> <span class="pre">std::runtime_error</span></code>. For the message, you can pass <strong>as many arguments of any type</strong> to it as you want as long as their stream operator <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> is overloaded.
+For example:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"></span>
+<span class="kt">float</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10.2</span><span class="p">;</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="k">throw</span><span class="w"> </span><span class="n">ParallelGPUCode_error</span><span class="p">(</span><span class="s">&quot;This will work&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;and print just fine&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>In your main, you should use something like this to catch any runtime errors and close the program in a clean way:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="o">&lt;</span><span class="n">CONTENT</span><span class="w"> </span><span class="n">OF</span><span class="w"> </span><span class="n">YOUR</span><span class="w"> </span><span class="n">MAIN</span><span class="w"> </span><span class="n">HERE</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="w"> </span><span class="o">&amp;</span><span class="n">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Lukas Mazur.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
