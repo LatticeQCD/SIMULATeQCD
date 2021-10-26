@@ -72,7 +72,7 @@ instance/
 docs/_build/
 
 # Documentaiton temp_build
-docs_src/build/temp_build
+docs_src/build/temp_build/
 
 
 # PyBuilder
