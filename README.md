@@ -15,7 +15,15 @@ SIMULATeQCD is a multi-GPU Lattice QCD framework that tries to make it simple an
 
 The following software is required to compile SIMULATeQCD:
 
-1. [git-lfs](https://git-lfs.github.com/) to also be able to clone the test configurations.
+1. [git-lfs](https://git-lfs.github.com/) to also be able to clone test configurations:
+    ```shell
+    # For Debian-based system
+    sudo apt install git-lfs
+     
+    # For Arch-based system
+    sudo pacman -S git-lfs
+    ```
+    and activate it by calling `git lfs install`
 2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definetely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.
 3. `C++` compiler with `C++17` support  (e.g. `g++-9`).
 4. `MPI` (e.g. `openmpi-4.0.4`).
