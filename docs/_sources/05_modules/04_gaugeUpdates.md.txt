@@ -27,7 +27,7 @@ gUpdate.updateHB(dev_state.state,beta);
 
 ## Some benchmarks
 
-The following use `HaloDepth=1`. Each sweep consists of 1 HB with 4 OR updates. Times are measured in [ms]. Error bars are in the last digits in parentheses. Each timing uses 50 sweeps. Each number given is an average time from between 3 and 4 test runs. Timing was done with the parallelGPU code's built-in timer. Only hyperplanes and planes are communicated. Originally the tests were carried out on NVIDIA Pascal GPU, but more tests were carried out later on NVIDIA VolNVIDIA Volta GPU. Both results are included because maybe it's interesting to see the improvement from the old hardware to the new hardware. Attached are plots of improvement $I$ versus number of GPUs for both machines, where I define improvement as $I=\frac{\text{number of GPUs}}{\text{time}/\text{1 GPU time}}$
+The following use `HaloDepth=1`. Each sweep consists of 1 HB with 4 OR updates. Times are measured in [ms]. Error bars are in the last digits in parentheses. Each timing uses 50 sweeps. Each number given is an average time from between 3 and 4 test runs. Timing was done with the SIMULATeQCD code's built-in timer. Only hyperplanes and planes are communicated. Originally the tests were carried out on NVIDIA Pascal GPU, but more tests were carried out later on NVIDIA VolNVIDIA Volta GPU. Both results are included because maybe it's interesting to see the improvement from the old hardware to the new hardware. Attached are plots of improvement $I$ versus number of GPUs for both machines, where I define improvement as $I=\frac{\text{number of GPUs}}{\text{time}/\text{1 GPU time}}$
 
 ## Pascal CPU 16 GB
 

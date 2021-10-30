@@ -4,7 +4,7 @@
 
 After creating your own executable, maybe you want to use an input file with some parameters.
 
-In order to to that, create an input file in ParallelGPUCode/parameter, with the name:
+In order to to that, create an input file in SIMULATeQCD/parameter, with the name:
 ``` 
 <custom_name>.param
 ```

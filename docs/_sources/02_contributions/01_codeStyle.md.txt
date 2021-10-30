@@ -1,21 +1,21 @@
 # How to write clean and readable code
 
 - **Warnings**\
-Switch on compiler warnings with -Wall -Wextra. Do care about this warnings. A code should compile without any warning. If a warning is unavoidable use pragmas to suppress them.
+Switch on compiler warnings with -Wall -Wextra. Do care about these warnings. A code should compile without any warning. If a warning is unavoidable use pragmas to suppress them.
 - **Do not repeat yourself**\
-Do not copy code or use similar code all the time. Never. This makes it very hard to maintain the code.
-- **Do not use the new and delete operator**\
-The new and the delete operator are source for many errors, especially memory leaks. It is better to avoid them completely and use `std::vector` instead. Especially there is absolutely no reason to use new for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.  
+Do not copy code or use similar code all the time. This makes it harder to maintain the code, for example by requiring the developer to make the same change in multiple places.
+- **Do not use the new and delete operators**\
+The `new` and the `delete` operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the [Memory Manager](06_memoryAllocation.md). There is absolutely no reason to use `new` for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.  
 - **Avoid pointers**\
-Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type save. This causes a lot of errors. There are cases, where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.
-- **Delete the copy constructor for classes which manage large amount of memory**\
-Delete the copy constructor:
-`myClass(myClass& ) = delete`
-The default copy constructor does not copy memory that is not part of the class. However, it calls the destructor. This deletes the memory that the class points to. This can lead to bad memory accesses. (`C++11`: Implement a move constructor instead)
+Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type safe. This causes a lot of errors. There are cases where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.
+- **Delete the copy constructor for classes which manage large amounts of memory**\
+Delete the copy constructor using
+`myClass(myClass& ) = delete`.
+The default copy constructor does not copy memory that is not part of the class. However, it calls the destructor. This deletes the memory that the class points to. This can lead to bad memory accesses. Implement a move constructor instead.
 - **Only functions should be public**\
-Do not use public member variables in classes
+Do not use public member variables in classes.
 - **Use const whenever possible**\
-The usage of const can really help to avoid undesired modification of objects.
+The usage of `const` can help avoid undesired modification of objects.
 - **Proper naming**\
 Use proper and consistent naming for everything. Use the same name for file names as for the classes they contain. Use long names which describe what is done. Do not use different names between different function calls. Follow the following naming scheme:
     Classes:
@@ -31,12 +31,12 @@ Use proper and consistent naming for everything. Use the same name for file name
 It is hard to distinguish the () from a function. Just do not use it.
 - **Formatting**\
 Format your code in a nice way:
-    - Do not use tabs. Use spaces instead
-    - Maximum line length of 120 characters.
-    - Maximum function length of 80 lines.
+    - DO NOT USE TABS. Use spaces instead.
+    - Try for a maximum line length of 120 characters.
+    - Try for a maximum function length of 80 lines.
     - Use braces:
       ```C++
-      for(int i = 0; i < 10; i++){
+      for(int i = 0; i < 10; i++) {
               std::cout << i << std::endl;
       }
       ```
@@ -55,9 +55,9 @@ Format your code in a nice way:
       ```C++
       if (true) {std::cout << "True" << std::endl;}
       ```
-- **Document your code**\
-Give comments about complex sections. Trivial code should not be commented. Remove old comments!
+- **Write helpful comments**\
+Give comments about complex sections, tricks that you used, relevant visualizations, DOIs for papers, your design philosophy (when relevant), etc. DO NOT comment trivial code. Remove commented-out code. (It is anyway in the git history if we need it later.)
 - **Remove old features**\
-If features are not needed any more, remove them (for example CUDA 1.1 stuff)
+If features are not needed any more, remove them. 
 - **Use `C++11/14/17/20` features** (lambda expressions, move constructor, initializer_list,...)\
 Read about them. They are nice!

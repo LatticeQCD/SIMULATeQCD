@@ -24,7 +24,7 @@ size_t siteLocal(const sitexyzt coord) {
     return (coord.x + coord.y*getLatData().vol1 + coord.z*getLatData().vol2 + coord.t*getLatData().vol3);
 }
 ```
-In the ParallelGPUCode we sometimes want to exploit  symmetries of the Dirac matrix, which requires an **even-odd memory layout** . In the linear memory we first continuously store the data for all of the even sites and then for all of the odd sites. **This is how it is done for all of the base classes like `Gaugefield`, `Spinorfield`, `LatticeContainer`, etc...**
+In SIMULATeQCD we sometimes want to exploit  symmetries of the Dirac matrix, which requires an **even-odd memory layout** . In the linear memory we first continuously store the data for all of the even sites and then for all of the odd sites. **This is how it is done for all of the base classes like `Gaugefield`, `Spinorfield`, `LatticeContainer`, etc...**
 The conversion looks like this:
 
 ```{hidden-code-block} C++
@@ -117,7 +117,7 @@ sitexyzt de_site_eo(const size_t site, int par) {
 
 ## Custom data types to store indices
 
-In the ParallelGPUCode, there are four structs that can store the spacetime coordinates and the corresponding memory index of a given lattice site:
+In SIMULATeQCD, there are four structs that can store the spacetime coordinates and the corresponding memory index of a given lattice site:
 
 `gSite`: 
 This struct stores the spacetime coordinates and memory index for one lattice site. 

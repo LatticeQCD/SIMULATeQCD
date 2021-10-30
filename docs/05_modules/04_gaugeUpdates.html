@@ -47,7 +47,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="01_inverter.html">Inverter (Conjugate Gradient)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="02_correlator.html">Correlator Class</a></li>
@@ -111,7 +111,7 @@
 </div>
 <section id="some-benchmarks">
 <h2>Some benchmarks<a class="headerlink" href="#some-benchmarks" title="Permalink to this headline"></a></h2>
-<p>The following use <code class="docutils literal notranslate"><span class="pre">HaloDepth=1</span></code>. Each sweep consists of 1 HB with 4 OR updates. Times are measured in [ms]. Error bars are in the last digits in parentheses. Each timing uses 50 sweeps. Each number given is an average time from between 3 and 4 test runs. Timing was done with the parallelGPU code’s built-in timer. Only hyperplanes and planes are communicated. Originally the tests were carried out on NVIDIA Pascal GPU, but more tests were carried out later on NVIDIA VolNVIDIA Volta GPU. Both results are included because maybe it’s interesting to see the improvement from the old hardware to the new hardware. Attached are plots of improvement <span class="math notranslate nohighlight">\(I\)</span> versus number of GPUs for both machines, where I define improvement as <span class="math notranslate nohighlight">\(I=\frac{\text{number of GPUs}}{\text{time}/\text{1 GPU time}}\)</span></p>
+<p>The following use <code class="docutils literal notranslate"><span class="pre">HaloDepth=1</span></code>. Each sweep consists of 1 HB with 4 OR updates. Times are measured in [ms]. Error bars are in the last digits in parentheses. Each timing uses 50 sweeps. Each number given is an average time from between 3 and 4 test runs. Timing was done with the SIMULATeQCD code’s built-in timer. Only hyperplanes and planes are communicated. Originally the tests were carried out on NVIDIA Pascal GPU, but more tests were carried out later on NVIDIA VolNVIDIA Volta GPU. Both results are included because maybe it’s interesting to see the improvement from the old hardware to the new hardware. Attached are plots of improvement <span class="math notranslate nohighlight">\(I\)</span> versus number of GPUs for both machines, where I define improvement as <span class="math notranslate nohighlight">\(I=\frac{\text{number of GPUs}}{\text{time}/\text{1 GPU time}}\)</span></p>
 </section>
 <section id="pascal-cpu-16-gb">
 <h2>Pascal CPU 16 GB<a class="headerlink" href="#pascal-cpu-16-gb" title="Permalink to this headline"></a></h2>

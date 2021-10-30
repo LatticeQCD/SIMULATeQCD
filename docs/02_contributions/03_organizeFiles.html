@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Terminal output &amp; terminating the program" href="04_terminalIO.html" />
-    <link rel="prev" title="How to use git" href="02_git.html" /> 
+    <link rel="prev" title="How to do pull requests" href="02_git.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,17 +47,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="01_codeStyle.html">How to write clean and readable code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="02_git.html">How to use git</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_git.html">How to do pull requests</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">How to organize new files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="04_terminalIO.html">Terminal output &amp; terminating the program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="05_inputParameter.html">How to use an input parameter file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="06_memoryAllocation.html">Memory Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="07_multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="08_testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_documenting.html">Documenting your code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
 </ul>
 
@@ -88,27 +89,27 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="how-to-organize-new-files">
 <h1>How to organize new files<a class="headerlink" href="#how-to-organize-new-files" title="Permalink to this headline"></a></h1>
-<p>All source and header files are stored in <code class="docutils literal notranslate"><span class="pre">src/&lt;MeaningfulName&gt;/...</span></code> .
-For example, <code class="docutils literal notranslate"><span class="pre">src/base/*</span></code> holds source files of all base classes which are needed by most programs, e.g. the Lattice class or the CommunicationBase class.</p>
+<p>All source and header files are stored in <code class="docutils literal notranslate"><span class="pre">src/&lt;MeaningfulName&gt;/...</span></code>.
+For example, <code class="docutils literal notranslate"><span class="pre">src/base/*</span></code> holds source files of all base classes which are needed by most programs, e.g. the <code class="docutils literal notranslate"><span class="pre">Lattice</span></code> class or the <code class="docutils literal notranslate"><span class="pre">CommunicationBase</span></code> class.</p>
 <p>If you want to add a new executable, be it an application, a test, a profiler, etc., you should save it as <code class="docutils literal notranslate"><span class="pre">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cu</span></code>.
 If you have added additional <code class="docutils literal notranslate"><span class="pre">*.cpp</span></code> or <code class="docutils literal notranslate"><span class="pre">*.cu</span></code> or header files which are needed by your main, you should save them in a new module folder, e.g. <code class="docutils literal notranslate"><span class="pre">src/modules/&lt;exec_name&gt;/&lt;meaningfulName&gt;.cpp</span></code> and add them to the source files
 list in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> (root folder):</p>
 <div class="highlight-Cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_FILES_&lt;exec_name&gt;</span> <span class="s">&lt;path/to/file1.cu&gt;</span> <span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
-<span class="nb">add_ParallelGPU_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cu</span>
+<span class="nb">add_SIMULATeQCD_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cu</span>
                            <span class="o">${</span><span class="nv">SOURCE_FILES_&lt;exec_name&gt;</span><span class="o">}</span><span class="p">)</span>
-<span class="nb">set_ParallelGPU_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PROPERTIES</span> <span class="s">RUNTIME_OUTPUT_DIRECTORY</span> <span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
-<span class="nb">ParallelGPU_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PRIVATE</span> <span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
-<span class="nb">add_to_compound_ParallelGPU_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span> <span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
+<span class="nb">set_SIMULATeQCD_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PROPERTIES</span> <span class="s">RUNTIME_OUTPUT_DIRECTORY</span> <span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
+<span class="nb">SIMULATeQCD_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PRIVATE</span> <span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
+<span class="nb">add_to_compound_SIMULATeQCD_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span> <span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Headerfiles should NOT be listed there!</p>
+<p>Header files should NOT be listed there!</p>
 <ul class="simple">
 <li><p>Example programs are stored in <code class="docutils literal notranslate"><span class="pre">src/example/*</span></code>. Ideally, these programs should be as short as possible and strongly commented.</p></li>
-<li><p>Testing programs are stored in <code class="docutils literal notranslate"><span class="pre">src/testing/*</span></code>. These programs should check if everything works properly.</p></li>
+<li><p>Testing programs are stored in <code class="docutils literal notranslate"><span class="pre">src/testing/*</span></code>. These programs should check if everything works properly. Please make sure that your tests return a clear pass/fail message.</p></li>
 </ul>
-<p>An example configuration is stored in <code class="docutils literal notranslate"><span class="pre">test_conf/l20t20b06498a_nersc.302500</span></code>. It is a <span class="math notranslate nohighlight">\(20^4\)</span> lattice with a <span class="math notranslate nohighlight">\(\beta=0.638\)</span> and it is written in nersc.</p>
-<p>Add the HaloDepth and precision which you want to use in you appication in <code class="docutils literal notranslate"><span class="pre">ParallelGPU_target_compile_definitions(...)</span></code>. Available definitions are written in define.h.</p>
-<p>A nice example how to write GPU code may be found in
+<p>An example configuration is stored in <code class="docutils literal notranslate"><span class="pre">test_conf/l20t20b06498a_nersc.302500</span></code>. It is a <span class="math notranslate nohighlight">\(20^4\)</span> lattice with a <span class="math notranslate nohighlight">\(\beta=0.638\)</span> and it is written in the NERSC format.</p>
+<p>Add the <code class="docutils literal notranslate"><span class="pre">HaloDepth</span></code> and precision which you want to use in you application in <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD_target_compile_definitions(...)</span></code>. Available definitions are written in <code class="docutils literal notranslate"><span class="pre">define.h</span></code>.</p>
+<p>Nice examples on how to write SIMULATeQCD code may be found in
 <code class="docutils literal notranslate"><span class="pre">src/examples/main_plaquette.cu</span></code>
 or
 <code class="docutils literal notranslate"><span class="pre">src/testing/main_GeneralOperatorTest.cu</span></code>.</p>

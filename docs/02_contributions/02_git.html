@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How to use git &mdash; SIMULATeQCD 0.7 documentation</title>
+  <title>How to do pull requests &mdash; SIMULATeQCD 0.7 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
@@ -45,17 +45,18 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="01_codeStyle.html">How to write clean and readable code</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">How to use git</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">How to do pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="03_organizeFiles.html">How to organize new files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="04_terminalIO.html">Terminal output &amp; terminating the program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="05_inputParameter.html">How to use an input parameter file</a></li>
 <li class="toctree-l2"><a class="reference internal" href="06_memoryAllocation.html">Memory Management</a></li>
 <li class="toctree-l2"><a class="reference internal" href="07_multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="08_testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_documenting.html">Documenting your code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code Base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
 </ul>
 
@@ -74,7 +75,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>How to use git</li>
+      <li>How to do pull requests</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/02_git.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,59 +85,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="how-to-use-git">
-<h1>How to use git<a class="headerlink" href="#how-to-use-git" title="Permalink to this headline"></a></h1>
-<section id="contribute-to-the-parallelgpucode-using-git">
-<h2>Contribute to the ParallelGPUCode using git<a class="headerlink" href="#contribute-to-the-parallelgpucode-using-git" title="Permalink to this headline"></a></h2>
-<p>If you want to start a new project, create a new branch. This should be done like that</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git checkout -b &lt;name_of_your_new_branch&gt;
-</pre></div>
-</div>
-<p>If you have done some changes, you should add these changes to your local repository using this command</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git add /path/to/changed/file
-</pre></div>
-</div>
-<p>Do NOT call <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">add</span> <span class="pre">.</span></code> and <strong>do NOT include the build folder</strong>! You should always keep track of what files you have changed
-and should be pushed…
-After that you should commit these changes to your local repository. This is done like this</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git commit -m <span class="s2">&quot;Some words about what has been changed&quot;</span>
-</pre></div>
-</div>
-<p><strong>Never leave the message empty!</strong> Using <strong>many small commits with detailed messages is always better</strong> than doing one large commit!
-Finally you can push your changes to the git:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">push</span> <span class="n">origin</span> <span class="o">&lt;</span><span class="n">name_of_your_new_branch</span><span class="o">&gt;</span>
-</pre></div>
-</div>
-<p>Frequently pull new changes from the master into your local branch, in order to not fall behind:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git pull origin master 
-</pre></div>
-</div>
-<p>There should never be an “old version” of the code in use. This makes eventually merging your code into the master easier and safer.</p>
-</section>
-<section id="pushing-to-the-master">
-<h2>Pushing to the master<a class="headerlink" href="#pushing-to-the-master" title="Permalink to this headline"></a></h2>
-<p>If you don’t exactly know what you’re doing then you should <strong>not push your code the master</strong>.</p>
-<p><strong>One always has to check that all executables still compile and that all tests pass without errors!</strong></p>
-<p>You can automatically check this by simply running:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make everything
-<span class="nb">cd</span> testing
-bash ../scripts/TEST_run.bash
-</pre></div>
-</div>
-<p><strong>This should complete without any errors or warnings!</strong>
-You need access to a machine with 4 GPUs for 2-3 hours (make a job script!).</p>
-<div class="toggle admonition">
-<p class="admonition-title">Pushing to the master</p>
-<p>Pushing to the master branch is done like this:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git pull origin master
-git merge &lt;name_of_your_branch&gt;
-git push origin master
-</pre></div>
-</div>
-<p>In the case that there are merge conflicts (another user has modified a file that you have also changed in your branch), you need to resolve these after calling &#64;git merge&#64;, then stage and commit the resolved files and then push again.</p>
-</div>
-<p>If at any point you are not sure what to do, do not hesitate to ask someone who knows how to use git correctly.</p>
-</section>
+  <section class="tex2jax_ignore mathjax_ignore" id="how-to-do-pull-requests">
+<h1>How to do pull requests<a class="headerlink" href="#how-to-do-pull-requests" title="Permalink to this headline"></a></h1>
 </section>
 
 

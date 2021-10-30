@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="File Writer" href="02_fileWriter.html" />
-    <link rel="prev" title="Code Base" href="codeBase.html" /> 
+    <link rel="prev" title="Code base" href="codeBase.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,7 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="codeBase.html">Code Base</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="codeBase.html">Code base</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Indexer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="02_fileWriter.html">File Writer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="03_latticeContainer.html">Lattice Container</a></li>
@@ -73,7 +73,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="codeBase.html">Code Base</a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
       <li>Indexer</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/01_indexer.md.txt" rel="nofollow"> View page source</a>
@@ -118,7 +118,7 @@ The four spacetime coordinates of a lattice site are stored in a struct named <c
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div id="hiddencodeblock1_whitespace" style="display: block"><br></div><p>In the ParallelGPUCode we sometimes want to exploit  symmetries of the Dirac matrix, which requires an <strong>even-odd memory layout</strong> . In the linear memory we first continuously store the data for all of the even sites and then for all of the odd sites. <strong>This is how it is done for all of the base classes like <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, <code class="docutils literal notranslate"><span class="pre">Spinorfield</span></code>, <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>, etc…</strong>
+</div><div id="hiddencodeblock1_whitespace" style="display: block"><br></div><p>In SIMULATeQCD we sometimes want to exploit  symmetries of the Dirac matrix, which requires an <strong>even-odd memory layout</strong> . In the linear memory we first continuously store the data for all of the even sites and then for all of the odd sites. <strong>This is how it is done for all of the base classes like <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, <code class="docutils literal notranslate"><span class="pre">Spinorfield</span></code>, <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>, etc…</strong>
 The conversion looks like this:</p>
 <script type="text/javascript">
     function showhide(element){
@@ -246,7 +246,7 @@ The conversion looks like this:</p>
 </div><div id="hiddencodeblock5_whitespace" style="display: block"><br></div></section>
 <section id="custom-data-types-to-store-indices">
 <h2>Custom data types to store indices<a class="headerlink" href="#custom-data-types-to-store-indices" title="Permalink to this headline"></a></h2>
-<p>In the ParallelGPUCode, there are four structs that can store the spacetime coordinates and the corresponding memory index of a given lattice site:</p>
+<p>In SIMULATeQCD, there are four structs that can store the spacetime coordinates and the corresponding memory index of a given lattice site:</p>
 <p><code class="docutils literal notranslate"><span class="pre">gSite</span></code>:
 This struct stores the spacetime coordinates and memory index for one lattice site.
 More specifically, it stores</p>
