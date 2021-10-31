@@ -40,7 +40,7 @@ git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 
 ## Building the code
 
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script (see source:/doc/cmake.sh, you need to manually change this for your machine): 
+To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
 cmake ../simulateqcd/ \
 -DARCHITECTURE="70" \

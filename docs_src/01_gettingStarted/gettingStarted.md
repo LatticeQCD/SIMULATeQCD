@@ -33,7 +33,7 @@ The following software is required to compile SIMULATeQCD:
 5. `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2).
 6. `pip install -r requirements.txt` to build the documentation.
 
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and *from there* call the following example script (see source:/doc/cmake.sh, you need to manually change this for your machine): 
+To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
 cmake ../simulateqcd/ \
 -DARCHITECTURE="70" \
