@@ -18,10 +18,20 @@ git clone git@github.com:LatticeQCD/SIMULATeQCD.git
 
 The following software is required to compile SIMULATeQCD:
 
-1. `cmake3` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/) v3.14.6 or 3.19.2 
-2. `C++` compiler with `C++17` support  (e.g. `g++-9`)
-3. `MPI` (e.g. `openmpi-4.0.4`) and
-4. `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2)
+1. [git-lfs](https://git-lfs.github.com/) to also be able to clone test configurations:
+    ```shell
+    # For Debian-based system
+    sudo apt install git-lfs
+     
+    # For Arch-based system
+    sudo pacman -S git-lfs
+    ```
+    and activate it by calling `git lfs install`
+2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definetely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.
+3. `C++` compiler with `C++17` support  (e.g. `g++-9`).
+4. `MPI` (e.g. `openmpi-4.0.4`).
+5. `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2).
+6. `pip install -r requirements.txt` to build the documentation.
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and *from there* call the following example script (see source:/doc/cmake.sh, you need to manually change this for your machine): 
 ```shell
@@ -30,9 +40,9 @@ cmake ../simulateqcd/ \
 -DUSE_CUDA_AWARE_MPI=ON \
 -DUSE_CUDA_P2P=ON \
 ``` 
-Here, it is assumed that your source code folder is called `simulateqcd`. *Do NOT compile your code in the source code folder!* 
+Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
-`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example, "20" will compile for Fermi, "35" for Kepler, "60" for Pascal and "70" for Volta. 
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
 ```shell
 make NameOfExecutable
