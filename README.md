@@ -24,19 +24,25 @@ The following software is required to compile SIMULATeQCD:
     sudo pacman -S git-lfs
     ```
     and activate it by calling `git lfs install`
-2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definetely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.
+2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 3. `C++` compiler with `C++17` support  (e.g. `g++-9`).
 4. `MPI` (e.g. `openmpi-4.0.4`).
 5. `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2).
 6. `pip install -r requirements.txt` to build the documentation.
 
-## Download the code
+## Downloading the code
 
-Clone the code to your machine:
-
+First, make sure you have activated git-lfs using `git lfs install`, as mentioned above. 
+The code can then be cloned to your folder using:
 ```shell
 git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 ```
+If you are using two-factor authentication on GitHub, you may need to use the command
+```shell
+git clone git@github.com:LatticeQCD/SIMULATeQCD.git
+```
+
+
 
 ## Building the code
 
@@ -89,7 +95,7 @@ iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 
 ## Contributors
 
-## Acknoledgements
+## Acknowledgements
 
 ## Reference
 
