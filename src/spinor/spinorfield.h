@@ -45,7 +45,7 @@ private:
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
 public:
-
+typedef floatT floatT_inner;
     //! constructor
     explicit Spinorfield(CommunicationBase &comm, std::string spinorfieldName="Spinorfield") :
             siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
@@ -177,6 +177,9 @@ public:
 
     template<size_t BlockSize = 128, typename const_T>
     void axupbyThisLoop(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
+
+    template<size_t BlockSize = 128, typename const_T>
+    void axupbyThisLoopd(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
     virtual gVect3arrayAcc<floatT> getAccessor() const;
 

@@ -20,6 +20,8 @@ public:
     Parameter<int> cgMax;
     Parameter<double> residue_meas;
     Parameter<int> cgMax_meas;
+    Parameter<bool> cgMixedPrec;
+    Parameter<double> cgMixedPrec_delta;
     Parameter<bool> always_acc;
     Parameter<int> no_updates;
     Parameter<int> write_every;
@@ -45,6 +47,8 @@ public:
         addDefault(residue_meas, "residue_meas", 1e-12);
         addDefault(cgMax_meas, "cgMax_meas", 20000);
         addDefault(always_acc, "always_acc", false);
+        addDefault(cgMixedPrec, "cgMixedPrec", false);
+        addDefault(cgMixedPrec_delta, "cgMixedPrec_delta",0.1);
         add(no_updates, "no_updates");
         addDefault(write_every, "write_every", 1);
         add(rat_file, "rat_file");
