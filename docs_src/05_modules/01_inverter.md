@@ -71,21 +71,14 @@ performs the multi-shift inversion. In contrast to ConjugateGradient::invert, th
 
 ## Mixed precision
 
-The time to solution of the CG can be significantly decreased by using mixed precision approaches. Since it is an iterative method, we can use half precision floating point arithmetic for the bulk part of the computation and inject full precision residuals occasionally to correct for rounding errors accumulated along the way.  Two such methods are member functions of `ConjugateGradient`, namely 
+The time to solution of the CG can be significantly decreased by using mixed precision approaches. Since it is an iterative method, we can use half precision floating point arithmetic for the bulk part of the computation and inject full precision residuals occasionally to correct for rounding errors accumulated along the way.  This is implemented in the member function `invert_mixed` of `ConjugateGradient`: 
 ```C++
 template <typename Spinor_t, typename Spinor_t_half>
-void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_half, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
-```
-and
-```C++
-template <typename Spinor_t, typename Spinor_t_half>
-void invert_mrel(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_half, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
+void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_half, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta);
 ```
 
-`void invert_mixed` recomputes a full precision true residual if the norm of the current residual decreased by a factor 10 compared to the residual from the last restart. It then resets the CG by performing a gradient descent step ($p_{i+1}=r_{\mathrm{true}}=r_{i+1}$).
 
-
-`void invert_mrel` uses the same update trigger but reprojects the gradient vector $p_{i}$ such that is orthogonal to the new, true residual. Doing this, one can retain partial information about the Krylov subspace which should lead to faster convergence compared to `void invert_mixed`.
+`void invert_mixed` recomputes a full precision true residual if the norm of the current residual decreased by a factor $\frac{1}{\delta}$ compared to the residual from the last restart. It then resets the CG by reprojecting the gradient vector $p_{i}$ such that it is orthogonal to the new, true residual.
 
 In contrast to the other invert methods, one has to pass an additional, half-precision dslash operator to these methods. An example how to use the mixed precision inverters is given below
 
@@ -117,6 +110,6 @@ HisqDSlash<__half, onDevice, LatLayout, HaloDepth, HaloDepthSpin, NStacks> dslas
  gauge_naik_half.template convert_precision<floatT>(gauge_naik);
 
 //invert using floatT-half CG solver
-cg.invert_mrel(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue());
+cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
 
 ```

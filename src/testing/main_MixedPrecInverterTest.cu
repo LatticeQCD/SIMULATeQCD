@@ -55,7 +55,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     gpuEventRecord(start);
     switch (cg_switch) {
     case 1 :
-        cg.invert_mrel(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
+        cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
         break;
     case 2 :
         cg.invert_res_replace(dslash, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
@@ -64,6 +64,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
         break;
     default :
+        throw PGCError("CG inverter not specified, provide an option (1, 2 or 3) after parameter file");
         break;
     }
     
