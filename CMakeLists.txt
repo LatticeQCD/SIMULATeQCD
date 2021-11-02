@@ -315,10 +315,7 @@ add_to_compound_SIMULATeQCD_target(tests InverterTest)
 add_SIMULATeQCD_executable(MixedPrecInverterTest src/testing/main_MixedPrecInverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(MixedPrecInverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(MixedPrecInverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 HALFPREC=1 SINGLEPREC=1 NSTACKS_1=1 ${ALL_LAYOUTS})
-
-add_SIMULATeQCD_executable(MixedPrecMultiShiftInverterTest src/testing/main_MixedPrecShiftedInverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
-set_SIMULATeQCD_property(MixedPrecMultiShiftInverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(MixedPrecMultiShiftInverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 HALFPREC=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests MixedPrecInverterTest)
 
 add_SIMULATeQCD_executable(dotProductTest src/testing/main_dotProduct.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(dotProductTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

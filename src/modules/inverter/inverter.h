@@ -56,8 +56,6 @@ public:
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, 
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 
-template <class SpinorOut_t_inner,  typename SpinorIn_t, typename SpinorOut_t, typename Spinor_t_inner>
-void invert_mixed(LinearOperator<SpinorIn_t>& dslash, LinearOperator<Spinor_t_inner>& dslash_inner, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 
 };
 
