@@ -8,7 +8,7 @@
 *a SImple MUlti-GPU LATtice code for QCD calculations*
 
 
-SIMULATeQCD is a multi-GPU Lattice QCD framework that tries to make it simple and easy for physicists to implement lattice QCD formulas while still providing the best possible performance.
+SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it simple and easy for physicists to implement lattice QCD formulas while still providing the best possible performance.
 
 
 ## Prerequisites
