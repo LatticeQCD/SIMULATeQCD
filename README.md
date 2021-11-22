@@ -105,10 +105,16 @@ If none of the above cases apply, you may also send an email to lukas.mazur(at)u
 [L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), P. Scior, H.-T. Shu, R. Larsen, M. Rodekamp, [O. Kaczmarek](https://github.com/okacz72), [C. Schmidt](https://github.com/schmidt74)
 
 
-## Acknowledging SIMULATeQCD
+## Citing SIMULATeQCD
 
 If you are using this code in your research please cite:
 
 - *L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, Bielefeld University (2021), [https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
 - *L. Altenkort, D.Bollweg, D. A. Clarke, O. Kaczmarek, L. Mazur, C. Schmidt, P. Scior, H.-T. Shu, HotQCD on Multi-GPU Systems, PoS LATTICE2021, Bielefeld University (2021) [https://arxiv.org/abs/2111.10354](https://arxiv.org/abs/2111.10354)*
 
+## Acknowledgment
+
+- We acknowledge support by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the CRC-TR 211 'Strong-interaction matter under extreme conditions'– project number 315477589 – TRR 211.
+- This work was partly performed in the framework of the PUNCH4NFDI consortium supported by DFG fund "NFDI 39/1", Germany.
+- This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance Computing (SciDAC) award 
+Computing the Properties of Matter with Leadership Computing Resources. 
