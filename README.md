@@ -102,7 +102,7 @@ If none of the above cases apply, you may also send an email to lukas.mazur(at)u
 
 ## Main contributors
 
-[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), P. Scior, H.-T. Shu, R. Larsen, M. Rodekamp, [O. Kaczmarek](https://github.com/okacz72), [C. Schmidt](https://github.com/schmidt74)
+[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), P. Scior, H.-T. Shu, R. Larsen, M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74)
 
 
 ## Citing SIMULATeQCD
