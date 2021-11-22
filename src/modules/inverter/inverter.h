@@ -29,13 +29,10 @@ public:
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-        const int max_iter, const double precision);
+                            const int max_iter, const double precision, double delta);
 
     template <typename Spinor_t, typename Spinor_t_half>
-    void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_half, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
-
-    template <typename Spinor_t, typename Spinor_t_half>
-    void invert_mrel(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_half, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
+void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta);
 
 
 };
@@ -59,8 +56,6 @@ public:
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, 
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 
-template <typename SpinorIn_t, typename SpinorOut_t, typename Spinor_t_half>
-void invert_mixed(LinearOperator<SpinorIn_t>& dslash, LinearOperator<Spinor_t_half>& dslash_half, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 
 };
 

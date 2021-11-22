@@ -20,6 +20,15 @@ enum Operation {
     add, subtract, mult, divide
 };
 
+template<typename T>
+class custom_is_scalar{ public: static constexpr bool value = std::is_scalar<T>::value; };
+template <>
+class custom_is_scalar<__half> {public: static constexpr bool value = true; };
+
+template<typename T>
+class custom_is_class{ public: static constexpr bool value = std::is_class<T>::value; };
+template <>
+class custom_is_class<__half>{ public: static constexpr bool value = false; };
 
 template<typename typeLHS,
         typename typeRHS,
@@ -67,8 +76,8 @@ struct GeneralOperator<
         typeLHS, //Left hand side object. (Spinor, GeneralOperator or something else that has the getAccessor() method)
         typeRHS, //Right hand side object
         add, //Type of operator (add mult divide subtract)
-        std::enable_if_t<std::is_class<typeLHS>::value>, //SFINAE to check if typeLHS is a class
-        std::enable_if_t<std::is_class<typeRHS>::value> //SFINAE to check if typeRHS is a class
+        std::enable_if_t<custom_is_class<typeLHS>::value>, //SFINAE to check if typeLHS is a class
+        std::enable_if_t<custom_is_class<typeRHS>::value> //SFINAE to check if typeRHS is a class
 > {
     //
     //We need to get the type of the return value of getAccessor(). This is what is stored here.
@@ -84,8 +93,8 @@ struct GeneralOperator<
     GeneralOperator<typeLHS,
             typeRHS,
             add,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -107,8 +116,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         add,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_scalar<typeRHS>::value> //Check if typeRHS is a scalar
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_scalar<typeRHS>::value> //Check if typeRHS is a scalar
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
 
@@ -122,8 +131,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             add,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_scalar<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_scalar<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -142,8 +151,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         add,
-        std::enable_if_t<std::is_scalar<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     typeLHS _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -154,8 +163,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             add,
-            std::enable_if_t<std::is_scalar<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value> >
+            std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -174,8 +183,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         subtract,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -186,8 +195,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             subtract,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -207,8 +216,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         subtract,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_scalar<typeRHS>::value>
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_scalar<typeRHS>::value>
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
     const typeRHS _rhs;
@@ -219,8 +228,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             subtract,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_scalar<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_scalar<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -239,8 +248,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         subtract,
-        std::enable_if_t<std::is_scalar<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     typeLHS _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -251,8 +260,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             subtract,
-            std::enable_if_t<std::is_scalar<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value> >
+            std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -271,8 +280,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         mult,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -283,8 +292,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             mult,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -304,8 +313,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         mult,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_scalar<typeRHS>::value>
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_scalar<typeRHS>::value>
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
     const typeRHS _rhs;
@@ -316,8 +325,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             mult,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_scalar<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_scalar<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -331,35 +340,6 @@ struct GeneralOperator<typeLHS,
 };
 
 
-//Class * scalar (half)
-template<typename typeLHS>
-struct GeneralOperator<typeLHS,
-        __half,
-        mult,
-        std::enable_if_t<std::is_class<typeLHS>::value>
-> {
-    const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
-    const __half _rhs;
-
-    GeneralOperator(const typeLHS &lhs, const __half &rhs) :
-            _lhs(lhs.getAccessor()),_rhs(rhs) {}
-
-    GeneralOperator<typeLHS,
-            __half,
-            mult,
-            std::enable_if_t<std::is_class<typeLHS>::value>
-        >
-    getAccessor() const {
-        return *this;
-    }
-
-    template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
-    {
-        auto lhs = _lhs(i);
-        return lhs * _rhs;
-    }
-};
 
 
 //Scalar * Class
@@ -367,8 +347,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         mult,
-        std::enable_if_t<std::is_scalar<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     typeLHS _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -379,8 +359,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             mult,
-            std::enable_if_t<std::is_scalar<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value>
+            std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value>
     > getAccessor() const {
         return *this;
     }
@@ -399,8 +379,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         divide,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -411,8 +391,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             divide,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -431,8 +411,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         divide,
-        std::enable_if_t<std::is_class<typeLHS>::value>,
-        std::enable_if_t<std::is_scalar<typeRHS>::value>
+        std::enable_if_t<custom_is_class<typeLHS>::value>,
+        std::enable_if_t<custom_is_scalar<typeRHS>::value>
 > {
     const decltype(std::declval<typeLHS>().getAccessor()) _lhs;
     const typeRHS _rhs;
@@ -443,8 +423,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             divide,
-            std::enable_if_t<std::is_class<typeLHS>::value>,
-            std::enable_if_t<std::is_scalar<typeRHS>::value> >
+            std::enable_if_t<custom_is_class<typeLHS>::value>,
+            std::enable_if_t<custom_is_scalar<typeRHS>::value> >
     getAccessor() const {
         return *this;
     }
@@ -463,8 +443,8 @@ template<typename typeLHS, typename typeRHS>
 struct GeneralOperator<typeLHS,
         typeRHS,
         divide,
-        std::enable_if_t<std::is_scalar<typeLHS>::value>,
-        std::enable_if_t<std::is_class<typeRHS>::value>
+        std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+        std::enable_if_t<custom_is_class<typeRHS>::value>
 > {
     typeLHS _lhs;
     const decltype(std::declval<typeRHS>().getAccessor()) _rhs;
@@ -475,8 +455,8 @@ struct GeneralOperator<typeLHS,
     GeneralOperator<typeLHS,
             typeRHS,
             divide,
-            std::enable_if_t<std::is_scalar<typeLHS>::value>,
-            std::enable_if_t<std::is_class<typeRHS>::value>
+            std::enable_if_t<custom_is_scalar<typeLHS>::value>,
+            std::enable_if_t<custom_is_class<typeRHS>::value>
     > getAccessor() const {
         return *this;
     }
@@ -535,7 +515,7 @@ auto operator/(const GeneralOperator<typeLHS1, typeRHS1, op1> &lhs,
 //Idea taken from https://stackoverflow.com/questions/44387251/thrust-reduction-and-overloaded-operator-const-float3-const-float3-wont-co
 
 template<typename inputType>
-using isAllowedType = typename std::enable_if<std::is_scalar<inputType>::value
+using isAllowedType = typename std::enable_if<custom_is_scalar<inputType>::value
                                               || std::is_same<inputType, GCOMPLEX(__half)>::value
                                               || std::is_same<inputType, GCOMPLEX(float)>::value
                                               || std::is_same<inputType, GCOMPLEX(double)>::value

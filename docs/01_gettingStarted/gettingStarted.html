@@ -106,7 +106,7 @@ sudo pacman -S git-lfs
 <li><p><code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">Toolkit</span></code> version 11.0 (NOT 11.1 or 11.2).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> to build the documentation.</p></li>
 </ol>
-<p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <em>from there</em> call the following example script (see source:/doc/cmake.sh, you need to manually change this for your machine):</p>
+<p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
 -DUSE_CUDA_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>

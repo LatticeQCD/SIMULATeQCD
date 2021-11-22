@@ -36,7 +36,12 @@ class SimpleArray{
             values[i] = init;
         }
     }
-
+    template<class floatT>
+        __device__ __host__ SimpleArray(SimpleArray<floatT, N> s_array) {
+        for(size_t i = 0; i < N; i++) {
+            values[i] = s_array[i];
+        }
+    }
 
     __device__ __host__ void operator=(SimpleArray<T,N> vec){
         for(size_t i = 0; i < N; i++){

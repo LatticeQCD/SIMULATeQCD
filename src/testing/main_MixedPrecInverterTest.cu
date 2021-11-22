@@ -11,7 +11,7 @@
 #include "../modules/HISQ/hisqSmearing.h"
 
 
-template<class floatT, Layout LatLayout, size_t NStacks, bool onDevice>
+template<class floatT, class floatT_inner, Layout LatLayout, size_t NStacks, bool onDevice>
 void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat, int cg_switch) {
 
     const int HaloDepth = 2;
@@ -20,8 +20,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_naik(commBase);
-    Gaugefield<__half, onDevice, HaloDepth, R18> gauge_smeared_half(commBase);
-    Gaugefield<__half, onDevice, HaloDepth, U3R14> gauge_naik_half(commBase);
+    Gaugefield<floatT_inner, onDevice, HaloDepth, R18> gauge_smeared_half(commBase);
+    Gaugefield<floatT_inner, onDevice, HaloDepth, U3R14> gauge_naik_half(commBase);
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_naik);
 
@@ -35,13 +35,14 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     gauge.random(d_rand.state);
 
     smearing.SmearAll();
-    gauge_smeared_half.template convert_precision<floatT>(gauge_smeared);
-    gauge_naik_half.template convert_precision<floatT>(gauge_naik);
-
+    gauge_smeared_half.convert_precision(gauge_smeared);
+    gauge_naik_half.convert_precision(gauge_naik);
+    
+    
     ConjugateGradient<floatT, NStacks> cg;
     
     HisqDSlash<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_naik, param.m_ud());
-    HisqDSlash<__half, onDevice, LayoutSwitcher<LatLayout>(), HaloDepth, HaloDepthSpin, NStacks> dslash_half(gauge_smeared_half, gauge_naik_half, param.m_ud());    
+    HisqDSlash<floatT_inner, onDevice, LayoutSwitcher<LatLayout>(), HaloDepth, HaloDepthSpin, NStacks> dslash_half(gauge_smeared_half, gauge_naik_half, param.m_ud());    
 
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorOut(commBase);
@@ -54,18 +55,16 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     gpuEventRecord(start);
     switch (cg_switch) {
     case 1 :
-        cg.invert_mrel(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue());
+        cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
         break;
     case 2 :
-        cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue());
+        cg.invert_res_replace(dslash, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
         break;
     case 3 :
-        cg.invert_res_replace(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
-        break;
-    case 4 :
         cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
         break;
     default :
+        throw PGCError("CG inverter not specified, provide an option (1, 2 or 3) after parameter file");
         break;
     }
     
@@ -90,7 +89,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     err_arr = real<double>(dot1)/real<double>(dot2);
 
-    for (size_t i = 0; i < NStacks; ++i) {
+    for (size_t i = 0; i < NStacks; ++i)
+    {
         rootLogger.info() << err_arr[i];
     }
 
@@ -105,6 +105,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         rootLogger.info() << "Inverter test: " << CoutColors::red << "failed" << CoutColors::reset;
 
 }
+
 
 int main(int argc, char **argv) {
     try{
@@ -128,13 +129,23 @@ int main(int argc, char **argv) {
 
 
     int cg_sw = atoi(argv[2]);
+    if (cg_sw == 1) {
+        rootLogger.info() << "testing float-half";
+        run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
+        
+        rootLogger.info() << "testing double-float";
+        run_func<double, float, Even, 1, true>(commBase, param, rat, cg_sw);
+        
+        rootLogger.info() << "testing double-half";
+        run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
+    }
+    else {
+        rootLogger.info() << "testing float";
+        run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
 
-    rootLogger.info() << "testing in float";
-    run_func<float, Even, 1, true>(commBase, param, rat, cg_sw);
-
-    //rootLogger.info() << "testing in double";
-    //run_func<double, Even, 1, true>(commBase, param, rat, cg_sw);
-
+        rootLogger.info() << "testing double";
+        run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
+    }
     return 0;
     }
     
