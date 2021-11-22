@@ -1,7 +1,5 @@
 #include "LatticeContainer.h"
-#define CUB_NS_QUALIFIER
-
-#include "../../cub/cub/cub.cuh"
+#include <cub/cub.cuh>
 
 
 template<class floatT>
