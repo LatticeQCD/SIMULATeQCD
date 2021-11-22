@@ -94,7 +94,7 @@ Please check out [the documentation](https://latticeqcd.github.io/SIMULATeQCD) t
 ## Getting help and bug report
 Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
 - you have troubles compiling/running the code.
-- you questions on how to implement your own routine.
+- you have questions on how to implement your own routine.
 - you have found a bug.
 
 
