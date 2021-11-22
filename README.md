@@ -62,12 +62,6 @@ make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
-
-
-## Documentation
-
-Please check out [the documentation](https://latticeqcd.github.io/SIMULATeQCD) to learn how to use SIMULATeQCD.
-
 ## Example: Plaquette action computation
 
 (See [Full code example](https://github.com/LatticeQCD/SIMULATeQCD/blob/main/src/examples/main_plaquette.cu).)
@@ -91,6 +85,19 @@ struct CalcPlaq {
 Gaugefield<floatT, true, HaloDepth> gauge(...);
 iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 ```
+
+
+## Documentation
+
+Please check out [the documentation](https://latticeqcd.github.io/SIMULATeQCD) to learn how to use SIMULATeQCD.
+
+## Getting help and bug report
+Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
+- you have troubles compiling/running the code.
+- you questions on how to implement your own routine.
+- you have found a bug.
+
+
 
 ## Main Developer
 
