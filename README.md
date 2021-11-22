@@ -94,7 +94,7 @@ iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 
 ## Main Developer
 
-L. Mazur, H. Sandmeyer, D. Bollweg, P. Scior, D. Clarke, L. Altenkord, H.-T. Shu, M. Rodekamp, R. Larsen
+[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkord](https://github.com/luhuhis), P. Scior, H.-T. Shu, R. Larsen, M. Rodekamp
 
 
 ## Acknowledging SIMULATeQCD
