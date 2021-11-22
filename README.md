@@ -98,7 +98,6 @@ iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 
 If you are using this code in your research please cite:
 
-*L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, 
-Bielefeld University (2021),
-[https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
+- *L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, Bielefeld University (2021), [https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
+- *L. Altenkort, D.Bollweg, D. A. Clarke, O. Kaczmarek, L. Mazur, C. Schmidt, P. Scior, H.-T. Shu, HotQCD on Multi-GPU Systems [https://arxiv.org/abs/2111.10354](https://arxiv.org/abs/2111.10354)*
 
