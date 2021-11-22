@@ -93,9 +93,12 @@ iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 ```
 
 
-## Contributors
 
-## Acknowledgements
+## Acknowledging SIMULATeQCD
 
-## Reference
+If you are using this code in your research please cite:
+
+L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, 
+Bielefeld University (2021),
+[https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)
 
