@@ -97,6 +97,7 @@ Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
 - you have questions on how to implement your own routine.
 - you have found a bug.
 
+If none of the above cases apply, you may also send an Email to lukas.mazur(at)uni-paderborn(dot)de.
 
 
 ## Main Developer
