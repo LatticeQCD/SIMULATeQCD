@@ -92,6 +92,9 @@ Gaugefield<floatT, true, HaloDepth> gauge(...);
 iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 ```
 
+## Main Developer
+
+L. Mazur, H. Sandmeyer, D. Bollweg, P. Scior, D. Clarke, L. Altenkord, H.-T. Shu, M. Rodekamp, R. Larsen
 
 
 ## Acknowledging SIMULATeQCD
