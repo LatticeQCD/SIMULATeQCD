@@ -1,5 +1,5 @@
 /* 
- * main_GeneralOperatorTest.cu                                                               
+ * main_GeneralFunctorTest.cu                                                               
  * 
  * This file includes a lot of examples for how to our coding paradigm, which we call "general functor syntax".
  * We recommend to start reading at read_func, below.
@@ -676,7 +676,7 @@ int main(int argc, char **argv) {
 
     LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/GeneralOperatorTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/GeneralFunctorTest.param", argc, argv);
     commBase.init(param.nodeDim());
 
     const int HaloDepth = 2;
