@@ -82,8 +82,8 @@ struct CalcPlaq {
   }
 };
 
-Gaugefield<floatT, true, HaloDepth> gauge(...);
-iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
+(... main ...)
+latticeContainer.template iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
 ```
 
 
