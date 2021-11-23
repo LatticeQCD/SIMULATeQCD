@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
 
     LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../test_parameter/DslashTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/DslashTest.param", argc, argv);
 
     commBase.init(param.nodeDim());
 
