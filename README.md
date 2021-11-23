@@ -37,11 +37,6 @@ The code can then be cloned to your folder using:
 ```shell
 git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 ```
-If you are using two-factor authentication on GitHub, you may need to use the command
-```shell
-git clone git@github.com:LatticeQCD/SIMULATeQCD.git
-```
-
 
 
 ## Building the code
