@@ -2,7 +2,7 @@
  * main_GeneralFunctorTest.cu                                                               
  * 
  * This file includes a lot of examples for how to our coding paradigm, which we call "general functor syntax".
- * We recommend to start reading at read_func, below.
+ * Please start reading at run_func below.
  * 
  */
 
