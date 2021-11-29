@@ -27,8 +27,6 @@ Use proper and consistent naming for everything. Use the same name for file name
     Function parameter:
         `this_is_my_parameter`
         For example: `thisIsMyFunction(double this_is_my_parameter);`
-- **Do not implement the ()-operator**\
-It is hard to distinguish the () from a function. Just do not use it.
 - **Formatting**\
 Format your code in a nice way:
     - DO NOT USE TABS. Use spaces instead.
