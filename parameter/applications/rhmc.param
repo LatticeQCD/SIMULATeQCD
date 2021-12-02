@@ -1,0 +1,38 @@
+# input file for HISQ action
+
+# lattice parameters
+
+Lattice = 32 32 32 8
+Nodes = 1 1 1 1
+
+# action parameters
+
+beta    =  6.285          # beta
+mass_s  =  0.0790         # strange quark mass
+mass_ud = 0.0009875       # up/down quark mass
+
+# RHMC parameters
+
+step_size  = 0.07142857 # step size of trajectory
+no_md      = 1          # number of steps of trajectory
+no_step_1f = 1          # number of steps of strange quark integration
+no_sw      = 1          # number of steps of gauge integration
+
+#residue   = 1e-12      # residue for inversions
+
+cgMax  = 20000          # max cg steps for multi mass solver
+always_acc = 0          # always accept configuration in Metropolis
+
+rat_file = ../parameter/sample_eo.rat
+
+# run parameters
+
+rand_flag = 0                                                         # new random numbers(0)/read in random numbers(1)
+rand_file = rand                                                      # file name for random numbers and infos
+seed = 1337                                                           # myseed
+load_conf = 2                                                         # flag_load (0=einhei, 1=random, 2=getconf)
+gauge_file = ../../test_conf/l328f21b6285m0009875m0790a_019.995       # file name for configuration
+config_no = 876                                                       # configuration number
+no_updates = 1                                                        # number of updates
+write_every = 11                                                      # write out configuration every
+
