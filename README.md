@@ -57,6 +57,19 @@ make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
+Popular production-ready executables are:
+```Shell
+# generate HISQ configurations
+rhmc                 # Example Parameter-file: parameter/applications/rhmc.param
+# generate quenched gauge configurations using HB and OR
+GenerateQuenched     # Example Parameter-file: parameter/applications/GenerateQuenched.param
+# Apply Wilson/Zeuthen flow and measure various observables
+gradientFlow         # Example Parameter-file: parameter/applications/gradientFlow.param
+# Gauge fixing
+gaugeFixing          # Example Parameter-file: parameter/applications/gaugeFixing.param
+```
+In the [the documentation](https://latticeqcd.github.io/SIMULATeQCD) you will find more information on how to execute these programs.
+
 ## Example: Plaquette action computation
 
 (See [Full code example](https://github.com/LatticeQCD/SIMULATeQCD/blob/main/src/examples/main_plaquette.cu).)
