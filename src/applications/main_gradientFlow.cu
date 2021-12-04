@@ -134,10 +134,10 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     if ( lp.topCharge_imp_block() || lp.shear_bulk_corr_block() ) {
         if (lp.latDim()[0]%(lp.nodeDim()[0]*lp.binsize()) != 0 || lp.latDim()[1]%(lp.nodeDim()[1]*lp.binsize()) != 0 || lp.latDim()[2]%(lp.nodeDim()[2]*lp.binsize()) != 0) {
-            throw PGCError("bin can not span between gpus");
+            throw std::runtime_error(stdLogger.fatal("bin can not span between gpus");
         }
         if (lp.latDim()[0]/lp.nodeDim()[0]<lp.binsize() || lp.latDim()[1]/lp.nodeDim()[1]<lp.binsize() || lp.latDim()[2]/lp.nodeDim()[2]<lp.binsize()) {
-            throw PGCError("each gpu should be able to hold at least one block. please check your blocksize and nodeDim");
+            throw std::runtime_error(stdLogger.fatal("each gpu should be able to hold at least one block. please check your blocksize and nodeDim");
         }
     }
 
@@ -777,7 +777,7 @@ int main(int argc, char *argv[]) {
                             break;
 #endif
                         default:
-                            throw PGCError("Invalid RK_method. Did you set the compile definitions accordingly?");
+                            throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?");
                     }
                 } else {
                     const size_t HaloDepth = 1;
@@ -796,7 +796,7 @@ int main(int argc, char *argv[]) {
                             break;
 #endif
                         default:
-                            throw PGCError("Invalid RK_method. Did you set the compile definitions accordingly?");
+                            throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?");
                     }
                 }
                 break;
@@ -820,13 +820,13 @@ int main(int argc, char *argv[]) {
                         break;
 #endif
                     default:
-                        throw PGCError("Invalid RK_method. Did you set the compile definitions accordingly?");
+                        throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?");
                 }
                 break;
             }
 #endif
             default:
-                throw PGCError("Invalid force. Did you set the compile definitions accordingly?");
+                throw std::runtime_error(stdLogger.fatal("Invalid force. Did you set the compile definitions accordingly?");
         }
     }
     catch (const std::runtime_error &error) {

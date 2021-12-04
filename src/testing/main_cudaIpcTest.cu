@@ -100,7 +100,7 @@ int main(int argc, char *argv[]) {
     commBase.init(param.nodeDim());
 
     if (!commBase.useGpuP2P()) {
-        throw PGCError("P2P is not activated. Exit.");
+        throw std::runtime_error(stdLogger.fatal("P2P is not activated. Exit.");
     }
 
     size_t size = 200000000;

@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     if (lp.force() != "zeuthen"
         or (lp.RK_method() != "adaptive_stepsize" and lp.RK_method() != "adaptive_stepsize_allgpu")) {
-        throw PGCError("Force is not zeuthen or RK_method is not adaptive stepsize!");
+        throw std::runtime_error(stdLogger.fatal("Force is not zeuthen or RK_method is not adaptive stepsize!");
     }
     const size_t HaloDepth = 3;
 

@@ -307,7 +307,7 @@ public:
 
     explicit GaugeConstructor(GCOMPLEX(floatT_memory) *const elements[EntryCount<STAGG_R12>::count])
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<STAGG_R12>::count>(elements) {
-        throw PGCError("STAGG_R12 should not be used at the moment");
+        throw std::runtime_error(stdLogger.fatal("STAGG_R12 should not be used at the moment");
     }
     __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<STAGG_R12>::count >(elementsBase, object_count) {

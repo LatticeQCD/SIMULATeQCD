@@ -73,7 +73,7 @@ class StaticArray<T, 0>{
     }
 
     T& operator[]( [[gnu::unused]] size_t i){
-        throw PGCError("Size of array is 0");
+        throw std::runtime_error(stdLogger.fatal("Size of array is 0");
     }
 
     template<typename... Args>

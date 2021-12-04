@@ -101,21 +101,21 @@ int main(int argc, char *argv[]) {
     commBase.init(lp.nodeDim());
 
     if ( lp.EnergyMomentumTensorCorr() && lp.sublattice_lt() < 4 ) {
-        throw PGCError("Temporal extent of sub lattices can NOT be smaller than 4 when measure energy-"
+        throw std::runtime_error(stdLogger.fatal("Temporal extent of sub lattices can NOT be smaller than 4 when measure energy-"
                        "momentum tensor correlators!!!");
     }
 
     if ( lp.ColorElectricCorr() && lp.sublattice_lt() < 3 ) {
-        throw PGCError("Temporal extent of sub lattices can NOT be smaller than 3 when measure "
+        throw std::runtime_error(stdLogger.fatal("Temporal extent of sub lattices can NOT be smaller than 3 when measure "
                        "color-electric correlators!!!");
     }
 
     if ( lp.nodeDim()[3] != 1) {
-        throw PGCError("Can NOT split node in temporal direction !!");
+        throw std::runtime_error(stdLogger.fatal("Can NOT split node in temporal direction !!");
     }
 
     if ( lp.latDim()[3]%lp.sublattice_lt() != 0) {
-        throw PGCError("Temporal extent of sub lattices must be divisible full temporal extention !!!");
+        throw std::runtime_error(stdLogger.fatal("Temporal extent of sub lattices must be divisible full temporal extention !!!");
     }
 
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Device Memory[MB]: " ,  TotalDevice/1024./1024.);
     if ( MemAll + 20 > TotalDevice/1024./1024. ) { //20 is an estimation for miscellaneous memory comsumption
-        throw PGCError("Device Memory[MB]:  ", TotalDevice / 1024. / 1024., "    Required Memory[MB]:  ", MemAll + 20,
+        throw std::runtime_error(stdLogger.fatal("Device Memory[MB]:  ", TotalDevice / 1024. / 1024., "    Required Memory[MB]:  ", MemAll + 20,
                        ". Memory needed exceeds the device's memory ! exit the program.");
     }
 

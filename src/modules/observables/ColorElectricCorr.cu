@@ -153,7 +153,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 std::vector<GCOMPLEX(floatT)> ColorElectricCorr<floatT, onDevice, HaloDepth, comp>::getColorElectricCorr_naive() {
     ///exit if lattice is split in time
     if (_gauge.getComm().nodes()[3] != 1){
-        throw PGCError("Do not split lattice in time direction for color-electric correlator computation!");
+        throw std::runtime_error(stdLogger.fatal("Do not split lattice in time direction for color-electric correlator computation!");
     }
 
     typedef GIndexer<All, HaloDepth> GInd;
@@ -234,7 +234,7 @@ struct ColorElecCloverKernel{
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 std::vector<GCOMPLEX(floatT)> ColorElectricCorr<floatT, onDevice, HaloDepth, comp>::getColorElectricCorr_clover() {
     if (_gauge.getComm().nodes()[3] != 1){
-        throw PGCError("Do not split lattice in time direction!");
+        throw std::runtime_error(stdLogger.fatal("Do not split lattice in time direction!");
     }
     typedef GIndexer<All, HaloDepth> GInd;
     const size_t Nt = (size_t)GInd::getLatData().globLT;

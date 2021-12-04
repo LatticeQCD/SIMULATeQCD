@@ -64,7 +64,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
         break;
     default :
-        throw PGCError("CG inverter not specified, provide an option (1, 2 or 3) after parameter file");
+        throw std::runtime_error(stdLogger.fatal("CG inverter not specified, provide an option (1, 2 or 3) after parameter file");
         break;
     }
     

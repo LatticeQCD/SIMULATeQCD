@@ -115,7 +115,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
         if (this->getComm().IamRoot())
             in.open(fname.c_str());
         if (!nersc.read_header(in)){
-            throw PGCError("Error reading header of ", fname.c_str());
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str());
         }
     }
 
@@ -144,7 +144,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
     this->getComm().closeIOBinary();
 
     if (!nersc.checksums_match()){
-        throw PGCError("Error checksum!");
+        throw std::runtime_error(stdLogger.fatal("Error checksum!");
     }
 
 }
@@ -161,7 +161,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
         if (this->getComm().IamRoot())
             in.open(fname.c_str());
         if (!milc.read_header()){
-            throw PGCError("Error reading header of ", fname.c_str());
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str());
         }
     }
 
@@ -201,7 +201,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
 
 
     if (!milc.checksums_match()){
-//        throw PGCError("Error checksum!");
+//        throw std::runtime_error(stdLogger.fatal("Error checksum!");
     }
 
 }

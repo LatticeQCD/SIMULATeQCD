@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     std::string conf;
 
     if (argc != 2) {
-        throw PGCError("Wrong number of arguments!");
+        throw std::runtime_error(stdLogger.fatal("Wrong number of arguments!");
     } else {
         conf = argv[1];
     }

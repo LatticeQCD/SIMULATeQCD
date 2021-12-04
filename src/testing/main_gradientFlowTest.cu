@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info(CoutColors::green ,  "           ");
     if (passfail_double) { // || passfail_float
-        throw PGCError("At least one test failed!");
+        throw std::runtime_error(stdLogger.fatal("At least one test failed!");
     } else {
         rootLogger.info(CoutColors::green ,  "All Tests passed!" ,  CoutColors::reset);
     }

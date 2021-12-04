@@ -23,7 +23,7 @@
 #define RETa_IF_SCALAR { return a; }
 #endif
 
-//! ---  PGCError: a nice wrapper to throw errors from and output the error message ---
+//! ---  std::runtime_error(stdLogger.fatal: a nice wrapper to throw errors from and output the error message ---
 template <typename U>
 inline void args_to_stream(std::stringstream& out, U err_msg) {
     out << err_msg;
@@ -36,7 +36,7 @@ inline void args_to_stream(std::stringstream& out, U err_msg, Args... args) {
 }
 
 template <typename... Args>
-inline std::runtime_error PGCError(Args... args) {
+inline std::runtime_error std::runtime_error(stdLogger.fatal(Args... args) {
     std::stringstream err_msg;
     args_to_stream(err_msg, args...);
     stdLogger.fatal(err_msg.str());

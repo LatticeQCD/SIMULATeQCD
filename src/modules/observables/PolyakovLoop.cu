@@ -54,7 +54,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 GCOMPLEX(floatT) PolyakovLoop<floatT, onDevice, HaloDepth, comp>::getPolyakovLoop() {
     /// Exit if lattice is split in time
     if (_gauge.getComm().nodes()[3] != 1){
-        throw PGCError("Do not split lattice in time direction!");
+        throw std::runtime_error(stdLogger.fatal("Do not split lattice in time direction!");
     }
     GCOMPLEX(floatT) poly_result;
     _redBase.template iterateOverSpatialBulk<All, HaloDepth>(PolyakovLoopKernel<floatT, onDevice, HaloDepth, comp>(_gauge));
@@ -67,7 +67,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void PolyakovLoop<floatT, onDevice, HaloDepth, comp>::PloopInArray(MemoryAccessor _ploop){
     /// Exit if lattice is split in time
     if (_gauge.getComm().nodes()[3] != 1){
-        throw PGCError("Do not split lattice in time direction!");
+        throw std::runtime_error(stdLogger.fatal("Do not split lattice in time direction!");
     }
     ReadIndexSpatial<HaloDepth> calcReadIndexSpatial;
     iterateFunctorNoReturn<onDevice>(CalcPloopKernel<floatT,onDevice,HaloDepth, comp>(_gauge,_ploop),

@@ -117,7 +117,7 @@ inline std::string CommunicationBase::gpuAwareMPICheck() {
 void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensions &Topo) {
 
     if (Dim.mult() != getNumberProcesses()) {
-        throw PGCError("Number of processes does not match with the Node dimensions: ",
+        throw std::runtime_error(stdLogger.fatal("Number of processes does not match with the Node dimensions: ",
                        Dim[0], " * ", Dim[1], " * ", Dim[2], " * ", Dim[3], " != ", getNumberProcesses());
     }
 
@@ -140,7 +140,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     int num_devices = 0;
     gpuGetDeviceCount(&num_devices);
     if (num_devices == 0){
-        throw PGCError(myInfo.nodeName, " CPU_", sched_getcpu(), " MPI world_rank=", myInfo.world_rank,
+        throw std::runtime_error(stdLogger.fatal(myInfo.nodeName, " CPU_", sched_getcpu(), " MPI world_rank=", myInfo.world_rank,
                        ": You didn't give me any GPU to work with! >:(");
     }
 
@@ -187,7 +187,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 
 #ifdef ARCHITECTURE
     if (static_cast<int>(ARCHITECTURE) != gpu_arch){
-        throw PGCError("You compiled for ARCHITECTURE=", ARCHITECTURE, " but the GPUs here are ", gpu_arch);
+        throw std::runtime_error(stdLogger.fatal("You compiled for ARCHITECTURE=", ARCHITECTURE, " but the GPUs here are ", gpu_arch);
     }
 #else
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
@@ -217,7 +217,7 @@ CommunicationBase::~CommunicationBase() {
 
 void CommunicationBase::_MPI_fail(int ret, const std::string& func) {
     if (ret != MPI_SUCCESS) {
-        throw PGCError(func, " failed!");
+        throw std::runtime_error(stdLogger.fatal(func, " failed!");
     }
 }
 
@@ -679,7 +679,7 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
 
     if (MPI_File_open(getCart_comm(), const_cast<char *>(fileName.c_str()), mpi_mode, MPI_INFO_NULL, &fh) !=
         MPI_SUCCESS) {
-        throw PGCError("Unable to read/write binary file: ", fileName);
+        throw std::runtime_error(stdLogger.fatal("Unable to read/write binary file: ", fileName);
     }
 
     if (mode != READ) MPI_File_set_size(fh, filesize); //truncate if file exists and is too large
