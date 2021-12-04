@@ -62,7 +62,7 @@ struct compare_smearing {
         return (sum < 8e-5 ? 0 : 1);
         #else
         if (sum > 8e-5) {
-            rootLogger.info("Found significant difference at " ,  site ,  " the difference is " ,  sum ,  std::endl);
+            rootLogger.info("Found significant difference at " ,  site.getStr() ,  " the difference is " ,  sum ,  "\n");
         }
         return (sum < 8e-5 ? 0 : 1);
         #endif

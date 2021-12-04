@@ -110,7 +110,7 @@ public :
     //! Adds +/- 1 to dimension mu
     __host__ void mv(const int mu, const bool plus) {
         if ((mu < 0) || (mu >= 4))
-            throw std::runtime_error(stdLogger.fatal("Wrong mu in LatticeDimensions");
+            throw std::runtime_error(stdLogger.fatal("Wrong mu in LatticeDimensions"));
         c[mu] += ((plus) ? (1) : (-1));
     }
 

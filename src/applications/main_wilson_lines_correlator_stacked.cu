@@ -121,10 +121,10 @@ int main(int argc, char *argv[]) {
             rootLogger.info("plaquette ST info file: " ,   (paramMilc.stplaq())/3.0);
             rootLogger.info("linktr info file: " ,  paramMilc.linktr());
             if(abs((paramMilc.ssplaq())/3.0-SpatialPlaq) > 1e-5){
-                throw std::runtime_error(stdLogger.fatal("Error ssplaq!");
+                throw std::runtime_error(stdLogger.fatal("Error ssplaq!"));
             }
             if(abs((paramMilc.stplaq())/3.0-TemporalPlaq) > 1e-5){
-                throw std::runtime_error(stdLogger.fatal("Error stplaq!");
+                throw std::runtime_error(stdLogger.fatal("Error stplaq!"));
             }
 
 

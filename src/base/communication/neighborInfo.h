@@ -435,7 +435,7 @@ inline bool NeighborInfo::IsGPUCapableP2P() const {
     // to ensure exclusive or prohibited mode is not set
     if (myProp.computeMode != gpuComputeModeDefault) {
         throw std::runtime_error(stdLogger.fatal("Device ", myProp.name, " is in an unsupported compute mode "
-                                               "(exclusive or prohibited mode is NOT allowed)");
+                                               "(exclusive or prohibited mode is NOT allowed)"));
     }
     return (bool) (myProp.major >= 2);
 

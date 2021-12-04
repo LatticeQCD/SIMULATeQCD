@@ -165,7 +165,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 
     if (Nmax > Nloops)
     {
-        throw std::runtime_error(stdLogger.fatal("Nmax larger than Nloops!");
+        throw std::runtime_error(stdLogger.fatal("Nmax larger than Nloops!"));
     }
 
 

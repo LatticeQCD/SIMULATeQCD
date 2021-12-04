@@ -24,7 +24,7 @@ void MemoryManagement::gMemory<onDevice>::swap(gMemoryPtr<onDevice> &src){
 //! for documentation look at getHostMem
 gMemoryPtr<true> MemoryManagement::getDevMem(std::string name, size_t size){
     if (name.empty()){
-        throw std::runtime_error(stdLogger.fatal("MemoryManagement: Name for dynamic memory cannot be empty!");
+        throw std::runtime_error(stdLogger.fatal("MemoryManagement: Name for dynamic memory cannot be empty!"));
     }
     name = MemoryManagement::getSmartName(name,devContainer);
     if (devContainer.find(name) == devContainer.end()){
@@ -47,7 +47,7 @@ void MemoryManagement::decreaseDevCounter(const std::string& name){
 //! method to get a pointer to new dynamic memory, or just
 gMemoryPtr<false> MemoryManagement::getHostMem(std::string name, size_t size){
     if (name.empty()){
-        throw std::runtime_error(stdLogger.fatal("MemoryManagement: Name for dynamic memory cannot be empty!");
+        throw std::runtime_error(stdLogger.fatal("MemoryManagement: Name for dynamic memory cannot be empty!"));
     }
 
     //! convert the input string to a smart name

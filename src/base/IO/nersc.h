@@ -199,7 +199,7 @@ public:
             rootLogger.error("header.read() failed!");
             return false;
         }
-        rootLogger.pop_verbosity(;
+        rootLogger.pop_verbosity();
 
         bool error = false;
         for (int i = 0; i < 4; i++)

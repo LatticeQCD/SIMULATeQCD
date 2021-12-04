@@ -292,7 +292,7 @@ public:
     /// Check indices
     void failIdx(int mu, int plus) {
         if ((mu < 0) || (mu > 4) || (plus < 0) || (plus > 1)) {
-            throw std::runtime_error(stdLogger.fatal("Fail IDX/mu/plus in CommunicationBase");
+            throw std::runtime_error(stdLogger.fatal("Fail IDX/mu/plus in CommunicationBase"));
         }
     }
 

@@ -316,7 +316,7 @@ private:
         int position = name.find_last_of('_');
         std::string temp = name.substr(position + 1);
         if (!is_number(temp)) {
-            throw std::runtime_error(stdLogger.fatal("Expected to extract integer from gMemoryPtr tag!");
+            throw std::runtime_error(stdLogger.fatal("Expected to extract integer from gMemoryPtr tag!"));
         }
         return std::stoi(temp);
     }
@@ -346,7 +346,7 @@ private:
         }
         if (maxTag < 0) {
             throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr."
-                           "  substr, maxTag = ", substr, "  ", maxTag);
+                           "  substr, maxTag = ", substr, "  ", maxTag));
         }
         return maxTag;
     }
@@ -388,7 +388,7 @@ private:
         }
         if (maxTag < 0) {
             throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr."
-                           "  name, maxTag =", substr, "  ", maxTag);
+                           "  name, maxTag =", substr, "  ", maxTag));
         }
         return maxTag;
     }

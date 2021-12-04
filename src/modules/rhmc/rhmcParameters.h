@@ -186,7 +186,7 @@ public:
         }
 
         if(error)
-            throw std::runtime_error(stdLogger.fatal("There was atleast one error!");
+            throw std::runtime_error(stdLogger.fatal("There was atleast one error!"));
 
         if(tpo)
             rootLogger.info("You seem to be simulating 2+1f with std. Hasenbusch preconditioning!");

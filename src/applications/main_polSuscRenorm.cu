@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     CorrelatorTools<PREC,true,HaloDepth> corrTools;         /// for measuring correlators
 
     if( (corrTools.Nx != corrTools.Ny) || (corrTools.Ny != corrTools.Nz) ) {
-        throw std::runtime_error(stdLogger.fatal("Need Nx=Ny=Nz.");
+        throw std::runtime_error(stdLogger.fatal("Need Nx=Ny=Nz."));
     }
 
     rootLogger.info("Read configuration " ,  param.GaugefileName());

@@ -317,7 +317,7 @@ void grnd_state<onDevice>::read_from_file(const std::string &fname, Communicatio
         if (comm.IamRoot())
             in.open(fname.c_str());
         if (!read_header(in,comm)){
-            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str());
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
         }
     }
 
@@ -366,7 +366,7 @@ void grnd_state<onDevice>::read_from_file(const std::string &fname, Communicatio
     comm.closeIOBinary();
 
     if (!checksums_match(comm)){
-        throw std::runtime_error(stdLogger.fatal("Error checksum!");
+        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
 }
 

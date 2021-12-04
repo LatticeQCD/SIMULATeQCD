@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
             rootLogger.info("Starting with all U = 1");
             gauge.one();
         } else {
-            throw std::runtime_error(stdLogger.fatal("Error! Choose from 'start = {one, fixed_random, all_random}!");
+            throw std::runtime_error(stdLogger.fatal("Error! Choose from 'start = {one, fixed_random, all_random}!"));
         }
 
         rootLogger.info("On stream " ,  lp.streamName());
@@ -147,7 +147,7 @@ int main(int argc, char* argv[]) {
                        "nsweeps_thermal_HBwithOR and start (one, fixed_random or all_random). To continue "
                        "existing stream, specify"
                        "(previous) conf_nr, prev_conf and (optionally) prev_rand. Do not specify unused"
-                       "parameters.");
+                       "parameters."));
     }
 
     rootLogger.info("Generating up to " ,  lp.nconfs() ,  " confs with a separation of " , 

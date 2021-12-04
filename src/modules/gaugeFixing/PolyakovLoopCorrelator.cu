@@ -264,7 +264,7 @@ void PolyakovLoopCorrelator<floatT,onDevice,HaloDepth>::PLCtoArrays(std::vector<
     for (int dy=0 ; dy<(this->RSymax) ; dy++)
     for (int dz=0 ; dz<(this->RSzmax) ; dz++) {
         qnorm = dx*dx+dy*dy+dz*dz;
-        if (qnorm>(this->distmax)) throw std::runtime_error(stdLogger.fatal("qnorm > distmax");
+        if (qnorm>(this->distmax)) throw std::runtime_error(stdLogger.fatal("qnorm > distmax"));
         psite = dx + dy*(this->pvol1) + dz*(this->pvol2);
         g     = vec_weight[psite];
         _plcaoffCPU.getValue<floatT>(psite,plcaoff);
@@ -278,7 +278,7 @@ void PolyakovLoopCorrelator<floatT,onDevice,HaloDepth>::PLCtoArrays(std::vector<
     }
     for (int dx=(this->RSxmax);dx<(this->RSonmax);dx++) {
         qnorm = dx*dx;
-        if (qnorm>(this->distmax)) throw std::runtime_error(stdLogger.fatal("qnorm > distmax");
+        if (qnorm>(this->distmax)) throw std::runtime_error(stdLogger.fatal("qnorm > distmax"));
         g = 3;
         _plcaonCPU.getValue<floatT>(dx,plcaon);
         _plc1onCPU.getValue<floatT>(dx,plc1on);
