@@ -12,21 +12,12 @@
 #include <stack>
 #include <string>
 
-template <typename U>
-inline void args_to_stream(std::ostringstream &out, U msg) {
-  out << msg;
-}
-
-template <typename U, typename... Args>
-inline void args_to_stream(std::ostringstream &out, U msg, Args... args) {
-  out << msg;
-  args_to_stream(out, args...);
-}
-
-template <typename... Args> inline std::string sjoin(Args... args) {
-  std::ostringstream msg;
-  args_to_stream(msg, args...);
-  return msg.str();
+template <typename... Args>
+inline std::string sjoin(Args&&... args)
+{
+    std::ostringstream msg;
+    (msg << ... << args);
+    return msg.str();
 }
 
 template <typename... Args> std::string sformat(const char *fmt, Args... args) {
