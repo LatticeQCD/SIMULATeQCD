@@ -121,7 +121,7 @@ public:
       out << prefix.str() << loginfo.str() << addPrefix << msg << postfix.str();
     }
 
-    return prefix.str() + msg + postfix.str();
+    return prefix.str() + addPrefix + msg + postfix.str();
   }
 
   template <typename... Args> inline std::string info(Args... args) {
