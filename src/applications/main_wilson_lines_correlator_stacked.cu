@@ -72,13 +72,13 @@ int main(int argc, char *argv[]) {
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
 
     /// Initialize the Lattice class.
     initIndexer(HaloDepth,param,commBase);
 
     /// Initialize the Gaugefield.
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 
     /// Initialize gaugefield with unit-matrices.
@@ -89,15 +89,15 @@ int main(int argc, char *argv[]) {
     // load gauge file, 0 start from 1, 1 and 2 load file, 2 will also gauge fix
     if (param.load_conf() == 0)
     {
-        rootLogger.info() << "Starting from unit configuration";
+        rootLogger.info("Starting from unit configuration");
         gauge.one();
     }
     else if(param.load_conf() == 2 || param.load_conf() == 1)
     {
         std::string file_path = param.directory();
         file_path.append(param.gauge_file()); 
-        rootLogger.info() << "Starting from configuration: " << file_path;
-//	rootLogger.info() << param.gauge_file() << endl;
+        rootLogger.info("Starting from configuration: " ,  file_path);
+//	rootLogger.info(param.gauge_file() ,  endl);
         if(param.file_type() == "nersc"){
             gauge.readconf_nersc(file_path);
         }
@@ -108,8 +108,8 @@ int main(int argc, char *argv[]) {
             GaugeAction<PREC,true,HaloDepth> enDensity(gauge);
             PREC SpatialPlaq  = enDensity.plaquetteSS();
             PREC TemporalPlaq = enDensity.plaquette()*2.0-SpatialPlaq;
-            rootLogger.info() << "plaquetteST: "   << TemporalPlaq;
-            rootLogger.info() << "plaquetteSS: " << SpatialPlaq;
+            rootLogger.info("plaquetteST: "   ,  TemporalPlaq);
+            rootLogger.info("plaquetteSS: " ,  SpatialPlaq);
 
 
 
@@ -117,9 +117,9 @@ int main(int argc, char *argv[]) {
             info_path.append(".info");
             milcInfo<PREC> paramMilc;
             paramMilc.readfile(commBase,info_path);
-            rootLogger.info() << "plaquette SS info file: " <<  (paramMilc.ssplaq())/3.0;
-            rootLogger.info() << "plaquette ST info file: " <<  (paramMilc.stplaq())/3.0;
-            rootLogger.info() << "linktr info file: " << paramMilc.linktr();
+            rootLogger.info("plaquette SS info file: " ,   (paramMilc.ssplaq())/3.0);
+            rootLogger.info("plaquette ST info file: " ,   (paramMilc.stplaq())/3.0);
+            rootLogger.info("linktr info file: " ,  paramMilc.linktr());
             if(abs((paramMilc.ssplaq())/3.0-SpatialPlaq) > 1e-5){
                 throw PGCError("Error ssplaq!");
             }
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]) {
     /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
     typedef GIndexer<All,HaloDepth> GInd;
     redBase.adjustSize(GInd::getLatData().vol4);
-    rootLogger.info() << "volume size " << GInd::getLatData().globvol4;
+    rootLogger.info("volume size " ,  GInd::getLatData().globvol4);
 
 
 ///////////// gauge fixing
@@ -168,7 +168,7 @@ int main(int argc, char *argv[]) {
         }
         gauge.su3latunitarize(); /// One final re-unitarization.
 
-        rootLogger.info() << "Gauge fixing finished in " << ngfstep << " steps, with gftheta = " << gftheta;
+        rootLogger.info("Gauge fixing finished in " ,  ngfstep ,  " steps, with gftheta = " ,  gftheta);
     }
    
 
@@ -267,7 +267,7 @@ int main(int argc, char *argv[]) {
 
 
             for(int j = 0;j < STACKS ; j++){
-//                rootLogger.info() << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j]; 
+//                rootLogger.info(x0+j ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[j]); 
                 file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
             }
         }
@@ -386,9 +386,9 @@ int main(int argc, char *argv[]) {
     }
 
     timer.stop();
-    rootLogger.info() << "Time for operators: " << timer;
+    rootLogger.info("Time for operators: " ,  timer);
 
-    rootLogger.info() << "abs(sum) = " << sum;
+    rootLogger.info("abs(sum) = " ,  sum);
 
     delete [] results;
     delete [] results_r2;
@@ -397,3 +397,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

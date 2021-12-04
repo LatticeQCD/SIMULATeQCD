@@ -108,12 +108,12 @@ struct TestKernel {
 template<size_t HaloDepth, bool onDevice>
 void run_func(CommunicationBase& commBase, const int * NodeDim, bool forceHalos){
 
-    rootLogger.info() << " ";
-    rootLogger.info() << " ";
-    rootLogger.info() << "=======================================";
-    rootLogger.info() << CoutColors::yellowBold <<"            Test on " << (onDevice ? "GPU" : "CPU") << CoutColors::reset;
-    rootLogger.info() << "=======================================";
-    rootLogger.info() << " ";
+    rootLogger.info(" ");
+    rootLogger.info(" ");
+    rootLogger.info("=======================================");
+    rootLogger.info(CoutColors::yellowBold , "            Test on " ,  (onDevice ? "GPU" : "CPU") ,  CoutColors::reset);
+    rootLogger.info("=======================================");
+    rootLogger.info(" ");
 
     GpuStopWatch timer;
     TestKernel<PREC, onDevice, HaloDepth> Kernel;
@@ -139,8 +139,8 @@ void run_func(CommunicationBase& commBase, const int * NodeDim, bool forceHalos)
         check(CheckIndices<PREC, All, HaloDepth, onDevice>(gauge, LatticeDimensions(HaloDepth, HaloDepth, HaloDepth, HaloDepth))
                 ,"Just HaloUpdate");
     }
-    rootLogger.info() << "Halo update " << timer;
-    rootLogger.info() << " ";
+    rootLogger.info("Halo update " ,  timer);
+    rootLogger.info(" ");
 
     gauge.one();
 
@@ -161,8 +161,8 @@ void run_func(CommunicationBase& commBase, const int * NodeDim, bool forceHalos)
         check(CheckIndices<PREC, All, HaloDepth, onDevice>(gauge, LatticeDimensions(HaloDepth, HaloDepth, HaloDepth, HaloDepth))
                 ,"First index computation then Halo update");
     }
-    rootLogger.info() << "First index computation then Halo update " << timer;
-    rootLogger.info() << " ";
+    rootLogger.info("First index computation then Halo update " ,  timer);
+    rootLogger.info(" ");
 }
 
 
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
 
     const int HaloDepth = 4;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
     initIndexer(HaloDepth,param, commBase, param.forceHalos());
 
     run_func<HaloDepth,true>(commBase,  param.nodeDim(), param.forceHalos());
@@ -187,5 +187,6 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
 
 

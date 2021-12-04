@@ -64,9 +64,9 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool 
     //     condensate/=GInd::getLatData().globvol4;
 
     //     if(light)
-    //         rootLogger.info() << "chi_ud(" << i <<")= " << condensate;
+    //         rootLogger.info("chi_ud(" ,  i , ")= " ,  condensate);
     //     else
-    //         rootLogger.info() << "chi_s(" << i <<")= " << condensate;
+    //         rootLogger.info("chi_s(" ,  i , ")= " ,  condensate);
     // }
 
 
@@ -103,13 +103,13 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool 
     dslash_o.Dslash(x_e, eta_o);
     x_e = eta_e * mass - x_e;
 
-    // rootLogger.info() << "Starting inversion";
+    // rootLogger.info("Starting inversion");
 
     // dot_e = x_e.dotProductStacked(x_e);
 
     // for (int i = 0; i < NStacks; ++i)
     // {
-    //     rootLogger.info() << "x_e[" << i << "]^2 = " << dot_e[i];
+    //     rootLogger.info("x_e[" ,  i ,  "]^2 = " ,  dot_e[i]);
     // }
 
     cg.invert_new(dslash_e_inv, w_e, x_e, param.cgMax_meas(), param.residue_meas());
@@ -118,7 +118,7 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool 
 
     // for (int i = 0; i < NStacks; ++i)
     // {
-    //     rootLogger.info() << "w_e[" << i << "]^2 = " << dot_o[i];
+    //     rootLogger.info("w_e[" ,  i ,  "]^2 = " ,  dot_o[i]);
     // }
 
     dslash_e.Dslash(w_o, w_e);
@@ -135,10 +135,11 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool 
     for (size_t i = 0; i < NStacks; ++i)
     {
          if(light)
-            rootLogger.info() << "CHI_UD = " <<  (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4);
+            rootLogger.info("CHI_UD = " ,   (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4));
         else
-            rootLogger.info() << "CHI_S = " <<  (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4);
+            rootLogger.info("CHI_S = " ,   (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4));
     }
 
 
 };
+

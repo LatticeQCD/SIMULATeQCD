@@ -9,14 +9,14 @@
 
 bool RNDHeader::read(std::istream &in, std::string &content) {
     if (in.fail()) {
-        rootLogger.error() << "Could not open file.";
+        rootLogger.error("Could not open file.");
         return false;
     }
     std::string line;
 
     getline(in, line);
     if (line != "BEGIN_HEADER") {
-        rootLogger.error() << "BEGIN_HEADER not found!";
+        rootLogger.error("BEGIN_HEADER not found!");
         return false;
     }
 
@@ -27,7 +27,7 @@ bool RNDHeader::read(std::istream &in, std::string &content) {
         content.append(line + '\n');
     }
     if (in.fail()) {
-        rootLogger.error() << "END_HEADER not found!";
+        rootLogger.error("END_HEADER not found!");
         return false;
     }
     header_size = in.tellg();
@@ -159,7 +159,7 @@ template<bool onDevice>
 bool grnd_state<onDevice>::read_header(std::istream &in, CommunicationBase &comm) {
     rootLogger.push_verbosity(OFF);
     if (!header.read(in, comm)){
-        rootLogger.error() << "header.read() failed!";
+        rootLogger.error("header.read() failed!");
         return false;
     }
     rootLogger.pop_verbosity();
@@ -167,14 +167,14 @@ bool grnd_state<onDevice>::read_header(std::istream &in, CommunicationBase &comm
     bool error = false;
     for (int i = 0; i < 4; i++)
         if (header.dim[i]() != GInd::getLatData().globalLattice()[i]) {
-            rootLogger.error() << "Stored dimension " << i << " not equal to current lattice size.";
+            rootLogger.error("Stored dimension " ,  i ,  " not equal to current lattice size.");
             error = true;
         }
 
     if (header.dattype() == "RNGSTATE")
-        rootLogger.debug() << "DATATYPE =" << header.dattype();
+        rootLogger.debug("DATATYPE =" ,  header.dattype());
     else {
-        rootLogger.error() << "DATATYPE = " << header.dattype() << "not recognized.";
+        rootLogger.error("DATATYPE = " ,  header.dattype() ,  "not recognized.");
         error = true;
     }
 
@@ -184,7 +184,7 @@ bool grnd_state<onDevice>::read_header(std::istream &in, CommunicationBase &comm
     } else if (header.endian() == "LITTLE") {
         disken = ENDIAN_LITTLE;
     } else {
-        rootLogger.error() << "Unrecognized ENDIANNESS " << header.endian();
+        rootLogger.error("Unrecognized ENDIANNESS " ,  header.endian());
         error = true;
     }
     switch_endian = switch_endianness(disken);
@@ -192,8 +192,8 @@ bool grnd_state<onDevice>::read_header(std::istream &in, CommunicationBase &comm
     std::stringstream s(header.checksum());
     s >> std::hex >> stored_checksum;
     if (s.fail()) {
-        rootLogger.error() << "Could not interpret checksum " <<
-                           header.checksum() << "as hexadecimal number.";
+        rootLogger.error("Could not interpret checksum " , 
+                           header.checksum() ,  "as hexadecimal number.");
         error = true;
     }
 
@@ -233,7 +233,7 @@ bool grnd_state<onDevice>::write_header(Endianness en, std::ostream &out, Commun
     std::stringstream s;
     s << std::hex << stored_checksum;
     header.checksum.set(s.str());
-    rootLogger.info() << "Calculated checksum: " << s.str();
+    rootLogger.info("Calculated checksum: " ,  s.str());
     return header.write(out, comm);
 }
 
@@ -246,13 +246,13 @@ template<bool onDevice>
 bool grnd_state<onDevice>::checksums_match(CommunicationBase &comm) {
         uint32_t checksum = comm.reduce(computed_checksum);
         if (stored_checksum != checksum) {
-            rootLogger.error() << "Checksum mismatch! "
-                               << std::hex << stored_checksum << " != "
-                               << std::hex << checksum;
+            rootLogger.error("Checksum mismatch! "
+                               ,  std::hex ,  stored_checksum ,  " != "
+                               ,  std::hex ,  checksum);
             return false;
         }
-        rootLogger.debug() << "stored_checksum =" << std::hex << stored_checksum;
-        rootLogger.debug() << "computed_checksum =" << std::hex << checksum;
+        rootLogger.debug("stored_checksum =" ,  std::hex ,  stored_checksum);
+        rootLogger.debug("computed_checksum =" ,  std::hex ,  checksum);
 
         return true;
     }
@@ -268,12 +268,12 @@ void grnd_state<onDevice>::write_to_file(const std::string &fname, Communication
         if (comm.IamRoot())
             out.open(fname.c_str());
         if (!write_header(en, out, comm)) {
-            rootLogger.error() << "Unable to write RNGSTATE file: " << fname;
+            rootLogger.error("Unable to write RNGSTATE file: " ,  fname);
             return;
         }
     }
 
-    rootLogger.info() << "Writing RNGSTATE file: " << fname;
+    rootLogger.info("Writing RNGSTATE file: " ,  fname);
 
     LatticeDimensions global = GInd::getLatData().globalLattice();
     LatticeDimensions local = GInd::getLatData().localLattice();
@@ -394,3 +394,4 @@ class RNDHeader;
 
 template class grnd_state<true>;
 template class grnd_state<false>;
+

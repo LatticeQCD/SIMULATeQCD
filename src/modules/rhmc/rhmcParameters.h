@@ -168,7 +168,7 @@ public:
             if(cmp_rel(get_exp(r1,x),-3.0/8.0, 0.0001 , 0.0001))
                 tpo = true;
         } else {
-            rootLogger.error() << "strange quark rational approximations are not consistent";
+            rootLogger.error("strange quark rational approximations are not consistent");
             error = true;
         }
 
@@ -180,8 +180,8 @@ public:
             else
                 tpo = tpo && false;
         } else {
-            rootLogger.error() << "light quark rational approximations are not consistent";
-            rootLogger.error() << get_exp(r2,x) << " " << - get_exp(r2inv,x) << " " << 0.5*get_exp(r2bar,x); 
+            rootLogger.error("light quark rational approximations are not consistent");
+            rootLogger.error(get_exp(r2,x) ,  " " ,  - get_exp(r2inv,x) ,  " " ,  0.5*get_exp(r2bar,x)); 
             error = true;
         }
 
@@ -189,11 +189,12 @@ public:
             throw PGCError("There was atleast one error!");
 
         if(tpo)
-            rootLogger.info() << "You seem to be simulating 2+1f with std. Hasenbusch preconditioning!";
+            rootLogger.info("You seem to be simulating 2+1f with std. Hasenbusch preconditioning!");
         else
-            rootLogger.warn() << "Rational approximation unknown, but consistent!";
+            rootLogger.warn("Rational approximation unknown, but consistent!");
     }
 };
 
 
 #endif
+

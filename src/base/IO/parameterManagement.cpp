@@ -6,7 +6,7 @@ bool ParameterList::readfile(const CommunicationBase& comm, const std::string& f
     std::string filecontent;
     if (comm.IamRoot()) {
         std::string fname = (argc<2)?filename:argv[1];
-        rootLogger.info() << "Reading parameters from file :: "<<fname;
+        rootLogger.info("Reading parameters from file :: ", fname);
         std::ifstream in(fname.c_str(), std::ios::in);
         if (in.fail()) {
             throw PGCError("Unable to open parameter file!");
@@ -47,9 +47,9 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
 
         //fix that!!
         if (p.isSet())
-            rootLogger.info() << "# " << prefix << " :: " << p;
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p);
         else if (p.hasdefault)
-            rootLogger.info() << "# " << prefix << " :: " << p << " (default)";
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p ,  " (default)");
         else if (p.isRequired())
             throw PGCError("# ", prefix, " :: ", p.name, " required but NOT set");
 
@@ -61,4 +61,5 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
     }
     return true;
 }
+
 

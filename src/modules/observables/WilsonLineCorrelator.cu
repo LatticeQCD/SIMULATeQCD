@@ -67,7 +67,7 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
 
     for (int tau=0;tau<Nt;tau++)
     {
-        rootLogger.info() << "measuring wilson line corr at tau: " << tau;
+        rootLogger.info("measuring wilson line corr at tau: " ,  tau);
         MemTypeGPU PtrPloopGPU = MemoryManagement::getMemAt<true>("ploopGPU");
         PtrPloopGPU->template adjustSize<GSU3<floatT>>(GInd::getLatData().globvol3);
         MemoryAccessor _wlineGPU(PtrPloopGPU->getPointer());
@@ -208,3 +208,4 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
 template class WilsonLineCorrelator<floatT,true,HALO>; \
 
 INIT_PH(CLASS_INIT2)
+

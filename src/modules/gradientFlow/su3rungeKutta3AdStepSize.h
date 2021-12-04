@@ -220,8 +220,8 @@ floatT su3rungeKutta3AdStepSize<floatT, HaloDepth, Zi>::updateFlow() {
         // check if maxDist ist smaller then the tolerance and accept or refuse
         if (sqrt(maxDistsq) > _accuracy) {
             // refuse
-            rootLogger.info() << CoutColors::magenta << "Reject step size " << thisStepSize << " at flow time " << this->_current_flow_time
-                              << ", try again with step size " << this->_step_size << CoutColors::reset;
+            rootLogger.info(CoutColors::magenta ,  "Reject step size " ,  thisStepSize ,  " at flow time " ,  this->_current_flow_time
+                              ,  ", try again with step size " ,  this->_step_size ,  CoutColors::reset);
             //restart with original gaugefield
             this->_gaugeA_device = _gaugeC_host;
         }
@@ -237,3 +237,4 @@ floatT su3rungeKutta3AdStepSize<floatT, HaloDepth, Zi>::updateFlow() {
 
 
 #endif //SU3RUNGEKUTTA3ADSTEPSIZE_H
+

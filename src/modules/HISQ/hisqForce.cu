@@ -8,34 +8,34 @@ void printResult(Gaugefield<floatT, true, HaloDepth, comp> &g_dev) {
   g_host = g_dev;
   gSite site = GInd::getSite(0,0,0,0);
   GSU3<floatT> mat = g_host.getAccessor().getLink(GInd::getSiteMu(site,3));
-  rootLogger.info() << mat.getLink00() << mat.getLink01() << mat.getLink02();
-  rootLogger.info() << mat.getLink10() << mat.getLink11() << mat.getLink12();
-  rootLogger.info() << mat.getLink20() << mat.getLink21() << mat.getLink22();
-  rootLogger.info() << " ";
+  rootLogger.info(mat.getLink00() ,  mat.getLink01() ,  mat.getLink02());
+  rootLogger.info(mat.getLink10() ,  mat.getLink11() ,  mat.getLink12());
+  rootLogger.info(mat.getLink20() ,  mat.getLink21() ,  mat.getLink22());
+  rootLogger.info(" ");
   site = GInd::getSite(0,0,0,1);
   mat = g_host.getAccessor().getLink(GInd::getSiteMu(site,3));
-  rootLogger.info() << mat.getLink00() << mat.getLink01() << mat.getLink02();
-  rootLogger.info() << mat.getLink10() << mat.getLink11() << mat.getLink12();
-  rootLogger.info() << mat.getLink20() << mat.getLink21() << mat.getLink22();
-  rootLogger.info() << " ";
+  rootLogger.info(mat.getLink00() ,  mat.getLink01() ,  mat.getLink02());
+  rootLogger.info(mat.getLink10() ,  mat.getLink11() ,  mat.getLink12());
+  rootLogger.info(mat.getLink20() ,  mat.getLink21() ,  mat.getLink22());
+  rootLogger.info(" ");
   site = GInd::getSite(0,0,0,2);
   mat = g_host.getAccessor().getLink(GInd::getSiteMu(site,3));
-  rootLogger.info() << mat.getLink00() << mat.getLink01() << mat.getLink02();
-  rootLogger.info() << mat.getLink10() << mat.getLink11() << mat.getLink12();
-  rootLogger.info() << mat.getLink20() << mat.getLink21() << mat.getLink22();
-  rootLogger.info() << " ";
+  rootLogger.info(mat.getLink00() ,  mat.getLink01() ,  mat.getLink02());
+  rootLogger.info(mat.getLink10() ,  mat.getLink11() ,  mat.getLink12());
+  rootLogger.info(mat.getLink20() ,  mat.getLink21() ,  mat.getLink22());
+  rootLogger.info(" ");
   site = GInd::getSite(0,0,0,3);
   mat = g_host.getAccessor().getLink(GInd::getSiteMu(site,3));
-  rootLogger.info() << mat.getLink00() << mat.getLink01() << mat.getLink02();
-  rootLogger.info() << mat.getLink10() << mat.getLink11() << mat.getLink12();
-  rootLogger.info() << mat.getLink20() << mat.getLink21() << mat.getLink22();
-  rootLogger.info() << " ";
+  rootLogger.info(mat.getLink00() ,  mat.getLink01() ,  mat.getLink02());
+  rootLogger.info(mat.getLink10() ,  mat.getLink11() ,  mat.getLink12());
+  rootLogger.info(mat.getLink20() ,  mat.getLink21() ,  mat.getLink22());
+  rootLogger.info(" ");
   site = GInd::getSite(0,0,1,1);
   mat = g_host.getAccessor().getLink(GInd::getSiteMu(site,1));
-  rootLogger.info() << mat.getLink00() << mat.getLink01() << mat.getLink02();
-  rootLogger.info() << mat.getLink10() << mat.getLink11() << mat.getLink12();
-  rootLogger.info() << mat.getLink20() << mat.getLink21() << mat.getLink22();
-  rootLogger.info() << " ";
+  rootLogger.info(mat.getLink00() ,  mat.getLink01() ,  mat.getLink02());
+  rootLogger.info(mat.getLink10() ,  mat.getLink11() ,  mat.getLink12());
+  rootLogger.info(mat.getLink20() ,  mat.getLink21() ,  mat.getLink22());
+  rootLogger.info(" ");
 
   return;
 }
@@ -255,7 +255,7 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
     for (int i = 1; i < rdeg; i++) {
       shifts[i] = _rat.r_bar_2f_den[i] -_rat.r_bar_2f_den[0];
       rat_num[i] = _rat.r_bar_2f_num[i];
-      // rootLogger.info() << rat_num[i];
+      // rootLogger.info(rat_num[i]);
     }
   }
   else {
@@ -264,7 +264,7 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
     for (int i = 1; i < rdeg; i++) {
       shifts[i] = _rat.r_bar_1f_den[i] -_rat.r_bar_1f_den[0];
       rat_num[i] = _rat.r_bar_1f_num[i];
-      // rootLogger.info() << rat_num[i];
+      // rootLogger.info(rat_num[i]);
     }
   }
 
@@ -295,7 +295,7 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     
     
   if (!runTesting) {
-    rootLogger.error() << "Calling member function TestForce should only be used when the template parameter runTesting is set to true!";
+    rootLogger.error("Calling member function TestForce should only be used when the template parameter runTesting is set to true!");
   }
   
   Force.iterateWithConst(gsu3_zero<floatT>());
@@ -313,7 +313,7 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     _spinor_x.copyFromStackToStack(temp,i,0);
     SpinorOutput = temp;
     SpinorTestOutput = SpinorOutput.getAccessor().getElement(GIndexer<Even,HaloDepthSpin>::getSite(0,0,0,0));
-    rootLogger.info() << "Xi_" << i << " " << SpinorTestOutput;
+    rootLogger.info("Xi_" ,  i ,  " " ,  SpinorTestOutput);
   }
   // _cg.invert(_dslash,x,SpinorIn,shifts,_rhmc_param.cgMax(),_rhmc_param.residue());
 
@@ -335,7 +335,7 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
   Force.updateAll();
   _TmpForce.updateAll();
  
-  rootLogger.info() << "f0 intermediate result";
+  rootLogger.info("f0 intermediate result");
   printResult<floatT,HaloDepth,comp>(_TmpForce);
   _smearing.template SmearLvl1<R18>(_GaugeLvl1);
   _smearing.template ProjectU3<R18,R18>(_GaugeLvl1,_GaugeU3P);
@@ -383,14 +383,14 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
   
   //_TmpForce = _TmpForce + Force;
  
-  rootLogger.info() << "f1 intermediate result";
+  rootLogger.info("f1 intermediate result");
   printResult<floatT,HaloDepth,comp>(_TmpForce);
   _TmpForce.updateAll();
   Force.iterateOverBulkAllMu(_createF2);
   //Force = _TmpForce;
   Force.updateAll();
   
-  rootLogger.info() << "f2 intermediate result";
+  rootLogger.info("f2 intermediate result");
   printResult<floatT,HaloDepth,comp>(Force);
   staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase);
   _GaugeU3P.iterateOverBulkAllMu(multPhaseB); //reuse U3P Field here
@@ -422,12 +422,12 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
   _TmpForce = _TmpForce + _Dummy;
   _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_7);
   _TmpForce = _TmpForce + _Dummy;
-  rootLogger.info() << "f3 intermediate result";
+  rootLogger.info("f3 intermediate result");
   printResult<floatT,HaloDepth,comp>(_TmpForce);
 
   Force.iterateOverBulkAllMu(_finalizeF3);
   
-  rootLogger.info() << "f3 final result";
+  rootLogger.info("f3 final result");
   printResult<floatT,HaloDepth,comp>(Force);
   
   return;
@@ -540,3 +540,4 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
   template class HisqForce<floatT, true, HALO, HALOSPIN, R18, false>; \
   template class HisqForce<floatT, true, HALO, HALOSPIN, R18, true>;
 INIT_PHHS(HFORCE_INIT)
+

@@ -76,7 +76,7 @@ bool test_function(Gaugefield<floatT, false, HaloDepth> &gauge, Gaugefield<float
         }
     }
     floatT failedfrac=1.0*failedchecks/totalchecks;
-    rootLogger.info() << "test_function: " << failedfrac*100 << "% of tests failed with tolerance " << tol;
+    rootLogger.info("test_function: " ,  failedfrac*100 ,  "% of tests failed with tolerance " ,  tol);
     if(failedfrac>0.01) lpassed=false;
     return lpassed;
 }
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth = 2;
 
     /// None of these parameters should be changed.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     LatticeParameters param;
     const int  LatDim[]   = {32,32,32,8};
     const int  ngfstepMAX = 30;
@@ -116,12 +116,12 @@ int main(int argc, char *argv[]) {
     redBase.adjustSize(GInd::getLatData().vol4);
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
     gauge.updateAll();
 
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING
-    rootLogger.info() << "GAUGE FIXING...";
+    rootLogger.info("GAUGE FIXING...");
 
     bool lpassed=true;
     while ( (ngfstep<ngfstepMAX) && (gftheta>gtol) ) {
@@ -152,20 +152,21 @@ int main(int argc, char *argv[]) {
     hostgauge=gauge;
 
     if(test_function(hostgauge,refgauge,tolp)) {
-        rootLogger.info() << "Direct link check (read) " << CoutColors::green << "passed." << CoutColors::reset;
+        rootLogger.info("Direct link check (read) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
-        rootLogger.info() << "Direct link check (read) " << CoutColors::red << "failed." << CoutColors::reset;
+        rootLogger.info("Direct link check (read) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
         lpassed=false;
     }
 
     /// Close up shop.
-    rootLogger.info() << "==============================";
+    rootLogger.info("==============================");
     if (lpassed) {
-        rootLogger.info() << "All tests " << CoutColors::green << "passed!" << CoutColors::reset;
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        rootLogger.error() << "At least one test failed!";
+        rootLogger.error("At least one test failed!");
     }
-    rootLogger.info() << "==============================";
+    rootLogger.info("==============================");
 
     return 0;
 }
+

@@ -110,15 +110,15 @@ void set_seed( CommunicationBase &commBase, Parameter<int64_t> &seed ){
         int64_t root_seed = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count();
         commBase.root2all(root_seed);
         seed.set(root_seed);
-        rootLogger.info() << "No seed was specified. Using time since epoch in milliseconds.";
+        rootLogger.info("No seed was specified. Using time since epoch in milliseconds.");
     }
-    rootLogger.info() << "Seed for random numbers is " << seed();
+    rootLogger.info("Seed for random numbers is " ,  seed());
 }
 
 template<class floatT, size_t HaloDepth, typename gradFlowClass>
 void run_flow(gradFlowClass &gradFlow, Gaugefield<PREC, USE_GPU, HaloDepth> &gauge, sampleTopologyParameters<PREC> &lp, floatT& topchar_out, bool writeFiles) {
 
-    rootLogger.info() << "Applying gradient flow...";
+    rootLogger.info("Applying gradient flow...");
 
     //! -------------------------------prepare file output--------------------------------------------------------------
     std::stringstream prefix, datName, datNameConf, datNameTopChSlices, datNameTopChSlices_imp;
@@ -222,7 +222,7 @@ void run_flow(gradFlowClass &gradFlow, Gaugefield<PREC, USE_GPU, HaloDepth> &gau
         }
 
         if (gradFlow.checkIfEndTime() or (lp.print_all_flowtimes()) ){
-            rootLogger.info() << logStream.str();
+            rootLogger.info(logStream.str());
         }
 
         flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
@@ -251,7 +251,7 @@ void init(CommunicationBase &commBase,
     grnd_state<false> host_state;
     grnd_state<true> dev_state;
 
-    rootLogger.info() << "===================================================================";
+    rootLogger.info("===================================================================");
 
     ///Start new stream or continue existing one?
     //! for thermalization we don't care about topology for now (maybe add this later)
@@ -259,7 +259,7 @@ void init(CommunicationBase &commBase,
          and not lp.nsweeps_thermal_HB_only.isSet()
          and not lp.nsweeps_thermal_HBwithOR.isSet()
          and lp.confnumber.isSet()){
-        rootLogger.info() << "Resuming previous run.";
+        rootLogger.info("Resuming previous run.");
 
         gauge.readconf_nersc(lp.prev_conf());
         gauge.updateAll();
@@ -268,14 +268,14 @@ void init(CommunicationBase &commBase,
         if ( lp.prev_rand.isSet() ){
             host_state.read_from_file(lp.prev_rand(), commBase);
         } else {
-            rootLogger.warn() << "No prev_rand was specified!";
+            rootLogger.warn("No prev_rand was specified!");
             set_seed(commBase, lp.seed);
             host_state.make_rng_state(lp.seed());
         }
         dev_state = host_state;
 
         lp.confnumber.set(lp.confnumber() + lp.nsweeps_HBwithOR());
-        rootLogger.info()  << "Next conf_number will be " << lp.confnumber();
+        rootLogger.info("Next conf_number will be " ,  lp.confnumber());
 
     } else if ( not lp.prev_conf.isSet()
                 and not lp.prev_rand.isSet()
@@ -283,7 +283,7 @@ void init(CommunicationBase &commBase,
                 and lp.nsweeps_thermal_HB_only.isSet()
                 and lp.nsweeps_thermal_HBwithOR.isSet()
                 and not lp.confnumber.isSet()){
-        rootLogger.info() << "Starting new stream.";
+        rootLogger.info("Starting new stream.");
 
         /// Initialize RNG for new stream
         set_seed(commBase, lp.seed);
@@ -292,37 +292,37 @@ void init(CommunicationBase &commBase,
 
         ///Initialize gaugefield
         if ( lp.start() == "fixed_random" ){
-            rootLogger.info() << "Starting with all U = some single arbitrary SU3";
+            rootLogger.info("Starting with all U = some single arbitrary SU3");
             gSite first_site; //by default = 0 0 0 0
             GSU3<PREC> some_SU3;
             some_SU3.random(host_state.getElement(first_site));
             gauge.iterateWithConst(some_SU3);
         } else if ( lp.start() == "all_random"  ){
-            rootLogger.info() << "Starting with some random configuration";
+            rootLogger.info("Starting with some random configuration");
             gauge.random(host_state.state);
         } else if ( lp.start() == "one" ){
-            rootLogger.info() << "Starting with all U = 1";
+            rootLogger.info("Starting with all U = 1");
             gauge.one();
         } else {
             throw PGCError("Error! Choose from 'start = {one, fixed_random, all_random}!");
         }
 
-        rootLogger.info() << "On stream " << lp.streamName();
+        rootLogger.info("On stream " ,  lp.streamName());
 
         lp.confnumber.set(lp.nsweeps_HBwithOR());
-        rootLogger.info() << "Start thermalization. Doing " << lp.nsweeps_thermal_HB_only() << " pure HB sweeps.";
+        rootLogger.info("Start thermalization. Doing " ,  lp.nsweeps_thermal_HB_only() ,  " pure HB sweeps.");
         for (int i = 0; i < lp.nsweeps_thermal_HB_only(); ++i){
             gaugeUpdate.updateHB(dev_state.state,lp.beta());
         }
-        rootLogger.info() << "Now do " << lp.nsweeps_thermal_HBwithOR() << " HB sweeps with " << lp.nsweeps_ORperHB() <<
-                          " OR sweeps per HB.";
+        rootLogger.info("Now do " ,  lp.nsweeps_thermal_HBwithOR() ,  " HB sweeps with " ,  lp.nsweeps_ORperHB() , 
+                          " OR sweeps per HB.");
         for (int i = 0; i < lp.nsweeps_thermal_HBwithOR(); ++i){
             gaugeUpdate.updateHB(dev_state.state,lp.beta());
             for (int j = 0; j < lp.nsweeps_ORperHB(); j++) {
                 gaugeUpdate.updateOR();
             }
         }
-        rootLogger.info() << "Thermalization finished";
+        rootLogger.info("Thermalization finished");
     } else {
         throw PGCError("Error! Parameters unclear. To start a new stream, specify nsweeps_thermal_HB_only,"
                        "nsweeps_thermal_HBwithOR and start (one, fixed_random or all_random). To continue "
@@ -333,12 +333,12 @@ void init(CommunicationBase &commBase,
 
 
 
-    rootLogger.info() << "Generating up to " << lp.nconfs() << " confs with a separation of " <<
-                      lp.nsweeps_HBwithOR() << " HBOR sweeps (OR/HB = " << lp.nsweeps_ORperHB() << ") ...";
+    rootLogger.info("Generating up to " ,  lp.nconfs() ,  " confs with a separation of " , 
+                      lp.nsweeps_HBwithOR() ,  " HBOR sweeps (OR/HB = " ,  lp.nsweeps_ORperHB() ,  ") ...");
 
 
     int n_topo_meas_btwn_saved_confs = lp.nsweeps_HBwithOR()/lp.nsweeps_btwn_topology_meas();
-    rootLogger.info() << "Checking top. charge " << n_topo_meas_btwn_saved_confs << "times between saved confs.";
+    rootLogger.info("Checking top. charge " ,  n_topo_meas_btwn_saved_confs ,  "times between saved confs.");
 
     {
         gradFlowClass<floatT, HaloDepth, input_RK_method> gradFlow(gauge, lp.start_step_size(),
@@ -348,14 +348,14 @@ void init(CommunicationBase &commBase,
         floatT topchar_tmp;
         run_flow<floatT, HaloDepth, gradFlowClass<floatT, HaloDepth, input_RK_method>>(gradFlow, gauge, lp, topchar_tmp,
                                                                                        (false));
-        rootLogger.info() << "Top. charge of start conf: Q=" << topchar_tmp;
+        rootLogger.info("Top. charge of start conf: Q=" ,  topchar_tmp);
     }
 
     int n_accumulated_sweeps = 0;
 
     for (int i = 0; i < lp.nconfs(); i++ ){
-        rootLogger.info() << "======================================================================";
-        rootLogger.info() << "Start sweeping...";
+        rootLogger.info("======================================================================");
+        rootLogger.info("Start sweeping...");
         ///do separation sweeps
         timer.start();
 
@@ -370,7 +370,7 @@ void init(CommunicationBase &commBase,
                 m++;
             }
             //! flow and check topo
-            rootLogger.info() << "Accumulated sweeps = " << n_accumulated_sweeps;
+            rootLogger.info("Accumulated sweeps = " ,  n_accumulated_sweeps);
             gauge_nonflowed = gauge;
             //! flow and measure topology
             gradFlowClass<floatT, HaloDepth, input_RK_method> gradFlow(gauge, lp.start_step_size(),
@@ -379,17 +379,17 @@ void init(CommunicationBase &commBase,
                                                                        lp.necessary_flow_times.get(), lp.accuracy());
             floatT topchar;
             run_flow<floatT, HaloDepth, gradFlowClass<floatT, HaloDepth, input_RK_method>>(gradFlow, gauge, lp, topchar, (k+1 == n_topo_meas_btwn_saved_confs)  );
-            rootLogger.info() << "Done top. charge meas. " << k+1 << "/" << n_topo_meas_btwn_saved_confs << " Q=" << topchar;
+            rootLogger.info("Done top. charge meas. " ,  k+1 ,  "/" ,  n_topo_meas_btwn_saved_confs ,  " Q=" ,  topchar);
 
             if ( topchar >= 0.5 or topchar <= -0.5 ){
-                rootLogger.info() << "Continue sweeping";
+                rootLogger.info("Continue sweeping");
                 gauge = gauge_nonflowed; //! continue with the current conf but undo the flow first
             } else {
                 if (i == 0 && not lp.prev_conf_has_nonzero_Q() ){
-                    rootLogger.info() << "Top. charge not non-zero but we're on the first conf so we keep the update sweeps!";
+                    rootLogger.info("Top. charge not non-zero but we're on the first conf so we keep the update sweeps!");
                     gauge = gauge_nonflowed;    //! if we're still on the first conf we can accumulate the updates
                 } else {
-                    rootLogger.warn() << "Top. charge not non-zero! Discarding last update sweeps.";
+                    rootLogger.warn("Top. charge not non-zero! Discarding last update sweeps.");
                     n_accumulated_sweeps-=lp.nsweeps_btwn_topology_meas();
                     gauge = gauge_backup; //! continue with the conf from before the updates
                 }
@@ -403,18 +403,18 @@ void init(CommunicationBase &commBase,
 
         timer.reset();
 
-        rootLogger.info() << "Plaquette = " << gaugeAction.plaquette();
+        rootLogger.info("Plaquette = " ,  gaugeAction.plaquette());
 
         std::string conf_path = lp.output_dir()+"/conf"+lp.fileExt();
         std::string rand_path = lp.output_dir()+"/rand"+lp.fileExt();
 
-        rootLogger.info() << "Writing conf to disk...";
+        rootLogger.info("Writing conf to disk...");
         timer.start();
         gauge.writeconf_nersc(conf_path, 2, 2);
         host_state = dev_state;
         timer.stop();
 
-        rootLogger.info() << "Writing to disk took " << timer.ms()/1000 << " seconds";
+        rootLogger.info("Writing to disk took " ,  timer.ms()/1000 ,  " seconds");
         timer.reset();
         lp.confnumber.set(lp.confnumber() + lp.nsweeps_HBwithOR());
     }
@@ -440,8 +440,8 @@ int main(int argc, char* argv[]) {
     RungeKuttaMethod input_RK_method = RK_map[lp.RK_method()];
 
     if (input_RK_method == fixed_stepsize && lp.ignore_fixed_startstepsize() && lp.necessary_flow_times.isSet()) {
-        rootLogger.info() << "Ignoring fixed start_step_size. "
-                             "Stepsizes are dynamically deduced from necessary_flow_times.";
+        rootLogger.info("Ignoring fixed start_step_size. "
+                             "Stepsizes are dynamically deduced from necessary_flow_times.");
         lp.start_step_size.set(lp.measurement_intervall()[1]);
     }
 
@@ -501,4 +501,5 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
+
 

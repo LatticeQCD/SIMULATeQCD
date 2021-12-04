@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 
     const size_t HaloDepth=0;
 
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
 
     LatticeParameters param;
     const int LatDim[] = {20,20,20,20};
@@ -124,11 +124,11 @@ int main(int argc, char *argv[]) {
     typedef GIndexer<All,HaloDepth> GInd;
     gSite site1 = GInd::getSite(0,0,1,1);
     gaugeAccessor<float,R18> gAcc = gauge_host.getAccessor();
-    rootLogger.info() << "initial values: ";
+    rootLogger.info("initial values: ");
     GSU3<float> test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
-    rootLogger.info() << test.getLink00() << " " <<test.getLink01() << " " <<test.getLink02();
-    rootLogger.info() << test.getLink10() << " " <<test.getLink11() << " " << test.getLink12();
-    rootLogger.info() << test.getLink20() << " " <<test.getLink21() << " " << test.getLink22();
+    rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
+    rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
+    rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
     
     for (int i = 0; i < 2; i++) {
         gauge_half.iterateOverBulkAllMu(simple_add<__half,HaloDepth,R18>(gauge_half));
@@ -138,18 +138,18 @@ int main(int argc, char *argv[]) {
     gauge_host = dummy;
     
     test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
-    rootLogger.info() << "half precision values: ";
+    rootLogger.info("half precision values: ");
     
-    rootLogger.info() << test.getLink00() << " " <<test.getLink01() << " " <<test.getLink02();
-    rootLogger.info() << test.getLink10() << " " <<test.getLink11() << " " << test.getLink12();
-    rootLogger.info() << test.getLink20() << " " <<test.getLink21() << " " << test.getLink22();
+    rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
+    rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
+    rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
     
     gpuEventRecord(stop);
     gpuEventSynchronize(stop);
     float milliseconds = 0;
     gpuEventElapsedTime(&milliseconds, start, stop);
     // gpuProfilerStop();
-    rootLogger.info() << "Time for 2 applications of 2 Adds (half): " << milliseconds << " ms";
+    rootLogger.info("Time for 2 applications of 2 Adds (half): " ,  milliseconds ,  " ms");
     gpuEventRecord(start2);
     
     for (int i = 0; i < 2; i++) {
@@ -158,16 +158,16 @@ int main(int argc, char *argv[]) {
     gauge_host = gauge;
     
     test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
-    rootLogger.info() << "single precision values: ";
+    rootLogger.info("single precision values: ");
     
-    rootLogger.info() << test.getLink00() << " " <<test.getLink01() << " " <<test.getLink02();
-    rootLogger.info() << test.getLink10() << " " <<test.getLink11() << " " << test.getLink12();
-    rootLogger.info() << test.getLink20() << " " <<test.getLink21() << " " << test.getLink22();
+    rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
+    rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
+    rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
     gpuEventRecord(stop2);
     gpuEventSynchronize(stop2);
     float milliseconds2 = 0;
     gpuEventElapsedTime(&milliseconds2, start2, stop2);
-    rootLogger.info() << "Time for 2 applications of 2 Adds (float): " << milliseconds2 << " ms";
+    rootLogger.info("Time for 2 applications of 2 Adds (float): " ,  milliseconds2 ,  " ms");
 
     
     gpuEventRecord(start3);
@@ -183,7 +183,7 @@ for (int i = 0; i < 2; i++) {
     float milliseconds3 = 0;
     gpuEventElapsedTime(&milliseconds3, start3, stop3);
     // gpuProfilerStop();
-    rootLogger.info() << "Time for 2 applications of 6 mults (half): " << milliseconds3 << " ms";
+    rootLogger.info("Time for 2 applications of 6 mults (half): " ,  milliseconds3 ,  " ms");
     gpuEventRecord(start4);
 
 
@@ -191,11 +191,11 @@ dummy.template convert_precision<__half>(gauge_half);
     gauge_host = dummy;
     
     test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
-    rootLogger.info() << "half precision values: ";
+    rootLogger.info("half precision values: ");
     
-    rootLogger.info() << test.getLink00() << " " <<test.getLink01() << " " <<test.getLink02();
-    rootLogger.info() << test.getLink10() << " " <<test.getLink11() << " " << test.getLink12();
-    rootLogger.info() << test.getLink20() << " " <<test.getLink21() << " " << test.getLink22();
+    rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
+    rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
+    rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
     
     
 for (int i = 0; i < 2; i++) {
@@ -208,16 +208,16 @@ for (int i = 0; i < 2; i++) {
     gpuEventSynchronize(stop4);
     float milliseconds4 = 0;
     gpuEventElapsedTime(&milliseconds4, start4, stop4);
-    rootLogger.info() << "Time for 2 applications of 6 mults (float): " << milliseconds4 << " ms";
+    rootLogger.info("Time for 2 applications of 6 mults (float): " ,  milliseconds4 ,  " ms");
     
     gauge_host = gauge;
     
     test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
-    rootLogger.info() << "single precision values: ";
+    rootLogger.info("single precision values: ");
     
-    rootLogger.info() << test.getLink00() << " " <<test.getLink01() << " " <<test.getLink02();
-    rootLogger.info() << test.getLink10() << " " <<test.getLink11() << " " << test.getLink12();
-    rootLogger.info() << test.getLink20() << " " <<test.getLink21() << " " << test.getLink22();
+    rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
+    rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
+    rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
     return 0;
     }
     catch (const std::runtime_error &error){

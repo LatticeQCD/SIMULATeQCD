@@ -54,7 +54,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
     //possible reversibility check
     if (reverse)
     {
-        rootLogger.warn() << "Checking if integration is reversible";
+        rootLogger.warn("Checking if integration is reversible");
 
         _p = -1.0 * _p;
 
@@ -64,7 +64,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
     //get newaction
     floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info() << "Simple Delta H = " << new_hamiltonian- old_hamiltonian;
+    // rootLogger.info("Simple Delta H = " ,  new_hamiltonian- old_hamiltonian);
 
     int ret;
 
@@ -76,20 +76,20 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
     {
         if (accept){
             ret=1;
-            rootLogger.info() << "Update acepted!";
+            rootLogger.info("Update acepted!");
     }
         else{
             _gaugeField=_savedField;
             _gaugeField.updateAll();
             ret=0;
-            rootLogger.info() << "Update declined!";
+            rootLogger.info("Update declined!");
         }
     }
     else{
 
         //skip Metropolis step
         ret=1;
-        rootLogger.warn() << "Skipped Metropolis step!";
+        rootLogger.warn("Skipped Metropolis step!");
     }
 
     return ret;
@@ -149,14 +149,14 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
     redBase.template iterateOverBulk<All, HaloDepth>(get_momenta<floatT, HaloDepth>(_p));
     redBase2.template iterateOverBulk<All, HaloDepth>(plaquetteKernel<floatT, true, HaloDepth,comp>(_gaugeField));
     redBase3.template iterateOverBulk<All, HaloDepth>(rectangleKernel<floatT, true, HaloDepth,comp>(_gaugeField));
-    // rootLogger.info() << "constructed momentum, plaquette and rectangle dens";
+    // rootLogger.info("constructed momentum, plaquette and rectangle dens");
     redBase2.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(redBase2, redBase3, 5.0/3.0 , -1.0/12.0)); 
-    // rootLogger.info() << "added plaquette and rectangle dens to symanzik dens";
+    // rootLogger.info("added plaquette and rectangle dens to symanzik dens");
 
     floatT beta = _rhmc_param.beta() *3.0/5.0;
 
     energy_dens.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(redBase, redBase2, 0.5, -beta/3.0));
-    // rootLogger.info() << "added momentumm and symanzik dens to energy_dens";
+    // rootLogger.info("added momentumm and symanzik dens to energy_dens");
 
     redBase.reduce(momenta, elems);
 
@@ -166,7 +166,7 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
 
     // energy_dens.reduce(H, elems);
 
-    // rootLogger.info() << "reduced momentum dens";
+    // rootLogger.info("reduced momentum dens");
     
 
     GaugeAction<floatT, true, HaloDepth, comp> gaugeaction(_gaugeField);
@@ -176,7 +176,7 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
 
     hamiltonian+= gaugeact; 
 
-    rootLogger.info() << "momenta = " << 0.5 *momenta << " glue = " << gaugeact;// << "H = " << H;
+    rootLogger.info("momenta = " ,  0.5 *momenta ,  " glue = " ,  gaugeact);// << "H = " << H;
 
     return hamiltonian;
 }
@@ -194,7 +194,7 @@ bool pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::Metropolis(){
 
     dens_delta.reduce(delta_E, elems);
 
-    rootLogger.info() << "Delta H = " << delta_E;
+    rootLogger.info("Delta H = " ,  delta_E);
 
     uint4 state;
 
@@ -233,7 +233,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
     //get newaction
     floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info() << "Delta H =" << new_hamiltonian - old_hamiltonian;
+    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
 
     int ret;
 
@@ -242,13 +242,13 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
 
     if (accept){
         ret=1;
-        rootLogger.info() << "Update acepted!";
+        rootLogger.info("Update acepted!");
     }
     else{
         _gaugeField=_savedField;
         _gaugeField.updateAll();
         ret=0;
-        rootLogger.info() << "Update declined!";
+        rootLogger.info("Update declined!");
     }
 
     return ret;
@@ -259,3 +259,4 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
 template class pure_gauge_hmc<floatT, All, HALO, comp>;
 
 INIT_PHC(CLASS_INIT)
+

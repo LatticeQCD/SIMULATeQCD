@@ -39,14 +39,14 @@ int main(int argc, char *argv[]) {
 
     typedef float floatT;
 
-    rootLogger.info() << "STARTING RHMC Update:";
+    rootLogger.info("STARTING RHMC Update:");
 
     if (sizeof(floatT)==4)
-        rootLogger.info() << "update done in single precision";
+        rootLogger.info("update done in single precision");
     else if(sizeof(floatT)==8)
-        rootLogger.info() << "update done in double precision";
+        rootLogger.info("update done in double precision");
     else
-        rootLogger.info() << "update done in unknown precision";
+        rootLogger.info("update done in unknown precision");
 
     initIndexer(4,param, commBase);
 
@@ -57,33 +57,33 @@ int main(int argc, char *argv[]) {
     if (param.load_rand()) {
         grnd_state<false> h_rand;
         rand_file = param.rand_file() + std::to_string(param.config_no());
-        rootLogger.info() << "With random numbers from file: " << rand_file;
+        rootLogger.info("With random numbers from file: " ,  rand_file);
         h_rand.read_from_file(rand_file, commBase);
         d_rand=h_rand;
     } else {
-        rootLogger.info() << "With new random numbers generated from seed: " << param.seed();
+        rootLogger.info("With new random numbers generated from seed: " ,  param.seed());
         initialize_rng(param.seed(), d_rand);
     }
 
     if (param.load_conf() == 0) {
-        rootLogger.info() << "Starting from unit configuration";
+        rootLogger.info("Starting from unit configuration");
         gauge.one();
     } else if(param.load_conf() == 1) {
-        rootLogger.info() << "Starting from random configuration";
+        rootLogger.info("Starting from random configuration");
         gauge.random(d_rand.state);
     } else if(param.load_conf() == 2) {
         gauge_file = param.gauge_file() + std::to_string(param.config_no());
-        rootLogger.info() << "Starting from configuration: " << gauge_file;
+        rootLogger.info("Starting from configuration: " ,  gauge_file);
         gauge.readconf_nersc(gauge_file);
     }
     gauge.updateAll();
     gauge.su3latunitarize();
     if(param.always_acc())
-        rootLogger.warn() << "Skipping Metropolis step!";
+        rootLogger.warn("Skipping Metropolis step!");
 
     rhmc<floatT, true, HaloDepth> HMC(param, rat, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed the HMC";
+    rootLogger.info("constructed the HMC");
 
     HMC.init_ratapprox();
 
@@ -101,13 +101,13 @@ int main(int argc, char *argv[]) {
 
         acc += HMC.update(!param.always_acc());
         acceptance = floatT(acc)/floatT(i);
-        rootLogger.info() << "current acceptance = " << acceptance;
+        rootLogger.info("current acceptance = " ,  acceptance);
 
-        rootLogger.info() << "MEASUREMENT: " << param.config_no()+i;
+        rootLogger.info("MEASUREMENT: " ,  param.config_no()+i);
 
-        rootLogger.info() << "Polyakov Loop = " << ploop.getPolyakovLoop();
-        rootLogger.info() << "Plaquette = " << gaugeaction.plaquette();
-        rootLogger.info() << "Rectangle = " << gaugeaction.rectangle();
+        rootLogger.info("Polyakov Loop = " ,  ploop.getPolyakovLoop());
+        rootLogger.info("Plaquette = " ,  gaugeaction.plaquette());
+        rootLogger.info("Rectangle = " ,  gaugeaction.rectangle());
 	
         measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, true, gauge, d_rand);
 	
@@ -118,8 +118,8 @@ int main(int argc, char *argv[]) {
         gpuEventElapsedTime( &cu_timer_time, mcu_timer_start, mcu_timer_stop );
         configtime += cu_timer_time;
         totaltime += cu_timer_time;
-        rootLogger.info() << "Time (TTRAJ) for trajectory without IO: " << static_cast<int>(cu_timer_time / 1000.) << " s | avg traj. time : "
-            << static_cast<int>(totaltime/1000./(i)) << " s";
+        rootLogger.info("Time (TTRAJ) for trajectory without IO: " ,  static_cast<int>(cu_timer_time / 1000.) ,  " s | avg traj. time : "
+            ,  static_cast<int>(totaltime/1000./(i)) ,  " s");
         
         //IO
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    rootLogger.info() << "Run has ended! acceptance = " << acceptance;
+    rootLogger.info("Run has ended! acceptance = " ,  acceptance);
 
     gpuEventDestroy(mcu_timer_stop);
     gpuEventDestroy(mcu_timer_start);

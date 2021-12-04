@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth  = 0;
 
     /// Read in parameters and initialize communication base.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     gfixParam<PREC> param;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/gfixplcTest.param", argc, argv);
@@ -70,12 +70,12 @@ int main(int argc, char *argv[]) {
     PolyakovLoopCorrelator<PREC,true,HaloDepth> PLC(gauge); /// class for Polyakov loop correlators
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
     gauge.updateAll();
 
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING
-    rootLogger.info() << "GAUGE FIXING...";
+    rootLogger.info("GAUGE FIXING...");
     timer.start();
 
     bool lerror=false;
@@ -94,9 +94,9 @@ int main(int argc, char *argv[]) {
         adif=abs(act    -control_act[ngfstep]);
         tdif=abs(gftheta-control_tha[ngfstep]);
         if ( adif>abs(tolp*control_act[ngfstep]) || tdif>abs(tolp*control_tha[ngfstep]) ) {
-            rootLogger.error() << "Large functional or theta difference!";
-            rootLogger.info() << control_act[ngfstep] << "  " << act;
-            rootLogger.info() << control_tha[ngfstep] << "  " << gftheta;
+            rootLogger.error("Large functional or theta difference!");
+            rootLogger.info(control_act[ngfstep] ,  "  " ,  act);
+            rootLogger.info(control_tha[ngfstep] ,  "  " ,  gftheta);
             lerror=true;
         }
         ngfstep+=1;
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 
     /// Report time to user.
     timer.stop();
-    rootLogger.info() << "Time to gauge fix: " << timer;
+    rootLogger.info("Time to gauge fix: " ,  timer);
     timer.reset();
 
     /// --------------------------------------------------------------------------------------POLYAKOV LOOP CORRELATIONS
@@ -122,9 +122,9 @@ int main(int argc, char *argv[]) {
 
     /// Calculation of Polyakov loop correlators.
     timer.start();
-    rootLogger.info() << "CALCULATING CORRELATORS...";
+    rootLogger.info("CALCULATING CORRELATORS...");
 
-    rootLogger.info() << "RUN FAST CORRELATOR TEST";
+    rootLogger.info("RUN FAST CORRELATOR TEST");
     PLC.PLCtoArrays(vec_plca, vec_plc1, vec_plc8, vec_factor, vec_weight, true);
 
     int controlindex=0;
@@ -138,10 +138,10 @@ int main(int argc, char *argv[]) {
             dif8=abs(vec_plc8[r2]-control_plc8[controlindex]);
             if ( difa>abs(tolp*control_plca[controlindex]) || dif1>abs(tolp*control_plc1[controlindex])
                                                            || dif8>abs(tolp*control_plc8[controlindex]) ) {
-                rootLogger.error() << "Large correlator difference!";
-                rootLogger.info() << control_plca[controlindex] << "  " << vec_plca[r2];
-                rootLogger.info() << control_plc1[controlindex] << "  " << vec_plc1[r2];
-                rootLogger.info() << control_plc8[controlindex] << "  " << vec_plc8[r2];
+                rootLogger.error("Large correlator difference!");
+                rootLogger.info(control_plca[controlindex] ,  "  " ,  vec_plca[r2]);
+                rootLogger.info(control_plc1[controlindex] ,  "  " ,  vec_plc1[r2]);
+                rootLogger.info(control_plc8[controlindex] ,  "  " ,  vec_plc8[r2]);
                 lerror=true;
             }
             controlindex+=1;
@@ -149,11 +149,11 @@ int main(int argc, char *argv[]) {
     }
 
     timer.stop();
-    rootLogger.info() << "Time to measure correlations: " << timer;
+    rootLogger.info("Time to measure correlations: " ,  timer);
     timer.reset();
     timer.start();
 
-    rootLogger.info() << "RUN GENERAL CORRELATOR TEST";
+    rootLogger.info("RUN GENERAL CORRELATOR TEST");
     PLC.PLCtoArrays(vec_plca, vec_plc1, vec_plc8, vec_factor, vec_weight, false);
 
     controlindex=0;
@@ -167,10 +167,10 @@ int main(int argc, char *argv[]) {
             dif8=abs(vec_plc8[r2]-control_plc8[controlindex]);
             if ( difa>abs(tolp*control_plca[controlindex]) || dif1>abs(tolp*control_plc1[controlindex])
                  || dif8>abs(tolp*control_plc8[controlindex]) ) {
-                rootLogger.error() << "Large correlator difference!";
-                rootLogger.info() << control_plca[controlindex] << "  " << vec_plca[r2];
-                rootLogger.info() << control_plc1[controlindex] << "  " << vec_plc1[r2];
-                rootLogger.info() << control_plc8[controlindex] << "  " << vec_plc8[r2];
+                rootLogger.error("Large correlator difference!");
+                rootLogger.info(control_plca[controlindex] ,  "  " ,  vec_plca[r2]);
+                rootLogger.info(control_plc1[controlindex] ,  "  " ,  vec_plc1[r2]);
+                rootLogger.info(control_plc8[controlindex] ,  "  " ,  vec_plc8[r2]);
                 lerror=true;
             }
             controlindex+=1;
@@ -178,13 +178,14 @@ int main(int argc, char *argv[]) {
     }
 
     timer.stop();
-    rootLogger.info() << "Time to measure correlations: " << timer;
+    rootLogger.info("Time to measure correlations: " ,  timer);
 
     if(lerror) {
-      rootLogger.error() << "At least one test " << CoutColors::red << "failed!" << CoutColors::reset;
+      rootLogger.error("At least one test " ,  CoutColors::red ,  "failed!" ,  CoutColors::reset);
     } else {
-      rootLogger.info() << "All tests " << CoutColors::green << "passed!" << CoutColors::reset;
+      rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     }
 
     return 0;
 }
+

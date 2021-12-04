@@ -29,10 +29,10 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
     
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     // gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info("Initialize random state");
     grnd_state<onDevice> d_rand;
     initialize_rng(13333, d_rand);
 
@@ -42,9 +42,9 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     smearing.SmearAll();
 
-    rootLogger.info() << "Testing multishift inverter:";
+    rootLogger.info("Testing multishift inverter:");
     // r_2f test
-    rootLogger.info() << "Starting r_2f test";
+    rootLogger.info("Starting r_2f test");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, 1> dslashMulti_ud(gauge_smeared, gauge_Naik, 0.0);
     // HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, 1> dslashMulti_s(gauge_smeared, gauge_Naik, param.m_s());
 
@@ -75,7 +75,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     gpuEventElapsedTime(&milliseconds, start, stop);
     // timer.stop();
     gpuProfilerStop();
-    rootLogger.info() << "Time for inversion with multishift CG: " << milliseconds;
+    rootLogger.info("Time for inversion with multishift CG: " ,  milliseconds);
 
     // phi = floatT(rat.r_2f_const()) * spinorInMulti;
 
@@ -107,41 +107,41 @@ try {
     const int HaloDepthSpin = 4;
     initIndexer(HaloDepthSpin, param, commBase);
 
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Device");
+    rootLogger.info("-------------------------------------");
 
-    // rootLogger.info() << "Testing All - All";
-    // rootLogger.info() << "------------------";
+    // rootLogger.info("Testing All - All");
+    // rootLogger.info("------------------");
     // run_func<float, All, All, 1, 14, true>(commBase, param, rat);
 
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     run_func<float, Even, Odd, 1, 14, true>(commBase, param, rat);
-    // rootLogger.info() << "------------------";
-    // rootLogger.info() << "Testing Odd - Even";
-    // rootLogger.info() << "------------------";
+    // rootLogger.info("------------------");
+    // rootLogger.info("Testing Odd - Even");
+    // rootLogger.info("------------------");
     // run_func<double, Odd, Even, 1, 14, true>(commBase, param, rat);
 
     /// Apparently the host has trouble to store a configuration.
-    //    rootLogger.info() << "-------------------------------------";
-    //    rootLogger.info() << "Running on Host";
-    //    rootLogger.info() << "-------------------------------------";
-    //    rootLogger.info() << "Testing All - All";
-    //    rootLogger.info() << "------------------";
+    //    rootLogger.info("-------------------------------------");
+    //    rootLogger.info("Running on Host");
+    //    rootLogger.info("-------------------------------------");
+    //    rootLogger.info("Testing All - All");
+    //    rootLogger.info("------------------");
     //    run_func<double, All, All, 1, 14, false>(commBase, param, rat);
-    //    rootLogger.info() << "------------------";
-    //    rootLogger.info() << "Testing Even - Odd";
-    //    rootLogger.info() << "------------------";
+    //    rootLogger.info("------------------");
+    //    rootLogger.info("Testing Even - Odd");
+    //    rootLogger.info("------------------");
     //    run_func<double, Even, Odd, 1, 14, false>(commBase, param, rat);
-    //    rootLogger.info() << "------------------";
-    //    rootLogger.info() << "Testing Odd - Even";
-    //    rootLogger.info() << "------------------";
+    //    rootLogger.info("------------------");
+    //    rootLogger.info("Testing Odd - Even");
+    //    rootLogger.info("------------------");
     //    run_func<double, Odd, Even, 1, 14,false>(commBase, param, rat);
 }
 catch (const std::runtime_error &error) {
-    rootLogger.error() << "There has been a runtime error!";
+    rootLogger.error("There has been a runtime error!");
     return -1;
 }
 }
@@ -156,3 +156,4 @@ catch (const std::runtime_error &error) {
 //     return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
 //         globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
 // }
+

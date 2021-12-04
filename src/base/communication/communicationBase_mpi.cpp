@@ -48,7 +48,7 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv) {
         rootLogger.setVerbosity(stdLogger.getVerbosity());
     }
 
-    rootLogger.info() << "Initializing MPI with (" << world_size << " proc)";
+    rootLogger.info("Initializing MPI with (" ,  world_size ,  " proc)");
 
     /// Get the name of the processor
     char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -154,7 +154,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 
         for (int i = 0; i < 4; ++i) {
             if (((Dim[i] == 1) && (Topo[i] != 0)) || ((Dim[i] != 1) && (Topo[i] == 0))) {
-                rootLogger.warn() << "GPU topology and chosen lattice splitting seem incompatible!";
+                rootLogger.warn("GPU topology and chosen lattice splitting seem incompatible!");
             }
         }
     }
@@ -173,24 +173,24 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     gpuGetDeviceProperties(&tmpProp, myInfo.deviceRank);
 
     globalBarrier();
-    rootLogger.info() << "> Running on:";
+    rootLogger.info("> Running on:");
     globalBarrier();
-    stdLogger.info() << "> " << myInfo.nodeName << " CPU_"<< sched_getcpu() << " GPU_" << std::uppercase << std::hex << tmpProp.pciBusID
-                     << "; MPI: world_rank=" << myInfo.world_rank << ", node_rank=" << myInfo.node_rank
-                     << ", coord: " << myInfo.coord;
+    stdLogger.info("> " ,  myInfo.nodeName ,  " CPU_",  sched_getcpu() ,  " GPU_" ,  std::uppercase ,  std::hex ,  tmpProp.pciBusID
+                     ,  "; MPI: world_rank=", myInfo.world_rank, ", node_rank=", myInfo.node_rank,
+                      ", coord: ", myInfo.coord);
     globalBarrier();
 
-    rootLogger.info() << "> Is MPI CUDA-aware? " << gpuAwareMPICheck();
+    rootLogger.info("> Is MPI CUDA-aware? " ,  gpuAwareMPICheck());
 
     const int gpu_arch = tmpProp.major*static_cast<int>(10)+tmpProp.minor;
-    rootLogger.info() << "> GPU compute capability: " << gpu_arch;
+    rootLogger.info("> GPU compute capability: " ,  gpu_arch);
 
 #ifdef ARCHITECTURE
     if (static_cast<int>(ARCHITECTURE) != gpu_arch){
         throw PGCError("You compiled for ARCHITECTURE=", ARCHITECTURE, " but the GPUs here are ", gpu_arch);
     }
 #else
-    rootLogger.warn() << "Cannot determine for which compute capability the code was compiled!";
+    rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
@@ -201,7 +201,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 CommunicationBase::~CommunicationBase() {
     rootLogger.deactivateLocalProcessInfo();
     stdLogger.deactivateLocalProcessInfo();
-    rootLogger.info() << "Finalize CommunicationBase";
+    rootLogger.info("Finalize CommunicationBase");
     int ret;
     ret = MPI_Comm_free(&cart_comm);
     _MPI_fail(ret, "MPI_Comm_free");
@@ -550,8 +550,8 @@ CommunicationBase::updateSegment(HaloSegment hseg, size_t direction, int leftRig
             uint8_t *recvBase = seg.getDeviceDestinationPtrP2P();
 
 
-            IF(COMBASE_DEBUG) (stdLogger.debug() << "gpuMemcpyAsync: Copy " << seg.getLength() 
-                                    << " bytes from rank " << MyRank() << " to rank " << info.world_rank;)
+            IF(COMBASE_DEBUG) (stdLogger.debug("gpuMemcpyAsync: Copy " ,  seg.getLength() 
+                                    ,  " bytes from rank " ,  MyRank() ,  " to rank " ,  info.world_rank);)
 
             gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
                                     seg.getDeviceStream());
@@ -563,8 +563,8 @@ CommunicationBase::updateSegment(HaloSegment hseg, size_t direction, int leftRig
             uint8_t *recvBase = seg.getMyDeviceDestinationPtr();
 
 
-            IF(COMBASE_DEBUG) (stdLogger.debug() << "gpuMemcpyAsync (same rank): Copy " 
-                                      << seg.getLength() << " bytes on rank " << MyRank();)
+            IF(COMBASE_DEBUG) (stdLogger.debug("gpuMemcpyAsync (same rank): Copy " 
+                                      ,  seg.getLength() ,  " bytes on rank " ,  MyRank());)
 
             gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
                                     seg.getDeviceStream(0));
@@ -578,8 +578,8 @@ CommunicationBase::updateSegment(HaloSegment hseg, size_t direction, int leftRig
             int index = haloSegmentCoordToIndex(hseg, direction, leftRight);
             int indexDest = haloSegmentCoordToIndex(hseg, direction, !leftRight);
 
-            IF(COMBASE_DEBUG) (stdLogger.debug() << "MPI_Isend (gpu): Send " << seg.getLength() 
-                                    << " bytes from rank " << MyRank() << " to rank " << info.world_rank;)
+            IF(COMBASE_DEBUG) (stdLogger.debug("MPI_Isend (gpu): Send " ,  seg.getLength() 
+                                    ,  " bytes from rank " ,  MyRank() ,  " to rank " ,  info.world_rank);)
 
             MPI_Isend(sendBase, 1, seg.getMpiType(), rank, indexDest, cart_comm, &seg.getRequestSend());
             MPI_Irecv(recvBase, 1, seg.getMpiType(), rank, index, cart_comm, &seg.getRequestRecv());
@@ -591,8 +591,8 @@ CommunicationBase::updateSegment(HaloSegment hseg, size_t direction, int leftRig
             int index = haloSegmentCoordToIndex(hseg, direction, leftRight);
             int indexDest = haloSegmentCoordToIndex(hseg, direction, !leftRight);
 
-            IF(COMBASE_DEBUG) (stdLogger.debug() << "MPI_Isend (cpu): Send " << seg.getLength() 
-                                      << " bytes from rank " << MyRank() << " to rank " << info.world_rank;)
+            IF(COMBASE_DEBUG) (stdLogger.debug("MPI_Isend (cpu): Send " ,  seg.getLength() 
+                                      ,  " bytes from rank " ,  MyRank() ,  " to rank " ,  info.world_rank);)
             MPI_Isend(sendBase, 1, seg.getMpiType(), rank, indexDest, cart_comm, &seg.getRequestSend());
             MPI_Irecv(recvBase, 1, seg.getMpiType(), rank, index, cart_comm, &seg.getRequestRecv());
         }
@@ -669,8 +669,8 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
     MPI_Type_create_subarray(4, globalLattice, localLattice, offset, MPI_ORDER_FORTRAN, basetype, &fvtype);
     MPI_Type_commit(&fvtype);
 
-    stdLogger.debug() << "MPI File [" << Pad0(2, MyRank()) << "] " << globalLattice << " " << localLattice << " "
-                      << offset;
+    stdLogger.debug("MPI File [" ,  Pad0(2, MyRank()) ,  "] " ,  globalLattice ,  " " ,  localLattice ,  " "
+                      ,  offset);
 
     int mpi_mode = 0;
     if (mode == READ) mpi_mode = MPI_MODE_RDONLY;
@@ -717,3 +717,4 @@ template void CommunicationBase::updateAll<false>(HaloOffsetInfo<false> &HalInfo
 
 
 #endif
+

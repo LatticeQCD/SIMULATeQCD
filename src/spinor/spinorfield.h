@@ -140,7 +140,7 @@ typedef floatT floatT_inner;
         //! if we're on the correct GPU, set one entry to one
         if ( GInd::getLatData().isLocal(pointsource) ){
             sitexyzt pointsource_local(GInd::globalCoordToLocalCoord(pointsource));
-            stdLogger.info() << "Pointsource at " << pointsource << ": " << gvect3_unity<double>(i_color)*(double)mass;
+            stdLogger.info("Pointsource at " ,  pointsource ,  ": " ,  gvect3_unity<double>(i_color)*(double)mass);
             //! TODO add support for multiple RHS (stacks)
             sitexyzt pointsource_full = GIndexer<LatticeLayout,HaloDepth>::coordToFullCoord(pointsource_local);
             gSite tmp = GIndexer<LatticeLayout,HaloDepth>::getSiteFull(pointsource_full);
@@ -458,3 +458,4 @@ struct convert_spinor_precision {
 
 
 #endif //SPINORFIELD_H
+

@@ -30,7 +30,7 @@ void compareWithOne(Correlator<false,PREC> &CPUcorr, Correlator<false,PREC> &CPU
         if(norm > 0) {
             _CPUcorr.getValue<PREC>(ir2,corrResult);
             if(!isApproximatelyEqual(corrResult,1.0,1e-15)) {
-                rootLogger.error() << testName + " ir2, corr = " << ir2 << ", " << corrResult;
+                rootLogger.error(testName + " ir2, corr = " ,  ir2 ,  ", " ,  corrResult);
                 lerror=true;
             }
         }
@@ -51,7 +51,7 @@ void compareWithId3(Correlator<false,GCOMPLEX(PREC)> &CPUcorr, Correlator<false,
         if(norm > 0) {
             _CPUcorr.getValue<GCOMPLEX(PREC)>(ir2,corrResult);
             if(!isApproximatelyEqual(real(corrResult),3.0,1e-15)) {
-                rootLogger.error() << testName + " ir2, corr = " << ir2 << ", " << corrResult;
+                rootLogger.error(testName + " ir2, corr = " ,  ir2 ,  ", " ,  corrResult);
                 lerror=true;
             }
         }
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     const size_t HaloDepth  = 0;
 
     /// Read in parameters and initialize communication base.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/correlatorTest.param", argc, argv);
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     CorrelatorTools<PREC,true,HaloDepth> corrTools;
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     if (HAVECONFIG) gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
     gaugeDev=gauge;
@@ -134,14 +134,14 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     Correlator<false,PREC> CPUcorr(commBase, corrTools.UAr2max);
     Correlator<false,PREC> CPUnorm(commBase, corrTools.UAr2max);
 
-    rootLogger.info() << "vol4, UAr2max = " << corrTools.vol4 << ",  " << corrTools.UAr2max;
+    rootLogger.info("vol4, UAr2max = " ,  corrTools.vol4 ,  ",  " ,  corrTools.UAr2max);
 
     CorrField<false,PREC>  CPUSfield1(commBase, corrTools.vol3);
     CorrField<false,PREC>  CPUSfield2(commBase, corrTools.vol3);
     Correlator<false,PREC> CPUScorr(commBase, corrTools.USr2max);
     Correlator<false,PREC> CPUSnorm(commBase, corrTools.USr2max);
 
-    rootLogger.info() << "vol3, USr2max = " << corrTools.vol3 << ",  " << corrTools.USr2max;
+    rootLogger.info("vol3, USr2max = " ,  corrTools.vol3 ,  ",  " ,  corrTools.USr2max);
 
     CPUfield2.one();
     CPUSfield1.one();
@@ -152,19 +152,19 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     /// --------------------------------------------------------------------------------------------- 1.0 x 1.0 TEST
 
-    rootLogger.info() << "Running symmetric UA 1 x 1 test.";
+    rootLogger.info("Running symmetric UA 1 x 1 test.");
     corrTools.correlateAt<PREC,PREC,AxB<PREC>>("spacetime", CPUfield1, CPUfield2, CPUnorm, CPUcorr, true);
     compareWithOne(CPUcorr, CPUnorm, "symmetric UA 1 x 1:", corrTools.UAr2max, lerror);
 
-    rootLogger.info() << "Running asymmetric UA 1 x 1 test.";
+    rootLogger.info("Running asymmetric UA 1 x 1 test.");
     corrTools.correlateAt<PREC,PREC,AxB<PREC>>("spacetime", CPUfield1, CPUfield2, CPUnorm, CPUcorr, false);
     compareWithOne(CPUcorr, CPUnorm, "asymmetric UA 1 x 1:", corrTools.UAr2max, lerror);
 
-    rootLogger.info() << "Running symmetric US 1 x 1 test.";
+    rootLogger.info("Running symmetric US 1 x 1 test.");
     corrTools.correlateAt<PREC,PREC,AxB<PREC>>("spatial", CPUSfield1, CPUSfield2, CPUSnorm, CPUScorr, true);
     compareWithOne(CPUScorr, CPUSnorm, "symmetric US 1 x 1:", corrTools.USr2max, lerror);
 
-    rootLogger.info() << "Running asymmetric US 1 x 1 test.";
+    rootLogger.info("Running asymmetric US 1 x 1 test.");
     corrTools.correlateAt<PREC,PREC,AxB<PREC>>("spatial", CPUSfield1, CPUSfield2, CPUSnorm, CPUScorr, false);
     compareWithOne(CPUScorr, CPUSnorm, "asymmetric US 1 x 1:", corrTools.USr2max, lerror);
 
@@ -186,36 +186,36 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     CPUSfield3.one();
     CPUSfield4.one();
 
-    rootLogger.info() << "Running symmetric UA id_3 x id_3 test.";
+    rootLogger.info("Running symmetric UA id_3 x id_3 test.");
     timer.start();
     corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1, true);
     timer.stop();
     compareWithId3(CPUcorrComplex1, CPUnorm, "symmetric UA id_3 x id_3:", corrTools.UAr2max, lerror);
-    rootLogger.info() << "Time for symmetric UA id_3 x id_3: " << timer;
+    rootLogger.info("Time for symmetric UA id_3 x id_3: " ,  timer);
     timer.reset();
 
-    rootLogger.info() << "Running asymmetric UA id_3 x id_3 test.";
+    rootLogger.info("Running asymmetric UA id_3 x id_3 test.");
     timer.start();
     corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1, false);
     timer.stop();
     compareWithId3(CPUcorrComplex1, CPUnorm, "asymmetric UA id_3 x id_3:", corrTools.UAr2max, lerror);
-    rootLogger.info() << "Time for asymmetric UA id_3 x id_3: " << timer;
+    rootLogger.info("Time for asymmetric UA id_3 x id_3: " ,  timer);
     timer.reset();
 
-    rootLogger.info() << "Running symmetric US id_3 x id_3 test.";
+    rootLogger.info("Running symmetric US id_3 x id_3 test.");
     timer.start();
     corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex, true);
     timer.stop();
     compareWithId3(CPUScorrComplex, CPUSnorm, "symmetric US id_3 x id_3:", corrTools.USr2max, lerror);
-    rootLogger.info() << "Time for symmetric US id_3 x id_3: " << timer;
+    rootLogger.info("Time for symmetric US id_3 x id_3: " ,  timer);
     timer.reset();
 
-    rootLogger.info() << "Running asymmetric US id_3 x id_3 test.";
+    rootLogger.info("Running asymmetric US id_3 x id_3 test.");
     timer.start();
     corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex, false);
     timer.stop();
     compareWithId3(CPUScorrComplex, CPUSnorm, "asymmetric US id_3 x id_3:", corrTools.USr2max, lerror);
-    rootLogger.info() << "Time for asymmetric US id_3 x id_3: " << timer;
+    rootLogger.info("Time for asymmetric US id_3 x id_3: " ,  timer);
     timer.reset();
 
     /// ------------------------------------------------------------------------------- gaugefield x gaugefield TEST
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         Correlator<false,GCOMPLEX(PREC)> CPUcorrComplex2(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUcorrComplex2(CPUcorrComplex2.getAccessor());
 
-        rootLogger.info() << "Running generalized UA gaugefield(mu=2) x gaugefield(mu=3) test.";
+        rootLogger.info("Running generalized UA gaugefield(mu=2) x gaugefield(mu=3) test.");
 
         size_t m, n;
         Correlator<false,PREC> CPUnormControl(commBase, corrTools.UAr2max);
@@ -358,8 +358,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
                 _CPUcorrComplex1.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
                 _CPUcorrComplexControl1.getValue<GCOMPLEX(PREC)>(ir2,corrComplexControl);
                 if(!(corrComplex==corrComplexControl)) {
-                    rootLogger.error() << "UA tr A x B: ir2, tr(test), tr(control) = " << ir2 << ", "
-                                       << corrComplex << ", " << corrComplexControl;
+                    rootLogger.error("UA tr A x B: ir2, tr(test), tr(control) = " ,  ir2 ,  ", "
+                                       ,  corrComplex ,  ", " ,  corrComplexControl);
                     lerror=true;
                 }
 
@@ -367,18 +367,18 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
                 _CPUcorrComplex2.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
                 _CPUcorrComplexControl2.getValue<GCOMPLEX(PREC)>(ir2,corrComplexControl);
                 if(!(corrComplex==corrComplexControl)) {
-                    rootLogger.error() << "UA tr A x Bt: ir2, tr(test), tr(control) = " << ir2 << ", "
-                                       << corrComplex << ", " << corrComplexControl;
+                    rootLogger.error("UA tr A x Bt: ir2, tr(test), tr(control) = " ,  ir2 ,  ", "
+                                       ,  corrComplex ,  ", " ,  corrComplexControl);
                     lerror=true;
                 }
 
             }
         }
 
-        rootLogger.info() << "Time for UA gaugefield(mu=2) x gaugefield(mu=3): " << timer;
+        rootLogger.info("Time for UA gaugefield(mu=2) x gaugefield(mu=3): " ,  timer);
         timer.reset();
 
-        rootLogger.info() << "Running US gaugefield(mu=2) x gaugefield(mu=3) test.";
+        rootLogger.info("Running US gaugefield(mu=2) x gaugefield(mu=3) test.");
 
         Correlator<false,PREC> CPUSnormControl(commBase, corrTools.USr2max);
         LatticeContainerAccessor _CPUSfield3(CPUSfield3.getAccessor());
@@ -471,13 +471,13 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
                 _CPUScorrComplex.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
                 _CPUScorrComplexControl.getValue<GCOMPLEX(PREC)>(ir2,corrComplexControl);
                 if(!(corrComplex==corrComplexControl)) {
-                    rootLogger.error() << "US gauge x gauge: ir2, tr(test), tr(control) = " << ir2 << ", "
-                                       << corrComplex << ", " << corrComplexControl;
+                    rootLogger.error("US gauge x gauge: ir2, tr(test), tr(control) = " ,  ir2 ,  ", "
+                                       ,  corrComplex ,  ", " ,  corrComplexControl);
                     lerror=true;
                 }
             }
         }
-        rootLogger.info() << "Time for US gaugefield(mu=2) x gaugefield(mu=3): " << timer;
+        rootLogger.info("Time for US gaugefield(mu=2) x gaugefield(mu=3): " ,  timer);
     }
 
     /// ---------------------------------------- NOW I WANT TO COMPARE THE OUTPUT WITH THE RESTRICTED SPATIAL CORRELATOR
@@ -508,20 +508,21 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     GCOMPLEX(PREC) bareSusc;
 
-    rootLogger.info() << "r2    plca    trAtrBt:";
+    rootLogger.info("r2    plca    trAtrBt:");
     for (int r2=0 ; r2<corrTools.distmax ; r2++) {
         if (vec_factor[r2]>0) {
             _PLoopBareSusc.getValue<GCOMPLEX(PREC)>(r2,bareSusc);
-            rootLogger.info() << vec_plca[r2] << "  " << real(bareSusc)/9.;
+            rootLogger.info(vec_plca[r2] ,  "  " ,  real(bareSusc)/9.);
         }
     }
 
     /// ------------------------------------------------------------------------------------------------- REPORT RESULTS
     if(lerror) {
-        rootLogger.error() << "At least one test " << CoutColors::red << "failed!" << CoutColors::reset;
+        rootLogger.error("At least one test " ,  CoutColors::red ,  "failed!" ,  CoutColors::reset);
     } else {
-        rootLogger.info() << "All tests " << CoutColors::green << "passed!" << CoutColors::reset;
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     }
 
     return 0;
 }
+

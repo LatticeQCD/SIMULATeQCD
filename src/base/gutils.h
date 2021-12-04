@@ -99,7 +99,7 @@ public:
   void reset() { _elapsed = 0; }
 
   void print(std::string text) {
-    rootLogger.info() << "Time for " + text + " " << _elapsed << "ms";
+    rootLogger.info("Time for " + text + " " ,  _elapsed ,  "ms");
   }
 
   inline friend std::ostream &operator<<(std::ostream &stream,
@@ -112,3 +112,4 @@ std::ostream &operator<<(std::ostream &stream, const GpuStopWatch &rhs) {
 }
 
 #endif /* UTIL_H */
+

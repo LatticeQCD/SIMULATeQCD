@@ -72,9 +72,9 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         int cg_max_iter = _individual_cg_max_iters[i];
         floatT naik_epsilon = _individual_naik_epsilons[i];
 
-        rootLogger.info() << "------------------------------------------------------------------------";
-        rootLogger.info() << "Computing propagators: m_" << _lp.mass_labels.get()[i] << "=" << mass
-                          << ", naik_eps=" << naik_epsilon << ", cg_residue=" << cg_residue << ", max_iter=" << cg_max_iter;
+        rootLogger.info("------------------------------------------------------------------------");
+        rootLogger.info("Computing propagators: m_" ,  _lp.mass_labels.get()[i] ,  "=" ,  mass
+                          ,  ", naik_eps=" ,  naik_epsilon ,  ", cg_residue=" ,  cg_residue ,  ", max_iter=" ,  cg_max_iter);
 
         //! Apply HISQ smearing and perform staggered transformation
         Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(_commBase);
@@ -150,12 +150,12 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
     }
 
 
-    rootLogger.info() << "Computing correlators along " << _lp.correlator_axis() << "-axis.";
+    rootLogger.info("Computing correlators along " ,  _lp.correlator_axis() ,  "-axis.");
 
     //! Reduce contracted propagators and project to different quantum numbers (channels).
     //! We do this here without functor syntax because then we can easily factor in the phase factors while reducing.
     for (int channel = 1; channel <= 8; channel++){
-        rootLogger.info() << "Project to M" << channel;
+        rootLogger.info("Project to M" ,  channel);
         mass_index = 0;
         for (int m_i = 0; m_i < _n_masses; m_i++){
             for (int m_j = 0; m_j <= m_i; m_j++){
@@ -187,7 +187,7 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
             }
         }
     }
-    rootLogger.info() << "Done calculating correlators";
+    rootLogger.info("Done calculating correlators");
 
 }
 
@@ -214,7 +214,7 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
                       << _current_source.x << "-" << _current_source.y << "-" << _current_source.z << "-"
                       << _current_source.t <<  _lp.fileExt();
     FileWriter file(_commBase, _lp, full_path_to_file.str());
-    rootLogger.info() << "Writing correlators to file: " << full_path_to_file.str();
+    rootLogger.info("Writing correlators to file: " ,  full_path_to_file.str());
     LineFormatter header = file.header();
     header << corr_axis_prefix+" " << "real " << "imag ";
     header.endLine();
@@ -247,3 +247,4 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
 #define INITMEAS(floatT,LAYOUT,HALO,HALOSPIN,NSTACKS) \
 template class measureHadrons<floatT, true, HALO, HALOSPIN, LAYOUT, NSTACKS, R18>;
 INIT_PLHHSN(INITMEAS)
+

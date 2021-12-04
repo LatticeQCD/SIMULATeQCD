@@ -45,7 +45,7 @@ bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield
     int faults = 0;
     redBase.reduce(faults,elems);
 
-    rootLogger.info() << faults << " faults detected";
+    rootLogger.info(faults ,  " faults detected");
 
     if (faults > 0) {
       return false;
@@ -148,31 +148,31 @@ void test_dslash2(CommunicationBase &commBase){
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
     
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
     gauge.updateAll();
 
     smearing.SmearAll();
 
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info("Initialize random state");
     grnd_state<false> h_rand;
     grnd_state<onDevice> d_rand;
 
     h_rand.make_rng_state(1337);
     d_rand = h_rand;
 
-    rootLogger.info() << "Initialize spinors";
+    rootLogger.info("Initialize spinors");
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
     Spinorfield<floatT, false, LatLayout, HaloDepthSpin, NStacks> spinorOut2(commBase);
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinor(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     spinor.gauss(d_rand.state);
 
-    rootLogger.info() << "Initialize DSlash";
+    rootLogger.info("Initialize DSlash");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
     dslash.Dslash(spinorOut, spinorIn);
@@ -333,11 +333,11 @@ void test_dslash2(CommunicationBase &commBase){
     }
 
     if (success[0] && success[1] && success[2] && success[3]) {
-        stdLogger.info() << "Test of Dslash: " << CoutColors::green << "passed" << CoutColors::reset;
+        stdLogger.info("Test of Dslash: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     } else {
-        stdLogger.info() << "Test of Dslash: " << CoutColors::red << "failed" << CoutColors::reset;
-        stdLogger.info() << "mycoords = " << commBase.mycoords()*GInd::getLatData().localLattice()
-        << ": " <<  success[0] << " " << success[1] << " " << success[2] << " " << success[3];
+        stdLogger.info("Test of Dslash: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
+        stdLogger.info("mycoords = " ,  commBase.mycoords()*GInd::getLatData().localLattice()
+        ,  ": " ,   success[0] ,  " " ,  success[1] ,  " " ,  success[2] ,  " " ,  success[3]);
     }
 
     bool simple = false;
@@ -360,9 +360,9 @@ void test_dslash2(CommunicationBase &commBase){
 
 
     if (simple)
-        rootLogger.info() << "Simple Test using scalar product: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("Simple Test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.info() << "Simple Test using scalar product: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.info("Simple Test using scalar product: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 }
 
 
@@ -380,19 +380,19 @@ int main(int argc, char **argv) {
     initIndexer(4,param, commBase);
     stdLogger.setVerbosity(INFO);
 
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing All - All";
-    rootLogger.info() << "------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Device");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing All - All");
+    rootLogger.info("------------------");
     test_dslash2<double, All, All, 1, true>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     test_dslash2<double, Even, Odd, 1, true>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Odd - Even";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Odd - Even");
+    rootLogger.info("------------------");
     test_dslash2<double, Odd, Even, 1, true>(commBase);
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
 }

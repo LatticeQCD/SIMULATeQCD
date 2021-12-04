@@ -59,13 +59,13 @@ int main(int argc, char *argv[]) {
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
 
     /// Initialize the Lattice class.
     initIndexer(HaloDepth,param,commBase);
 
     /// Initialize the Gaugefield.
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 
     /// Initialize gaugefield with unit-matrices.
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 
         std::string file_path = param.directory();
         file_path.append(param.gauge_file()); 
-        rootLogger.info() << "Starting from configuration: " << file_path;
+        rootLogger.info("Starting from configuration: " ,  file_path);
 
             gauge.readconf_milc(file_path);
 
@@ -83,8 +83,8 @@ int main(int argc, char *argv[]) {
             GaugeAction<PREC,true,HaloDepth> enDensity(gauge);
             PREC SpatialPlaq  = enDensity.plaquetteSS();
             PREC TemporalPlaq = enDensity.plaquette()*2.0-SpatialPlaq;
-//            rootLogger.info() << "plaquetteST: "   << TemporalPlaq;
-//            rootLogger.info() << "plaquetteSS: " << SpatialPlaq;
+//            rootLogger.info("plaquetteST: "   ,  TemporalPlaq);
+//            rootLogger.info("plaquetteSS: " ,  SpatialPlaq);
 
 
 
@@ -92,20 +92,20 @@ int main(int argc, char *argv[]) {
             info_path.append(".info");
             milcInfo<PREC> paramMilc;
 //            paramMilc.readfile(commBase,info_path);
-            rootLogger.info() << "plaquette SS: " << SpatialPlaq << "  and info file: " << (paramMilc.ssplaq())/3.0;
-            rootLogger.info() << "plaquette ST: "  << TemporalPlaq << "  and info file: "<<  (paramMilc.stplaq())/3.0;
-            rootLogger.info() << "linktr info file: " << paramMilc.linktr();
+            rootLogger.info("plaquette SS: " ,  SpatialPlaq ,  "  and info file: " ,  (paramMilc.ssplaq())/3.0);
+            rootLogger.info("plaquette ST: "  ,  TemporalPlaq ,  "  and info file: ",   (paramMilc.stplaq())/3.0);
+            rootLogger.info("linktr info file: " ,  paramMilc.linktr());
             if(!(abs((paramMilc.ssplaq())/3.0-SpatialPlaq) < 1e-5)){
 //                throw PGCError("Error ssplaq!");
             }
             else{
-                rootLogger.info() << "Passed ssplaq check";
+                rootLogger.info("Passed ssplaq check");
             }
             if(!(abs((paramMilc.stplaq())/3.0-TemporalPlaq) < 1e-5)){
 //                throw PGCError("Error stplaq!");
             }
             else{
-                rootLogger.info() << "Passed stplaq check";
+                rootLogger.info("Passed stplaq check");
             }
 
 
@@ -123,7 +123,7 @@ int main(int argc, char *argv[]) {
     /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
     typedef GIndexer<All,HaloDepth> GInd;
     redBase.adjustSize(GInd::getLatData().vol4);
-    rootLogger.info() << "volume size " << GInd::getLatData().globvol4;
+    rootLogger.info("volume size " ,  GInd::getLatData().globvol4);
 */
 
     file_path.append("_nersc");
@@ -132,3 +132,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

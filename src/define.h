@@ -39,7 +39,7 @@ template <typename... Args>
 inline std::runtime_error PGCError(Args... args) {
     std::stringstream err_msg;
     args_to_stream(err_msg, args...);
-    stdLogger.fatal() << err_msg.str();
+    stdLogger.fatal(err_msg.str());
     return std::runtime_error(err_msg.str());
 }
 //! -------------------------------------------------------------------
@@ -173,3 +173,4 @@ namespace CoutColors {
 
 
 #endif //GPU_LATTICE_DEFINE_H
+

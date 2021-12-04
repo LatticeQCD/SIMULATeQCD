@@ -12,7 +12,7 @@ CommunicationBase::CommunicationBase( int *argc, char ***argv) {
     myrank = 0;
     num_proc_world = 1;
     _nodes = LatticeDimensions(1,1,1,1);
-    rootLogger.setVerbosity(stdLogger.getVerbosity());
+    rootLogger.setVerbosity(stdLogger.getVerbosity();
 }
 
 void CommunicationBase::init(const LatticeParameters &lp ) {
@@ -25,3 +25,4 @@ void CommunicationBase::init(const LatticeParameters &lp ) {
 }; 
 
 #endif
+

@@ -62,7 +62,7 @@ struct compare_smearing {
         return (sum < 8e-5 ? 0 : 1);
         #else
         if (sum > 8e-5) {
-            rootLogger.info() << "Found significant difference at " << site << " the difference is " << sum << std::endl;
+            rootLogger.info("Found significant difference at " ,  site ,  " the difference is " ,  sum ,  std::endl);
         }
         return (sum < 8e-5 ? 0 : 1);
         #endif
@@ -82,7 +82,7 @@ bool checkfields(Gaugefield<floatT,false,HaloDepth, comp> &GaugeL, Gaugefield<fl
     int faults = 0;
     redBase.reduce(faults,elems);
 
-    rootLogger.info() << faults << " faults detected";
+    rootLogger.info(faults ,  " faults detected");
 
     if (faults > 0) {
         return false;
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth = 0;
     const size_t HaloDepthSpin = 4;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
     typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,rhmc_param,commBase);
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]) {
     rat.readfile(commBase, rhmc_param.rat_file(), argc, argv);
 
     Gaugefield<PREC, false,HaloDepth> force_host(commBase);
-    rootLogger.info() << "Initialize Gaugefield & Spinorfield";
+    rootLogger.info("Initialize Gaugefield & Spinorfield");
 
     Gaugefield<PREC, true, HaloDepth,R18> gauge(commBase);
     Gaugefield<PREC, false, HaloDepth> gauge_host(commBase);
@@ -154,11 +154,11 @@ int main(int argc, char *argv[]) {
 
     GSU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
 
-    rootLogger.info() << "Time: " << timer;
-    rootLogger.info() << "Force parallelGpu:";
-    rootLogger.info() << test1.getLink00()<<test1.getLink01()<<test1.getLink02();
-    rootLogger.info() << test1.getLink10()<<test1.getLink11()<<test1.getLink12();
-    rootLogger.info() << test1.getLink20()<<test1.getLink21()<<test1.getLink22();
+    rootLogger.info("Time: " ,  timer);
+    rootLogger.info("Force parallelGpu:");
+    rootLogger.info(test1.getLink00(), test1.getLink01(), test1.getLink02());
+    rootLogger.info(test1.getLink10(), test1.getLink11(), test1.getLink12());
+    rootLogger.info(test1.getLink20(), test1.getLink21(), test1.getLink22());
     
     Gaugefield<PREC,false,HaloDepth> force_BIGPU(commBase);
 
@@ -176,12 +176,13 @@ int main(int argc, char *argv[]) {
 
     bool pass = checkfields<PREC,HaloDepth,R18>(force_host,force_BIGPU);
     if (pass) {
-        rootLogger.info() << CoutColors::green << "Force is correct" << CoutColors::reset;
+        rootLogger.info(CoutColors::green ,  "Force is correct" ,  CoutColors::reset);
     } else {
-        rootLogger.info() << CoutColors::red << "Force is wrong" << CoutColors::reset;
-        rootLogger.info() << CoutColors::red << "Please make sure that you are using the same seed, precision, and rational approx as gaction_test_hisqforce.cpp in the BielefeldGPUCode" << CoutColors::reset;
+        rootLogger.info(CoutColors::red ,  "Force is wrong" ,  CoutColors::reset);
+        rootLogger.info(CoutColors::red ,  "Please make sure that you are using the same seed, precision, and rational approx as gaction_test_hisqforce.cpp in the BielefeldGPUCode" ,  CoutColors::reset);
     }
-    rootLogger.info() << "For a more precise check, compare Ascii Output test_conf/HisqForceCheck.txt with test_conf/BIGPU_HisqForce.txt";
+    rootLogger.info("For a more precise check, compare Ascii Output test_conf/HisqForceCheck.txt with test_conf/BIGPU_HisqForce.txt");
        
     return 0;
 }
+

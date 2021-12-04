@@ -132,12 +132,12 @@ int main(int argc, char *argv[]) {
     /// parameter to each kernel.
     const size_t HaloDepth = 1;
 
-    /// rootLogger.info() is a method which prints messages. It can be used as std::cout, but it involves always a newline.
-    /// This rootLogger class makes sure that only the root Core/GPU prints something.
-    /// Alternatively, one can use stdLogger.info() where each Core/GPU will print something.
-    /// Apart from the method info() there is also alloc() trace() debug() info() warn() error() fatal() which
-    /// highlight the output differently.
-    rootLogger.info() << "Initialize Lattice";
+    /// rootLogger.info(isamethodwhichprintsmessages.Itcanbeusedasstd::cout,butitinvolvesalwaysanewline.
+///ThisrootLoggerclassmakessurethatonlytherootCore/GPUprintssomething.
+///Alternatively,onecanusestdLogger.info(whereeachCore/GPUwillprintsomething.
+///Apartfromthemethodinfo(thereisalsoalloc(trace(debug(info(warn(error(fatal(which
+///highlighttheoutputdifferently.
+rootLogger.info("Initialize Lattice");
     /// Initialize the Indexer on GPU and CPU.  
     initIndexer(HaloDepth,param,commBase,true);
     typedef GIndexer<All,HaloDepth> GInd;
@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     /// Initialize the Gaugefield. Basically, this object holds all SU(3)-matrices of the gaugefield.
     /// The second template parameter determines whether the gaugefield should be stored on GPU or CPU but this will
     /// be changed in the future ...
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC, true,HaloDepth> gauge(commBase);
 
     /// Initialize gaugefield with unity-matrices.
@@ -159,7 +159,7 @@ int main(int argc, char *argv[]) {
     redBase.adjustSize(GInd::getLatData().vol4);
 
     /// Read a configuration from hard drive.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
     /// start timer...
@@ -175,8 +175,8 @@ int main(int argc, char *argv[]) {
     plaq = gPlaq<PREC,HaloDepth>(gauge, redBase);
     /// stop timer and print time
     timer.stop();
-    rootLogger.info() << "Time for operators " << timer;
-    rootLogger.info() << "Reduced Plaquette is: " << plaq;
+    rootLogger.info("Time for operators " ,  timer);
+    rootLogger.info("Reduced Plaquette is: " ,  plaq);
 
     return 0;
 }

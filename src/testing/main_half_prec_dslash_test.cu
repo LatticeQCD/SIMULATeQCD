@@ -60,15 +60,15 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     Gaugefield<__half, true, HaloDepth, U3R14> gauge_Naik_half(commBase);
     
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    rootLogger.info() << "Starting Test with " << NStacks << " Stacks";
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info("Starting Test with " ,  NStacks ,  " Stacks");
+    rootLogger.info("Initialize random state");
     grnd_state<false> h_rand;
     grnd_state<onDevice> d_rand;
 
     h_rand.make_rng_state(1337);
     d_rand = h_rand;
 
-    rootLogger.info() << "gen conf";
+    rootLogger.info("gen conf");
 
     // gauge.readconf_nersc("../test_conf/gauge12750");
     gauge.random(d_rand.state);
@@ -76,28 +76,28 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("Error in random gauge field", gpuErr);
-            rootLogger.info() << "Error in random gauge field";
+            rootLogger.info("Error in random gauge field");
 
     gauge.updateAll();
 
     gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("Error in updateAll", gpuErr);
-            rootLogger.info() << "Error updateAll";
+            rootLogger.info("Error updateAll");
 
     smearing.SmearAll();
 
     gpuErr = gpuGetLastError();
     if (gpuErr)
         // GpuError("error in smearing", gpuErr);
-        rootLogger.info() << "Error in smearing";
+        rootLogger.info("Error in smearing");
     //convert_precision<float,__half,HaloDepth,R18> convert_struct(gauge_smeared);
         
     gauge_smeared_half.convert_precision<floatT>(gauge_smeared);
     gauge_Naik_half.convert_precision<floatT>(gauge_Naik);
 
 //gauge_smeared.iterateOverBulkAllMu(convert_precision<__half,floatT,true, HaloDepth,R18>(gauge_smeared_half));
-    rootLogger.info() << "Initialize spinors";
+    rootLogger.info("Initialize spinors");
     Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorSave(commBase);
     Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
@@ -106,22 +106,22 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         if (gpuErr)
             GpuError("error in spinor Initialization", gpuErr);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     spinorSave = spinorIn;
     gpuErr = gpuGetLastError();
         if (gpuErr)
            // GpuError("error in gaussian spinors", gpuErr);
-            rootLogger.info() << "error in gaussian spinors";
+            rootLogger.info("error in gaussian spinors");
 
 
-    rootLogger.info() << "Initialize DSlash";
+    rootLogger.info("Initialize DSlash");
     HisqDSlash<__half, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared_half, gauge_Naik_half, 0.0);
     
     gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("error in Initialization of DSlash", gpuErr);
-            rootLogger.info() << "Error in Initialization of DSlash";
+            rootLogger.info("Error in Initialization of DSlash");
 
     gpuEventRecord(start);
     for (int i = 0; i < 500; ++i)
@@ -147,16 +147,16 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     norm = norm / Vol_Stack;
     
     // gpuProfilerStop();
-    rootLogger.info() << "Time for 500 applications of multiRHS Dslash: " << milliseconds;
+    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  milliseconds);
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wint-in-bool-context"
     float EOfactor = (LatLayout == (Even || Odd) ? 0.5 : 1.0);
     #pragma GCC diagnostic pop
     float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(milliseconds * 1e-3)*1e-12;
-    rootLogger.info() << "Achieved TFLOP/s " << TFlops;
+    rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 
     for (int i = 0; i < NStacks; i++) {
-        rootLogger.info() << "dot [" << i <<"] = "<< norm[i];
+        rootLogger.info("dot [" ,  i , "] = ",  norm[i]);
     }
 
 }
@@ -184,11 +184,11 @@ int main(int argc, char **argv) {
     initIndexer(HaloDepthSpin,param, commBase);
     stdLogger.setVerbosity(INFO);
 
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Device");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
@@ -204,15 +204,15 @@ int main(int argc, char **argv) {
     
 
 /// Apparently the host has trouble to store a configuration.
-//    rootLogger.info() << "-------------------------------------";
-//    rootLogger.info() << "Running on Host";
-//    rootLogger.info() << "-------------------------------------";
-//    rootLogger.info() << "Testing Even - Odd";
-//    rootLogger.info() << "------------------";
+//    rootLogger.info("-------------------------------------");
+//    rootLogger.info("Running on Host");
+//    rootLogger.info("-------------------------------------");
+//    rootLogger.info("Testing Even - Odd");
+//    rootLogger.info("------------------");
 //    test_dslash<float, Even, Odd, 1, false>(commBase);
-//    rootLogger.info() << "------------------";
-//    rootLogger.info() << "Testing Odd - Even";
-//    rootLogger.info() << "------------------";
+//    rootLogger.info("------------------");
+//    rootLogger.info("Testing Odd - Even");
+//    rootLogger.info("------------------");
 //    test_dslash<float, Odd, Even, 1, false>(commBase);
 }
 

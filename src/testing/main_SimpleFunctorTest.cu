@@ -115,11 +115,11 @@ bool cmp_rel(Spinor& lhs, Spinor& rhs, double rel, double prec){
 
 void compare_relative(Spinor& ref, Spinor& res, double rel, double prec, std::string text){
     if (cmp_rel(ref, res, rel, prec)){
-        rootLogger.info() << text << " PASSED";
+        rootLogger.info(text ,  " PASSED");
     }else{
-        rootLogger.error() << text << " FAILED";
-        rootLogger.error() << ref << " vs";
-        rootLogger.error() << res;
+        rootLogger.error(text ,  " FAILED");
+        rootLogger.error(ref ,  " vs");
+        rootLogger.error(res);
     }
 }
 
@@ -202,7 +202,7 @@ void performFunctorsLaunch(SpinorAccessor res, Function op, const int size){
         const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (size)
                                                / static_cast<float> (blockDim.x)));
 
-        rootLogger.debug() << "Size of operator " << sizeof(op) << std::endl;
+        rootLogger.debug("Size of operator " ,  sizeof(op) ,  std::endl);
         performFunctors <<< gridDim, blockDim >>>(res, op, size);
 
         gpuError_t gpuErr = gpuGetLastError();
@@ -359,3 +359,4 @@ int main(){
 
     return 0;
 }
+

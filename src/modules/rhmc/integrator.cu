@@ -1,7 +1,7 @@
 #include "integrator.h"
 
 
-// inline void WaitEnter() { rootLogger.warn() << "Press Enter to continue..."; while (std::cin.get()!='\n'); }
+// inline void WaitEnter() { rootLogger.warn("Press Enter to continue..."); while (std::cin.get()!='\n'); }
 
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
 struct do_evolve_Q
@@ -102,7 +102,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::inte
              break;
 
         default:
-            rootLogger.error() << "Only SW leapfroger implemented!";
+            rootLogger.error("Only SW leapfroger implemented!");
     }
 }
 
@@ -132,7 +132,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     updateP_gaugeforce( sw_steph );
 
 
-    rootLogger.info() << "Done first Leapfrog step";
+    rootLogger.info("Done first Leapfrog step");
 
     //==================================================//
     // Perform the next ( _no_md - 1 ) steps            //
@@ -150,10 +150,10 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
             }// end loop over steps of gauge part
             _smearing.SmearAll();
             // update P using only the 1f part of the force
-            rootLogger.info() << "strange force:";
+            rootLogger.info("strange force:");
             updateP_fermforce( step_1f, _phi_1f, false );
         }// end loop over steps of 1f
-        rootLogger.info() << "light force:";
+        rootLogger.info("light force:");
         // update P using only the 2f part of the force
         updateP_fermforce( ieps, _phi_2f, true );
     }  
@@ -212,13 +212,13 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 
     // float force_time;
     // gpuEventElapsedTime(&force_time, start, stop);
-    // rootLogger.info() << "gauge force  time [ms]: " << force_time;
+    // rootLogger.info("gauge force  time [ms]: " ,  force_time);
     // gpuEventDestroy(start);
     // gpuEventDestroy(stop);
 
 
     evolveP(stepsize);
-    // rootLogger.info() << "Gauge force:";
+    // rootLogger.info("Gauge force:");
     // check_traceless();
 }
 
@@ -241,7 +241,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 
     // float force_time;
     // gpuEventElapsedTime(&force_time, start, stop);
-    // rootLogger.info() << "fermforce  time [ms]: " << force_time;
+    // rootLogger.info("fermforce  time [ms]: " ,  force_time);
     // gpuEventDestroy(start);
     // gpuEventDestroy(stop);
 
@@ -250,7 +250,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
     forceinfo();
 
     evolveP(stepsize);
-    // rootLogger.info() << "Fermion force:";
+    // rootLogger.info("Fermion force:");
     // check_traceless();
 }
 
@@ -300,7 +300,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::forc
 
 
 
-    rootLogger.info() << "Average force = " << thing;
+    rootLogger.info("Average force = " ,  thing);
 
 
 }
@@ -336,7 +336,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::chec
 
     redBase.reduce(momenta, elems);
 
-    rootLogger.info() << "summed trace of momenta: " << momenta;
+    rootLogger.info("summed trace of momenta: " ,  momenta);
 }
 
 
@@ -358,7 +358,7 @@ void pure_gauge_integrator<floatT, onDevice, HaloDepth, comp>::PureGaugeleapfrog
 
     updateP_gaugeforce( _rhmc_param.step_size()/2.0 );
 
-    rootLogger.info() << "Done first Leapfrog step";
+    rootLogger.info("Done first Leapfrog step");
 
     //==================================================//
     // Perform the next ( _no_md - 1 ) steps            //
@@ -419,7 +419,7 @@ void pure_gauge_integrator<floatT, onDevice, HaloDepth, comp>::check_traceless()
 
     redBase.reduce(momenta, elems);
 
-    rootLogger.info() << "summed trace of momenta: " << momenta;
+    rootLogger.info("summed trace of momenta: " ,  momenta);
 }
 
 
@@ -432,3 +432,4 @@ template class pure_gauge_integrator<floatT, true, HALO, comp>;
 
 INIT_PHHS(CLASS1_INIT)
 INIT_PHC(CLASS2_INIT)
+

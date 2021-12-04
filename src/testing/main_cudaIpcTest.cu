@@ -70,7 +70,7 @@ void sendRecvBufferMPI(int rank, uint8_t *sendBufferHost, uint8_t *recvBufferHos
                        uint8_t *sendBufferDevice, uint8_t *recvBufferDevice, int size,
                        MPI_Request requestSend[2], MPI_Comm comm) {
     int tag = 0;
-    rootLogger.info() << "Do memcpies.";
+    rootLogger.info("Do memcpies.");
     copyDeviceToHost(sendBufferDevice, sendBufferHost, size);
     MPI_Isend(sendBufferHost, size, MPI_UINT8_T, rank, tag, comm, &requestSend[0]);
     MPI_Irecv(recvBufferHost, size, MPI_UINT8_T, rank, tag, comm, &requestSend[1]);
@@ -144,10 +144,10 @@ int main(int argc, char *argv[]) {
 
         copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
-        rootLogger.info() << "Note that in what follows, the output will look strange. It's okay.";
-        stdLogger.info() << recvBufferHost[0] << recvBufferHost[(int) (size / 2.)] << recvBufferHost[size - 1];
+        rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
+        stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
 
-        rootLogger.info() << "P2P Time: " << timer ;
+        rootLogger.info("P2P Time: " ,  timer);
     }
 
     timer.reset();
@@ -158,10 +158,10 @@ int main(int argc, char *argv[]) {
 
     copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
-    rootLogger.info() << "Note that in what follows, the output will look strange. It's okay.";
-    stdLogger.info() << recvBufferHost[0] << recvBufferHost[(int) (size / 2.)] << recvBufferHost[size - 1];
+    rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
+    stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
 
-    rootLogger.info() << "P2P Last time: " << timer;
+    rootLogger.info("P2P Last time: " ,  timer);
 
     ////// CHECK TIMINGS WITH STANDARD MPI COMMUNICATION //////
 
@@ -176,10 +176,10 @@ int main(int argc, char *argv[]) {
 
         copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
-        rootLogger.info() << "Note that in what follows, the output will look strange. It's okay.";
-        stdLogger.info() << recvBufferHost[0] << recvBufferHost[(int) (size / 2.)] << recvBufferHost[size - 1];
+        rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
+        stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
 
-        rootLogger.info() << "MPI Time: " << timer ;
+        rootLogger.info("MPI Time: " ,  timer);
     }
 
     timer.reset();
@@ -191,12 +191,12 @@ int main(int argc, char *argv[]) {
 
     copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
-    rootLogger.info() << "Note that in what follows, the output will look strange. It's okay.";
-    stdLogger.info() << recvBufferHost[0] << recvBufferHost[(int) (size / 2.)] << recvBufferHost[size - 1];
+    rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
+    stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
 
-    rootLogger.info() << "MPI Last time: " << timer;
+    rootLogger.info("MPI Last time: " ,  timer);
 
-    rootLogger.info() << "Test passed (since it didn't crash)";
+    rootLogger.info("Test passed (since it didn't crash)");
     gpuIpcCloseMemHandle(recvBufferDeviceP2P);
     freeDevice(sendBufferDevice);
     freeDevice(recvBufferDevice);
@@ -205,3 +205,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

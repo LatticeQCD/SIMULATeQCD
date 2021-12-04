@@ -17,7 +17,7 @@ void MemoryManagement::gMemory<onDevice>::swap(gMemoryPtr<onDevice> &src){
         src->_rawPointer = _rawPointer;
         _rawPointer = tmp;
     } else {
-        rootLogger.error() << "memoryManagement.h: swap not allowed when sizes are different!";
+        rootLogger.error("memoryManagement.h: swap not allowed when sizes are different!");
     }
 }
 
@@ -197,7 +197,7 @@ void MemoryManagement::memorySummary(bool show_counts_host, bool show_size_host,
                    << "\t" << devContainer;
         }
     }
-    rootLogger.info() << output.str();
+    rootLogger.info(output.str());
 }
 
 
@@ -215,3 +215,4 @@ template void MemoryManagement::gMemory<true>::copyFrom<false>(const gMemoryPtr<
                                              const size_t offsetSelf, const size_t offsetSrc);
 template void MemoryManagement::gMemory<true>::copyFrom<true>(const gMemoryPtr<true> &src, const size_t sizeInBytes,
                                             const size_t offsetSelf, const size_t offsetSrc);
+

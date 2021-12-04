@@ -92,7 +92,7 @@ void test_old_new_host_dev(CommunicationBase &commBase){
     ReadIndex<All,HaloDepth> index;
     const size_t elems=GInd::getLatData().vol4;
 
-    rootLogger.info() << "Draw random numbers twice:";
+    rootLogger.info("Draw random numbers twice:");
 
     iterateFunctorNoReturn<true>(draw_rand<floatT>(dev_state.state, d_rand), index, elems);
     iterateFunctorNoReturn<true>(draw_rand<floatT>(dev_state.state, d_rand), index, elems);
@@ -109,43 +109,43 @@ void test_old_new_host_dev(CommunicationBase &commBase){
     for (size_t i = 0; i < GInd::getLatData().vol4; ++i) {
 
         if ((h_rand[i]-h_rand2[i]) != 0.0) {
-            rootLogger.error() << "At index " << i << ": host neq device rnd number!";
+            rootLogger.error("At index " ,  i ,  ": host neq device rnd number!");
             host_dev = host_dev && false;
         
         }
     }
 
     if ((h_rand[0]-0.351445) > 1e-6){
-        rootLogger.error() << "At index 0: old neq new rnd number!";
+        rootLogger.error("At index 0: old neq new rnd number!");
         new_old = new_old && false;
     }
 
     if ((h_rand[189]-0.82627) > 1e-6){
-        rootLogger.error() << "At index 189: old neq new rnd number!";
+        rootLogger.error("At index 189: old neq new rnd number!");
         new_old = new_old && false;
     }
 
     if ((h_rand[1024]-0.670597) > 1e-6){
-        rootLogger.error() << "At index 0: old neq new rnd number!";
+        rootLogger.error("At index 0: old neq new rnd number!");
         new_old = new_old && false;
     }
 
     if ((h_rand[2045]-0.511756) > 1e-6){
-        rootLogger.error() << "At index 0: old neq new rnd number!";
+        rootLogger.error("At index 0: old neq new rnd number!");
         new_old = new_old && false;
     }
 
 
     if (host_dev)
-        rootLogger.info() << CoutColors::green << "Host and device random numbers match"<< CoutColors::reset;
+        rootLogger.info(CoutColors::green ,  "Host and device random numbers match",  CoutColors::reset);
     else
-       rootLogger.info() <<  CoutColors::red << "Host and device random numbers do not match"<< CoutColors::reset;
+       rootLogger.info( CoutColors::red ,  "Host and device random numbers do not match",  CoutColors::reset);
 
 
     if (new_old)
-        rootLogger.info() << CoutColors::green << "Old code and new code random numbers match"<< CoutColors::reset;
+        rootLogger.info(CoutColors::green ,  "Old code and new code random numbers match",  CoutColors::reset);
     else
-       rootLogger.info() <<  CoutColors::red << "Old code and new code random numbers do not match"<< CoutColors::reset;
+       rootLogger.info( CoutColors::red ,  "Old code and new code random numbers do not match",  CoutColors::reset);
 
     std::string filename;
 
@@ -172,13 +172,13 @@ void test_for_zeros(){
 
     const size_t elems=GInd::getLatData().vol4;
 
-    rootLogger.info() << "Draw random numbers twice:";
+    rootLogger.info("Draw random numbers twice:");
 
     for (int i = 0; i < 25000; ++i) {
         printf("\033[0;31m"); 
         iterateFunctorNoReturn<true>(is_rand_zero<floatT>(dev_state.state), index, elems);
         printf("\033[0m");
-        rootLogger.info() << "completed # " << i << "sweeps"; 
+        rootLogger.info("completed # " ,  i ,  "sweeps"); 
     }
 }
 
@@ -199,11 +199,12 @@ int main(int argc, char *argv[]) {
 
     initIndexer(HaloDepth,param, commBase);
 
-    rootLogger.info() << "Testig RNG for single prec:";
+    rootLogger.info("Testig RNG for single prec:");
     test_old_new_host_dev<float, HaloDepth>(commBase);
 
-    rootLogger.info() << "Testing RNG for double prec:";
+    rootLogger.info("Testing RNG for double prec:");
     test_old_new_host_dev<double, HaloDepth>(commBase);
 
     return 0;
 }
+

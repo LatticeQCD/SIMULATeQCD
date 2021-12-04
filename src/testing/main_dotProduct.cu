@@ -22,7 +22,7 @@ void run_func_nostacks(CommunicationBase &commBase) {
 
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 1> spinorIn(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     GCOMPLEX(double) dot(0.0,0.0);
     gpuEventRecord(start);
@@ -34,9 +34,9 @@ void run_func_nostacks(CommunicationBase &commBase) {
     float milliseconds = 0;
     gpuEventElapsedTime(&milliseconds, start, stop);
 
-    rootLogger.info() << "dot " << dot;
+    rootLogger.info("dot " ,  dot);
 
-    rootLogger.info() << "Time for dot-product: " << milliseconds << " ms";
+    rootLogger.info("Time for dot-product: " ,  milliseconds ,  " ms");
 }
 
 
@@ -54,7 +54,7 @@ void run_func(CommunicationBase &commBase) {
 
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorIn(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
     gpuEventRecord(start);
@@ -67,10 +67,10 @@ void run_func(CommunicationBase &commBase) {
     gpuEventElapsedTime(&milliseconds, start, stop);
 
     for (size_t i = 0; i < NStacks; ++i) {
-        rootLogger.info() << "dot " << dot[i];
+        rootLogger.info("dot " ,  dot[i]);
     }
 
-    rootLogger.info() << "Time for dot-product: " << milliseconds << " ms";
+    rootLogger.info("Time for dot-product: " ,  milliseconds ,  " ms");
 }
 
 int main(int argc, char **argv) {

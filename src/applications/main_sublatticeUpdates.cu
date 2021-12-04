@@ -146,7 +146,7 @@ int main(int argc, char *argv[]) {
     gpuMemGetInfo( &AvailDevice, &TotalDevice );
     UsedDevice = TotalDevice - AvailDevice;
     double StarterUsedInMB = UsedDevice/1024./1024.;
-    rootLogger.info() << "Memory for the starter[MB]: " << StarterUsedInMB;
+    rootLogger.info("Memory for the starter[MB]: " ,  StarterUsedInMB);
     double Ratio = (double)(elem2)/elem1; 
     double MemLatNoHalo = sizeof(PREC)*18.*elem1*lp.latDim()[3]*4/1024./1024.;
     double MemLatWithHalo = sizeof(PREC)*18.*P2P*4/1024./1024.;
@@ -154,11 +154,11 @@ int main(int argc, char *argv[]) {
     double MemAll = StarterUsedInMB + MemLatWithHalo + 16.*elem4/1024./1024.;//last term for seed
     if (lp.ColorElectricCorr()) {
         double TotalEstimation_CEC = MemLatNoHalo*((1+6.*(lp.sublattice_lt()-2)*(1+Ratio))/4.);
-        rootLogger.info() << "Memory to be used for CEC[MB]: " << TotalEstimation_CEC;
+        rootLogger.info("Memory to be used for CEC[MB]: " ,  TotalEstimation_CEC);
         MemAll += TotalEstimation_CEC;
     }
 
-    rootLogger.info() << "Device Memory[MB]: " << TotalDevice/1024./1024.;
+    rootLogger.info("Device Memory[MB]: " ,  TotalDevice/1024./1024.);
     if ( MemAll + 20 > TotalDevice/1024./1024. ) { //20 is an estimation for miscellaneous memory comsumption
         throw PGCError("Device Memory[MB]:  ", TotalDevice / 1024. / 1024., "    Required Memory[MB]:  ", MemAll + 20,
                        ". Memory needed exceeds the device's memory ! exit the program.");
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
     //field on the host, can not be changed.
     Gaugefield<PREC, false, HaloDepth> gauge_host(commBase);
 
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge_host.readconf_nersc(lp.GaugefileName());
     gauge_host.updateAll();
 
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
 
     for (int local_pos_t=0;local_pos_t<lp.sublattice_lt();local_pos_t++) {
     
-        rootLogger.info() << "measure. update the sub-lattice at shift position: " << local_pos_t << "/" << lp.sublattice_lt();
+        rootLogger.info("measure. update the sub-lattice at shift position: " ,  local_pos_t ,  "/" ,  lp.sublattice_lt());
         // copy field to device 
         Gaugefield<PREC, USE_GPU, HaloDepth> gauge_device(gauge_host.getComm()); 
         gauge_device = gauge_host;
@@ -314,7 +314,7 @@ int main(int argc, char *argv[]) {
         contraction.ImproveNormalizeBulk(SubBulk_Nt_real, SubBulk_Nt_p0, lp.num_meas()); 
 
         //contraction for the improve emt correlators in bulk channel  
-        rootLogger.info() << "contration to obtain the multi-level improved energy-momentum correlator in bulk channel";
+        rootLogger.info("contration to obtain the multi-level improved energy-momentum correlator in bulk channel");
         std::vector<PREC> ImproveBulk_Correlator((lp.PzMax()+1)*lp.latDim()[3], 0) ;
         for(int pz=0; pz<=lp.PzMax();pz++) {
             contraction.ImproveContractionBulk(SubBulk_Nt_real, SubBulk_Nt_imag, lp.min_dist(), global_spatial_vol, pz, ImproveBulk_Correlator);  
@@ -354,7 +354,7 @@ int main(int argc, char *argv[]) {
         //normalize the shear channel element
         contraction.ImproveNormalizeShear(SubShear_Nt_real, SubShear_Nt_p0, lp.num_meas()); 
         //contraction for the improve emt correlators in bulk channel  
-        rootLogger.info() << "contration to obtain the multi-level improved energy-momentum correlator in shear channel";
+        rootLogger.info("contration to obtain the multi-level improved energy-momentum correlator in shear channel");
         std::vector<PREC> ImproveShear_Correlator((lp.PzMax()+1)*lp.latDim()[3], 0) ;
         for(int pz=0; pz<=lp.PzMax();pz++) {
             contraction.ImproveContractionShear(SubShear_Nt_real, SubShear_Nt_imag, lp.min_dist(), global_spatial_vol, pz, ImproveShear_Correlator);
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]) {
         //NonimproveColorElectricCorrelator = StandardCEC.getColorElectricCorr();
 
         ////write nonimprove polyakovloop
-        //rootLogger.info() << "calculate the nonimprove polyakovloop ";
+        //rootLogger.info("calculate the nonimprove polyakovloop ");
         //datNameCE_NonimprovePoly << lp.out_dir() << "Standard_polyakovloop" << lp.fileExt();
         //FileWriter file_NonimprovePoly(gauge_host.getComm(), lp);
         //file_NonimprovePoly.createFile(datNameCE_NonimprovePoly.str());
@@ -401,7 +401,7 @@ int main(int argc, char *argv[]) {
         //newTagNonimprovePoly << std::scientific << std::setprecision(15) << real(NonimprovePolyakovLoop) << " " << imag(NonimprovePolyakovLoop) << "\n";
 
         ////write nonimprove color electric correlator  
-        //rootLogger.info() << "calculate the nonimprove colorelectric correlator";
+        //rootLogger.info("calculate the nonimprove colorelectric correlator");
         //datNameCE_NonimproveCorr << lp.out_dir() << "Standard_colorelectriccorr" << lp.fileExt();
         //FileWriter file_NonimproveCorr(gauge_host.getComm(), lp);
         //file_NonimproveCorr.createFile(datNameCE_NonimproveCorr.str());
@@ -421,7 +421,7 @@ int main(int argc, char *argv[]) {
         ImproveColorElectricCorrelator = sublatmeas.contraction_cec(sub1_cec_Nt, sub2_cec_Nt, lp.min_dist());
 
         //write improve polyakovloop
-        rootLogger.info() << "contract to obtain improve polyakovloop ";
+        rootLogger.info("contract to obtain improve polyakovloop ");
         datNameCE_ImprovePoly << lp.out_dir() << "MultiLevel_polyakovloop" << lp.fileExt();
         FileWriter file_ImprovePoly(gauge_host.getComm(), lp);
         file_ImprovePoly.createFile(datNameCE_ImprovePoly.str());
@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
         newTagImprovePoly << std::scientific << std::setprecision(15) << real(ImprovePolyakovLoop) << " " << imag(ImprovePolyakovLoop) << "\n";
 
         //write improve color electric correlator  
-        rootLogger.info() << "contract to obtain improve colorelectric correlator";
+        rootLogger.info("contract to obtain improve colorelectric correlator");
         datNameCE_ImproveColEleCorr << lp.out_dir() << "MultiLevel_colorelectriccorr" << lp.fileExt();
         FileWriter file_ImproveColEleCorr(gauge_host.getComm(), lp);
         file_ImproveColEleCorr.createFile(datNameCE_ImproveColEleCorr.str());
@@ -445,7 +445,8 @@ int main(int argc, char *argv[]) {
     }
 
     timer.stop();
-    rootLogger.info() << "complete time = " << timer;
+    rootLogger.info("complete time = " ,  timer);
 
     return 0;
 }
+

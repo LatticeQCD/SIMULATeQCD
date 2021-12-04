@@ -26,13 +26,13 @@ int main(int argc, char *argv[]) {
 
     const size_t HaloDepth = 2;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
     typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
     grnd_state<true> d_rand;
   
     initialize_rng(1337,d_rand);
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC, true, HaloDepth> gauge_in(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_Lv2(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_naik(commBase);
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
     timer.start();
     smearing.SmearAll();
     timer.stop();
-    rootLogger.info() << "Time for full smearing: " << timer;
+    rootLogger.info("Time for full smearing: " ,  timer);
     std::string filename_out;
     if (param.nodeDim[1] == 1) {
       filename_out = "../test_conf/pgpu_naik_smearing_single.nersc";
@@ -61,3 +61,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

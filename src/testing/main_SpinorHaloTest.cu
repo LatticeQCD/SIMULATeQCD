@@ -129,31 +129,31 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
 
     std::stringstream output;
     output << "Test on " << (onDevice ? "GPU" : "CPU") << " with " << NStacks << " Stacks";
-    rootLogger.info() << " ";
-    rootLogger.info() << " ";
-    rootLogger.info() << "==========================================";
-    rootLogger.info() << CoutColors::yellowBold << "       " << output.str() << CoutColors::reset;
-    rootLogger.info() << "==========================================";
-    rootLogger.info() << " ";
+    rootLogger.info(" ");
+    rootLogger.info(" ");
+    rootLogger.info("==========================================");
+    rootLogger.info(CoutColors::yellowBold ,  "       " ,  output.str() ,  CoutColors::reset);
+    rootLogger.info("==========================================");
+    rootLogger.info(" ");
 
 
 /// ================ Even Test ================ ///
-    rootLogger.info() << "----------------------------------------";
-    rootLogger.info() << "           ";
-    rootLogger.info() << "Initialize Lattice with even indices";
+    rootLogger.info("----------------------------------------");
+    rootLogger.info("           ");
+    rootLogger.info("Initialize Lattice with even indices");
     const Layout LatLayout2 = Even;
 
-    rootLogger.info() << "Initialize Spinorfield";
+    rootLogger.info("Initialize Spinorfield");
     Spinorfield<PREC, onDevice, LatLayout2, HaloDepth, NStacks> spinor2(commBase);
 
-    rootLogger.info() << "Fill indices";
+    rootLogger.info("Fill indices");
     fillIndices<PREC, onDevice, LatLayout2, HaloDepth>(spinor2);
 
 
-    rootLogger.info() << "Update Halos";
+    rootLogger.info("Update Halos");
     spinor2.updateAll();
 
-    rootLogger.info() << "Check indices";
+    rootLogger.info("Check indices");
     bool EvenTest;
     if (!forceHalos) {
         EvenTest = CheckIndices<PREC, onDevice, LatLayout2, HaloDepth>(spinor2,
@@ -169,22 +169,22 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
 
 
 /// ================ Odd Test ================ ///
-    rootLogger.info() << "----------------------------------------";
-    rootLogger.info() << "           ";
-    rootLogger.info() << "Initialize Lattice with odd indices";
+    rootLogger.info("----------------------------------------");
+    rootLogger.info("           ");
+    rootLogger.info("Initialize Lattice with odd indices");
     const Layout LatLayout3 = Odd;
 
-    rootLogger.info() << "Initialize Spinorfield";
+    rootLogger.info("Initialize Spinorfield");
     Spinorfield<PREC, onDevice, LatLayout3, HaloDepth, NStacks> spinor3(commBase);
 
-    rootLogger.info() << "Fill indices";
+    rootLogger.info("Fill indices");
     fillIndices<PREC, onDevice, LatLayout3, HaloDepth>(spinor3);
 
 
-    rootLogger.info() << "Update Halos";
+    rootLogger.info("Update Halos");
     spinor3.updateAll();
 
-    rootLogger.info() << "Check indices";
+    rootLogger.info("Check indices");
 
     bool OddTest;
     if (!forceHalos) {
@@ -201,24 +201,24 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
 
 
 /// ================ Full Test ================ ///
-    rootLogger.info() << "----------------------------------------";
-    rootLogger.info() << "           ";
-    rootLogger.info() << "Initialize Lattice with all indices";
+    rootLogger.info("----------------------------------------");
+    rootLogger.info("           ");
+    rootLogger.info("Initialize Lattice with all indices");
 
     const Layout LatLayout = All;
 
-    rootLogger.info() << "Initialize Spinorfield";
+    rootLogger.info("Initialize Spinorfield");
     Spinorfield<PREC, onDevice, LatLayout, HaloDepth, NStacks> spinor(commBase);
     Gaugefield<PREC, onDevice, HaloDepth> gauge( commBase);
 
-    rootLogger.info() << "Fill indices";
+    rootLogger.info("Fill indices");
     fillIndices<PREC, onDevice, LatLayout, HaloDepth>(spinor);
 
 
-    rootLogger.info() << "Update Halos";
+    rootLogger.info("Update Halos");
     spinor.updateAll();
 
-    rootLogger.info() << "Check indices";
+    rootLogger.info("Check indices");
 
     bool fullTest;
     if (!forceHalos) {
@@ -258,3 +258,4 @@ int main(int argc, char *argv[]) {
     run_func<HaloDepth,false, 8>(commBase, param.nodeDim(),param.forceHalos());
     return 0;
 }
+

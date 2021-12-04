@@ -103,7 +103,7 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::check_unitarity()
     unitarity.reduce(unit_norm, elems_full);
 
 
-    rootLogger.info() << std::setprecision(10) << "Unitarity norm <Tr(U^+U)> = " << unit_norm/floatT(GInd::getLatData().globvol4);
+    rootLogger.info(std::setprecision(10) ,  "Unitarity norm <Tr(U^+U)> = " ,  unit_norm/floatT(GInd::getLatData().globvol4));
 
 }
 
@@ -167,7 +167,7 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::init_ratapprox()
 
     // for (int i = 0; i < 2*_rat.r_inv_1f_num.get().size()+1; ++i)
     // {
-    //     rootLogger.info() << std::setprecision(10) << rat_inv_1f[i];
+    //     rootLogger.info(std::setprecision(10) ,  rat_inv_1f[i]);
     // }
 
 }
@@ -183,23 +183,23 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     //copy gaugefield to savedfield
     _savedField = _gaugeField;
 
-    rootLogger.info() << "Smearing gauge fields";
+    rootLogger.info("Smearing gauge fields");
     
     _smearing.SmearAll();
 
-    rootLogger.info() << "generating momenta";
+    rootLogger.info("generating momenta");
     
     generate_momenta();
     
-    rootLogger.info() << "Constructing peudo-fermion fields";
+    rootLogger.info("Constructing peudo-fermion fields");
 
     make_phi(phi_1f, rat_inv_1f);
 
-    rootLogger.info() << "phi_1f: done";
+    rootLogger.info("phi_1f: done");
 
     make_phi(phi_2f, rat_inv_2f);
 
-    rootLogger.info() << "phi_2f: done";
+    rootLogger.info("phi_2f: done");
 
     
     //get oldaction
@@ -211,7 +211,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     //possible reversibility check
     if (reverse)
     {
-        rootLogger.warn() << "Checking if integration is reversible";
+        rootLogger.warn("Checking if integration is reversible");
 
         _p = -floatT(1.0) * _p;
 
@@ -238,8 +238,8 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
                             //if( x==3 && y == 16 && z == 12 && t == -1 && mu == 0){
                                 if (!compareGSU3(tmpA, tmpB, 1e-4)) {
-                                    rootLogger.error() << "Difference in saved and evolved Gaugefields at " << LatticeDimensions(x, y, z, t) <<", mu = " << mu;
-                                    rootLogger.error() << "|| S - G ||_inf = " << infnorm(tmpA-tmpB);
+                                    rootLogger.error("Difference in saved and evolved Gaugefields at " ,  LatticeDimensions(x, y, z, t) , ", mu = " ,  mu);
+                                    rootLogger.error("|| S - G ||_inf = " ,  infnorm(tmpA-tmpB));
                                 }
         }
 
@@ -248,7 +248,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     //get newaction
     double new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info() << "Delta H =" << new_hamiltonian - old_hamiltonian;
+    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
 
     int ret;
 
@@ -260,20 +260,20 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
         //make Metropolis step
         if (accept){
             ret=1;
-            rootLogger.info() << "Update acepted!";
+            rootLogger.info("Update acepted!");
     }
         else{
             _gaugeField=_savedField;
             _gaugeField.updateAll();
             ret=0;
-            rootLogger.info() << "Update declined!";
+            rootLogger.info("Update declined!");
         }
     }
     else{
 
         //skip Metropolis step
         ret=1;
-        rootLogger.warn() << "Skipped Metropolis step!";
+        rootLogger.warn("Skipped Metropolis step!");
     }
 
     return ret;
@@ -287,19 +287,19 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     //copy gaugefield to savedfield
     _savedField = _gaugeField;
 
-    rootLogger.info() << "Smearing gauge fields";
+    rootLogger.info("Smearing gauge fields");
     
     _smearing.SmearAll();
     
-    rootLogger.info() << "Constructing peudo-fermion fields";
+    rootLogger.info("Constructing peudo-fermion fields");
 
     make_const_phi(phi_1f, rat_inv_1f);
 
-    rootLogger.info() << "phi_1f: done";
+    rootLogger.info("phi_1f: done");
 
     make_const_phi(phi_2f, rat_inv_2f);
 
-    rootLogger.info() << "phi_2f: done";
+    rootLogger.info("phi_2f: done");
 
     //make momenta
     generate_const_momenta();
@@ -313,7 +313,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     //get newaction
     floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info() << "Delta H =" << new_hamiltonian - old_hamiltonian;
+    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
 
     int ret;
 
@@ -322,13 +322,13 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
 
     if (accept){
         ret=1;
-        rootLogger.info() << "Update acepted!";
+        rootLogger.info("Update acepted!");
     }
     else{
         _gaugeField=_savedField;
         _gaugeField.updateAll();
         ret=0;
-        rootLogger.info() << "Update declined!";
+        rootLogger.info("Update declined!");
     }
 
     return ret;
@@ -426,18 +426,18 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     double act_1f = chi.realdotProduct(chi);
 
 
-    rootLogger.info() << std::fixed << std::setprecision(12) << "momentum part = " << 0.5*momenta;
-    rootLogger.info() << "fermion action 1f by   dotp = " << act_1f; 
+    rootLogger.info(std::fixed ,  std::setprecision(12) ,  "momentum part = " ,  0.5*momenta);
+    rootLogger.info("fermion action 1f by   dotp = " ,  act_1f); 
     double fermionaction1 = 0.0;
     redBase2.reduce(fermionaction1, elems_full);
 
-    rootLogger.info() << "fermion action 1f by reduce = " << fermionaction1; 
+    rootLogger.info("fermion action 1f by reduce = " ,  fermionaction1); 
 
 
     double mom_ferm1=0.0;
     redBase3.reduce(mom_ferm1, elems_full);
 
-    rootLogger.info() << " mom + ferm 1f = " << mom_ferm1;
+    rootLogger.info(" mom + ferm 1f = " ,  mom_ferm1);
 
 
     make_chi(chi, phi_2f, rat_2f);
@@ -448,25 +448,25 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     double act_2f = chi.realdotProduct(chi);
 
-    rootLogger.info() << "fermion action 2f by   dotp = " << act_2f; 
+    rootLogger.info("fermion action 2f by   dotp = " ,  act_2f); 
     double fermionaction2 = 0.0;
     redBase2.reduce(fermionaction2, elems_full);
 
-    rootLogger.info() << "fermion action 2f by reduce = " << fermionaction2; 
+    rootLogger.info("fermion action 2f by reduce = " ,  fermionaction2); 
 
     double mom_ferm1_ferm2=0.0;
     redBase3.reduce(mom_ferm1_ferm2 , elems_full);
 
-    rootLogger.info() << " mom + ferm 1f +ferm 2f = " << mom_ferm1_ferm2;
+    rootLogger.info(" mom + ferm 1f +ferm 2f = " ,  mom_ferm1_ferm2);
 
-    rootLogger.info() << "fermion action 1f by   dotp = " << act_1f; 
+    rootLogger.info("fermion action 1f by   dotp = " ,  act_1f); 
 
     // gauge action
 
     // redBase2.template iterateOverBulk<All, HaloDepth>(gaugeActKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
     redBase2.template iterateOverBulk<All, HaloDepth>(plaquetteKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
     redBase4.template iterateOverBulk<All, HaloDepth>(rectangleKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
-    // rootLogger.info() << "constructed momentum, plaquette and rectangle dens";
+    // rootLogger.info("constructed momentum, plaquette and rectangle dens");
 
     double plaq;
     double rect;
@@ -474,8 +474,8 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     redBase2.reduce(plaq, elems_full);
     redBase4.reduce(rect, elems_full);
 
-    rootLogger.info() << "reduced plaq = " << plaq;
-    rootLogger.info() << "reduced rect = " << rect;
+    rootLogger.info("reduced plaq = " ,  plaq);
+    rootLogger.info("reduced rect = " ,  rect);
     redBase2.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(redBase2, redBase4, 5.0/3.0 , -1.0/12.0));
 
     double beta = _rhmc_param.beta() *3.0/5.0;
@@ -487,8 +487,8 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     GaugeAction<floatT, onDevice, HaloDepth, R18> gaugeaction(_gaugeField);
     gaugeact = - beta * gaugeaction.symanzik(); 
 
-    rootLogger.info() << "gauge act. by reduce = " << gauge;
-    // rootLogger.info() << "Symanzik gaugeaction = " << gaugeact;
+    rootLogger.info("gauge act. by reduce = " ,  gauge);
+    // rootLogger.info("Symanzik gaugeaction = " ,  gaugeact);
 
 
     //CAVE: In contrast to std. textbook definitions of the gauge action: Here we find an additional factor of 3/5!
@@ -513,10 +513,10 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     energy_dens.reduce(H, elems_full);
 
-    rootLogger.info() << "reduced energy_dens - individual parts = " << H - hamiltonian;
+    rootLogger.info("reduced energy_dens - individual parts = " ,  H - hamiltonian);
 
-    rootLogger.info() <<std::setprecision(10) << "momenta = " << 0.5 *momenta << " fermion 1f = " << act_1f <<" fermion 2f = " << act_2f <<" glue = " << gaugeact;
-    // rootLogger.info() <<std::setprecision(10) << " H = " << H;
+    rootLogger.info(std::setprecision(10) ,  "momenta = " ,  0.5 *momenta ,  " fermion 1f = " ,  act_1f , " fermion 2f = " ,  act_2f , " glue = " ,  gaugeact);
+    // rootLogger.info(std::setprecision(10) ,  " H = " ,  H);
 
     return hamiltonian;
 }
@@ -531,7 +531,7 @@ bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
 
     dens_delta.reduce(delta_E, elems_full);
 
-    rootLogger.info() << "Delta H = " << delta_E;
+    rootLogger.info("Delta H = " ,  delta_E);
 
     uint4 state;
 
@@ -683,3 +683,4 @@ template class rhmc<floatT,true, HALO, HALOSPIN>; /*\
 template class rhmc<floatT,false, HALO>;*/
 
 INIT_PHHS(CLASS_INIT)
+

@@ -114,13 +114,13 @@ int main(int argc, char *argv[]) {
     /// Set the HaloDepth.
     const size_t HaloDepth = 1;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
 
     /// Initialize the Lattice class.
     initIndexer(HaloDepth,param,commBase);
 
     /// Initialize the Gaugefield.
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 
     /// Initialize gaugefield with unit-matrices.
@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     /// Read a configuration from hard drive. For the given configuration you should find
     ///   Reduced RE(ploop) =  0.00358613
     ///   Reduced IM(ploop) = -0.000869849
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
     /// Start timer.
@@ -153,12 +153,13 @@ int main(int argc, char *argv[]) {
     timer.start();
     ploop = gPloop<PREC,HaloDepth>(gauge, redBase);
     timer.stop();
-    rootLogger.info() << "Time for operators: " << timer;
-    rootLogger.info() << std::setprecision(20) << "Reduced RE(ploop) = " << ploop.cREAL;
-    rootLogger.info() << std::setprecision(20) << "Reduced IM(ploop) = " << ploop.cIMAG;
+    rootLogger.info("Time for operators: " ,  timer);
+    rootLogger.info(std::setprecision(20) ,  "Reduced RE(ploop) = " ,  ploop.cREAL);
+    rootLogger.info(std::setprecision(20) ,  "Reduced IM(ploop) = " ,  ploop.cIMAG);
 
     /// stop timer and print time
     timer.stop();
 
     return 0;
 }
+

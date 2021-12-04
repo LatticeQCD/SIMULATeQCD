@@ -31,15 +31,15 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     smearing.SmearAll();
 
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info("Initialize random state");
     grnd_state<onDevice> d_rand;
     initialize_rng(13333+2130, d_rand);
 
     GaugeAction<floatT, onDevice, HaloDepth, R18> gaugeaction(gauge_smeared);
 
-    rootLogger.info() << "Whats the avg. plaquette of lvl2 smeared field? " << gaugeaction.plaquette();
+    rootLogger.info("Whats the avg. plaquette of lvl2 smeared field? " ,  gaugeaction.plaquette());
 
-    rootLogger.info() << "Initialize spinors";
+    rootLogger.info("Initialize spinors");
 
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> eta(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> eta2(commBase);
@@ -52,24 +52,24 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     Spinorfield<floatT, false, LatLayoutRHS, HaloDepthSpin, NStacks> spinorHost(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
 
     SimpleArray<GCOMPLEX(double), NStacks> dot1(0.0);
 
-    rootLogger.info() << "Simplest possible test!";
+    rootLogger.info("Simplest possible test!");
 
     dot1 = spinorIn.dotProductStacked(spinorIn);
 
-    rootLogger.info() << "||spinorIn 0 ||^2 = " << dot1[0];
+    rootLogger.info("||spinorIn 0 ||^2 = " ,  dot1[0]);
 
     spinorOut2.gauss(d_rand.state);
 
-    rootLogger.info() << "Initialize DSlash";
+    rootLogger.info("Initialize DSlash");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash_(gauge_smeared, gauge_Naik, 0.0);
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, param.m_ud());
 
-    rootLogger.info() << "Very simple test";
+    rootLogger.info("Very simple test");
 
     dslash_.Dslash(spinorOut3, spinorIn, true);
     
@@ -78,16 +78,16 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     dslash.applyMdaggM(spinorOut, spinorIn);
     dot1 = spinorOut.dotProductStacked(spinorOut);
 
-    rootLogger.info() << "|| D^+D eta ||^2 = " << dot1[0];     
+    rootLogger.info("|| D^+D eta ||^2 = " ,  dot1[0]);     
 
     dot1 = spinorIn.dotProductStacked(spinorIn);
 
     for (int i = 0; i < NStacks; ++i) {
-        rootLogger.info() << " || SpinorIn ||^2 /vol4 [" << i << "] = " << dot1[i]/floatT(GInd::getLatData().globvol4);
+        rootLogger.info(" || SpinorIn ||^2 /vol4 [" ,  i ,  "] = " ,  dot1[i]/floatT(GInd::getLatData().globvol4));
     }
 
     ConjugateGradient<floatT, NStacks> cg;
-    rootLogger.info() << "Run inversion";
+    rootLogger.info("Run inversion");
     cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
 
     SimpleArray<floatT, NStacks> mass(param.m_ud()*param.m_ud());
@@ -106,16 +106,16 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     err_arr = real<double>(dot1)/real<double>(dot2);
 
     for (size_t i = 0; i < NStacks; ++i) {
-        rootLogger.info() << err_arr[i];
+        rootLogger.info(err_arr[i]);
     }
 
-    rootLogger.info() << "relative error of (D^+D) * (D^+D)^-1 * phi - phi : " << max(err_arr) ;
+    rootLogger.info("relative error of (D^+D) * (D^+D)^-1 * phi - phi : " ,  max(err_arr));
 
     if (!(max(err_arr) < 1e-5))
         success = success && false;
 
 
-    rootLogger.info() << "Testing multishift inverter:";
+    rootLogger.info("Testing multishift inverter:");
     gSite origin;
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, 1> dslashMulti_ud(gauge_smeared, gauge_Naik, param.m_ud());
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, 1> dslashMulti_s(gauge_smeared, gauge_Naik, param.m_s());
@@ -130,7 +130,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
 
     for (size_t i = 0; i < rat.r_inv_2f_den.get().size(); ++i) {
-        rootLogger.info() << "shifts: " << shifts[i];
+        rootLogger.info("shifts: " ,  shifts[i]);
     }
 
 
@@ -144,12 +144,12 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     AdvancedMultiShiftCG<floatT, Multistack> cgM;
 
 
-    rootLogger.info() << "The xi test as in ye olde code:";
+    rootLogger.info("The xi test as in ye olde code:");
     spinorInMulti.one();
 
     spinortmp.copyFromStackToStack(spinorOutMulti, 0, 0);
     spinorHost = spinortmp;
-    rootLogger.info() << "0th component of xi[" << 0 << "] =" << spinorHost.getAccessor().getElement(origin); 
+    rootLogger.info("0th component of xi[" ,  0 ,  "] =" ,  spinorHost.getAccessor().getElement(origin)); 
 
     cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue_force());
 
@@ -157,7 +157,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     for (size_t i = 0; i < rat.r_bar_1f_den.get().size(); ++i) {
         spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
         spinorHost = spinortmp;
-        rootLogger.info() << "0th component of xi[" << i << "] =" << spinorHost.getAccessor().getElement(origin);    
+        rootLogger.info("0th component of xi[" ,  i ,  "] =" ,  spinorHost.getAccessor().getElement(origin));    
     }
 
 
@@ -165,7 +165,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     // r_2f test
     //////////////////////////////////
 
-    rootLogger.info() << "Starting r_2f test";
+    rootLogger.info("Starting r_2f test");
 
     spinorInMulti.gauss(d_rand.state);
 
@@ -231,7 +231,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     double diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     double phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info() << "relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_2f^4 * phi - phi = " << abs(diff_normsq/phi_sq);
+    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_2f^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
@@ -239,7 +239,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     //////////////////////////////////
     ////r_bar_2f_test
     //////////////////////////////////
-    rootLogger.info() << "Starting r_bar_2f test";
+    rootLogger.info("Starting r_bar_2f test");
 
     SimpleArray<floatT, 12> shifts_bar(0.0);
 
@@ -289,7 +289,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info() << "relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_bar_2f^4 * phi - phi = " << abs(diff_normsq/phi_sq);
+    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_bar_2f^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
@@ -299,7 +299,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     // r_inv_2f test
 
-    rootLogger.info() << "Starting r_inv_2f test";
+    rootLogger.info("Starting r_inv_2f test");
 
     spinorInMulti = phi;
 
@@ -335,7 +335,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     phi_sq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
 
-    rootLogger.info() << "relative error of r_inv_2f^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " << abs(diff_normsq/phi_sq);
+    rootLogger.info("relative error of r_inv_2f^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
     
@@ -393,7 +393,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info() << "relative error of (Ds^+*Ds)^3 * r_1f^8 * phi - phi = " << abs(diff_normsq/phi_sq);
+    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_1f^8 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
@@ -436,7 +436,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info() << "relative error of (Ds^+*Ds)^3 * r_bar_1f^4 * phi - phi = " << abs(diff_normsq/phi_sq);
+    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_bar_1f^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
     //////////////////////////////////
@@ -476,7 +476,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info() << "relative error of  r_inv_1f^8 * phi - (Ds^+*Ds)^3 *phi = " << abs(diff_normsq/phi_sq);
+    rootLogger.info("relative error of  r_inv_1f^8 * phi - (Ds^+*Ds)^3 *phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
@@ -484,9 +484,9 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         success = success && false;
 
     if (success)
-        rootLogger.info() << "Inverter tests: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("Inverter tests: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.info() << "Inverter tests: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.info("Inverter tests: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 }
 
 
@@ -507,12 +507,12 @@ int main(int argc, char **argv) {
         const int HaloDepthSpin = 4;
         initIndexer(HaloDepthSpin, param, commBase);
 
-        rootLogger.info() << "-------------------------------------";
-        rootLogger.info() << "Running on Device";
-        rootLogger.info() << "-------------------------------------";
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Running on Device");
+        rootLogger.info("-------------------------------------");
 
-        rootLogger.info() << "Testing Even - Odd";
-        rootLogger.info() << "------------------";
+        rootLogger.info("Testing Even - Odd");
+        rootLogger.info("------------------");
         run_func<float, Even, Odd, 1, 14, true>(commBase, param, rat);
     }
     catch (std::runtime_error& error){
@@ -531,3 +531,4 @@ size_t getGlobalIndex(LatticeDimensions coord) {
     return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
         globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
 }
+

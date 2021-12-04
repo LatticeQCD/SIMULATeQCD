@@ -27,39 +27,39 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    rootLogger.info() << "Starting Test with " << NStacks << " Stacks";
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info("Starting Test with " ,  NStacks ,  " Stacks");
+    rootLogger.info("Initialize random state");
     grnd_state<false> h_rand;
     grnd_state<onDevice> d_rand;
 
     h_rand.make_rng_state(1337);
     d_rand = h_rand;
 
-    rootLogger.info() << "gen conf";
+    rootLogger.info("gen conf");
 
     gauge.random(d_rand.state);
 
     gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("Error in random gauge field", gpuErr);
-            rootLogger.info() << "Error in random gauge field";
+            rootLogger.info("Error in random gauge field");
 
     gauge.updateAll();
 
     gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("Error in updateAll", gpuErr);
-            rootLogger.info() << "Error updateAll";
+            rootLogger.info("Error updateAll");
 
     smearing.SmearAll();
 
     gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("error in smearing", gpuErr);
-            rootLogger.info() << "Error in smearing";
+            rootLogger.info("Error in smearing");
 
 
-    rootLogger.info() << "Initialize spinors";
+    rootLogger.info("Initialize spinors");
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorSave(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
@@ -68,7 +68,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         if (gpuErr)
             GpuError("error in spinor Initialization", gpuErr);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     
 
@@ -76,16 +76,16 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     gpuErr = gpuGetLastError();
         if (gpuErr)
            // GpuError("error in gaussian spinors", gpuErr);
-            rootLogger.info() << "error in gaussian spinors";
+            rootLogger.info("error in gaussian spinors");
 
 
-    rootLogger.info() << "Initialize DSlash";
+    rootLogger.info("Initialize DSlash");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
     
     gpuErr = gpuGetLastError();
         if (gpuErr)
             // GpuError("error in Initialization of DSlash", gpuErr);
-            rootLogger.info() << "Error in Initialization of DSlash";
+            rootLogger.info("Error in Initialization of DSlash");
 
     gpuEventRecord(start);
     for (int i = 0; i < 500; ++i)
@@ -103,13 +103,13 @@ void test_dslash(CommunicationBase &commBase, int Vol){
  
  
      
-    rootLogger.info() << "Time for 500 applications of multiRHS Dslash: " << milliseconds;
+    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  milliseconds);
   
   
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
   
     float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(milliseconds * 1e-3)*1e-12;
-    rootLogger.info() << "Achieved TFLOP/s " << TFlops;
+    rootLogger.info("Achieved TFLOP/s " ,  TFlops);
  
 }
 
@@ -134,11 +134,11 @@ int main(int argc, char **argv) {
     initIndexer(HaloDepthSpin,param, commBase);
     stdLogger.setVerbosity(INFO);
 
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Device");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
@@ -153,4 +153,5 @@ int main(int argc, char **argv) {
     test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
     
 }
+
 

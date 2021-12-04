@@ -12,8 +12,8 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
     LatticeDimensions _globalLattice(param.latDim);
     LatticeDimensions _localLattice(_globalLattice / comm.nodes());
 
-    rootLogger.info() << "Initialize Indexer with HaloDepth = " << HaloDepth << CoutColors::yellow
-                      << (forceAllHalos ? " and force Halos in all directions" : "") << CoutColors::reset;
+    rootLogger.info("Initialize Indexer with HaloDepth = " ,  HaloDepth ,  CoutColors::yellow
+                      ,  (forceAllHalos ? " and force Halos in all directions" : "") ,  CoutColors::reset);
 
     if (_localLattice * comm.nodes() != _globalLattice) {
         throw PGCError("Lattice ", _globalLattice, " not divisible into Nodes ", comm.nodes());
@@ -52,12 +52,12 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
     initGPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
     initCPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
 
-    stdLogger.debug() << "Local size without Halos: " << globLatDataCPU[HaloDepth].lx << " "
-                      << globLatDataCPU[HaloDepth].ly << " " << globLatDataCPU[HaloDepth].lz << " "
-                      << globLatDataCPU[HaloDepth].lt;
-    stdLogger.debug() << "Local size with Halos: " << globLatDataCPU[HaloDepth].lxFull << " "
-                      << globLatDataCPU[HaloDepth].lyFull << " " << globLatDataCPU[HaloDepth].lzFull << " "
-                      << globLatDataCPU[HaloDepth].ltFull;
+    stdLogger.debug("Local size without Halos: " ,  globLatDataCPU[HaloDepth].lx ,  " "
+                      ,  globLatDataCPU[HaloDepth].ly ,  " " ,  globLatDataCPU[HaloDepth].lz ,  " "
+                      ,  globLatDataCPU[HaloDepth].lt);
+    stdLogger.debug("Local size with Halos: " ,  globLatDataCPU[HaloDepth].lxFull ,  " "
+                      ,  globLatDataCPU[HaloDepth].lyFull ,  " " ,  globLatDataCPU[HaloDepth].lzFull ,  " "
+                      ,  globLatDataCPU[HaloDepth].ltFull);
 }
 
 
@@ -102,3 +102,4 @@ void initCPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int
 
     }
 }
+

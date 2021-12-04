@@ -919,7 +919,7 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::createNorm(std::string domain, 
     std::ofstream normfile;
 
     normfilename << normfilePrefix << std::to_string(Nx) << "t" << std::to_string(Nt) << ".norm";
-    rootLogger.info() << "Creating normalization file " << normfilename.str();
+    rootLogger.info("Creating normalization file " ,  normfilename.str());
     normfile.open(normfilename.str());
 
     if(domain=="spacetime") {
@@ -1015,7 +1015,7 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::readNorm(std::string domain, Co
     std::stringstream normfilename;
     std::ifstream normfile;
     normfilename << normFileDir << normfilePrefix << std::to_string(Nx) << "t" << std::to_string(Nt) << ".norm";
-    rootLogger.info() << "Reading from normalization file " << normfilename.str();
+    rootLogger.info("Reading from normalization file " ,  normfilename.str());
     normfile.open(normfilename.str());
 
     if(!normfile.good()) {
@@ -1184,3 +1184,4 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::getFactorArray(std::vector<int>
 };
 
 #endif //CORRELATORS_H
+

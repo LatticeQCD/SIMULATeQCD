@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     /// General initialization
     stdLogger.setVerbosity(INFO);
     const size_t HaloDepth  = 0;
-    rootLogger.info() << "Initialization...";
+    rootLogger.info("Initialization...");
     CommunicationBase commBase(&argc, &argv);
     ploopParam<PREC> param;
     param.readfile(commBase, "../parameter/applications/polSuscRenorm.param", argc, argv);
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
         throw PGCError("Need Nx=Ny=Nz.");
     }
 
-    rootLogger.info() << "Read configuration " << param.GaugefileName();
+    rootLogger.info("Read configuration " ,  param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
@@ -81,15 +81,16 @@ int main(int argc, char *argv[]) {
             _ABareSusc.getValue<GCOMPLEX(PREC)>(ir2,suscA);
             _LBareSusc.getValue<PREC>(ir2,suscL);
             _TBareSusc.getValue<PREC>(ir2,suscT);
-            rootLogger.info() << "r**2, A, L, T : " << ir2 << ": " << real(suscA) << ": " << suscL << ": " << suscT;
+            rootLogger.info("r**2, A, L, T : " ,  ir2 ,  ": " ,  real(suscA) ,  ": " ,  suscL ,  ": " ,  suscT);
         }
     }
 
-    rootLogger.info() << "Time to calculate bare susceptibility correlators: " << timer;
+    rootLogger.info("Time to calculate bare susceptibility correlators: " ,  timer);
 
     PLoop = ploopClass.getPolyakovLoop();
 
-    rootLogger.info() << " P = " << PLoop;
+    rootLogger.info(" P = " ,  PLoop);
 
     return 0;
 }
+

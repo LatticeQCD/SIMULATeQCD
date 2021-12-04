@@ -179,7 +179,7 @@ class DynamicParameter : public ParameterBase {
         while (s.good()) {
             T tmp;
             s >> tmp;
-//                     stdLogger.trace() << s.fail();
+//                     stdLogger.trace(s.fail());
             if (s.fail())
                 break;
             values.push_back(tmp);
@@ -313,3 +313,4 @@ public:
 
 
 #endif
+

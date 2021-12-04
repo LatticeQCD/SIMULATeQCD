@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth = 0;
 
     /// None of these parameters should be changed.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     LatticeParameters param;
     const int  LatDim[]   = {20,20,20,20};
     const int  NodeDim[]  = {1 ,1 ,1 ,1};
@@ -75,19 +75,20 @@ int main(int argc, char *argv[]) {
     redBase.adjustSize(GInd::getLatData().vol4);
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
     gauge.updateAll();
 
     traceU =getTrUtimesUdagger<PREC,HaloDepth>(gauge, redBase);
 
-    rootLogger.info() << std::scientific << std::setprecision(14)  << "Trace of (UtimesUdagger) is: " << traceU ;
+    rootLogger.info(std::scientific ,  std::setprecision(14)  ,  "Trace of (UtimesUdagger) is: " ,  traceU);
 
     if (fabs(traceU-1.0)>1.e-10)
-        rootLogger.error() << "UtimesUdagger TEST: failed";
+        rootLogger.error("UtimesUdagger TEST: failed");
     else
-        rootLogger.info() << "UtimesUdagger TEST: passed";
+        rootLogger.info("UtimesUdagger TEST: passed");
 
 
     return 0;
 }
+

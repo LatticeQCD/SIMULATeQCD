@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) {
     initIndexer(HaloDepth,lp,commBase);
     Gaugefield<PREC,ON_DEVICE,HaloDepth>     gauge(commBase);
 
-    rootLogger.info() << "Reference values in this test come from l328f21b6285m0009875m0790a_019.995";
-    rootLogger.info() << "Read configuration" << lp.GaugefileName();
+    rootLogger.info("Reference values in this test come from l328f21b6285m0009875m0790a_019.995");
+    rootLogger.info("Read configuration" ,  lp.GaugefileName());
     gauge.readconf_nersc(lp.GaugefileName());
 
     LatticeContainer<true,GSU3<PREC>> redBase(commBase);
@@ -99,12 +99,13 @@ int main(int argc, char *argv[]) {
     timer.start();
     F_temporal = getFmunu_temporal<PREC,HaloDepth>(gauge, redBase);
     timer.stop();
-    rootLogger.info() << "Time for temporal Fmunu computation: " << timer;
+    rootLogger.info("Time for temporal Fmunu computation: " ,  timer);
     timer.reset();
     timer.start();
     F_spatial = getFmunu_spatial<PREC,HaloDepth>(gauge, redBase);
     timer.stop();
-    rootLogger.info() << "Time for spatial Fmunu computation: " << timer;
+    rootLogger.info("Time for spatial Fmunu computation: " ,  timer);
 
     return 0;
 }
+

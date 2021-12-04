@@ -53,7 +53,7 @@ bool run(gradFlowClass &gradFlow,
     while(continueFlow) {
 
         if (flow_time_count >= reference_values.size()) {
-            rootLogger.info() << "End of reference values reached!";
+            rootLogger.info("End of reference values reached!");
             failed = true;
             return failed;
         }
@@ -93,7 +93,7 @@ bool run(gradFlowClass &gradFlow,
             failed = true;
             logStream << CoutColors::red << " != " << reference_values[flow_time_count][3] << CoutColors::reset;
         }
-        rootLogger.info() << logStream.str();
+        rootLogger.info(logStream.str());
 
         flow_time += gradFlow.updateFlow();
         flow_time_count++;
@@ -135,8 +135,8 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
     GaugeAction<floatT, USE_GPU, HaloDepth> gAction(gauge);
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
 
-    rootLogger.info() << "Comparison-tolerance to reference is " << acceptance;
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Comparison-tolerance to reference is " ,  acceptance);
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc(lp.GaugefileName());
     gauge_backup = gauge;
     gauge.updateAll();
@@ -177,7 +177,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
     wFlowFailed = run<floatT, HaloDepth, wilsonFlow<floatT, HaloDepth, fixed_stepsize>>(wFlow, gauge, gAction, topology,
                                                                                          wilson_values, acceptance);
     timer.stop();
-    rootLogger.info() << "complete time for standard Runge Kutta 3 and Wilson Force = " << timer;
+    rootLogger.info("complete time for standard Runge Kutta 3 and Wilson Force = " ,  timer);
     timer.reset();
     gauge = gauge_backup;
     gauge.updateAll();
@@ -188,7 +188,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
                                                                                               std::is_same<floatT, double>::value ? wilsonAd_values : wilson_ad_values_float,
                                                                                               acceptance);
     timer.stop();
-    rootLogger.info() << "complete time for adaptive Runge Kutta 3 and Wilson Force = " << timer;
+    rootLogger.info("complete time for adaptive Runge Kutta 3 and Wilson Force = " ,  timer);
     timer.reset();
     gauge = gauge_backup;
     gauge.updateAll();
@@ -198,7 +198,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
             wFlowAdAllGPU, gauge, gAction, topology,
             std::is_same<floatT, double>::value ? wilsonAd_values : wilson_ad_values_float, acceptance);
     timer.stop();
-    rootLogger.info() << "complete time for adaptive all GPU Runge Kutta 3 and Wilson Force = " << timer;
+    rootLogger.info("complete time for adaptive all GPU Runge Kutta 3 and Wilson Force = " ,  timer);
     timer.reset();
     gauge = gauge_backup;
     gauge.updateAll();
@@ -207,7 +207,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
     zFlowFailed = run<floatT, HaloDepth, zeuthenFlow<floatT, HaloDepth, fixed_stepsize>>(zFlow, gauge, gAction, topology,
                                                                                           zeuthen_values, acceptance);
     timer.stop();
-    rootLogger.info() << "complete time for standard Runge Kutta 3 and Zeuthen Force = " << timer;
+    rootLogger.info("complete time for standard Runge Kutta 3 and Zeuthen Force = " ,  timer);
     timer.reset();
     gauge.updateAll();
     gauge = gauge_backup;
@@ -218,7 +218,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
                                                                                                std::is_same<floatT, double>::value ? zeuthenAd_values : zeuthen_ad_values_float,
                                                                                                acceptance);
     timer.stop();
-    rootLogger.info() << "complete time for adaptive Runge Kutta 3 and Zeuthen Force = " << timer;
+    rootLogger.info("complete time for adaptive Runge Kutta 3 and Zeuthen Force = " ,  timer);
     timer.reset();
     gauge = gauge_backup;
     gauge.updateAll();
@@ -228,7 +228,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
             zFlowAdAllGPU, gauge, gAction,
             topology, std::is_same<floatT, double>::value ? zeuthenAd_values : zeuthen_ad_values_float, acceptance);
     timer.stop();
-    rootLogger.info() << "complete time for adaptive all GPU Runge Kutta 3 and Zeuthen Force = " << timer;
+    rootLogger.info("complete time for adaptive all GPU Runge Kutta 3 and Zeuthen Force = " ,  timer);
     timer.reset();
 
     bool failed = (zFlowAdFailed || zFlowAdAllGPUFailed || wFlowFailed || zFlowFailed || wFlowAdFailed || wFlowAdAllGPUFailed);
@@ -246,17 +246,18 @@ int main(int argc, char *argv[]) {
     //adaptive stepsize accuracy. just a parameter for reference values, do not change!
     const double double_accuracy = 1e-9;
 
-    stdLogger.info() << "TEST DOUBLE PRECISION";
+    stdLogger.info("TEST DOUBLE PRECISION");
     bool passfail_double = run_test<double>(argc, argv, commBase, double_acceptance, double_accuracy);
 
-    rootLogger.info() << CoutColors::green << "           ";
+    rootLogger.info(CoutColors::green ,  "           ");
     if (passfail_double) { // || passfail_float
         throw PGCError("At least one test failed!");
     } else {
-        rootLogger.info() << CoutColors::green << "All Tests passed!" << CoutColors::reset ;
+        rootLogger.info(CoutColors::green ,  "All Tests passed!" ,  CoutColors::reset);
     }
 
     return 0;
 }
+
 
 
