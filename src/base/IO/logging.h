@@ -11,26 +11,8 @@
 #include <sstream>
 #include <stack>
 #include <string>
+#include "stringFunctions.h"
 
-
-template<typename ...Args>
-inline std::string sjoin(Args&&... args) noexcept
-{
-    std::ostringstream msg;
-    //  ((msg << std::forward<Args>(args) << " "), ...);
-    (msg << ... << args);
-    return msg.str();
-}
-
-template <typename... Args> 
-inline std::string sformat(const char *fmt, Args&&... args) {
-    size_t size = snprintf(nullptr, 0, fmt, std::forward<Args>(args)...);
-    std::string buf;
-    buf.reserve(size + 1);
-    buf.resize(size);
-    snprintf(&buf[0], size + 1, fmt, std::forward<Args>(args)...);
-    return buf;
-}
 
 namespace COLORS {
     const std::string red("\033[0;31m");
@@ -49,13 +31,6 @@ namespace COLORS {
 enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO",
     "WARN", "ERROR", "FATAL", "OFF"};
-
-inline std::string timeStamp() {
-    std::ostringstream strStream;
-    std::time_t t = std::time(nullptr);
-    strStream << "[" << std::put_time(std::localtime(&t), "%F %T") << "] ";
-    return strStream.str();
-}
 
 class Logger {
     private:
