@@ -672,6 +672,7 @@ void run_func(CommunicationBase &commBase) {
 
 int main(int argc, char **argv) {
 
+
     stdLogger.setVerbosity(INFO);
 
     LatticeParameters param;
@@ -686,7 +687,6 @@ int main(int argc, char **argv) {
     const int HaloDepthSpin = 4;
     initIndexer(HaloDepthSpin,param, commBase, true);
 
-    stdLogger.setVerbosity(INFO);
     rootLogger.info("------------------");
     rootLogger.info("Testing All - All");
     rootLogger.info("------------------");

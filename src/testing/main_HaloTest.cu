@@ -169,7 +169,7 @@ void run_func(CommunicationBase& commBase, const int * NodeDim, bool forceHalos)
 
 int main(int argc, char *argv[]) {
 
-    stdLogger.setVerbosity(DEBUG);
+    stdLogger.setVerbosity(INFO);
 
     HaloTestParam param;
 
