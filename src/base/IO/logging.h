@@ -58,7 +58,10 @@ class Logger {
             setVerbosity(verbosity_stack.top());
             verbosity_stack.pop();
         }
-
+        
+        void set_colored_output(bool val){
+            colorized_output = val;
+        }
 
 
         inline void set_additional_prefix(std::string add) { addPrefix = add; }
