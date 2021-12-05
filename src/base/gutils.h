@@ -41,7 +41,7 @@ public:
 
   gpuError_t getError();
 
-  const char *getErrorMessage();
+  const std::string getErrorMessage();
 
 private:
   gpuError_t gpuErr;

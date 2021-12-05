@@ -11,6 +11,9 @@ GpuError::GpuError(const char *warn, gpuError_t err) : gpuErr(err) {
 
 gpuError_t GpuError::getError() { return gpuErr; }
 
-const char *GpuError::getErrorMessage() {
-  return gpuGetErrorString(getError());
+const std::string GpuError::getErrorMessage() {
+    std::string err_name = cudaGetErrorName(getError());
+    std::string err_msg = gpuGetErrorString(getError());
+    std::string err = err_msg + " ( " + err_name + " )";
+    return err;
 }
