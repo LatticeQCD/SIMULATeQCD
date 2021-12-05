@@ -44,7 +44,7 @@ double b = 0.00251;
 std::string c = "test";
 
 std::string str1 = sformat("%.3f, %g %s %.2e", 1.23, 0.001, c, b);
-std::string str2 = sjoin(a, " ", b, " 123 ", c);
+std::string str2 = sjoin(a, " ", b, COLORS::red, " 123 ", COLORS::reset, c);
 // Result of str1 and str2 is: 
 // str1 = "1.230, 0.001 test 2.51e-03"
 // str2 = "2 0.00251 123 test"
