@@ -440,4 +440,3 @@ public:
 };
 
 #endif
-

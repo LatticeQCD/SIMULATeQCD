@@ -25,4 +25,3 @@ void CommunicationBase::init(const LatticeParameters &lp ) {
 }; 
 
 #endif
-

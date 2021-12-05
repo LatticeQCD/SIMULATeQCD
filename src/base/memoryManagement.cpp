@@ -215,4 +215,3 @@ template void MemoryManagement::gMemory<true>::copyFrom<false>(const gMemoryPtr<
                                              const size_t offsetSelf, const size_t offsetSrc);
 template void MemoryManagement::gMemory<true>::copyFrom<true>(const gMemoryPtr<true> &src, const size_t sizeInBytes,
                                             const size_t offsetSelf, const size_t offsetSrc);
-

@@ -6,11 +6,12 @@
 
 #ifdef COMPILE_WITH_MPI
 
-#include "communicationBase.h"
-#include <cstring>
-#include <mpi.h>
 #include <sched.h>
+#include <mpi.h>
 #include <vector>
+#include <cstring>
+#include "communicationBase.h"
+
 
 Logger rootLogger(OFF);
 Logger stdLogger(ALL);
@@ -29,7 +30,7 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv) {
 
     stdLogger.set_additional_prefix(sjoin("[Rank ", myInfo.world_rank, "] "));
 
-    if (IamRoot()) {
+    if (IamRoot()){
         rootLogger.setVerbosity(stdLogger.getVerbosity());
     }
 
@@ -127,8 +128,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     int num_devices = 0;
     gpuGetDeviceCount(&num_devices);
     if (num_devices == 0) {
-        throw std::runtime_error(
-                stdLogger.fatal(myInfo.nodeName, " CPU_", sched_getcpu(),
+        throw std::runtime_error(stdLogger.fatal(myInfo.nodeName, " CPU_", sched_getcpu(),
                     " MPI world_rank=", myInfo.world_rank,
                     ": You didn't give me any GPU to work with! >:("));
     }
@@ -138,14 +138,12 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 
     else {
 
-        myInfo.deviceRank = myInfo.coord[0] * Topo[0] + myInfo.coord[1] * Topo[1] +
-            myInfo.coord[2] * Topo[2] + myInfo.coord[3] * Topo[3];
+        myInfo.deviceRank = myInfo.coord[0] * Topo[0] + myInfo.coord[1] * Topo[1] + myInfo.coord[2] * Topo[2]
+            + myInfo.coord[3] * Topo[3];
 
         for (int i = 0; i < 4; ++i) {
-            if (((Dim[i] == 1) && (Topo[i] != 0)) ||
-                    ((Dim[i] != 1) && (Topo[i] == 0))) {
-                rootLogger.warn(
-                        "GPU topology and chosen lattice splitting seem incompatible!");
+            if (((Dim[i] == 1) && (Topo[i] != 0)) || ((Dim[i] != 1) && (Topo[i] == 0))) {
+                rootLogger.warn( "GPU topology and chosen lattice splitting seem incompatible!");
             }
         }
     }
@@ -175,13 +173,11 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 
 #ifdef ARCHITECTURE
     if (static_cast<int>(ARCHITECTURE) != gpu_arch) {
-        throw std::runtime_error(
-                stdLogger.fatal("You compiled for ARCHITECTURE=", ARCHITECTURE,
+        throw std::runtime_error(stdLogger.fatal("You compiled for ARCHITECTURE=", ARCHITECTURE,
                     " but the GPUs here are ", gpu_arch));
     }
 #else
-    rootLogger.warn(
-            "Cannot determine for which compute capability the code was compiled!");
+    rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
@@ -209,11 +205,11 @@ void CommunicationBase::_MPI_fail(int ret, const std::string &func) {
     }
 }
 
-bool CommunicationBase::IamRoot() const { return (myInfo.world_rank == 0); }
+bool CommunicationBase::IamRoot() const {
+    return (myInfo.world_rank == 0);
+}
 
-const LatticeDimensions &CommunicationBase::nodes() {
-    return dims;
-} /// Number of nodes in Cartesian grid
+const LatticeDimensions &CommunicationBase::nodes() { return dims; }            /// Number of nodes in Cartesian grid
 int CommunicationBase::getRank(LatticeDimensions c) const {
     int result;
     MPI_Cart_rank(cart_comm, c, &result);
@@ -240,14 +236,14 @@ void CommunicationBase::root2all(double &value) const {
     MPI_Bcast(&value, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
-void CommunicationBase::root2all(GCOMPLEX(float) & value) const {
+void CommunicationBase::root2all(GCOMPLEX(float) &value) const {
     std::complex<float> v(value.cREAL, value.cIMAG);
     MPI_Bcast(&v, 1, MPI_COMPLEX, 0, MPI_COMM_WORLD);
     value.cREAL = v.real();
     value.cIMAG = v.imag();
 }
 
-void CommunicationBase::root2all(GCOMPLEX(double) & value) const {
+void CommunicationBase::root2all(GCOMPLEX(double) &value) const {
     std::complex<double> v(value.cREAL, value.cIMAG);
     MPI_Bcast(&v, 1, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
     value.cREAL = v.real();
@@ -402,14 +398,15 @@ void CommunicationBase::reduce(double *in, int nr) const {
     delete[] buf;
 }
 
-void CommunicationBase::reduce(GCOMPLEX(float) * in, int nr) const {
+void CommunicationBase::reduce(GCOMPLEX(float) *in, int nr) const {
     GCOMPLEX(float) *buf = new GCOMPLEX(float)[nr];
     MPI_Allreduce(in, buf, nr, MPI_COMPLEX, MPI_SUM, cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
     delete[] buf;
 }
 
-void CommunicationBase::reduce(GCOMPLEX(double) * in, int nr) const {
+
+void CommunicationBase::reduce(GCOMPLEX(double) *in, int nr) const {
     GCOMPLEX(double) *buf = new GCOMPLEX(double)[nr];
     MPI_Allreduce(in, buf, nr, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
@@ -467,7 +464,7 @@ void CommunicationBase::reduce(std::complex<double> *in, int nr) const {
 double CommunicationBase::globalAverage(double in) const {
     double recv;
     MPI_Allreduce(&in, &recv, 1, MPI_DOUBLE, MPI_SUM, cart_comm);
-    recv /= (double)world_size;
+    recv /= (double) world_size;
     return recv;
 }
 
@@ -493,14 +490,14 @@ double CommunicationBase::globalMaximum(double in) const {
 float CommunicationBase::globalAverage(float in) const {
     float recv;
     MPI_Allreduce(&in, &recv, 1, MPI_FLOAT, MPI_SUM, cart_comm);
-    recv /= (float)world_size;
+    recv /= (float) world_size;
     return recv;
 }
 
 std::complex<float> CommunicationBase::globalAverage(std::complex<float> in) const {
     std::complex<float> recv;
     MPI_Allreduce(&in, &recv, 1, MPI_COMPLEX, MPI_SUM, cart_comm);
-    recv /= (float)world_size;
+    recv /= (float) world_size;
     return recv;
 }
 
@@ -518,8 +515,7 @@ float CommunicationBase::globalMaximum(float in) const {
 
 template <bool onDevice>
 int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
-        int leftRight,
-        HaloOffsetInfo<onDevice> &HalInfo) {
+        int leftRight, HaloOffsetInfo<onDevice> &HalInfo) {
     HaloSegmentInfo &seg = HalInfo.get(hseg, direction, leftRight);
 
     NeighborInfo &NInfo = HalInfo.getNeighborInfo();
@@ -539,8 +535,8 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
             IF(COMBASE_DEBUG)(stdLogger.debug("gpuMemcpyAsync: Copy ", seg.getLength(),
                                  " bytes from rank ", MyRank(), " to rank ", info.world_rank);)
 
-                gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice, 
-			seg.getDeviceStream());
+                gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
+                        seg.getDeviceStream());
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1a)", gpuErr);
 
@@ -551,11 +547,10 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
             IF(COMBASE_DEBUG) (stdLogger.debug("gpuMemcpyAsync (same rank): Copy ", seg.getLength(),
                                  " bytes on rank ", MyRank());)
 
-                gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(),
-                        gpuMemcpyDeviceToDevice, seg.getDeviceStream(0));
+                gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
+                        seg.getDeviceStream(0));
             if (gpuErr != gpuSuccess)
-                GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1b)",
-                        gpuErr);
+                GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1b)", gpuErr);
 
         } else if (onDevice && gpuAwareMPIAvail()) {
             uint8_t *sendBase = seg.getMyDeviceSourcePtr();
@@ -565,8 +560,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
             int indexDest = haloSegmentCoordToIndex(hseg, direction, !leftRight);
 
             IF(COMBASE_DEBUG) (stdLogger.debug("MPI_Isend (gpu): Send ", seg.getLength(),
-                                 " bytes from rank ", MyRank(), " to rank ",
-                                 info.world_rank);)
+                                 " bytes from rank ", MyRank(), " to rank ", info.world_rank);)
 
                 MPI_Isend(sendBase, 1, seg.getMpiType(), rank, indexDest, cart_comm, &seg.getRequestSend());
             MPI_Irecv(recvBase, 1, seg.getMpiType(), rank, index, cart_comm, &seg.getRequestRecv());
@@ -579,8 +573,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
             int indexDest = haloSegmentCoordToIndex(hseg, direction, !leftRight);
 
             IF(COMBASE_DEBUG) (stdLogger.debug("MPI_Isend (cpu): Send ", seg.getLength(),
-                                 " bytes from rank ", MyRank(), " to rank ",
-                                 info.world_rank);)
+                                 " bytes from rank ", MyRank(), " to rank ", info.world_rank);)
                 MPI_Isend(sendBase, 1, seg.getMpiType(), rank, indexDest, cart_comm, &seg.getRequestSend());
             MPI_Irecv(recvBase, 1, seg.getMpiType(), rank, index, cart_comm, &seg.getRequestRecv());
         }
@@ -588,9 +581,9 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
     return seg.getLength();
 }
 
-template <bool onDevice>
-void CommunicationBase::updateAll(HaloOffsetInfo<onDevice> &HalInfo,
-        unsigned int param) {
+
+template<bool onDevice>
+void CommunicationBase::updateAll(HaloOffsetInfo<onDevice> &HalInfo, unsigned int param) {
 
     if (param & COMM_START) {
 
@@ -667,8 +660,7 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
 
     if (MPI_File_open(getCart_comm(), const_cast<char *>(fileName.c_str()),
                 mpi_mode, MPI_INFO_NULL, &fh) != MPI_SUCCESS) {
-        throw std::runtime_error(
-                stdLogger.fatal("Unable to read/write binary file: ", fileName));
+        throw std::runtime_error(stdLogger.fatal("Unable to read/write binary file: ", fileName));
     }
 
     if (mode != READ) MPI_File_set_size(fh, filesize); //truncate if file exists and is too large

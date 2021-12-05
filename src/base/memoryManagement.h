@@ -549,4 +549,3 @@ public:
 };
 
 #endif //MEMORYMANAGEMENT_H
-

@@ -410,4 +410,3 @@ void LatticeContainer<onDevice, elemType>::iterateOverSpatialBulk(Functor op) {
 }
 
 #endif //LATTICECONTAINER_H
-

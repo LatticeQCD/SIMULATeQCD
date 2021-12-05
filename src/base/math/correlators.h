@@ -1184,4 +1184,3 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::getFactorArray(std::vector<int>
 };
 
 #endif //CORRELATORS_H
-

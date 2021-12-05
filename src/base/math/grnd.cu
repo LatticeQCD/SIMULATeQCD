@@ -394,4 +394,3 @@ class RNDHeader;
 
 template class grnd_state<true>;
 template class grnd_state<false>;
-

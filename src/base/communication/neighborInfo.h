@@ -474,4 +474,3 @@ inline void NeighborInfo::checkP2P() {
 }
 
 #endif //NEIGHBORINFO_H
-

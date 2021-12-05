@@ -103,4 +103,3 @@ public:
 };
 
 #endif //DEVICEEVENT_H
-

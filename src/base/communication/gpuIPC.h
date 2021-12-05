@@ -439,4 +439,3 @@ public:
 };
 
 #endif //CUDAIPC_H
-

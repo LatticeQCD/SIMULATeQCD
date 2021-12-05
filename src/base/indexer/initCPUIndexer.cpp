@@ -102,4 +102,3 @@ void initCPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int
 
     }
 }
-

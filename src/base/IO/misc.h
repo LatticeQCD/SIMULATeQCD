@@ -66,4 +66,3 @@ inline bool switch_endianness(Endianness target) {
 
 
 #endif
-
