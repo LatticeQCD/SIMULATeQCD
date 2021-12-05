@@ -345,8 +345,7 @@ private:
             if ((int) temp.find(substr) >= 0) maxTag = std::max(extract_tag(temp), maxTag);
         }
         if (maxTag < 0) {
-            throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr."
-                           "  substr, maxTag = ", substr, "  ", maxTag));
+            throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr. substr, maxTag = ", substr, "  ", maxTag));
         }
         return maxTag;
     }
@@ -387,8 +386,7 @@ private:
             if ((int) temp.find(substr) >= 0) maxTag = std::max(extract_tag(temp), maxTag);
         }
         if (maxTag < 0) {
-            throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr."
-                           "  name, maxTag =", substr, "  ", maxTag));
+            throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr. name, maxTag =", substr, "  ", maxTag));
         }
         return maxTag;
     }
