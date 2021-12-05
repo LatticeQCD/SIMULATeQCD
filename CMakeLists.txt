@@ -482,7 +482,7 @@ add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 
 add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cu ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 HALFPREC=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications RHMC)
 
 add_SIMULATeQCD_executable(sublatticeUpdates src/applications/main_sublatticeUpdates.cu ${SOURCE_FILES_SUBLATTICEUPDATES})
