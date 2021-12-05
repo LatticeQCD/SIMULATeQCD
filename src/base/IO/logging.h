@@ -1,3 +1,6 @@
+//
+// Created by Lukas Mazur on 04.12.21.
+//
 
 #ifndef LOGGER
 #define LOGGER
@@ -13,20 +16,6 @@
 #include <string>
 #include "stringFunctions.h"
 
-
-namespace COLORS {
-    const std::string red("\033[0;31m");
-    const std::string redBold("\033[1;31m");
-    const std::string green("\033[0;32m");
-    const std::string greenBold("\033[1;32m");
-    const std::string yellow("\033[0;33m");
-    const std::string yellowBold("\033[1;33m");
-    const std::string cyan("\033[0;36m");
-    const std::string cyanBold("\033[1;36m");
-    const std::string magenta("\033[0;35m");
-    const std::string magentaBold("\033[1;35m");
-    const std::string reset("\033[0m");
-} // namespace COLORS
 
 enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
 static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO",
