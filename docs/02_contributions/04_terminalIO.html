@@ -93,13 +93,42 @@ These two classes are called <code class="docutils literal notranslate"><span cl
 <section id="printing-a-statement">
 <h2>Printing a statement<a class="headerlink" href="#printing-a-statement" title="Permalink to this headline"></a></h2>
 <p>This is accomplished through</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rootLogger</span><span class="p">.</span><span class="n">info</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Some information about the currently running program.&quot;</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rootLogger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Some information about the currently running program.&quot;</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>This will output the statement <strong>on the root process only</strong> in a nicely formatted way with time stamp and also append a newline (no more <code class="docutils literal notranslate"><span class="pre">std::endl</span></code> or \n’s that clutter the code).
 If you want to output something from every process you can use <code class="docutils literal notranslate"><span class="pre">stdLogger</span></code>.</p>
 <p>These are some of the different Logger levels you can choose from:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">alloc</span><span class="p">,</span><span class="w"> </span><span class="n">debug</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">warn</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">fatal</span><span class="w"> </span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">alloc</span><span class="p">(),</span><span class="w"> </span><span class="n">debug</span><span class="p">(),</span><span class="w"> </span><span class="n">info</span><span class="p">(),</span><span class="w"> </span><span class="n">warn</span><span class="p">(),</span><span class="w"> </span><span class="n">error</span><span class="p">(),</span><span class="w"> </span><span class="n">fatal</span><span class="p">()</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The output level can be set by calling</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rootLogger</span><span class="p">.</span><span class="n">setVerbosity</span><span class="p">(</span><span class="n">LOGLEVEL</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">LOGLEVEL</span></code> must be one of these levels:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">ALL</span><span class="p">,</span><span class="w"> </span><span class="n">ALLOC</span><span class="p">,</span><span class="w"> </span><span class="n">TRACE</span><span class="p">,</span><span class="w"> </span><span class="n">DEBUG</span><span class="p">,</span><span class="w"> </span><span class="n">INFO</span><span class="p">,</span><span class="w"> </span><span class="n">WARN</span><span class="p">,</span><span class="w"> </span><span class="n">ERROR</span><span class="p">,</span><span class="w"> </span><span class="n">FATAL</span><span class="p">,</span><span class="w"> </span><span class="n">OFF</span><span class="w"></span>
+</pre></div>
+</div>
+<p>All levels to the left of the selected level are not printed.</p>
+<p>For the message, you can pass <strong>as many arguments of any type</strong> to it as you want as long as their stream operator <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> is overloaded.
+For example:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"></span>
+<span class="kt">float</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10.2</span><span class="p">;</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test&quot;</span><span class="p">;</span><span class="w"></span>
+<span class="n">rootLogger</span><span class="p">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;This will work&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;and print just fine&quot;</span><span class="p">));</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">stringFunctions.h</span></code> header offers additional convenience function, e.g.:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="kt">double</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">0.00251</span><span class="p">;</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">c</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test&quot;</span><span class="p">;</span><span class="w"></span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">str1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sformat</span><span class="p">(</span><span class="s">&quot;%.3f, %g %s %.2e&quot;</span><span class="p">,</span><span class="w"> </span><span class="mf">1.23</span><span class="p">,</span><span class="w"> </span><span class="mf">0.001</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">);</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">str2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sjoin</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">,</span><span class="w"> </span><span class="s">&quot; 123 &quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c</span><span class="p">);</span><span class="w"></span>
+<span class="c1">// Result of str1 and str2 is: </span>
+<span class="c1">// str1 = &quot;1.230, 0.001 test 2.51e-03&quot;</span>
+<span class="c1">// str2 = &quot;2 0.00251 123 test&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -112,18 +141,11 @@ it makes sense to use <code class="docutils literal notranslate"><span class="pr
 <section id="terminating-the-program-in-case-of-error">
 <h2>Terminating the program in case of error<a class="headerlink" href="#terminating-the-program-in-case-of-error" title="Permalink to this headline"></a></h2>
 <p>The way to close your program at runtime because of an error is</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">throw</span><span class="w"> </span><span class="n">PGCError</span><span class="p">(</span><span class="s">&quot;Put&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;your&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;error message here&quot;</span><span class="p">);</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="n">stdLogger</span><span class="p">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;Put&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;your&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;error message here&quot;</span><span class="p">));</span><span class="w"></span>
 </pre></div>
 </div>
-<p>This will call rootLogger.fatal() and write out the error message, then <code class="docutils literal notranslate"><span class="pre">throw</span> <span class="pre">std::runtime_error</span></code>. For the message, you can pass <strong>as many arguments of any type</strong> to it as you want as long as their stream operator <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> is overloaded.
-For example:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">5</span><span class="p">;</span><span class="w"></span>
-<span class="kt">float</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">10.2</span><span class="p">;</span><span class="w"></span>
-<span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">msg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;test&quot;</span><span class="p">;</span><span class="w"></span>
-<span class="k">throw</span><span class="w"> </span><span class="n">SIMULATeQCD_error</span><span class="p">(</span><span class="s">&quot;This will work&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">msg</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;and print just fine&quot;</span><span class="p">);</span><span class="w"></span>
-</pre></div>
-</div>
-<p>In your main, you should use something like this to catch any runtime errors and close the program in a clean way:</p>
+<p>This will call rootLogger.fatal() and write out the error message, then <code class="docutils literal notranslate"><span class="pre">throw</span> <span class="pre">std::runtime_error</span></code>.
+In your main, you should use something like this to catch any runtime errors and close the program in a clean way:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">argv</span><span class="p">[])</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">        </span><span class="o">&lt;</span><span class="n">CONTENT</span><span class="w"> </span><span class="n">OF</span><span class="w"> </span><span class="n">YOUR</span><span class="w"> </span><span class="n">MAIN</span><span class="w"> </span><span class="n">HERE</span><span class="o">&gt;</span><span class="w"></span>
