@@ -55,7 +55,7 @@ __device__ __host__ inline bool isOdd(int cand) { return (cand & 0x1); }
 class GpuStopWatch {
     float _elapsed = 0;
 
-#ifdef __CUDACC__
+#ifdef __HIPCC__
     gpuEvent_t _start_time, _stop_time;
 
     public:

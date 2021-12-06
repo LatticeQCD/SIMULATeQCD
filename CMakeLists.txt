@@ -5,15 +5,21 @@
 # alphabetically. Please try to follow these guidelines when adding your target.
 #
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-project(SIMULATeQCD LANGUAGES CXX CUDA)
+project(SIMULATeQCD LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
 # Find and include+link MPI and CUDA
 find_package(MPI 3.1 REQUIRED)
-find_package(CUDA 11.0 REQUIRED)
-include_directories(SYSTEM ${MPI_INCLUDE_PATH} ${CUDA_INCLUDE_DIRS})
-link_libraries(${MPI_LIBRARIES} ${CUDA_LIBRARIES})
+
+set(CMAKE_MODULE_PATH "$ENV{HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+
+find_package(HIP REQUIRED)
+find_package(rocprim REQUIRED CONFIG PATHS "/opt/rocm/rocprim")
+find_package(hipcub REQUIRED CONFIG PATHS "/opt/rocm/hipcub")
+
+include_directories(SYSTEM ${MPI_INCLUDE_PATH} ${CUDA_INCLUDE_DIRS} $ENV{HIP_PATH}/include)
+link_libraries(${MPI_LIBRARIES} ${HIP_LIBRARIES})
 
 # Read architecture, CUDA-aware MPI, CUDA P2P settings
 set(ARCHITECTURE "" CACHE STRING "Set the architecture. For example 70 will compile for Volta support")
@@ -35,11 +41,12 @@ endif()
 option(USE_MPFR "Set to ON to include MPFR - needed for rat_approx (default - OFF)" OFF)
 
 # Additional compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc --hip-link")
 set(CMAKE_CUDA_FLAGS
     "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
 
-
+set(HIP_HIPCC_FLAGS "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --amdgpu-target=gfx906,gfx908 -fgpu-rdc")
+set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
 
 # --------------------------------------------------------------------------------------------------VARIABLE DEFINITIONS
 
@@ -148,7 +155,7 @@ target_compile_definitions(CodeBase PRIVATE
 		)
 set_target_properties(CodeBase
 		PROPERTIES
-		COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+		COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON)
 
 
 #---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
@@ -157,10 +164,10 @@ set_target_properties(CodeBase
 FUNCTION(add_SIMULATeQCD_executable TARGET)
 	add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
 	add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
-	target_link_libraries("_${TARGET}" CodeBase)
+	target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
 	set_target_properties(${TARGET} _${TARGET}
 			PROPERTIES
-			COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+			COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON)
 ENDFUNCTION()
 FUNCTION(set_SIMULATeQCD_property TARGET)
 	set_target_properties(${TARGET} _${TARGET} ${ARGN})

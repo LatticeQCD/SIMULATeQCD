@@ -470,7 +470,8 @@ inline void NeighborInfo::checkP2P() {
 #else
      , "P2P NO ; "
 #endif
-    , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+//    , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+      , "UVA ", "Unknown (this is the hip branch!)");
 }
 
 #endif //NEIGHBORINFO_H

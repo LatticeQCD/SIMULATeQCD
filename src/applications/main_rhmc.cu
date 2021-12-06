@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim(), param.gpuTopo());
 
-    typedef float floatT;
+    typedef double floatT;
 
     rootLogger.info("STARTING RHMC Update:");
 

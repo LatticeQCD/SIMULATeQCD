@@ -20,7 +20,7 @@
 #include "../wrapper/gpu_wrapper.h"
 #include "floatComparison.h"
 #include <complex>
-#include <cuda_fp16.h>
+#include <hip/hip_fp16.h>
 #include <iostream>
 #include <type_traits>
 
@@ -269,7 +269,7 @@ public:
   }
 };
 
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
 template <> class GPUcomplex<__half> {
 public:
   __half2 c;

@@ -338,8 +338,8 @@ std::vector<GCOMPLEX(floatT)> gDotAlongXYStackedShared( Gaugefield<floatT,true,H
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
                 / static_cast<float> (blockDim.x)));
 
-    DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,sharedX><<< gridDim, blockDim>>> (redBase.getAccessor(),gauge.getAccessor(),shifty, elems);
-
+    //DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,sharedX><<< gridDim, blockDim>>> (redBase.getAccessor(),gauge.getAccessor(),shifty, elems);
+    hipLaunchKernelGGL((DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,sharedX>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),gauge.get    Accessor(),shifty, elems);
 
     /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
     floatT vol=GInd::getLatData().globvol4;

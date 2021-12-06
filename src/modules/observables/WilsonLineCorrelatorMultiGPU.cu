@@ -22,7 +22,7 @@
 
 #include "../../base/math/correlators.h"
 
-#include <cuda_runtime.h>
+#include <hip/hip_runtime.h>
 #include <cuda.h>
 
 #include <iostream>
@@ -256,8 +256,8 @@ std::vector<floatT> WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gDotA
         const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
                     / static_cast<float> (blockDim.x)));
 
-        DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,stacks><<< gridDim, blockDim>>> (redBase.getAccessor(),gauge.getAccessor(),shifty, elems);
-
+        //DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,stacks><<< gridDim, blockDim>>> (redBase.getAccessor(),gauge.getAccessor(),shifty, elems);
+        hipLaunchKernelGGL((DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,stacks>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),gauge.getA        ccessor(),shifty, elems);
 
         /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
         floatT vol=GInd::getLatData().globvol4;

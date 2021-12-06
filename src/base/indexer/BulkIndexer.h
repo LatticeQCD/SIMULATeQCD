@@ -312,8 +312,8 @@ class GIndexer {
 public:
     __device__ __host__ GIndexer() = default;
     __device__ __host__ inline static LatticeData getLatData() {
-#ifdef __CUDA_ARCH__
-        return globLatDataGPU[HaloDepth];
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
+  	return globLatDataGPU[HaloDepth];
 #else
         return globLatDataCPU[HaloDepth];
 #endif
@@ -1544,49 +1544,49 @@ public:
         return site_move<-1>(s, mu);
     }
     template<class T> __device__ __host__ inline static T site_up_up(const T &s, const int mu, const int nu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, 1>(s, mu, nu);
 #else
         return site_up(site_up(s, mu), nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_dn(const T &s, const int mu, const int nu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, -1>(s, mu, nu);
 #else
         return site_dn(site_up(s, mu), nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_dn_dn(const T &s, const int mu, const int nu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<-1, -1>(s, mu, nu);
 #else
         return site_dn(site_dn(s, mu), nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_up_up(const T &s, const int mu, const int nu, const int rho) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, 1, 1>(s, mu, nu, rho);
 #else
         return site_up(site_up_up(s, mu, nu), rho);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_up_dn(const T &s, const int mu, const int nu, const int rho) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, 1, -1>(s, mu, nu, rho);
 #else
         return site_dn(site_up_up(s, mu, nu), rho);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_dn_dn(const T &s, const int mu, const int nu, const int rho) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, -1, -1>(s, mu, nu, rho);
 #else
         return site_dn(site_up_dn(s, mu, nu), rho);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_dn_dn_dn(const T &s, const int mu, const int nu, const int rho) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<-1, -1, -1>(s, mu, nu, rho);
 #else
         return site_dn(site_dn_dn(s, mu, nu), rho);
@@ -1594,70 +1594,70 @@ public:
     }
     //! The following are currently unused but can be commented in if needed:
     template<class T> __device__ __host__ inline static T site_up_up_up_up(const T &s, const int mu, const int nu, const int rho, const int sig) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, 1, 1, 1>(s, mu, nu, rho, sig);
 #else
         return site_up(site_up_up_up(s, mu, nu, rho), sig);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_up_up_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, 1, 1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_up_up_up(s, mu, nu, rho), sig);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_up_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, 1, -1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_up_up_dn(s, mu, nu, rho), sig);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_dn_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, -1, -1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_up_dn_dn(s, mu, nu, rho), sig);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_dn_dn_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<-1, -1, -1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_dn_dn_dn(s, mu, nu, rho), sig);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_2up_up(const T &s, const int mu, const int nu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<2, 1>(s, mu, nu);
 #else
         return site_up_up_up(s, mu, mu, nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_2up_dn(const T &s, const int mu, const int nu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<2, -1>(s, mu, nu);
 #else
         return site_up_up_dn(s, mu, mu, nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_up_2dn(const T &s, const int mu, const int nu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<1, -2>(s, mu, nu);
 #else
         return site_up_dn_dn(s, mu, mu, nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_2up(const T &s, const int mu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<2>(s, mu);
 #else
         return site_up_up(s, mu, mu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_2dn(const T &s, const int mu) {
-#ifdef __CUDA_ARCH__
+#if defined __CUDA_ARCH__ || defined __HIP_DEVICE_COMPILE__
         return site_move<-2>(s, mu);
 #else
         return site_dn_dn(s, mu, mu);

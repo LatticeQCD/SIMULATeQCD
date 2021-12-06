@@ -57,7 +57,7 @@ public:
     __host__ __device__ gVect3(floatT v0) : _v0(v0), _v1(v0), _v2(v0) {};
     __host__ __device__ gVect3(GCOMPLEX(floatT) v0, GCOMPLEX(floatT) v1, GCOMPLEX(floatT) v2) : _v0(v0), _v1(v1), _v2(v2) {};
 
-#if (!defined __CUDACC__)
+#if (!defined __HIPCC__)
     __host__ friend std::ostream &operator << <> (std::ostream &, const gVect3<floatT> &);
 #endif
     __host__ friend std::istream &operator >> <> (std::istream &, gVect3<floatT> &);
@@ -90,7 +90,7 @@ public:
     __device__ __host__ void random( rndstateT * const);   // set gvect3 randomly
     __device__ __host__ void gauss( uint4 * state )
     {
-        if constexpr (!std::is_same<floatT,__half>::value) {
+        //if constexpr (!std::is_same<floatT,__half>::value) {
         floatT radius0,radius1,radius2,phi0,phi1,phi2;
 
         phi0 = 2.0*M_PI * get_rand<floatT>(state);
@@ -110,8 +110,8 @@ public:
         _v0 = GCOMPLEX(floatT)(radius0 * cos(phi0), radius0 * sin(phi0));
         _v1 = GCOMPLEX(floatT)(radius1 * cos(phi1), radius1 * sin(phi1));
         _v2 = GCOMPLEX(floatT)(radius2 * cos(phi2), radius2 * sin(phi2));
-            }
-        else {
+            //}
+        /*else {
             #ifdef __CUDA_ARCH__
             float radius0,radius1,radius2,phi0,phi1,phi2;
             phi0 = 2.0*M_PI * get_rand<float>(state);
@@ -132,7 +132,7 @@ public:
         _v1 = GCOMPLEX(__half)(__float2half(radius1 * cos(phi1)), __float2half(radius1 * sin(phi1)));
         _v2 = GCOMPLEX(__half)(__float2half(radius2 * cos(phi2)), __float2half(radius2 * sin(phi2)));
         #endif
-        }
+        }*/
         
     };
 
@@ -451,7 +451,7 @@ __device__ __host__ gVect3<floatT> conj(const gVect3<floatT> &x)
 }
 
 
-#ifdef __CUDACC__
+#ifdef __HIPCC__
 
 template <class floatT>
 __host__ std::ostream &operator << (std::ostream &s, const gVect3<floatT> &x)

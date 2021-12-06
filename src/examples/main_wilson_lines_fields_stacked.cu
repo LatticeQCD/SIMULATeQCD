@@ -9,8 +9,9 @@
 #include "../modules/rhmc/rhmcParameters.h"
 #include "../modules/gaugeFixing/gfix.h"
 
-#include <cuda_runtime.h>
-#include <cuda.h>
+//#include <cuda_runtime.h>
+//#include <cuda.h>
+#include <hip/hip_runtime.h>
 
 #include <iostream>
 using namespace std;

@@ -16,8 +16,7 @@
 #include "grnd.h"
 #include <float.h>
 #include <type_traits>
-#include <cuda_fp16.h>
-
+#include <hip/hip_fp16.h>
 
 
 template<class floatT>
@@ -125,7 +124,7 @@ public:
 
 
 
-#if (!defined __CUDACC__)
+#if (!defined __HIPCC__)
     __host__ friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
 #endif
 
@@ -838,7 +837,7 @@ __device__ __host__ void GSU3<floatT>::random(uint4 *state) {
 
 template<class floatT>
 __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
-    if constexpr (!std::is_same<floatT,__half>::value) {
+    //if constexpr (!std::is_same<floatT,__half>::value) {
             floatT rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
             
             for (int i = 0; i < 4; ++i) {
@@ -864,7 +863,7 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
             _e20 = GCOMPLEX(floatT)(temp1[3], temp2[0]);
             _e21 = GCOMPLEX(floatT)(temp2[1], temp2[2]);
             _e22 = GCOMPLEX(floatT)(-2. / sqrt(3.0) * temp2[3], 0.0);
-        }
+        /*}
     else {
 #ifdef __CUDA_ARCH__
         float rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
@@ -893,13 +892,13 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
     _e21 = GCOMPLEX(__half)(__float2half(temp2[1]), __float2half( temp2[2]));
     _e22 = GCOMPLEX(__half)(__float2half(-2. / sqrt(3.0) * temp2[3]), __float2half( 0.0));
 #endif
-    }
+    }*/
 }
 
 // project to su3 using first two rows of link
 template<class floatT>
 __device__ __host__ void GSU3<floatT>::su3unitarize() {
-    if constexpr (!std::is_same<floatT,__half>::value) {
+    //if constexpr (!std::is_same<floatT,__half>::value) {
     double quadnorm, invnorm;
     double Cre, Cim;
 
@@ -958,7 +957,7 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                              - (_e01.cREAL * _e10.cREAL - _e01.cIMAG * _e10.cIMAG)),
                             (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
-        }
+    /*    }
     else {
  #ifdef __CUDA_ARCH__
     double quadnorm, invnorm;
@@ -1020,7 +1019,7 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                             (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
     #endif
-    }
+    }*/
     
 }
 
