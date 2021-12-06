@@ -1,5 +1,5 @@
 /* 
- * PureGaugeUpdates.cu                                                               
+ * PureGaugeUpdates.cpp                                                               
  * 
  * v1.0: D. Clarke, 1 Feb 2019
  * 

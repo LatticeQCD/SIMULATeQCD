@@ -1,5 +1,5 @@
 /* 
- * main_InverterTest.cu                                                               
+ * main_InverterTest.cpp                                                               
  * 
  */
 

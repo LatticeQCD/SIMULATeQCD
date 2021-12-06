@@ -1,9 +1,9 @@
 /* 
- * main_ploop.cu                                                               
+ * main_ploop.cpp                                                               
  * 
  * David Clarke, 30 Oct 2018
  * 
- * Measure Polyakov loops using the multi-GPU framework. Initialization copied from main_plaquette.cu. This is a good
+ * Measure Polyakov loops using the multi-GPU framework. Initialization copied from main_plaquette.cpp. This is a good
  * example of a simple operator calculated on spatial sites only.
  * 
  */

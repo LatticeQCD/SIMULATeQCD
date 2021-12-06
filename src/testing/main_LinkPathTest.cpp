@@ -1,5 +1,5 @@
 /* 
- * main_LinkPathTest.cu                                                               
+ * main_LinkPathTest.cpp                                                               
  * 
  */
 

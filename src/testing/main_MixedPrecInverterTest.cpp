@@ -1,5 +1,5 @@
 /* 
- * main_MixedPrecInverterTest.cu                                                               
+ * main_MixedPrecInverterTest.cpp                                                               
  * 
  * Dennis Bollweg
  * 

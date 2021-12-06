@@ -1,10 +1,10 @@
 /* 
- * PolyakovLoopCorrelator.cu
+ * PolyakovLoopCorrelator.cpp
  * 
  * D. Clarke, 27 Apr 2020
  *
  * This includes some functions for computing Polyakov loop correlations. There are more general implementations of
- * these correlations in math/correlators.h and math/correlators.cu, but they are slower. The reason they are slower
+ * these correlations in math/correlators.h and math/correlators.cpp, but they are slower. The reason they are slower
  * is that they repeat kernel calls for each kind of Polyakov loop correlation there is, which means it repeats the
  * same code three times instead of just calling it once, leading to about a 3x slow-down. Please have a look at that
  * header file and cu file if you would like a better understanding of what these kernels are doing. The code is very

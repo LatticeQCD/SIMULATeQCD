@@ -1,5 +1,5 @@
 /* 
- * main_gaugeFixing.cu
+ * main_gaugeFixing.cpp
  *
  * D. Clarke
  *

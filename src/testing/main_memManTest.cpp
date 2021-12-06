@@ -1,5 +1,5 @@
 /* 
- * main_memManTest.cu                                                               
+ * main_memManTest.cpp                                                               
  * 
  * D. Clarke
  * 

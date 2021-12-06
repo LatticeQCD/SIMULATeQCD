@@ -115,7 +115,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
 #else
-        static_assert(!onDevice, "Functor construction not available for device code outside .cu files");
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
         auto resAcc = getAccessor();
@@ -182,7 +182,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
         if (gpuErr)
             GpuError("performFunctorLoop: Failed to launch kernel", gpuErr);
 #else
-        static_assert(!onDevice, "Functor construction not available for device code outside .cu files");
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
         auto resAcc = getAccessor();
@@ -251,7 +251,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
         if (gpuErr)
             GpuError("CopyFromConst: Failed to launch kernel", gpuErr);
 #else
-        static_assert(!onDevice, "Functor construction not available for device code outside .cu files");
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
         auto resAcc = getAccessor();
@@ -331,7 +331,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
 #else
-        static_assert(!onDevice, "Functor construction not available for device code outside .cu files");
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
         uint3 blockIdx;
@@ -411,7 +411,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
 #else
-        static_assert(!onDevice, "Functor construction not available for device code outside .cu files");
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
         uint3 blockIdx;

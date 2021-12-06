@@ -1,5 +1,5 @@
 /* 
- * main_wilson_lines_fields.cu
+ * main_wilson_lines_fields.cpp
  * 
  * Rasmus Larsen, 16 Dec 2020
  *

@@ -1,5 +1,5 @@
 /* 
- * main_gradientFlow.cu                                                               
+ * main_gradientFlow.cpp                                                               
  *
  * Lukas Mazur
  *

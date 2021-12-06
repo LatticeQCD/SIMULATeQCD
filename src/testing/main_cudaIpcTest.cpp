@@ -1,5 +1,5 @@
 /* 
- * main_cudaIpcTest.cu                                                               
+ * main_cudaIpcTest.cpp                                                               
  * 
  * Lukas Mazur
  * 

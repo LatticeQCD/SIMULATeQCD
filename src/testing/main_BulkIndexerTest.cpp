@@ -1,5 +1,5 @@
 /* 
- * main_BulkIndexerTest.cu                                                               
+ * main_BulkIndexerTest.cpp                                                               
  * 
  * Philipp Scior, 11 Oct 2018
  * 

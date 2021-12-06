@@ -1,5 +1,5 @@
 /*
- * ColorMagneticCorr.cu
+ * ColorMagneticCorr.cpp
  *
  * v1.0: Hai-Tao Shu, 6 Nov 2020 
  * Measure Color-Magnetic Correlator using the multi-GPU framework. Read sketch from right to left

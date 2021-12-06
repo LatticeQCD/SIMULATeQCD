@@ -1,5 +1,5 @@
 /* 
- * gfix.cu
+ * gfix.cpp
  *
  * v2.4: D. Clarke, 11 Feb 2019
  *
@@ -197,7 +197,7 @@ void GaugeFixing<floatT,onDevice,HaloDepth>::gaugefixOR() {
 
 
 /// Initialize various possibilities of template parameter combinations for the class GaugeFixing, as well as for most
-/// of the above kernels. It is crucial that you do this for templated objects inside of *.cu files.
+/// of the above kernels. It is crucial that you do this for templated objects inside of *.cpp files.
 #define CLASS_INIT(floatT,HALO) \
 template class GaugeFixing<floatT,true,HALO>;
 INIT_PH(CLASS_INIT)

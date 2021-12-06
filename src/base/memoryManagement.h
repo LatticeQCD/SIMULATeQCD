@@ -23,7 +23,7 @@
  * When you wish to allocate dynamic memory, use MemoryManagement::getMemAt(name). If name begins with "SHARED_" it
  * will behave as channels did before. Otherwise, the MemoryManager enforces that if getMemAt(name) is called again
  * later, it will get its own memory, separate from the first time getMemAt(name) was called. For some very basic
- * examples how this works, please read through main_memManTest.cu.
+ * examples how this works, please read through main_memManTest.cpp.
  *
  */
 

@@ -1,5 +1,5 @@
 /* 
- * main_rhmc.cu                                                               
+ * main_rhmc.cpp                                                               
  * 
  */
 

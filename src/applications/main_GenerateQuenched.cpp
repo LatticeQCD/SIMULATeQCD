@@ -1,5 +1,5 @@
 /*
- * main_GenerateQuenched.cu
+ * main_GenerateQuenched.cpp
  *
  * Luis Altenkort, 2 Apr 2019
  *

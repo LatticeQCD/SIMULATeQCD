@@ -1,5 +1,5 @@
 /* 
- * main_rnd_single_test.cu                                                               
+ * main_rnd_single_test.cpp                                                               
  * 
  * Philipp Scior, 12 Nov 2018
  * 

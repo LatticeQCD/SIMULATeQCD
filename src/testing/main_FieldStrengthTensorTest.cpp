@@ -1,5 +1,5 @@
 /* 
- * main_FieldStrengthTensorTest.cu                                                               
+ * main_FieldStrengthTensorTest.cpp                                                               
  * 
  * Hai Tao Shu
  * 

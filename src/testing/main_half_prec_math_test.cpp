@@ -1,5 +1,5 @@
 /* 
- * main_half_prec_math_test.cu                                                               
+ * main_half_prec_math_test.cpp                                                               
  * 
  * Dennis Bollweg
  * 

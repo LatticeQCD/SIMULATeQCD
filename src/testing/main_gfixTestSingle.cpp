@@ -1,5 +1,5 @@
 /* 
- * main_gfixTestSingle.cu
+ * main_gfixTestSingle.cpp
  *
  * D. Clarke
  *

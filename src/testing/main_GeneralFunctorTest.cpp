@@ -1,5 +1,5 @@
 /* 
- * main_GeneralFunctorTest.cu                                                               
+ * main_GeneralFunctorTest.cpp                                                               
  * 
  * This file includes a lot of examples for how to our coding paradigm, which we call "general functor syntax".
  * Please start reading at run_func below.

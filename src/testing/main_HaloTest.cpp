@@ -1,5 +1,5 @@
 /* 
- * main_HaloTest.cu                                                               
+ * main_HaloTest.cpp                                                               
  * 
  * Lukas Mazur, 9 Oct 2017
  * 

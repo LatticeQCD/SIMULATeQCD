@@ -1,5 +1,5 @@
 /* 
- * main_DslashMultiTest.cu                                                               
+ * main_DslashMultiTest.cpp                                                               
  * 
  */
 

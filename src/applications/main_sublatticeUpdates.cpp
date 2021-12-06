@@ -1,5 +1,5 @@
 /* 
- * main_sublatticeUpdates.cu                                                               
+ * main_sublatticeUpdates.cpp                                                               
  * 
  * Hai-Tao Shu, 6 May 2019
  * 

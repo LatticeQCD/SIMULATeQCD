@@ -1,5 +1,5 @@
 /* 
- * main_SaveTest.cu                                                               
+ * main_SaveTest.cpp                                                               
  * 
  * Marcel Rodekamp, 19 Jul 2018
  * 

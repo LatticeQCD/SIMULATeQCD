@@ -1,5 +1,5 @@
 /* 
- * main_milc_to_nersc.cu                                                               
+ * main_milc_to_nersc.cpp                                                               
  * 
  * Rasmus Larsen
  * 

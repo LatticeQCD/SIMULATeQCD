@@ -1,9 +1,9 @@
 # Multi-level algorithm
 
 
-The Multi-level algorithm has been implemented according to Martin Lüscher and Peter Weisz's idea of sub-lattice updates, see  [hep-lat/0108014v1](https://doi.org/10.1088/1126-6708/2001/09/010) (and also Harvey Meyer's paper [hep-lat/0209145](https://doi.org/10.1088/1126-6708/2003/01/048)). There are two sub-lattice updates: HB and OR,  same as the standard ones [Gauge Updates (HB and OR)](../05_modules/04_gaugeUpdates.md#gauge-updates-hb-and-or) but performed within a sub lattice. For details see luscherweisz.h and luscherweisz.cu.
+The Multi-level algorithm has been implemented according to Martin Lüscher and Peter Weisz's idea of sub-lattice updates, see  [hep-lat/0108014v1](https://doi.org/10.1088/1126-6708/2001/09/010) (and also Harvey Meyer's paper [hep-lat/0209145](https://doi.org/10.1088/1126-6708/2003/01/048)). There are two sub-lattice updates: HB and OR,  same as the standard ones [Gauge Updates (HB and OR)](../05_modules/04_gaugeUpdates.md#gauge-updates-hb-and-or) but performed within a sub lattice. For details see luscherweisz.h and luscherweisz.cpp.
 
-After the sub-lattice updates, the observables will be measured. Currently the calculations of energy-momentum tensor, polyakovloop and color-electric correlators have been implemented. For details, see SubLatMeas.h and SubLatMeas.cu.
+After the sub-lattice updates, the observables will be measured. Currently the calculations of energy-momentum tensor, polyakovloop and color-electric correlators have been implemented. For details, see SubLatMeas.h and SubLatMeas.cpp.
 
 To compile, one can `make` the executable `sublatticeUpdates`. You can then find it under `applications/sublatticeUpdates`. The example parameter file is found under `parameter/sublatticeUpdates.param` and looks like this:
 ```shell

@@ -1,5 +1,5 @@
 /* 
- * main_sampleTopology.cu                                                               
+ * main_sampleTopology.cpp                                                               
  * 
  * L. Altenkort
  * 

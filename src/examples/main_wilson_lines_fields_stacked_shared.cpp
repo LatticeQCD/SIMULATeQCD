@@ -1,5 +1,5 @@
 /* 
- * main_wilson_lines_fields_stacked_shared.cu
+ * main_wilson_lines_fields_stacked_shared.cpp
  * 
  * Rasmus Larsen, 23 Mar 2021
  * 

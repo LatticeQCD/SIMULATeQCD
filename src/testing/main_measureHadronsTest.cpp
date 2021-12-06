@@ -1,5 +1,5 @@
 /* 
- * main_measureHadronsTest.cu                                                               
+ * main_measureHadronsTest.cpp                                                               
  * 
  * Luis Altenkort, 6 Jan 2021
  * 

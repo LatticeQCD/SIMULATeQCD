@@ -1,5 +1,5 @@
 /* 
- * main_polSuscRenorm.cu
+ * main_polSuscRenorm.cpp
  *
  * D. Clarke
  *

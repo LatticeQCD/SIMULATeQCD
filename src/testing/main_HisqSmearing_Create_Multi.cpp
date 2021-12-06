@@ -1,5 +1,5 @@
 /* 
- * main_HisqSmearing_Create_Multi.cu                                                               
+ * main_HisqSmearing_Create_Multi.cpp                                                               
  * 
  */
 

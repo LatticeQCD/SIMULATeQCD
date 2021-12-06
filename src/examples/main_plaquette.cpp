@@ -1,9 +1,9 @@
 /* 
- * main_plaquette.cu                                                               
+ * main_plaquette.cpp                                                               
  * 
  * Lukas Mazur, 10 Apr 2018
  * 
- * This is just an example how a very very basic program works. Look at src/testing/main_GeneralOperatorTest.cu to see
+ * This is just an example how a very very basic program works. Look at src/testing/main_GeneralOperatorTest.cpp to see
  * how to write more advanced GPU code.
  *
  */

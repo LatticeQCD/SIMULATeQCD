@@ -1,5 +1,5 @@
 /* 
- * main_gfixplcTest.cu
+ * main_gfixplcTest.cpp
  *
  * D. Clarke
  *

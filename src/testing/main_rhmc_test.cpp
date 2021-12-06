@@ -1,5 +1,5 @@
 /* 
- * main_rhmc_test.cu                                                               
+ * main_rhmc_test.cpp                                                               
  * 
  */
 

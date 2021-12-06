@@ -1,7 +1,7 @@
 //
 // Created by Hai-Tao Shu on 11.11.2020
 //
-// see PolyakovLoopCorrelator.cu for details
+// see PolyakovLoopCorrelator.cpp for details
 #include "WilsonLineCorrelator.h"
 #include "../gaugeFixing/PolyakovLoopCorrelator.cpp"
 

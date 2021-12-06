@@ -1,5 +1,5 @@
 /* 
- * main_SpinorHaloTest.cu                                                               
+ * main_SpinorHaloTest.cpp                                                               
  * 
  * Lukas Mazur, 9 Oct 2017
  * 

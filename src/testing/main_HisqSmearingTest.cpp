@@ -1,5 +1,5 @@
 /* 
- * main_HisqSmearingTest.cu                                                               
+ * main_HisqSmearingTest.cpp                                                               
  * 
  */
 

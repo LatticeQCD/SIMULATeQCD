@@ -1,5 +1,5 @@
 /* 
- * main_correlatorTest.cu
+ * main_correlatorTest.cpp
  *
  * D. Clarke
  *

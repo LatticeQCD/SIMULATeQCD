@@ -1,5 +1,5 @@
 /* 
- * main_half_prec_dslash_test.cu                                                               
+ * main_half_prec_dslash_test.cpp                                                               
  * 
  * Dennis Bollweg
  * 

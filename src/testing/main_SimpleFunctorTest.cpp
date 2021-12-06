@@ -1,5 +1,5 @@
 /* 
- * main_SimpleFunctorTest.cu                                                               
+ * main_SimpleFunctorTest.cpp                                                               
  * 
  * Simplest relevant implementations of Functor syntax. 
  * 

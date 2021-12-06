@@ -1,5 +1,5 @@
 /* 
- * main_HBOR_benchmark.cu
+ * main_HBOR_benchmark.cpp
  *
  * D. Clarke
  *

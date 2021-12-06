@@ -1,5 +1,5 @@
 /* 
- * main_gradientFlowTest.cu                                                               
+ * main_gradientFlowTest.cpp                                                               
  * 
  */
 

@@ -1,5 +1,5 @@
 /* 
- * main_createCorrelatorNorm.cu
+ * main_createCorrelatorNorm.cpp
  *
  * v1.0: D. Clarke, 2 Jan 2020
  *

@@ -1,5 +1,5 @@
 /* 
- * main_gradientFlow_example.cu                                                               
+ * main_gradientFlow_example.cpp                                                               
  * 
  * Lukas Mazur, 25 Nov 2018
  * 

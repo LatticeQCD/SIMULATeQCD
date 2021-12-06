@@ -1,5 +1,5 @@
 /* 
- * main_pure_gauge_hmc_test.cu                                                               
+ * main_pure_gauge_hmc_test.cpp                                                               
  * 
  */
 

@@ -1,5 +1,5 @@
 /* 
- * main_hisqForce.cu                                                               
+ * main_hisqForce.cpp                                                               
  * 
  * This program tests the HISQ fermion force and has to yield the same result as the gaction_test_hisqforce.cpp
  * in the BielefeldGPUCode.

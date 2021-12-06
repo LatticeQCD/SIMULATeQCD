@@ -1,5 +1,5 @@
 /* 
- * luscherweisz.cu                                                               
+ * luscherweisz.cpp                                                               
  * 
  * v1.0: Hai-Tao Shu, 10 May 2019
  * 

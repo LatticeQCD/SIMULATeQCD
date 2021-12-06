@@ -1,5 +1,5 @@
 /* 
- * main_StackedSpinorTest.cu                                                               
+ * main_StackedSpinorTest.cpp                                                               
  * 
  */
 

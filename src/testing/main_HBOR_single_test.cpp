@@ -1,5 +1,5 @@
 /* 
- * main_HBOR_single_test.cu
+ * main_HBOR_single_test.cpp
  *
  * D. Clarke
  *

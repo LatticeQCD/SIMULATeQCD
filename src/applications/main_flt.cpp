@@ -1,5 +1,5 @@
 /* 
- * main_flt.cu
+ * main_flt.cpp
  *
  * v1.0: Sodbileg Ch., Battogtokh P. & Enkhtuya G.
  *

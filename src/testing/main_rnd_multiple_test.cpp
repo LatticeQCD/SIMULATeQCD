@@ -1,5 +1,5 @@
 /* 
- * main_rnd_multiple_test.cu                                                               
+ * main_rnd_multiple_test.cpp                                                               
  * 
  * Philipp Scior, 14 May 2019
  * 

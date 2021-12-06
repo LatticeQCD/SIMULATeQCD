@@ -1,5 +1,5 @@
 /* 
- * main_CompressionTest.cu                                                               
+ * main_CompressionTest.cpp                                                               
  * 
  * Lukas Mazur, 9 Oct 2017
  *

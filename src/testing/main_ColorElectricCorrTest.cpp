@@ -1,10 +1,10 @@
 /*
- * main_ColorElectricCorrTest.cu
+ * main_ColorElectricCorrTest.cpp
  *
  * v1.0: L. Altenkort, 14 Jan 2019
  *
  * Tests the Color-Electric Correlator (ColorElectricCorr) using the multi-GPU framework. Initialization copied from
- * main_polyakovloop.cu.
+ * main_polyakovloop.cpp.
  * Read sketch from right to left (time advances to the left, space advances to the top)
  *          <----   <------  ^ <---^
  *          |  -  |          |  -  |   +  flipped = "going downwards" + "going upwards"

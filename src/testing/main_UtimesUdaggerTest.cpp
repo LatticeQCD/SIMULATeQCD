@@ -1,5 +1,5 @@
 /* 
- * main_UtimesUdagger.cu
+ * main_UtimesUdagger.cpp
  *
  * Hai-Tao Shu, 5 May 2020
  *
