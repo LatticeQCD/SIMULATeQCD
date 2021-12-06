@@ -1,29 +1,56 @@
 //
 // Created by Lukas Mazur on 04.01.19.
 //
-#ifndef STAGGEREDPHASES_H
-#define STAGGEREDPHASES_H
 
-#include "../../gauge/gaugefield.h"
-#include "staggeredPhases.cuh"
+#ifndef PARALLELGPUCODE_STAGGEREDPHASES_HCU
+#define PARALLELGPUCODE_STAGGEREDPHASES_HCU
 
-template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-struct staggeredPhaseKernel {
+#include "../../define.h"
+#include "../../base/indexer/BulkIndexer.h"
 
-    //Member variables to hold all information needed
-    gaugeAccessor<floatT, comp> gAcc;
 
-    calcStaggeredPhase staggPhase;
-    calcStaggeredBoundary staggBound;
 
-    //Constructor to initialize this member variable.
-    explicit staggeredPhaseKernel(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeIn) :
-            gAcc(gaugeIn.getAccessor()) {}
+struct calcStaggeredPhase {
+    inline __host__ __device__ int operator()(const gSiteMu &siteMu) const {
 
-    __host__ __device__ GSU3<floatT> operator()(gSiteMu siteMu) {
-        floatT phase = staggPhase(siteMu) * staggBound(siteMu);
-        return phase * gAcc.getLink(siteMu);
+        typedef GIndexer<All> GInd;
+
+        sitexyzt localCoord = siteMu.coord;
+        /// I think we don't need to compute global coord here..
+        sitexyzt globalCoord = GInd::getLatData().globalPos(localCoord);
+
+        // printf("Is this even used?\n");
+
+        int rest = globalCoord.x % 2;
+        if (rest == 1 && siteMu.mu == 1) return -1;
+
+        rest = (globalCoord.x + globalCoord.y) % 2;
+        if (rest == 1 && siteMu.mu == 2) return -1;
+
+        rest = (globalCoord.x + globalCoord.y + globalCoord.z) % 2;
+        if (rest == 1 && siteMu.mu == 3) return -1;
+
+
+        return 1;
     }
 };
 
-#endif //STAGGEREDPHASES_H
+/*! For fermi statistics we want anti-periodic boundary conditions in the time-direction
+ *
+ */
+struct calcStaggeredBoundary {
+    inline __host__ __device__ int operator()(const gSiteMu &siteMu) const {
+
+        typedef GIndexer<All> GInd;
+
+        sitexyzt localCoord = siteMu.coord;
+        sitexyzt globalCoord = GInd::getLatData().globalPos(localCoord);
+
+        if ((globalCoord.t == (int) GInd::getLatData().globLT - 1) && siteMu.mu == 3) return -1;
+
+        return 1;
+    }
+};
+
+#endif //PARALLELGPUCODE_STAGGEREDPHASES_HCU
+

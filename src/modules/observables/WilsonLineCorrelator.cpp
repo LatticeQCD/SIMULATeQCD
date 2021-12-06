@@ -3,7 +3,7 @@
 //
 // see PolyakovLoopCorrelator.cu for details
 #include "WilsonLineCorrelator.h"
-#include "../gaugeFixing/PolyakovLoopCorrelator.cu"
+#include "../gaugeFixing/PolyakovLoopCorrelator.cpp"
 
 template<class floatT, bool onDevice, size_t HaloDepth>
 struct ResetWilsonLineKernel{

@@ -1,5 +1,5 @@
 #include "SubLatMeas.h"
-#include "../../gauge/gauge_kernels.cu"
+#include "../../gauge/gauge_kernels.cpp"
 
 
 template<class floatT, bool onDevice, size_t HaloDepth>

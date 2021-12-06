@@ -1,5 +1,5 @@
 #include "hisqForce.h"
-#include "staggeredPhases.h"
+#include "staggeredPhasesKernel.h"
 
 template<class floatT, size_t HaloDepth, CompressionType comp> //this is only used for testing 
 void printResult(Gaugefield<floatT, true, HaloDepth, comp> &g_dev) {

@@ -1,5 +1,5 @@
 #include "hisqSmearing.h"
-#include "staggeredPhases.h"
+#include "staggeredPhasesKernel.h"
 
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, CompressionType compLvl1, CompressionType compLvl2, CompressionType compNaik>

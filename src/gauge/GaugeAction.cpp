@@ -11,7 +11,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "gauge_kernels.cu"
+#include "gauge_kernels.cpp"
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 template<bool onDeviceRet>

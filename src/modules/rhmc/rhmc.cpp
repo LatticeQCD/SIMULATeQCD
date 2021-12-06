@@ -1,7 +1,7 @@
 // Created by Philipp Scior on 10.12.18
 
 #include "rhmc.h"
-#include "../../gauge/gauge_kernels.cu"
+#include "../../gauge/gauge_kernels.cpp"
 
 template <bool onDevice, class floatT>
 struct add_f_r_f_r
