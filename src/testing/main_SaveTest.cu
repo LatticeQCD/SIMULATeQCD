@@ -58,7 +58,7 @@ bool compare_fields(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gauge
     int faults = 0;
     redBase.reduce(faults, elems);
 
-    rootLogger.info() << faults << " faults detected!";
+    rootLogger.info(faults ,  " faults detected!");
 
     if (faults > 0) {
         return false;
@@ -75,7 +75,7 @@ int main(int argc, char *argv[]){
     param.readfile(commBase, "../parameter/tests/SaveTest.param", argc, argv);
 	commBase.init(param.nodeDim());
 
-	rootLogger.info() << "Initialize Lattice";
+	rootLogger.info("Initialize Lattice");
 
 	const size_t HaloDepth = 1;
 	typedef GIndexer<All,HaloDepth> GInd;
@@ -85,21 +85,21 @@ int main(int argc, char *argv[]){
 
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test(commBase);
 
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
 
 	gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
-	rootLogger.info() << "Store Lattice";
+	rootLogger.info("Store Lattice");
 
 	gauge.updateAll();
 	gauge.writeconf_nersc("../test_conf/test_l20t20b06498a_nersc.302500");
 
-	rootLogger.info() << "Read test configuration";
+	rootLogger.info("Read test configuration");
 
 	gauge_test.readconf_nersc("../test_conf/test_l20t20b06498a_nersc.302500");
 
 	gauge_test.updateAll();
-	rootLogger.info() << "Testing the configuration";
+	rootLogger.info("Testing the configuration");
 
     GaugeAction<PREC, USE_GPU,HaloDepth,R18> gAction(gauge);
 
@@ -110,9 +110,9 @@ int main(int argc, char *argv[]){
     PREC plaq_test = gAction_test.plaquette();
 
 	if(abs(plaq - plaq_test) > error){
-		rootLogger.info() << CoutColors::red<< "writeconf_nersc failed: Computed plaquettes are not equal " << plaq << " != " << plaq_test << CoutColors::reset;
+		rootLogger.info(CoutColors::red,  "writeconf_nersc failed: Computed plaquettes are not equal " ,  plaq ,  " != " ,  plaq_test ,  CoutColors::reset);
 	} else {
-	    rootLogger.info() << CoutColors::green <<"writeconf_nersc succeeded: Computed plaquettes are equal" << CoutColors::reset;
+	    rootLogger.info(CoutColors::green , "writeconf_nersc succeeded: Computed plaquettes are equal" ,  CoutColors::reset);
 	}
 
     PREC clov = gAction.clover();
@@ -120,20 +120,21 @@ int main(int argc, char *argv[]){
     PREC clov_test = gAction_test.clover();
 
 	if(abs(clov - clov_test) > error){
-		rootLogger.info() << CoutColors::red<< "writeconf_nersc failed: Computed clovers are not equal " << clov << " != " << clov_test << CoutColors::reset;
+		rootLogger.info(CoutColors::red,  "writeconf_nersc failed: Computed clovers are not equal " ,  clov ,  " != " ,  clov_test ,  CoutColors::reset);
 	} else {
-	    rootLogger.info() << CoutColors::green <<"writeconf_nersc succeeded: Computed clovers are equal " << CoutColors::reset;
+	    rootLogger.info(CoutColors::green , "writeconf_nersc succeeded: Computed clovers are equal " ,  CoutColors::reset);
 	}
 
     bool pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge,gauge_test);
 
     if(!pass){
-		rootLogger.info() << CoutColors::red << "writeconf_nersc failed: Binaries are not equal." << CoutColors::reset;
+		rootLogger.info(CoutColors::red ,  "writeconf_nersc failed: Binaries are not equal." ,  CoutColors::reset);
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
 	} else {
-		rootLogger.info() << CoutColors::green <<"Congratulations, writeconf_nersc worked!" << CoutColors::reset;
+		rootLogger.info(CoutColors::green , "Congratulations, writeconf_nersc worked!" ,  CoutColors::reset);
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
     }
    
     return 0;
 }
+

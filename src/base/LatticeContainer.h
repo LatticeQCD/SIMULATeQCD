@@ -289,7 +289,7 @@ public:
                 GpuError("Reductionbase.h: Failed to copy data", gpuErr);
             // gpuFree(d_out);
         } else {
-            rootLogger.warn() << "Max Host reduction has not been properly tested. Check the results and remove this warning";
+            rootLogger.warn("Max Host reduction has not been properly tested. Check the results and remove this warning");
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
                 result = std::max(result, acc.getElement<elemType>(i));

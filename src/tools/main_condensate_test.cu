@@ -26,16 +26,16 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, std::
 
     seed = rand();
 
-    rootLogger.info() << "seed from rand and time = " << seed;
+    rootLogger.info("seed from rand and time = " ,  seed);
 
     h_rand.make_rng_state(seed);
 
     d_rand = h_rand;
-    rootLogger.info() << "Reading configuration";
+    rootLogger.info("Reading configuration");
     gauge.readconf_nersc(conf);
     gauge.updateAll();
 
-    rootLogger.info() << "Smearing gauge fields";
+    rootLogger.info("Smearing gauge fields");
 
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase);
@@ -64,7 +64,7 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, std::
     dslash_o.Dslash(x_e, eta_o);
     x_e = eta_e * floatT(mass) - x_e;
 
-    rootLogger.info() << "Starting inversion";
+    rootLogger.info("Starting inversion");
 
     cg.invert_new(dslash_e_inv, w_e, x_e, param.cgMax(), param.residue());
 
@@ -78,7 +78,7 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, std::
     dot_o = (1.0/mass)*dot_o;
 
     for (size_t i = 0; i < NStacks; ++i) {
-         rootLogger.info() << "CHIRAL CONDENSATE = " <<  (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4);
+         rootLogger.info("CHIRAL CONDENSATE = " ,   (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4));
     }
 };
 
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
     std::string conf;
 
     if (argc != 2) {
-        throw PGCError("Wrong number of arguments!");
+        throw std::runtime_error(stdLogger.fatal("Wrong number of arguments!"));
     } else {
         conf = argv[1];
     }
@@ -106,11 +106,12 @@ int main(int argc, char *argv[])
 
     const size_t numVec=10;
 
-    // rootLogger.info() << "START MEASURING CHIRAL CONDENSATE IN DOUBLE";
+    // rootLogger.info("START MEASURING CHIRAL CONDENSATE IN DOUBLE");
     // measure_condensate<double, true, 2, 4, numVec>(commBase, param, conf);
 
-    rootLogger.info() << "START MEASURING CHIRAL CONDENSATE IN SINGLE";
+    rootLogger.info("START MEASURING CHIRAL CONDENSATE IN SINGLE");
     measure_condensate<float, true, 2, 4, numVec>(commBase, param, conf);
 
     return 0;
 }
+

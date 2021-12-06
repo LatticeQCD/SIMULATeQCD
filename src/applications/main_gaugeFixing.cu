@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth  = 0;
 
     /// Read in parameters and initialize communication base.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     CommunicationBase commBase(&argc, &argv);
     gfixParam<PREC> param;
     param.readfile(commBase, "../parameter/applications/gaugeFixing.param", argc, argv);
@@ -117,26 +117,27 @@ int main(int argc, char *argv[]) {
     std::ofstream plcresultfile;
     if ( param.PolyakovLoopCorr() ) {
         plcresultfile.open(plcfilename.str());
-        rootLogger.info() << "PolyakovLoopCorr OUTPUT TO FILE: " << plcfilename.str();
+        rootLogger.info("PolyakovLoopCorr OUTPUT TO FILE: " ,  plcfilename.str());
     }
 
     std::ofstream wlcresultfile;
     if ( param.WilsonLineCorr() ) {
         wlcresultfile.open(wlcfilename.str());
-        rootLogger.info() << "WilsonLineCorr OUTPUT TO FILE: " << wlcfilename.str();
+        rootLogger.info("WilsonLineCorr OUTPUT TO FILE: " ,  wlcfilename.str());
     }
  
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc(param.GaugefileName());
+for i in $(cat files_); do vim $i; done
     gauge.updateAll();
 
     /// Measure the Polyakov loop and report to user.
     GCOMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
-    rootLogger.info() << "# POLYAKOV LOOP :: " << ploop;
+    rootLogger.info("# POLYAKOV LOOP :: " ,  ploop);
 
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING
-    rootLogger.info() << "GAUGE FIXING...";
+    rootLogger.info("GAUGE FIXING...");
     if (commBase.MyRank()==0) std::cout << "\nngfstep\t  act\t         act diff\ttheta\n";
     timer.start();
 
@@ -165,14 +166,14 @@ int main(int argc, char *argv[]) {
     /// Report time to user.
     timer.stop();
     if (commBase.MyRank()==0) std::cout << "\n";
-    rootLogger.info() << "Time to gauge fix: " << timer;
+    rootLogger.info("Time to gauge fix: " ,  timer);
 
     /// Optionally save configuration.
     if ( param.SaveConfig() ) gauge.writeconf_nersc(param.SavedConfName(), 2, 2);
 
     /// ---------------------------------------------------------------------------------------POLYAKOV LOOP CORRELATORS
     if ( param.PolyakovLoopCorr() ) {
-        rootLogger.info() << "CALCULATING POLYAKOVLOOP CORRELATORS...";
+        rootLogger.info("CALCULATING POLYAKOVLOOP CORRELATORS...");
         timer.start();
         std::ofstream plcresultfile;
         plcresultfile.open(plcfilename.str());
@@ -187,7 +188,7 @@ int main(int argc, char *argv[]) {
 
         if (commBase.MyRank()==0) plcresultfile << "#  r**2\t  plca\t         plc1\t        plc8\n";
 
-        rootLogger.info() << "the rank is:" << commBase.MyRank();
+        rootLogger.info("the rank is:" ,  commBase.MyRank());
 
         /// Calculation of Polyakov loop correlators.
         PLC.PLCtoArrays(vec_plca, vec_plc1, vec_plc8, vec_factor, vec_weight, true);
@@ -204,14 +205,14 @@ int main(int argc, char *argv[]) {
             }
         }
         plcresultfile.close();
-        rootLogger.info() << "POLYAKOVLOOP CORRELATORS MEASURED";
+        rootLogger.info("POLYAKOVLOOP CORRELATORS MEASURED");
         timer.stop();
-        rootLogger.info() << "Time to measure polyakovloop correlations: " << timer;
+        rootLogger.info("Time to measure polyakovloop correlations: " ,  timer);
     }
 
     /// -----------------------------------------------------------------------------------------WILSON LINE CORRELATORS
     if ( param.WilsonLineCorr() ) {
-        rootLogger.info() << "CALCULATING WILSONLINE CORRELATORS...";
+        rootLogger.info("CALCULATING WILSONLINE CORRELATORS...");
         timer.start();
         std::ofstream wlcresultfile;
         wlcresultfile.open(wlcfilename.str());
@@ -226,7 +227,7 @@ int main(int argc, char *argv[]) {
 
         if (commBase.MyRank()==0) wlcresultfile << "#  r**2\t   dtau\t  wlca\t         wlc1\t        wlc8\n";
 
-        rootLogger.info() << "the rank is:" << commBase.MyRank();
+        rootLogger.info("the rank is:" ,  commBase.MyRank());
 
         /// Calculation of wilsonline correlators.
         WLC.WLCtoArrays(vec_wlca_full, vec_wlc1_full, vec_wlc8_full, vec_factor, vec_weight, true);
@@ -245,10 +246,11 @@ int main(int argc, char *argv[]) {
             }
         }
         wlcresultfile.close();
-        rootLogger.info() << "WILSONLINE CORRELATORS MEASURED";
+        rootLogger.info("WILSONLINE CORRELATORS MEASURED");
         timer.stop();
-        rootLogger.info() << "Time to measure wilsonline correlations: " << timer;
+        rootLogger.info("Time to measure wilsonline correlations: " ,  timer);
     }
 
     return 0;
 }
+

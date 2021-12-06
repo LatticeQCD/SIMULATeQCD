@@ -64,7 +64,7 @@ void test_dslash(CommunicationBase &commBase){
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
     
-    rootLogger.info() << "Read conf";
+    rootLogger.info("Read conf");
 
     gauge.readconf_nersc("../test_conf/gauge12750");
 
@@ -72,22 +72,22 @@ void test_dslash(CommunicationBase &commBase){
 
     smearing.SmearAll();
 
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info("Initialize random state");
     grnd_state<false> h_rand;
     grnd_state<onDevice> d_rand;
 
     h_rand.make_rng_state(1337);
     d_rand = h_rand;
 
-    rootLogger.info() << "Initialize spinors";
+    rootLogger.info("Initialize spinors");
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
     Spinorfield<floatT, false, LatLayout, HaloDepthSpin, NStacks> spinorOut2(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
 
-    rootLogger.info() << "Initialize DSlash";
+    rootLogger.info("Initialize DSlash");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
     
     dslash.Dslash(spinorOut, spinorIn);
@@ -162,9 +162,9 @@ void test_dslash(CommunicationBase &commBase){
     }
 
     if (success[0] && success[1] && success[2] && success[3])
-        rootLogger.info() << "Test of Dslash against old values: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("Test of Dslash against old values: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.info() << "Test of Dslash against old values: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.info("Test of Dslash against old values: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 }
 
 int main(int argc, char **argv) {
@@ -183,15 +183,15 @@ int main(int argc, char **argv) {
     initIndexer(HaloDepthSpin,param, commBase);
     stdLogger.setVerbosity(INFO);
 
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Device");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Odd - Even";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Odd - Even");
+    rootLogger.info("------------------");
     test_dslash<float, Odd, Even, 1, true>(commBase);
 }
 
@@ -206,3 +206,4 @@ size_t getGlobalIndex(LatticeDimensions coord) {
     return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
            globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
 }
+

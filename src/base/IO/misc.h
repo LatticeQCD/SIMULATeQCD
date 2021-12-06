@@ -19,7 +19,7 @@ inline void Byte_swap(char *b, int n) {
 }
 
 //! convenience class to insert an integer with zero padding into a stream
-//! example: stdLogger.debug() << Pad0(2,mu);
+//! example: stdLogger.debug(Pad0(2,mu));
 //! will print mu with width 2 and padded with zeros
 class Pad0 {
 private:

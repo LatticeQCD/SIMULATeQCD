@@ -80,30 +80,30 @@ struct measureHadronsParam : LatticeParameters {
     /*! call this after parameter read in */
     void check_for_nonsense() {
         if (masses.numberValues() != mass_labels.numberValues()){
-            throw PGCError("Number of mass labels is not equal to number of masses");
+            throw std::runtime_error(stdLogger.fatal("Number of mass labels is not equal to number of masses"));
         }
         if (naik_epsilons_individual.isSet() && (naik_epsilons_individual.numberValues() != masses.numberValues())){
-            throw PGCError("Number of naik_epsilons_individual is not equal to number of masses. "
-                           "Use -1 as placeholder for no naik term.");
+            throw std::runtime_error(stdLogger.fatal("Number of naik_epsilons_individual is not equal to number of masses. "
+                           "Use -1 as placeholder for no naik term."));
         }
         if (cg_residues_individual.isSet() && (cg_residues_individual.numberValues() != masses.numberValues())){
-            throw PGCError("Number of cg_residues_individual is not equal to number of masses. "
-                           "Use -1 as placeholder for default value.");
+            throw std::runtime_error(stdLogger.fatal("Number of cg_residues_individual is not equal to number of masses. "
+                           "Use -1 as placeholder for default value."));
         }
         if (cg_max_iters_individual.isSet() && (cg_max_iters_individual.numberValues() != masses.numberValues())){
-            throw PGCError("Number of cg_max_ites_individual is not equal to number of masses. "
-                           "Use -1 as placeholder for default value.");
+            throw std::runtime_error(stdLogger.fatal("Number of cg_max_ites_individual is not equal to number of masses. "
+                           "Use -1 as placeholder for default value."));
         }
         for (size_t i = 0; i < 4; i++){
             if (source_coords()[i] >= latDim()[i]){
-                throw PGCError("source_coords[", i, "] is greater than lattice extent!");
+                throw std::runtime_error(stdLogger.fatal("source_coords[", i, "] is greater than lattice extent!"));
             }
         }
         if ((source_coords()[0]+source_coords()[1]+source_coords()[2]+source_coords()[3]) % 2 != 0 ){
-            throw PGCError("Pointsource is odd but needs to be even!");
+            throw std::runtime_error(stdLogger.fatal("Pointsource is odd but needs to be even!"));
         }
         if (nodeDim()[correlator_axis_map[correlator_axis()]] != 1){
-            throw PGCError("Don't split the lattice along the correlator axis!");
+            throw std::runtime_error(stdLogger.fatal("Don't split the lattice along the correlator axis!"));
         }
     }
 };
@@ -185,7 +185,7 @@ public:
                 _axis_indices = {3, 0, 1, 2};
                 break;
             default:
-                throw PGCError("Unknown correlator axis! Choose one from {x, y, z, t}.");
+                throw std::runtime_error(stdLogger.fatal("Unknown correlator axis! Choose one from {x, y, z, t}."));
         }
 
         _corr_l = _lat_extents[_axis_indices[0]];
@@ -269,7 +269,7 @@ private:
             case 8:
                 return 1 - 2*(v%2);
             default:
-                throw PGCError("Error in staggered phase factors: No such channel");
+                throw std::runtime_error(stdLogger.fatal("Error in staggered phase factors: No such channel"));
         }
     }
 };

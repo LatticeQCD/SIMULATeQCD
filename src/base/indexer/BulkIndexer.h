@@ -68,6 +68,14 @@ struct gSite {
           << "coordFull: " << site.coordFull.x << " " << site.coordFull.y << " " << site.coordFull.z << " " << site.coordFull.t << " "
           << "isite: " << site.isite << " isiteFull: " << site.isiteFull;
         return s;
+    
+    }
+    __host__ inline std::string getStr() {
+        std::ostringstream s;
+        s << "gSite: coord: " << coord.x << " " << coord.y << " " << coord.z << " " << coord.t << " "
+          << "coordFull: " << coordFull.x << " " << coordFull.y << " " << coordFull.z << " " << coordFull.t << " "
+          << "isite: " << isite << " isiteFull: " << isiteFull;
+        return s.str();
     }
 };
 struct gSiteStack : public gSite {

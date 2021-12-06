@@ -134,10 +134,10 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     if ( lp.topCharge_imp_block() || lp.shear_bulk_corr_block() ) {
         if (lp.latDim()[0]%(lp.nodeDim()[0]*lp.binsize()) != 0 || lp.latDim()[1]%(lp.nodeDim()[1]*lp.binsize()) != 0 || lp.latDim()[2]%(lp.nodeDim()[2]*lp.binsize()) != 0) {
-            throw PGCError("bin can not span between gpus");
+            throw std::runtime_error(stdLogger.fatal("bin can not span between gpus"));
         }
         if (lp.latDim()[0]/lp.nodeDim()[0]<lp.binsize() || lp.latDim()[1]/lp.nodeDim()[1]<lp.binsize() || lp.latDim()[2]/lp.nodeDim()[2]<lp.binsize()) {
-            throw PGCError("each gpu should be able to hold at least one block. please check your blocksize and nodeDim");
+            throw std::runtime_error(stdLogger.fatal("each gpu should be able to hold at least one block. please check your blocksize and nodeDim"));
         }
     }
 
@@ -352,10 +352,10 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     //! -------------------------------read in configuration------------------------------------------------------------
 
     if (lp.use_unit_conf()){
-        rootLogger.info() << "Using unit configuration for tests/benchmarks";
+        rootLogger.info("Using unit configuration for tests/benchmarks");
         gauge.one();
     } else {
-        rootLogger.info() << "Read configuration";
+        rootLogger.info("Read configuration");
         gauge.readconf_nersc(lp.GaugefileName());
     }
     gauge.updateAll();
@@ -683,7 +683,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
             resultPoly = poly.getPolyakovLoop();
 
             // Calculate susceptibilities.
-            rootLogger.info() << "Remove contact term from chi_A, chi_L, chi_T...";
+            rootLogger.info("Remove contact term from chi_A, chi_L, chi_T...");
             corrTools.template correlateAt<GSU3<floatT>,GCOMPLEX(floatT),trAxtrBt<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, ABareSusc, false, lp.normFileDir());
             corrTools.template correlateAt<GSU3<floatT>,floatT,trReAxtrReB<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, LBareSusc, true, lp.normFileDir());
             corrTools.template correlateAt<GSU3<floatT>,floatT,trImAxtrImB<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, TBareSusc, true, lp.normFileDir());
@@ -711,7 +711,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
             newLinePolySuscT << resultPoly;
         }
 
-        rootLogger.info() << logStream.str();
+        rootLogger.info(logStream.str());
         flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
         gauge.updateAll();
 
@@ -719,7 +719,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         topology.recomputeField();
     }
     timer.stop();
-    rootLogger.info() << "complete time = " << timer.ms()/1000./60. << " min";
+    rootLogger.info("complete time = " ,  timer.ms()/1000./60. ,  " min");
 }
 
 
@@ -749,8 +749,8 @@ int main(int argc, char *argv[]) {
         RungeKuttaMethod input_RK_method = RK_map[lp.RK_method()];
 
         if (input_RK_method == fixed_stepsize && lp.ignore_fixed_startstepsize() && lp.necessary_flow_times.isSet()) {
-            rootLogger.info() << "Ignoring fixed start_step_size. "
-                                 "Stepsizes are dynamically deduced from necessary_flow_times.";
+            rootLogger.info("Ignoring fixed start_step_size. "
+                                 "Stepsizes are dynamically deduced from necessary_flow_times.");
             lp.start_step_size.set(lp.measurement_intervall()[1]);
         }
 
@@ -777,7 +777,7 @@ int main(int argc, char *argv[]) {
                             break;
 #endif
                         default:
-                            throw PGCError("Invalid RK_method. Did you set the compile definitions accordingly?");
+                            throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
                     }
                 } else {
                     const size_t HaloDepth = 1;
@@ -796,7 +796,7 @@ int main(int argc, char *argv[]) {
                             break;
 #endif
                         default:
-                            throw PGCError("Invalid RK_method. Did you set the compile definitions accordingly?");
+                            throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
                     }
                 }
                 break;
@@ -820,13 +820,13 @@ int main(int argc, char *argv[]) {
                         break;
 #endif
                     default:
-                        throw PGCError("Invalid RK_method. Did you set the compile definitions accordingly?");
+                        throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
                 }
                 break;
             }
 #endif
             default:
-                throw PGCError("Invalid force. Did you set the compile definitions accordingly?");
+                throw std::runtime_error(stdLogger.fatal("Invalid force. Did you set the compile definitions accordingly?"));
         }
     }
     catch (const std::runtime_error &error) {
@@ -834,3 +834,4 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
+

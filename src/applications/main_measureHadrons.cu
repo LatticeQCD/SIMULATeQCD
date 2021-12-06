@@ -35,10 +35,10 @@ int main(int argc, char *argv[]) {
 
         Gaugefield<PREC, USE_GPU, HaloDepth> gauge(commBase);
         if (lp.use_unit_conf()){
-            rootLogger.info() << "Using unit configuration for tests/benchmarks";
+            rootLogger.info("Using unit configuration for tests/benchmarks");
             gauge.one();
         } else {
-            rootLogger.info() << "Read configuration";
+            rootLogger.info("Read configuration");
             gauge.readconf_nersc(lp.GaugefileName());
         }
         gauge.updateAll();
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
         GaugeAction<PREC, USE_GPU, HaloDepth> gAction(gauge);
         PREC plaq;
         plaq = gAction.plaquette();
-        rootLogger.info() << "plaquette: " << plaq;
+        rootLogger.info("plaquette: " ,  plaq);
 
         {
             measureHadrons<PREC, USE_GPU, HaloDepth, HaloDepthSpin, Even, NStacks, R18> mesons(commBase, lp, gauge);
@@ -68,3 +68,4 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
+

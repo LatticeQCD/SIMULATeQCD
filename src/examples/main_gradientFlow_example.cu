@@ -43,7 +43,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     std::stringstream logStream;
     logStream << std::fixed << std::setprecision(6);
 
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc(lp.GaugefileName());
     gauge.updateAll();
 
@@ -63,13 +63,13 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         plaq = gAction.plaquette();
         logStream << "   Plaquette = " << plaq;
 
-        rootLogger.info() << logStream.str();
+        rootLogger.info(logStream.str());
         flow_time += gradFlow.updateFlow();
 
         gauge.updateAll();
     }
 
-    rootLogger.info() << "done";
+    rootLogger.info("done");
 }
 
 int main(int argc, char *argv[]) {
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     if (lp.force() != "zeuthen"
         or (lp.RK_method() != "adaptive_stepsize" and lp.RK_method() != "adaptive_stepsize_allgpu")) {
-        throw PGCError("Force is not zeuthen or RK_method is not adaptive stepsize!");
+        throw std::runtime_error(stdLogger.fatal("Force is not zeuthen or RK_method is not adaptive stepsize!"));
     }
     const size_t HaloDepth = 3;
 
@@ -108,3 +108,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

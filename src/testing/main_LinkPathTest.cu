@@ -248,8 +248,8 @@ bool testSmearLink(CommunicationBase &commBase) {
     GSU3<PREC> test1 = gaugeSmearOld_Host.getAccessor().getLink(GInd::getSiteMu(site3, 0));
     GSU3<PREC> test2 = gaugeSmearNew_Host.getAccessor().getLink(GInd::getSiteMu(site3, 0));
 
-    rootLogger.info() << test1.getLink00() << " " << test1.getLink01() << " " << test1.getLink10();
-    rootLogger.info() << test2.getLink00() << " " << test2.getLink01() << " " << test2.getLink10();
+    rootLogger.info(test1.getLink00() ,  " " ,  test1.getLink01() ,  " " ,  test1.getLink10());
+    rootLogger.info(test2.getLink00() ,  " " ,  test2.getLink01() ,  " " ,  test2.getLink10());
 
     if (test > 0.0) return false;
 
@@ -264,8 +264,8 @@ bool testSmearLink(CommunicationBase &commBase) {
     test1 = gaugeSmearOld_Host.getAccessor().getLink(GInd::getSiteMu(site3, 0));
     test2 = gaugeSmearNew_Host.getAccessor().getLink(GInd::getSiteMu(site3, 0));
 
-    rootLogger.info() << test1.getLink00() << " " << test1.getLink01() << " " << test1.getLink10();
-    rootLogger.info() << test2.getLink00() << " " << test2.getLink01() << " " << test2.getLink10();
+    rootLogger.info(test1.getLink00() ,  " " ,  test1.getLink01() ,  " " ,  test1.getLink10());
+    rootLogger.info(test2.getLink00() ,  " " ,  test2.getLink01() ,  " " ,  test2.getLink10());
 
     if (test > 0.0) return false;
 
@@ -280,8 +280,8 @@ bool testSmearLink(CommunicationBase &commBase) {
     test1 = gaugeSmearOld_Host.getAccessor().getLink(GInd::getSiteMu(site3, 0));
     test2 = gaugeSmearNew_Host.getAccessor().getLink(GInd::getSiteMu(site3, 0));
 
-    rootLogger.info() << test1.getLink00() << " " << test1.getLink01() << " " << test1.getLink10();
-    rootLogger.info() << test2.getLink00() << " " << test2.getLink01() << " " << test2.getLink10();
+    rootLogger.info(test1.getLink00() ,  " " ,  test1.getLink01() ,  " " ,  test1.getLink10());
+    rootLogger.info(test2.getLink00() ,  " " ,  test2.getLink01() ,  " " ,  test2.getLink10());
 
     if (test > 0.0) return false;
     else return true;
@@ -301,12 +301,13 @@ int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
     rootLogger.setVerbosity(INFO);
-    rootLogger.info() << "Testing LinkPath Feature for smearing constructs";
+    rootLogger.info("Testing LinkPath Feature for smearing constructs");
     if (testSmearLink<PREC,HaloDepth>(commBase)) {
-        rootLogger.info() << "Test " << CoutColors::green << "passed!" << CoutColors::reset;
+        rootLogger.info("Test " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        rootLogger.info() << "Test " << CoutColors::red << "failed." << CoutColors::reset;
+        rootLogger.info("Test " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
     }
 
     return 0;
 }
+

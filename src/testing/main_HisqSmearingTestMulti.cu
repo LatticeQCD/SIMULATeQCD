@@ -46,7 +46,7 @@ bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield
     int faults = 0;
     redBase.reduce(faults,elems);
 
-    rootLogger.info() << faults << " faults detected";
+    rootLogger.info(faults ,  " faults detected");
 
     if (faults > 0) {
         return false;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
     const size_t HaloDepth = 0;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
     typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
 
@@ -86,23 +86,24 @@ int main(int argc, char *argv[]) {
     bool pass2 = checkfields<PREC,true,HaloDepth,R18>(gaugeSingleGPU,gaugeMultiXGPU);
 
     if (pass) {
-      rootLogger.info() << "Fields Single and Multi are identical";
+      rootLogger.info("Fields Single and Multi are identical");
     }
     else {
-      rootLogger.info() << "Fields Single and Multi are not identical";
+      rootLogger.info("Fields Single and Multi are not identical");
     }
     if (pass2) {
-      rootLogger.info() << "Fields Single and MultiX are identical";
+      rootLogger.info("Fields Single and MultiX are identical");
     }
     else {
-      rootLogger.info() << "Fields Single and MultiX are not identical";
+      rootLogger.info("Fields Single and MultiX are not identical");
     }
     if (pass && pass2) {
-      rootLogger.info() << CoutColors::green << "Test passed!";
+      rootLogger.info(CoutColors::green ,  "Test passed!");
     }
     else {
-      rootLogger.info() << CoutColors::red << "Test failed!";
+      rootLogger.info(CoutColors::red ,  "Test failed!");
     }
     
     return 0;
 }
+

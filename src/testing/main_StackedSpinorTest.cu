@@ -295,34 +295,34 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     /// Let's force Halos in all directions, otherwise the test doesn't work... (last parameter)
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing All - All";
-    rootLogger.info() << "------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Device");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing All - All");
+    rootLogger.info("------------------");
     run_func<double, All, All, 4, true>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     run_func<double, Even, Odd, 4, true>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Odd - Even";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Odd - Even");
+    rootLogger.info("------------------");
     run_func<double, Odd, Even, 4, true>(commBase);
 
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Host";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing All - All";
-    rootLogger.info() << "------------------";
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Running on Host");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing All - All");
+    rootLogger.info("------------------");
     run_func<double, All, All, 4, false>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     run_func<double, Even, Odd, 4, false>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Odd - Even";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Odd - Even");
+    rootLogger.info("------------------");
     run_func<double, Odd, Even, 4, false>(commBase);
 }
 
@@ -337,4 +337,5 @@ size_t getGlobalIndex(LatticeDimensions coord) {
     return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
            globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
 }
+
 

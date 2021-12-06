@@ -555,7 +555,7 @@ template<class floatT, size_t HaloDepth>
 void gWilson(Gaugefield<floatT,true,HaloDepth> &gauge , size_t length){
 
     gauge.template iterateOverBulkAtMu<0,256>(CalcWilson<floatT,HaloDepth>(gauge,length));
-//    rootLogger.info() << spinor.dotProduct(spinor);
+//    rootLogger.info(spinor.dotProduct(spinor));
     return;
 
 }
@@ -614,7 +614,7 @@ int main(int argc, char *argv[]) {
     /// Number of sublattices in each direction.
 //    const int NodeDim[] = {1, 1, 8, 1};
 //    if(NodeDim[3] != 1){
- //       rootLogger.error() << "WilsonLines does not allow partitions in time direction";
+ //       rootLogger.error("WilsonLines does not allow partitions in time direction");
  //       exit(1);
  //   }
 
@@ -639,13 +639,13 @@ int main(int argc, char *argv[]) {
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
 
     /// Initialize the Lattice class.
     initIndexer(HaloDepth,param,commBase);
 
     /// Initialize the Gaugefield.
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 
     /// Initialize gaugefield with unit-matrices.
@@ -656,13 +656,13 @@ int main(int argc, char *argv[]) {
     // load gauge file, 0 start from 1, 1 and 2 load file, 2 will also gauge fix
     if (param.load_conf() == 0)
     {
-        rootLogger.info() << "Starting from unit configuration";
+        rootLogger.info("Starting from unit configuration");
         gauge.one();
     }
     else if(param.load_conf() == 2 || param.load_conf() == 1)
     {
 //        gauge_file = param.gauge_file() + std::to_string(param.config_no());
-        rootLogger.info() << "Starting from configuration: " << gauge_file;
+        rootLogger.info("Starting from configuration: " ,  gauge_file);
 //        gauge.readconf_nersc(gauge_file);
 //	gauge.readconf_nersc("../test/l328f21b6285m0009875m0790a_019.995");
 	cout << param.gauge_file() << endl;
@@ -682,15 +682,15 @@ int main(int argc, char *argv[]) {
     /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
     typedef GIndexer<All,HaloDepth> GInd;
     redBase.adjustSize(GInd::getLatData().vol4);
-    rootLogger.info() << "volume size " << GInd::getLatData().globvol4;
+    rootLogger.info("volume size " ,  GInd::getLatData().globvol4);
     /// Read a configuration from hard drive. For the given configuration you should find
- //   rootLogger.info() << "Read configuration";
+ //   rootLogger.info("Read configuration");
 //    gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
     
 //    std::string gauge_file;
 //    gauge_file = param.gauge_file() + std::to_string(param.config_no());
-//    rootLogger.info() << "Starting from configuration: " << gauge_file;
+//    rootLogger.info("Starting from configuration: " ,  gauge_file);
 //    gauge.readconf_nersc(gauge_file);
 
 
@@ -778,7 +778,7 @@ int main(int argc, char *argv[]) {
         //    dot = lines.dotProduct(shifted)/3.0/GInd::getLatData().globvol4;
         /// check that dot product is with conjugate, hack
 
-        //    rootLogger.info() << 0 << " " << 0 << " "<< 0 << " " << length << " " << dot;
+        //    rootLogger.info(0 ,  " " ,  0 ,  " ",  0 ,  " " ,  length ,  " " ,  dot);
 
         // initial position x0=-1 due to adding dx in first line
         int x0 = -STACKS;
@@ -833,7 +833,7 @@ int main(int argc, char *argv[]) {
                  dot = gDotAlongXY(gauge,x0,0,redBase);
             }
 
-            rootLogger.info() << x0 << " " << y0 << " "<< z0 << " " << length << " " << dotVector[0] << " " << dotVector[1]; 
+            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[0] ,  " " ,  dotVector[1]); 
     
             }
 
@@ -907,13 +907,13 @@ int main(int argc, char *argv[]) {
                 corrComplex += factor*dot;
 	        _CPUresults.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
 
-//                rootLogger.info() << x0 << " " << y0 << " "<< z0 << " " << ir2 << " " << dot << " " << corrComplex;
+//                rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  ir2 ,  " " ,  dot ,  " " ,  corrComplex);
 
                 _CPUnormR.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
                 corrComplex += factor;
                 _CPUnormR.setValue<GCOMPLEX(PREC)>(ir2, corrComplex);
 
-                rootLogger.info() << x0 << " " << y0 << " "<< z0 << " " << length << " " << dot << " " << corrComplex << " " << factor << " " << i << " r2 " << ir2;
+                rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dot ,  " " ,  corrComplex ,  " " ,  factor ,  " " ,  i ,  " r2 " ,  ir2);
 
             }
 
@@ -922,7 +922,7 @@ int main(int argc, char *argv[]) {
     }
 
     timer.stop();
-    rootLogger.info() << "Time for operators: " << timer;
+    rootLogger.info("Time for operators: " ,  timer);
     /// stop timer and print time
     timer.stop();
 
@@ -977,14 +977,14 @@ int main(int argc, char *argv[]) {
 	    corrComplex2 = corrComplex2/real(corrComplex3);
 	}
 
-    	rootLogger.info() << ir2 << " " << corrComplex/3.0/GInd::getLatData().globLT << " , " << corrComplex2 << "    " << real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) << "   Norm " << real(corrComplex3);            
+    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));            
     difference += abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2));
     if(abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2)) > 1e-10){
-	   rootLogger.info() << " Error, large difference";
+	   rootLogger.info(" Error, large difference");
 	}
     }
 
-   rootLogger.info() << "Total difference between all resuls are "  << difference ;
+   rootLogger.info("Total difference between all resuls are "  ,  difference);
 
     ///////
 
@@ -992,3 +992,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

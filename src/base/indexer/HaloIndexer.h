@@ -208,7 +208,7 @@ public:
         }
 
 
-        //  rootLogger.info() << "Bla: " << get_SubHaloSize(5,All) << " " << get_SubHaloSize(5,Even);
+        //  rootLogger.info("Bla: " ,  get_SubHaloSize(5,All) ,  " " ,  get_SubHaloSize(5,Even));
 
     }
 

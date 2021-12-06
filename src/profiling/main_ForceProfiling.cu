@@ -99,11 +99,11 @@ int main(int argc, char *argv[]) {
   
   GSU3<PREC> test1 = force_host.getAccessor().getLink(GIndexer<All,HaloDepth>::getSiteMu(0,0,0,0,0));
   
-  rootLogger.info() << "Time: " << timer;
+  rootLogger.info("Time: " ,  timer);
 		       
-  rootLogger.info() << "Force parallelGpu:";
+  rootLogger.info("Force parallelGpu:");
   
-  rootLogger.info() << test1.getLink00()<<test1.getLink01()<<test1.getLink02()<<test1.getLink10();
+  rootLogger.info(test1.getLink00(), test1.getLink01(), test1.getLink02(), test1.getLink10());
   
     
 		       

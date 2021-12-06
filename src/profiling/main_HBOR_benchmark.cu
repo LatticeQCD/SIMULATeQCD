@@ -38,7 +38,7 @@ bool test_function(Gaugefield<floatT, false, HaloDepth> &gauge, Gaugefield<float
         }
     }
     floatT failedfrac=1.0*failedchecks/totalchecks;
-    rootLogger.info() << "test_function: " << failedfrac*100 << "% of tests failed with tolerance " << tol;
+    rootLogger.info("test_function: " ,  failedfrac*100 ,  "% of tests failed with tolerance " ,  tol);
     if(failedfrac>0.01) lpassed=false;
     return lpassed;
 }
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     const PREC beta0 = 5.8;
 
     /// Initialize communication base, indexer, timer.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     CommunicationBase commBase(&argc, &argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param, commBase);
@@ -75,16 +75,16 @@ int main(int argc, char *argv[]) {
     )
 
     /// Initialize RNG.
-    rootLogger.info() << "Initialize RNG and make random lattice...";
+    rootLogger.info("Initialize RNG and make random lattice...");
     int seed = 0;
     grnd_state<false> host_state;
     grnd_state<true> dev_state;
     host_state.make_rng_state(seed);
     dev_state = host_state;
-    rootLogger.info() << "Random seed is: " << seed;
+    rootLogger.info("Random seed is: " ,  seed);
 
     /// Create random lattice, then hit it with some updates.
-    rootLogger.info() << "Performing the benchmark... ";
+    rootLogger.info("Performing the benchmark... ");
     timer.start();
     gauge.random(dev_state.state);
     gauge.updateAll();
@@ -94,23 +94,24 @@ int main(int argc, char *argv[]) {
         gUpdate.updateOR();
         gUpdate.updateOR();
         gUpdate.updateOR();
-        rootLogger.info() << "Sweep " << i;
+        rootLogger.info("Sweep " ,  i);
     }
     timer.stop();
-    rootLogger.info() << "Time for updates: " << timer;
+    rootLogger.info("Time for updates: " ,  timer);
     hostgauge=gauge;
 
     /// Compare against test configuration mode.
     IF(READ_TEST_CONF) (
-        rootLogger.info() << "Read from file...";
+        rootLogger.info("Read from file...");
         refgauge.readconf_nersc("config_HBOR_benchmark");
-        rootLogger.info() << "Running comparison test...";
+        rootLogger.info("Running comparison test...");
         bool lpassed=test_function(hostgauge,refgauge,1e-13);
         if (lpassed) {
-            rootLogger.info() << "Comparison test " << CoutColors::green << "passed!" << CoutColors::reset;
+            rootLogger.info("Comparison test " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
         } else {
-            rootLogger.error() << "Comparison test failed!";
+            rootLogger.error("Comparison test failed!");
         }
     )
     return 0;
 }
+

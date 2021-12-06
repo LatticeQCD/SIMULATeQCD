@@ -67,7 +67,7 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
 
     for (int tau=0;tau<Nt;tau++)
     {
-        rootLogger.info() << "measuring wilson line corr at tau: " << tau;
+        rootLogger.info("measuring wilson line corr at tau: " ,  tau);
         MemTypeGPU PtrPloopGPU = MemoryManagement::getMemAt<true>("ploopGPU");
         PtrPloopGPU->template adjustSize<GSU3<floatT>>(GInd::getLatData().globvol3);
         MemoryAccessor _wlineGPU(PtrPloopGPU->getPointer());
@@ -165,7 +165,7 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
             for (int dy=0 ; dy<(this->RSymax) ; dy++)
             for (int dz=0 ; dz<(this->RSzmax) ; dz++) {
                 qnorm = dx*dx+dy*dy+dz*dz;
-                if (qnorm>(this->distmax)) throw PGCError("qnorm > distmax");
+                if (qnorm>(this->distmax)) throw std::runtime_error(stdLogger.fatal("qnorm > distmax"));
                 psite               = dx + dy*(this->pvol1) + dz*(this->pvol2);
                 g                   = vec_weight[psite];
                 _wlcaoffCPU.getValue<floatT>(psite,wlcaoff);
@@ -177,7 +177,7 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
             }
             for (int dx=(this->RSxmax);dx<(this->RSonmax);dx++) {
                 qnorm = dx*dx;
-                if (qnorm>(this->distmax)) throw PGCError("qnorm > distmax");
+                if (qnorm>(this->distmax)) throw std::runtime_error(stdLogger.fatal("qnorm > distmax"));
                 g                   = 3;
                 _wlcaonCPU.getValue<floatT>(dx,wlcaon);
                 _wlc1onCPU.getValue<floatT>(dx,wlc1on);
@@ -208,3 +208,4 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
 template class WilsonLineCorrelator<floatT,true,HALO>; \
 
 INIT_PH(CLASS_INIT2)
+

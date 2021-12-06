@@ -83,12 +83,12 @@ public:
                 gpuErr = gpuIpcCloseMemHandle(_oppositeMemoryPtr[i]);
                 if (gpuErr != gpuSuccess) {
                     GpuError("gpuIPC.h: destroy: gpuIpcCloseMemHandle", gpuErr);
-                    stdLogger.error() << "Rank = " << i;
+                    stdLogger.error("Rank = " ,  i);
                 }
                 gpuErr = gpuEventDestroy(_oppositeEvent[i]);
                 if (gpuErr != gpuSuccess) {
                     GpuError("gpuIPC.h: destroy: gpuEventDestroy", gpuErr);
-                    stdLogger.error() << "Rank = " << i;
+                    stdLogger.error("Rank = " ,  i);
                 }
             }
             initialized = false;
@@ -136,11 +136,11 @@ public:
                 int ret;
                 ret = MPI_Waitall(_oppositeInfo.size(), &recvReq[0], MPI_STATUSES_IGNORE);
                 if (ret != MPI_SUCCESS) {
-                    stdLogger.error() << "gpuIPC.h: MPI_Wait(recv) failed";
+                    stdLogger.error("gpuIPC.h: MPI_Wait(recv) failed");
                 }
                 ret = MPI_Waitall(_oppositeInfo.size(), &sendReq[0], MPI_STATUSES_IGNORE);
                 if (ret != MPI_SUCCESS) {
-                    stdLogger.error() << "gpuIPC.h: MPI_Wait(send) failed";
+                    stdLogger.error("gpuIPC.h: MPI_Wait(send) failed");
                 }
 
 
@@ -187,7 +187,7 @@ public:
                 return _oppositeMemoryPtr[i];
             }
         }
-        rootLogger.error() << "gpuIPC.h: getPointer: Rank is not listed!";
+        rootLogger.error("gpuIPC.h: getPointer: Rank is not listed!");
         return nullptr;
     }
 
@@ -324,9 +324,9 @@ public:
 
 
     void addP2PRank(int index, int oppositeIndex, int oppositeRank) {
-        if (!initialized) rootLogger.error() << "gpuIPC.h: gpuIPCEvent.addP2PRank: Event not initialized";
+        if (!initialized) rootLogger.error("gpuIPC.h: gpuIPCEvent.addP2PRank: Event not initialized");
 
-    //    rootLogger.info() << "Set index: " << index << " with rank: " << oppositeRank;
+    //    rootLogger.info("Set index: " ,  index ,  " with rank: " ,  oppositeRank);
         _oppositeInfo.emplace_back();
         int lastIndex = _oppositeInfo.size() - 1;
         _oppositeInfo[lastIndex].oppositeRank = oppositeRank;
@@ -337,7 +337,7 @@ public:
     }
 
     void syncAndInitAllP2PRanks() {
-        if (!initialized) rootLogger.error() << "gpuIPC.h: gpuIPCEvent.syncAndInitAllP2PRanks: Event not initialized";
+        if (!initialized) rootLogger.error("gpuIPC.h: gpuIPCEvent.syncAndInitAllP2PRanks: Event not initialized");
 
         std::vector<deviceEventHandlePair> oppositeHandles;
         std::vector<MPI_Request> sendReq;
@@ -364,11 +364,11 @@ public:
         int ret;
         ret = MPI_Waitall(_oppositeInfo.size(), &recvReq[0], MPI_STATUSES_IGNORE);
         if (ret != MPI_SUCCESS) {
-            stdLogger.error() << "gpuIPC.h: MPI_Wait(recv) failed";
+            stdLogger.error("gpuIPC.h: MPI_Wait(recv) failed");
         }
         ret = MPI_Waitall(_oppositeInfo.size(), &sendReq[0], MPI_STATUSES_IGNORE);
         if (ret != MPI_SUCCESS) {
-            stdLogger.error() << "gpuIPC.h: MPI_Wait(send) failed";
+            stdLogger.error("gpuIPC.h: MPI_Wait(send) failed");
         }
 
         for (unsigned int i = 0; i < _oppositeInfo.size(); i++) {
@@ -410,28 +410,28 @@ public:
     }
 
     deviceEventPair &getOppositeEventPair(int oppositeIndex, int rank) {
-        if (!initialized) rootLogger.error() << "gpuIPC.h: gpuIPCEvent.getOppositeEventPair: Event not initialized";
+        if (!initialized) rootLogger.error("gpuIPC.h: gpuIPCEvent.getOppositeEventPair: Event not initialized");
         for (unsigned int i = 0; i < _oppositeInfo.size(); i++) {
             if (_oppositeInfo[i].oppositeIndex == oppositeIndex) {
 
-                if(_oppositeInfo[i].oppositeRank != rank) rootLogger.error() << "gpuIPCEvent: getOppositeEventPair: Rank is not the same!!";
+                if(_oppositeInfo[i].oppositeRank != rank) rootLogger.error("gpuIPCEvent: getOppositeEventPair: Rank is not the same!!");
                 return _oppositeEvents[i];
             }
         }
-        rootLogger.error() << "gpuIPC.h: getPointer: Rank is not listed!";
+        rootLogger.error("gpuIPC.h: getPointer: Rank is not listed!");
         return _myEvents[0];
     }
 
     deviceEventPair &getMyEventPair(int index, int rank) {
-        if (!initialized) rootLogger.error() << "gpuIPC.h: gpuIPCEvent.getMyEventPair: Event not initialized";
+        if (!initialized) rootLogger.error("gpuIPC.h: gpuIPCEvent.getMyEventPair: Event not initialized");
         for (unsigned int i = 0; i < _oppositeInfo.size(); i++) {
             if (_oppositeInfo[i].index == index) {
 
-                if(_oppositeInfo[i].oppositeRank != rank) rootLogger.error() << "gpuIPCEvent: getMyEventPair: Rank is not the same!!";
+                if(_oppositeInfo[i].oppositeRank != rank) rootLogger.error("gpuIPCEvent: getMyEventPair: Rank is not the same!!");
                 return _myEvents[i];
             }
         }
-        rootLogger.error() << "gpuIPC.h: getPointer: Rank is not listed!";
+        rootLogger.error("gpuIPC.h: getPointer: Rank is not listed!");
         return _myEvents[0];
     }
 

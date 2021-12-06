@@ -6,10 +6,10 @@ bool ParameterList::readfile(const CommunicationBase& comm, const std::string& f
     std::string filecontent;
     if (comm.IamRoot()) {
         std::string fname = (argc<2)?filename:argv[1];
-        rootLogger.info() << "Reading parameters from file :: "<<fname;
+        rootLogger.info("Reading parameters from file :: ", fname);
         std::ifstream in(fname.c_str(), std::ios::in);
         if (in.fail()) {
-            throw PGCError("Unable to open parameter file!");
+            throw std::runtime_error(stdLogger.fatal("Unable to open parameter file!"));
         }
         if (comm.single())
             return readstream(in,argc-2,argv+2);
@@ -47,17 +47,17 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
 
         //fix that!!
         if (p.isSet())
-            rootLogger.info() << "# " << prefix << " :: " << p;
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p.name);
         else if (p.hasdefault)
-            rootLogger.info() << "# " << prefix << " :: " << p << " (default)";
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p.name ,  " (default)");
         else if (p.isRequired())
-            throw PGCError("# ", prefix, " :: ", p.name, " required but NOT set");
+            throw std::runtime_error(stdLogger.fatal("# ", prefix, " :: ", p.name, " required but NOT set"));
 
         if (p.isRequired() && !p.isSet()) abort = true;
     }
 
     if (abort) {
-        throw PGCError("Required parameters unset!");
+        throw std::runtime_error(stdLogger.fatal("Required parameters unset!"));
     }
     return true;
 }

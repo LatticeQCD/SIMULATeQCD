@@ -11,7 +11,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_nersc(const std::s
                                                                              int diskprec, Endianness en) {
     if(onDevice){
 
-        rootLogger.info() << "writeconf_nersc: Create temporary GSU3Array!";
+        rootLogger.info("writeconf_nersc: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
         writeconf_nersc_host(lattice_host.getAccessor(),fname,rows,diskprec,en);
@@ -38,12 +38,12 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_nersc_host(gaugeAcc
         if (this->getComm().IamRoot())
             out.open(fname.c_str());
         if (!nersc.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, out)) {
-            rootLogger.error() << "Unable to write NERSC file: " << fname;
+            rootLogger.error("Unable to write NERSC file: " ,  fname);
             return;
         }
     }
 
-    rootLogger.info() << "Writing NERSC file format: " << fname;
+    rootLogger.info("Writing NERSC file format: " ,  fname);
 
     const size_t filesize = nersc.header_size() + GInd::getLatData().globalLattice().mult() * nersc.bytes_per_site();
 
@@ -72,7 +72,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_nersc(const std::str
 
     if(onDevice){
 
-        rootLogger.info() << "readconf_nersc: Create temporary GSU3Array!";
+        rootLogger.info("readconf_nersc: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_nersc_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -89,7 +89,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_milc(const std::stri
 
     if(onDevice){
 
-        rootLogger.info() << "readconf_milc: Create temporary GSU3Array!";
+        rootLogger.info("readconf_milc: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_milc_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -115,7 +115,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
         if (this->getComm().IamRoot())
             in.open(fname.c_str());
         if (!nersc.read_header(in)){
-            throw PGCError("Error reading header of ", fname.c_str());
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
         }
     }
 
@@ -144,7 +144,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
     this->getComm().closeIOBinary();
 
     if (!nersc.checksums_match()){
-        throw PGCError("Error checksum!");
+        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
 
 }
@@ -161,7 +161,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
         if (this->getComm().IamRoot())
             in.open(fname.c_str());
         if (!milc.read_header()){
-            throw PGCError("Error reading header of ", fname.c_str());
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
         }
     }
 
@@ -197,11 +197,11 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     traceSum = ((this->getComm()).reduce(traceSum)) / (3  * 4 * GInd::getLatData().globalLattice().mult());
 
 
-    rootLogger.info() << "Trace sum is = " << traceSum;
+    rootLogger.info("Trace sum is = " ,  traceSum);
 
 
     if (!milc.checksums_match()){
-//        throw PGCError("Error checksum!");
+//        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
 
 }
@@ -216,3 +216,4 @@ _GLATTICE_CLASS_INIT(floatT, 0,HALO,COMP)  \
 _GLATTICE_CLASS_INIT(floatT, 1,HALO,COMP)
 
 INIT_PHC(INIT)
+

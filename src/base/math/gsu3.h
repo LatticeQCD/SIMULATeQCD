@@ -414,7 +414,7 @@ public:
             case 8:
                 return _e22;
         }
-        throw PGCError("GSU3 access to element (", i, ",", j, ") not possible!");
+        throw std::runtime_error(stdLogger.fatal("GSU3 access to element (", i, ",", j, ") not possible!"));
     }
 
     __host__ __device__ GSU3<floatT> getAccessor() const {

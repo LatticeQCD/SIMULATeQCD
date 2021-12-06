@@ -884,13 +884,13 @@ int main(int argc, char *argv[]) {
     /// Set the HaloDepth.
     const size_t HaloDepth = 0;
 
-    rootLogger.info() << "Initialize Lattice";
+    rootLogger.info("Initialize Lattice");
 
     /// Initialize the Lattice class.
     initIndexer(HaloDepth,param,commBase);
 
     /// Initialize the Gaugefield.
-    rootLogger.info() << "Initialize Gaugefield";
+    rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 
     /// Initialize gaugefield with unit-matrices.
@@ -905,7 +905,7 @@ int main(int argc, char *argv[]) {
     redBase.adjustSize(GInd::getLatData().vol3);
 
     /// Read a configuration from hard drive. For the given configuration you should find
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc(param.GaugefileName());
 
     /// Ploop variable
@@ -921,15 +921,16 @@ int main(int argc, char *argv[]) {
 
     ploop = flt_meas<PREC,HaloDepth>(gauge, redBase, commBase, (double)(param.beta()));
  
-    rootLogger.info() << std::setprecision(20) << "Reduced RE(ploop) = " << ploop.cREAL;
-    rootLogger.info() << std::setprecision(20) << "Reduced IM(ploop) = " << ploop.cIMAG;
+    rootLogger.info(std::setprecision(20) ,  "Reduced RE(ploop) = " ,  ploop.cREAL);
+    rootLogger.info(std::setprecision(20) ,  "Reduced IM(ploop) = " ,  ploop.cIMAG);
     
     /// stop timer and print time
     timer.stop();
 
-    rootLogger.info() << "Time for operators: " << timer;
+    rootLogger.info("Time for operators: " ,  timer);
    
     return 0;
 }
 
 // Created by Battogtokh P.
+

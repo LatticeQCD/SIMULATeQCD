@@ -1,18 +1,19 @@
-/* 
+/*
  * define.h
- * 
+ *
  * Lukas Mazur, 10 Oct 2017
- * 
+ *
  */
 
 #ifndef GPU_LATTICE_DEFINE_H
 #define GPU_LATTICE_DEFINE_H
 
-#include "explicit_instantiation_macros.h"
 #include "base/IO/logging.h"
+#include "explicit_instantiation_macros.h"
 
 #define COMPILE_WITH_MPI
-//! define functions as 'void bla() EMPTY_IF_SCALAR;' in order to give a standard implementation of doing nothing in the case of scalar code
+//! define functions as 'void bla() EMPTY_IF_SCALAR;' in order to give a
+//! standard implementation of doing nothing in the case of scalar code
 #ifdef COMPILE_WITH_MPI
 #define EMPTY_IF_SCALAR
 #define RET0_IF_SCALAR
@@ -23,26 +24,6 @@
 #define RETa_IF_SCALAR { return a; }
 #endif
 
-//! ---  PGCError: a nice wrapper to throw errors from and output the error message ---
-template <typename U>
-inline void args_to_stream(std::stringstream& out, U err_msg) {
-    out << err_msg;
-}
-
-template <typename U, typename... Args>
-inline void args_to_stream(std::stringstream& out, U err_msg, Args... args) {
-    out << err_msg;
-    args_to_stream(out, args...);
-}
-
-template <typename... Args>
-inline std::runtime_error PGCError(Args... args) {
-    std::stringstream err_msg;
-    args_to_stream(err_msg, args...);
-    stdLogger.fatal() << err_msg.str();
-    return std::runtime_error(err_msg.str());
-}
-//! -------------------------------------------------------------------
 
 enum Layout {
     All, Even, Odd

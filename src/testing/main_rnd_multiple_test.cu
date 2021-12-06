@@ -72,7 +72,7 @@ int seed = 1337;
     ReadIndex<All,HaloDepth> index;
     const size_t elems=GInd::getLatData().vol4;
 
-    rootLogger.info() << "Draw random numbers and compare:";
+    rootLogger.info("Draw random numbers and compare:");
 
     iterateFunctorNoReturn<true>(draw_rand<floatT>(dev_state.state, d_rand), index, elems);
     iterateFunctorNoReturn<true>(draw_rand<floatT>(dev_state.state, d_rand), index, elems);
@@ -87,15 +87,15 @@ int seed = 1337;
     for (size_t i = 0; i < GInd::getLatData().vol4; ++i) {
 
         if ((h_rand[i]-h_rand2[i]) != 0.0) {
-            rootLogger.error() << "At index " << i << ": host neq device rnd number!";
+            rootLogger.error("At index " ,  i ,  ": host neq device rnd number!");
             host_dev = host_dev && false;
         }
     }
 
     if (host_dev)
-        rootLogger.info() << CoutColors::green << "Random numbers on one and multiple GPUs match" << CoutColors::reset;
+        rootLogger.info(CoutColors::green ,  "Random numbers on one and multiple GPUs match" ,  CoutColors::reset);
     else
-        rootLogger.info() <<  CoutColors::red << "Random numbers on one and multiple GPU do not match" << CoutColors::reset;
+        rootLogger.info( CoutColors::red ,  "Random numbers on one and multiple GPU do not match" ,  CoutColors::reset);
 }
 
 
@@ -116,12 +116,12 @@ int main(int argc, char *argv[]) {
 
     initIndexer(HaloDepth,param, commBase);
 
-    rootLogger.warn() << "Before running this test you have to run RndSingeTest!";
+    rootLogger.warn("Before running this test you have to run RndSingeTest!");
 
-    rootLogger.info() << "Testing RNG for single prec:";
+    rootLogger.info("Testing RNG for single prec:");
     test_single_multiple<float, HaloDepth>(commBase);
 
-    rootLogger.info() << "Testing RNG for double prec:";
+    rootLogger.info("Testing RNG for double prec:");
     test_single_multiple<float, HaloDepth>(commBase);
 
     return 0;

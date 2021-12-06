@@ -282,7 +282,7 @@ void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::emTimeSlices(std::vector
     const size_t elems = GInd::getLatData().vol3;
     const size_t spatialvol = GInd::getLatData().globvol3;
     if (_gauge.getComm().nodes()[3] != 1){
-        throw PGCError("Do not split lattice in time direction!");
+        throw std::runtime_error(stdLogger.fatal("Do not split lattice in time direction!"));
     }
 
     _redBaseE.template iterateOverSpatialBulk<All, HaloDepth>(energyMomentumTensorEKernel<floatT, HaloDepth, onDevice>(_gauge, sub_E_gpu, tau, pz, real_imag));

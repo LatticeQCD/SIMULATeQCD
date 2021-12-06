@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
     const size_t HaloDepth  = 0;
 
-    rootLogger.info() << "Initialization.";
+    rootLogger.info("Initialization.");
     corrParam param;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../test_parameter/correlatorTest.param", argc, argv);
@@ -52,3 +52,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

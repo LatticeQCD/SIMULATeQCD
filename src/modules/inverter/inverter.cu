@@ -47,7 +47,7 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
         rsnew = real<floatT>(dot);
 
         if(max(rsnew /*/ norm*/) < precision) {
-            rootLogger.info() << "# iterations " << i;
+            rootLogger.info("# iterations " ,  i);
             break;
         }
 
@@ -56,11 +56,11 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
         rsold = rsnew;
 
         if(i == max_iter -1) {
-            rootLogger.warn() << "CG: Warning max iteration reached " << i;
+            rootLogger.warn("CG: Warning max iteration reached " ,  i);
         }
     }
     spinorOut.updateAll();
-    rootLogger.info() << "residue " << max(rsnew /*/norm*/);
+    rootLogger.info("residue " ,  max(rsnew /*/norm*/));
 }
 
 
@@ -183,10 +183,10 @@ struct StackMinusFloatTimeStack
 //     }
 
 //     if(cg >= max_iter -1){
-//         rootLogger.warn() << "CG: Warning max iteration reached " << cg;
+//         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
 //     } else {
-//         rootLogger.info() << "CG: # iterations " << cg;
-//         rootLogger.info() << "residue " << rnormsqr/in_normsqr;
+//         rootLogger.info("CG: # iterations " ,  cg);
+//         rootLogger.info("residue " ,  rnormsqr/in_normsqr);
 //     }
 // }
 template<class floatT, size_t NStacks>
@@ -213,7 +213,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
 
     double norm_r2 = r.realdotProduct(r);
 
-    // rootLogger.info() << "Norm of input = " << norm_r2;
+    // rootLogger.info("Norm of input = " ,  norm_r2);
 
     double  pAp,lambda, lambda2, rr_1, Bm1;
 
@@ -231,21 +231,21 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     do{
         cg++;
 
-        // rootLogger.info() << "max_term = " <<max_term;
+        // rootLogger.info("max_term = " , max_term);
 
         pi0.copyFromStackToStack(pi, 0, 0);
         pi0.updateAll(COMM_BOTH | Hyperplane);
         // pi0.updateAll();
-        // rootLogger.info() << "Norm2 of pi0 = " << pi0.realdotProduct(pi0);
+        // rootLogger.info("Norm2 of pi0 = " ,  pi0.realdotProduct(pi0));
 
         dslash.applyMdaggM(s, pi0, false);
 
-        // rootLogger.info() << "Norm2 of s after DeoDoe = " << s.realdotProduct(s);
+        // rootLogger.info("Norm2 of s after DeoDoe = " ,  s.realdotProduct(s));
 
 
         s = sigma[0] * pi0 - s;
 
-        // rootLogger.info() << "Norm2 of s after lin alg = " << s.realdotProduct(s);
+        // rootLogger.info("Norm2 of s after lin alg = " ,  s.realdotProduct(s));
 
         //s.axpyThisB(sigma[0], pi0);
 
@@ -269,7 +269,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         a[0]  = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        // rootLogger.info() << "residue =" << lambda2;
+        // rootLogger.info("residue =" ,  lambda2);
 
         spinorOut.template axpyThisLoop<32>(((floatT)(-1.0))*B, pi,max_term); 
         //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
@@ -298,9 +298,9 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     } while ( (max_term>0) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
-        rootLogger.warn() << "CG: Warning max iteration reached " << cg;
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
     } else {
-        rootLogger.info() << "CG: # iterations " << cg;
+        rootLogger.info("CG: # iterations " ,  cg);
     }
 
     spinorOut.updateAll();
@@ -348,20 +348,20 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     do{
         cg++;
 
-        // rootLogger.info() << "max_term = " <<max_term;
+        // rootLogger.info("max_term = " , max_term);
 
         pi.updateAll(COMM_BOTH | Hyperplane);
         // pi0.updateAll();
-        // rootLogger.info() << "Norm2 of pi0 = " << pi0.realdotProduct(pi0);
+        // rootLogger.info("Norm2 of pi0 = " ,  pi0.realdotProduct(pi0));
 
         dslash.applyMdaggM(s, pi, false);
 
-        // rootLogger.info() << "Norm2 of s after DeoDoe = " << s.realdotProduct(s);
+        // rootLogger.info("Norm2 of s after DeoDoe = " ,  s.realdotProduct(s));
 
 
         // s = floatT(mass*mass) * pi - s;
 
-        // rootLogger.info() << "Norm2 of s after lin alg = " << s.realdotProduct(s);
+        // rootLogger.info("Norm2 of s after lin alg = " ,  s.realdotProduct(s));
 
         //s.axpyThisB(sigma[0], pi0);
 
@@ -416,9 +416,9 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
-        rootLogger.warn() << "CG: Warning max iteration reached " << cg;
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
     } else {
-        rootLogger.info() << "CG: # iterations " << cg;
+        rootLogger.info("CG: # iterations " ,  cg);
     }
 
     spinorOut.updateAll();
@@ -525,7 +525,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);       
             norm_r2 = lambda2;
             norm_comp = lambda2;
-            // rootLogger.debug() << "recompute precise residual " << max(norm_restart/norm_input);
+            // rootLogger.debug("recompute precise residual " ,  max(norm_restart/norm_input));
         
         }
         else {
@@ -533,13 +533,13 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             
         }
-        //  rootLogger.info() << "CG-Mixed: residual "<< max(lambda2/norm_input);
+        //  rootLogger.info("CG-Mixed: residual ",  max(lambda2/norm_input));
     } while ( (max(lambda2/norm_input) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
-        rootLogger.warn() << "CG: Warning max iteration reached " << cg;
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
     } else {
-        rootLogger.info() << "CG: # iterations " << cg;
+        rootLogger.info("CG: # iterations " ,  cg);
     }
     
     spinorOut += accum;
@@ -663,7 +663,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             pi_inner.convert_precision(pi);
             norm_r2 = lambda2;
             norm_comp = lambda2;
-            //rootLogger.debug() << "recompute precise residual " << max(norm_restart/norm_input);
+            //rootLogger.debug("recompute precise residual " ,  max(norm_restart/norm_input));
             steps_since_restart = 0;
             
         }
@@ -676,13 +676,13 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             steps_since_restart++;
         }
         
-        //rootLogger.info() << "CG-Mixed: residual "<< max(lambda2/norm_input);
+        //rootLogger.info("CG-Mixed: residual ",  max(lambda2/norm_input));
     } while ( (max(lambda2/norm_input) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
-        rootLogger.warn() << "CG: Warning max iteration reached " << cg;
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
     } else {
-        rootLogger.info() << "CG: # iterations " << cg << " residual: " << max(lambda2/norm_input);
+        rootLogger.info("CG: # iterations " ,  cg ,  " residual: " ,  max(lambda2/norm_input));
     }
     
     spinorOut += accum;
@@ -717,3 +717,4 @@ INIT_PLHSN(CLASSCG_INV_INIT)
 INIT_PLHSN(CLASSMCG_INIT)
 INIT_PN(CLASSAMCG_INIT)
 INIT_PLHSN(CLASSAMCG_INV_INIT)
+

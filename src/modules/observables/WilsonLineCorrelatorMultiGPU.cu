@@ -111,7 +111,7 @@ template<class floatT, size_t HaloDepth,int stacks>
 void WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gWilson(Gaugefield<floatT,true,HaloDepth> &gauge , size_t length){
 
     gauge.template iterateOverBulkAtMu<0,256>(CalcWilson<floatT,HaloDepth>(gauge,length));
-//    rootLogger.info() << spinor.dotProduct(spinor);
+//    rootLogger.info(spinor.dotProduct(spinor));
     return;
 
 }
@@ -271,7 +271,7 @@ std::vector<floatT> WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gDotA
 
     }
     else{
-        rootLogger.info() << "ERROR, Wilson Line Shared only works with stacks equal to lx";
+        rootLogger.info("ERROR, Wilson Line Shared only works with stacks equal to lx");
         std::vector<floatT> result;
         return result;
     }
@@ -293,4 +293,5 @@ template class WilsonLineCorrelatorMultiGPU<floatT,HALO,48>; \
 
 
 INIT_PH(CLASS_INIT2)
+
 

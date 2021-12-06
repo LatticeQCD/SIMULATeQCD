@@ -58,7 +58,7 @@ public:
     }
 
     void synchronize() {
-        if (!_initialized) rootLogger.error() << "deviceStream.h: synchronize: stream not initialized";
+        if (!_initialized) rootLogger.error("deviceStream.h: synchronize: stream not initialized");
         if (_mode == 1 && onDevice) {
             gpuError_t gpuErr = gpuStreamSynchronize(_stream);
             if (gpuErr != gpuSuccess)

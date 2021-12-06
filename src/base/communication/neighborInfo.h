@@ -97,7 +97,7 @@ public:
 
     NeighborInfo(MPI_Comm CartComm, ProcessInfo info) : cart_comm(CartComm), myInfo(info) {
 
-        rootLogger.debug() << "> Collecting neighbor information...";
+        rootLogger.debug("> Collecting neighbor information...");
         MPI_Cart_shift(cart_comm, 0, 1, &_X[0].world_rank, &_X[1].world_rank);
         MPI_Cart_shift(cart_comm, 1, 1, &_Y[0].world_rank, &_Y[1].world_rank);
         MPI_Cart_shift(cart_comm, 2, 1, &_Z[0].world_rank, &_Z[1].world_rank);
@@ -127,7 +127,7 @@ public:
 
         gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
 
-        rootLogger.info() << "> Checking support for P2P (Peer-to-Peer) and UVA (Unified Virtual Addressing):";
+        rootLogger.info("> Checking support for P2P (Peer-to-Peer) and UVA (Unified Virtual Addressing):");
         MPI_Barrier(cart_comm);
         checkP2P();
         MPI_Barrier(cart_comm);
@@ -151,37 +151,37 @@ public:
         else if (hseg == XY) {
             if (direction < 2 && leftRight < 2) return _XY[direction][leftRight];
             else {
-                rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!";
+                rootLogger.error("neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!");
                 return fail;
             }
         } else if (hseg == XZ) {
             if (direction < 2 && leftRight < 2) return _XZ[direction][leftRight];
             else {
-                rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!";
+                rootLogger.error("neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!");
                 return fail;
             }
         } else if (hseg == XT) {
             if (direction < 2 && leftRight < 2) return _XT[direction][leftRight];
             else {
-                rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!";
+                rootLogger.error("neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!");
                 return fail;
             }
         } else if (hseg == YZ) {
             if (direction < 2 && leftRight < 2) return _YZ[direction][leftRight];
             else {
-                rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!";
+                rootLogger.error("neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!");
                 return fail;
             }
         } else if (hseg == YT) {
             if (direction < 2 && leftRight < 2) return _YT[direction][leftRight];
             else {
-                rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!";
+                rootLogger.error("neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!");
                 return fail;
             }
         } else if (hseg == ZT) {
             if (direction < 2 && leftRight < 2) return _ZT[direction][leftRight];
             else {
-                rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!";
+                rootLogger.error("neighborinfo.h: getNeighborInfo(...): dir or lr is wrong!");
                 return fail;
             }
         } else if (hseg == XYZ) return _XYZ[direction][leftRight];
@@ -191,7 +191,7 @@ public:
 
         else if (hseg == XYZT) return _XYZT[direction][leftRight];
         else {
-            rootLogger.error() << "neighborinfo.h: getNeighborInfo(...): hseg is wrong!";
+            rootLogger.error("neighborinfo.h: getNeighborInfo(...): hseg is wrong!");
             return fail;
         }
     }
@@ -236,7 +236,7 @@ inline void NeighborInfo::_fill2DNeighbors(ProcessInfo array[][2], int mu, int n
         c[mu] += right[0];
         c[nu] += right[1];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
-        // rootLogger.info() <<"2D: (" <<left[0] << " " << left[1] << ") (" << right[0] << " " << right[1]  << ") i=" <<i <<" i_opp=" << _opposite(i, 2)<<std::endl;
+        // rootLogger.info("2D: (" , left[0] ,  " " ,  left[1] ,  ") (" ,  right[0] ,  " " ,  right[1]  ,  ") i=" , i , " i_opp=" ,  _opposite(i, 2), std::endl);
     }
 }
 
@@ -256,7 +256,7 @@ inline void NeighborInfo::_fill3DNeighbors(ProcessInfo array[][2], int mu, int n
         c[nu] += right[1];
         c[rho] += right[2];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
-        //rootLogger.info() <<"3D: (" <<left[0] << " " << left[1] << " " << left[2] << ") (" << right[0] << " " << right[1] << " " << right[2] << ") i=" <<i <<" i_opp=" << _opposite(i, 3)<<std::endl;
+        //rootLogger.info("3D: (" , left[0] ,  " " ,  left[1] ,  " " ,  left[2] ,  ") (" ,  right[0] ,  " " ,  right[1] ,  " " ,  right[2] ,  ") i=" , i , " i_opp=" ,  _opposite(i, 3), std::endl);
     }
 }
 
@@ -275,7 +275,7 @@ inline void NeighborInfo::_fill4DNeighbors(ProcessInfo array[][2]) {
         c = myInfo.coord;
         LatticeDimensions right = _shortToDim(_opposite(i, 4));
         //if(IamRoot())std::cout <<"4D:" <<left << " " << right << " i=" <<i <<" i_opp=" << _opposite(i, 4)<<std::endl;
-        //  rootLogger.info() <<"4D: (" <<left[0] << " " << left[1] << " " << left[2] << " " <<left[3] << ") (" << right[0] << " " << right[1] << " " << right[2]<<" "<< right[3] << ") i=" <<i <<" i_opp=" << _opposite(i, 4)<<std::endl;
+        //  rootLogger.info("4D: (" , left[0] ,  " " ,  left[1] ,  " " ,  left[2] ,  " " , left[3] ,  ") (" ,  right[0] ,  " " ,  right[1] ,  " " ,  right[2], " ",  right[3] ,  ") i=" , i , " i_opp=" ,  _opposite(i, 4), std::endl);
         c = c + right;
         //c[0] += right[0];
         //c[1] += right[1];
@@ -427,15 +427,14 @@ inline void NeighborInfo::exchangeProcessInfo() {
         }
     }
     MPI_Barrier(cart_comm);
-    rootLogger.debug() << "> Neighbor information collected!";
+    rootLogger.debug("> Neighbor information collected!");
 }
 
 inline bool NeighborInfo::IsGPUCapableP2P() const {
     // This requires two processes accessing each device, so we need
     // to ensure exclusive or prohibited mode is not set
     if (myProp.computeMode != gpuComputeModeDefault) {
-        throw PGCError("Device ", myProp.name, " is in an unsupported compute mode "
-                                               "(exclusive or prohibited mode is NOT allowed)");
+        throw std::runtime_error(stdLogger.fatal("Device ", myProp.name, " is in an unsupported compute mode (exclusive or prohibited mode is NOT allowed)"));
     }
     return (bool) (myProp.major >= 2);
 
@@ -455,9 +454,9 @@ inline void NeighborInfo::checkP2P() {
                     nInfo.p2p = (bool) can_access_peer;
 #ifdef PEERACCESSINFO
                     if (!nInfo.sameRank)
-                        stdLogger.debug() << "> Peer access on node " << myInfo.nodeName << " from GPU "
-                                          << myInfo.deviceRank
-                                          << " -> GPU " << nInfo.deviceRank << (can_access_peer ? " Yes" : " No");
+                        stdLogger.debug("> Peer access on node " ,  myInfo.nodeName ,  " from GPU "
+                                          ,  myInfo.deviceRank
+                                          ,  " -> GPU " ,  nInfo.deviceRank ,  (can_access_peer ? " Yes" : " No"));
 #endif
 
                 }
@@ -465,13 +464,13 @@ inline void NeighborInfo::checkP2P() {
         }
     }
 
-    stdLogger.info() << "> " << myInfo.nodeName << " GPU_" << std::uppercase << std::hex << myProp.pciBusID << "(" << myProp.name << "): "
+    stdLogger.info("> " ,  myInfo.nodeName ,  " GPU_" ,  std::uppercase ,  std::hex ,  myProp.pciBusID ,  "(" ,  myProp.name ,  "): "
 #if USE_CUDA_P2P
-     << "P2P " << (IsGPUCapableP2P() ? "YES" : "NO") << "; "
+     ,  "P2P " ,  (IsGPUCapableP2P() ? "YES" : "NO") ,  "; "
 #else
-     << "P2P NO ; "
+     , "P2P NO ; "
 #endif
-    << "UVA " << (myProp.unifiedAddressing ? "YES" : "NO");
+    , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
 }
 
 #endif //NEIGHBORINFO_H

@@ -12,24 +12,24 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
     LatticeDimensions _globalLattice(param.latDim);
     LatticeDimensions _localLattice(_globalLattice / comm.nodes());
 
-    rootLogger.info() << "Initialize Indexer with HaloDepth = " << HaloDepth << CoutColors::yellow
-                      << (forceAllHalos ? " and force Halos in all directions" : "") << CoutColors::reset;
+    rootLogger.info("Initialize Indexer with HaloDepth = " ,  HaloDepth ,  CoutColors::yellow
+                      ,  (forceAllHalos ? " and force Halos in all directions" : "") ,  CoutColors::reset);
 
     if (_localLattice * comm.nodes() != _globalLattice) {
-        throw PGCError("Lattice ", _globalLattice, " not divisible into Nodes ", comm.nodes());
+        throw std::runtime_error(stdLogger.fatal("Lattice ", _globalLattice, " not divisible into Nodes ", comm.nodes()));
     }
     if ((_localLattice[0] < 1) || (_localLattice[1] < 1) || (_localLattice[2] < 1) || (_localLattice[3] < 1)) {
-        throw PGCError("lattice : size of lattice must be > 0 !");
+        throw std::runtime_error(stdLogger.fatal("lattice : size of lattice must be > 0 !"));
     }
     if ((_localLattice[0] % 2) || (_localLattice[1] % 2) || (_localLattice[2] % 2) || (_localLattice[3] % 2)) {
-        throw PGCError("lx=", _localLattice[0], " ly=", _localLattice[1],
+        throw std::runtime_error(stdLogger.fatal("lx=", _localLattice[0], " ly=", _localLattice[1],
                        " lz=", _localLattice[2], " lt=", _localLattice[3],
-                       ". lattice : size of lattice must be even!");
+                       ". lattice : size of lattice must be even!"));
     }
 
     for(int i = 0; i < 4; i++) {
         if (((_localLattice[i] <= (int)(2 * HaloDepth)) && comm.nodes()[i] > 1) || ((_localLattice[i] <= (int)(2 * HaloDepth)) && forceAllHalos )) {
-            throw PGCError("One dimension smaller or equal HaloSize");
+            throw std::runtime_error(stdLogger.fatal("One dimension smaller or equal HaloSize"));
         }
     }
     unsigned int Nodes[4] = {forceAllHalos ? 2 : (unsigned int)param.nodeDim()[0],
@@ -52,12 +52,12 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
     initGPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
     initCPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
 
-    stdLogger.debug() << "Local size without Halos: " << globLatDataCPU[HaloDepth].lx << " "
-                      << globLatDataCPU[HaloDepth].ly << " " << globLatDataCPU[HaloDepth].lz << " "
-                      << globLatDataCPU[HaloDepth].lt;
-    stdLogger.debug() << "Local size with Halos: " << globLatDataCPU[HaloDepth].lxFull << " "
-                      << globLatDataCPU[HaloDepth].lyFull << " " << globLatDataCPU[HaloDepth].lzFull << " "
-                      << globLatDataCPU[HaloDepth].ltFull;
+    stdLogger.debug("Local size without Halos: " ,  globLatDataCPU[HaloDepth].lx ,  " "
+                      ,  globLatDataCPU[HaloDepth].ly ,  " " ,  globLatDataCPU[HaloDepth].lz ,  " "
+                      ,  globLatDataCPU[HaloDepth].lt);
+    stdLogger.debug("Local size with Halos: " ,  globLatDataCPU[HaloDepth].lxFull ,  " "
+                      ,  globLatDataCPU[HaloDepth].lyFull ,  " " ,  globLatDataCPU[HaloDepth].lzFull ,  " "
+                      ,  globLatDataCPU[HaloDepth].ltFull);
 }
 
 

@@ -70,7 +70,7 @@ public:
     void swap(stackedArray<onDevice, entryType, entryCount> &in) {
         if (getSize() == in.getSize()) {
             _memory->swap(in._memory);
-        } else throw PGCError("stackedArray.h: swap not allowed when Array size is different!");
+        } else throw std::runtime_error(stdLogger.fatal("stackedArray.h: swap not allowed when Array size is different!"));
     }
 
     size_t getSize() const {

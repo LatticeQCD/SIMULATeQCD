@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth = 0;
 
     /// None of these parameters should be changed.
-    rootLogger.info() << "Initialization";
+    rootLogger.info("Initialization");
     LatticeParameters param;
     const int  LatDim[]   = {32,32,32,8};
     const int  NodeDim[]  = {1 ,1 ,1 ,1};
@@ -87,12 +87,12 @@ int main(int argc, char *argv[]) {
     redBase.adjustSize(GInd::getLatData().vol4);
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info() << "Read configuration";
+    rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
     gauge.updateAll();
 
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING
-    rootLogger.info() << "GAUGE FIXING...";
+    rootLogger.info("GAUGE FIXING...");
 
     while ( (ngfstep<ngfstepMAX) && (gftheta>gtol) ) {
         /// Compute starting GF functional and update the lattice.
@@ -121,7 +121,8 @@ int main(int argc, char *argv[]) {
     /// Write without compression, in double precision, with big endian.
     gauge.writeconf_nersc("gfixTestSingle_conf",3,2,ENDIAN_BIG);
 
-    rootLogger.info() << "Gauge field written to gfixTestSingle_conf. Please run gfixTestMulti.";
+    rootLogger.info("Gauge field written to gfixTestSingle_conf. Please run gfixTestMulti.");
 
     return 0;
 }
+

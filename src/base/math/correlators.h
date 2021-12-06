@@ -250,7 +250,7 @@ public:
         } else if(domain=="spatial") {
             r2max=USr2max;
         } else {
-            throw PGCError("Correlator domain ", domain, " not valid.");
+            throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
         }
         return r2max;
     }
@@ -262,7 +262,7 @@ public:
         } else if(domain=="spatial") {
             dvol=svol3;
         } else {
-            throw PGCError("Correlator domain ", domain, " not valid.");
+            throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
         }
         return dvol;
     }
@@ -274,7 +274,7 @@ public:
         } else if(domain=="spatial") {
             normfilePrefix="US_s";
         } else {
-            throw PGCError("Correlator domain ", domain, " not valid.");
+            throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
         }
         return normfilePrefix;
     }
@@ -282,7 +282,7 @@ public:
     /// Method that crashes upon detection of multiple processors.
     inline void verifySingleProc(CommunicationBase &comm) {
         if( comm.nodes()[0]!=1 || comm.nodes()[1]!=1 || comm.nodes()[2]!=1 || comm.nodes()[3]!=1 ) {
-            throw PGCError("These correlators do not allow partitioning for now!");
+            throw std::runtime_error(stdLogger.fatal("These correlators do not allow partitioning for now!"));
         }
     }
 };
@@ -360,7 +360,7 @@ public:
             }
 
         } else {
-            throw PGCError("Correlator domain ", domain, " not valid.");
+            throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
         }
     }
 
@@ -919,7 +919,7 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::createNorm(std::string domain, 
     std::ofstream normfile;
 
     normfilename << normfilePrefix << std::to_string(Nx) << "t" << std::to_string(Nt) << ".norm";
-    rootLogger.info() << "Creating normalization file " << normfilename.str();
+    rootLogger.info("Creating normalization file " ,  normfilename.str());
     normfile.open(normfilename.str());
 
     if(domain=="spacetime") {
@@ -987,7 +987,7 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::createNorm(std::string domain, 
         }
 
     } else {
-        throw PGCError("Correlator domain ", domain, " not valid.");
+        throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
     }
 
     for (int ir2=0; ir2<r2max+1; ir2++) {
@@ -1015,18 +1015,18 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::readNorm(std::string domain, Co
     std::stringstream normfilename;
     std::ifstream normfile;
     normfilename << normFileDir << normfilePrefix << std::to_string(Nx) << "t" << std::to_string(Nt) << ".norm";
-    rootLogger.info() << "Reading from normalization file " << normfilename.str();
+    rootLogger.info("Reading from normalization file " ,  normfilename.str());
     normfile.open(normfilename.str());
 
     if(!normfile.good()) {
-        throw PGCError("Problem opening norm file.");
+        throw std::runtime_error(stdLogger.fatal("Problem opening norm file."));
     }
 
     for (int ir2=0; ir2<r2max+1; ir2++) {
         normfile >> jr2;
         normfile >> norm;
         if(ir2!=jr2) {
-            throw PGCError("Problem reading norm file. ir2, jr2 = ", ir2, jr2);
+            throw std::runtime_error(stdLogger.fatal("Problem reading norm file. ir2, jr2 = ", ir2, jr2));
         }
         _normalization.setValue<floatT>(ir2,norm);
     }
@@ -1120,7 +1120,7 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::correlateAt(std::string domain,
         }
 
     } else {
-        throw PGCError("Correlator domain not set correctly.");
+        throw std::runtime_error(stdLogger.fatal("Correlator domain not set correctly."));
     }
 
     /// Normalization coming from number of pairs at a specific r2.
@@ -1169,14 +1169,14 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::getFactorArray(std::vector<int>
     for (int dy=0 ; dy<RSymax ; dy++)
     for (int dz=0 ; dz<RSzmax ; dz++) {
         qnorm = dx*dx+dy*dy+dz*dz;
-        if (qnorm>distmax) throw PGCError("qnorm > distmax");
+        if (qnorm>distmax) throw std::runtime_error(stdLogger.fatal("qnorm > distmax"));
         psite              = dx + dy*pvol1 + dz*pvol2;
         g                  = vec_weight[psite];
         vec_factor[qnorm] += g;
     }
     for (int dx=RSxmax;dx<RSonmax;dx++) {
         qnorm = dx*dx;
-        if (qnorm>distmax) throw PGCError("qnorm > distmax");
+        if (qnorm>distmax) throw std::runtime_error(stdLogger.fatal("qnorm > distmax"));
         /// Here there are always 3 unique vectors corresponding to 3 spatial directions.
         g                  = 3;
         vec_factor[qnorm] += g;

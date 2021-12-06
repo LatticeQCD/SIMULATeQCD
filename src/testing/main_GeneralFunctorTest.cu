@@ -544,7 +544,7 @@ void run_func(CommunicationBase &commBase) {
     gauge_Naik.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
     gauge_Naik.updateAll();
 
-    rootLogger.info() << "Initialize Spinorfield";
+    rootLogger.info("Initialize Spinorfield");
     //! Two data spinors that we will use for further tests.
     Spinorfield<floatT, true, LatLayout, HaloDepthSpin> spinor1(commBase);
     Spinorfield<floatT, true, LatLayout, HaloDepthSpin> spinor2(commBase);
@@ -562,7 +562,7 @@ void run_func(CommunicationBase &commBase) {
     //! which is easy to compare. Similar to the plaquette above.
     Spinorfield<floatT, true, LatLayout, HaloDepthSpin> project_to_spinor(commBase);
 
-    rootLogger.info() << "Fill with random numbers";
+    rootLogger.info("Fill with random numbers");
 
     //! Let us fill the spinors with some random numbers. This means we need a random number generator state
     grnd_state<true> d_rand;
@@ -574,7 +574,7 @@ void run_func(CommunicationBase &commBase) {
     rhs_spinor.gauss(d_rand.state);
     project_to_spinor.gauss(d_rand.state);
 
-    rootLogger.info() << "Update Halos";
+    rootLogger.info("Update Halos");
     spinor1.updateAll();
     spinor2.updateAll();
     project_to_spinor.updateAll();
@@ -614,7 +614,7 @@ void run_func(CommunicationBase &commBase) {
 
     //! Perform an axpy operation using functor syntax. Here we measure the time to compare if the functor syntax is
     //! slower, which should not be the case.
-    rootLogger.info() << "Iterate and perform functors";
+    rootLogger.info("Iterate and perform functors");
     GpuStopWatch timer;
     timer.start();
     res_spinor = 1.234 * spinor1 + spinor2;
@@ -624,7 +624,7 @@ void run_func(CommunicationBase &commBase) {
     res_projected = project_to_spinor.dotProduct(res_spinor);
 
     //! Use an existing implementation as reference.
-    rootLogger.info() << "Perform reference calculation";
+    rootLogger.info("Perform reference calculation");
     ref_spinor = spinor2;
     timer.start();
     ref_spinor.axpyThis(1.234, spinor1);
@@ -672,6 +672,7 @@ void run_func(CommunicationBase &commBase) {
 
 int main(int argc, char **argv) {
 
+
     stdLogger.setVerbosity(INFO);
 
     LatticeParameters param;
@@ -686,17 +687,17 @@ int main(int argc, char **argv) {
     const int HaloDepthSpin = 4;
     initIndexer(HaloDepthSpin,param, commBase, true);
 
-    stdLogger.setVerbosity(INFO);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing All - All";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing All - All");
+    rootLogger.info("------------------");
     run_func<double, All, All>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     run_func<double, Even, Odd>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Odd - Even";
-    rootLogger.info() << "------------------";
+    rootLogger.info("------------------");
+    rootLogger.info("Testing Odd - Even");
+    rootLogger.info("------------------");
     run_func<double, Odd, Even>(commBase);
 }
+

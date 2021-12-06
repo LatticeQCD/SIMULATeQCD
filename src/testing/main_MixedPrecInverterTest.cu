@@ -49,7 +49,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorOut2(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     
     gpuEventRecord(start);
@@ -64,7 +64,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
         break;
     default :
-        throw PGCError("CG inverter not specified, provide an option (1, 2 or 3) after parameter file");
+        throw std::runtime_error(stdLogger.fatal("CG inverter not specified, provide an option (1, 2 or 3) after parameter file"));
         break;
     }
     
@@ -84,25 +84,25 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     dot1 = spinorOut.dotProductStacked(spinorOut);
     dot2 = spinorIn.dotProductStacked(spinorIn);
 
-    rootLogger.info() << "dot1 " << dot1[0] << " dot2 " << dot2[0];
+    rootLogger.info("dot1 " ,  dot1[0] ,  " dot2 " ,  dot2[0]);
     SimpleArray<double, NStacks> err_arr(0.0);
 
     err_arr = real<double>(dot1)/real<double>(dot2);
 
     for (size_t i = 0; i < NStacks; ++i)
     {
-        rootLogger.info() << err_arr[i];
+        rootLogger.info(err_arr[i]);
     }
 
-    rootLogger.info() << "relative error of (D^+D) * (D^+D)^-1 * phi - phi : " << max(err_arr) ;
-    rootLogger.info() << "Time for inversion: " << milliseconds << " ms";
+    rootLogger.info("relative error of (D^+D) * (D^+D)^-1 * phi - phi : " ,  max(err_arr));
+    rootLogger.info("Time for inversion: " ,  milliseconds ,  " ms");
     if (!(max(err_arr) < 10*param.residue()))
         success = success && false;
     
     if (success)
-        rootLogger.info() << "Inverter test: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("Inverter test: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.info() << "Inverter test: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.info("Inverter test: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 
 }
 
@@ -125,25 +125,25 @@ int main(int argc, char **argv) {
     const int HaloDepthSpin = 4;
     initIndexer(HaloDepthSpin, param, commBase);
 
-    rootLogger.info() << "Running mixed precision inverter test";
+    rootLogger.info("Running mixed precision inverter test");
 
 
     int cg_sw = atoi(argv[2]);
     if (cg_sw == 1) {
-        rootLogger.info() << "testing float-half";
+        rootLogger.info("testing float-half");
         run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
         
-        rootLogger.info() << "testing double-float";
+        rootLogger.info("testing double-float");
         run_func<double, float, Even, 1, true>(commBase, param, rat, cg_sw);
         
-        rootLogger.info() << "testing double-half";
+        rootLogger.info("testing double-half");
         run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
     }
     else {
-        rootLogger.info() << "testing float";
+        rootLogger.info("testing float");
         run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
 
-        rootLogger.info() << "testing double";
+        rootLogger.info("testing double");
         run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
     }
     return 0;

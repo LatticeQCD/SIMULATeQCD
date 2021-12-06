@@ -63,7 +63,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::random(uint4* rand_state) {
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::gauss(uint4* rand_state) {
     if (comp != R18){
-        rootLogger.error() << "Gaussian matrices are only possible in R18 fields!";
+        rootLogger.error("Gaussian matrices are only possible in R18 fields!");
     }else{
         iterateOverBulkLoopMu(fill_with_gauss<floatT>(rand_state));
     }
@@ -100,3 +100,4 @@ template class Gaugefield<floatT,onDevice,HaloDepth, U3R14>; \
 _GLATTICE_CLASS_INIT_HALF(floatT, 1,HALO)
 
 INIT_H_HALF(INIT_HALF)
+

@@ -196,7 +196,7 @@ public:
 
         /// A check that we don't have multiGPU and halosize=0:
         if (_commBase.getNumberProcesses() != 1 && HaloDepth == 0) {
-            throw PGCError("Useless call of CommunicationBase.updateAll() with multiGPU and HaloDepth=0!");
+            throw std::runtime_error(stdLogger.fatal("Useless call of CommunicationBase.updateAll() with multiGPU and HaloDepth=0!"));
         }
 
         unsigned int haltype = param & 15;

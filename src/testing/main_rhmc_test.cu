@@ -20,15 +20,15 @@ bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoe
 
     gauge.one();
 
-    rootLogger.info() << "constructed gauge field";
+    rootLogger.info("constructed gauge field");
 
     rhmc<floatT, true, HaloDepth> HMC(param, rat, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed the HMC";
+    rootLogger.info("constructed the HMC");
 
     HMC.init_ratapprox();
 
-    rootLogger.info() << "Initialized the Rational Approximation";
+    rootLogger.info("Initialized the Rational Approximation");
 
     int acc = 0;
     double acceptance = 0.0;
@@ -61,15 +61,15 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     gauge.one();
     gauge.updateAll();
 
-    rootLogger.info() << "constructed gauge field";
+    rootLogger.info("constructed gauge field");
 
     rhmc<floatT, true, HaloDepth> HMC(param, rat, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed the HMC";
+    rootLogger.info("constructed the HMC");
 
     HMC.init_ratapprox();
 
-    rootLogger.info() << "Initialized the Rational Approximation";
+    rootLogger.info("Initialized the Rational Approximation");
 
     int acc = 0;
     floatT acceptance = 0.0;
@@ -79,10 +79,10 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
         acc += HMC.update();
         acceptance = floatT(acc)/floatT(i);
 
-        rootLogger.info() << "|Ploop|(" << i <<")= " << abs(ploop.getPolyakovLoop());
+        rootLogger.info("|Ploop|(" ,  i , ")= " ,  abs(ploop.getPolyakovLoop()));
     }
 
-    rootLogger.info() << "Run has ended. acceptance = " << acceptance;
+    rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
     bool ret = false;
 
@@ -106,15 +106,15 @@ bool no_rng_test(CommunicationBase &commBase, RhmcParameters param, RationalCoef
 
     gauge.one();
 
-    rootLogger.info() << "constructed gauge field";
+    rootLogger.info("constructed gauge field");
 
     rhmc<floatT, true, HaloDepth> HMC(param, rat, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed the HMC";
+    rootLogger.info("constructed the HMC");
 
     HMC.init_ratapprox();
 
-    rootLogger.info() << "Initialized the Rational Approximation";
+    rootLogger.info("Initialized the Rational Approximation");
 
     int acc = HMC.update_test();
 
@@ -145,10 +145,10 @@ int main(int argc, char *argv[]) {
 
     initIndexer(HaloDepth,param, commBase);
 
-    rootLogger.info() << "STARTING RHMC TESTS:\n";
-    rootLogger.info() << "This will take some minutes. Go grab a coffee/tea.";
+    rootLogger.info("STARTING RHMC TESTS:\n");
+    rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
 
-    rootLogger.info() << "STARTING REVERSIBILITY TEST:";
+    rootLogger.info("STARTING REVERSIBILITY TEST:");
 
     typedef float floatT;
 
@@ -156,30 +156,30 @@ int main(int argc, char *argv[]) {
 
 
     if (revers)
-        rootLogger.info() << "REVERSIBILITY TEST: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("REVERSIBILITY TEST: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.error() << "REVERSIBILITY TEST: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.error("REVERSIBILITY TEST: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 
 
-    rootLogger.info() << "STARTING FULL UPDATE TEST:";
-    rootLogger.info() << "Now, there should be some dynamics";
+    rootLogger.info("STARTING FULL UPDATE TEST:");
+    rootLogger.info("Now, there should be some dynamics");
 
 
     bool full = full_test<floatT, HaloDepth>(commBase, param, rat);
 
     if (full)
-        rootLogger.info() << "FULL UPDATE TEST: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("FULL UPDATE TEST: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.error() << "FULL UPDATE TEST: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.error("FULL UPDATE TEST: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 
 
     if (revers /*&& no_rng*/ && full)  {
-        rootLogger.info() << CoutColors::green << "ALL TESTS PASSED" << CoutColors::reset;
-        rootLogger.warn() << "This only indicates that force matches action.\n";
-        rootLogger.warn() << "Check Observables to find out if action is correct!";
+        rootLogger.info(CoutColors::green ,  "ALL TESTS PASSED" ,  CoutColors::reset);
+        rootLogger.warn("This only indicates that force matches action.\n");
+        rootLogger.warn("Check Observables to find out if action is correct!");
     }
     else
-        rootLogger.error() << CoutColors::red << "AT LEAST ONE TEST FAILED" << CoutColors::reset;
+        rootLogger.error(CoutColors::red ,  "AT LEAST ONE TEST FAILED" ,  CoutColors::reset);
 
     return 0;
 }

@@ -75,27 +75,27 @@ public:
     }
 
     void synchronize() {
-        if (!_initialized) rootLogger.error() << "deviceEvent.h: synchronize: event not initialized";
+        if (!_initialized) rootLogger.error("deviceEvent.h: synchronize: event not initialized");
         gpuError_t gpuErr = gpuEventSynchronize(_event);
         if (gpuErr != gpuSuccess)
             GpuError("deviceEvent.h: deviceEvent.synchronize: gpuEventSynchronize(_event)", gpuErr);
     }
 
     void record(gpuStream_t stream) {
-        if (!_initialized) rootLogger.error() << "deviceEvent.h: record: event not initialized";
+        if (!_initialized) rootLogger.error("deviceEvent.h: record: event not initialized");
         gpuError_t gpuErr = gpuEventRecord(_event, stream);
         if (gpuErr != gpuSuccess) GpuError("deviceEvent.h: deviceEvent.record(): gpuEventRecord", gpuErr);
     }
 
     void streamWaitForMe(gpuStream_t stream) {
-        if (!_initialized) rootLogger.error() << "deviceEvent.h: streamWaitForMe: event not initialized";
+        if (!_initialized) rootLogger.error("deviceEvent.h: streamWaitForMe: event not initialized");
         gpuError_t gpuErr = gpuStreamWaitEvent(stream, _event, 0);
         if (gpuErr != gpuSuccess)
             GpuError("deviceEvent.h: deviceEvent.streamWaitForMe(): gpuStreamWaitEvent", gpuErr);
     }
 
     bool query() {
-        if (!_initialized) rootLogger.error() << "deviceEvent.h: query: event not initialized";
+        if (!_initialized) rootLogger.error("deviceEvent.h: query: event not initialized");
         gpuError_t gpuErr = gpuEventQuery(_event);
         if (gpuErr == gpuSuccess) return true;
         else return false;

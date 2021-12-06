@@ -34,20 +34,20 @@ int main(int argc, char *argv[]) {
 
     const size_t Ntau  = GInd::getLatData().lt;
 
-    rootLogger.info() << "Reference values in this test come from l328f21b6285m0009875m0790a_019.995";
-    rootLogger.info() << "Read configuration" << lp.GaugefileName();
+    rootLogger.info("Reference values in this test come from l328f21b6285m0009875m0790a_019.995");
+    rootLogger.info("Read configuration" ,  lp.GaugefileName());
     gauge.readconf_nersc(lp.GaugefileName());
 
     /// Calculate and report ColorElectricCorr.
     ColorElectricCorr<PREC,ON_DEVICE,HaloDepth> CEC(gauge);
     //ColorElectricMagneticCorr<PREC, ON_DEVICE, HaloDepth> CECM(gauge);
-    rootLogger.info() << "Calculating color electric correlator (ColorElectricCorr)...";
+    rootLogger.info("Calculating color electric correlator (ColorElectricCorr)...");
     timer.start();
     gauge.updateAll();
     std::vector<GCOMPLEX(PREC)> result = CEC.getColorElectricCorr_naive();
     //std::vector<Matrix4x4Sym<PREC>> result = CECM.getColorElectricMagneticCorr();
     timer.stop();
-    rootLogger.info() << "Time for ColorElectricCorr: " << timer;
+    rootLogger.info("Time for ColorElectricCorr: " ,  timer);
 
     ///reference for l328f21b6285m0009875m0790a_019.995
     std::vector<PREC> reference_result = { -0.0036785027192919143857, -0.0018776993246428395554, -0.00098076311144967278852,
@@ -58,35 +58,36 @@ int main(int argc, char *argv[]) {
 
     bool failed = false;
     PREC tolerance = 1e-7;
-    rootLogger.info() << "====== Results are said to be equal to reference if difference is less than 1e-7 ======";
+    rootLogger.info("====== Results are said to be equal to reference if difference is less than 1e-7 ======");
     for(size_t i = 0; i < Ntau/2; ++i) {
-        rootLogger.info() << std::setprecision(20) << "ColorElectricCorr(" << i+1 << ") =     " << real(result[i]);
-        //rootLogger.info() << std::setprecision(20) << "ColorElectricCorr(" << i+1 << ") =     " << result[i].elems[0];
+        rootLogger.info(std::setprecision(20) ,  "ColorElectricCorr(" ,  i+1 ,  ") =     " ,  real(result[i]));
+        //rootLogger.info(std::setprecision(20) ,  "ColorElectricCorr(" ,  i+1 ,  ") =     " ,  result[i].elems[0]);
         if ( !(isApproximatelyEqual(real(result[i]), reference_result[i], tolerance)) ){
         //if ( !(isApproximatelyEqual(result[i].elems[0], reference_result[i], tolerance)) ){
             failed = true;
-            rootLogger.info() <<  "ColorElectricCorr_ref(" << i+1 << ") = " << reference_result[i];
-            rootLogger.info() <<  "Difference to reference is  " << std::fabs(real(result[i])
-            //rootLogger.info() <<  "Difference to reference is  " << std::fabs(result[i].elems[0]
-            -reference_result[i]);
-            rootLogger.error() << "--- Failed for dt = " << i+1 << "! ---";
+            rootLogger.info( "ColorElectricCorr_ref(" ,  i+1 ,  ") = " ,  reference_result[i]);
+            rootLogger.info( "Difference to reference is  " ,  std::fabs(real(result[i])
+            //rootLogger.info() ,   "Difference to reference is  " ,  std::fabs(result[i].elems[0]
+            -reference_result[i]));
+            rootLogger.error("--- Failed for dt = " ,  i+1 ,  "! ---");
 
         } else {
-            rootLogger.info() <<  "ColorElectricCorr_ref(" << i+1 << ") = " << reference_result[i];
-            rootLogger.info() <<  "Difference to reference is  " << std::fabs(real(result[i])
-            //rootLogger.info() <<  "Difference to reference is  " << std::fabs(result[i].elems[0]
-                                                                              -reference_result[i]);
-            rootLogger.info() << "--- Passed for dt = " << i+1 << "! ---";
+            rootLogger.info( "ColorElectricCorr_ref(" ,  i+1 ,  ") = " ,  reference_result[i]);
+            rootLogger.info( "Difference to reference is  " ,  std::fabs(real(result[i])
+            //rootLogger.info() ,   "Difference to reference is  " ,  std::fabs(result[i].elems[0]
+                                                                              -reference_result[i]));
+            rootLogger.info("--- Passed for dt = " ,  i+1 ,  "! ---");
         }
     }
     if (failed){
-        rootLogger.info() << "======== "<< CoutColors::red << "FAILED" << CoutColors::reset
-                           << " TESTS FOR COLOR-ELECTRIC CORRELATOR!!! ========";
+        rootLogger.info("======== ",  CoutColors::red ,  "FAILED" ,  CoutColors::reset
+                           ,  " TESTS FOR COLOR-ELECTRIC CORRELATOR!!! ========");
 
     } else {
-        rootLogger.info() << "======== ALL TESTS FOR COLOR-ELECTRIC CORRELATOR "<< CoutColors::green <<"PASSED!"
-                          << CoutColors::reset << " ========";
+        rootLogger.info("======== ALL TESTS FOR COLOR-ELECTRIC CORRELATOR ",  CoutColors::green , "PASSED!"
+                          ,  CoutColors::reset ,  " ========");
     }
 
     return 0;
 }
+

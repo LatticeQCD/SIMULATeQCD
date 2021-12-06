@@ -40,18 +40,18 @@ private:
 
     bool read(std::istream &in, std::string &content) {
         if (in.fail()) {
-            rootLogger.error() << "Could not open file.";
+            rootLogger.error("Could not open file.");
             return false;
         }
         std::string line;
 
         getline(in, line);
         if (line != "BEGIN_HEADER") {
-//            rootLogger.error() << "BEGIN_HEADER not found!";
+//            rootLogger.error("BEGIN_HEADER not found!");
 //            return false;
         }
         /////
-        rootLogger.info() << line;
+        rootLogger.info(line);
 
         while (!in.fail()) {
             getline(in, line);
@@ -59,11 +59,11 @@ private:
                 break;
             content.append(line + '\n');
         /////
-            rootLogger.info() << line;
+            rootLogger.info(line);
                        
         }
         if (in.fail()) {
-            rootLogger.error() << "END_HEADER not found!";
+            rootLogger.error("END_HEADER not found!");
             return false;
         }
         header_size = in.tellg();
@@ -222,19 +222,19 @@ public:
         switch_endian = false;
         float_size = 4;
 /*
-        rootLogger.info() << "This is Rasmus Surrender now";
+        rootLogger.info("This is Rasmus Surrender now");
 //	rootLogger.push_verbosity(OFF);
-        rootLogger.info() << "This is Rasmus Surrender now";
+        rootLogger.info("This is Rasmus Surrender now");
         if (!header.read(in)){
-            rootLogger.error() << "header.read() failed!";
+            rootLogger.error("header.read() failed!");
             return false;
         }
-        rootLogger.pop_verbosity();
+        rootLogger.pop_verbosity(;
 
         bool error = false;
         for (int i = 0; i < 4; i++)
             if (header.dim[i]() != GInd::getLatData().globalLattice()[i]) {
-                rootLogger.error() << "Stored dimension " << i << " not equal to current lattice size.";
+                rootLogger.error("Stored dimension " ,  i ,  " not equal to current lattice size.");
                 error = true;
             }
 
@@ -243,7 +243,7 @@ public:
         else if (header.dattype() == "4D_SU3_GAUGE_3x3")
             rows = 3;
         else {
-            rootLogger.error() << "DATATYPE = " << header.dattype() << "not recognized.";
+            rootLogger.error("DATATYPE = " ,  header.dattype() ,  "not recognized.");
             error = true;
         }
 
@@ -261,7 +261,7 @@ public:
             float_size = 8;
             disken = ENDIAN_LITTLE;
         } else {
-            rootLogger.error() << "Unrecognized FLOATING_POINT " << header.floatingpoint();
+            rootLogger.error("Unrecognized FLOATING_POINT " ,  header.floatingpoint());
             error = true;
         }
         switch_endian = switch_endianness(disken);
@@ -269,8 +269,8 @@ public:
         std::stringstream s(header.checksum());
         s >> std::hex >> stored_checksum;
         if (s.fail()) {
-            rootLogger.error() << "Could not interpret checksum " <<
-                               header.checksum() << "as hexadecimal number.";
+            rootLogger.error("Could not interpret checksum " , 
+                               header.checksum() ,  "as hexadecimal number.");
             error = true;
         }
 */
@@ -291,7 +291,7 @@ public:
         else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double)))
             float_size = 8;
         else {
-            rootLogger.error() << "diskprec should be 0, 1 or 2.";
+            rootLogger.error("diskprec should be 0, 1 or 2.");
             return false;
         }
         su3_size = 2 * 3 * rows * float_size;
@@ -309,7 +309,7 @@ public:
         else if (rows == 3)
             header.dattype.set("4D_SU3_GAUGE_3x3");
         else {
-            rootLogger.error() << "NERSC format must store 2 or 3 rows.";
+            rootLogger.error("NERSC format must store 2 or 3 rows.");
             return false;
         }
 
@@ -319,7 +319,7 @@ public:
         else if (float_size == 8)
             fp = "IEEE64";
         else {
-            rootLogger.error() << "NERSC format must store single or double precision.";
+            rootLogger.error("NERSC format must store single or double precision.");
             return false;
         }
         if (en == ENDIAN_LITTLE)
@@ -351,7 +351,7 @@ public:
         std::stringstream s;
         s << std::hex << stored_checksum;
         header.checksum.set(s.str());
-        rootLogger.info() << "Calculated checksum: " << s.str();
+        rootLogger.info("Calculated checksum: " ,  s.str());
         return header.write(out);
     }
 
@@ -380,9 +380,9 @@ public:
         index = 0;
         GSU3<floatT> ret = this->template get<floatT>();
         floatT determinant = det(ret).cREAL;
-        rootLogger.info() << "determinant = " << determinant;
+        rootLogger.info("determinant = " ,  determinant);
         if( !(abs(abs(determinant)-1.0) < 1e-4)  ){
-            rootLogger.info() << "Changing Endian " ;
+            rootLogger.info("Changing Endian ");
             switch_endian = true;
         }
 	else{
@@ -430,9 +430,9 @@ public:
     bool checksums_match() {
         uint32_t checksum = comm.reduce(computed_checksum);
         if (stored_checksum != checksum) {
-            rootLogger.error() << "Checksum mismatch! "
-                               << std::hex << stored_checksum << " != "
-                               << std::hex << checksum;
+            rootLogger.error("Checksum mismatch! "
+                               ,  std::hex ,  stored_checksum ,  " != "
+                               ,  std::hex ,  checksum);
             return false;
         }
         return true;

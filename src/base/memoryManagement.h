@@ -88,9 +88,9 @@ private:
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
                 }
-                rootLogger.alloc() << "> Allocated mem at " << static_cast<void*>(_rawPointer)
-                                   << " (" << (onDevice ? "Device" : "Host  ") << "): "
-                                   << size/1000000000. << " GB";
+                rootLogger.alloc("> Allocated mem at " ,  static_cast<void*>(_rawPointer)
+                                   ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): "
+                                   ,  size/1000000000. ,  " GB");
             }
             _current_size = size;
         }
@@ -121,8 +121,8 @@ private:
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
                 }
-                rootLogger.alloc() << "> Free      mem at " << static_cast<void*>(_rawPointer) << " (" << (onDevice ? "Device" : "Host  ") << "): " <<
-                                   _current_size/1000000000. << " GB";
+                rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " , 
+                                   _current_size/1000000000. ,  " GB");
             }
             _rawPointer = nullptr;
             _current_size = 0;
@@ -191,8 +191,8 @@ private:
             bool resize = _current_size < sizeBytes;
             if (resize) {
                 if (_current_size > 0){
-                    rootLogger.alloc() << "Increasing mem (" << (onDevice ? "Device" : "Host") << ") from " <<
-                                       _current_size/1000000000. << " GB to " << sizeBytes/1000000000. << " GB:";
+                    rootLogger.alloc("Increasing mem (" ,  (onDevice ? "Device" : "Host") ,  ") from " , 
+                                       _current_size/1000000000. ,  " GB to " ,  sizeBytes/1000000000. ,  " GB:");
                 }
                 free();
                 alloc(sizeBytes);
@@ -205,8 +205,8 @@ private:
             bool resize = _current_size < sizeBytes;
             if (resize) {
                 if (_current_size > 0){
-                    rootLogger.alloc() << ">> Increase mem at " << static_cast<void*>(_rawPointer) << " (" << (onDevice ? "Device" : "Host") << ") from " <<
-                                       _current_size/1000000000. << " GB to " << sizeBytes/1000000000. << " GB.";
+                    rootLogger.alloc(">> Increase mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host") ,  ") from " , 
+                                       _current_size/1000000000. ,  " GB to " ,  sizeBytes/1000000000. ,  " GB.");
                 }
                 free();
                 alloc(sizeBytes);
@@ -261,28 +261,28 @@ private:
                     P2Ppaired = true;
                 }
             } else if (!onDevice) {
-                rootLogger.error() << "memoryManagement.h: initP2P: gpuIPC not possible on gMemory<HOST>";
+                rootLogger.error("memoryManagement.h: initP2P: gpuIPC not possible on gMemory<HOST>");
             }
         }
 
         void addP2PRank(int oppositeRank) {
             if (onDevice) _cIpc.addP2PRank(oppositeRank);
             else if (!onDevice) {
-                rootLogger.error() << "memoryManagement.h: addP2PRank: gpuIPC not possible on gMemory<HOST>";
+                rootLogger.error("memoryManagement.h: addP2PRank: gpuIPC not possible on gMemory<HOST>");
             }
         }
 
         void syncAndInitP2PRanks() {
             if (onDevice && _current_size != 0) _cIpc.syncAndInitAllP2PRanks();
             else if (!onDevice) {
-                rootLogger.error() << "memoryManagement.h: syncAndInitP2PRanks: gpuIPC not possible on gMemory<HOST>";
+                rootLogger.error("memoryManagement.h: syncAndInitP2PRanks: gpuIPC not possible on gMemory<HOST>");
             }
         }
 
         uint8_t *getOppositeP2PPointer(int oppositeRank) {
             if (onDevice && _current_size != 0) return _cIpc.getPointer(oppositeRank);
             else if (!onDevice) {
-                rootLogger.error() << "memoryManagement.h: getOppositeP2PPointer: gpuIPC not possible on gMemory<HOST>";
+                rootLogger.error("memoryManagement.h: getOppositeP2PPointer: gpuIPC not possible on gMemory<HOST>");
                 return nullptr;
             }
             return nullptr;
@@ -316,7 +316,7 @@ private:
         int position = name.find_last_of('_');
         std::string temp = name.substr(position + 1);
         if (!is_number(temp)) {
-            throw PGCError("Expected to extract integer from gMemoryPtr tag!");
+            throw std::runtime_error(stdLogger.fatal("Expected to extract integer from gMemoryPtr tag!"));
         }
         return std::stoi(temp);
     }
@@ -345,8 +345,7 @@ private:
             if ((int) temp.find(substr) >= 0) maxTag = std::max(extract_tag(temp), maxTag);
         }
         if (maxTag < 0) {
-            throw PGCError("Something strange happened while extracting max tag for gMemoryPtr."
-                           "  substr, maxTag = ", substr, "  ", maxTag);
+            throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr. substr, maxTag = ", substr, "  ", maxTag));
         }
         return maxTag;
     }
@@ -387,8 +386,7 @@ private:
             if ((int) temp.find(substr) >= 0) maxTag = std::max(extract_tag(temp), maxTag);
         }
         if (maxTag < 0) {
-            throw PGCError("Something strange happened while extracting max tag for gMemoryPtr."
-                           "  name, maxTag =", substr, "  ", maxTag);
+            throw std::runtime_error(stdLogger.fatal("Something strange happened while extracting max tag for gMemoryPtr. name, maxTag =", substr, "  ", maxTag));
         }
         return maxTag;
     }

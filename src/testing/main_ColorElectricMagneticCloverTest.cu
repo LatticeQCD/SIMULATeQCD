@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     const size_t Ntau  = GInd::getLatData().lt;
 
-    rootLogger.info() << "Read configuration" << lp.GaugefileName();
+    rootLogger.info("Read configuration" ,  lp.GaugefileName());
     gauge.readconf_nersc(lp.GaugefileName());
 
     /// Calculate and report ColorElectricCorr.
@@ -44,13 +44,14 @@ int main(int argc, char *argv[]) {
     timer.start();
     resultColElecCorSl_clover = CEC.getColorElectricCorr_clover();
     timer.stop();
-    rootLogger.info() << "Time for clover color-electric corrs: " << timer;
+    rootLogger.info("Time for clover color-electric corrs: " ,  timer);
     timer.reset();
     timer.start();
     resultColMagnCorSl_clover = CMC.getColorMagneticCorr_clover();
     timer.stop();
-    rootLogger.info() << "Time for clover color-magnetic corrs: " << timer;
+    rootLogger.info("Time for clover color-magnetic corrs: " ,  timer);
 
 
     return 0;
 }
+

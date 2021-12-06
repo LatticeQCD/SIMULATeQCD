@@ -60,7 +60,7 @@ template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t
 double Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realdotProduct(
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y) {
     if (NStacks > 1){
-        throw PGCError("realDotProduct only possible for non stacked spinors");
+        throw std::runtime_error(stdLogger.fatal("realDotProduct only possible for non stacked spinors"));
     }else{
 
         GCOMPLEX(double) result = 0;
@@ -124,7 +124,7 @@ GCOMPLEX(double) Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::d
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y)
 {
     if (NStacks > 1){
-        throw PGCError("dotProduct only possible for non stacked spinors");
+        throw std::runtime_error(stdLogger.fatal("dotProduct only possible for non stacked spinors"));
     }else{
 
         size_t elems = getNumberElements();

@@ -18,11 +18,11 @@ bool no_rng_test(CommunicationBase &commBase, RhmcParameters param){
     
     gauge.one();
 
-    rootLogger.info() << "constructed gauge field";
+    rootLogger.info("constructed gauge field");
 
     pure_gauge_hmc<double, All, HaloDepth> HMC(param, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed hmc";
+    rootLogger.info("constructed hmc");
 
     int acc =HMC.update_test();
 
@@ -51,11 +51,11 @@ bool reverse_test(CommunicationBase &commBase, RhmcParameters param){
     d_rand = h_rand;
     gauge.random(d_rand.state);
 
-    rootLogger.info() << "constructed gauge field";
+    rootLogger.info("constructed gauge field");
 
     pure_gauge_hmc<double, All, HaloDepth> HMC(param, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed hmc";
+    rootLogger.info("constructed hmc");
 
     int acc = 0;
     double acceptance = 0.0;
@@ -90,15 +90,15 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
     h_rand.make_rng_state(param.seed());
 
     d_rand = h_rand;
-    rootLogger.info() << "after the fill with rand";
+    rootLogger.info("after the fill with rand");
     gauge.random(d_rand.state);
     gauge.updateAll();
 
-    rootLogger.info() << "constructed gauge field";
+    rootLogger.info("constructed gauge field");
 
     pure_gauge_hmc<double, All, HaloDepth, COMP> HMC(param, gauge, d_rand.state);
 
-    rootLogger.info() << "constructed hmc";
+    rootLogger.info("constructed hmc");
 
     int acc = 0;
     double acceptance = 0.0;
@@ -110,16 +110,16 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
         acc += HMC.update();
         acceptance = double(acc)/double(i);
 
-        rootLogger.info() << "|Ploop|= " << abs(ploop.getPolyakovLoop());
+        rootLogger.info("|Ploop|= " ,  abs(ploop.getPolyakovLoop()));
     }
 
     auto finish = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> elapsed = finish - start;
 
-    rootLogger.info() << "Elapsed time: " << elapsed.count();
+    rootLogger.info("Elapsed time: " ,  elapsed.count());
 
-    rootLogger.info() << "Run has ended. acceptance = " << acceptance;
+    rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
     bool ret = false;
 
@@ -146,48 +146,49 @@ int main(int argc, char *argv[]) {
 
     initIndexer(HaloDepth,param, commBase);
 
-    rootLogger.info() << "STARTING PURE GAUGE HMC TESTS:\n";
-    rootLogger.info() << "This will take some minutes. Go grab a coffee/tea.";
+    rootLogger.info("STARTING PURE GAUGE HMC TESTS:\n");
+    rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
 
-    rootLogger.info() << "STARTING REVERSIBILITY TEST:";
+    rootLogger.info("STARTING REVERSIBILITY TEST:");
 
     bool revers = reverse_test<HaloDepth>(commBase, param);
 
     if (revers)
-        rootLogger.info() << "REVERSIBILITY TEST: passed";
+        rootLogger.info("REVERSIBILITY TEST: passed");
     else
-        rootLogger.error() << "REVERSIBILITY TEST: failed";
+        rootLogger.error("REVERSIBILITY TEST: failed");
 
-    rootLogger.info() << "STARTING NO_RNG TEST:";
-    rootLogger.info() << "There should be no dynamics!";
+    rootLogger.info("STARTING NO_RNG TEST:");
+    rootLogger.info("There should be no dynamics!");
 
     bool no_rng = no_rng_test<HaloDepth>(commBase, param);
 
     if (no_rng)
-        rootLogger.info() << "UPDATE WITHOUT RNG: passed";
+        rootLogger.info("UPDATE WITHOUT RNG: passed");
     else
-        rootLogger.error() << "UPDATE WITHOUT RNG: failed";
+        rootLogger.error("UPDATE WITHOUT RNG: failed");
 
-    rootLogger.info() << "STARTING FULL UPDATE TEST:";
-    rootLogger.info() << "Now, there should be some dynamics"; 
+    rootLogger.info("STARTING FULL UPDATE TEST:");
+    rootLogger.info("Now, there should be some dynamics"); 
 
     bool full = full_test<HaloDepth>(commBase, param);
 
     if (full)
-        rootLogger.info() << "FULL UPDATE TEST: passed";
+        rootLogger.info("FULL UPDATE TEST: passed");
     else
-        rootLogger.error() << "FULL UPDATE TEST: failed";
+        rootLogger.error("FULL UPDATE TEST: failed");
 
     int ret = 1;
 
     if (revers && no_rng && full)  {
         ret = 0;
-        rootLogger.info() << "ALL TESTS PASSED";
-        rootLogger.warn() << "This only indicates that force matches action.\n";
-        rootLogger.warn() << "Check Observables to find out if action is correct!";
+        rootLogger.info("ALL TESTS PASSED");
+        rootLogger.warn("This only indicates that force matches action.\n");
+        rootLogger.warn("Check Observables to find out if action is correct!");
     }
     else
-        rootLogger.error() << "AT LEAST ONE TEST FAILED";
+        rootLogger.error("AT LEAST ONE TEST FAILED");
 
     return ret;
 }
+

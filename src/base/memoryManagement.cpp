@@ -17,14 +17,14 @@ void MemoryManagement::gMemory<onDevice>::swap(gMemoryPtr<onDevice> &src){
         src->_rawPointer = _rawPointer;
         _rawPointer = tmp;
     } else {
-        rootLogger.error() << "memoryManagement.h: swap not allowed when sizes are different!";
+        rootLogger.error("memoryManagement.h: swap not allowed when sizes are different!");
     }
 }
 
 //! for documentation look at getHostMem
 gMemoryPtr<true> MemoryManagement::getDevMem(std::string name, size_t size){
     if (name.empty()){
-        throw PGCError("MemoryManagement: Name for dynamic memory cannot be empty!");
+        throw std::runtime_error(stdLogger.fatal("MemoryManagement: Name for dynamic memory cannot be empty!"));
     }
     name = MemoryManagement::getSmartName(name,devContainer);
     if (devContainer.find(name) == devContainer.end()){
@@ -47,7 +47,7 @@ void MemoryManagement::decreaseDevCounter(const std::string& name){
 //! method to get a pointer to new dynamic memory, or just
 gMemoryPtr<false> MemoryManagement::getHostMem(std::string name, size_t size){
     if (name.empty()){
-        throw PGCError("MemoryManagement: Name for dynamic memory cannot be empty!");
+        throw std::runtime_error(stdLogger.fatal("MemoryManagement: Name for dynamic memory cannot be empty!"));
     }
 
     //! convert the input string to a smart name
@@ -197,7 +197,7 @@ void MemoryManagement::memorySummary(bool show_counts_host, bool show_size_host,
                    << "\t" << devContainer;
         }
     }
-    rootLogger.info() << output.str();
+    rootLogger.info(output.str());
 }
 
 

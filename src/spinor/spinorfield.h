@@ -95,10 +95,10 @@ typedef floatT floatT_inner;
     template<bool onDevice2, size_t NStacks2>
     void copyFromStackToStack(const Spinorfield<floatT, onDevice2, LatticeLayout, HaloDepth, NStacks2> &spinorRHS, size_t stackSelf, size_t stackSrc){
         if (stackSelf >= NStacks){
-            throw PGCError("stackSelf larger than NStacks");
+            throw std::runtime_error(stdLogger.fatal("stackSelf larger than NStacks"));
         }
         if (stackSrc >= NStacks2){
-            throw PGCError("stackSrc larger than NStacks");
+            throw std::runtime_error(stdLogger.fatal("stackSrc larger than NStacks"));
         }
         _lattice.copyFromPartial(spinorRHS.getArray(), getNumberLatticePointsFull(), getNumberLatticePointsFull() * stackSelf,
                 getNumberLatticePointsFull() * stackSrc);
@@ -140,7 +140,7 @@ typedef floatT floatT_inner;
         //! if we're on the correct GPU, set one entry to one
         if ( GInd::getLatData().isLocal(pointsource) ){
             sitexyzt pointsource_local(GInd::globalCoordToLocalCoord(pointsource));
-            stdLogger.info() << "Pointsource at " << pointsource << ": " << gvect3_unity<double>(i_color)*(double)mass;
+            stdLogger.info("Pointsource at " ,  pointsource ,  ": " ,  gvect3_unity<double>(i_color)*(double)mass);
             //! TODO add support for multiple RHS (stacks)
             sitexyzt pointsource_full = GIndexer<LatticeLayout,HaloDepth>::coordToFullCoord(pointsource_local);
             gSite tmp = GIndexer<LatticeLayout,HaloDepth>::getSiteFull(pointsource_full);
@@ -311,7 +311,7 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 template<size_t stack, unsigned BlockSize, typename Functor>
 void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverEvenBulkAtStack(Functor op){
     if(LatticeLayout == Odd){
-        throw PGCError("You're trying to iterate over the even part of an odd spinorfield!");
+        throw std::runtime_error(stdLogger.fatal("You're trying to iterate over the even part of an odd spinorfield!"));
     }
     CalcGSiteAtStack<stack, LatticeLayout, HaloDepth> calcGSite;
     WriteAtReadStack writeAtRead;
@@ -323,7 +323,7 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 template<size_t stack, unsigned BlockSize, typename Functor>
 void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverOddBulkAtStack(Functor op){
     if(LatticeLayout == Even){
-        throw PGCError("You're trying to iterate over the odd part of an even spinorfield!");
+        throw std::runtime_error(stdLogger.fatal("You're trying to iterate over the odd part of an even spinorfield!"));
     }
 
     //TODO write and read index may be wrong here! the read index we use here is actually the write index, and the true read index depends on whether source spinor latticelayout
@@ -458,3 +458,4 @@ struct convert_spinor_precision {
 
 
 #endif //SPINORFIELD_H
+
