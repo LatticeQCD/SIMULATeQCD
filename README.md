@@ -68,7 +68,7 @@ gradientFlow         # Example Parameter-file: parameter/applications/gradientFl
 # Gauge fixing
 gaugeFixing          # Example Parameter-file: parameter/applications/gaugeFixing.param
 ```
-In the [documentation](https://latticeqcd.github.io/SIMULATeQCD) you will find more information on how to execute these programs.
+In the [documentation](https://latticeqcd.github.io/SIMULATeQCD/03_applications/applications.html) you will find more information on how to execute these programs.
 
 ## Example: Plaquette action computation
 
