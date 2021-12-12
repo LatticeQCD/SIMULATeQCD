@@ -80,11 +80,11 @@ Gaugefield_Mem_GB_P2P = n_sites_P2P * gaugefield_factor / unit_factor
 Spinor_Mem_GB_P2P = n_sites_P2P * spinorfield_factor / unit_factor
 
 print("")
-print("No P2P/CUDA-aware-MPI: The GPU needs memory for the full sub-lattice (bulk+halo) \n"
+print("No P2P/GPU-aware-MPI: The GPU needs memory for the full sub-lattice (bulk+halo) \n"
       "and ONE extra *continuous* buffer for halos \n"
       "that it needs for communication with the host.")
 print("")
-print("P2P/CUDA-aware-MPI: The GPU needs memory for the full sub-lattice (bulk+halo) \n"
+print("P2P/GPU-aware-MPI: The GPU needs memory for the full sub-lattice (bulk+halo) \n"
       "and TWO extra *continuous* buffers for halos \n"
       "that it needs for communication with the other GPUs.\n")
 print("---------------------Gaugefield----------------------------------------------------------------------")

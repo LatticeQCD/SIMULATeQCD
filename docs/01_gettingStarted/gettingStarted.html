@@ -110,8 +110,8 @@ sudo pacman -S git-lfs
 <p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
--DUSE_CUDA_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
--DUSE_CUDA_P2P<span class="o">=</span>ON <span class="se">\</span>
+-DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
+-DUSE_GPU_P2P<span class="o">=</span>ON <span class="se">\</span>
 </pre></div>
 </div>
 <p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">simulateqcd</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>

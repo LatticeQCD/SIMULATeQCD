@@ -20,7 +20,6 @@
 #include "../wrapper/gpu_wrapper.h"
 #include "floatComparison.h"
 #include <complex>
-#include <cuda_fp16.h>
 #include <iostream>
 #include <type_traits>
 

@@ -1,4 +1,4 @@
 cmake ../parallelgpucode/ \
 -DARCHITECTURE="70" \
--DUSE_CUDA_AWARE_MPI=ON \
--DUSE_CUDA_P2P=ON \
+-DUSE_GPU_AWARE_MPI=ON \
+-DUSE_GPU_P2P=ON \

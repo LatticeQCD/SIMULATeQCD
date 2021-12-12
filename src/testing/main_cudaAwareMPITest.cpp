@@ -188,7 +188,7 @@ void run0(CommunicationBase &commBase) {
 
         timer.reset();
         timer.start();
-#ifdef USE_CUDA_AWARE_MPI
+#ifdef USE_GPU_AWARE_MPI
         rootLogger.info("Without memcpies!");
         MPI_Isend(sendBufferDevice, size, MPI_CHAR, !commBase.MyRank(), tag, commBase.getCart_comm(), &requestSend[0]);
         MPI_Irecv(recvBufferDevice, size, MPI_CHAR, !commBase.MyRank(), tag, commBase.getCart_comm(), &requestSend[1]);
@@ -217,7 +217,7 @@ void run0(CommunicationBase &commBase) {
 
     timer.reset();
     timer.start();
-#ifdef USE_CUDA_AWARE_MPI
+#ifdef USE_GPU_AWARE_MPI
     rootLogger.info("Without memcpies!");
     MPI_Isend(sendBufferDevice, size, MPI_CHAR, !commBase.MyRank(), tag, commBase.getCart_comm(), &requestSend[0]);
     MPI_Irecv(recvBufferDevice, size, MPI_CHAR, !commBase.MyRank(), tag, commBase.getCart_comm(), &requestSend[1]);
@@ -265,7 +265,7 @@ int main(int argc, char *argv[]) {
 
     run0(commBase);
 
-#ifdef USE_CUDA_AWARE_MPI
+#ifdef USE_GPU_AWARE_MPI
     run1(commBase);
     run1(commBase);
     run1(commBase);

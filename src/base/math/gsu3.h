@@ -16,7 +16,6 @@
 #include "grnd.h"
 #include <float.h>
 #include <type_traits>
-#include <cuda_fp16.h>
 
 
 

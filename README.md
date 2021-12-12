@@ -45,8 +45,8 @@ To setup the compilation, create a folder outside of the code directory (e.g. `.
 ```shell
 cmake ../simulateqcd/ \
 -DARCHITECTURE="70" \
--DUSE_CUDA_AWARE_MPI=ON \
--DUSE_CUDA_P2P=ON \
+-DUSE_GPU_AWARE_MPI=ON \
+-DUSE_GPU_P2P=ON \
 ``` 
 Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.

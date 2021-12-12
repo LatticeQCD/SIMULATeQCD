@@ -2,8 +2,8 @@
 // Created by Lukas Mazur on 28.04.19.
 //
 
-#ifndef CUDAIPC_H
-#define CUDAIPC_H
+#ifndef GPUIPC_H
+#define GPUIPC_H
 
 #include <mpi.h>
 #include "../../define.h"
@@ -438,4 +438,4 @@ public:
 
 };
 
-#endif //CUDAIPC_H
+#endif //GPUIPC_H

@@ -465,7 +465,7 @@ inline void NeighborInfo::checkP2P() {
     }
 
     stdLogger.info("> " ,  myInfo.nodeName ,  " GPU_" ,  std::uppercase ,  std::hex ,  myProp.pciBusID ,  "(" ,  myProp.name ,  "): "
-#if USE_CUDA_P2P
+#if USE_GPU_P2P
      ,  "P2P " ,  (IsGPUCapableP2P() ? "YES" : "NO") ,  "; "
 #else
      , "P2P NO ; "

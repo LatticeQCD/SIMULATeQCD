@@ -22,9 +22,6 @@
 
 #include "../../base/math/correlators.h"
 
-#include <cuda_runtime.h>
-#include <cuda.h>
-
 #include <iostream>
 using namespace std;
 
