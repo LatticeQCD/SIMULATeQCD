@@ -82,8 +82,6 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R14, CompressionTy
 };
 
 template<class floatT, size_t HaloDepth, CompressionType compIn=R14, CompressionType compForce=R18> __host__ __device__ GSU3<floatT> lepagelinkContribution(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, floatT c_lp) {
-    typedef GIndexer<All,HaloDepth> GInd;
-
     GSU3<floatT> derivative_lp = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu+nu_h)%4;
@@ -93,8 +91,6 @@ template<class floatT, size_t HaloDepth, CompressionType compIn=R14, Compression
 };
 
 template<class floatT, size_t HaloDepth, CompressionType comp> __host__ __device__ GSU3<floatT> sevenLinkContribution(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7, int Term, int SubTerm) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    
     GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;

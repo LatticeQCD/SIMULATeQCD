@@ -26,6 +26,7 @@
 #define gpuDeviceCanAccessPeer           cudaDeviceCanAccessPeer
 #define gpuDeviceSynchronize             cudaDeviceSynchronize
 #define gpuEventCreate                   cudaEventCreate
+#define gpuEventCreateWithFlags          cudaEventCreateWithFlags
 #define gpuEventDestroy                  cudaEventDestroy
 #define gpuEventDisableTiming            cudaEventDisableTiming
 #define gpuEventElapsedTime              cudaEventElapsedTime
@@ -82,6 +83,7 @@
 
 #include <hip/hip_runtime.h>
 #include <hip/hip_runtime_api.h>
+#include <hip/hip_fp16.h>
 #include <utility>
 
 
@@ -139,24 +141,23 @@
 #define gpuStreamWaitEvent               hipStreamWaitEvent
 #define gpuSuccess                       hipSuccess
 
-inline gpuError_t hipDummyFunction1(gpuIpcEventHandle_t* handle, hipEvent_t event) {
-    hipError_t temp = hipErrorUnknown;
+[[nodiscard]] inline gpuError_t hipDummyFunction1(__attribute__((unused)) gpuIpcEventHandle_t* handle, __attribute__((unused)) hipEvent_t event) {
+    __attribute__((unused)) hipError_t temp = hipErrorUnknown;
     return temp;
 }
 
-inline gpuError_t hipDummyFunction2(gpuEvent_t* event, gpuIpcEventHandle_t handle) {
-    hipError_t temp = hipErrorUnknown;
+[[nodiscard]] inline gpuError_t hipDummyFunction2(__attribute__((unused)) gpuEvent_t* event, __attribute__((unused)) gpuIpcEventHandle_t handle) {
+    __attribute__((unused)) hipError_t temp = hipErrorUnknown;
     return temp;
 }
 
-#ifdef __HIP_ARCH__
-#define __GPU_ARCH__                     __HIP_ARCH__
+#ifdef __HIP_DEVICE_COMPILE__
+#define __GPU_ARCH__                     __HIP_DEVICE_COMPILE__
 #endif
 
 #ifdef __HIPCC__
 #define __GPUCC__                        __HIPCC__
 #endif
-
 
 #endif
 

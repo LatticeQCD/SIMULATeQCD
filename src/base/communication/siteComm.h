@@ -146,7 +146,12 @@ public:
             }
         }
         if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.syncAndInitP2PRanks();
-       	gpuDeviceSynchronize();
+       	
+        gpuError_t gpuErr = gpuDeviceSynchronize();
+        if (gpuErr != gpuSuccess) {
+            GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
+        }
+    
         commB.globalBarrier();
     }
 
@@ -355,7 +360,11 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         GCOMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
 
-    gpuDeviceSynchronize();
+    gpuError_t gpuErr = gpuDeviceSynchronize();
+    if (gpuErr != gpuSuccess) {
+        GpuError("siteComm.h: _extractHalosSeg gpuDeviceSynchronize failed:", gpuErr);
+    }
+
     _commBase.globalBarrier();
     extractLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(acc, _commBase, HaloInfo,
                                                                                               HaloBuffer, param);
@@ -369,10 +378,13 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
     injectLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(_commBase, HaloInfo,
-                                                                                             acc,
-                                                                                             HaloBuffer,
-                                                                                             param);
-    gpuDeviceSynchronize();
+                                                                                         acc,
+                                                                                         HaloBuffer,
+                                                                                         param);
+    gpuError_t gpuErr = gpuDeviceSynchronize();
+    if (gpuErr != gpuSuccess) {
+        GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
+    }
     _commBase.globalBarrier();
 
 }

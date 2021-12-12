@@ -56,7 +56,6 @@ bool CheckIndices(Gaugefield<floatT, onDevice,HaloDepth> &gauge, LatticeDimensio
     if(!onDevice) gaugeAcc = gauge.getAccessor();
 
     typedef GIndexer<All, HaloDepth> GInd;
-    typedef HaloIndexer<All, HaloDepth> HInd;
     bool passed = true;
 
     for (int x = -Halo[0]; x < (int) GInd::getLatData().lx + Halo[0]; x++)
@@ -72,9 +71,9 @@ bool CheckIndices(Gaugefield<floatT, onDevice,HaloDepth> &gauge, LatticeDimensio
                         GSU3<floatT> tmpB = gaugeAcc.getLink(GInd::getSiteMu(site, mu));
 
                             if (!compareGSU3(tmpA, tmpB)) {
-                                sitexyzt fullcoord = GInd::coordToFullCoord(sitexyzt(localCoord[0],localCoord[1],localCoord[2],localCoord[3]));
-                                HaloSegment hseg = HInd::getHSeg(fullcoord);
-                                int lr = HInd::getlr(fullcoord);
+                               // sitexyzt fullcoord = GInd::coordToFullCoord(sitexyzt(localCoord[0],localCoord[1],localCoord[2],localCoord[3]));
+                                //HaloSegment hseg = HInd::getHSeg(fullcoord);
+                                //int lr = HInd::getlr(fullcoord);
                                 passed = false;
                             }
                     }

@@ -17,7 +17,6 @@
 
 template<class floatT,size_t HaloDepth>
 __device__ GSU3<floatT> inline gaugeActionDerivPlaq(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
-    typedef GIndexer<All,HaloDepth> GInd;
     GSU3<floatT> result = gsu3_zero<floatT>();
     GSU3<floatT> tmp = gsu3_zero<floatT>();
 

@@ -125,7 +125,10 @@ public:
         fail.coord = LatticeDimensions(-99, -99, -99, -99);
         fail.onNode = false;
 
-        gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
+        gpuError_t gpuErr = gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
+        if (gpuErr != gpuSuccess) {
+            GpuError("neighborInfo.h: gpuGetDeviceProperties failed:", gpuErr);
+        }
 
         rootLogger.info("> Checking support for P2P (Peer-to-Peer) and UVA (Unified Virtual Addressing):");
         MPI_Barrier(cart_comm);
@@ -450,7 +453,10 @@ inline void NeighborInfo::checkP2P() {
                 ProcessInfo &nInfo = getNeighborInfo(hseg, dir, leftRight);
                 if (nInfo.onNode) {
                     int can_access_peer;
-                    gpuDeviceCanAccessPeer(&can_access_peer, myInfo.deviceRank, nInfo.deviceRank);
+                    gpuError_t gpuErr = gpuDeviceCanAccessPeer(&can_access_peer, myInfo.deviceRank, nInfo.deviceRank);
+                    if (gpuErr != gpuSuccess) {
+                        GpuError("neighborInfo.h: gpuDeviceCanAccessPeer failed:", gpuErr);
+                    }
                     nInfo.p2p = (bool) can_access_peer;
 #ifdef PEERACCESSINFO
                     if (!nInfo.sameRank)

@@ -5,140 +5,170 @@
 # alphabetically. Please try to follow these guidelines when adding your target.
 #
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
-project(SIMULATeQCD LANGUAGES CXX)
+set(USE_CUDA ON CACHE BOOL "Set to ON to build with CUDA (default = ON)")
+set(USE_HIP_AMD OFF CACHE BOOL "Set to ON to build with HIP (default = OFF)")
+if (USE_HIP_AMD)
+    add_definitions(-DUSE_HIP_AMD)
+    add_definitions(-DUSE_HIP)
+    message(STATUS "Using HIP backend (for AMD GPUs)")
+elseif (USE_CUDA)
+    add_definitions(-DUSE_CUDA)
+    message(STATUS "Using CUDA backend")
+endif()
+
+if (USE_CUDA)
+    project(SIMULATeQCD LANGUAGES CXX CUDA)
+elseif (USE_HIP_AMD)
+    project(SIMULATeQCD LANGUAGES CXX HIP)
+endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
 # Find and include+link MPI and CUDA
 find_package(MPI 3.1 REQUIRED)
 
-set(CMAKE_MODULE_PATH "$ENV{HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+if (USE_CUDA)
+    find_package(CUDA 11.0 REQUIRED)
+    include_directories(SYSTEM ${MPI_INCLUDE_PATH} ${CUDA_INCLUDE_DIRS})
+    link_libraries(${MPI_LIBRARIES} ${CUDA_LIBRARIES})
+elseif (USE_HIP_AMD)
+    set(CMAKE_MODULE_PATH "$ENV{HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
 
-find_package(HIP REQUIRED)
-find_package(rocprim REQUIRED CONFIG PATHS "/opt/rocm/rocprim")
-find_package(hipcub REQUIRED CONFIG PATHS "/opt/rocm/hipcub")
+    find_package(HIP REQUIRED)
+    find_package(rocprim REQUIRED CONFIG PATHS "/opt/rocm/rocprim")
+    find_package(hipcub REQUIRED CONFIG PATHS "/opt/rocm/hipcub")
 
-include_directories(SYSTEM ${MPI_INCLUDE_PATH} ${CUDA_INCLUDE_DIRS} $ENV{HIP_PATH}/include)
-link_libraries(${MPI_LIBRARIES} ${HIP_LIBRARIES})
+    include_directories(SYSTEM ${MPI_INCLUDE_PATH} $ENV{HIP_PATH}/include)
+    link_libraries(${MPI_LIBRARIES} ${HIP_LIBRARIES}})
+endif()
+
 
 # Read architecture, CUDA-aware MPI, CUDA P2P settings
-set(ARCHITECTURE "" CACHE STRING "Set the architecture. For example 70 will compile for Volta support")
-if(NOT ARCHITECTURE)
-	message(FATAL_ERROR "No GPU architecture set!")
+if (USE_CUDA)
+    set(ARCHITECTURE "" CACHE STRING "Set the architecture. For example 70 will compile for Volta support")
+    if(NOT ARCHITECTURE)
+        message(FATAL_ERROR "No GPU architecture set!")
+    endif()
+    message(STATUS "CUDA Architecture: ${ARCHITECTURE}")
+    set(CMAKE_CUDA_ARCHITECTURES "${ARCHITECTURE}")
 endif()
-message(STATUS "CUDA Architecture: ${ARCHITECTURE}")
-set(CMAKE_CUDA_ARCHITECTURES "${ARCHITECTURE}")
 
-set(USE_GPU_AWARE_MPI OFF CACHE BOOL "Set to ON to build cuda-aware MPI code (default = OFF)")
+set(USE_GPU_AWARE_MPI OFF CACHE BOOL "Set to ON to build gpu-aware MPI code (default = OFF)")
 if (USE_GPU_AWARE_MPI)
-	add_definitions(-DUSE_GPU_AWARE_MPI)
+    add_definitions(-DUSE_GPU_AWARE_MPI)
 endif()
-set(USE_GPU_P2P ON CACHE BOOL "Set to ON to build with CUDA Direct P2P (default = ON)")
+set(USE_GPU_P2P ON CACHE BOOL "Set to ON to build with GPU Direct P2P (default = ON)")
 if (USE_GPU_P2P)
-	add_definitions(-DUSE_GPU_P2P)
+    add_definitions(-DUSE_GPU_P2P)
 endif()
 
 option(USE_MPFR "Set to ON to include MPFR - needed for rat_approx (default - OFF)" OFF)
 
 # Additional compiler flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc --hip-link")
-set(CMAKE_CUDA_FLAGS
-    "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
+if (USE_CUDA)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
+    set(CMAKE_CUDA_FLAGS
+        "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
 
-set(HIP_HIPCC_FLAGS "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --amdgpu-target=gfx906,gfx908 -fgpu-rdc")
-set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
+elseif (USE_HIP_AMD)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc --hip-link")
+
+    add_definitions(-D__HIP_PLATFORM_AMD__)
+    set(HIP_HIPCC_FLAGS "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --amdgpu-target=gfx906,gfx908 -fgpu-rdc")
+    set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
+endif()
 
 # --------------------------------------------------------------------------------------------------VARIABLE DEFINITIONS
 
 
 set(SOURCE_FILES_BASE
-		src/base/gutils.cpp
-		src/base/memoryManagement.cpp
-		src/base/indexer/initGPUIndexer.cpp
-		src/base/indexer/initCPUIndexer.cpp
-		src/base/communication/communicationBase_mpi.cpp
-        src/base/IO/parameterManagement.cpp
-        src/base/IO/fileWriter.cpp
-        src/base/math/grnd.cpp
-		src/gauge/gaugefield_device.cpp
-		src/gauge/gaugefield.cpp
-		src/gauge/GaugeAction.cpp
-        src/base/LatticeContainer.cpp)
+    src/base/gutils.cpp
+    src/base/memoryManagement.cpp
+    src/base/indexer/initGPUIndexer.cpp
+    src/base/indexer/initCPUIndexer.cpp
+    src/base/communication/communicationBase_mpi.cpp
+    src/base/IO/parameterManagement.cpp
+    src/base/IO/fileWriter.cpp
+    src/base/math/grnd.cpp
+    src/gauge/gaugefield_device.cpp
+    src/gauge/gaugefield.cpp
+    src/gauge/GaugeAction.cpp
+    src/base/LatticeContainer.cpp)
 set(SOURCE_FILES_COLORELECTRICCORRTEST
-		src/modules/observables/ColorElectricCorr.cpp
-		src/modules/observables/PolyakovLoop.cpp)
+    src/modules/observables/ColorElectricCorr.cpp
+    src/modules/observables/PolyakovLoop.cpp)
 set(SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST
-        src/modules/observables/ColorElectricCorr.cpp
-        src/modules/observables/ColorMagneticCorr.cpp
-        src/modules/observables/PolyakovLoop.cpp)
+    src/modules/observables/ColorElectricCorr.cpp
+    src/modules/observables/ColorMagneticCorr.cpp
+    src/modules/observables/PolyakovLoop.cpp)
 set(SOURCE_FILES_GENERATEQUENCHED
-        src/modules/gauge_updates/PureGaugeUpdates.cpp
-		src/modules/observables/PolyakovLoop.cpp)
+    src/modules/gauge_updates/PureGaugeUpdates.cpp
+    src/modules/observables/PolyakovLoop.cpp)
 set(SOURCE_FILES_GFIX
-		src/modules/gaugeFixing/gfix.cpp
-		src/modules/observables/PolyakovLoop.cpp
-        src/modules/gaugeFixing/PolyakovLoopCorrelator.cpp
-		src/modules/observables/WilsonLineCorrelator.cpp)
+    src/modules/gaugeFixing/gfix.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/modules/gaugeFixing/PolyakovLoopCorrelator.cpp
+    src/modules/observables/WilsonLineCorrelator.cpp)
 set(SOURCE_FILES_GFLOW
-		src/modules/observables/Topology.cpp
-		src/modules/observables/Blocking.cpp
-		src/modules/observables/ColorElectricCorr.cpp
-		src/modules/observables/ColorMagneticCorr.cpp)
+    src/modules/observables/Topology.cpp
+    src/modules/observables/Blocking.cpp
+    src/modules/observables/ColorElectricCorr.cpp
+    src/modules/observables/ColorMagneticCorr.cpp)
 set(SOURCE_FILES_GETMAGICTRACEANOMALY
-		src/modules/gauge_updates/SubLatMeas_device.cpp)
+    src/modules/gauge_updates/SubLatMeas_device.cpp)
 set(SOURCE_FILES_MEASUREHADRONS
-		src/modules/measureHadrons/measureHadrons.cpp
-		src/modules/HISQ/hisqSmearing.cpp
-		src/modules/dslash/dslash.cpp
-		src/modules/inverter/inverter.cpp
-		src/spinor/spinorfield.cpp)
+    src/modules/measureHadrons/measureHadrons.cpp
+    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/dslash/dslash.cpp
+    src/modules/inverter/inverter.cpp
+    src/spinor/spinorfield.cpp)
 set(SOURCE_FILES_SUBLATTICEUPDATES
-		src/modules/gauge_updates/luscherweisz.cpp
-		src/modules/gauge_updates/SubLatMeas.cpp
-		src/modules/gauge_updates/SubLatMeas_device.cpp)
+    src/modules/gauge_updates/luscherweisz.cpp
+    src/modules/gauge_updates/SubLatMeas.cpp
+    src/modules/gauge_updates/SubLatMeas_device.cpp)
 set(SOURCE_FILES_HMC
-		src/modules/rhmc/pure_gauge_hmc.cpp
-		src/modules/rhmc/integrator.cpp
-        src/modules/dslash/dslash.cpp
-		src/modules/inverter/inverter.cpp
-        src/modules/HISQ/hisqSmearing.cpp
-        src/modules/HISQ/hisqForce.cpp
-		src/spinor/spinorfield.cpp)
+    src/modules/rhmc/pure_gauge_hmc.cpp
+    src/modules/rhmc/integrator.cpp
+    src/modules/dslash/dslash.cpp
+    src/modules/inverter/inverter.cpp
+    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/HISQ/hisqForce.cpp
+    src/spinor/spinorfield.cpp)
 set(SOURCE_FILES_RHMC
-		src/modules/rhmc/rhmc.cpp
-		src/modules/rhmc/integrator.cpp
-        src/modules/dslash/dslash.cpp
-		src/modules/inverter/inverter.cpp
-        src/modules/HISQ/hisqSmearing.cpp
-        src/modules/HISQ/hisqForce.cpp
-		src/modules/observables/PolyakovLoop.cpp
-		src/spinor/spinorfield.cpp)
+    src/modules/rhmc/rhmc.cpp
+    src/modules/rhmc/integrator.cpp
+    src/modules/dslash/dslash.cpp
+    src/modules/inverter/inverter.cpp
+    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/HISQ/hisqForce.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/spinor/spinorfield.cpp)
 set(ALL_NSTACK
-		NSTACKS_1=1
-		NSTACKS_2=1
-		NSTACKS_4=1
-		NSTACKS_8=1
-		NSTACKS_12=1
-		NSTACKS_14=1)
+    NSTACKS_1=1
+    NSTACKS_2=1
+    NSTACKS_4=1
+    NSTACKS_8=1
+    NSTACKS_12=1
+    NSTACKS_14=1)
 set(REALLY_ALL_NSTACK
-		${ALL_NSTACK}
-		NSTACKS_3=1
-		NSTACKS_5=1
-		NSTACKS_6=1
-		NSTACKS_7=1
-		NSTACKS_9=1
-		NSTACKS_10=1
-		NSTACKS_11=1)
+    ${ALL_NSTACK}
+    NSTACKS_3=1
+    NSTACKS_5=1
+    NSTACKS_6=1
+    NSTACKS_7=1
+    NSTACKS_9=1
+    NSTACKS_10=1
+    NSTACKS_11=1)
 set(ALL_LAYOUTS
-		LAYOUT_ALL=1
-		LAYOUT_ODD=1
-		LAYOUT_EVEN=1)
+    LAYOUT_ALL=1
+    LAYOUT_ODD=1
+    LAYOUT_EVEN=1)
 set(ALL_HALODEPTHS
-        HALODEPTH_0=1
-        HALODEPTH_1=1
-        HALODEPTH_2=1
-        HALODEPTH_3=1
-        HALODEPTH_4=1)
+    HALODEPTH_0=1
+    HALODEPTH_1=1
+    HALODEPTH_2=1
+    HALODEPTH_3=1
+    HALODEPTH_4=1)
 
 
 #-------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: CODEBASE
@@ -146,91 +176,112 @@ set(ALL_HALODEPTHS
 
 add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
 target_compile_definitions(CodeBase PRIVATE
-		ARCHITECTURE=${ARCHITECTURE}
-		SINGLEPREC=1 DOUBLEPREC=1
-		COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
-	    ${ALL_HALODEPTHS}
-	    HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
-		${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
-		)
-set_target_properties(CodeBase
-		PROPERTIES
-		COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON)
+    ARCHITECTURE=${ARCHITECTURE}
+    SINGLEPREC=1 DOUBLEPREC=1
+    COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
+    ${ALL_HALODEPTHS}
+    HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
+    ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
+    )
+if (USE_CUDA)
+    set_target_properties(CodeBase
+        PROPERTIES
+        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
 
+elseif (USE_HIP_AMD)
+    set_target_properties(CodeBase
+        PROPERTIES
+        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON HIP_ARCHITECTURES "gfx801 gfx900")
+
+endif()
 
 #---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
 
 FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)
-    set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CUDA)
+    if (USE_CUDA)
+        set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CUDA)
+    elseif (USE_HIP_AMD)
+        set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE HIP)
+        #  set_source_files_properties(${TARGET} ${ARGN} PROPERTIES COMPILE_DEFINITIONS COMPILE_WITH_HIP="1")
+        #  set_source_files_properties(${TARGET} ${ARGN} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
+        # set_source_files_properties(${TARGET} ${ARGN} PROPERTIES COMPILE_FLAGS "-x hip")
+    endif()
 ENDFUNCTION()
 
 FUNCTION(add_SIMULATeQCD_executable TARGET)
-	add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-	add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
-	target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
-	set_target_properties(${TARGET} _${TARGET}
-			PROPERTIES
-			COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON)
+    add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+    add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+    if (USE_CUDA)
+        target_link_libraries("_${TARGET}" CodeBase)
+        set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+    elseif (USE_HIP_AMD)
+        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON HIP_ARCHITECTURES "gfx801 gfx900")
+    endif()
 ENDFUNCTION()
 FUNCTION(set_SIMULATeQCD_property TARGET)
-	set_target_properties(${TARGET} _${TARGET} ${ARGN})
+    set_target_properties(${TARGET} _${TARGET} ${ARGN})
 ENDFUNCTION()
 FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
-	target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
-	target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
+    target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
+    target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
 ENDFUNCTION()
 
 FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
-	add_dependencies(${TARGET1} _${TARGET2})
+    add_dependencies(${TARGET1} _${TARGET2})
 ENDFUNCTION()
 
 
 #-------------------------------------------------------------------------------------------------------SET GPU BACKEND
 
 set_SIMULATeQCD_gpu_backend(
-		src/base/indexer/initGPUIndexer.cpp
-        src/base/math/grnd.cpp
-		src/gauge/gaugefield_device.cpp
-		src/gauge/GaugeAction.cpp
-        src/base/LatticeContainer.cpp
-		src/modules/observables/ColorElectricCorr.cpp
-		src/modules/observables/PolyakovLoop.cpp
-        src/modules/observables/ColorElectricCorr.cpp
-        src/modules/observables/ColorMagneticCorr.cpp
-        src/modules/observables/PolyakovLoop.cpp
-        src/modules/gauge_updates/PureGaugeUpdates.cpp
-		src/modules/observables/PolyakovLoop.cpp
-		src/modules/gaugeFixing/gfix.cpp
-		src/modules/observables/PolyakovLoop.cpp
-        src/modules/gaugeFixing/PolyakovLoopCorrelator.cpp
-		src/modules/observables/WilsonLineCorrelator.cpp
-		src/modules/observables/Topology.cpp
-		src/modules/observables/Blocking.cpp
-		src/modules/observables/ColorElectricCorr.cpp
-		src/modules/observables/ColorMagneticCorr.cpp
-		src/modules/gauge_updates/SubLatMeas_device.cpp
-		src/modules/measureHadrons/measureHadrons.cpp
-		src/modules/HISQ/hisqSmearing.cpp
-		src/modules/dslash/dslash.cpp
-		src/modules/inverter/inverter.cpp
-		src/spinor/spinorfield.cpp
-		src/modules/gauge_updates/luscherweisz.cpp
-		src/modules/gauge_updates/SubLatMeas_device.cpp
-		src/modules/rhmc/pure_gauge_hmc.cpp
-		src/modules/rhmc/integrator.cpp
-        src/modules/dslash/dslash.cpp
-		src/modules/inverter/inverter.cpp
-        src/modules/HISQ/hisqSmearing.cpp
-        src/modules/HISQ/hisqForce.cpp
-		src/spinor/spinorfield.cpp
-		src/modules/rhmc/rhmc.cpp
-		src/modules/rhmc/integrator.cpp
-        src/modules/dslash/dslash.cpp
-		src/modules/inverter/inverter.cpp
-        src/modules/HISQ/hisqSmearing.cpp
-        src/modules/HISQ/hisqForce.cpp
-		src/modules/observables/PolyakovLoop.cpp
-		src/spinor/spinorfield.cpp)
+    src/base/indexer/initGPUIndexer.cpp
+    src/base/math/grnd.cpp
+    src/gauge/gaugefield_device.cpp
+    src/gauge/GaugeAction.cpp
+    src/base/LatticeContainer.cpp
+    src/modules/observables/ColorElectricCorr.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/modules/observables/ColorElectricCorr.cpp
+    src/modules/observables/ColorMagneticCorr.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/modules/gauge_updates/PureGaugeUpdates.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/modules/gaugeFixing/gfix.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/modules/gaugeFixing/PolyakovLoopCorrelator.cpp
+    src/modules/observables/WilsonLineCorrelator.cpp
+    src/modules/observables/Topology.cpp
+    src/modules/observables/Blocking.cpp
+    src/modules/observables/ColorElectricCorr.cpp
+    src/modules/observables/ColorMagneticCorr.cpp
+    src/modules/gauge_updates/SubLatMeas_device.cpp
+    src/modules/measureHadrons/measureHadrons.cpp
+    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/dslash/dslash.cpp
+    src/modules/inverter/inverter.cpp
+    src/spinor/spinorfield.cpp
+    src/modules/gauge_updates/luscherweisz.cpp
+    src/modules/gauge_updates/SubLatMeas_device.cpp
+    src/modules/rhmc/pure_gauge_hmc.cpp
+    src/modules/rhmc/integrator.cpp
+    src/modules/dslash/dslash.cpp
+    src/modules/inverter/inverter.cpp
+    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/HISQ/hisqForce.cpp
+    src/spinor/spinorfield.cpp
+    src/modules/rhmc/rhmc.cpp
+    src/modules/rhmc/integrator.cpp
+    src/modules/dslash/dslash.cpp
+    src/modules/inverter/inverter.cpp
+    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/HISQ/hisqForce.cpp
+    src/modules/observables/PolyakovLoop.cpp
+    src/spinor/spinorfield.cpp)
 
 
 #-------------------------------------------------------------------------------------------------------COMPOUND TARGETS
@@ -245,12 +296,12 @@ add_custom_target(tests)
 add_custom_target(tools)
 add_custom_target(everything)
 add_dependencies(everything
-		applications
-		examples
-		profilers
-		tests
-		tools
-		)
+    applications
+    examples
+    profilers
+    tests
+    tools
+    )
 
 
 #----------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: TESTS
@@ -473,7 +524,11 @@ SIMULATeQCD_target_compile_definitions(cudaAwareMPITest PRIVATE HALODEPTH_1=1 DO
 set_SIMULATeQCD_gpu_backend(src/testing/main_SimpleFunctorTest.cpp)
 add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
 add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
-set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON RUNTIME_OUTPUT_DIRECTORY "testing")
+if (USE_CUDA)
+    set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON RUNTIME_OUTPUT_DIRECTORY "testing")
+elseif (USE_HIP_AMD)
+    set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON HIP_ARCHITECTURES "gfx801 gfx900" RUNTIME_OUTPUT_DIRECTORY "testing")
+endif()
 target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1)
 target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1)
 add_to_compound_SIMULATeQCD_target(tests SimpleFunctorTest)
@@ -648,49 +703,49 @@ add_to_compound_SIMULATeQCD_target(tools correlatorNorm)
 
 
 if(USE_MPFR)
-find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h 
-    PATHS ${GMP_PREFIX}/include /usr/include /usr/local/include )
+    find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h 
+        PATHS ${GMP_PREFIX}/include /usr/include /usr/local/include )
 
-find_library(GMP_LIBRARY NAMES gmp libgmp 
-    PATHS ${GMP_PREFIX}/lib /usr/lib /usr/local/lib)
-
-
-if(GMP_INCLUDE_DIR AND GMP_LIBRARY)
-    get_filename_component(GMP_LIBRARY_DIR ${GMP_LIBRARY} PATH)
-    set(GMP_FOUND TRUE)
-endif()
-
-if(GMP_FOUND)
-      MESSAGE(STATUS "Found GMP: ${GMP_LIBRARY}")
-elseif(GMP_FOUND)
-      message(WARNING "Could not find GMP")
-endif()
-
-# Find MPFR Library
-
-find_path(MPFR_INCLUDE_DIR mpf2mpfr.h mpfr.h 
-    PATHS ${MPFR_PREFIX}/include /usr/include /usr/local/include )
-
-find_library(MPFR_LIBRARY NAMES mpfr libmpfr 
-    PATHS ${MPFR_PREFIX}/lib /usr/lib /usr/local/lib)
+    find_library(GMP_LIBRARY NAMES gmp libgmp 
+        PATHS ${GMP_PREFIX}/lib /usr/lib /usr/local/lib)
 
 
-if(MPFR_INCLUDE_DIR AND MPFR_LIBRARY)
-    get_filename_component(MPFR_LIBRARY_DIR ${MPFR_LIBRARY} PATH)
-    set(MPFR_FOUND TRUE)
-endif()
+    if(GMP_INCLUDE_DIR AND GMP_LIBRARY)
+        get_filename_component(GMP_LIBRARY_DIR ${GMP_LIBRARY} PATH)
+        set(GMP_FOUND TRUE)
+    endif()
 
-if(MPFR_FOUND)
-      MESSAGE(STATUS "Found MPFR: ${MPFR_LIBRARY}")
-elseif(MPFR_FOUND)
-      message(WARNING "Could not find MPFR")
-endif()
+    if(GMP_FOUND)
+        MESSAGE(STATUS "Found GMP: ${GMP_LIBRARY}")
+    elseif(GMP_FOUND)
+        message(WARNING "Could not find GMP")
+    endif()
 
-add_executable(rat_approx src/tools/rational_approx/poly4.C src/tools/rational_approx/alg_remez.C)
+    # Find MPFR Library
 
-set_target_properties(rat_approx PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tools")
-target_include_directories(rat_approx PUBLIC ${GMP_INCLUDE_DIR} ${MPFR_INCLUDE_DIR})
-target_link_libraries(rat_approx PUBLIC ${MPFR_LIBRARY} ${GMP_LIBRARY})
+    find_path(MPFR_INCLUDE_DIR mpf2mpfr.h mpfr.h 
+        PATHS ${MPFR_PREFIX}/include /usr/include /usr/local/include )
+
+    find_library(MPFR_LIBRARY NAMES mpfr libmpfr 
+        PATHS ${MPFR_PREFIX}/lib /usr/lib /usr/local/lib)
+
+
+    if(MPFR_INCLUDE_DIR AND MPFR_LIBRARY)
+        get_filename_component(MPFR_LIBRARY_DIR ${MPFR_LIBRARY} PATH)
+        set(MPFR_FOUND TRUE)
+    endif()
+
+    if(MPFR_FOUND)
+        MESSAGE(STATUS "Found MPFR: ${MPFR_LIBRARY}")
+    elseif(MPFR_FOUND)
+        message(WARNING "Could not find MPFR")
+    endif()
+
+    add_executable(rat_approx src/tools/rational_approx/poly4.C src/tools/rational_approx/alg_remez.C)
+
+    set_target_properties(rat_approx PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tools")
+    target_include_directories(rat_approx PUBLIC ${GMP_INCLUDE_DIR} ${MPFR_INCLUDE_DIR})
+    target_link_libraries(rat_approx PUBLIC ${MPFR_LIBRARY} ${GMP_LIBRARY})
 endif()
 
 

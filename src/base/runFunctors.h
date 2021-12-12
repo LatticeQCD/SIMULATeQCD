@@ -1,6 +1,7 @@
 #ifndef _runFunctors_h_
 
 #define _runFunctors_h_
+#include "wrapper/gpu_wrapper.h"
 #include "../define.h"
 #include "../base/gutils.h"
 #include "math/operators.h"
@@ -115,7 +116,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
                                                                                    const size_t elems_x,
                                                                                    const size_t elems_y,
                                                                                    const size_t elems_z,
-                                                                                   gpuStream_t stream){
+                                                                                   __attribute__((unused)) gpuStream_t stream){
 
     dim3 blockDim;
 
@@ -138,7 +139,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
-#else
+#else 
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
@@ -179,7 +180,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 template<bool onDevice, class Accessor>
 template<size_t Nloops, unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
-    CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t elems_x, const size_t elems_y, const size_t elems_z,gpuStream_t stream, size_t Nmax) {
+    CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t elems_x, const size_t elems_y, const size_t elems_z,__attribute__((unused)) gpuStream_t stream, size_t Nmax) {
 
     dim3 blockDim;
 
@@ -258,7 +259,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
         const size_t elems_x,
         const size_t elems_y,
         const size_t elems_z,
-        gpuStream_t stream ){
+        __attribute__((unused)) gpuStream_t stream ){
 
     dim3 blockDim;
 
@@ -346,7 +347,7 @@ template<bool onDevice, size_t BlockSize = DEFAULT_NBLOCKS, typename CalcReadInd
 void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t elems_x,
         const size_t elems_y = 1,
         const size_t elems_z = 1,
-        gpuStream_t stream = (gpuStream_t)nullptr){
+        __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
 
     dim3 blockDim;
 
@@ -430,7 +431,7 @@ template<bool onDevice, size_t BlockSize = DEFAULT_NBLOCKS, typename CalcReadWri
 void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWriteInd, const size_t subHaloSize, const size_t elems_x,
                                    const size_t elems_y = 1,
                                    const size_t elems_z = 1,
-                                   gpuStream_t stream = (gpuStream_t)nullptr){
+                                   __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
 
     dim3 blockDim;
 

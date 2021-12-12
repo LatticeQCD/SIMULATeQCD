@@ -44,7 +44,7 @@ private:
             gpuErr = gpuIpcGetMemHandle((gpuIpcMemHandle_t *) &_myHandle.handle, _myMemory);
             if (gpuErr != gpuSuccess) GpuError("gpuIPC.h: exchangeHandle: gpuIpcGetMemHandle", gpuErr);
 
-            gpuErr = gpuEventCreate(&_myEvent, gpuEventDisableTiming | gpuEventInterprocess);
+            gpuErr = gpuEventCreateWithFlags(&_myEvent, gpuEventDisableTiming | gpuEventInterprocess);
             if (gpuErr != gpuSuccess) GpuError("gpuIPC.h: exchangeHandle: gpuEventCreate", gpuErr);
 
             gpuErr = gpuIpcGetEventHandle((gpuIpcEventHandle_t *) &_myHandle.eventHandle, _myEvent);
