@@ -29,10 +29,12 @@
 #define gpuEventQuery                    cudaEventQuery
 #define gpuEventRecord                   cudaEventRecord
 #define gpuEventSynchronize              cudaEventSynchronize
+#define gpuEventDefault                  cudaEventDefault
 #define gpuFree                          cudaFree
 #define gpuFreeHost                      cudaFreeHost
 #define gpuGetDeviceCount                cudaGetDeviceCount
 #define gpuGetDeviceProperties           cudaGetDeviceProperties
+#define gpuGetErrorName                  cudaGetErrorName
 #define gpuGetErrorString                cudaGetErrorString
 #define gpuGetLastError                  cudaGetLastError
 #define gpuIpcCloseMemHandle             cudaIpcCloseMemHandle

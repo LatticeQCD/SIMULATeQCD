@@ -34,7 +34,7 @@ public:
     _mode(obj._mode)
     {
         obj._initialized = false;
-        obj._event = cudaEventDefault;
+        obj._event = gpuEventDefault;
         obj._mode = 999;
     }
 
@@ -45,7 +45,7 @@ public:
         _mode = obj._mode;
 
         obj._initialized = false;
-        obj._event = cudaEventDefault;
+        obj._event = gpuEventDefault;
         obj._mode = 999;
         return *this;
     }
