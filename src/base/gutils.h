@@ -31,7 +31,7 @@ __host__ void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
 }
 
 /**
- * Utility class to report errors in CUDA code.
+ * Utility class to report errors in GPU code.
  */
 class GpuError {
 public:
@@ -55,7 +55,7 @@ __device__ __host__ inline bool isOdd(int cand) { return (cand & 0x1); }
 class GpuStopWatch {
     float _elapsed = 0;
 
-#ifdef __CUDACC__
+#ifdef __GPUCC__
     gpuEvent_t _start_time, _stop_time;
 
     public:

@@ -65,5 +65,13 @@
 #define gpuSuccess                       cudaSuccess
 
 
+#ifdef __CUDA_ARCH__
+#define __GPU_ARCH__                     __CUDA_ARCH__
+#endif
+
+#ifdef __CUDACC__
+#define __GPUCC__                        __CUDACC__
+#endif
+
 
 #endif //GPU_WRAPPER_H

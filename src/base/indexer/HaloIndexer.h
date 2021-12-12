@@ -353,7 +353,7 @@ public:
     __device__ __host__ ~HaloIndexer() {};
 
     __device__ __host__ inline static HaloData getHalData() {
-#ifdef __CUDA_ARCH__
+#ifdef __GPU_ARCH__
         return globHalDataGPU[HaloDepth];
 #else
         return globHalDataCPU[HaloDepth];
@@ -361,7 +361,7 @@ public:
     }
 
     __device__ __host__ inline static HaloData getHalDataReduced() {
-#ifdef __CUDA_ARCH__
+#ifdef __GPU_ARCH__
         return globHalDataGPUReduced[HaloDepth];
 #else
         return globHalDataCPUReduced[HaloDepth];

@@ -58,7 +58,7 @@ struct compare_smearing {
         }
         sum /= 4.0;
 
-        #ifdef __CUDA_ARCH__
+        #ifdef __GPU_ARCH__
         return (sum < 8e-5 ? 0 : 1);
         #else
         if (sum > 8e-5) {

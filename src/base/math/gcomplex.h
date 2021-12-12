@@ -269,7 +269,7 @@ public:
   }
 };
 
-#ifdef __CUDA_ARCH__
+#ifdef __GPU_ARCH__
 template <> class GPUcomplex<__half> {
 public:
   __half2 c;

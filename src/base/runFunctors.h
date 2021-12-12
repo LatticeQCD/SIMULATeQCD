@@ -32,7 +32,7 @@ public:
             const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr, size_t Nmax=Nloops);
 };
 
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
@@ -107,7 +107,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
                 / static_cast<float> (blockDim.x)));
 
     if (onDevice) {
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
         performFunctor<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 
@@ -174,7 +174,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
                 / static_cast<float> (blockDim.x)));
 
     if (onDevice) {
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
         performFunctorLoop<Nloops> <<< gridDim, blockDim, 0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x, Nmax);
 
@@ -243,7 +243,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
                 / static_cast<float> (blockDim.x)));
 
     if (onDevice) {
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
         performCopyConstObject<<< gridDim, blockDim,0, stream >>> (getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 
@@ -287,7 +287,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 }
 
 
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
 template<typename Functor, typename CalcReadInd>
 __global__ void performFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t size_x) {
@@ -322,7 +322,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
                 / static_cast<float> (blockDim.x)));
 
     if (onDevice) {
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
         performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
 
@@ -364,7 +364,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
     }
 }
 
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
 template<typename Functor, typename CalcReadWriteInd, class Accessor>
 __global__ void performFunctorComm(Functor op, Accessor acc,  CalcReadWriteInd calcReadWriteInd, const size_t subHaloSize, const size_t size_x ) {
@@ -402,7 +402,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
                                                  / static_cast<float> (blockDim.x)));
 
     if (onDevice) {
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
         performFunctorComm<<< gridDim, blockDim, 0, stream >>> (op, acc, calcReadWriteInd, subHaloSize, elems_x);
 

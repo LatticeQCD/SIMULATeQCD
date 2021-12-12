@@ -57,7 +57,7 @@ public:
     __host__ __device__ gVect3(floatT v0) : _v0(v0), _v1(v0), _v2(v0) {};
     __host__ __device__ gVect3(GCOMPLEX(floatT) v0, GCOMPLEX(floatT) v1, GCOMPLEX(floatT) v2) : _v0(v0), _v1(v1), _v2(v2) {};
 
-#if (!defined __CUDACC__)
+#if (!defined __GPUCC__)
     __host__ friend std::ostream &operator << <> (std::ostream &, const gVect3<floatT> &);
 #endif
     __host__ friend std::istream &operator >> <> (std::istream &, gVect3<floatT> &);
@@ -112,7 +112,7 @@ public:
         _v2 = GCOMPLEX(floatT)(radius2 * cos(phi2), radius2 * sin(phi2));
             }
         else {
-            #ifdef __CUDA_ARCH__
+            #ifdef __GPU_ARCH__
             float radius0,radius1,radius2,phi0,phi1,phi2;
             phi0 = 2.0*M_PI * get_rand<float>(state);
         phi1 = 2.0*M_PI * get_rand<float>(state);
@@ -451,7 +451,7 @@ __device__ __host__ gVect3<floatT> conj(const gVect3<floatT> &x)
 }
 
 
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
 template <class floatT>
 __host__ std::ostream &operator << (std::ostream &s, const gVect3<floatT> &x)
