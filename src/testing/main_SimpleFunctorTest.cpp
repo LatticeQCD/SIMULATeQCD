@@ -203,7 +203,12 @@ void performFunctorsLaunch(SpinorAccessor res, Function op, const int size){
                                                / static_cast<float> (blockDim.x)));
 
         rootLogger.debug("Size of operator " ,  sizeof(op) ,  std::endl);
+
+#ifdef USE_CUDA
         performFunctors <<< gridDim, blockDim >>>(res, op, size);
+#elif defined USE_HIP
+        hipLaunchKernelGGL((performFunctors), dim3(gridDim), dim3(blockDim ), 0, 0, res, op, size);
+#endif
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -248,7 +253,12 @@ void referenceLaunch(SpinorAccessor res, SpinorAccessor a, SpinorAccessor b, Spi
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (size)
                 / static_cast<float> (blockDim.x)));
 
+#ifdef USE_CUDA
     reference<<< gridDim, blockDim >>>(res, a, b, c, d, size);
+#elif defined USE_HIP
+    hipLaunchKernelGGL((reference), dim3(gridDim), dim3(blockDim ), 0, 0, res, a, b, c, d, size);
+#endif
+
     gpuError_t gpuErr = gpuGetLastError();
     if (gpuErr)
         GpuError("performReferenceLaunch: Failed to launch kernel", gpuErr);

@@ -34,6 +34,16 @@ public:
 
 #ifdef __GPUCC__
 
+#ifdef USE_HIP
+
+__host__ __device__ static HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
+
+        return HIP_vector_type<unsigned int, 3>(Idx.x, Idx.y, Idx.z);
+
+};
+#endif
+
+
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
 
@@ -43,8 +53,11 @@ __global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd
     }
 
     //Site can be anything. Therefore auto
+#ifdef USE_CUDA
     auto site = calcReadInd(blockDim, blockIdx, threadIdx);
-
+#elif defined USE_HIP
+auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
+#endif
     res.setElement(calcWriteInd(site), op(site));
 }
 
@@ -59,8 +72,12 @@ __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcRea
     }
 
     //Site can be anything. Therefore auto
-    auto site = calcReadInd(blockDim, blockIdx, threadIdx);
 
+#ifdef USE_CUDA
+    auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+#elif defined USE_HIP
+    auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
+#endif
     op.initialize(site);
 #pragma unroll
     for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++){
@@ -80,8 +97,12 @@ __global__ void performCopyConstObject(Accessor res, Object ob, CalcReadInd calc
     }
 
     //Site can be anything. Therefore auto
-    auto site = calcReadInd(blockDim, blockIdx, threadIdx);
 
+#ifdef USE_CUDA
+    auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+#elif defined USE_HIP
+    auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
+#endif
     res.setElement(calcWriteInd(site), ob);
 }
 #endif
@@ -109,8 +130,11 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
     if (onDevice) {
 #ifdef __GPUCC__
 
+#ifdef USE_CUDA
         performFunctor<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
-
+#elif defined USE_HIP
+        hipLaunchKernelGGL(performFunctor, dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
+#endif
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
@@ -176,7 +200,11 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     if (onDevice) {
 #ifdef __GPUCC__
 
+#ifdef USE_CUDA
         performFunctorLoop<Nloops> <<< gridDim, blockDim, 0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x, Nmax);
+#elif defined USE_HIP
+        hipLaunchKernelGGL((performFunctorLoop<Nloops>), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x,         Nmax);
+#endif
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -245,7 +273,12 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
     if (onDevice) {
 #ifdef __GPUCC__
 
+#ifdef USE_CUDA
         performCopyConstObject<<< gridDim, blockDim,0, stream >>> (getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
+#elif defined USE_HIP
+        hipLaunchKernelGGL((performCopyConstObject), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
+#endif
+
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -298,7 +331,11 @@ __global__ void performFunctorNoReturn(Functor op, CalcReadInd calcReadInd, cons
     }
 
     //Site can be anything. Therefore auto
+#ifdef USE_CUDA
     auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+#elif defined USE_HIP
+    auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
+#endif
     op(site);
 }
 
@@ -324,8 +361,12 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
     if (onDevice) {
 #ifdef __GPUCC__
 
-        performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
 
+#ifdef USE_CUDA
+        performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
+#elif defined USE_HIP
+        hipLaunchKernelGGL((performFunctorNoReturn), dim3(gridDim), dim3(blockDim), 0, stream , op, calcReadInd, elems_x);
+#endif
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -404,8 +445,11 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     if (onDevice) {
 #ifdef __GPUCC__
 
+#ifdef USE_CUDA
         performFunctorComm<<< gridDim, blockDim, 0, stream >>> (op, acc, calcReadWriteInd, subHaloSize, elems_x);
-
+#elif defined USE_HIP
+        hipLaunchKernelGGL((performFunctorComm), dim3(gridDim), dim3(blockDim), 0, stream , op, acc, calcReadWriteInd, subHaloSize, elems_x);
+#endif
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)

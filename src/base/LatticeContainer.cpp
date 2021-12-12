@@ -1,18 +1,25 @@
 #include "LatticeContainer.h"
+
+#ifdef USE_CUDA
 #include <cub/cub.cuh>
+#define gpucub cub
+#elif defined USE_HIP
+#include <hipcub/hipcub.hpp>
+#define gpucub hipcub
+#endif
 
 
 template<class floatT>
 gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size) {
 
-    return cub::DeviceReduce::Sum(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr), out,
+    return gpucub::DeviceReduce::Sum(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr), out,
                                   size);
 }
 
 template<class floatT>
 gpuError_t CubReduceMax(void *helpArr, size_t *temp_storage_bytes, void *Arr, floatT *out, size_t size) {
 
-    return cub::DeviceReduce::Max(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr), out,
+    return gpucub::DeviceReduce::Max(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr), out,
                                   size);
 }
 
@@ -20,7 +27,7 @@ template<class floatT>
 gpuError_t
 CubReduceStacked(void *helpArr, size_t *temp_storage_bytes, void *Arr, void *out, int Nt, void *StackOffsets) {
 
-    return cub::DeviceSegmentedReduce::Sum(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr),
+    return gpucub::DeviceSegmentedReduce::Sum(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr),
                                            static_cast<floatT *>(out),
                                            Nt, static_cast<size_t*>(StackOffsets), static_cast<size_t*>(StackOffsets) + 1);
 }

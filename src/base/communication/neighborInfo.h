@@ -470,7 +470,11 @@ inline void NeighborInfo::checkP2P() {
 #else
      , "P2P NO ; "
 #endif
-    , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+#ifdef USE_CUDA
+      , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+#elif defined USE_HIP
+      , "UVA ", "Unknown (HIP does not support this!)");
+#endif
 }
 
 #endif //NEIGHBORINFO_H
