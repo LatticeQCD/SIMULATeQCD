@@ -129,7 +129,6 @@ int main(int argc, char *argv[]) {
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
     rootLogger.info("Read configuration");
     gauge.readconf_nersc(param.GaugefileName());
-for i in $(cat files_); do vim $i; done
     gauge.updateAll();
 
     /// Measure the Polyakov loop and report to user.
