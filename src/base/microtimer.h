@@ -1,115 +1,172 @@
 #ifndef _INC_TIMER
 #define _INC_TIMER
 
-#include <iostream>
-#include <sstream>
+#include "../define.h"
+#include "wrapper/gpu_wrapper.h"
+#include <chrono>
 #include <ctime>
-
-#include <stdio.h>
-#include <sys/time.h>
-
-using std::ostream;
+#include <iostream>
+#include <math.h>
 
 
 //! A class to time events/function calls
+
+template<bool device = true>
 class MicroTimer {
+    float _elapsed;
+    
+    long _bytes;
+    long _flops;
 
+    using host_clock = std::chrono::high_resolution_clock;
+    
+    host_clock::time_point _host_start_time, _host_stop_time;
 
-private :
+    inline void _host_start() { 
+        _host_start_time = host_clock::now(); 
+    }
 
-    double starttime;
-    double total;
+    inline double _host_stop() {
+        float time;
+        _host_stop_time = host_clock::now();
+        time = std::chrono::duration_cast<std::chrono::microseconds>(_host_stop_time - 
+                                                                    _host_start_time)
+            .count();
+        _elapsed += time/1000;
+        return _elapsed;
+    }
 
-    long bytes;
-    long flops;
+#ifdef __CUDACC__
+    gpuEvent_t _device_start_time, _device_stop_time;
 
-    //! Implement something system specific to return
-    //! the time in ms as double.
-    static double tick() {
-	struct timeval cur;
-	gettimeofday(&cur, NULL);
-	long  seconds  = cur.tv_sec ;
-	long useconds  = cur.tv_usec ;
-	return ((seconds) * 1000 + useconds/1000.);
+    public:
+
+    MicroTimer() : _elapsed(0.0), _bytes(0), _flops(0) {
+        if(device == true){
+            gpuEventCreate(&_device_start_time);
+            gpuEventCreate(&_device_stop_time);
+        }
+    }
+
+    ~MicroTimer() {
+        if(device == true){
+            gpuEventDestroy(_device_start_time);
+            gpuEventDestroy(_device_stop_time);
+        }
+    }
+
+    inline void start() { 
+        if(device == true){
+            gpuEventRecord(_device_start_time, 0); 
+        }
+        else{
+            _host_start();
+        }
+
+    }
+
+    inline double stop() {
+        if(device == true){
+            gpuEventRecord(_device_stop_time, 0);
+            gpuEventSynchronize(_device_stop_time);
+            float time;
+            gpuEventElapsedTime(&time, _device_start_time, _device_stop_time);
+            _elapsed += time;
+            return _elapsed;
+        }
+        else{
+            return _host_stop();
+        }
+    }
+#else
+    public:
+    
+    MicroTimer() : _elapsed(0.0), _bytes(0), _flops(0) {}
+
+    inline void start() { 
+        if(device == true){
+            throw std::runtime_error( stdLogger.fatal("MicroTimer.start() error:", 
+                                    "No device timer support with that compiler!"));
+        }
+        else{
+            _host_start(); 
+        }
+    }
+    inline double stop() { 
+        if(device == true){
+            throw std::runtime_error( stdLogger.fatal("MicroTimer.stop() error:", 
+                                    "No device timer support with that compiler!"));
+        }
+        else{
+            return _host_stop(); 
+        }
+    }
+#endif
+
+    void reset() { _elapsed = 0; }
+
+    void print(std::string text) {
+        rootLogger.info("Time for " + text + " " ,  _elapsed ,  "ms");
     }
 
 
-public :
-
-    //! Constructor, also starts the timer
-    MicroTimer() { 
-	starttime = tick(); 
-    	bytes = -1;
-	flops = -1;
-	total = 0;
-    };
-    
-    //! reset and start the timer
-    void reset() { starttime = tick(); total = 0; };
-    //! resume the timer
-    void start() { starttime = tick();}
-    //! stop the timer
-    void stop()  { total += (tick()-starttime); }
-    //! return the elapsed time in ms
-    double ms() const { return total; }
+    double ms() const { return _elapsed; }
     //! set how many bytes were processed (for an MB/s output)
-    void setBytes(const long b ) { bytes = b ; }
+    void setBytes(const long b ) { _bytes = b ; }
     //! set how many FLOPs were calculated 
-    void setFlops(const long f ) { flops = f ; } 
+    void setFlops(const long f ) { _flops = f ; } 
 
     //! return MBytes/s (be sure to call setBytes() before)
     double mbs() const {
-	return (bytes / (ms()*1024*1024/1000.));
+        return (_bytes / (ms()*1024*1024/1000.));
     }
 
     //! return MFLOP/s (be sure to call setFlops() before)
     double mflps() const {
-	return (flops / (ms()*1000.));
+        return (_flops / (ms()*1000.));
     }
 
 
     //! Add two timings (bytes and flops are not transfered atm)
     MicroTimer operator+(const MicroTimer & lhs) const {
-	MicroTimer ret;
-	ret.total = total + lhs.total;
-	return ret;
+        MicroTimer ret;
+        ret._elapsed = _elapsed + lhs._elapsed;
+        return ret;
     }
-    //! Substract two timings (bytes and flops are not transfered atm)
+    //! Substract two timings (_bytes and flops are not transfered atm)
     MicroTimer operator-(const MicroTimer & lhs) const {
-	MicroTimer ret;
-	ret.total = total - lhs.total;
-	return ret;
+        MicroTimer ret;
+        ret._elapsed = _elapsed - lhs._elapsed;
+        return ret;
     }
 
     //! Divide the timing by an integer (e.g. loop count)
     MicroTimer & operator/=(const int & lhs) {
-	total /= lhs;
-	return *this ;
+        _elapsed /= lhs;
+        return *this ;
     }   
 
     //! Calculate ratio of two timings
     double operator/(const MicroTimer & lhs) {
-	return (total / lhs.total);
+        return (_elapsed / lhs._elapsed);
     }
 
 
- 
-    //! Write formatted timing output to ostream
-    friend ostream& operator<<(ostream &str, const MicroTimer & mt ) {
-	char tmp[255];
-	if ((mt.bytes>0)&&(mt.flops>0))
-	    sprintf(tmp, "[T: %7.2lf ms   %7.2f MB  %7.2f MFlops]", mt.ms(), mt.mbs(), mt.mflps());
-	else if ((mt.bytes>0))
-	sprintf(tmp, "[T: %7.2lf ms   %7.2f MB/s]", mt.ms(), mt.mbs());
-	else
-	    sprintf(tmp, "[T: %7.2lf ms]", mt.ms());
-	str << tmp;
-	return str ;
-    }
+
+    template<bool _device>
+    inline friend std::ostream &operator<<(std::ostream &stream,
+            const MicroTimer<_device> &rhs);
 
 
-} ;
 
+
+};
+
+template<bool device>
+std::ostream &operator<<(std::ostream &stream, const MicroTimer<device> &rhs) {
+    stream << "Time = " << rhs._elapsed << "ms";
+    return stream;
+}
 
 #endif
 

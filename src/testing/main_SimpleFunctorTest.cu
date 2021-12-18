@@ -319,7 +319,7 @@ int main(){
     c.fill();
     d.fill();
 
-    GpuStopWatch timer;
+    MicroTimer timer;
     timer.start();
 
     res = a + b * c + 5 * d;

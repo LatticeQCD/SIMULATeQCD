@@ -615,7 +615,7 @@ void run_func(CommunicationBase &commBase) {
     //! Perform an axpy operation using functor syntax. Here we measure the time to compare if the functor syntax is
     //! slower, which should not be the case.
     rootLogger.info("Iterate and perform functors");
-    GpuStopWatch timer;
+    MicroTimer timer;
     timer.start();
     res_spinor = 1.234 * spinor1 + spinor2;
     timer.stop();

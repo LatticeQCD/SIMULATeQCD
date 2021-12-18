@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Initialize Gaugefields");
 
-    GpuStopWatch timer;
+    MicroTimer timer;
 
     typedef GIndexer<All,HaloDepth> GInd;
 
