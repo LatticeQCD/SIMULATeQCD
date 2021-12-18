@@ -719,7 +719,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         topology.recomputeField();
     }
     timer.stop();
-    rootLogger.info("complete time = " ,  timer.ms()/1000./60. ,  " min");
+    rootLogger.info("complete time = " ,  timer.ms()/60. ,  " min");
 }
 
 

@@ -414,7 +414,7 @@ void init(CommunicationBase &commBase,
         host_state = dev_state;
         timer.stop();
 
-        rootLogger.info("Writing to disk took " ,  timer.ms()/1000 ,  " seconds");
+        rootLogger.info("Writing to disk took " ,  timer.ms() ,  " seconds");
         timer.reset();
         lp.confnumber.set(lp.confnumber() + lp.nsweeps_HBwithOR());
     }
