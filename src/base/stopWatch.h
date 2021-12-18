@@ -12,7 +12,7 @@
 //! A class to time events/function calls
 
 template<bool device = true>
-class MicroTimer {
+class StopWatch {
     float _elapsed;
     
     long _bytes;
@@ -41,14 +41,14 @@ class MicroTimer {
 
     public:
 
-    MicroTimer() : _elapsed(0.0), _bytes(0), _flops(0) {
+    StopWatch() : _elapsed(0.0), _bytes(0), _flops(0) {
         if(device == true){
             gpuEventCreate(&_device_start_time);
             gpuEventCreate(&_device_stop_time);
         }
     }
 
-    ~MicroTimer() {
+    ~StopWatch() {
         if(device == true){
             gpuEventDestroy(_device_start_time);
             gpuEventDestroy(_device_stop_time);
@@ -81,11 +81,11 @@ class MicroTimer {
 #else
     public:
     
-    MicroTimer() : _elapsed(0.0), _bytes(0), _flops(0) {}
+    StopWatch() : _elapsed(0.0), _bytes(0), _flops(0) {}
 
     inline void start() { 
         if(device == true){
-            throw std::runtime_error( stdLogger.fatal("MicroTimer.start() error:", 
+            throw std::runtime_error( stdLogger.fatal("StopWatch.start() error:", 
                                     "No device timer support with that compiler!"));
         }
         else{
@@ -94,7 +94,7 @@ class MicroTimer {
     }
     inline double stop() { 
         if(device == true){
-            throw std::runtime_error( stdLogger.fatal("MicroTimer.stop() error:", 
+            throw std::runtime_error( stdLogger.fatal("StopWatch.stop() error:", 
                                     "No device timer support with that compiler!"));
         }
         else{
@@ -128,26 +128,26 @@ class MicroTimer {
 
 
     //! Add two timings (bytes and flops are not transfered atm)
-    MicroTimer operator+(const MicroTimer & lhs) const {
-        MicroTimer ret;
+    StopWatch operator+(const StopWatch & lhs) const {
+        StopWatch ret;
         ret._elapsed = _elapsed + lhs._elapsed;
         return ret;
     }
     //! Substract two timings (_bytes and flops are not transfered atm)
-    MicroTimer operator-(const MicroTimer & lhs) const {
-        MicroTimer ret;
+    StopWatch operator-(const StopWatch & lhs) const {
+        StopWatch ret;
         ret._elapsed = _elapsed - lhs._elapsed;
         return ret;
     }
 
     //! Divide the timing by an integer (e.g. loop count)
-    MicroTimer & operator/=(const int & lhs) {
+    StopWatch & operator/=(const int & lhs) {
         _elapsed /= lhs;
         return *this ;
     }   
 
     //! Calculate ratio of two timings
-    double operator/(const MicroTimer & lhs) {
+    double operator/(const StopWatch & lhs) {
         return (_elapsed / lhs._elapsed);
     }
 
@@ -155,7 +155,7 @@ class MicroTimer {
 
     template<bool _device>
     inline friend std::ostream &operator<<(std::ostream &stream,
-            const MicroTimer<_device> &rhs);
+            const StopWatch<_device> &rhs);
 
 
 
@@ -163,7 +163,7 @@ class MicroTimer {
 };
 
 template<bool device>
-std::ostream &operator<<(std::ostream &stream, const MicroTimer<device> &rhs) {
+std::ostream &operator<<(std::ostream &stream, const StopWatch<device> &rhs) {
     stream << "Time = " << rhs._elapsed << "ms";
     return stream;
 }

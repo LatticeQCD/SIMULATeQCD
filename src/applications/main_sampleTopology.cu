@@ -178,7 +178,7 @@ void run_flow(gradFlowClass &gradFlow, Gaugefield<PREC, USE_GPU, HaloDepth> &gau
 
     //! -------------------------------flow the field until max flow time-----------------------------------------------
     std::stringstream logStream;
-    MicroTimer timer;
+    StopWatch timer;
     timer.start();
     PREC flow_time = 0.;
     bool continueFlow = true;
@@ -240,7 +240,7 @@ void init(CommunicationBase &commBase,
                sampleTopologyParameters<floatT> &lp) {
 
     initIndexer(HaloDepth,lp,commBase);
-    MicroTimer                              timer;
+    StopWatch                              timer;
 
     Gaugefield<PREC,ONDEVICE,HaloDepth>     gauge(commBase);
     Gaugefield<PREC,false,HaloDepth>     gauge_backup(commBase);

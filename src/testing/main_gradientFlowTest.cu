@@ -107,7 +107,7 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
     stdLogger.setVerbosity(INFO);
     const size_t HaloDepth = 3;
 
-    MicroTimer timer;
+    StopWatch timer;
     gradientFlowParam<floatT> lp;
 
     //do not change these!

@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
     const int  nunit      = param.numunit();
     const PREC gtol       = param.gtolerance();
 
-    MicroTimer timer;
+    StopWatch timer;
     int        ngfstep = 0;          /// # of gauge fixing steps
     PREC       gftheta = 1e10;       /// gauge fixing theta
     PREC       act1    = 1.0;        /// gauge fix action before OR update

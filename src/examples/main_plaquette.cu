@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     param.nodeDim.set(NodeDim);
 
     /// Initialize a timer
-    MicroTimer timer;
+    StopWatch timer;
 
     /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
     CommunicationBase commBase(&argc, &argv);

@@ -415,7 +415,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     //! -------------------------------flow the field until max flow time-----------------------------------------------
 
     std::stringstream logStream;
-    MicroTimer timer;
+    StopWatch timer;
     timer.start();
     floatT flow_time = 0.;
     bool continueFlow = true;

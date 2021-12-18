@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param, commBase);
     typedef GIndexer<All, HaloDepth> GInd;
-    MicroTimer timer;
+    StopWatch timer;
 
     /// Initialize objects related to the gauge fields.
     Gaugefield<PREC, true, HaloDepth> gauge(commBase);

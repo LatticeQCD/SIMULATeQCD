@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     ///Initialize Base
     typedef GIndexer<All,HaloDepth> GInd;
     stdLogger.setVerbosity(INFO);
-    MicroTimer                              timer;
+    StopWatch                              timer;
     generateQuenchedParameters              lp;
     CommunicationBase                       commBase(&argc, &argv);
     lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);

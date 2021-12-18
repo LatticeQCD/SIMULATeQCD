@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
     LatticeParameters param;
-    MicroTimer timer;
+    StopWatch timer;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/hisqSmearingTest.param", argc, argv);
     commBase.init(param.nodeDim());
