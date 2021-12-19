@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     /// More initialization.
-    MicroTimer                        timer;
+    StopWatch<true> timer;
     int                               ngfstep = 0;          /// # of gauge fixing steps
     PREC                              gftheta = 1e10;       /// gauge fixing theta
     PREC                              act     = 1.0;        /// gauge fix action after OR update

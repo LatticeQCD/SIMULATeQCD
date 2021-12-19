@@ -25,9 +25,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_naik);
 
-    gpuEvent_t start, stop;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
+    StopWatch<true> timer;
 
     grnd_state<onDevice> d_rand;
     initialize_rng(243, d_rand);
@@ -52,7 +50,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     
-    gpuEventRecord(start);
+    timer.start();
     switch (cg_switch) {
     case 1 :
         cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
@@ -68,10 +66,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         break;
     }
     
-    gpuEventRecord(stop);
-    gpuEventSynchronize(stop);
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
+    timer.stop();
     
     dslash.applyMdaggM(spinorOut2, spinorOut);
 
@@ -95,7 +90,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     }
 
     rootLogger.info("relative error of (D^+D) * (D^+D)^-1 * phi - phi : " ,  max(err_arr));
-    rootLogger.info("Time for inversion: " ,  milliseconds ,  " ms");
+    rootLogger.info("Time for inversion: " ,  timer);
     if (!(max(err_arr) < 10*param.residue()))
         success = success && false;
     

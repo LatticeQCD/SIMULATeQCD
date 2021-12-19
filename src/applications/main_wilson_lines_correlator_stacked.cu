@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
     FileWriter file(gauge.getComm(), param, Name);
     FileWriter file_r2(gauge.getComm(), param, Name_r2);
 
-         MicroTimer timer;
+         StopWatch<true> timer;
 
     /// Start timer.
     timer.start();

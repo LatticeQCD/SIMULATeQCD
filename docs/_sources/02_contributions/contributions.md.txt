@@ -17,9 +17,10 @@ maxdepth: 1
 02_git.md
 03_organizeFiles.md
 04_terminalIO.md
-05_inputParameter.md
-06_memoryAllocation.md
-07_multiGPU.md
-08_testing.md
-09_documenting.md
+05_timer.md
+06_inputParameter.md
+07_memoryAllocation.md
+08_multiGPU.md
+09_testing.md
+10_documenting.md
 ```

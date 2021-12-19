@@ -202,7 +202,7 @@ void performFunctorsLaunch(SpinorAccessor res, Function op, const int size){
         const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (size)
                                                / static_cast<float> (blockDim.x)));
 
-        rootLogger.debug("Size of operator " ,  sizeof(op) ,  std::endl);
+        rootLogger.debug("Size of operator " ,  sizeof(op) ,"\n");
         performFunctors <<< gridDim, blockDim >>>(res, op, size);
 
         gpuError_t gpuErr = gpuGetLastError();
@@ -319,7 +319,7 @@ int main(){
     c.fill();
     d.fill();
 
-    GpuStopWatch timer;
+    StopWatch<true> timer;
     timer.start();
 
     res = a + b * c + 5 * d;

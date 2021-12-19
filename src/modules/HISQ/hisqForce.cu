@@ -328,7 +328,6 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
   // y.updateAll();
   //x.iterateOverBulkLoopStack(multiplySimpleArraySpinor<floatT, onDevice, Even, HaloDepthSpin, rdeg>(rat_num,x));
   //x.updateAll();
-  //gpuEventRecord(start);
   Force.iterateOverBulkAllMu(tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, 1, runTesting>(Force, _spinor_x.getAccessor(), _spinor_y.getAccessor(),rat_num));
   _TmpForce.iterateOverBulkAllMu(tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, 3, runTesting>(_TmpForce, _spinor_x.getAccessor(), _spinor_y.getAccessor(),rat_num));
   

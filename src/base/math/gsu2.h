@@ -126,7 +126,7 @@ public:
 
 private:
 
-  friend ostream &operator << (ostream &s, const GSU2 &x) {
+  friend std::ostream &operator << (std::ostream &s, const GSU2 &x) {
     return s << x._e11  << x._e12;
   }
 

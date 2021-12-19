@@ -200,26 +200,9 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_gaugeforce(floatT stepsize){
 
-    // gpuEvent_t start, stop;
-    //    gpuEventCreate(&start);
-    //    gpuEventCreate(&stop);
-    //    gpuEventRecord(start,0);
-
     ipdot.iterateOverBulkAllMu(get_gauge_Force<floatT,HaloDepth,R18>(gAcc, _rhmc_param.beta()));
 
-    // gpuEventRecord(stop,0);
-    // gpuEventSynchronize(stop);
-
-    // float force_time;
-    // gpuEventElapsedTime(&force_time, start, stop);
-    // rootLogger.info("gauge force  time [ms]: " ,  force_time);
-    // gpuEventDestroy(start);
-    // gpuEventDestroy(stop);
-
-
     evolveP(stepsize);
-    // rootLogger.info("Gauge force:");
-    // check_traceless();
 }
 
 //update P with the fermion force
@@ -227,31 +210,11 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_fermforce(floatT stepsize, 
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, bool light/* std::vector<floatT> rat_coeff*/){
 
-
-    // gpuEvent_t start, stop;
-    //    gpuEventCreate(&start);
-    //    gpuEventCreate(&stop);
-    //    gpuEventRecord(start,0);
-
-
     ip_dot_f2_hisq.updateForce(phi,ipdot,light);
-
-    //     gpuEventRecord(stop,0);
-    // gpuEventSynchronize(stop);
-
-    // float force_time;
-    // gpuEventElapsedTime(&force_time, start, stop);
-    // rootLogger.info("fermforce  time [ms]: " ,  force_time);
-    // gpuEventDestroy(start);
-    // gpuEventDestroy(stop);
-
-
 
     forceinfo();
 
     evolveP(stepsize);
-    // rootLogger.info("Fermion force:");
-    // check_traceless();
 }
 
 template<class floatT, size_t HaloDepth>

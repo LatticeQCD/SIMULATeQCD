@@ -9,7 +9,7 @@
 #include "../../gauge/gaugefield.h"
 #include "../../base/latticeParameters.h"
 #include "../../base/memoryManagement.h"
-#include "../../base/microtimer.h"
+#include "../../base/stopWatch.h"
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/GaugeAction.h"
 #include "../../gauge/gaugeActionDeriv.h"
