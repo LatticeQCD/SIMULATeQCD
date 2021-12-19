@@ -105,16 +105,38 @@ class StopWatch {
 
     void reset() { _elapsed = 0; }
 
-    void print(std::string text) {
-        rootLogger.info("Time for " + text + " " ,  _elapsed ,  "ms");
-    }
-
-
     double microseconds() const { return _elapsed*1000; }
     double milliseconds() const { return _elapsed; }
     double seconds() const { return milliseconds()/1000; }
     double minutes() const { return seconds()/60; }
     double hours() const { return minutes()/60; }
+    double days() const { return hours()/24; }
+
+    
+    std::string autoFormat() const {
+        if(days() > 2){
+            return sformat("%.2fh", days());
+        }
+        else if(hours() > 2){
+            return sformat("%.2fh", hours());
+        }
+        else if(minutes() > 2){
+            return sformat("%.2fmin", minutes());
+        }
+        else if(seconds() > 2){
+            return sformat("%.3fs", seconds());
+        }
+        else if(milliseconds() > 2){
+            return sformat("%.3fms", milliseconds());
+        }
+        else{
+            return sformat("%.0fµs", microseconds());
+        }
+    }
+
+    void print(std::string text) {
+        rootLogger.info("Time for " + text + " " , autoFormat());
+    }
 
     //! set how many bytes were processed (for an MB/s output)
     void setBytes(const long b ) { _bytes = b ; }
@@ -169,7 +191,7 @@ class StopWatch {
 
 template<bool device>
 std::ostream &operator<<(std::ostream &stream, const StopWatch<device> &rhs) {
-    stream << "Time = " << rhs._elapsed << "ms";
+    stream << "Time = " << rhs.autoFormat();
     return stream;
 }
 
