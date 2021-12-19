@@ -870,7 +870,7 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
 
     /// Initialize a timer.
-    StopWatch timer;
+    StopWatch<true> timer;
 
     /// Initialize the CommunicationBase.
     CommunicationBase commBase(&argc, &argv);

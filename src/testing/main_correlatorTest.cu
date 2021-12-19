@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     typedef GIndexer<All,HaloDepth> GInd;
 
     /// More initialization.
-    StopWatch                           timer;
+    StopWatch<true> timer;
     Gaugefield<PREC,false,HaloDepth>     gauge(commBase);
     Gaugefield<PREC,true,HaloDepth>      gaugeDev(commBase);
     CorrelatorTools<PREC,true,HaloDepth> corrTools;

@@ -174,7 +174,7 @@ int main(int argc, char *argv[]) {
     grnd_state<false> host_state;
     grnd_state<true> dev_state; 
 
-    StopWatch timer;
+    StopWatch<true> timer;
     timer.start();
 
     std::stringstream datNameCE_ImprovePoly, datNameCE_ImproveColEleCorr;

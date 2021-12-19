@@ -515,7 +515,7 @@ int main(int argc, char *argv[]) {
 
 
     /// Initialize a timer.
-    StopWatch timer;
+    StopWatch<true> timer;
 
     /// Initialize the CommunicationBase.
     CommunicationBase commBase(&argc, &argv);

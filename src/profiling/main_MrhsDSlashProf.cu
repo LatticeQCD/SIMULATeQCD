@@ -13,9 +13,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     //Initialization as usual
 
-    gpuEvent_t start, stop;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
+    StopWatch<true> timer;
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
@@ -86,8 +84,8 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         if (gpuErr)
             // GpuError("error in Initialization of DSlash", gpuErr);
             rootLogger.info("Error in Initialization of DSlash");
-
-    gpuEventRecord(start);
+    
+    timer.start();
     for (int i = 0; i < 500; ++i)
     {
     
@@ -95,15 +93,12 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         spinorIn=spinorSave;
         
     }
-
-    gpuEventRecord(stop);
-    gpuEventSynchronize(stop);
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
+    
+    timer.stop();
  
  
      
-    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  milliseconds);
+    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
   
   
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);

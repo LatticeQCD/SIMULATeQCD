@@ -6,7 +6,6 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/pure_gauge_hmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-#include <chrono>
 
 
 template<int HaloDepth>
@@ -103,8 +102,9 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
     int acc = 0;
     double acceptance = 0.0;
     PolyakovLoop<double, true, HaloDepth> ploop(gauge);
-
-    auto start = std::chrono::high_resolution_clock::now();
+    
+    StopWatch<true> timer;
+    timer.start();
 
     for (int i = 1; i <= 100; ++i)  {
         acc += HMC.update();
@@ -112,12 +112,10 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
 
         rootLogger.info("|Ploop|= " ,  abs(ploop.getPolyakovLoop()));
     }
+    
+    timer.stop();
 
-    auto finish = std::chrono::high_resolution_clock::now();
-
-    std::chrono::duration<double> elapsed = finish - start;
-
-    rootLogger.info("Elapsed time: " ,  elapsed.count());
+    rootLogger.info("Elapsed time: " ,  timer);
 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 

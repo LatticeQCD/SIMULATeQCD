@@ -115,7 +115,7 @@ void run_func(CommunicationBase& commBase, const int * NodeDim, bool forceHalos)
     rootLogger.info("=======================================");
     rootLogger.info(" ");
 
-    StopWatch timer;
+    StopWatch<true> timer;
     TestKernel<PREC, onDevice, HaloDepth> Kernel;
 
     Gaugefield<PREC, onDevice, HaloDepth> gauge( commBase);

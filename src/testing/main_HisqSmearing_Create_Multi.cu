@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
     
-    StopWatch timer;
+    StopWatch<true> timer;
 
     CommunicationBase commBase(&argc, &argv);
 
