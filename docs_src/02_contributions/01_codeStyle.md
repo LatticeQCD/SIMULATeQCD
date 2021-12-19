@@ -5,7 +5,7 @@ Switch on compiler warnings with -Wall -Wextra. Do care about these warnings. A 
 - **Do not repeat yourself**\
 Do not copy code or use similar code all the time. This makes it harder to maintain the code, for example by requiring the developer to make the same change in multiple places.
 - **Do not use the new and delete operators**\
-The `new` and the `delete` operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the [Memory Manager](06_memoryAllocation.md). There is absolutely no reason to use `new` for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.  
+The `new` and the `delete` operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the [Memory Manager](07_memoryAllocation.md). There is absolutely no reason to use `new` for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.  
 - **Avoid pointers**\
 Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type safe. This causes a lot of errors. There are cases where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.
 - **Delete the copy constructor for classes which manage large amounts of memory**\
