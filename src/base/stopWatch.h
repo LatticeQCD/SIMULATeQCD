@@ -110,7 +110,11 @@ class StopWatch {
     }
 
 
-    double ms() const { return _elapsed; }
+    double milliseconds() const { return _elapsed; }
+    double seconds() const { return milliseconds()/1000; }
+    double minutes() const { return seconds()/60; }
+    double hours() const { return minutes()/60; }
+
     //! set how many bytes were processed (for an MB/s output)
     void setBytes(const long b ) { _bytes = b ; }
     //! set how many FLOPs were calculated 
@@ -118,12 +122,12 @@ class StopWatch {
 
     //! return MBytes/s (be sure to call setBytes() before)
     double mbs() const {
-        return (_bytes / (ms()*1024*1024/1000.));
+        return (_bytes / (seconds()*1024*1024));
     }
 
     //! return MFLOP/s (be sure to call setFlops() before)
     double mflps() const {
-        return (_flops / (ms()*1000.));
+        return (_flops / seconds());
     }
 
 
