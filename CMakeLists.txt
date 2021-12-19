@@ -309,7 +309,7 @@ add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
 
 add_SIMULATeQCD_executable(InverterTest src/testing/main_InverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(InverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests InverterTest)
 
 add_SIMULATeQCD_executable(MixedPrecInverterTest src/testing/main_MixedPrecInverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
