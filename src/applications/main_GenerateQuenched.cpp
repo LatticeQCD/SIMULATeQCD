@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     ///Initialize Base
     typedef GIndexer<All,HaloDepth> GInd;
     stdLogger.setVerbosity(INFO);
-    MicroTimer                              timer;
+    StopWatch<true> timer;
     generateQuenchedParameters              lp;
     CommunicationBase                       commBase(&argc, &argv);
     lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
             }
         }
         timer.stop();
-        rootLogger.info("It took " ,  timer.ms()/1000 ,  " seconds to do " ,  lp.nsweeps_HBwithOR() ,  " HBOR "
+        rootLogger.info("It took " ,  timer.seconds() ,  " seconds to do " ,  lp.nsweeps_HBwithOR() ,  " HBOR "
                              "sweeps.");
         timer.reset();
 
@@ -180,7 +180,7 @@ int main(int argc, char* argv[]) {
         host_state.write_to_file(rand_path, commBase);
         timer.stop();
 
-        rootLogger.info("Writing to disk took " ,  timer.ms()/1000 ,  " seconds");
+        rootLogger.info("Writing to disk took " ,  timer.seconds() ,  " seconds");
         timer.reset();
         lp.confnumber.set(lp.confnumber() + lp.nsweeps_HBwithOR());
     }

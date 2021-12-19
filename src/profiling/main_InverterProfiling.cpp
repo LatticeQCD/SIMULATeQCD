@@ -10,10 +10,7 @@
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, size_t Multistack, bool onDevice>
 void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat)
 {
-    gpuEvent_t start, stop;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
-
+    StopWatch<true> timer;
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
@@ -66,16 +63,11 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     // make phi:
     gpuProfilerStart();
-    // timer.start();
-    gpuEventRecord(start);
+    timer.start();
     cgM.invert(dslashMulti_ud, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
-    gpuEventRecord(stop);
-    gpuEventSynchronize(stop);
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
-    // timer.stop();
+    timer.stop();
     gpuProfilerStop();
-    rootLogger.info("Time for inversion with multishift CG: " ,  milliseconds);
+    rootLogger.info("Time for inversion with multishift CG: " , timer);
 
     // phi = floatT(rat.r_2f_const()) * spinorInMulti;
 

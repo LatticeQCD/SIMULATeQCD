@@ -10,7 +10,7 @@
 
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
-#include "../../base/microtimer.h"
+#include "../../base/stopWatch.h"
 //#include "../base/Reductionbase.h"
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/GaugeAction.h"

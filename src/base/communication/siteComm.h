@@ -10,7 +10,7 @@
 #include <iostream>
 #include "communicationBase.h"
 #include <memory>
-#include "../microtimer.h"
+#include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
 #include "nvToolsExt.h"

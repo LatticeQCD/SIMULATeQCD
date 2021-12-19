@@ -82,18 +82,13 @@ int main(int argc, char *argv[]) {
   
   
   MemoryManagement::memorySummary();
-  gpuEvent_t start, stop;
-  gpuEventCreate(&start);
-  gpuEventCreate(&stop);
-  gpuEventRecord(start);
   
+  StopWatch<true> timer;
+  timer.start();
   
   ip_dot_f2_hisq.updateForce(SpinorIn,force,true);
   
-  gpuEventRecord(stop);
-  gpuEventSynchronize(stop);
-  float timer = 0;
-  gpuEventElapsedTime(&timer, start, stop);
+  timer.stop();
     
   force_host=force;
   

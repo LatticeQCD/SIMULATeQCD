@@ -13,9 +13,7 @@ void run_func_nostacks(CommunicationBase &commBase) {
 
     const int HaloDepthSpin = 4;
 
-    gpuEvent_t start, stop;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
+    StopWatch<true> timer;
 
     grnd_state<onDevice> d_rand;
     initialize_rng(13333+2130, d_rand);
@@ -25,18 +23,15 @@ void run_func_nostacks(CommunicationBase &commBase) {
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     GCOMPLEX(double) dot(0.0,0.0);
-    gpuEventRecord(start);
-
+    
+    timer.start();
     dot = spinorIn.dotProduct(spinorIn);
 
-    gpuEventRecord(stop);
-
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
+    timer.stop();
 
     rootLogger.info("dot " ,  dot);
 
-    rootLogger.info("Time for dot-product: " ,  milliseconds ,  " ms");
+    rootLogger.info("Time for dot-product: " ,  timer);
 }
 
 
@@ -44,10 +39,8 @@ template<class floatT, Layout LatLayout, size_t NStacks, bool onDevice>
 void run_func(CommunicationBase &commBase) {
 
     const int HaloDepthSpin = 4;
-
-    gpuEvent_t start, stop;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
+    
+    StopWatch<true> timer;
 
     grnd_state<onDevice> d_rand;
     initialize_rng(13333+2130, d_rand);
@@ -57,20 +50,16 @@ void run_func(CommunicationBase &commBase) {
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
-    gpuEventRecord(start);
-
+    
+    timer.start();
     dot = spinorIn.dotProductStacked(spinorIn);
-
-    gpuEventRecord(stop);
-
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
+    timer.stop();
 
     for (size_t i = 0; i < NStacks; ++i) {
         rootLogger.info("dot " ,  dot[i]);
     }
 
-    rootLogger.info("Time for dot-product: " ,  milliseconds ,  " ms");
+    rootLogger.info("Time for dot-product: " , timer);
 }
 
 int main(int argc, char **argv) {

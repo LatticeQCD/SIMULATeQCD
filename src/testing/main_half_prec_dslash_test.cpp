@@ -43,9 +43,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     //Initialization as usual
 
-    gpuEvent_t start, stop;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
+    StopWatch<true> timer;
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
@@ -123,17 +121,14 @@ void test_dslash(CommunicationBase &commBase, int Vol){
             // GpuError("error in Initialization of DSlash", gpuErr);
             rootLogger.info("Error in Initialization of DSlash");
 
-    gpuEventRecord(start);
+    timer.start();
     for (int i = 0; i < 500; ++i)
     {
         // spinorIn.updateAll(COMM_BOTH | Hyperplane);
         dslash.applyMdaggM(spinorOut, spinorIn, false);
         spinorIn=spinorSave;
     }
-    gpuEventRecord(stop);
-    gpuEventSynchronize(stop);
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
+    timer.stop();
     
 
 
@@ -147,12 +142,12 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     norm = norm / Vol_Stack;
     
     // gpuProfilerStop();
-    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  milliseconds);
+    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wint-in-bool-context"
     float EOfactor = (LatLayout == (Even || Odd) ? 0.5 : 1.0);
     #pragma GCC diagnostic pop
-    float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(milliseconds * 1e-3)*1e-12;
+    float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /timer.seconds()*1e-12;
     rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 
     for (int i = 0; i < NStacks; i++) {

@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     param.nodeDim.set(NodeDim);
 
     /// Initialize a timer
-    MicroTimer timer;
+    StopWatch<true> timer;
 
     /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
     CommunicationBase commBase(&argc, &argv);
@@ -132,12 +132,13 @@ int main(int argc, char *argv[]) {
     /// parameter to each kernel.
     const size_t HaloDepth = 1;
 
-    /// rootLogger.info(isamethodwhichprintsmessages.Itcanbeusedasstd::cout,butitinvolvesalwaysanewline.
-///ThisrootLoggerclassmakessurethatonlytherootCore/GPUprintssomething.
-///Alternatively,onecanusestdLogger.info(whereeachCore/GPUwillprintsomething.
-///Apartfromthemethodinfo(thereisalsoalloc(trace(debug(info(warn(error(fatal(which
-///highlighttheoutputdifferently.
-rootLogger.info("Initialize Lattice");
+
+    /// rootLogger.info() is a method which prints messages. It can be used as std::cout, but it involves always a newline.
+    /// This rootLogger class makes sure that only the root Core/GPU prints something.
+    /// Alternatively, one can use stdLogger.info() where each Core/GPU will print something.
+    /// Apart from the method info() there is also alloc() trace() debug() info() warn() error() fatal() which
+    /// highlight the output differently.
+    rootLogger.info("Initialize Lattice");
     /// Initialize the Indexer on GPU and CPU.  
     initIndexer(HaloDepth,param,commBase,true);
     typedef GIndexer<All,HaloDepth> GInd;

@@ -68,7 +68,7 @@ gradientFlow         # Example Parameter-file: parameter/applications/gradientFl
 # Gauge fixing
 gaugeFixing          # Example Parameter-file: parameter/applications/gaugeFixing.param
 ```
-In the [documentation](https://latticeqcd.github.io/SIMULATeQCD) you will find more information on how to execute these programs.
+In the [documentation](https://latticeqcd.github.io/SIMULATeQCD/03_applications/applications.html) you will find more information on how to execute these programs.
 
 ## Example: Plaquette action computation
 
@@ -111,8 +111,7 @@ If none of the above cases apply, you may also send an email to lukas.mazur(at)u
 
 ## Main contributors
 
-[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), [P. Scior](https://github.com/philomat), [H.-T. Shu](https://github.com/haitaoshu), R. Larsen, M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74)
-
+[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), [P. Scior](https://github.com/philomat), [H.-T. Shu](https://github.com/haitaoshu), R. Larsen, M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74), [S. Ali](https://github.com/Sajidali1031)
 
 ## Citing SIMULATeQCD
 

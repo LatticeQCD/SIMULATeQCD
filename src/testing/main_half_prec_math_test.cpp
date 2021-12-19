@@ -89,15 +89,7 @@ int main(int argc, char *argv[]) {
 
     initIndexer(HaloDepth,param,commBase);
 
-    gpuEvent_t start, stop, start2, stop2, start3, stop3, start4, stop4;
-    gpuEventCreate(&start);
-    gpuEventCreate(&stop);
-    gpuEventCreate(&start2);
-    gpuEventCreate(&stop2);
-    gpuEventCreate(&start3);
-    gpuEventCreate(&stop3);
-    gpuEventCreate(&start4);
-    gpuEventCreate(&stop4);
+    StopWatch<true> timer;
 
     Gaugefield<float,true,HaloDepth,R18> gauge(commBase);
     Gaugefield<float,true,HaloDepth,R18> dummy(commBase);
@@ -119,8 +111,8 @@ int main(int argc, char *argv[]) {
     spinor_half.one();
     spinor_out.iterateOverBulk(simple_matvec_mult<__half,HaloDepth,R18>(gauge_half,spinor_half));
 
-    gpuEventRecord(start);
-    
+    timer.start();
+
     typedef GIndexer<All,HaloDepth> GInd;
     gSite site1 = GInd::getSite(0,0,1,1);
     gaugeAccessor<float,R18> gAcc = gauge_host.getAccessor();
@@ -144,14 +136,12 @@ int main(int argc, char *argv[]) {
     rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
     rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
     
-    gpuEventRecord(stop);
-    gpuEventSynchronize(stop);
-    float milliseconds = 0;
-    gpuEventElapsedTime(&milliseconds, start, stop);
+    timer.stop();
     // gpuProfilerStop();
-    rootLogger.info("Time for 2 applications of 2 Adds (half): " ,  milliseconds ,  " ms");
-    gpuEventRecord(start2);
+    rootLogger.info("Time for 2 applications of 2 Adds (half): " ,  timer);
     
+    timer.reset();
+    timer.start();
     for (int i = 0; i < 2; i++) {
         gauge.iterateOverBulkAllMu(simple_add<float,HaloDepth,R18>(gauge));
     }
@@ -163,29 +153,25 @@ int main(int argc, char *argv[]) {
     rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
     rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
     rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());
-    gpuEventRecord(stop2);
-    gpuEventSynchronize(stop2);
-    float milliseconds2 = 0;
-    gpuEventElapsedTime(&milliseconds2, start2, stop2);
-    rootLogger.info("Time for 2 applications of 2 Adds (float): " ,  milliseconds2 ,  " ms");
+
+    timer.stop();
+    rootLogger.info("Time for 2 applications of 2 Adds (float): " ,  timer);
 
     
-    gpuEventRecord(start3);
-
+    timer.reset();
+    timer.start();
 for (int i = 0; i < 2; i++) {
     
 
     gauge_half.iterateOverBulkAllMu(simple_mult<__half,HaloDepth,R18>(gauge_half));
     }
-
-    gpuEventRecord(stop3);
-    gpuEventSynchronize(stop3);
-    float milliseconds3 = 0;
-    gpuEventElapsedTime(&milliseconds3, start3, stop3);
+    
+    timer.stop();
     // gpuProfilerStop();
-    rootLogger.info("Time for 2 applications of 6 mults (half): " ,  milliseconds3 ,  " ms");
-    gpuEventRecord(start4);
+    rootLogger.info("Time for 2 applications of 6 mults (half): " ,  timer);
 
+    timer.reset();
+    timer.start();
 
 dummy.template convert_precision<__half>(gauge_half);
     gauge_host = dummy;
@@ -203,12 +189,9 @@ for (int i = 0; i < 2; i++) {
 
     gauge.iterateOverBulkAllMu(simple_mult<float,HaloDepth,R18>(gauge));
     }
-
-    gpuEventRecord(stop4);
-    gpuEventSynchronize(stop4);
-    float milliseconds4 = 0;
-    gpuEventElapsedTime(&milliseconds4, start4, stop4);
-    rootLogger.info("Time for 2 applications of 6 mults (float): " ,  milliseconds4 ,  " ms");
+    
+    timer.stop();
+    rootLogger.info("Time for 2 applications of 6 mults (float): " ,  timer);
     
     gauge_host = gauge;
     

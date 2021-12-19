@@ -14,10 +14,7 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
     CommunicationBase commBase(&argc, &argv);
 
-    gpuEvent_t mcu_timer_start, mcu_timer_stop;
-    float cu_timer_time=0;
-    double configtime=0;
-    double totaltime=0;
+    StopWatch<true> timer, totaltime;
 
     RhmcParameters param;
 
@@ -92,12 +89,9 @@ int main(int argc, char *argv[]) {
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
     GaugeAction<floatT, true, HaloDepth, R18> gaugeaction(gauge);
 
-    gpuEventCreate( &mcu_timer_start );
-    gpuEventCreate( &mcu_timer_stop );
-
     for (int i = 1; i <= param.no_updates(); ++i) {
 
-        gpuEventRecord( mcu_timer_start, 0 );
+        timer.start();
 
         acc += HMC.update(!param.always_acc());
         acceptance = floatT(acc)/floatT(i);
@@ -112,16 +106,13 @@ int main(int argc, char *argv[]) {
         measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, true, gauge, d_rand);
 	
         measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, false, gauge, d_rand);
-
-        gpuEventRecord( mcu_timer_stop, 0 );
-        gpuEventSynchronize(mcu_timer_stop);
-        gpuEventElapsedTime( &cu_timer_time, mcu_timer_start, mcu_timer_stop );
-        configtime += cu_timer_time;
-        totaltime += cu_timer_time;
-        rootLogger.info("Time (TTRAJ) for trajectory without IO: " ,  static_cast<int>(cu_timer_time / 1000.) ,  " s | avg traj. time : "
-            ,  static_cast<int>(totaltime/1000./(i)) ,  " s");
         
-        //IO
+        timer.stop();
+        totaltime += timer;
+        rootLogger.info("Time (TTRAJ) for trajectory without IO: " , timer,  
+                " | avg traj. time : " , totaltime/i);
+        
+        timer.reset();
 
         if (i % param.write_every()==0)
         {
@@ -136,8 +127,6 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Run has ended! acceptance = " ,  acceptance);
 
-    gpuEventDestroy(mcu_timer_stop);
-    gpuEventDestroy(mcu_timer_start);
 
     return 0;
 }

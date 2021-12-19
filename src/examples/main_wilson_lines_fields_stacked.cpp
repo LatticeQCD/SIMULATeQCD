@@ -512,7 +512,7 @@ int main(int argc, char *argv[]) {
 
 
     /// Initialize a timer.
-    MicroTimer timer;
+    StopWatch<true> timer;
 
     /// Initialize the CommunicationBase.
     CommunicationBase commBase(&argc, &argv);

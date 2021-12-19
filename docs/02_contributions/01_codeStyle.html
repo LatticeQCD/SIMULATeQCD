@@ -48,11 +48,12 @@
 <li class="toctree-l2"><a class="reference internal" href="02_git.html">How to do pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="03_organizeFiles.html">How to organize new files</a></li>
 <li class="toctree-l2"><a class="reference internal" href="04_terminalIO.html">Terminal output &amp; terminating the program</a></li>
-<li class="toctree-l2"><a class="reference internal" href="05_inputParameter.html">How to use an input parameter file</a></li>
-<li class="toctree-l2"><a class="reference internal" href="06_memoryAllocation.html">Memory Management</a></li>
-<li class="toctree-l2"><a class="reference internal" href="07_multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="08_testing.html">Testing the code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="09_documenting.html">Documenting your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_timer.html">Timing your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_inputParameter.html">How to use an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="08_multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_documenting.html">Documenting your code</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
@@ -93,7 +94,7 @@ Switch on compiler warnings with -Wall -Wextra. Do care about these warnings. A 
 <li><p><strong>Do not repeat yourself</strong><br />
 Do not copy code or use similar code all the time. This makes it harder to maintain the code, for example by requiring the developer to make the same change in multiple places.</p></li>
 <li><p><strong>Do not use the new and delete operators</strong><br />
-The <code class="docutils literal notranslate"><span class="pre">new</span></code> and the <code class="docutils literal notranslate"><span class="pre">delete</span></code> operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the <a class="reference internal" href="06_memoryAllocation.html"><span class="doc std std-doc">Memory Manager</span></a>. There is absolutely no reason to use <code class="docutils literal notranslate"><span class="pre">new</span></code> for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.</p></li>
+The <code class="docutils literal notranslate"><span class="pre">new</span></code> and the <code class="docutils literal notranslate"><span class="pre">delete</span></code> operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the <a class="reference internal" href="07_memoryAllocation.html"><span class="doc std std-doc">Memory Manager</span></a>. There is absolutely no reason to use <code class="docutils literal notranslate"><span class="pre">new</span></code> for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.</p></li>
 <li><p><strong>Avoid pointers</strong><br />
 Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type safe. This causes a lot of errors. There are cases where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.</p></li>
 <li><p><strong>Delete the copy constructor for classes which manage large amounts of memory</strong><br />

@@ -173,7 +173,7 @@ void run0(CommunicationBase &commBase) {
     allocHost(&sendBufferHost, size);
     allocHost(&recvBufferHost, size);
 
-    MicroTimer timer;
+    StopWatch<true> timer;
 
     for (size_t i = 0; i < size; i++) {
         sendBufferHost[i] = (char) (i % 100 + commBase.MyRank());

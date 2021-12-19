@@ -19,7 +19,7 @@
 #include "base/LatticeDimension.h"
 #include "base/latticeParameters.h"
 #include "base/memoryManagement.h"
-#include "base/microtimer.h"
+#include "base/stopWatch.h"
 #include "base/runFunctors.h"
 #include "base/staticArray.h"
 #include "base/static_for_loop.h"

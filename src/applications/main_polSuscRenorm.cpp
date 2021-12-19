@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     param.readfile(commBase, "../parameter/applications/polSuscRenorm.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param,commBase);
-    MicroTimer timer;
+    StopWatch<true> timer;
 
     Gaugefield<PREC,true,HaloDepth>      gauge(commBase);   /// gauge field
     PolyakovLoop<PREC,true,HaloDepth>    ploopClass(gauge); /// for measuring Polyakov loops

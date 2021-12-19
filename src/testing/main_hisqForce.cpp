@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
 
-    MicroTimer timer;
+    StopWatch<true> timer;
     CommunicationBase commBase(&argc, &argv);
     RhmcParameters rhmc_param;
     rhmc_param.readfile(commBase,"../parameter/tests/hisqForce.param", argc, argv);

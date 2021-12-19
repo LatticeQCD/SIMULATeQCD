@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     ///Initialize Base
     typedef GIndexer<All,HaloDepth> GInd;
     stdLogger.setVerbosity(INFO);
-    MicroTimer                              timer;
+    StopWatch<true> timer;
     LatticeParameters                       lp;
     CommunicationBase                       commBase(&argc, &argv);
     lp.readfile(commBase, "../parameter/tests/ColorElectricMagneticCloverTest.param", argc, argv);
