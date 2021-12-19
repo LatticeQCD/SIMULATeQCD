@@ -110,6 +110,7 @@ class StopWatch {
     }
 
 
+    double microseconds() const { return _elapsed*1000; }
     double milliseconds() const { return _elapsed; }
     double seconds() const { return milliseconds()/1000; }
     double minutes() const { return seconds()/60; }
