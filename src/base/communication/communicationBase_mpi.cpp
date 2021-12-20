@@ -384,6 +384,13 @@ GSU3<double> CommunicationBase::reduce(GSU3<double> in) const {
     return recv;
 }
 
+void CommunicationBase::reduce(uint32_t *in, int nr) const {
+    uint32_t *buf = new uint32_t[nr];
+    MPI_Allreduce(in, buf, nr, MPI_UINT32_T, MPI_SUM, cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
 void CommunicationBase::reduce(float *in, int nr) const {
     float *buf = new float[nr];
     MPI_Allreduce(in, buf, nr, MPI_FLOAT, MPI_SUM, cart_comm);

@@ -237,6 +237,8 @@ public:
     /// Reduce (summing up) an array of double values, replacing values
     void reduce(float *, int) const EMPTY_IF_SCALAR;
 
+    void reduce(uint32_t *, int) const EMPTY_IF_SCALAR;
+
     void reduce(double *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of values, replacing values
