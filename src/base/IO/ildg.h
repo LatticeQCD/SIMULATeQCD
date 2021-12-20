@@ -536,8 +536,8 @@ public:
                 std::stringstream crc32a, crc32b;
                 crc32a<<std::hex<<computed_checksum_crc32.checksuma;
                 crc32b<<std::hex<<computed_checksum_crc32.checksumb;
-                rootLogger.info("checksuma (ildg): ", crc32a.str());
-                rootLogger.info("checksumb (ildg): ", crc32b.str());
+                rootLogger.template info("checksuma (ildg): ", crc32a.str());
+                rootLogger.template info("checksumb (ildg): ", crc32b.str());
 
                 // sixth lime record (tail)
                 header_ildg = "scidac-checksum";

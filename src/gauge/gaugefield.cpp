@@ -90,6 +90,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
                                                                        int diskprec, Endianness en)
 {
     Checksum crc32;
+    uint32_t index=0;
     InitializeChecksum(&crc32);
     uint32_t crc32_array_full[GInd::getLatData().globvol4];
     size_t lattVol_local=GInd::getLatData().vol4;
@@ -133,9 +134,8 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
                         sitedata.push_back(tmp);
                         ildg.put(tmp);
                     }
-                    uint32_t index=this->getComm().MyRank()*lattVol_local + site.isite;
-                    //index=this->getComm().MyRank()*lattVol_local + index;
-                    //rootLogger.template info()<<"index = "<<index;
+                    //index=this->getComm().MyRank()*lattVol_local + site.isite;
+                    index=this->getComm().MyRank()*lattVol_local + index;
                     //this->getComm().MyRank() gives mpi rank (GPU #)
                     floatT *sitedata_=(floatT*)(&sitedata[0]);
                     for (size_t i_brev = 0; i_brev < 72; i_brev++)
@@ -145,6 +145,8 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
 
                     if (ildg.end_of_buffer()) {
                         ildg.process_write_data();
+                        //for(size_t i=0; i<GInd::getLatData().globvol4; i++)
+                        //    checksum_crc32_accumulator(&crc32, i, ildg.buf_ptr()+ i * ildg.bytes_per_site(), ildg.bytes_per_site());
                         this->getComm().writeBinary(ildg.buf_ptr(), ildg.buf_size() / ildg.bytes_per_site());
                     }
                 }
