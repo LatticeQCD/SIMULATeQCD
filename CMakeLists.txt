@@ -289,7 +289,7 @@ add_to_compound_SIMULATeQCD_target(tests HBOR_single_test)
 
 add_SIMULATeQCD_executable(hisqForce src/testing/main_hisqForce.cu src/modules/HISQ/hisqSmearing.cu src/modules/dslash/dslash.cu src/modules/inverter/inverter.cu src/modules/HISQ/hisqForce.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
 
 add_SIMULATeQCD_executable(hisqSmearingMulti src/testing/main_HisqSmearingTestMulti.cu src/spinor/spinorfield.cu)
@@ -309,7 +309,7 @@ add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
 
 add_SIMULATeQCD_executable(InverterTest src/testing/main_InverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(InverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests InverterTest)
 
 add_SIMULATeQCD_executable(MixedPrecInverterTest src/testing/main_MixedPrecInverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
@@ -343,7 +343,7 @@ add_to_compound_SIMULATeQCD_target(tests PureGaugeHmcTest)
 
 add_SIMULATeQCD_executable(rhmcTest src/testing/main_rhmc_test.cu ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(rhmcTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(rhmcTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(rhmcTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests rhmcTest)
 
 add_SIMULATeQCD_executable(RndMultipleTest src/testing/main_rnd_multiple_test.cu)
@@ -409,7 +409,7 @@ add_to_compound_SIMULATeQCD_target(profilers InverterProf)
 
 add_SIMULATeQCD_executable(MultiRHSProf src/profiling/main_MrhsDSlashProf.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(MultiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 HALFPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf)
 
 add_SIMULATeQCD_executable(MultiRHSProf_half src/testing/main_half_prec_dslash_test.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/spinor/spinorfield.cu)
@@ -482,7 +482,7 @@ add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 
 add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cu ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 HALFPREC=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications RHMC)
 
 add_SIMULATeQCD_executable(sublatticeUpdates src/applications/main_sublatticeUpdates.cu ${SOURCE_FILES_SUBLATTICEUPDATES})
@@ -492,7 +492,7 @@ add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
 add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cu ${SOURCE_FILES_MEASUREHADRONS})
 set_SIMULATeQCD_property(measureHadrons PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 HALFPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
 
 add_SIMULATeQCD_executable(sampleTopology src/applications/main_sampleTopology.cu ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GFIX} ${SOURCE_FILES_GENERATEQUENCHED})
 set_SIMULATeQCD_property(sampleTopology PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
