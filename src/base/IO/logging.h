@@ -59,20 +59,28 @@ class Logger {
         template <LogLevel level, typename... Args>
             inline std::string message(Args&&... args) {
                 std::ostringstream prefix, loginfo, postfix;
-
-                if (colorized_output && level == WARN)
+                
+                bool resetColor = false;
+                if (colorized_output && level == WARN){
                     prefix << COLORS::yellow;
-                if (colorized_output && level == ERROR)
+                    resetColor = true;
+                }
+                if (colorized_output && level == ERROR){
                     prefix << COLORS::red;
-                if (colorized_output && level == FATAL)
+                    resetColor = true;
+                }
+                if (colorized_output && level == FATAL){
                     prefix << COLORS::redBold;
+                    resetColor = true;
+                }
 
                 loginfo << "# " << timeStamp() << LogLevelStr[level] << ": ";
 
                 std::string msg = sjoin(std::forward<Args>(args)...);
 
-                postfix << COLORS::reset
-                    << std::resetiosflags(
+                if(resetColor) postfix << COLORS::reset;
+                
+                postfix << std::resetiosflags(
                             std::ios_base::floatfield | std::ios_base::basefield |
                             std::ios_base::adjustfield | std::ios_base::uppercase |
                             std::ios_base::showpos | std::ios_base::showpoint |
