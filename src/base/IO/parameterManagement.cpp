@@ -47,11 +47,11 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
 
         //fix that!!
         if (p.isSet())
-            rootLogger.info("# " ,  prefix ,  " :: " ,  p.name);
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p);
         else if (p.hasdefault)
-            rootLogger.info("# " ,  prefix ,  " :: " ,  p.name ,  " (default)");
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p ,  " (default)");
         else if (p.isRequired())
-            throw std::runtime_error(stdLogger.fatal("# ", prefix, " :: ", p.name, " required but NOT set"));
+            throw std::runtime_error(stdLogger.fatal("# ", prefix, " :: ", p, " required but NOT set"));
 
         if (p.isRequired() && !p.isSet()) abort = true;
     }
