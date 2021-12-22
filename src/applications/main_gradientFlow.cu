@@ -74,9 +74,6 @@ struct gradientFlowParam : LatticeParameters {
 
     Parameter<bool> use_unit_conf; //! for testing (or benchmarking purposes using fixed stepsize)
     Parameter<bool> save_conf;
-    Parameter<std::string> format_output;
-    Parameter<std::string> format_input;
-    Parameter<int> precision_output;// precision of output configuration
     //! ignore start_step_size and integrate to the necessary_flow_times without steps in between.
     //! only useful when using RK_method fixed_stepsize
     Parameter<bool> ignore_fixed_startstepsize;
@@ -89,7 +86,7 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(RK_method, "RK_method", std::string("adaptive_stepsize"));
         addDefault(accuracy, "accuracy", floatT(1e-5));
 
-        addDefault(binsize, "binsize", 4);
+        addDefault(binsize, "binsize", 8);
 
         add(measurements_dir, "measurements_dir");
 
@@ -99,12 +96,6 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(save_conf, "save_configurations", false);
 
         addDefault(use_unit_conf, "use_unit_conf", false);
-
-        addDefault(format_input, "format_in", std::string("nersc"));
-
-        addDefault(format_output, "format_out", std::string("nersc"));
-
-        addDefault(precision_output, "prec_out", 0);
 
         add(measurement_intervall, "measurement_intervall");
 
@@ -442,20 +433,8 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
         //! -------------------------------calculate observables on flowed field----------------------------------------
 
-        if (lp.save_conf() ){//&& gradFlow.checkIfnessTime()){
-
-            int dp=lp.precision_output();
-            if (dp==0)(sizeof(PREC)==4)?dp=1:dp=2;
-            if (lp.format_output()=="ildg"){
-                gauge.writeconf_ildg( datNameConf.str() + "_FT" + std::to_string(flow_time)+"_ildg_prec_"+std::to_string(dp)+"_cn."+std::to_string(lp.confnumber()),3,dp,ENDIAN_BIG);
-            }
-            else if (lp.format_output()=="nersc"){
-                gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time)+"_nersc_prec_"+std::to_string(dp)+"_cn."+std::to_string(lp.confnumber()),3,dp,ENDIAN_BIG);
-            }
-            else {
-                rootLogger.template info("Only NERSC and ILDG formats are supported for output configuration.");
-            }
-
+        if (lp.save_conf() && gradFlow.checkIfnecessaryTime()){
+            gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time));
         }
 
         if (lp.plaquette()) {
@@ -740,7 +719,7 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         topology.recomputeField();
     }
     timer.stop();
-    rootLogger.template info("complete time = " ,  timer.minutes() ,  " min");
+    rootLogger.info("complete time = " ,  timer.minutes() ,  " min");
 }
 
 

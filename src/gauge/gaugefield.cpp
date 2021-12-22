@@ -12,7 +12,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_nersc(const std::s
                                                                              int diskprec, Endianness en) {
     if(onDevice){
 
-        rootLogger.template info("writeconf_nersc: Create temporary GSU3Array!");
+        rootLogger.info("writeconf_nersc: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
         writeconf_nersc_host(lattice_host.getAccessor(),fname,rows,diskprec,en);
@@ -39,12 +39,12 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_nersc_host(gaugeAcc
         if (this->getComm().IamRoot())
             out.open(fname.c_str());
         if (!nersc.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, out)) {
-            rootLogger.template error("Unable to write NERSC file: " ,  fname);
+            rootLogger.error("Unable to write NERSC file: " ,  fname);
             return;
         }
     }
 
-    rootLogger.template info("Writing NERSC file format: " ,  fname);
+    rootLogger.info("Writing NERSC file format: " ,  fname);
 
     const size_t filesize = nersc.header_size() + GInd::getLatData().globalLattice().mult() * nersc.bytes_per_site();
 
@@ -73,7 +73,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::st
                                                                    int diskprec, Endianness en) {
     if(onDevice){
 
-        rootLogger.template info("writeconf_ildg: Create temporary GSU3Array!");
+        rootLogger.info("writeconf_ildg: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
         writeconf_ildg_host(lattice_host.getAccessor(),fname,rows,diskprec,en);
@@ -92,8 +92,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
     Checksum crc32;
     uint32_t index=0;
     InitializeChecksum(&crc32);
-    uint32_t crc32_array_full[GInd::getLatData().globvol4];
-    size_t lattVol_local=GInd::getLatData().vol4;
+    //uint32_t crc32_array_full[GInd::getLatData().globvol4];
     //dynamically allocate memory
     gMemoryPtr<false> crc32_array = MemoryManagement::getMemAt<false>("crc32_array");
     crc32_array->template adjustSize<uint32_t>(GInd::getLatData().globvol4);
@@ -112,12 +111,12 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
             out.open(fname.c_str(),std::ios::out | std::ios::binary);
         //changed open to binary
         if (!ildg.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, crc32, out,true)) {
-            rootLogger.template error("Unable to write ILDG file: ", fname);
+            rootLogger.error("Unable to write ILDG file: ", fname);
             return;
         }
     }
 
-    rootLogger.template info("Writing ILDG file format: ", fname);
+    rootLogger.info("Writing ILDG file format: ", fname);
 
     const size_t filesize = ildg.header_size() + GInd::getLatData().globalLattice().mult() * ildg.bytes_per_site();
 
@@ -134,8 +133,8 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
                         sitedata.push_back(tmp);
                         ildg.put(tmp);
                     }
-                    //index=this->getComm().MyRank()*lattVol_local + site.isite;
-                    index=this->getComm().MyRank()*lattVol_local + index;
+                    //index=this->getComm().MyRank()*GInd::getLatData().vol4 + site.isite;
+                    index=this->getComm().MyRank()*GInd::getLatData().vol4 + index;
                     //this->getComm().MyRank() gives mpi rank (GPU #)
                     floatT *sitedata_=(floatT*)(&sitedata[0]);
                     for (size_t i_brev = 0; i_brev < 72; i_brev++)
@@ -167,7 +166,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
         if (this->getComm().IamRoot())
             out.open(fname.c_str(),std::ios::app | std::ios::binary);
         if (!ildg.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, crc32, out,false)) {
-            rootLogger.template error("Unable to write ILDG file: ", fname);
+            rootLogger.error("Unable to write ILDG file: ", fname);
             return;
         }
     }
@@ -178,7 +177,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_nersc(const std::str
 
     if(onDevice){
 
-        rootLogger.template info("readconf_nersc: Create temporary GSU3Array!");
+        rootLogger.info("readconf_nersc: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_nersc_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -195,7 +194,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_ildg(const std::stri
 
     if(onDevice){
 
-        rootLogger.template info("readconf_ildg: Create temporary GSU3Array!");
+        rootLogger.info("readconf_ildg: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_ildg_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -212,7 +211,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_milc(const std::stri
 
     if(onDevice){
 
-        rootLogger.template info("readconf_milc: Create temporary GSU3Array!");
+        rootLogger.info("readconf_milc: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_milc_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -365,7 +364,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     traceSum = ((this->getComm()).reduce(traceSum)) / (3  * 4 * GInd::getLatData().globalLattice().mult());
 
 
-    rootLogger.template info("Trace sum is = " ,  traceSum);
+    rootLogger.info("Trace sum is = " ,  traceSum);
 
 
     if (!milc.checksums_match()){
