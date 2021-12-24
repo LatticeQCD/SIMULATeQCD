@@ -136,10 +136,10 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
                     //index=this->getComm().MyRank()*GInd::getLatData().vol4 + site.isite;
                     index=this->getComm().MyRank()*GInd::getLatData().vol4 + index;
                     //this->getComm().MyRank() gives mpi rank (GPU #)
-                    floatT *sitedata_=(floatT*)(&sitedata[0]);
-                    for (size_t i_brev = 0; i_brev < 72; i_brev++)
-                        Byte_swap(sitedata_[i_brev]);
-                    crc32_array_ptr[index] = checksum_crc32_sitedata((char *)(&sitedata_[0]), ildg.bytes_per_site());
+                    //ildg.byte_swap_sitedata((char *)&sitedata[0]);
+                    for (size_t bs = 0; bs < 72; bs++)
+                        Byte_swap((char *)(&sitedata[0]) + bs * sizeof(floatT), sizeof(floatT));
+                    crc32_array_ptr[index] = checksum_crc32_sitedata((char *)(&sitedata[0]), ildg.bytes_per_site());
                     index++;
 
                     if (ildg.end_of_buffer()) {
@@ -310,9 +310,9 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
 
     this->getComm().closeIOBinary();
 
-    if (!ildg.checksums_match()){
+    /*if (!ildg.checksums_match()){
         throw std::runtime_error(stdLogger.fatal("Error checksum!"));
-    }
+    }*/
 
 }
 

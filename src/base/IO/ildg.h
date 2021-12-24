@@ -613,6 +613,13 @@ public:
         }
         return true;
     }
+    /*template<class floatT>
+    void byte_swap_sitedata(char *sitedata) {
+        char *sitedata_=(char *)(&sitedata);
+        for (size_t bs = 0; bs < 72; bs++) {
+            Byte_swap(sitedata_[bs * sizeof(floatT)], sizeof(floatT));
+        }
+    }*/
 };
 
 #endif //SIMULATEQCD_ILDG_H

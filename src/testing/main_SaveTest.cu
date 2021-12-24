@@ -72,7 +72,7 @@ int main(int argc, char *argv[]){
 
 	LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/SaveTest.param", argc, argv);
+    param.readfile(commBase, "/home/sali/measurements/measurePlaquette/readWriteConf/SaveTest.param", argc, argv);
 	commBase.init(param.nodeDim());
 
 	rootLogger.info("Initialize Lattice");
@@ -82,21 +82,24 @@ int main(int argc, char *argv[]){
     initIndexer(HaloDepth,param,commBase);
 
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge( commBase);
-
+	//Gaugefield<PREC, USE_GPU,HaloDepth> gauge_in_ildg( commBase);
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test(commBase);
 
     rootLogger.info("Read configuration");
 
-	gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
+	gauge.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB");
+	//gauge_in_ildg.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB_test");
 
 	rootLogger.info("Store Lattice");
 
 	gauge.updateAll();
-	gauge.writeconf_nersc("../test_conf/test_l20t20b06498a_nersc.302500");
+    //gauge_in_ildg.updateAll();
+	gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
+    gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB_test",3,2);
 
 	rootLogger.info("Read test configuration");
 
-	gauge_test.readconf_nersc("../test_conf/test_l20t20b06498a_nersc.302500");
+	gauge_test.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
 
 	gauge_test.updateAll();
 	rootLogger.info("Testing the configuration");
