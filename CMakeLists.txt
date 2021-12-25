@@ -292,6 +292,11 @@ set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing"
 SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
 
+add_SIMULATeQCD_executable(hisqForceImagmu src/testing/main_HisqForceImagmu.cu src/modules/HISQ/hisqSmearing.cu src/modules/dslash/dslash.cu src/modules/inverter/inverter.cu src/modules/HISQ/hisqForce.cu src/spinor/spinorfield.cu)
+set_SIMULATeQCD_property(hisqForceImagmu PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqForceImagmu PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+
+add_to_compound_SIMULATeQCD_target(tests hisqForce)
 add_SIMULATeQCD_executable(hisqSmearingMulti src/testing/main_HisqSmearingTestMulti.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(hisqSmearingMulti PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(hisqSmearingMulti PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
@@ -306,6 +311,11 @@ add_SIMULATeQCD_executable(hisqSmearingTest src/testing/main_HisqSmearingTest.cu
 set_SIMULATeQCD_property(hisqSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(hisqSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
+
+add_SIMULATeQCD_executable(hisqSmearingImagmuTest src/testing/main_HisqSmearingImagmuTest.cu src/modules/HISQ/hisqSmearing.cu)
+set_SIMULATeQCD_property(hisqSmearingImagmuTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqSmearingImagmuTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(tests hisqSmearingImagmuTest)
 
 add_SIMULATeQCD_executable(InverterTest src/testing/main_InverterTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/modules/inverter/inverter.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(InverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

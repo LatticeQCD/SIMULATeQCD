@@ -95,6 +95,39 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
     
     //_gauge_lvl2.iterateOverBulkAllMu(HisqSmearingStruct<floatT, HaloDepth,compLvl1>(_gauge_lvl1.getAccessor(), _Lvl2));
     
+    //if (mu_f != 0){
+    //     if (multiplyPhase){
+    //    staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2,mu_f);
+    //    _gauge_lvl2.iterateOverBulkAllMu(multPhase); 
+    //    _gauge_lvl2.updateAll();
+    //    }
+    //else {
+    //   if (multiplyPhase) {
+    //    staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl2> multPhase(_gauge_lvl2);
+    //    _gauge_lvl2.iterateOverBulkAllMu(multPhase);
+    //    _gauge_lvl2.updateAll(); 
+    //                     }
+    //}    
+    
+   
+    
+    //if ( mu_f !=0 ) {
+    //    if (multiplyPhase) {
+    //    staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1,mu_f);
+    //    _gauge_lvl1.iterateOverBulkAllMu(multPhase);
+    //    _gauge_lvl1.updateAll();
+    //    }
+    //}
+    //else {
+    //   if (multiplyPhase) {
+    //    staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1);
+    //    _gauge_lvl1.iterateOverBulkAllMu(multPhase);
+    //    _gauge_lvl1.updateAll(); 
+    //                     }
+    //}
+
+
+
     if (mu_f != 0) {
         if (multiplyPhase) {
         staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2,mu_f);
