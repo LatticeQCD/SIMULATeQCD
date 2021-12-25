@@ -130,7 +130,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R
  staple7_8_lvl2(_gauge_lvl1.getAccessor()),
  stapleLepage(_gauge_lvl1.getAccessor()), stapleNaik(_gauge_lvl1.getAccessor()) {}
 
- void SmearAll(bool multiplyPhase = true);
+ void SmearAll(floatT mu_f=0.0, bool multiplyPhase = true);
  
  //these two functions will be used in the force calculation
  template<CompressionType comp_tmp>

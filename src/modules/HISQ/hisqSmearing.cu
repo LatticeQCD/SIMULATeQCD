@@ -3,7 +3,7 @@
 
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, CompressionType compLvl1, CompressionType compLvl2, CompressionType compNaik>
-void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNaik>::SmearAll(bool multiplyPhase) {
+void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNaik>::SmearAll(floatT mu_f, bool multiplyPhase) {
 
     //_gauge_lvl1.iterateOverBulkAllMu(HisqSmearingStruct<floatT, HaloDepth,comp>(_gauge_base.getAccessor(), _Lvl1));
     _dummy.iterateOverBulkAllMu(staple3_lvl1);
@@ -95,16 +95,33 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
     
     //_gauge_lvl2.iterateOverBulkAllMu(HisqSmearingStruct<floatT, HaloDepth,compLvl1>(_gauge_lvl1.getAccessor(), _Lvl2));
     
-    if (multiplyPhase) {
-        staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2);
+    if (mu_f != 0) {
+        if (multiplyPhase) {
+        staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2,mu_f);
         _gauge_lvl2.iterateOverBulkAllMu(multPhase);
+                 }
+    }
+    else {
+        if (multiplyPhase) {
+        staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2);
+        _gauge_lvl2.iterateOverBulkAllMu(multPhase); 
+        }
     }
     _gauge_lvl2.updateAll();
     
-    if (multiplyPhase) {
-        staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1);
+    if ( mu_f !=0 ) {
+        if (multiplyPhase) {
+        staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1,mu_f);
         _gauge_lvl1.iterateOverBulkAllMu(multPhase);
         _gauge_lvl1.updateAll();
+        }
+    }
+    else {
+       if (multiplyPhase) {
+        staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1);
+        _gauge_lvl1.iterateOverBulkAllMu(multPhase);
+        _gauge_lvl1.updateAll(); 
+                         }
     }
     
     //  _gauge_naik.iterateOverBulkAllMu(naiktermStruct<floatT, HaloDepth,compLvl1>(_gauge_lvl1.getAccessor()));
@@ -112,7 +129,6 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
     
     _gauge_naik.updateAll();
 }
-
 #define CLASS_INIT(floatT,HALO) \
   template class HisqSmearing<floatT,true,HALO,R14,R18,R18,U3R14>;	\
   template class HisqSmearing<floatT,true,HALO,R18,R18,R18,R18>; \

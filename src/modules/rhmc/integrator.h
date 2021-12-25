@@ -50,6 +50,7 @@ private:
     void check_traceless();
 
     void forceinfo();
+    floatT forceinfo2();
 
     //this is only a placeholder function for testing, real implementation is in HISQ force! REMOVE for production!
     void make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector <floatT> rat_coeff);
@@ -58,6 +59,7 @@ private:
 
     // The different integration schemes
     void SWleapfrog();
+    void PQPQP2MN();
 
     void PureGaugeleapfrog();
 
