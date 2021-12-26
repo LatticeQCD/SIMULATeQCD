@@ -101,14 +101,15 @@ int main(int argc, char *argv[]) {
 
     CommunicationBase commBase(&argc, &argv);
     RhmcParameters rhmc_param;
-    rhmc_param.readfile(commBase,"../parameter/run_force_test_imagmu.param", argc, argv);
+    rhmc_param.readfile(commBase,"../parameter/tests/hisqForce.param", argc, argv);
 
     commBase.init(rhmc_param.nodeDim());
 
 
     const size_t HaloDepth = 0;
     const size_t HaloDepthSpin = 4;
-    double chmp=rhmc_param.mu_f();
+//    double chmp=rhmc_param.mu_f();
+    double chmp=0.4;
 
     rootLogger.info( "Initialize Lattice");
     typedef GIndexer<All,HaloDepth> GInd;
