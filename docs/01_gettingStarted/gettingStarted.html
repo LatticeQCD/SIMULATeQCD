@@ -99,7 +99,13 @@ sudo apt install git-lfs
 sudo pacman -S git-lfs
 </pre></div>
 </div>
-<p>and activate it by calling <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">lfs</span> <span class="pre">install</span></code></p>
+<p>and activate it by calling <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">lfs</span> <span class="pre">install</span></code>. If you do not have superuser privileges where you are, you can use <a class="reference external" href="https://www.gnu.org/software/wget/">wget</a> as follows:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>wget https://github.com/git-lfs/git-lfs/releases/download/v3.0.2/git-lfs-linux-amd64-v3.0.2.tar.gz
+tar -xf git-lfs-linux-amd64-v3.0.2.tar.gz
+<span class="nv">PREFIX</span><span class="o">=</span>/path/to/install/dir ./install.sh
+</pre></div>
+</div>
+<p>and you can activate it with <code class="docutils literal notranslate"><span class="pre">/path/to/install/dir/bin/git-lfs</span> <span class="pre">install</span></code>. Finally you will need to add <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PATH=/path/to/install/dir/bin:$PATH</span></code> to your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code>.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code> (Some versions have the “–phtread” compiler bug. Versions that definitely work are <a class="reference external" href="https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6">3.14.6</a> or 3.19.2.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C++</span></code> compiler with <code class="docutils literal notranslate"><span class="pre">C++17</span></code> support  (e.g. <code class="docutils literal notranslate"><span class="pre">g++-9</span></code>).</p></li>
