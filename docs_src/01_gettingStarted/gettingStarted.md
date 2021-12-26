@@ -25,7 +25,13 @@ The following software is required to compile SIMULATeQCD:
     # For Arch-based system
     sudo pacman -S git-lfs
     ```
-    and activate it by calling `git lfs install`
+    and activate it by calling `git lfs install`. If you do not have superuser privileges where you are, you can use [wget](https://www.gnu.org/software/wget/) as follows:
+    ```shell
+    wget https://github.com/git-lfs/git-lfs/releases/download/v3.0.2/git-lfs-linux-amd64-v3.0.2.tar.gz
+    tar -xf git-lfs-linux-amd64-v3.0.2.tar.gz
+    PREFIX=/path/to/install/dir ./install.sh
+    ```
+    and you can activate it with `/path/to/install/dir/bin/git-lfs install`. Finally you will need to add `export PATH=/path/to/install/dir/bin:$PATH` to your `.bashrc`.
 2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 3. `C++` compiler with `C++17` support  (e.g. `g++-9`).
 4. `MPI` (e.g. `openmpi-4.0.4`).
