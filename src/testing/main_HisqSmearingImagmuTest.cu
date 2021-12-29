@@ -1,6 +1,11 @@
-//
-// Created by Jishnu on 2020-03-28.
-//
+/* 
+ * main_HisqSmearingImagmuTest.cu
+ *
+ * J. Goswami 
+ *
+ * Quick single-GPU test comparing the output of the imaginary mu smearing against the old results from the ParallelGPUCode. 
+ *
+ */
 
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
@@ -26,21 +31,17 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC, true, HaloDepth> gauge_in(commBase);
-    // Gaugefield<PREC, false,HaloDepth> gauge_in_host(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_Lvl1(commBase);
     Gaugefield<PREC, false,HaloDepth> gauge_Lvl1_host(commBase);
     Gaugefield<PREC, false,HaloDepth> gauge_smeared_bielefeldgpu(commBase);
-    //Gaugefield<PREC, false,HaloDepth> gauge_Lv2_bielefeldgpu(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_u3(commBase);
     Gaugefield<PREC, false,HaloDepth> gauge_u3_host(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_Lv2(commBase);
     Gaugefield<PREC, false,HaloDepth> gauge_Lv2_host(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_naik(commBase);
-    GCOMPLEX(double) imgchmp;
+    GCOMPLEX(PREC) imgchmp;
 
-    double chmp=0.4;
-    int muj;
-    
+    PREC chmp=0.4;
 
     timer.start();
     HisqSmearing<PREC, USE_GPU, HaloDepth,R18,R18,R18,R18> smearing(gauge_in, gauge_Lv2, gauge_naik);
@@ -50,7 +51,6 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Read configuration");
     gauge_in.readconf_nersc("../test_conf/gauge12750");
-    //  gauge_in.one();
     gauge_smeared_bielefeldgpu.readconf_nersc("../test_conf/smearing_link_lv2_110_nersc");
     gauge_in.updateAll();
 
@@ -71,34 +71,24 @@ int main(int argc, char *argv[]) {
 
     typedef GIndexer<All,HaloDepth> GInd;
     gSite site1 = GInd::getSite(0,0,1,1);
- //GSU3<PREC> test2 = gaugeAcc3.getLink(GInd::getSiteMu(site1, muj));
 
     GSU3<PREC> test2;
 
     imgchmp.cREAL = cos(chmp);
     imgchmp.cIMAG = sin(chmp);
 
-    for (muj=0;muj<4;muj++) {
+    for (int muj=0; muj<4; muj++) {
         if (muj == 3) {
-            test2 =  gaugeAcc3.getLink(GInd::getSiteMu(site1, muj)) * imgchmp;
+            test2 = gaugeAcc3.getLink(GInd::getSiteMu(site1, muj)) * imgchmp;
         } else {
             test2 = gaugeAcc3.getLink(GInd::getSiteMu(site1, muj));
-
         }
     }
-
-
-    //rootLogger.info() <<"\n" <<"level2 smeared link from bielefeldgpu:";
-    //rootLogger.info() << test2.getLink10()<<test2.getLink11()<<test2.getLink12();
-
 
     GSU3<PREC> temp = gauge_Lvl1_host.getAccessor().getLink(GInd::getSiteMu(site1, 3));
     temp.su3unitarize();
     rootLogger.info("\n  level1 smeared link from parallelgpu:");
     rootLogger.info(temp.getLink00(),temp.getLink01(),temp.getLink02(),temp.getLink10());
-
-
-
 
     GSU3<PREC> temp2 = gauge_u3_host.getAccessor().getLink(GInd::getSiteMu(site1,3));
     GSU3<PREC> temp2dagger = gauge_u3_host.getAccessor().getLinkDagger(GInd::getSiteMu(site1,3));
@@ -111,42 +101,32 @@ int main(int argc, char *argv[]) {
     rootLogger.info("\n unitarity test:U^{dagger}U=I");
     rootLogger.info(unitarity_test.getLink00(),unitarity_test.getLink11(),unitarity_test.getLink22());
 
+    GSU3<PREC> temp3 = gauge_Lv2_host.getAccessor().getLink(GInd::getSiteMu(site1, 3));
 
 
+    /// Simple test comparing the output of a link against the ParallelGPUCode.
+    rootLogger.info( "\n Lv2 smeared link from ParallelGPUCode with mu_f = 0.4 i");
+    rootLogger.info(temp3.getLink00(),temp3.getLink01(),temp3.getLink02());
+    rootLogger.info(temp3.getLink10(),temp3.getLink11(),temp3.getLink12());
+    rootLogger.info(temp3.getLink20(),temp3.getLink21(),temp3.getLink22());
 
-            GSU3<PREC> temp3 = gauge_Lv2_host.getAccessor().getLink(GInd::getSiteMu(site1, 3));
+    GSU3<PREC> test = GSU3<PREC>( GCOMPLEX(PREC)(0.732449,-0.0011968), GCOMPLEX(PREC)(-0.369535,-0.0837624), GCOMPLEX(PREC)(0.285353,0.654512) ,
+                                  GCOMPLEX(PREC)(0.502689,0.694297)  , GCOMPLEX(PREC)(-0.250711,0.191546)  , GCOMPLEX(PREC)(0.330026,-0.659482),
+                                  GCOMPLEX(PREC)(-0.283782,0.0796874), GCOMPLEX(PREC)(-0.790194,0.734873)  , GCOMPLEX(PREC)(-0.311241,0.150933) );
 
-
-             rootLogger.info( "\n Lv2 smeared link from parallelgpu:");
-             //temp3.su3unitarize();
-             rootLogger.info(temp3.getLink00(),temp3.getLink01(),temp3.getLink02());
-             rootLogger.info(temp3.getLink10(),temp3.getLink11(),temp3.getLink12());
-             rootLogger.info(temp3.getLink20(),temp3.getLink21(),temp3.getLink22());
-
-//  Test for mu_f=0.4
-
-             GSU3 <PREC> test = GSU3 <PREC> (GCOMPLEX(double)(0.732449,-0.0011968),GCOMPLEX(double)(-0.369535,-0.0837624),
-                     GCOMPLEX(double)(0.285353,0.654512),GCOMPLEX(double)(0.502689,0.694297),GCOMPLEX(double)(-0.250711,0.191546),
-                     GCOMPLEX(double)(0.330026,-0.659482),GCOMPLEX(double)(-0.283782,0.0796874),GCOMPLEX(double)(-0.790194,0.734873)
-                     ,GCOMPLEX(double)(-0.311241,0.150933));
-     GSU3<PREC> diff = test - temp3;
-             PREC norm = 0.0;
-             PREC sum = 0.0;
-             for (int i = 0; i < 3; i++) {
-                 for (int j = 0; j < 3; j++) {
-                   norm += abs2(diff(i,j));
-               }
-             }
-             sum += sqrt(norm);
-             sum /= 16.0;
-             if (sum < 1e-6) {
-                  rootLogger.info(CoutColors::green ,  "Test passed!");
-             }
-             else {
-                 rootLogger.info(CoutColors::red ,  "Test failed! sum: " ,  sum);
-             }
-
+    GSU3<PREC> diff = test - temp3;
+    PREC sum = 0.0;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            sum += abs2(diff(i,j));
+        }
+    }
+    sum = sqrt(sum)/16.0;
+    if (sum < 1e-6) {
+        rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
+    } else {
+        rootLogger.info(CoutColors::red, "Test failed! sum:", sum, CoutColors::reset);
+    }
 
     return 0;
-         }
-
+}

@@ -1,6 +1,11 @@
-//
-// Created by Jishnu on 2020-03-30.
-//
+/* 
+ * main_HisqForceImagmu.cu
+ *
+ * J. Goswami 
+ *
+ * Quick test of the HISQ force with imaginary chemical potential. Compares against results from ParallelGPUCode. 
+ *
+ */
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
 #include "../modules/HISQ/hisqForce.h"
@@ -10,9 +15,6 @@
 #define PREC float
 #define MY_BLOCKSIZE 256
 #define USE_GPU true
-
-// This programm tests the HISQ fermion force and has to yield the same result as the gaction_test_hisqforce.cpp in the BielefeldGPUCode
-
 
 template <class floatT, size_t HaloDepth, CompressionType comp>
 struct compare_smearing {
@@ -89,8 +91,7 @@ bool checkfields(Gaugefield<floatT,false,HaloDepth, comp> &GaugeL, Gaugefield<fl
 
     if (faults > 0) {
         return false;
-    }
-    else {
+    } else {
         return true;
     }
 }
@@ -108,8 +109,7 @@ int main(int argc, char *argv[]) {
 
     const size_t HaloDepth = 0;
     const size_t HaloDepthSpin = 4;
-//    double chmp=rhmc_param.mu_f();
-    double chmp=0.4;
+    PREC chmp=rhmc_param.mu_f();
 
     rootLogger.info( "Initialize Lattice");
     typedef GIndexer<All,HaloDepth> GInd;
@@ -128,9 +128,7 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase);
     Gaugefield<PREC, true, HaloDepth> force(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin> SpinorIn(commBase);
-    //    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
-    //gauge.one();
     gauge.readconf_nersc("../test_conf/gauge12750");
 
     gauge.updateAll();
@@ -141,9 +139,6 @@ int main(int argc, char *argv[]) {
     h_rand.make_rng_state(rhmc_param.seed());
 
     d_rand = h_rand;
-
-
-
 
     HisqSmearing<PREC, true, HaloDepth,R18> smearing(gauge,gaugeLvl2,gaugeNaik);
     smearing.SmearAll(chmp);
@@ -163,37 +158,33 @@ int main(int argc, char *argv[]) {
 
     force_host=force;
 
-    GSU3<double> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
+    GSU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
 
 
-//  Test force for mu_f=0.4
-    rootLogger.info("Force parallelGpu with imaginary chemical potential:");
+    /// Test force for mu_f=0.4
+    rootLogger.info("ParallelGPUCode force with mu_f = 0.4 i"); 
     rootLogger.info(test1.getLink00(), test1.getLink01(), test1.getLink02());
     rootLogger.info(test1.getLink10(), test1.getLink11(), test1.getLink12());
     rootLogger.info(test1.getLink20(), test1.getLink21(), test1.getLink22());
     
                 
-    GSU3 <double> temp = GSU3 <double> (GCOMPLEX(double)(0,5.84889e-05),GCOMPLEX(double)(4.45548e-05,0.000175047),
-                 GCOMPLEX(double)(-0.000279591,-0.000377919),GCOMPLEX(double)(-4.45548e-05,0.000175047),GCOMPLEX(double)(0,6.00033e-05),
-                GCOMPLEX(double)(-0.000340403,0.00014374),GCOMPLEX(double)(0.000279591,-0.000377919),GCOMPLEX(double)(0.000340403,0.00014374)
-                ,GCOMPLEX(double)(0,-0.000118492));
+    GSU3<PREC> temp = GSU3 <PREC> ( GCOMPLEX(PREC)(0,5.84889e-05)           , GCOMPLEX(PREC)(4.45548e-05,0.000175047), GCOMPLEX(PREC)(-0.000279591,-0.000377919),
+                                    GCOMPLEX(PREC)(-4.45548e-05,0.000175047), GCOMPLEX(PREC)(0,6.00033e-05)          , GCOMPLEX(PREC)(-0.000340403,0.00014374)  ,
+                                    GCOMPLEX(PREC)(0.000279591,-0.000377919), GCOMPLEX(PREC)(0.000340403,0.00014374) , GCOMPLEX(PREC)(0,-0.000118492) );
 
-   GSU3<PREC> diff = test1 - temp;
-        PREC norm = 0.0;
-        PREC sum = 0.0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-              norm += abs2(diff(i,j));
-          }
+    GSU3<PREC> diff = test1 - temp;
+    PREC sum = 0.0;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            sum += abs2(diff(i,j));
         }
-        sum += sqrt(norm);
-        sum /= 16.0;
-        if (sum < 1e-6) {
-             rootLogger.info(CoutColors::green ,  "Test passed!");
-        }
-        else {
-            rootLogger.info(CoutColors::red ,  "Test failed! sum: " ,  sum);
-        }
+    }
+    sum = sqrt(sum)/16.0;
+    if (sum < 1e-6) {
+        rootLogger.info(CoutColors::green,  "Test passed!",  CoutColors::reset);
+    } else {
+        rootLogger.info(CoutColors::red,  "Test failed! sum: ",  sum, CoutColors::reset);
+    }
     return 0;
 }
 
