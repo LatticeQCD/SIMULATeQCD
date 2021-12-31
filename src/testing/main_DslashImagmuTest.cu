@@ -2,18 +2,10 @@
 // Created by Jishnu on 07/04/20.
 //
 
-#include "../define.h"
-#include "../spinor/spinorfield.h"
-#include "../base/microtimer.h"
-#include "../base/IO/fileWriter.h"
-#include "../gauge/gaugefield.h"
-#include "../base/LatticeContainer.h"
-#include "../gauge/GaugeAction.h"
-#include "../base/staticArray.h"
-#include "testing.h"
-#include "../ImaginaryMu/dslashImagmu.h"
+#include "../SIMULATeQCD.h"
+#include "../modules/dslash/dslash.h"
 #include "../modules/rhmc/rhmcParameters.h"
-#include "../ImaginaryMu/hisqSmearingImagmu.h"
+#include "../modules/HISQ/hisqSmearing.h"
 
 template <class floatT>
 __host__ bool operator==(const gVect3<floatT> &lhs, const gVect3<floatT> &rhs){
@@ -67,12 +59,12 @@ void test_dslash(CommunicationBase &commBase){
     //Our gaugefield
     Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
-    Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_Naik(commBase);
+    Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
     double mu=0.4;
 
-    HisqSmearingImagmu<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
+    HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
 
-    rootLogger.info() << "Read conf";
+    rootLogger.info("Read conf");
 
     gauge.readconf_nersc("../test_conf/gauge12750");
 
@@ -80,23 +72,23 @@ void test_dslash(CommunicationBase &commBase){
 
     smearing.SmearAll(mu);
 
-    rootLogger.info() << "Initialize random state";
+    rootLogger.info( "Initialize random state");
     grnd_state<false> h_rand;
     grnd_state<onDevice> d_rand;
 
     h_rand.make_rng_state(1337);
     d_rand = h_rand;
 
-    rootLogger.info() << "Initialize spinors";
+    rootLogger.info("Initialize spinors");
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
     Spinorfield<floatT, false, LatLayout, HaloDepthSpin, NStacks> spinorOut2(commBase);
 
-    rootLogger.info() << "Randomize spinors";
+    rootLogger.info( "Randomize spinors");
     spinorIn.gauss(d_rand.state);
 
-    rootLogger.info() << "Initialize DSlash";
-    HisqDSlashImagmu<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+    rootLogger.info( "Initialize DSlash");
+    HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
     dslash.Dslash(spinorOut, spinorIn);
 
@@ -178,27 +170,10 @@ void test_dslash(CommunicationBase &commBase){
     }
 
     if (success[0] && success[1] && success[2] && success[3])
-        rootLogger.info() << "Test of Dslash against old values: " << CoutColors::green << "passed" << CoutColors::reset;
+        rootLogger.info("Test of Dslash against old values: ",CoutColors::green, "passed" ,CoutColors::reset);
     else
-        rootLogger.info() << "Test of Dslash against old values: " << CoutColors::red << "failed" << CoutColors::reset;
+        rootLogger.info("Test of Dslash against old values: " , CoutColors::red , "failed" , CoutColors::reset);
 
-    // for (int i = 0; i < GInd::getLatData().vol4/2; ++i)
-    // {
-
-    //     gSite sitei = GInd::getSite(i);
-    //     gVect3<floatT> veci = spinorOut2.getAccessor().getElement(sitei);
-    //     // GCOMPLEX(float) x, y, z;
-
-    //     // x = spinor.getAccessor().getElementEntry<0>(i);
-    //     // y = spinor.getAccessor().getElementEntry<1>(i);
-    //     // z = spinor.getAccessor().getElementEntry<2>(i);
-
-
-    //     std::cout << "index = " << i << "\t" << "vec = " << veci  << std::endl;
-    //     // std::cout << gauge_out.getAccessor().getLink(GInd::template convertSite<All, HaloDepth>(GInd::getSiteMu(GInd::site_up(site, 3), 3))) << std::endl;
-
-    //     // std::cout << "index = " << i << "\t" << "state = " << host_state.state[i] << std::endl;
-    // }
 }
 
 int main(int argc, char **argv) {
@@ -222,39 +197,27 @@ int main(int argc, char **argv) {
     initIndexer(HaloDepthSpin,param, commBase);
     stdLogger.setVerbosity(INFO);
 
-    rootLogger.info()<<"Test with old values done for chemical potential::0.4";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Running on Device";
-    rootLogger.info() << "-------------------------------------";
-    rootLogger.info() << "Testing Even - Odd";
-    rootLogger.info() << "------------------";
+    rootLogger.info("Test with old values done for chemical potential::0.4");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info( "Running on Device");
+    rootLogger.info("-------------------------------------");
+    rootLogger.info("Testing Even - Odd");
+    rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase);
-    rootLogger.info() << "------------------";
-    rootLogger.info() << "Testing Odd - Even";
-    rootLogger.info() << "------------------";
+    rootLogger.info( "------------------");
+    rootLogger.info( "Testing Odd - Even");
+    rootLogger.info("------------------");
     test_dslash<float, Odd, Even, 1, true>(commBase);
-
-/// Apparently the host has trouble to store a configuration.
-//    rootLogger.info() << "-------------------------------------";
-//    rootLogger.info() << "Running on Host";
-//    rootLogger.info() << "-------------------------------------";
-//    rootLogger.info() << "Testing Even - Odd";
-//    rootLogger.info() << "------------------";
-//    test_dslash<float, Even, Odd, 1, false>(commBase);
-//    rootLogger.info() << "------------------";
-//    rootLogger.info() << "Testing Odd - Even";
-//    rootLogger.info() << "------------------";
-//    test_dslash<float, Odd, Even, 1, false>(commBase);
 }
 
 
-template<Layout LatLayout, size_t HaloDepth>
-size_t getGlobalIndex(LatticeDimensions coord) {
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-
-    LatticeData lat = GInd::getLatData();
-    LatticeDimensions globCoord = lat.globalPos(coord);
-
-    return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
-           globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
-}
+//template<Layout LatLayout, size_t HaloDepth>
+//size_t getGlobalIndex(LatticeDimensions coord) {
+//    typedef GIndexer<LatLayout, HaloDepth> GInd;
+//
+//    LatticeData lat = GInd::getLatData();
+//    LatticeDimensions globCoord = lat.globalPos(coord);
+//
+//    return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
+//           globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
+//}

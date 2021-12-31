@@ -242,6 +242,13 @@ set_SIMULATeQCD_property(DslashTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing
 SIMULATeQCD_target_compile_definitions(DslashTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests DslashTest)
 
+
+add_SIMULATeQCD_executable(DslashImagmuTest src/testing/main_DslashImagmuTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/spinor/spinorfield.cu)
+set_SIMULATeQCD_property(DslashImagmuTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(DslashImagmuTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests DslashImagmuTest)
+
+
 add_SIMULATeQCD_executable(DslashMultiTest src/testing/main_DslashMultiTest.cu src/modules/dslash/dslash.cu src/modules/HISQ/hisqSmearing.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(DslashMultiTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(DslashMultiTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})

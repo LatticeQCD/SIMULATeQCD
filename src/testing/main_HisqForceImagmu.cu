@@ -3,7 +3,7 @@
  *
  * J. Goswami 
  *
- * Quick test of the HISQ force with imaginary chemical potential. Compares against results from ParallelGPUCode. 
+ * Quick test of the HISQ force with imaginary chemical potential. Compares against results from ParallelGPUCode/BielefeldGPUcode. 
  *
  */
 #include "../SIMULATeQCD.h"
