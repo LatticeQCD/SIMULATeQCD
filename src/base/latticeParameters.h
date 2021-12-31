@@ -23,6 +23,11 @@ public:
     Parameter<std::string> GaugefileName;
     Parameter<std::string> format;
     Parameter<std::string> endianness;  //!< one of "little", "big", "auto"
+    //my parameters
+    Parameter<std::string> format_out;
+    Parameter<int> prec_out;
+    Parameter<std::string> measurements_dir;
+    Parameter<bool> use_unit_conf;
     LatticeParameters() {
         add(latDim, "Lattice");
         add(nodeDim, "Nodes");
@@ -33,6 +38,11 @@ public:
         addDefault(endianness, "endianness", std::string("auto"));
         addOptional(confnumber, "conf_nr");
         addOptional(streamName, "stream");
+        //my parameters
+        addDefault(format_out, "format_out",std::string("nersc"));
+        addDefault(prec_out, "prec_out",0);
+        add(measurements_dir, "measurements_dir");
+        addDefault(use_unit_conf, "use_unit_conf", false);
     }
 
     //! Set by providing values, mainly used in test routines

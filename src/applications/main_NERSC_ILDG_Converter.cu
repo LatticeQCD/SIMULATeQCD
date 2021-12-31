@@ -4,29 +4,50 @@
 // converts NERSC file format to ILDG and vice versa.
 
 #define PREC double
-#define USE_GPU false
+#define USE_GPU true
 
 #include "../SIMULATeQCD.h"
+#include <string>
 using namespace std;
 
 int main(int argc, char *argv[]) {
 
-    const size_t HaloDepth = 2;
-    LatticeParameters param;
+    stdLogger.setVerbosity(DEBUG);
+
+	LatticeParameters param;
+    const size_t HaloDepth = 1;
+    std::stringstream datNameConf;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "/home/sali/builddirsimulateQCD/parameter/gradientFlow8c4.param", argc, argv);
-    commBase.init(param.nodeDim());
+    param.readfile(commBase, "../parameter/NERSC_ILDG_Converter.param", argc, argv);
+	commBase.init(param.nodeDim());
 
 	typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
-
     Gaugefield<PREC, USE_GPU, HaloDepth> gauge_field_in(commBase);
-    gauge_field_in.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB");
-    //gauge_field_in.one();
+
+    if(param.use_unit_conf())
+        gauge_field_in.one();
+    else{
+        if(param.format()=="nersc")
+            gauge_field_in.readconf_nersc(param.GaugefileName());
+        else if(param.format()=="ildg")
+            gauge_field_in.readconf_ildg(param.GaugefileName());
+        else
+            rootLogger.error("Input configuration format is not supported");
+    }
     gauge_field_in.updateAll();
 
-    std::string file_name_out = "l8t4b3360_bieHB_ildg_prec_"+std::to_string(2);
-    gauge_field_in.writeconf_ildg(  file_name_out,3,2);
+    if(param.format_out()=="nersc") {
+        datNameConf << param.measurements_dir()<< "conf_nersc" << param.fileExt();
+        gauge_field_in.writeconf_nersc(datNameConf.str(), 2, param.prec_out());
+    }
+    else if (param.format_out()=="ildg") {
+        datNameConf << param.measurements_dir() << "conf_ildg" << param.fileExt();
+        gauge_field_in.writeconf_ildg(  datNameConf.str(),3,param.prec_out());
+    }
+    //else
+    //    rootLogger.error("Output configuration format can only be nersc or ildg");
 
     return 0;
-    }
+
+}
