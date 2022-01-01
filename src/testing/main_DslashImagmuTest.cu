@@ -1,6 +1,9 @@
-//
-// Created by Jishnu on 07/04/20.
-//
+/* 
+ * main_DslashImagmuTest.cu
+ *
+ * J. Goswami
+ *
+ */
 
 #include "../SIMULATeQCD.h"
 #include "../modules/dslash/dslash.h"
@@ -114,57 +117,48 @@ void test_dslash(CommunicationBase &commBase){
 
     bool success[4]={false};
 
-    if (LatLayoutRHS==Even)
-    {
+    if (LatLayoutRHS==Even) {
+
         gSite site = GInd::getSite(0);
         gVect3<floatT> vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==EO_vec_0)
-        {
+        if (vec==EO_vec_0) {
             success[0]=true;
         }
         site = GInd::getSite(319);
         vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==EO_vec_319)
-        {
+        if (vec==EO_vec_319) {
             success[1]=true;
         }
         site = GInd::getSite(550);
         vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==EO_vec_550)
-        {
+        if (vec==EO_vec_550) {
             success[2]=true;
         }
         site = GInd::getSite(1023);
         vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==EO_vec_1023)
-        {
+        if (vec==EO_vec_1023) {
             success[3]=true;
         }
     }
-    if (LatLayoutRHS==Odd)
-    {
+    if (LatLayoutRHS==Odd) {
         gSite site = GInd::getSite(0);
         gVect3<floatT> vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==OE_vec_0)
-        {
+        if (vec==OE_vec_0) {
             success[0]=true;
         }
         site = GInd::getSite(512);
         vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==OE_vec_512)
-        {
+        if (vec==OE_vec_512) {
             success[1]=true;
         }
         site = GInd::getSite(697);
         vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==OE_vec_697)
-        {
+        if (vec==OE_vec_697) {
             success[2]=true;
         }
         site = GInd::getSite(1023);
         vec = spinorOut2.getAccessor().getElement(site);
-        if (vec==OE_vec_1023)
-        {
+        if (vec==OE_vec_1023) {
             success[3]=true;
         }
     }
@@ -209,15 +203,3 @@ int main(int argc, char **argv) {
     rootLogger.info("------------------");
     test_dslash<float, Odd, Even, 1, true>(commBase);
 }
-
-
-//template<Layout LatLayout, size_t HaloDepth>
-//size_t getGlobalIndex(LatticeDimensions coord) {
-//    typedef GIndexer<LatLayout, HaloDepth> GInd;
-//
-//    LatticeData lat = GInd::getLatData();
-//    LatticeDimensions globCoord = lat.globalPos(coord);
-//
-//    return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
-//           globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
-//}
