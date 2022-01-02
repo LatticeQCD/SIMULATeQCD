@@ -12,7 +12,7 @@
 
 
 template<class floatT, class floatT_inner, Layout LatLayout, size_t NStacks, bool onDevice>
-void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat, int cg_switch) {
+void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat) {
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
@@ -51,20 +51,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     spinorIn.gauss(d_rand.state);
     
     timer.start();
-    switch (cg_switch) {
-    case 1 :
-        cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
-        break;
-    case 2 :
-        cg.invert_res_replace(dslash, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
-        break;
-    case 3 :
-        cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
-        break;
-    default :
-        throw std::runtime_error(stdLogger.fatal("CG inverter not specified, provide an option (1, 2 or 3) after parameter file"));
-        break;
-    }
+    cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
     
     timer.stop();
     
@@ -123,24 +110,15 @@ int main(int argc, char **argv) {
     rootLogger.info("Running mixed precision inverter test");
 
 
-    int cg_sw = atoi(argv[2]);
-    if (cg_sw == 1) {
         rootLogger.info("testing float-half");
-        run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
+        run_func<float, __half, Even, 1, true>(commBase, param, rat);
         
         rootLogger.info("testing double-float");
-        run_func<double, float, Even, 1, true>(commBase, param, rat, cg_sw);
+        run_func<double, float, Even, 1, true>(commBase, param, rat);
         
         rootLogger.info("testing double-half");
-        run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-    }
-    else {
-        rootLogger.info("testing float");
-        run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-
-        rootLogger.info("testing double");
-        run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-    }
+        run_func<double, __half, Even, 1, true>(commBase, param, rat);
+    
     return 0;
     }
     
