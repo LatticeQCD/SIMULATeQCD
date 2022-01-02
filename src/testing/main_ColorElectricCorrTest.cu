@@ -73,9 +73,7 @@ int main(int argc, char *argv[]) {
         }
     }
     if (failed){
-        rootLogger.info("======== ",  CoutColors::red ,  "FAILED" ,  CoutColors::reset
-                           ,  " TESTS FOR COLOR-ELECTRIC CORRELATOR!!! ========");
-
+        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
     } else {
         rootLogger.info("======== ALL TESTS FOR COLOR-ELECTRIC CORRELATOR ",  CoutColors::green , "PASSED!"
                           ,  CoutColors::reset ,  " ========");

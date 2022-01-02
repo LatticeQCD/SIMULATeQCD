@@ -1,3 +1,8 @@
+/* 
+ * hisqSmearing.h 
+ *
+ */
+
 #ifndef HISQSMEARING_H
 #define HISQSMEARING_H
 
@@ -40,7 +45,6 @@ struct U3ProjectStruct{
   U3ProjectStruct(gaugeAccessor<floatT,comp> gaugeAcc_in): gauge_acc(gaugeAcc_in){}
 
     typedef GIndexer<All,HaloDepth> GInd;
-
 
     __device__ __host__ GSU3<floatT> operator()(gSiteMu site) {
         GSU3<floatT> temp;
@@ -135,7 +139,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R
  //these two functions will be used in the force calculation
  template<CompressionType comp_tmp>
  void SmearLvl1(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_out) {
-     //gauge_out.iterateOverBulkAllMu(HisqSmearingStruct<floatT, HaloDepth,comp>(_gauge_base.getAccessor(), _Lvl1));
+
      _dummy.iterateOverBulkAllMu(staple3_lvl1);
      gauge_out = _Lvl1._c_1 * _gauge_base + _Lvl1._c_3 * _dummy;
 

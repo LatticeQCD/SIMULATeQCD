@@ -166,7 +166,7 @@ void test_dslash(CommunicationBase &commBase){
     if (success[0] && success[1] && success[2] && success[3])
         rootLogger.info("Test of Dslash against old values: ",CoutColors::green, "passed" ,CoutColors::reset);
     else
-        rootLogger.info("Test of Dslash against old values: " , CoutColors::red , "failed" , CoutColors::reset);
+        throw std::runtime_error(stdLogger.fatal("Test of Dslash against old values failed!"));
 
 }
 

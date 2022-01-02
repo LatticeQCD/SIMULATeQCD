@@ -95,7 +95,7 @@ int seed = 1337;
     if (host_dev)
         rootLogger.info(CoutColors::green ,  "Random numbers on one and multiple GPUs match" ,  CoutColors::reset);
     else
-        rootLogger.info( CoutColors::red ,  "Random numbers on one and multiple GPU do not match" ,  CoutColors::reset);
+        throw std::runtime_error(stdLogger.fatal("Random numbers on one and multiple GPU do not match!"));
 }
 
 

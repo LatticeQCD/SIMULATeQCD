@@ -139,13 +139,12 @@ void test_old_new_host_dev(CommunicationBase &commBase){
     if (host_dev)
         rootLogger.info(CoutColors::green ,  "Host and device random numbers match",  CoutColors::reset);
     else
-       rootLogger.info( CoutColors::red ,  "Host and device random numbers do not match",  CoutColors::reset);
-
+        throw std::runtime_error(stdLogger.fatal("Host and device random numbers do not match"));
 
     if (new_old)
         rootLogger.info(CoutColors::green ,  "Old code and new code random numbers match",  CoutColors::reset);
     else
-       rootLogger.info( CoutColors::red ,  "Old code and new code random numbers do not match",  CoutColors::reset);
+        throw std::runtime_error(stdLogger.fatal("Old code and new code random numbers do not match"));
 
     std::string filename;
 
@@ -207,4 +206,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
