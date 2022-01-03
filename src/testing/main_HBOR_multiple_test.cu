@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     if(test_function(hostgauge,refgauge,(PREC)1e-15)) {
         rootLogger.info("Direct link check (read) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
-        rootLogger.info("Direct link check (read) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
+        rootLogger.error("Direct link check (read)  failed.");
         lpassed=false;
     }
 
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     if(test_function(hostgauge,refgauge,(PREC)1e-15)) {
         rootLogger.info("Direct link check (HB) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
-        rootLogger.info("Direct link check (HB) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
+        rootLogger.error("Direct link check (HB) failed." );
         lpassed=false;
     }
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[]) {
     if(test_function(hostgauge,refgauge,(PREC)1e-15)) {
         rootLogger.info("Direct link check (OR) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
-        rootLogger.info("Direct link check (OR) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
+        rootLogger.error("Direct link check (OR) failed.");
         lpassed=false;
     }
 
@@ -170,7 +170,8 @@ int main(int argc, char *argv[]) {
     if (lpassed) {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        rootLogger.error("At least one test failed!");
+        rootLogger.info("This is literally magic.");
+        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
     }
     rootLogger.info("==============================");
 

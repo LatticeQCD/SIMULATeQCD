@@ -1,5 +1,5 @@
 /* 
- * main_half_prec_dslash_test.cu                                                               
+ * main_half_prec_dslash_profile.cu                                                               
  * 
  * Dennis Bollweg
  * 
@@ -10,33 +10,6 @@
 #include "../modules/rhmc/rhmcParameters.h"
 #include "../modules/HISQ/hisqSmearing.h"
 
-/*
-template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDepth, CompressionType comp>
-struct convert_precision {
-    gaugeAccessor<floatT_source,comp> gAcc_source;
-
-    convert_precision(Gaugefield<floatT_source, onDevice, HaloDepth, comp> &gaugeIn) : gAcc_source(gaugeIn.getAccessor()) {}
-
-    __device__ __host__ GSU3<floatT_target> operator()(gSiteMu site) {
-        GSU3<floatT_source> source = gAcc_source.getLink(site);
-        GSU3<floatT_target> target(source);
-        return target;
-    }
-    };
-
-template<class floatT_source, class floatT_target, bool onDevice, Layout LatLayout, size_t HaloDepthSpin, size_t NStacks>
-struct convert_spinor_precision {
-    gVect3arrayAcc<floatT_source> spinor_source;
-
-    convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
-
-    __device__ __host__ gVect3<floatT_target> operator()(gSite site) {
-        gVect3<floatT_source> source = spinor_source.getElement(site);
-        gVect3<floatT_target> target(source);
-        return target;
-    }
-};
-*/
 //the Dslash test function. Please start reading here.
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, bool onDevice>
 void test_dslash(CommunicationBase &commBase, int Vol){
@@ -68,63 +41,53 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     rootLogger.info("gen conf");
 
-    // gauge.readconf_nersc("../test_conf/gauge12750");
     gauge.random(d_rand.state);
 
     gpuError_t gpuErr = gpuGetLastError();
-        if (gpuErr)
-            // GpuError("Error in random gauge field", gpuErr);
-            rootLogger.info("Error in random gauge field");
+    if (gpuErr)
+        rootLogger.info("Error in random gauge field");
 
     gauge.updateAll();
 
     gpuErr = gpuGetLastError();
-        if (gpuErr)
-            // GpuError("Error in updateAll", gpuErr);
-            rootLogger.info("Error updateAll");
+    if (gpuErr)
+        rootLogger.info("Error updateAll");
 
     smearing.SmearAll();
 
     gpuErr = gpuGetLastError();
     if (gpuErr)
-        // GpuError("error in smearing", gpuErr);
         rootLogger.info("Error in smearing");
-    //convert_precision<float,__half,HaloDepth,R18> convert_struct(gauge_smeared);
         
     gauge_smeared_half.convert_precision<floatT>(gauge_smeared);
     gauge_Naik_half.convert_precision<floatT>(gauge_Naik);
 
-//gauge_smeared.iterateOverBulkAllMu(convert_precision<__half,floatT,true, HaloDepth,R18>(gauge_smeared_half));
     rootLogger.info("Initialize spinors");
     Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorSave(commBase);
     Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
 
     gpuErr = gpuGetLastError();
-        if (gpuErr)
-            GpuError("error in spinor Initialization", gpuErr);
+    if (gpuErr)
+        GpuError("error in spinor Initialization", gpuErr);
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
     spinorSave = spinorIn;
     gpuErr = gpuGetLastError();
-        if (gpuErr)
-           // GpuError("error in gaussian spinors", gpuErr);
-            rootLogger.info("error in gaussian spinors");
+    if (gpuErr)
+        rootLogger.info("error in gaussian spinors");
 
 
     rootLogger.info("Initialize DSlash");
     HisqDSlash<__half, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared_half, gauge_Naik_half, 0.0);
     
     gpuErr = gpuGetLastError();
-        if (gpuErr)
-            // GpuError("error in Initialization of DSlash", gpuErr);
-            rootLogger.info("Error in Initialization of DSlash");
+    if (gpuErr)
+        rootLogger.info("Error in Initialization of DSlash");
 
     timer.start();
-    for (int i = 0; i < 500; ++i)
-    {
-        // spinorIn.updateAll(COMM_BOTH | Hyperplane);
+    for (int i = 0; i < 500; ++i) {
         dslash.applyMdaggM(spinorOut, spinorIn, false);
         spinorIn=spinorSave;
     }
@@ -141,7 +104,6 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     SimpleArray<double, NStacks> Vol_Stack(Vol);
     norm = norm / Vol_Stack;
     
-    // gpuProfilerStop();
     rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wint-in-bool-context"
@@ -166,12 +128,10 @@ int main(int argc, char **argv) {
     const int LatDim[] = {96, 96, 96, 16};
     
     
-    // const int NodeDim[] = {1, 1, 1, 1};
     int Vol = LatDim[0]*LatDim[1]*LatDim[2]*LatDim[3];
     
     
     param.latDim.set(LatDim);
-    // param.nodeDim.set(NodeDim);
 
     commBase.init(param.nodeDim());
 
@@ -196,19 +156,6 @@ int main(int argc, char **argv) {
     test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
-    
-
-/// Apparently the host has trouble to store a configuration.
-//    rootLogger.info("-------------------------------------");
-//    rootLogger.info("Running on Host");
-//    rootLogger.info("-------------------------------------");
-//    rootLogger.info("Testing Even - Odd");
-//    rootLogger.info("------------------");
-//    test_dslash<float, Even, Odd, 1, false>(commBase);
-//    rootLogger.info("------------------");
-//    rootLogger.info("Testing Odd - Even");
-//    rootLogger.info("------------------");
-//    test_dslash<float, Odd, Even, 1, false>(commBase);
 }
 
 

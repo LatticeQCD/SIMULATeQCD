@@ -1,5 +1,5 @@
 #
-# ColorElectricCorrTest.param
+# FieldStrengthTensorTest.param
 # 
 #    Lattice: Nx Ny Nz Nt
 #      Nodes: Number of sublattices per direction

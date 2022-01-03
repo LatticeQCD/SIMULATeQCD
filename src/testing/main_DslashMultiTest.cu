@@ -360,9 +360,9 @@ void test_dslash2(CommunicationBase &commBase){
 
 
     if (simple)
-        rootLogger.info("Simple Test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
+        rootLogger.info("Simple test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.info("Simple Test using scalar product: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
+        throw std::runtime_error(stdLogger.fatal("Simple test using scalar product failed!"));
 }
 
 

@@ -305,7 +305,7 @@ int main(int argc, char **argv) {
     if (testSmearLink<PREC,HaloDepth>(commBase)) {
         rootLogger.info("Test " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        rootLogger.info("Test " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
+        throw std::runtime_error(stdLogger.fatal("Test failed!"));
     }
 
     return 0;

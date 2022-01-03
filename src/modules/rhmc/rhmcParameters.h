@@ -28,6 +28,7 @@ public:
     Parameter<std::string> rat_file;
     Parameter <double> m_ud;
     Parameter <double> m_s;
+    Parameter <double> mu_f;
     Parameter <std::string> rand_file;
     Parameter <std::string> gauge_file;
     Parameter <int> seed;
@@ -40,6 +41,7 @@ public:
         add(no_step_1f, "no_step_1f");
         add(no_sw, "no_sw");
         add(step_size, "step_size");
+        addDefault(mu_f, "mu_f", 0.0);
         addDefault(integrator, "integrator", 0);
         addDefault(residue, "residue", 1e-12);
         addDefault(residue_force, "residue_force", 1e-7);

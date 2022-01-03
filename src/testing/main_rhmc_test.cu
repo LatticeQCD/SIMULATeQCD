@@ -177,9 +177,9 @@ int main(int argc, char *argv[]) {
         rootLogger.info(CoutColors::green ,  "ALL TESTS PASSED" ,  CoutColors::reset);
         rootLogger.warn("This only indicates that force matches action.\n");
         rootLogger.warn("Check Observables to find out if action is correct!");
+    } else {
+        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
     }
-    else
-        rootLogger.error(CoutColors::red ,  "AT LEAST ONE TEST FAILED" ,  CoutColors::reset);
 
     return 0;
 }

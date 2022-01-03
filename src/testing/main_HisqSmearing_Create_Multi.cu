@@ -48,13 +48,13 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Time for full smearing: " ,  timer);
     std::string filename_out;
     if (param.nodeDim[1] == 1) {
-      filename_out = "../test_conf/pgpu_naik_smearing_single.nersc";
+        filename_out = "../test_conf/pgpu_naik_smearing_single.nersc";
     }
     if (param.nodeDim[1] == 2) {
-      filename_out = "../test_conf/pgpu_naik_smearing_multi.nersc";
+        filename_out = "../test_conf/pgpu_naik_smearing_multi.nersc";
     }
     if (param.nodeDim[1] + param.nodeDim[2] == 4 ) {
-      filename_out = "../test_conf/pgpu_naik_smearing_multi_x.nersc";
+        filename_out = "../test_conf/pgpu_naik_smearing_multi_x.nersc";
     }
     
     gauge_naik.writeconf_nersc(filename_out);
