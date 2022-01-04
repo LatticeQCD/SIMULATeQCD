@@ -23,14 +23,14 @@ int main(int argc, char *argv[]) {
     ///Initialize Base
     typedef GIndexer<All,HaloDepth> GInd;
     stdLogger.setVerbosity(INFO);
-    StopWatch<true> timer;
+
     LatticeParameters                       lp;
     CommunicationBase                       commBase(&argc, &argv);
     lp.readfile(commBase, "../parameter/tests/ColorElectricCorrTest.param", argc, argv);
     commBase.init(lp.nodeDim());
     initIndexer(HaloDepth,lp,commBase);
     Gaugefield<PREC,ON_DEVICE,HaloDepth>     gauge(commBase);
-
+    StopWatch<true> timer;
     const size_t Ntau  = GInd::getLatData().lt;
 
     rootLogger.info("Reference values in this test come from l328f21b6285m0009875m0790a_019.995");

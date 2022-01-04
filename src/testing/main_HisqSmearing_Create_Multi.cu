@@ -15,8 +15,7 @@ int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
     
-    StopWatch<true> timer;
-
+    
     CommunicationBase commBase(&argc, &argv);
 
     RhmcParameters param;
@@ -41,8 +40,10 @@ int main(int argc, char *argv[]) {
 
     gauge_in.random(d_rand.state);
     gauge_in.updateAll();
+    StopWatch<true> timer;
 
-    timer.start();
+    
+    timer.start();    
     smearing.SmearAll();
     timer.stop();
     rootLogger.info("Time for full smearing: " ,  timer);
