@@ -503,6 +503,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             //r = b - Ax
             r = spinorIn;
             SimpleArray<double, NStacks> tmp_arr(-1.0);
+            spinorOut.updateAll();
             dslash.applyMdaggM(s,spinorOut, false);
             r.template axpyThisLoopd<32>(tmp_arr,s,NStacks);
 
@@ -637,7 +638,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             SimpleArray<double, NStacks> tmp_arr(-1.0);
             
             //reuse accum to save dslash result.
-            
+            spinorOut.updateAll();
             dslash.applyMdaggM(accum,spinorOut, false);
             r.template axpyThisLoopd<32>(tmp_arr,accum,NStacks);
             r_inner.convert_precision(r);
