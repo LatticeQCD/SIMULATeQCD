@@ -178,7 +178,8 @@ int main(int argc, char *argv[]) {
         rootLogger.warn("This only indicates that force matches action.\n");
         rootLogger.warn("Check Observables to find out if action is correct!");
     } else {
-        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
+        rootLogger.error("At least one test failed!");
+        return -1;
     }
 
     return 0;

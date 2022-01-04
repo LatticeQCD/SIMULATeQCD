@@ -166,14 +166,12 @@ int main(int argc, char *argv[]) {
     }
 
     /// Close up shop.
-    rootLogger.info("==============================");
     if (lpassed) {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        rootLogger.info("This is literally magic.");
-        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
+        rootLogger.error("At least one test failed!");
+        return -1;
     }
-    rootLogger.info("==============================");
 
     return 0;
 }

@@ -518,7 +518,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     /// ------------------------------------------------------------------------------------------------- REPORT RESULTS
     if(lerror) {
-        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
+        rootLogger.error("At least one test failed!");
+        return -1;
     } else {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     }

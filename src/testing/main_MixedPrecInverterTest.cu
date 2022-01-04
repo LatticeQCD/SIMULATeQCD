@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
     }
     
     catch (const std::runtime_error &error) {
-        std::cout << "There has been a runtime error!";
+        rootLogger.error("There has been a runtime error!");
         return -1;
     }
 }

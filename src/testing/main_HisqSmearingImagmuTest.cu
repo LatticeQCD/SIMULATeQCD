@@ -125,8 +125,8 @@ int main(int argc, char *argv[]) {
     if (sum < 1e-6) {
         rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
     } else {
-        rootLogger.error("sum:", sum); 
-        throw std::runtime_error(stdLogger.fatal("Test failed!"));
+        rootLogger.error("Test failed! sum:", sum); 
+        return -1;
     }
 
     return 0;

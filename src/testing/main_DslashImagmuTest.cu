@@ -52,7 +52,7 @@ __host__ bool operator==(const gVect3<floatT> &lhs, const gVect3<floatT> &rhs){
 
 //the Dslash test function. Please start reading here.
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, bool onDevice>
-void test_dslash(CommunicationBase &commBase){
+bool test_dslash(CommunicationBase &commBase){
 
     //Initialization as usual
     const int HaloDepth = 0;
@@ -163,16 +163,21 @@ void test_dslash(CommunicationBase &commBase){
         }
     }
 
-    if (success[0] && success[1] && success[2] && success[3])
+    if (success[0] && success[1] && success[2] && success[3]) {
         rootLogger.info("Test of Dslash against old values: ",CoutColors::green, "passed" ,CoutColors::reset);
-    else
-        throw std::runtime_error(stdLogger.fatal("Test of Dslash against old values failed!"));
+        return false;
+    } else {
+        rootLogger.error("Test of Dslash against old values failed!");
+        return true;
+    }
 
 }
 
 int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
+
+    bool lerror = false;
 
     LatticeParameters param;
     const int LatDim[] = {8, 8, 8, 4};
@@ -191,15 +196,22 @@ int main(int argc, char **argv) {
     initIndexer(HaloDepthSpin,param, commBase);
     stdLogger.setVerbosity(INFO);
 
-    rootLogger.info("Test with old values done for chemical potential::0.4");
+    rootLogger.info("Test with old values done for imaginary chemical potential = 0.4");
     rootLogger.info("-------------------------------------");
     rootLogger.info( "Running on Device");
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    test_dslash<float, Even, Odd, 1, true>(commBase);
+    lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
     rootLogger.info( "------------------");
     rootLogger.info( "Testing Odd - Even");
     rootLogger.info("------------------");
-    test_dslash<float, Odd, Even, 1, true>(commBase);
+    lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
+
+    if(lerror) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+    }
 }

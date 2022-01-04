@@ -97,7 +97,8 @@ int main(int argc, char *argv[]) {
     if (pass && pass2) {
         rootLogger.info(CoutColors::green ,  "Test passed!", CoutColors::reset);
     } else {
-        throw std::runtime_error(stdLogger.fatal("Test failed!"));
+        rootLogger.error("Test failed!");
+        return -1;
     }
     
     return 0;

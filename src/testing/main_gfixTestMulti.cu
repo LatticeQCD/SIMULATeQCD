@@ -163,7 +163,8 @@ int main(int argc, char *argv[]) {
     if (lpassed) {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        throw std::runtime_error(stdLogger.fatal("At least one test failed!"));
+        rootLogger.error("At least one test failed!");
+        return -1;
     }
     rootLogger.info("==============================");
 

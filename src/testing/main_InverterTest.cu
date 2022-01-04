@@ -516,6 +516,7 @@ int main(int argc, char **argv) {
         run_func<float, Even, Odd, 1, 14, true>(commBase, param, rat);
     }
     catch (std::runtime_error& error){
+        rootLogger.error("Test failed!");
         return -1;
     }
     return 0;

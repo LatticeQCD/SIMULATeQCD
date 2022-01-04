@@ -178,8 +178,8 @@ int main(int argc, char *argv[]) {
     if (pass) {
         rootLogger.info(CoutColors::green ,  "Force is correct" ,  CoutColors::reset);
     } else {
-        rootLogger.error("Please make sure that you are using the same seed, precision, and rational approx as gaction_test_hisqforce.cpp in the BielefeldGPUCode");
-        throw std::runtime_error(stdLogger.fatal("Force is wrong"));
+        rootLogger.error("Force is wrong! Please make sure that you are using the same seed, precision, and rational approx as gaction_test_hisqforce.cpp in the BielefeldGPUCode");
+        return -1;
     }
     rootLogger.info("For a more precise check, compare Ascii Output test_conf/HisqForceCheck.txt with test_conf/BIGPU_HisqForce.txt");
        

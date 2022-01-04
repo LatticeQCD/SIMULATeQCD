@@ -50,7 +50,7 @@ __host__ bool operator==(const gVect3<floatT> &lhs, const gVect3<floatT> &rhs){
 
 //the Dslash test function. Please start reading here.
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, bool onDevice>
-void test_dslash(CommunicationBase &commBase){
+bool test_dslash(CommunicationBase &commBase){
 
     //Initialization as usual
     const int HaloDepth = 0;
@@ -161,10 +161,13 @@ void test_dslash(CommunicationBase &commBase){
         }
     }
 
-    if (success[0] && success[1] && success[2] && success[3])
+    if (success[0] && success[1] && success[2] && success[3]) {
         rootLogger.info("Test of Dslash against old values: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
-    else
-        throw std::runtime_error(stdLogger.fatal("Test of Dslash against old values failed!"));
+        return false;
+    } else {
+        rootLogger.error("Test of Dslash against old values failed!");
+        return true;
+    }
 }
 
 int main(int argc, char **argv) {
@@ -174,6 +177,7 @@ int main(int argc, char **argv) {
     LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/DslashTest.param", argc, argv);
+    bool lerror=false;
 
     commBase.init(param.nodeDim());
 
@@ -188,11 +192,11 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    test_dslash<float, Even, Odd, 1, true>(commBase);
+    lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
     rootLogger.info("------------------");
     rootLogger.info("Testing Odd - Even");
     rootLogger.info("------------------");
-    test_dslash<float, Odd, Even, 1, true>(commBase);
+    lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
 }
 
 
