@@ -88,6 +88,18 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="how-to-do-pull-requests">
 <h1>How to do pull requests<a class="headerlink" href="#how-to-do-pull-requests" title="Permalink to this headline"></a></h1>
+<p>You just finished your feature branch and want to merge it with the main. Please follow this procedure to make sure
+that nothing has been broken:</p>
+<ol class="simple">
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge</span> <span class="pre">main</span> <span class="pre">feature</span></code>.</p></li>
+<li><p>Make sure that everything still compiles with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-j</span> <span class="pre">everything</span></code></p></li>
+<li><p>Run all the tests using <code class="docutils literal notranslate"><span class="pre">scripts/TEST_run.bash</span></code>. You will need 4 GPUs to run the tests. Please make sure that every single test passes.</p></li>
+<li><p>Once every single test passes, you can <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">main</span></code> and <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge</span> <span class="pre">feature</span> <span class="pre">main</span></code>.</p></li>
+<li><p>Finally you are ready to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code>. This will create a pull request.</p></li>
+<li><p>It is helpful if you say a few words about your feature branch in the pull request. Moreover you should emphasize that you followed the procedure listed here.</p></li>
+<li><p>One of us will then approve your request, assuming we don’t find anything strange.
+Congratulations! You are now a contributor!</p></li>
+</ol>
 </section>
 
 
