@@ -10,7 +10,7 @@ StopWatch<device> timer;
 where `device` is boolean template parameter. 
 If `device = false` then only the time duration of CPU routines of the current rank will be considered.
 If `device = true` then the time duration of GPU-kernel executions will be considered
-as well.
+as well. **Please do not construct the StopWatch before the CommBase!**
 
 ## Measuring time duration
 
@@ -39,7 +39,7 @@ rootLogger.info("Second time: ", timer);
 
 ## Combining different timers
 
-It's also possible to add/multiply/... different timers, e.g.:
+It's also possible to add/multiply/etc. different timers, e.g.:
 ```C++
 
 StopWatch<true> timer1, timer2, timer3;
