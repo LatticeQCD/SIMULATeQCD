@@ -518,7 +518,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     /// ------------------------------------------------------------------------------------------------- REPORT RESULTS
     if(lerror) {
-        rootLogger.error("At least one test " ,  CoutColors::red ,  "failed!" ,  CoutColors::reset);
+        rootLogger.error("At least one test failed!");
+        return -1;
     } else {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     }

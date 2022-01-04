@@ -1,6 +1,8 @@
 /* 
- * main_DslashTest.cu                                                               
- * 
+ * main_DslashImagmuTest.cu
+ *
+ * J. Goswami
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -61,18 +63,19 @@ bool test_dslash(CommunicationBase &commBase){
     Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
+    double mu=0.4;
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    
+
     rootLogger.info("Read conf");
 
     gauge.readconf_nersc("../test_conf/gauge12750");
 
     gauge.updateAll();
 
-    smearing.SmearAll();
+    smearing.SmearAll(mu);
 
-    rootLogger.info("Initialize random state");
+    rootLogger.info( "Initialize random state");
     grnd_state<false> h_rand;
     grnd_state<onDevice> d_rand;
 
@@ -84,33 +87,33 @@ bool test_dslash(CommunicationBase &commBase){
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
     Spinorfield<floatT, false, LatLayout, HaloDepthSpin, NStacks> spinorOut2(commBase);
 
-    rootLogger.info("Randomize spinors");
+    rootLogger.info( "Randomize spinors");
     spinorIn.gauss(d_rand.state);
 
-    rootLogger.info("Initialize DSlash");
+    rootLogger.info( "Initialize DSlash");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
-    
+
     dslash.Dslash(spinorOut, spinorIn);
 
     spinorOut2 = spinorOut;
 
-    gVect3<floatT> OE_vec_0 = gVect3<floatT>(GCOMPLEX(floatT)(2.3391,0.133572),GCOMPLEX(floatT)(-1.2575,-3.71507),
-        GCOMPLEX(floatT)(0.0448819,-1.03748));
-    gVect3<floatT> OE_vec_512 = gVect3<floatT>(GCOMPLEX(floatT)(-1.41934,0.264733),GCOMPLEX(floatT)(-1.63475,1.55185),
-        GCOMPLEX(floatT)(-1.71302,-2.05072));
-    gVect3<floatT> OE_vec_697 = gVect3<floatT>(GCOMPLEX(floatT)(1.10125,-0.909113),GCOMPLEX(floatT)(-1.92929,-0.893694),
-        GCOMPLEX(floatT)(-1.21505,-0.491814));
-    gVect3<floatT> OE_vec_1023 = gVect3<floatT>(GCOMPLEX(floatT)(-1.01115,-0.838747),GCOMPLEX(floatT)(-1.45297,-0.0797096),
-        GCOMPLEX(floatT)(-0.0330309,1.81019));
+    gVect3<floatT> OE_vec_0 = gVect3<floatT>(GCOMPLEX(floatT)(2.28094,0.578288),GCOMPLEX(floatT)(-1.57489,-3.40721),
+                                             GCOMPLEX(floatT)(-0.0483184,-1.14394));
+    gVect3<floatT> OE_vec_512 = gVect3<floatT>(GCOMPLEX(floatT)(-1.29579,0.339849),GCOMPLEX(floatT)(-1.46313,1.60306),
+                                               GCOMPLEX(floatT)(-1.52663,-2.28068));
+    gVect3<floatT> OE_vec_697 = gVect3<floatT>(GCOMPLEX(floatT)(0.993064,-0.721346),GCOMPLEX(floatT)(-2.17415,-0.643141),
+                                               GCOMPLEX(floatT)(-0.931775,-0.588071));
+    gVect3<floatT> OE_vec_1023 = gVect3<floatT>(GCOMPLEX(floatT)(-0.683339,-0.542339),GCOMPLEX(floatT)(-1.36262,0.125968),
+                                                GCOMPLEX(floatT)(0.255348,1.68404));
 
-    gVect3<floatT> EO_vec_0 = gVect3<floatT>(GCOMPLEX(floatT)(0.479281,-0.210938),GCOMPLEX(floatT)(-2.60014,-1.10176),
-        GCOMPLEX(floatT)(0.417858,-1.59543));
-    gVect3<floatT> EO_vec_319 = gVect3<floatT>(GCOMPLEX(floatT)(0.877146,0.391793),GCOMPLEX(floatT)(-0.177829,-0.995388),
-        GCOMPLEX(floatT)(-1.37693,0.670404));
-    gVect3<floatT> EO_vec_550 = gVect3<floatT>(GCOMPLEX(floatT)(-0.102483,-1.74452),GCOMPLEX(floatT)(1.02125,-2.43817),
-        GCOMPLEX(floatT)(1.1127,0.309778));
-    gVect3<floatT> EO_vec_1023 = gVect3<floatT>(GCOMPLEX(floatT)(1.25156,-1.10202),GCOMPLEX(floatT)(0.190079,-0.295352),
-        GCOMPLEX(floatT)(0.273009,-0.809811));
+    gVect3<floatT> EO_vec_0 = gVect3<floatT>(GCOMPLEX(floatT)(0.483484,-0.159519),GCOMPLEX(floatT)(-2.79428,-1.11986),
+                                             GCOMPLEX(floatT)(0.440891,-1.96765));
+    gVect3<floatT> EO_vec_319 = gVect3<floatT>(GCOMPLEX(floatT)(1.26807,0.474252),GCOMPLEX(floatT)(-0.327903,-1.13687),
+                                               GCOMPLEX(floatT)(-1.17472,0.362931));
+    gVect3<floatT> EO_vec_550 = gVect3<floatT>(GCOMPLEX(floatT)(-0.230879,-1.36073),GCOMPLEX(floatT)(1.12482,-2.19585),
+                                               GCOMPLEX(floatT)(1.15326,0.459365));
+    gVect3<floatT> EO_vec_1023 = gVect3<floatT>(GCOMPLEX(floatT)(1.23632,-1.13617),GCOMPLEX(floatT)(-0.0638833,-0.507776),
+                                                GCOMPLEX(floatT)(0.0369125,-0.770414));
 
     bool success[4]={false};
 
@@ -137,7 +140,6 @@ bool test_dslash(CommunicationBase &commBase){
             success[3]=true;
         }
     }
-
     if (LatLayoutRHS==Odd) {
         gSite site = GInd::getSite(0);
         gVect3<floatT> vec = spinorOut2.getAccessor().getElement(site);
@@ -162,22 +164,29 @@ bool test_dslash(CommunicationBase &commBase){
     }
 
     if (success[0] && success[1] && success[2] && success[3]) {
-        rootLogger.info("Test of Dslash against old values: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
+        rootLogger.info("Test of Dslash against old values: ",CoutColors::green, "passed" ,CoutColors::reset);
         return false;
     } else {
         rootLogger.error("Test of Dslash against old values failed!");
         return true;
     }
+
 }
 
 int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
 
+    bool lerror = false;
+
     LatticeParameters param;
+    const int LatDim[] = {8, 8, 8, 4};
+    const int NodeDim[] = {1, 1, 1, 1};
+
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/DslashTest.param", argc, argv);
-    bool lerror=false;
+
+    param.latDim.set(LatDim);
+    param.nodeDim.set(NodeDim);
 
     commBase.init(param.nodeDim());
 
@@ -187,27 +196,22 @@ int main(int argc, char **argv) {
     initIndexer(HaloDepthSpin,param, commBase);
     stdLogger.setVerbosity(INFO);
 
+    rootLogger.info("Test with old values done for imaginary chemical potential = 0.4");
     rootLogger.info("-------------------------------------");
-    rootLogger.info("Running on Device");
+    rootLogger.info( "Running on Device");
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
     lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
-    rootLogger.info("------------------");
-    rootLogger.info("Testing Odd - Even");
+    rootLogger.info( "------------------");
+    rootLogger.info( "Testing Odd - Even");
     rootLogger.info("------------------");
     lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
+
+    if(lerror) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+    }
 }
-
-
-template<Layout LatLayout, size_t HaloDepth>
-size_t getGlobalIndex(LatticeDimensions coord) {
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-
-    LatticeData lat = GInd::getLatData();
-    LatticeDimensions globCoord = lat.globalPos(coord);
-
-    return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
-           globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
-}
-

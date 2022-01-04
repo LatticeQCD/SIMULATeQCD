@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("MPI Last time: " ,  timer);
 
-    rootLogger.info("Test passed (since it didn't crash)");
+    rootLogger.info(CoutColors::green,"Test passed!",CoutColors::reset);
     gpuIpcCloseMemHandle(recvBufferDeviceP2P);
     freeDevice(sendBufferDevice);
     freeDevice(recvBufferDevice);

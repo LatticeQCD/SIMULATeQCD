@@ -10,7 +10,7 @@
 #define PREC double
 #define USE_GPU true
 #define MY_BLOCKSIZE 256
-#define error 0.00001
+#define epsilon 0.00001
 
 __host__ __device__ PREC dabs(PREC z){
 	if(z < 0){return -z;}
@@ -109,8 +109,9 @@ int main(int argc, char *argv[]){
 
     PREC plaq_test = gAction_test.plaquette();
 
-	if(abs(plaq - plaq_test) > error){
-		rootLogger.info(CoutColors::red,  "writeconf_nersc failed: Computed plaquettes are not equal " ,  plaq ,  " != " ,  plaq_test ,  CoutColors::reset);
+	if(abs(plaq - plaq_test) > epsilon) {
+		rootLogger.error("Computed plaquettes are not equal " ,  plaq ,  " != " ,  plaq_test );
+        return -1;
 	} else {
 	    rootLogger.info(CoutColors::green , "writeconf_nersc succeeded: Computed plaquettes are equal" ,  CoutColors::reset);
 	}
@@ -119,17 +120,19 @@ int main(int argc, char *argv[]){
 
     PREC clov_test = gAction_test.clover();
 
-	if(abs(clov - clov_test) > error){
-		rootLogger.info(CoutColors::red,  "writeconf_nersc failed: Computed clovers are not equal " ,  clov ,  " != " ,  clov_test ,  CoutColors::reset);
+	if(abs(clov - clov_test) > epsilon) {
+		rootLogger.error("Computed clovers are not equal " ,  clov ,  " != " ,  clov_test );
+        return -1;
 	} else {
 	    rootLogger.info(CoutColors::green , "writeconf_nersc succeeded: Computed clovers are equal " ,  CoutColors::reset);
 	}
 
     bool pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge,gauge_test);
 
-    if(!pass){
-		rootLogger.info(CoutColors::red ,  "writeconf_nersc failed: Binaries are not equal." ,  CoutColors::reset);
+    if(!pass) {
+		rootLogger.error("Binaries are not equal.");
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
+        return -1;
 	} else {
 		rootLogger.info(CoutColors::green , "Congratulations, writeconf_nersc worked!" ,  CoutColors::reset);
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");

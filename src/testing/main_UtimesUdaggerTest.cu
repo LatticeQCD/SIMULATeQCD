@@ -83,11 +83,12 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info(std::scientific ,  std::setprecision(14)  ,  "Trace of (UtimesUdagger) is: " ,  traceU);
 
-    if (fabs(traceU-1.0)>1.e-10)
-        rootLogger.error("UtimesUdagger TEST: failed");
-    else
+    if (fabs(traceU-1.0)>1.e-10) {
+        rootLogger.error("UtimesUdagger TEST: failed!");
+        return -1;
+    } else {
         rootLogger.info("UtimesUdagger TEST: passed");
-
+    }
 
     return 0;
 }
