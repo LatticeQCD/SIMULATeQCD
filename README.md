@@ -117,7 +117,7 @@ If none of the above cases apply, you may also send an email to lukas.mazur(at)u
 
 ## Contributors
 
-[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), [P. Scior](https://github.com/philomat), [H.-T. Shu](https://github.com/haitaoshu), R. Larsen(https://github.com/RasmusNL), M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74), [S. Ali](https://github.com/Sajidali1031), [J. Goswami](https://github.com/jishnuxx)
+[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), [P. Scior](https://github.com/philomat), [H.-T. Shu](https://github.com/haitaoshu), [R. Larsen](https://github.com/RasmusNL), M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74), [S. Ali](https://github.com/Sajidali1031), [J. Goswami](https://github.com/jishnuxx)
 
 ## Citing SIMULATeQCD
 
