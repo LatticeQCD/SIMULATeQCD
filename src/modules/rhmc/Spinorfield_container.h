@@ -45,6 +45,11 @@ public:
     }*/
     
     
+        Spinorfield_container() : 
+        phi_container()
+        {}
+    
+    
 //     //! copy assignment: host to host / device to device
 //     Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &
 //     operator=(const Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorRHS) {
