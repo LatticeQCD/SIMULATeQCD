@@ -185,7 +185,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
     rootLogger.info("Smearing gauge fields");
     
-    _smearing.SmearAll();
+    _smearing.SmearAll(_rhmc_param.mu_f());
 
     rootLogger.info("generating momenta");
     
@@ -289,7 +289,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
 
     rootLogger.info("Smearing gauge fields");
     
-    _smearing.SmearAll();
+    _smearing.SmearAll(_rhmc_param.mu_f());
     
     rootLogger.info("Constructing peudo-fermion fields");
 
