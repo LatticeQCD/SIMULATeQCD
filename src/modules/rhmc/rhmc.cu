@@ -111,63 +111,72 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::check_unitarity()
 // This assumes that all approx without bar have that same degree, same for bar!
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::init_ratapprox()
-{
-    int length = _rat.r_inv_1f_num.get().size();
+{    
+   
+    rootLogger.info("Loading lf container sized: ", phi_lf_container.phi_container.size());
+    rootLogger.info("Loading sf container sized: ", phi_sf_container.phi_container.size());
+    for(int i = 0; i < _no_pf; i++) {
+        rootLogger.info("Loading", i, "th pf in lf container sized: ", sizeof(phi_lf_container.phi_container[i]), " bytes");
+        rootLogger.info("Loading", i, "th pf in sf container sized: ", sizeof(phi_sf_container.phi_container[i]), " bytes");
+    }
+
+    
+    int length = _rat.r_inv_sf_num.get().size();
 
     floatT ml2 = _rhmc_param.m_ud() * _rhmc_param.m_ud();
     floatT ms2 = _rhmc_param.m_s() * _rhmc_param.m_s();
 
 
-    rat_1f.push_back(_rat.r_1f_const());
-    rat_2f.push_back(_rat.r_2f_const());
-    rat_inv_1f.push_back(_rat.r_inv_1f_const());
-    rat_inv_2f.push_back(_rat.r_inv_2f_const());
-    rat_bar_1f.push_back(_rat.r_bar_1f_const());
-    rat_bar_2f.push_back(_rat.r_bar_2f_const());
+    rat_sf.push_back(_rat.r_sf_const());
+    rat_lf.push_back(_rat.r_lf_const());
+    rat_inv_sf.push_back(_rat.r_inv_sf_const());
+    rat_inv_lf.push_back(_rat.r_inv_lf_const());
+    rat_bar_sf.push_back(_rat.r_bar_sf_const());
+    rat_bar_lf.push_back(_rat.r_bar_lf_const());
     
     for (int i = 0; i < length; ++i)
     {
-        rat_1f.push_back(_rat.r_1f_num[i]);
-        rat_2f.push_back(_rat.r_2f_num[i]);
-        rat_inv_1f.push_back(_rat.r_inv_1f_num[i]);
-        rat_inv_2f.push_back(_rat.r_inv_2f_num[i]);
+        rat_sf.push_back(_rat.r_sf_num[i]);
+        rat_lf.push_back(_rat.r_lf_num[i]);
+        rat_inv_sf.push_back(_rat.r_inv_sf_num[i]);
+        rat_inv_lf.push_back(_rat.r_inv_lf_num[i]);
     }
 
-    rat_1f.push_back(_rat.r_1f_den[0]+ms2);
-    rat_2f.push_back(_rat.r_2f_den[0]+ml2);
-    rat_inv_1f.push_back(_rat.r_inv_1f_den[0]+ms2);
-    rat_inv_2f.push_back(_rat.r_inv_2f_den[0]+ml2);
+    rat_sf.push_back(_rat.r_sf_den[0]+ms2);
+    rat_lf.push_back(_rat.r_lf_den[0]+ml2);
+    rat_inv_sf.push_back(_rat.r_inv_sf_den[0]+ms2);
+    rat_inv_lf.push_back(_rat.r_inv_lf_den[0]+ml2);
 
     for (int i = 1; i < length; ++i)
     {
-        rat_1f.push_back(_rat.r_1f_den[i]-_rat.r_1f_den[0]);
-        rat_2f.push_back(_rat.r_2f_den[i]-_rat.r_2f_den[0]);
-        rat_inv_1f.push_back(_rat.r_inv_1f_den[i]-_rat.r_inv_1f_den[0]);
-        rat_inv_2f.push_back(_rat.r_inv_2f_den[i]-_rat.r_inv_2f_den[0]);
+        rat_sf.push_back(_rat.r_sf_den[i]-_rat.r_sf_den[0]);
+        rat_lf.push_back(_rat.r_lf_den[i]-_rat.r_lf_den[0]);
+        rat_inv_sf.push_back(_rat.r_inv_sf_den[i]-_rat.r_inv_sf_den[0]);
+        rat_inv_lf.push_back(_rat.r_inv_lf_den[i]-_rat.r_inv_lf_den[0]);
     }
 
-    length = _rat.r_bar_1f_num.get().size();
+    length = _rat.r_bar_sf_num.get().size();
 
 
     for (int i = 0; i < length; ++i)
     {
-        rat_bar_1f.push_back(_rat.r_bar_1f_num[i]);
-        rat_bar_2f.push_back(_rat.r_bar_2f_num[i]);
+        rat_bar_sf.push_back(_rat.r_bar_sf_num[i]);
+        rat_bar_lf.push_back(_rat.r_bar_lf_num[i]);
     }
 
-    rat_bar_1f.push_back(_rat.r_bar_1f_den[0]+ms2);
-    rat_bar_2f.push_back(_rat.r_bar_2f_den[0]+ml2);
+    rat_bar_sf.push_back(_rat.r_bar_sf_den[0]+ms2);
+    rat_bar_lf.push_back(_rat.r_bar_lf_den[0]+ml2);
 
     for (int i = 0; i < length; ++i)
     {
-        rat_bar_1f.push_back(_rat.r_bar_1f_den[i]-_rat.r_bar_1f_den[0]);
-        rat_bar_2f.push_back(_rat.r_bar_2f_den[i]-_rat.r_bar_2f_den[0]);
+        rat_bar_sf.push_back(_rat.r_bar_sf_den[i]-_rat.r_bar_sf_den[0]);
+        rat_bar_lf.push_back(_rat.r_bar_lf_den[i]-_rat.r_bar_lf_den[0]);
     }
 
 
-    // for (int i = 0; i < 2*_rat.r_inv_1f_num.get().size()+1; ++i)
+    // for (int i = 0; i < 2*_rat.r_inv_sf_num.get().size()+1; ++i)
     // {
-    //     rootLogger.info(std::setprecision(10) ,  rat_inv_1f[i]);
+    //     rootLogger.info(std::setprecision(10) ,  rat_inv_sf[i]);
     // }
 
 }
@@ -193,17 +202,26 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     
     rootLogger.info("Constructing peudo-fermion fields");
 
-    make_phi(phi_1f, rat_inv_1f);
+    for(size_t i = 0; i < _no_pf; i++) {
+        make_phi(phi_sf_container.phi_container[i], rat_inv_sf);
+    }
 
-    rootLogger.info("phi_1f: done");
+    rootLogger.info("phi_sf: done");
 
-    make_phi(phi_2f, rat_inv_2f);
+    for(size_t i = 0; i < _no_pf; i++) {
+        make_phi(phi_lf_container.phi_container[i], rat_inv_lf);
+    }
 
-    rootLogger.info("phi_2f: done");
+    rootLogger.info("phi_lf: done");
 
+    rootLogger.info("MN_DEVEL0");
     
     //get oldaction
     double old_hamiltonian = get_Hamiltonian(energy_dens_old);
+    //double old_hamiltonian = 10000.0;
+    //rootLogger.info("MN_DEVEL_get_Hamiltonian ", get_Hamiltonian(energy_dens_old));
+    
+    printf("MN_DEVEL");
     
     //do the integration    
     integrator.integrate();
@@ -223,6 +241,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
         saved_h = _savedField;
         gauge_h = _gaugeField;
 
+        rootLogger.info("MN_DEVEL2");
 
         for (int x = 0; x < (int) GInd::getLatData().lx; x++)
             for (int y = 0; y < (int) GInd::getLatData().ly; y++)
@@ -247,13 +266,18 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
     //get newaction
     double new_hamiltonian = get_Hamiltonian(energy_dens_new);
+    //double new_hamiltonian =9999.0;
+    
+    rootLogger.info("MN_DEVEL3");
 
-    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
+    rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
 
     int ret;
 
 
     bool accept = Metropolis();
+    
+    rootLogger.info("MN_DEVEL4");
     
     if (metro)
     {
@@ -293,13 +317,17 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     
     rootLogger.info("Constructing peudo-fermion fields");
 
-    make_const_phi(phi_1f, rat_inv_1f);
+    for(size_t i = 0; i < _no_pf; i++) {
+        make_const_phi(phi_sf_container.phi_container[i], rat_inv_sf);
+    }
 
-    rootLogger.info("phi_1f: done");
+    rootLogger.info("phi_sf: done");
 
-    make_const_phi(phi_2f, rat_inv_2f);
+    for(size_t i = 0; i < _no_pf; i++) {
+        make_const_phi(phi_lf_container.phi_container[i], rat_inv_lf);
+    }
 
-    rootLogger.info("phi_2f: done");
+    rootLogger.info("phi_lf: done");
 
     //make momenta
     generate_const_momenta();
@@ -395,6 +423,8 @@ struct get_momenta
 // get the Hamiltonian
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(LatticeContainer<onDevice,double> &energy_dens){
+    
+    rootLogger.info("Get hamiltonian with ", _no_pf, " pseudofermions");
 
 
     LatticeContainer<true,double> momentum(_p.getComm(), "momenta");
@@ -411,55 +441,60 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     double momenta;
     double gaugeact;
+    double act_sf;
     // momentum part
 
     // fermion action
-    make_chi(chi, phi_1f, rat_1f);
-
+    
+    rootLogger.info("Get hamiltonian of 0th strange pseudofermion");
+    make_chi(chi, phi_sf_container.phi_container[0], rat_sf);
     redBase2.template iterateOverBulk<All, HaloDepthSpin>(get_fermion_act<floatT,onDevice,HaloDepthSpin>(chi));
-
-
+    act_sf = chi.realdotProduct(chi);
+    
+    for(int i = 1; i < _no_pf; i++) {
+        rootLogger.info("Get hamiltonian of ", i, "th strange pseudofermion");
+        make_chi(chi, phi_sf_container.phi_container[i], rat_sf);
+        redBase3.template iterateOverBulk<All, HaloDepthSpin>(get_fermion_act<floatT,onDevice,HaloDepthSpin>(chi));
+        redBase2.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(redBase2, redBase3, 1.0, 1.0));
+        act_sf += chi.realdotProduct(chi);
+    }
+    
     redBase3.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(momentum, redBase2, 0.5, 1.0));
-
     momentum.reduce(momenta, elems_full);
-
-    double act_1f = chi.realdotProduct(chi);
-
-
+    
     rootLogger.info(std::fixed ,  std::setprecision(12) ,  "momentum part = " ,  0.5*momenta);
-    rootLogger.info("fermion action 1f by   dotp = " ,  act_1f); 
+    rootLogger.info("fermion action sf by   dotp = " ,  act_sf); 
     double fermionaction1 = 0.0;
     redBase2.reduce(fermionaction1, elems_full);
 
-    rootLogger.info("fermion action 1f by reduce = " ,  fermionaction1); 
+    rootLogger.info("fermion action sf by reduce = " ,  fermionaction1); 
 
-
+    double act_lf;
     double mom_ferm1=0.0;
     redBase3.reduce(mom_ferm1, elems_full);
 
-    rootLogger.info(" mom + ferm 1f = " ,  mom_ferm1);
+    rootLogger.info(" mom + ferm sf = " ,  mom_ferm1);
 
-
-    make_chi(chi, phi_2f, rat_2f);
-
-    redBase2.template iterateOverBulk<All, HaloDepthSpin>(get_fermion_act<floatT,onDevice,HaloDepthSpin>(chi));
-
-    redBase3.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(redBase3, redBase2, 1.0, 1.0));
-
-    double act_2f = chi.realdotProduct(chi);
-
-    rootLogger.info("fermion action 2f by   dotp = " ,  act_2f); 
+    for(int i = 0; i < _no_pf; i++) {
+        rootLogger.info("Get hamiltonian of ", i, "th light pseudofermion");
+        make_chi(chi, phi_lf_container.phi_container[i], rat_lf);
+        redBase2.template iterateOverBulk<All, HaloDepthSpin>(get_fermion_act<floatT,onDevice,HaloDepthSpin>(chi));
+        redBase3.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(redBase3, redBase2, 1.0, 1.0));
+        act_lf += chi.realdotProduct(chi);
+    }
+    
+    rootLogger.info("fermion action lf by   dotp = " ,  act_lf); 
     double fermionaction2 = 0.0;
     redBase2.reduce(fermionaction2, elems_full);
 
-    rootLogger.info("fermion action 2f by reduce = " ,  fermionaction2); 
+    rootLogger.info("fermion action lf by reduce = " ,  fermionaction2); 
 
     double mom_ferm1_ferm2=0.0;
     redBase3.reduce(mom_ferm1_ferm2 , elems_full);
 
-    rootLogger.info(" mom + ferm 1f +ferm 2f = " ,  mom_ferm1_ferm2);
+    rootLogger.info(" mom + ferm sf +ferm lf = " ,  mom_ferm1_ferm2);
 
-    rootLogger.info("fermion action 1f by   dotp = " ,  act_1f); 
+    rootLogger.info("fermion action sf by   dotp = " ,  act_sf); 
 
     // gauge action
 
@@ -502,7 +537,7 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     double hamiltonian = 0.5 *momenta;
 
-    hamiltonian += act_1f + act_2f;
+    hamiltonian += act_sf + act_lf;
 
     hamiltonian+= gaugeact;
 
@@ -515,15 +550,22 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     rootLogger.info("reduced energy_dens - individual parts = " ,  H - hamiltonian);
 
-    rootLogger.info(std::setprecision(10) ,  "momenta = " ,  0.5 *momenta ,  " fermion 1f = " ,  act_1f , " fermion 2f = " ,  act_2f , " glue = " ,  gaugeact);
+    rootLogger.info(std::setprecision(10) ,  "momenta = " ,  0.5 *momenta ,  " fermion sf = " ,  act_sf , " fermion lf = " ,  act_lf , " glue = " ,  gaugeact);
     // rootLogger.info(std::setprecision(10) ,  " H = " ,  H);
 
+    rootLogger.info("MN_DEVEL0.5");
+    
+    rootLogger.info("hamiltonian = ", hamiltonian);
+    
     return hamiltonian;
+    //return 0.5*momenta + act_sf + act_lf + gaugeact;
 }
 
 // The Metropolis step
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
+    
+    rootLogger.info("Make Metropolos step with ", _no_pf, " pseudofermions");
 
     dens_delta.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, double>(energy_dens_new, energy_dens_old, 1.0, -1.0));
 
