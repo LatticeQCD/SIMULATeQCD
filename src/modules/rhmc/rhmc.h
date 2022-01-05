@@ -41,7 +41,8 @@ public:
         phi_sf_container(gaugeField.getComm(), rhmc_param.no_pf()),
         chi(gaugeField.getComm()),
         dslash(_smeared_W, _smeared_X, 0.0), 
-        integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, phi_lf_container, phi_sf_container, dslash, _rat, _smearing),
+        //integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, phi_lf_container, phi_sf_container, dslash, _rat, _smearing),
+        integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, dslash, _rat, _smearing),
         _smearing(_gaugeField, _smeared_W, _smeared_X), elems_full(GInd::getLatData().vol4),
         energy_dens_old(gaugeField.getComm(), "old_energy_density"), energy_dens_new(gaugeField.getComm(), "new_energy_density"), 
         dens_delta(gaugeField.getComm(), "energy_density_difference")

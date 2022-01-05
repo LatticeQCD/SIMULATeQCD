@@ -27,8 +27,8 @@ public:
                //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi_1f, Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi_2f,
                //std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> *phi_lf_container,
                //std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> *phi_sf_container,
-               Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi_lf_container,
-               Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi_sf_container,
+               //Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi_lf_container,
+               //Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi_sf_container,
                HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
                RationalCoeff rat, HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
             : _gaugeField(gaugeField), _p(p), _X(X), _W(W), _rhmc_param(rhmc_param), gAcc(gaugeField.getAccessor()),
@@ -41,7 +41,7 @@ public:
 
     ~integrator() {};
 
-    void integrate();
+    void integrate(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
 
 private:
     // methods to evolve P and Q
@@ -64,7 +64,7 @@ private:
     // HisqForce<floatT, onDevice, HaloDepth> ip_dot_f2_hisq;//(gauge,force,CG,dslash,rhmc_param,commBase,memMan);
 
     // The different integration schemes
-    void SWleapfrog();
+    void SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
 
     void PureGaugeleapfrog();
 
@@ -72,8 +72,8 @@ private:
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> &_X;
     Gaugefield<floatT, onDevice, HaloDepth> &_W;
     Gaugefield<floatT, onDevice, HaloDepth> &_p;
-     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> _phi_sf_container;
-     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> _phi_lf_container;
+    // Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> _phi_sf_container;
+    // Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> _phi_lf_container;
 //     std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> phi_sf_container;
 //     std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> phi_lf_container;
     //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> phi_1f;

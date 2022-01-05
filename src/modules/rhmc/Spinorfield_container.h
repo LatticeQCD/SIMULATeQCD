@@ -7,7 +7,7 @@
 
 #include "../../spinor/spinorfield.h"
 #include <vector>
-
+#include <string>
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
 class Spinorfield_container
@@ -18,36 +18,51 @@ public:
         phi_container()
     {
         
-    rootLogger.info("Constructing spiorfields with ", no_pf, " pseudofermions");
+        rootLogger.info("Constructing spiorfields with ", no_pf, " pseudofermions");
 
-    for(int i = 0; i < no_pf; i++) {
-        rootLogger.info("Initializing ", i, "th pseudofermion");
-        phi_container.emplace_back(std::move(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth>(comm, "Spinorfield_" + i )));
-    }
+        for(int i = 0; i < no_pf; i++) {
+            rootLogger.info("Initializing ", i, "th pseudofermion");
+            phi_container.emplace_back(std::move(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth>(comm, "Spinorfield_" + std::to_string(i) )));
+        }
         
     }
     
-//     Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &
-//     operator=(const Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &_phi_container) {
-//         for (int i=0; i<_phi_container.length(); ++i){
-//             phi_container.emplace_back(_phi_container.at(i));
-//         }
-//         return *this;
+//     Spinorfield_container(Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &_phi_container) {
+//         //phi_container.resize(_phi_container.phi_container.size());
+// //         for (int i=0; i<_phi_container.phi_container.size(); ++i){
+// //             phi_container[i] = *_phi_container.phi_container[i];
+// //         }
+//         * phi_container = * _phi_container.phi_container;
 //     }
     
-/*    
-    Spinorfield_container(Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &_phi_container) : 
-        phi_container()
-    {
-        //phi_container.resize(_phi_container.phi_container.size());
-        //*phi_container.data() = &_phi_container.phi_container.data();
-        _phi_container.phi_container = phi_container.swap(_phi_container.phi_container);
-    }*/
+    
+//         Spinorfield_container(Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &_phi_container) {
+//         //phi_container.resize(_phi_container.phi_container.size());
+//         for (int i=0; i<_phi_container.phi_container.size(); ++i){
+//             phi_container.emplace_back(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth>(_phi_container.phi_container.at(i)));
+//         }
+       // * phi_container = * _phi_container.phi_container;
+        
+        
+   // end_ptr = &_phi_container.phi_container[size - 1];
+
+
+        
+        
+  //  }
     
     
-        Spinorfield_container() : 
-        phi_container()
-        {}
+    
+//     Spinorfield_container(Spinorfield_container<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &_phi_container) : 
+//         phi_container()
+//     {
+//         //phi_container.resize(_phi_container.phi_container.size());
+//         //*phi_container.data() = &_phi_container.phi_container.data();
+//         _phi_container.phi_container = phi_container.swap(_phi_container.phi_container);
+//     }
+    
+    
+//         Spinorfield_container() = default;
     
     
 //     //! copy assignment: host to host / device to device

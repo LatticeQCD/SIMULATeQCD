@@ -92,12 +92,12 @@ struct get_mom_tr
 
 // this is called from outside, append switch cases if other integration schemes are added
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container){
     
     switch(_rhmc_param.integrator())
     {
         case 0:
-            SWleapfrog();
+            SWleapfrog(_phi_lf_container, _phi_sf_container);
 
              break;
 
@@ -109,7 +109,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::inte
 
 // Sexton-Weingarten integration scheme
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container){
     
     rootLogger.info("Starting Leapfrog with ", _no_pf, " pseudofermions");
     rootLogger.info("Loading lf container sized: ", _phi_lf_container.phi_container.size());
@@ -226,16 +226,16 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 //update P with the fermion force
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_fermforce(floatT stepsize, 
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi, bool light/* std::vector<floatT> rat_coeff*/){
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi, bool light/* std::vector<floatT> rat_coeff*/){
 
 
-    rootLogger.info("Updating a container sized: ", phi.phi_container.size());
+    rootLogger.info("Updating a container sized: ", _phi.phi_container.size());
     for(int i = 0; i < _no_pf; i++) {
-        rootLogger.info("Updating ", i, " th pf in an container sized: ", sizeof(phi.phi_container[i]), " bytes");
+        rootLogger.info("Updating ", i, " th pf in an container sized: ", sizeof(_phi.phi_container[i]), " bytes");
     }
     
     for(int i = 0; i < _no_pf; i++) {
-        ip_dot_f2_hisq.updateForce(phi.phi_container.at(i),ipdot,light);
+        ip_dot_f2_hisq.updateForce(_phi.phi_container.at(i),ipdot,light);
         forceinfo();
         evolveP(stepsize);
     }
