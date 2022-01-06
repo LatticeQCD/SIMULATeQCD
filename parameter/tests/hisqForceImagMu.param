@@ -34,7 +34,7 @@ mu_f    = 0.4
 
 step_size  = 0.02
 no_md      = 10
-no_step_1f = 5
+no_step_sf = 5
 no_sw      = 10
 #residue   = 1e-12
 cgMax      = 6500

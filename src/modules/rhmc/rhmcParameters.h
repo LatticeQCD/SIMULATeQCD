@@ -14,6 +14,7 @@ public:
     Parameter<int> no_md;
     Parameter<int> no_step_sf;
     Parameter<int> no_sw;
+    Parameter <double> mu_f;
     Parameter<double> step_size;
     Parameter<int> integrator;
     Parameter<double> residue;
@@ -42,6 +43,7 @@ public:
         add(no_step_sf, "no_step_sf");
         add(no_sw, "no_sw");
         add(step_size, "step_size");
+        addDefault(mu_f, "mu_f", 0.0);
         addDefault(integrator, "integrator", 0);
         addDefault(residue, "residue", 1e-12);
         addDefault(residue_force, "residue_force", 1e-7);
