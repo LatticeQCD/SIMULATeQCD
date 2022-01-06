@@ -215,9 +215,9 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
     
     for(int i = 0; i < _no_pf; i++) {
         ip_dot_f2_hisq.updateForce(_phi.phi_container.at(i),ipdot,light);
+        forceinfo();
+        evolveP(stepsize);
     }
-    forceinfo();
-    evolveP(stepsize);
 }
 
 template<class floatT, size_t HaloDepth>
