@@ -9,7 +9,7 @@ bool ParameterList::readfile(const CommunicationBase& comm, const std::string& f
         rootLogger.info("Reading parameters from file :: ", fname);
         std::ifstream in(fname.c_str(), std::ios::in);
         if (in.fail()) {
-            throw std::runtime_error(stdLogger.fatal("Unable to open parameter file!"));
+            throw std::runtime_error(stdLogger.fatal("Unable to open parameter file ", fname));
         }
         if (comm.single())
             return readstream(in,argc-2,argv+2);

@@ -94,8 +94,8 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(DEBUG);
 
     LatticeParameters param;
-    StopWatch<true> timer;
     CommunicationBase commBase(&argc, &argv);
+    StopWatch<true> timer;
     param.readfile(commBase, "../parameter/tests/cudaIpcTest.param", argc, argv);
     commBase.init(param.nodeDim());
 
