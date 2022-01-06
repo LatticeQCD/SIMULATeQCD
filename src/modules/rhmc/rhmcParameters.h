@@ -108,25 +108,25 @@ public:
 
     RationalCoeff(){
 
-        add(r_inv_sf_const, "r_inv_sf_const");
-        add(r_inv_sf_num, "r_inv_sf_num");
-        add(r_inv_sf_den, "r_inv_sf_den");
-        add(r_sf_const, "r_sf_const");
-        add(r_sf_num, "r_sf_num");
-        add(r_sf_den, "r_sf_den");
-        add(r_bar_sf_const, "r_bar_sf_const");
-        add(r_bar_sf_num, "r_bar_sf_num");
-        add(r_bar_sf_den, "r_bar_sf_den");
+        add(r_inv_sf_const, "r_inv_1f_const");
+        add(r_inv_sf_num, "r_inv_1f_num");
+        add(r_inv_sf_den, "r_inv_1f_den");
+        add(r_sf_const, "r_1f_const");
+        add(r_sf_num, "r_1f_num");
+        add(r_sf_den, "r_1f_den");
+        add(r_bar_sf_const, "r_bar_1f_const");
+        add(r_bar_sf_num, "r_bar_1f_num");
+        add(r_bar_sf_den, "r_bar_1f_den");
 
-        add(r_inv_lf_const, "r_inv_lf_const");
-        add(r_inv_lf_num, "r_inv_lf_num");
-        add(r_inv_lf_den, "r_inv_lf_den");
-        add(r_lf_const, "r_lf_const");
-        add(r_lf_num, "r_lf_num");
-        add(r_lf_den, "r_lf_den");
-        add(r_bar_lf_const, "r_bar_lf_const");
-        add(r_bar_lf_num, "r_bar_lf_num");
-        add(r_bar_lf_den, "r_bar_lf_den");
+        add(r_inv_lf_const, "r_inv_2f_const");
+        add(r_inv_lf_num, "r_inv_2f_num");
+        add(r_inv_lf_den, "r_inv_2f_den");
+        add(r_lf_const, "r_2f_const");
+        add(r_lf_num, "r_2f_num");
+        add(r_lf_den, "r_2f_den");
+        add(r_bar_lf_const, "r_bar_2f_const");
+        add(r_bar_lf_num, "r_bar_2f_num");
+        add(r_bar_lf_den, "r_bar_2f_den");
 
     };
 
