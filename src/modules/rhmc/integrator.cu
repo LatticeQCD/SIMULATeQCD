@@ -92,7 +92,9 @@ struct get_mom_tr
 
 // this is called from outside, append switch cases if other integration schemes are added
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container,
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container){
     
     switch(_rhmc_param.integrator())
     {
@@ -109,15 +111,9 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::inte
 
 // Sexton-Weingarten integration scheme
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container){
-    
-    rootLogger.info("Starting Leapfrog with ", _no_pf, " pseudofermions");
-    rootLogger.info("Loading lf container sized: ", _phi_lf_container.phi_container.size());
-    rootLogger.info("Loading sf container sized: ", _phi_sf_container.phi_container.size());
-    for(int i = 0; i < _no_pf; i++) {
-        rootLogger.info("Loading", i, "th pf in lf container sized: ", sizeof(_phi_lf_container.phi_container[i]), " bytes");
-        rootLogger.info("Loading", i, "th pf in sf container sized: ", sizeof(_phi_sf_container.phi_container[i]), " bytes");
-    }
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container,
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container){
 
     floatT ieps, iepsh, steph_sf, step_sf, sw_step, sw_steph;
     
@@ -134,11 +130,8 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     // Perform the first half step                      //
     //==================================================//
 
-    //for(int i = 0; i < _no_pf; i++) {
-        updateP_fermforce( iepsh, _phi_lf_container, true );
-        updateP_fermforce( steph_sf, _phi_sf_container, false );
-    //}
-
+    updateP_fermforce( iepsh, _phi_lf_container, true );
+    updateP_fermforce( steph_sf, _phi_sf_container, false );
     updateP_gaugeforce( sw_steph );
 
 
@@ -161,15 +154,11 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
             _smearing.SmearAll();
             // update P using only the sf part of the force
             rootLogger.info("strange force:");
-//             for(int i = 0; i < _no_pf; i++) {
-                 updateP_fermforce( step_sf, _phi_sf_container, false );
-//             }
+            updateP_fermforce( step_sf, _phi_sf_container, false );
         }// end loop over steps of sf
         rootLogger.info("light force:");
         // update P using only the lf part of the force
-//         for(int i = 0; i < _no_pf; i++) {
-             updateP_fermforce( ieps, _phi_lf_container, true );
-//         }
+        updateP_fermforce( ieps, _phi_lf_container, true );
     }  
 
 
@@ -187,9 +176,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
             updateP_gaugeforce( sw_step );
         }
         _smearing.SmearAll();
-//         for(int i = 0; i < _no_pf; i++) {
-             updateP_fermforce( step_sf, _phi_sf_container, false );
-//         }
+        updateP_fermforce( step_sf, _phi_sf_container, false );
     }
 
     // bring P sw_steph away from the end of the trajectory for gauge part of the force
@@ -206,10 +193,8 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     evolveQ( sw_step );
     _smearing.SmearAll();
     // bring P to the end of the trajectory by updating with all the forces
-//     for(int i = 0; i < _no_pf; i++) {
-         updateP_fermforce( steph_sf, _phi_sf_container, false );
-         updateP_fermforce( iepsh, _phi_lf_container, true );
-//     }
+    updateP_fermforce( steph_sf, _phi_sf_container, false );
+    updateP_fermforce( iepsh, _phi_lf_container, true );
     updateP_gaugeforce( sw_steph );
 }
 
@@ -227,18 +212,12 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_fermforce(floatT stepsize, 
     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi, bool light/* std::vector<floatT> rat_coeff*/){
-
-
-    rootLogger.info("Updating a container sized: ", _phi.phi_container.size());
-    for(int i = 0; i < _no_pf; i++) {
-        rootLogger.info("Updating ", i, " th pf in an container sized: ", sizeof(_phi.phi_container[i]), " bytes");
-    }
     
     for(int i = 0; i < _no_pf; i++) {
         ip_dot_f2_hisq.updateForce(_phi.phi_container.at(i),ipdot,light);
-        forceinfo();
-        evolveP(stepsize);
     }
+    forceinfo();
+    evolveP(stepsize);
 }
 
 template<class floatT, size_t HaloDepth>

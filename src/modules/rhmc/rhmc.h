@@ -35,13 +35,10 @@ public:
         gAcc(gaugeField.getAccessor()), _savedField(gaugeField.getComm()),
         _p(gaugeField.getComm()), _rand_state(rand_state), _smeared_W(gaugeField.getComm()),
         _smeared_X(gaugeField.getComm()),
-        //phi_1f(gaugeField.getComm()), phi_2f(gaugeField.getComm()),
-        //phi_lf_container(), phi_sf_container(),
         phi_lf_container(gaugeField.getComm(), rhmc_param.no_pf()),
         phi_sf_container(gaugeField.getComm(), rhmc_param.no_pf()),
         chi(gaugeField.getComm()),
         dslash(_smeared_W, _smeared_X, 0.0), 
-        //integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, phi_lf_container, phi_sf_container, dslash, _rat, _smearing),
         integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, dslash, _rat, _smearing),
         _smearing(_gaugeField, _smeared_W, _smeared_X), elems_full(GInd::getLatData().vol4),
         energy_dens_old(gaugeField.getComm(), "old_energy_density"), energy_dens_new(gaugeField.getComm(), "new_energy_density"), 
@@ -51,52 +48,7 @@ public:
         energy_dens_new.adjustSize(elems_full);
         dens_delta.adjustSize(elems_full);
         
-        
-        
-//         rootLogger.info("Constructing spiorfields with ", _rhmc_param.no_pf(), " pseudofermions");
-// 
-//         for(int i = 0; i < _rhmc_param.no_pf(); i++) {
-//             rootLogger.info("Initializing ", i, "th pseudofermion");
-//             phi_lf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(_gaugeField.getComm(), "Spinorfield_lf_" + i )));
-//             phi_sf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(_gaugeField.getComm(), "Spinorfield_sf_" + i )));
-//         }
-        
-        //_no_pf = _rhmc_param.no_pf();
-//         for(int i = 0; i < _rhmc_param.no_pf(); i++) {
-//             rootLogger.info("Initializing ", i, "th pseudofermion");
-//             //for(int j = 0; j < i; j++) {
-//                 phi_lf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(_gaugeField.getComm(), "Spinorfield_lf_" + i )));
-//                 phi_sf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(_gaugeField.getComm(), "Spinorfield_sf_" + i )));
-//             //}
-//         }
     };
-    
-     
-    //_vol4 = GInd::getLatData().vol4;
-    
-//     //! set up _contracted_propagators
-//     for(size_t i = 0; i < _no_pf; i++) {
-//         for(size_t j = 0; j <= i; j++) {
-//             //! Here we need to give names without the "SHARED_" prefix to the MemoryManagement, otherwise all
-//             //! of these will point to the same memory.
-//             _contracted_propagators.emplace_back(std::move(LatticeContainer<false, GPUcomplex<floatT>>(_commBase,
-//                     "propmemA", "propmemB", "propmemC", "propmemD")));
-//             _contracted_propagators.back().adjustSize(_vol4);
-//         }
-//     }
-    
-    //! setup memory for multiple pf
-    
-//     for(size_t i = 0; i < _no_pf; i++) {
-//         phi_lf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(gaugeField.getComm())));
-//         phi_sf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(gaugeField.getComm())));
-//     }
-    
-//     //! is getComm() neccessary?
-//     for(size_t i = 0; i < _no_pf; i++) {
-//         phi_lf_container[i](gaugeField.getComm());
-//         phi_sf_container[i](gaugeField.getComm());
-//     }
 
     int update(bool metro=true, bool reverse=false);
 
@@ -132,12 +84,8 @@ private:
     LatticeContainer<onDevice,double> dens_delta;
 
     // Pseudo-spinor fields for both flavors and another field for calculating the hamiltonian
-     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_sf_container;
-     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_lf_container;
-//     std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> phi_sf_container;
-//     std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> phi_lf_container;
-    //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> phi_1f;
-    //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> phi_2f;
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_sf_container;
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_lf_container;
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> chi;
 
     integrator<floatT,onDevice,All,HaloDepth,HaloDepthSpin> integrator;
@@ -172,33 +120,8 @@ private:
 
     //use this only for testing
     void generate_const_momenta();
-    void make_const_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff);
-    
-    
-//     //! set up _contracted_propagators
-//     for(size_t i = 0; i < _no_pf; i++) {
-//         for(size_t j = 0; j <= i; j++) {
-//             //! Here we need to give names without the "SHARED_" prefix to the MemoryManagement, otherwise all
-//             //! of these will point to the same memory.
-//             _contracted_propagators.emplace_back(std::move(LatticeContainer<false, GPUcomplex<floatT>>(_commBase,
-//                     "propmemA", "propmemB", "propmemC", "propmemD")));
-//             _contracted_propagators.back().adjustSize(_vol4);
-//         }
-//     }
-//     
-//     //! setup memory for multiple pf
-//     for(size_t i = 0; i < _no_pf; i++) {
-//         phi_lf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(_commBase, "Spinorfield_lf"[i])));
-//         phi_sf_container.emplace_back(std::move(Spinorfield<floatT, onDevice, Even, HaloDepthSpin>(_commBase, "Spinorfield_sf"[i])));
-//     }
-//     
-//     //! is getComm() neccessary?
-//     for(size_t i = 0; i < _no_pf; i++) {
-//         phi_lf_container[i](gaugeField.getComm());
-//         phi_sf_container[i](gaugeField.getComm());
-//     }
-    
+    void make_const_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff);    
 
 };
 
-#endif
+#endif //RHMC

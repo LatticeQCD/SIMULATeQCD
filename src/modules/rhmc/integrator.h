@@ -24,17 +24,10 @@ public:
     integrator(RhmcParameters rhmc_param, Gaugefield<floatT, onDevice, HaloDepth, R18> &gaugeField,
                Gaugefield<floatT, onDevice, HaloDepth> &p, Gaugefield<floatT, onDevice, HaloDepth, U3R14> &X,
                Gaugefield<floatT, onDevice, HaloDepth> &W,
-               //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi_1f, Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi_2f,
-               //std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> *phi_lf_container,
-               //std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> *phi_sf_container,
-               //Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi_lf_container,
-               //Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi_sf_container,
                HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
                RationalCoeff rat, HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
             : _gaugeField(gaugeField), _p(p), _X(X), _W(W), _rhmc_param(rhmc_param), gAcc(gaugeField.getAccessor()),
               pAccessor(p.getAccessor()), _dslash(dslash), ipdot(gaugeField.getComm()),
-              //_phi_1f(phi_1f), _phi_2f(phi_2f),
-              //_phi_lf_container(phi_lf_container), _phi_sf_container(phi_sf_container),
               ipdotAccessor(ipdot.getAccessor()), _rat(rat),
     _smearing(smearing), _dslashM(_W, _X, 0.0),
     ip_dot_f2_hisq(_gaugeField, ipdot, cgM, _dslash, _dslashM, _rhmc_param, _rat, _smearing) {};
@@ -72,12 +65,6 @@ private:
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> &_X;
     Gaugefield<floatT, onDevice, HaloDepth> &_W;
     Gaugefield<floatT, onDevice, HaloDepth> &_p;
-    // Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> _phi_sf_container;
-    // Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> _phi_lf_container;
-//     std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> phi_sf_container;
-//     std::vector<Spinorfield<floatT, onDevice, Even, HaloDepthSpin>> phi_lf_container;
-    //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> phi_1f;
-    //Spinorfield<floatT, onDevice, Even, HaloDepthSpin> phi_2f;
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &_smearing;
 
     RhmcParameters _rhmc_param;
@@ -142,4 +129,4 @@ private:
 
 };
 
-#endif
+#endif //INTEGRATOR
