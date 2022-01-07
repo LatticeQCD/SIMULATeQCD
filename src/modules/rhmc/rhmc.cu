@@ -442,10 +442,10 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     rootLogger.info("fermion action sf by reduce = " ,  fermionaction1); 
 
     double act_lf;
-    double mom_ferm1=0.0;
-    redBase3.reduce(mom_ferm1, elems_full);
+    double mom_ferms=0.0;
+    redBase3.reduce(mom_ferms, elems_full);
 
-    rootLogger.info(" mom + ferm sf = " ,  mom_ferm1);
+    rootLogger.info("mom + ferm sf = " ,  mom_ferms);
 
     // light fermion action
     for(int i = 0; i < _no_pf; i++) {
@@ -456,15 +456,15 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     }
     
     rootLogger.info("fermion action lf by   dotp = " ,  act_lf); 
-    double fermionaction2 = 0.0;
-    redBase2.reduce(fermionaction2, elems_full);
+    double fermionactionl = 0.0;
+    redBase2.reduce(fermionactionl, elems_full);
 
-    rootLogger.info("fermion action lf by reduce = " ,  fermionaction2); 
+    rootLogger.info("fermion action lf by reduce = " ,  fermionactionl); 
 
-    double mom_ferm1_ferm2=0.0;
-    redBase3.reduce(mom_ferm1_ferm2 , elems_full);
+    double mom_ferms_ferml = 0.0;
+    redBase3.reduce(mom_ferms_ferml , elems_full);
 
-    rootLogger.info(" mom + ferm sf +ferm lf = " ,  mom_ferm1_ferm2);
+    rootLogger.info("mom  +  ferm sf  +  ferm lf = " ,  mom_ferms_ferml);
 
     rootLogger.info("fermion action sf by   dotp = " ,  act_sf); 
 
@@ -487,9 +487,9 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     double beta = _rhmc_param.beta() *3.0/5.0;
 
-    double gauge=0.0;
+    double gauge = 0.0;
     redBase2.reduce(gauge, elems_full);
-    gauge*=-beta/3.0;
+    gauge *= -beta/3.0;
 
     GaugeAction<floatT, onDevice, HaloDepth, R18> gaugeaction(_gaugeField);
     gaugeact = - beta * gaugeaction.symanzik(); 
@@ -511,7 +511,7 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     hamiltonian += act_sf + act_lf;
 
-    hamiltonian+= gaugeact;
+    hamiltonian += gaugeact;
 
     // std::cout << std::fixed;
     // std::cout << std::setprecision(20) << gaugeact << std::endl; 
