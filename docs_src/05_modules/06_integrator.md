@@ -10,6 +10,7 @@ integrator(RhmcParameters rhmc_param, Gaugefield<floatT,onDevice,All,HaloDepth> 
 ```
 Aruments are: A `RhmcParameters` instance, the gauge field, a conjugate momentum field, two smeared gauge fields, a CG instance, an instance of a dslash and two vectors containing the coefficients for the rational approximations needed in the fermion force.
 
+## Integrator.integrate
 
 ```C++
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(
