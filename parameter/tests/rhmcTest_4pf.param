@@ -39,7 +39,8 @@ no_sw      = 10
 #residue   = 1e-12
 cgMax      = 6500
 always_acc = 0
-rat_file   = ../parameter/sample_eo.rat
+rat_file   = ../parameter/sample_eo_4pf.rat
+no_pf      = 4
 
 rand_flag    = 0
 rand_file    = rand
