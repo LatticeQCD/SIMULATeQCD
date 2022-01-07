@@ -82,13 +82,14 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     if (gpuErr)
         rootLogger.info("Error in Initialization of DSlash");
     
-    timer.start();
     for (int i = 0; i < 500; ++i) {
+        timer.start();
         dslash.applyMdaggM(spinorOut, spinorIn, false);
+        timer.stop();
         spinorIn=spinorSave;
     }
     
-    timer.stop();
+
      
     rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
   
