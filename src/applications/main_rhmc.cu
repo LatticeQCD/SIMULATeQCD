@@ -14,8 +14,6 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
     CommunicationBase commBase(&argc, &argv);
 
-    StopWatch<true> timer, totaltime;
-
     RhmcParameters param;
 
     param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
@@ -33,6 +31,8 @@ int main(int argc, char *argv[]) {
     rat.check_rat(param);
 
     commBase.init(param.nodeDim(), param.gpuTopo());
+
+    StopWatch<true> timer, totaltime;
 
     typedef float floatT;
 
