@@ -15,8 +15,10 @@ mass_ud = 0.0009875       # up/down quark mass
 
 step_size  = 0.07142857 # step size of trajectory
 no_md      = 1          # number of steps of trajectory
-no_step_1f = 1          # number of steps of strange quark integration
+no_step_sf = 1          # number of steps of strange quark integration
 no_sw      = 1          # number of steps of gauge integration
+
+no_pf      = 1          # number of up/down and strange pseudofermion fields
 
 #residue   = 1e-12      # residue for inversions
 

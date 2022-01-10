@@ -39,17 +39,17 @@ class AlgRemez
   int num_flav;
 
   // The numerator and denominator of the power we are approximating for flavor 1.
-  unsigned long power_num_flav_1;
-  unsigned long power_den_flav_1;
+  double power_num_flav_1;
+  double power_den_flav_1;
   // The numerator and denominator of the power we are approximating for flavor 2.
-  unsigned long power_num_flav_2;
-  unsigned long power_den_flav_2;
+  double power_num_flav_2;
+  double power_den_flav_2;
   // The numerator and denominator of the power we are approximating for flavor 3.
-  unsigned long power_num_flav_3;
-  unsigned long power_den_flav_3;
+  double power_num_flav_3;
+  double power_den_flav_3;
   // The numerator and denominator of the power we are approximating for flavor 4.
-  unsigned long power_num_flav_4;
-  unsigned long power_den_flav_4;
+  double power_num_flav_4;
+  double power_den_flav_4;
 
   // The mass for flavor 1.
   bigfloat mass_flav_1;
@@ -73,7 +73,7 @@ class AlgRemez
 
   // The exponential summation coefficients
   bigfloat *a;
-  int *a_power;
+  double *a_power;
   int a_length;
 
   // The number of equations we must solve at each iteration (n+d+1)
@@ -143,21 +143,21 @@ class AlgRemez
 
   // Generate the rational approximation x^(pnum/pden)
   double generateApprox(int num_degree, int den_degree, 
-			unsigned long power_num1, unsigned long power_den1, double m1,
-			unsigned long power_num2, unsigned long power_den2, double m2,
-			unsigned long power_num3, unsigned long power_den3, double m3,
-			unsigned long power_num4, unsigned long power_den4, double m4,
-			int a_len, double* a_param, int* a_pow);
+			double power_num1, double power_den1, double m1,
+			double power_num2, double power_den2, double m2,
+			double power_num3, double power_den3, double m3,
+			double power_num4, double power_den4, double m4,
+			int a_len, double* a_param, double* a_pow);
   double generateApprox(int num_degree, int den_degree, 
-			unsigned long power_num1, unsigned long power_den1, double m1,
-			unsigned long power_num2, unsigned long power_den2, double m2,
-			unsigned long power_num3, unsigned long power_den3, double m3,
-			unsigned long power_num4, unsigned long power_den4, double m4);
+			double power_num1, double power_den1, double m1,
+			double power_num2, double power_den2, double m2,
+			double power_num3, double power_den3, double m3,
+			double power_num4, double power_den4, double m4);
   double generateApprox(int degree,
-                        unsigned long power_num1, unsigned long power_den1, double m1,
-                        unsigned long power_num2, unsigned long power_den2, double m2,
-                        unsigned long power_num3, unsigned long power_den3, double m3,
-                        unsigned long power_num4, unsigned long power_den4, double m4);
+                        double power_num1, double power_den1, double m1,
+                        double power_num2, double power_den2, double m2,
+                        double power_num3, double power_den3, double m3,
+                        double power_num4, double power_den4, double m4);
 
   // Return the partial fraction expansion of the approximation x^(pnum/pden)
   int getPFE(double *res, double *pole, double *norm);

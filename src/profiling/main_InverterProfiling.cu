@@ -38,17 +38,17 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     smearing.SmearAll();
 
     rootLogger.info("Testing multishift inverter:");
-    // r_2f test
-    rootLogger.info("Starting r_2f test");
+    // r_lf test
+    rootLogger.info("Starting r_lf test");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, 1> dslashMulti_ud(gauge_smeared, gauge_Naik, 0.0);
 
     SimpleArray<floatT, Multistack> shifts(0.0);
 
-    for (size_t i = 1; i <rat.r_inv_1f_den.get().size(); ++i)
+    for (size_t i = 1; i <rat.r_inv_sf_den.get().size(); ++i)
     {
-        shifts[i] = rat.r_inv_1f_den[i]-rat.r_inv_1f_den[0];
+        shifts[i] = rat.r_inv_sf_den[i]-rat.r_inv_sf_den[0];
     }
-    shifts[0] = rat.r_inv_1f_den[0] + param.m_s()*param.m_s();
+    shifts[0] = rat.r_inv_sf_den[0] + param.m_s()*param.m_s();
 
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> spinorInMulti(commBase);
     spinorInMulti.gauss(d_rand.state);
