@@ -214,7 +214,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
 
     // bring P to the end of the trajectory by updating with all the forces
     updateP_fermforce( steph_1f, _phi_1f, false); 
-    updateP_fermforce( steph_1f, _phi_1f, true); 
+    updateP_fermforce( iepsh, _phi_2f, true); 
     updateP_gaugeforce( sw_steph );
 }
 // 2MN PQPQP Omelyan integrator on all scales 
