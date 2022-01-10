@@ -6,7 +6,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-
+#include "../gauge/gauge_kernels.cu"
 
 template<class floatT, int HaloDepth>
 bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff rat){
@@ -54,7 +54,9 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     initIndexer(4,param, commBase);
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
-
+    Gaugefield<floatT, true, HaloDepth, R18> gauge_reference(commBase);
+    gauge_reference.readconf_nersc("../test_conf/rhmc_4pf_reference_conf");
+    
     grnd_state<true> d_rand;
     initialize_rng(param.seed(), d_rand);
 
@@ -85,8 +87,19 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
     bool ret = false;
+    
+    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
+    LatticeContainer<true, int> dummy(commBase);
+    dummy.adjustSize(elems);
 
-    if (acceptance > 0.7) {
+    
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+
+    int faults = 0;
+    dummy.reduce(faults,elems);
+
+    rootLogger.info(faults, " faulty links found!");
+    if (acceptance > 0.7 && faults == 0) {
         ret=true;
     }
 

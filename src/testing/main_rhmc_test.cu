@@ -6,26 +6,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-
-
-template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-struct compare_fields {
-    gaugeAccessor<floatT,comp> gL;
-    gaugeAccessor<floatT,comp> gR;
-    compare_fields(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR) : gL(GaugeL.getAccessor()), gR(GaugeR.getAccessor()) {}
-
-    __host__ __device__ int operator() (gSite site) {
-        int sum = 0;
-        for (int mu = 0; mu < 4; mu++) {
-            gSiteMu siteMu = GIndexer<All,HaloDepth>::getSiteMu(site,mu);
-            
-            if (!compareGSU3(gL.getLink(siteMu), gR.getLink(siteMu),(floatT)1e-6)) {
-                sum++;
-            }
-        }
-        return sum;
-    }
-};
+#include "../gauge/gauge_kernels.cu"
  
     
 
@@ -114,7 +95,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     dummy.adjustSize(elems);
 
     
-    dummy.template iterateOverBulk<All,HaloDepth>(compare_fields<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
 
     int faults = 0;
     dummy.reduce(faults,elems);
