@@ -9,7 +9,7 @@
  *
  */
 
-#include "../base/stopWatch.h"
+//#include "../base/stopWatch.h"
 #include "../base/IO/fileWriter.h"
 #include "../gauge/gaugefield.h"
 #include "../base/math/correlators.h"

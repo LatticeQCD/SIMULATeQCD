@@ -250,18 +250,18 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
     SimpleArray<floatT, rdeg> rat_num;
   
     if (isLight) {
-        shifts[0] =_rat.r_bar_2f_den[0] + _rhmc_param.m_ud()*_rhmc_param.m_ud();
-        rat_num[0] = _rat.r_bar_2f_num[0];
+        shifts[0] =_rat.r_bar_lf_den[0] + _rhmc_param.m_ud()*_rhmc_param.m_ud();
+        rat_num[0] = _rat.r_bar_lf_num[0];
         for (int i = 1; i < rdeg; i++) {
-            shifts[i] = _rat.r_bar_2f_den[i] -_rat.r_bar_2f_den[0];
-            rat_num[i] = _rat.r_bar_2f_num[i];
+            shifts[i] = _rat.r_bar_lf_den[i] -_rat.r_bar_lf_den[0];
+            rat_num[i] = _rat.r_bar_lf_num[i];
         }
     } else {
-        shifts[0] =_rat.r_bar_1f_den[0] + _rhmc_param.m_s()*_rhmc_param.m_s();
-        rat_num[0] = _rat.r_bar_1f_num[0];
+        shifts[0] =_rat.r_bar_sf_den[0] + _rhmc_param.m_s()*_rhmc_param.m_s();
+        rat_num[0] = _rat.r_bar_sf_num[0];
         for (int i = 1; i < rdeg; i++) {
-            shifts[i] = _rat.r_bar_1f_den[i] -_rat.r_bar_1f_den[0];
-            rat_num[i] = _rat.r_bar_1f_num[i];
+            shifts[i] = _rat.r_bar_sf_den[i] -_rat.r_bar_sf_den[0];
+            rat_num[i] = _rat.r_bar_sf_num[i];
         }
     }
   
@@ -305,7 +305,7 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     SimpleArray<floatT, rdeg> rat_num;
   
     for (int i = 0; i < rdeg; i++) {
-        rat_num[i] = _rat.r_inv_2f_num[i];
+        rat_num[i] = _rat.r_inv_lf_num[i];
     }
   
     _dslash_multi.Dslash(_spinor_y,_spinor_x);

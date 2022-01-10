@@ -10,9 +10,11 @@
 class RhmcParameters: public LatticeParameters {
 public:
 
+    Parameter<int> no_pf;
     Parameter<int> no_md;
-    Parameter<int> no_step_1f;
+    Parameter<int> no_step_sf;
     Parameter<int> no_sw;
+    Parameter <double> mu_f;
     Parameter<double> step_size;
     Parameter<int> integrator;
     Parameter<double> residue;
@@ -28,7 +30,6 @@ public:
     Parameter<std::string> rat_file;
     Parameter <double> m_ud;
     Parameter <double> m_s;
-    Parameter <double> mu_f;
     Parameter <std::string> rand_file;
     Parameter <std::string> gauge_file;
     Parameter <int> seed;
@@ -37,8 +38,9 @@ public:
     Parameter <int> config_no;
 
     RhmcParameters(){
+        addDefault(no_pf, "no_pf", 1);
         add(no_md, "no_md");
-        add(no_step_1f, "no_step_1f");
+        add(no_step_sf, "no_step_sf");
         add(no_sw, "no_sw");
         add(step_size, "step_size");
         addDefault(mu_f, "mu0", 0.0);
@@ -77,56 +79,56 @@ double get_exp(double r, double x)
 public:
 
     // RationalCoeff for (Ms^+ * Ms)^(3/8) used in pseudo-fermion heatbath, higher order
-    Parameter<double> r_inv_1f_const;
-    DynamicParameter<double> r_inv_1f_num;
-    DynamicParameter<double> r_inv_1f_den;
+    Parameter<double> r_inv_sf_const;
+    DynamicParameter<double> r_inv_sf_num;
+    DynamicParameter<double> r_inv_sf_den;
 
     // RationalCoeff for (Ms^+ * Ms)^(-3/8) used in action, higher order
-    Parameter<double> r_1f_const;
-    DynamicParameter<double> r_1f_num;
-    DynamicParameter<double> r_1f_den;
+    Parameter<double> r_sf_const;
+    DynamicParameter<double> r_sf_num;
+    DynamicParameter<double> r_sf_den;
 
     // RationalCoeff for (Ms^+ * Ms)^(-3/4) used in force, lower order
-    Parameter<double> r_bar_1f_const;
-    DynamicParameter<double> r_bar_1f_num;
-    DynamicParameter<double> r_bar_1f_den;
+    Parameter<double> r_bar_sf_const;
+    DynamicParameter<double> r_bar_sf_num;
+    DynamicParameter<double> r_bar_sf_den;
 
     // RationalCoeff for (Mud^+ * Mud)^(1/4) used in pseudo-fermion heatbath, higher order
-    Parameter<double> r_inv_2f_const;
-    DynamicParameter<double> r_inv_2f_num;
-    DynamicParameter<double> r_inv_2f_den;
+    Parameter<double> r_inv_lf_const;
+    DynamicParameter<double> r_inv_lf_num;
+    DynamicParameter<double> r_inv_lf_den;
 
     // RationalCoeff for (Mud^+ * Mud)^(-1/4) used in action, higher order
-    Parameter<double> r_2f_const;
-    DynamicParameter<double> r_2f_num;
-    DynamicParameter<double> r_2f_den;
+    Parameter<double> r_lf_const;
+    DynamicParameter<double> r_lf_num;
+    DynamicParameter<double> r_lf_den;
 
     // RationalCoeff for (Mud^+ * Mud)^(-1/2) used in force, lower order
-    Parameter<double> r_bar_2f_const;
-    DynamicParameter<double> r_bar_2f_num;
-    DynamicParameter<double> r_bar_2f_den;
+    Parameter<double> r_bar_lf_const;
+    DynamicParameter<double> r_bar_lf_num;
+    DynamicParameter<double> r_bar_lf_den;
 
     RationalCoeff(){
 
-        add(r_inv_1f_const, "r_inv_1f_const");
-        add(r_inv_1f_num, "r_inv_1f_num");
-        add(r_inv_1f_den, "r_inv_1f_den");
-        add(r_1f_const, "r_1f_const");
-        add(r_1f_num, "r_1f_num");
-        add(r_1f_den, "r_1f_den");
-        add(r_bar_1f_const, "r_bar_1f_const");
-        add(r_bar_1f_num, "r_bar_1f_num");
-        add(r_bar_1f_den, "r_bar_1f_den");
+        add(r_inv_sf_const, "r_inv_1f_const");
+        add(r_inv_sf_num, "r_inv_1f_num");
+        add(r_inv_sf_den, "r_inv_1f_den");
+        add(r_sf_const, "r_1f_const");
+        add(r_sf_num, "r_1f_num");
+        add(r_sf_den, "r_1f_den");
+        add(r_bar_sf_const, "r_bar_1f_const");
+        add(r_bar_sf_num, "r_bar_1f_num");
+        add(r_bar_sf_den, "r_bar_1f_den");
 
-        add(r_inv_2f_const, "r_inv_2f_const");
-        add(r_inv_2f_num, "r_inv_2f_num");
-        add(r_inv_2f_den, "r_inv_2f_den");
-        add(r_2f_const, "r_2f_const");
-        add(r_2f_num, "r_2f_num");
-        add(r_2f_den, "r_2f_den");
-        add(r_bar_2f_const, "r_bar_2f_const");
-        add(r_bar_2f_num, "r_bar_2f_num");
-        add(r_bar_2f_den, "r_bar_2f_den");
+        add(r_inv_lf_const, "r_inv_2f_const");
+        add(r_inv_lf_num, "r_inv_2f_num");
+        add(r_inv_lf_den, "r_inv_2f_den");
+        add(r_lf_const, "r_2f_const");
+        add(r_lf_num, "r_2f_num");
+        add(r_lf_den, "r_2f_den");
+        add(r_bar_lf_const, "r_bar_2f_const");
+        add(r_bar_lf_num, "r_bar_2f_num");
+        add(r_bar_lf_den, "r_bar_2f_den");
 
     };
 
@@ -138,52 +140,52 @@ public:
 
         double y = z/(z+ param.m_s()*param.m_s() - param.m_ud() * param.m_ud());
 
-        double r1 = r_1f_const();
-        double r1inv = r_inv_1f_const();
-        double r1bar = r_bar_1f_const();
+        double rs = r_sf_const();
+        double rsinv = r_inv_sf_const();
+        double rsbar = r_bar_sf_const();
 
-        double r2 = r_2f_const();
-        double r2inv = r_inv_2f_const();
-        double r2bar = r_bar_2f_const();
+        double rl = r_lf_const();
+        double rlinv = r_inv_lf_const();
+        double rlbar = r_bar_lf_const();
 
         bool tpo = false;
         bool error = false;
 
-        for (size_t i = 0; i < r_1f_num.numberValues(); ++i)
+        for (size_t i = 0; i < r_sf_num.numberValues(); ++i)
         {
-            r1 += r_1f_num[i]/(x + r_1f_den[i]);
-            r1inv += r_inv_1f_num[i]/(x + r_inv_1f_den[i]);
+            rs += r_sf_num[i]/(x + r_sf_den[i]);
+            rsinv += r_inv_sf_num[i]/(x + r_inv_sf_den[i]);
             
-            r2 += r_2f_num[i]/(z + r_2f_den[i]);
-            r2inv += r_inv_2f_num[i]/(z + r_inv_2f_den[i]);
+            rl += r_lf_num[i]/(z + r_lf_den[i]);
+            rlinv += r_inv_lf_num[i]/(z + r_inv_lf_den[i]);
         }
 
-        for (int i = 0; i < r_bar_1f_num.numberValues(); ++i)
+        for (int i = 0; i < r_bar_sf_num.numberValues(); ++i)
         {
-            r1bar += r_bar_1f_num[i]/(x + r_bar_1f_den[i]);
-            r2bar += r_bar_2f_num[i]/(z + r_bar_2f_den[i]);
+            rsbar += r_bar_sf_num[i]/(x + r_bar_sf_den[i]);
+            rlbar += r_bar_lf_num[i]/(z + r_bar_lf_den[i]);
         }
 
-        if (cmp_rel(get_exp(r1,x), -get_exp(r1inv,x), 0.0001 , 0.0001) && 
-            cmp_rel(get_exp(r1,x), 0.5*get_exp(r1bar,x), 0.0001 , 0.0001) )
+        if (cmp_rel(get_exp(rs,x), -get_exp(rsinv,x), 0.0001 , 0.0001) && 
+            cmp_rel(get_exp(rs,x), 0.5*get_exp(rsbar,x), 0.0001 , 0.0001) )
         {
-            if(cmp_rel(get_exp(r1,x),-3.0/8.0, 0.0001 , 0.0001))
+            if(cmp_rel(get_exp(rs,x),-3.0/8.0, 0.0001 , 0.0001))
                 tpo = true;
         } else {
             rootLogger.error("strange quark rational approximations are not consistent");
             error = true;
         }
 
-        if (cmp_rel(get_exp(r2,y), -get_exp(r2inv,y), 0.0001 , 0.0001) && 
-            cmp_rel(get_exp(r2,y), 0.5*get_exp(r2bar,y), 0.0001 , 0.0001) )
+        if (cmp_rel(get_exp(rl,y), -get_exp(rlinv,y), 0.0001 , 0.0001) && 
+            cmp_rel(get_exp(rl,y), 0.5*get_exp(rlbar,y), 0.0001 , 0.0001) )
         {
-            if(cmp_rel(get_exp(r2,y),-0.25, 0.0001 , 0.0001))
+            if(cmp_rel(get_exp(rl,y),-0.25, 0.0001 , 0.0001))
                 tpo = tpo && true;
             else
                 tpo = tpo && false;
         } else {
             rootLogger.error("light quark rational approximations are not consistent");
-            rootLogger.error(get_exp(r2,x) ,  " " ,  - get_exp(r2inv,x) ,  " " ,  0.5*get_exp(r2bar,x)); 
+            rootLogger.error(get_exp(rl,x) ,  " " ,  - get_exp(rlinv,x) ,  " " ,  0.5*get_exp(rlbar,x)); 
             error = true;
         }
 

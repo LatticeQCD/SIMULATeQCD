@@ -123,13 +123,13 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     SimpleArray<floatT, Multistack> shifts(0.0);
 
-    for (size_t i = 1; i <rat.r_inv_2f_den.get().size(); ++i) {
-        shifts[i] = rat.r_inv_2f_den[i]-rat.r_inv_2f_den[0];
+    for (size_t i = 1; i <rat.r_inv_lf_den.get().size(); ++i) {
+        shifts[i] = rat.r_inv_lf_den[i]-rat.r_inv_lf_den[0];
     }
-    shifts[0] = rat.r_inv_2f_den[0] +param.m_ud()*param.m_ud();
+    shifts[0] = rat.r_inv_lf_den[0] +param.m_ud()*param.m_ud();
 
 
-    for (size_t i = 0; i < rat.r_inv_2f_den.get().size(); ++i) {
+    for (size_t i = 0; i < rat.r_inv_lf_den.get().size(); ++i) {
         rootLogger.info("shifts: " ,  shifts[i]);
     }
 
@@ -154,7 +154,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue_force());
 
 
-    for (size_t i = 0; i < rat.r_bar_1f_den.get().size(); ++i) {
+    for (size_t i = 0; i < rat.r_bar_sf_den.get().size(); ++i) {
         spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
         spinorHost = spinortmp;
         rootLogger.info("0th component of xi[" ,  i ,  "] =" ,  spinorHost.getAccessor().getElement(origin));    
@@ -162,27 +162,27 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
 
     //////////////////////////////////
-    // r_2f test
+    // r_lf test
     //////////////////////////////////
 
-    rootLogger.info("Starting r_2f test");
+    rootLogger.info("Starting r_lf test");
 
     spinorInMulti.gauss(d_rand.state);
 
     // make phi:
 
-    for (size_t i = 1; i <rat.r_inv_2f_den.get().size(); ++i) {
-        shifts[i] = rat.r_inv_2f_den[i]-rat.r_inv_2f_den[0];
+    for (size_t i = 1; i <rat.r_inv_lf_den.get().size(); ++i) {
+        shifts[i] = rat.r_inv_lf_den[i]-rat.r_inv_lf_den[0];
     }
-    shifts[0] = rat.r_inv_2f_den[0] +param.m_ud()*param.m_ud();
+    shifts[0] = rat.r_inv_lf_den[0] +param.m_ud()*param.m_ud();
 
     cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
 
-    phi = floatT(rat.r_inv_2f_const()) * spinorInMulti;
+    phi = floatT(rat.r_inv_lf_const()) * spinorInMulti;
 
-    for (size_t i = 0; i < rat.r_inv_2f_den.get().size(); ++i) {
+    for (size_t i = 0; i < rat.r_inv_lf_den.get().size(); ++i) {
         spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
-        phi = phi + floatT(rat.r_inv_2f_num[i])*spinortmp;
+        phi = phi + floatT(rat.r_inv_lf_num[i])*spinortmp;
     }
 
     
@@ -190,24 +190,24 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     
 
     ////////////
-    // make r_2f^4
+    // make r_lf^4
 
     spinorInMulti = phi;
 
-    for (size_t i = 1; i <rat.r_2f_den.get().size(); ++i) {
-        shifts[i] = rat.r_2f_den[i]-rat.r_2f_den[0];
+    for (size_t i = 1; i <rat.r_lf_den.get().size(); ++i) {
+        shifts[i] = rat.r_lf_den[i]-rat.r_lf_den[0];
     }
-    shifts[0] = rat.r_2f_den[0] +param.m_ud()*param.m_ud();
+    shifts[0] = rat.r_lf_den[0] +param.m_ud()*param.m_ud();
 
     for (int j = 0; j < 4; ++j) {
 
         cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
 
-        spinorOutSingle = floatT(rat.r_2f_const()) * spinorInMulti;
+        spinorOutSingle = floatT(rat.r_lf_const()) * spinorInMulti;
 
-        for (size_t i = 0; i < rat.r_2f_den.get().size(); ++i) {
+        for (size_t i = 0; i < rat.r_lf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
-            spinorOutSingle = spinorOutSingle + floatT(rat.r_2f_num[i])*spinortmp;
+            spinorOutSingle = spinorOutSingle + floatT(rat.r_lf_num[i])*spinortmp;
         }
         spinorOutSingle.updateAll();
 
@@ -231,22 +231,22 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     double diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     double phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_2f^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
+    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_lf^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
 
     //////////////////////////////////
-    ////r_bar_2f_test
+    ////r_bar_lf_test
     //////////////////////////////////
-    rootLogger.info("Starting r_bar_2f test");
+    rootLogger.info("Starting r_bar_lf test");
 
     SimpleArray<floatT, 12> shifts_bar(0.0);
 
-    for (size_t i = 1; i <rat.r_bar_2f_den.get().size(); ++i) {
-        shifts_bar[i] = rat.r_bar_2f_den[i]-rat.r_bar_2f_den[0];
+    for (size_t i = 1; i <rat.r_bar_lf_den.get().size(); ++i) {
+        shifts_bar[i] = rat.r_bar_lf_den[i]-rat.r_bar_lf_den[0];
     }
-    shifts_bar[0] = rat.r_bar_2f_den[0] +param.m_ud()*param.m_ud();
+    shifts_bar[0] = rat.r_bar_lf_den[0] +param.m_ud()*param.m_ud();
 
 
     spinorInMulti.gauss(d_rand.state);
@@ -257,7 +257,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
 
     ////////////
-    // make r_bar_2f^2
+    // make r_bar_lf^2
 
     spinorInMulti = phi;
 
@@ -265,11 +265,11 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
         cgM_bar.invert(dslashMulti, spinorOutMulti_bar, spinorInMulti, shifts_bar, param.cgMax(), param.residue_force());
 
-        spinorOutSingle = floatT(rat.r_bar_2f_const()) * spinorInMulti;
+        spinorOutSingle = floatT(rat.r_bar_lf_const()) * spinorInMulti;
 
-        for (size_t i = 0; i < rat.r_bar_2f_den.get().size(); ++i) {
+        for (size_t i = 0; i < rat.r_bar_lf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti_bar, 0, i);
-            spinorOutSingle = spinorOutSingle + floatT(rat.r_bar_2f_num[i])*spinortmp;
+            spinorOutSingle = spinorOutSingle + floatT(rat.r_bar_lf_num[i])*spinortmp;
         }
         spinorOutSingle.updateAll();
 
@@ -289,7 +289,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_bar_2f^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
+    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_bar_lf^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
@@ -297,26 +297,26 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
 
 
-    // r_inv_2f test
+    // r_inv_lf test
 
-    rootLogger.info("Starting r_inv_2f test");
+    rootLogger.info("Starting r_inv_lf test");
 
     spinorInMulti = phi;
 
-    for (size_t i = 1; i <rat.r_2f_den.get().size(); ++i) {
-        shifts[i] = rat.r_inv_2f_den[i]- rat.r_inv_2f_den[0];
+    for (size_t i = 1; i <rat.r_lf_den.get().size(); ++i) {
+        shifts[i] = rat.r_inv_lf_den[i]- rat.r_inv_lf_den[0];
     }
-    shifts[0] = rat.r_inv_2f_den[0] +param.m_ud()*param.m_ud();
+    shifts[0] = rat.r_inv_lf_den[0] +param.m_ud()*param.m_ud();
 
     for (int j = 0; j < 4; ++j) {
         cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
 
-        spinorOutSingle = floatT(rat.r_inv_2f_const()) * spinorInMulti;
+        spinorOutSingle = floatT(rat.r_inv_lf_const()) * spinorInMulti;
 
-        for (size_t i = 0; i < rat.r_inv_2f_den.get().size(); ++i)
+        for (size_t i = 0; i < rat.r_inv_lf_den.get().size(); ++i)
         {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
-            spinorOutSingle = spinorOutSingle + floatT(rat.r_inv_2f_num[i])*spinortmp;
+            spinorOutSingle = spinorOutSingle + floatT(rat.r_inv_lf_num[i])*spinortmp;
         } 
 
         spinorInMulti = spinorOutSingle;
@@ -335,48 +335,48 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     phi_sq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
 
-    rootLogger.info("relative error of r_inv_2f^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " ,  abs(diff_normsq/phi_sq));
+    rootLogger.info("relative error of r_inv_lf^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
     
     //////////////////////////////////
-    // r_1f test
+    // r_sf test
     //////////////////////////////////
 
     spinorInMulti.gauss(d_rand.state);
 
-    for (size_t i = 1; i <rat.r_inv_1f_den.get().size(); ++i) {
-        shifts[i] = rat.r_inv_1f_den[i]- rat.r_inv_1f_den[0];
+    for (size_t i = 1; i <rat.r_inv_sf_den.get().size(); ++i) {
+        shifts[i] = rat.r_inv_sf_den[i]- rat.r_inv_sf_den[0];
     }
-    shifts[0] = rat.r_inv_1f_den[0] + param.m_s() * param.m_s();
+    shifts[0] = rat.r_inv_sf_den[0] + param.m_s() * param.m_s();
 
     // make phi:
     cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
 
-    phi = floatT(rat.r_1f_const()) * spinorInMulti;
+    phi = floatT(rat.r_sf_const()) * spinorInMulti;
 
-    for (size_t i = 0; i < rat.r_1f_den.get().size(); ++i) {
+    for (size_t i = 0; i < rat.r_sf_den.get().size(); ++i) {
         spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
-        phi = phi + floatT(rat.r_inv_1f_num[i])*spinortmp;
+        phi = phi + floatT(rat.r_inv_sf_num[i])*spinortmp;
     }
 
-    // make r_1f^8
+    // make r_sf^8
 
     spinorInMulti = phi;
 
-    for (size_t i = 1; i <rat.r_1f_den.get().size(); ++i) {
-        shifts[i] = rat.r_1f_den[i]- rat.r_1f_den[0];
+    for (size_t i = 1; i <rat.r_sf_den.get().size(); ++i) {
+        shifts[i] = rat.r_sf_den[i]- rat.r_sf_den[0];
     }
-    shifts[0] = rat.r_1f_den[0] + param.m_s() * param.m_s();
+    shifts[0] = rat.r_sf_den[0] + param.m_s() * param.m_s();
 
     for (int j = 0; j < 8; ++j) {
         cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
 
-        spinorOutSingle = floatT(rat.r_1f_const()) * spinorInMulti;
+        spinorOutSingle = floatT(rat.r_sf_const()) * spinorInMulti;
 
-        for (size_t i = 0; i < rat.r_1f_den.get().size(); ++i) {
+        for (size_t i = 0; i < rat.r_sf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
-            spinorOutSingle = spinorOutSingle + floatT(rat.r_1f_num[i])*spinortmp;
+            spinorOutSingle = spinorOutSingle + floatT(rat.r_sf_num[i])*spinortmp;
         } 
         spinorInMulti = spinorOutSingle;
     }
@@ -393,33 +393,33 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_1f^8 * phi - phi = " ,  abs(diff_normsq/phi_sq));
+    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_sf^8 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
 
     //////////////////////////////////
-    // r_bar_1f test
+    // r_bar_sf test
     //////////////////////////////////
 
-    // make r_bar_1f^4
+    // make r_bar_sf^4
 
 
     spinorInMulti = phi;
 
-    for (size_t i = 1; i <rat.r_bar_1f_den.get().size(); ++i) {
-        shifts_bar[i] = rat.r_bar_1f_den[i]- rat.r_bar_1f_den[0];
+    for (size_t i = 1; i <rat.r_bar_sf_den.get().size(); ++i) {
+        shifts_bar[i] = rat.r_bar_sf_den[i]- rat.r_bar_sf_den[0];
     }
-    shifts_bar[0] = rat.r_bar_1f_den[0] + param.m_s() * param.m_s();
+    shifts_bar[0] = rat.r_bar_sf_den[0] + param.m_s() * param.m_s();
 
     for (int j = 0; j < 4; ++j) {
         cgM_bar.invert(dslashMulti, spinorOutMulti_bar, spinorInMulti, shifts_bar, param.cgMax(), param.residue_force());
 
-        spinorOutSingle = floatT(rat.r_bar_1f_const()) * spinorInMulti;
+        spinorOutSingle = floatT(rat.r_bar_sf_const()) * spinorInMulti;
 
-        for (size_t i = 0; i < rat.r_bar_1f_den.get().size(); ++i) {
+        for (size_t i = 0; i < rat.r_bar_sf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti_bar, 0, i);
-            spinorOutSingle = spinorOutSingle + floatT(rat.r_bar_1f_num[i])*spinortmp;
+            spinorOutSingle = spinorOutSingle + floatT(rat.r_bar_sf_num[i])*spinortmp;
         } 
         spinorInMulti = spinorOutSingle;
     }
@@ -436,30 +436,30 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_bar_1f^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
+    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_bar_sf^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
     //////////////////////////////////
-    // r_inv_1f test
+    // r_inv_sf test
     //////////////////////////////////
 
-    // make r_inv_1f^8
+    // make r_inv_sf^8
 
     spinorInMulti = phi;
 
-    for (size_t i = 1; i <rat.r_inv_1f_den.get().size(); ++i) {
-        shifts[i] = rat.r_inv_1f_den[i]- rat.r_inv_1f_den[0];
+    for (size_t i = 1; i <rat.r_inv_sf_den.get().size(); ++i) {
+        shifts[i] = rat.r_inv_sf_den[i]- rat.r_inv_sf_den[0];
     }
-    shifts[0] = rat.r_inv_1f_den[0] + param.m_s() * param.m_s();
+    shifts[0] = rat.r_inv_sf_den[0] + param.m_s() * param.m_s();
 
     for (int j = 0; j < 8; ++j) {
         cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue());
 
-        spinorOutSingle = floatT(rat.r_inv_1f_const()) * spinorInMulti;
+        spinorOutSingle = floatT(rat.r_inv_sf_const()) * spinorInMulti;
 
-        for (size_t i = 0; i < rat.r_inv_1f_den.get().size(); ++i) {
+        for (size_t i = 0; i < rat.r_inv_sf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
-            spinorOutSingle = spinorOutSingle + floatT(rat.r_inv_1f_num[i])*spinortmp;
+            spinorOutSingle = spinorOutSingle + floatT(rat.r_inv_sf_num[i])*spinortmp;
         } 
         spinorInMulti = spinorOutSingle;
     }
@@ -476,7 +476,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of  r_inv_1f^8 * phi - (Ds^+*Ds)^3 *phi = " ,  abs(diff_normsq/phi_sq));
+    rootLogger.info("relative error of  r_inv_sf^8 * phi - (Ds^+*Ds)^3 *phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
