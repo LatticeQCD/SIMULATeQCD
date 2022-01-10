@@ -34,7 +34,7 @@ bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoe
     double acceptance = 0.0;
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
-    for (int i = 1; i <= 2; ++i) {
+    for (int i = 1; i <= 10; ++i) {
         acc += HMC.update(true, true);
         acceptance = double(acc)/double(i);
     }

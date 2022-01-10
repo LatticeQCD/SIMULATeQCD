@@ -1,4 +1,9 @@
-// Created by Philipp Scior on 10.12.18
+/*
+ * rhmc.cu
+ *
+ * P. Scior
+ * 
+ */
 
 #include "rhmc.h"
 #include "../../gauge/gauge_kernels.cu"
@@ -17,15 +22,9 @@ struct add_f_r_f_r
     acc_a(a.getAccessor()), acc_b(b.getAccessor()), _aa(aa), _bb(bb) {}
 
     __device__ __host__ floatT operator()(gSite site) {
-
-
-    ret = _aa * acc_a.template getElement<floatT>(site) + _bb * acc_b.template getElement<floatT>(site);
-
-    return ret;
-
+        ret = _aa * acc_a.template getElement<floatT>(site) + _bb * acc_b.template getElement<floatT>(site);
+        return ret;
     }
-
-
 };
 
 
@@ -54,7 +53,6 @@ struct get_fermion_act
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp=R18>
 struct do_check_unitarity
 {
-    //do stuff
 
     do_check_unitarity(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
 
@@ -69,26 +67,13 @@ struct do_check_unitarity
         for (size_t mu = 0; mu < 4; ++mu)
         {
             gSiteMu siteM = GInd::getSiteMu(site, mu);
-
             ret += tr_d(gAcc.getLinkDagger(siteM)*gAcc.getLink(siteM));
-
         }
 
         return ret/4.0;
     }
 };
 
-// template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp=R18>
-// struct do_check_unitarity
-// {
-//     do_check_unitarity(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : _gAcc(gauge.getAccessor());
-
-//     gaugeAccessor<floatT, comp> _gAcc;
-
-//     __device__ __host__ floatT operator()(gSiteMu site){
-
-//         return tr_d(dagger(_gAcc.getLink(site))*_gAcc.getLink(site));
-// };
 
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::check_unitarity()
@@ -163,13 +148,6 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::init_ratapprox()
         rat_bar_1f.push_back(_rat.r_bar_1f_den[i]-_rat.r_bar_1f_den[0]);
         rat_bar_2f.push_back(_rat.r_bar_2f_den[i]-_rat.r_bar_2f_den[0]);
     }
-
-
-    // for (int i = 0; i < 2*_rat.r_inv_1f_num.get().size()+1; ++i)
-    // {
-    //     rootLogger.info(std::setprecision(10) ,  rat_inv_1f[i]);
-    // }
-
 }
 
 // Method to be called from outside, does the rhmc update
@@ -232,23 +210,19 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
                             gSite site = GInd::getSite(x, y, z, t);
 
                             GSU3<double> tmpA = saved_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
-
                             
                             GSU3<double> tmpB = gauge_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
 
-                            //if( x==3 && y == 16 && z == 12 && t == -1 && mu == 0){
                                 if (!compareGSU3(tmpA, tmpB, 1e-4)) {
                                     rootLogger.error("Difference in saved and evolved Gaugefields at " ,  LatticeDimensions(x, y, z, t) , ", mu = " ,  mu);
                                     rootLogger.error("|| S - G ||_inf = " ,  infnorm(tmpA-tmpB));
                                 }
         }
-
     }
 
     //get newaction
     double new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
 
     int ret;
 
@@ -261,15 +235,13 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
         if (accept){
             ret=1;
             rootLogger.info("Update acepted!");
-    }
-        else{
+        } else {
             _gaugeField=_savedField;
             _gaugeField.updateAll();
             ret=0;
             rootLogger.info("Update declined!");
         }
-    }
-    else{
+    } else {
 
         //skip Metropolis step
         ret=1;
@@ -313,8 +285,6 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     //get newaction
     floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
-
     int ret;
 
     //make Metropolis step
@@ -323,8 +293,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     if (accept){
         ret=1;
         rootLogger.info("Update acepted!");
-    }
-    else{
+    } else {
         _gaugeField=_savedField;
         _gaugeField.updateAll();
         ret=0;
@@ -336,33 +305,14 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
 
 // method for generating the gaussian conjugate momenta of the gauge field
 template<class floatT,bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
-void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_momenta(){
-
-    //this is very forbidden do not repeat this!!!
-    //Do not uncomment if you do not know why you should do this!
-    //It is only a dirty workaround for debuging
-    // int elems = GInd::getLatData().vol4;
-    
-    // uint4* h_rand;
-
-    // h_rand = (uint4*) malloc(elems*sizeof(uint4));
-
-    // gpuMemcpy(h_rand, _rand_state, elems*sizeof(uint4), gpuMemcpyDeviceToHost);
-
-
-    // _p.gauss_test(h_rand);
-    // // _p.gauss_test(_rand_state);
-
-    // gpuMemcpy(_rand_state, h_rand, elems*sizeof(uint4), gpuMemcpyHostToDevice);
+void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_momenta() {
 
     _p.gauss(_rand_state);
-
-
 }
 
 // generating constant conjugate momentum field. Only for testing
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
-void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_const_momenta(){
+void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_const_momenta() {
 
     _p.iterateWithConst(gsu3_zero<floatT>());
 }
@@ -384,9 +334,7 @@ struct get_momenta
         double result = 0.0;
 
         for (int mu = 0; mu < 4; mu++) {
-            {
-                result += tr_d(pAccessor.getLink(GInd::getSiteMu(site, mu)), pAccessor.getLink(GInd::getSiteMu(site, mu)));
-            }
+            result += tr_d(pAccessor.getLink(GInd::getSiteMu(site, mu)), pAccessor.getLink(GInd::getSiteMu(site, mu)));
         }
         return result;
     }
@@ -463,10 +411,8 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     // gauge action
 
-    // redBase2.template iterateOverBulk<All, HaloDepth>(gaugeActKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
     redBase2.template iterateOverBulk<All, HaloDepth>(plaquetteKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
     redBase4.template iterateOverBulk<All, HaloDepth>(rectangleKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
-    // rootLogger.info("constructed momentum, plaquette and rectangle dens");
 
     double plaq;
     double rect;
@@ -488,13 +434,10 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     gaugeact = - beta * gaugeaction.symanzik(); 
 
     rootLogger.info("gauge act. by reduce = " ,  gauge);
-    // rootLogger.info("Symanzik gaugeaction = " ,  gaugeact);
 
 
     //CAVE: In contrast to std. textbook definitions of the gauge action: Here we find an additional factor of 3/5!
     //      This is inherited from MILC!
-
-    
 
     energy_dens.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(redBase3, redBase2, 1.0, -beta/3.0)); 
 
@@ -506,9 +449,6 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     hamiltonian+= gaugeact;
 
-    // std::cout << std::fixed;
-    // std::cout << std::setprecision(20) << gaugeact << std::endl; 
-
     double H=0.0;
 
     energy_dens.reduce(H, elems_full);
@@ -516,7 +456,6 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     rootLogger.info("reduced energy_dens - individual parts = " ,  H - hamiltonian);
 
     rootLogger.info(std::setprecision(10) ,  "momenta = " ,  0.5 *momenta ,  " fermion 1f = " ,  act_1f , " fermion 2f = " ,  act_2f , " glue = " ,  gaugeact);
-    // rootLogger.info(std::setprecision(10) ,  " H = " ,  H);
 
     return hamiltonian;
 }
@@ -537,9 +476,9 @@ bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
 
     gpuMemcpy(&state, _rand_state, sizeof(uint4), gpuMemcpyDeviceToHost);
 
-    if (delta_E < 0.0)
+    if (delta_E < 0.0) {
         return true;
-    else{
+    } else {
         // double rand = dis(gen);
         double rand = get_rand<double>(&state);
         _p.getComm().root2all(rand); // Is is important so sync the random numbers between processes!
@@ -558,16 +497,12 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_phi(Spinorfield<floa
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> eta(phi.getComm());
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 14> spinorOutMulti(phi.getComm());
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> spinortmp(phi.getComm());
-    // eta.iterateOverBulk(fill_with_gauss_vec<floatT>(_rand_state));
-    // eta.updateAll();
     eta.gauss(_rand_state);
 
     int length = rat_coeff.size();
 
-    // floatT rat_num[length/2+1];
     SimpleArray<floatT, 15> rat_num(0.0);
     SimpleArray<floatT, 14> rat_den(0.0);
-    // floatT rat_den[length/2];
 
     // break up vector with rat. coeff. into two arrays used in multishift inverter
     for (int i = 0; i < length/2+1; ++i)
@@ -600,9 +535,6 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_chi(Spinorfield<floa
 {
     int length = rat_coeff.size();
 
-    // floatT rat_num[length/2+1];
-    // floatT rat_den[length/2];
-
     SimpleArray<floatT, 15> rat_num(0.0);
     SimpleArray<floatT, 14> rat_den(0.0);
 
@@ -619,7 +551,7 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_chi(Spinorfield<floa
         rat_den[i] = rat_coeff[length/2+1+i];
     }
 
-        // using the multishift inverter
+    // using the multishift inverter
    
     cgM.invert(dslash, spinorOutMulti, phi, rat_den, _rhmc_param.cgMax(), _rhmc_param.residue());
 
@@ -641,17 +573,12 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_const_phi(Spinorfiel
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> eta(phi.getComm());
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 14> spinorOutMulti(phi.getComm());
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> spinortmp(phi.getComm());
-    // eta.iterateOverBulk(fill_with_gauss_vec<floatT>(_rand_state));
-    // eta.updateAll();
-    // eta.gauss(_rand_state);
     eta.iterateWithConst(gvect3_unity<floatT>(0));
 
     int length = rat_coeff.size();
 
-    // floatT rat_num[length/2+1];
     SimpleArray<floatT, 15> rat_num(0.0);
     SimpleArray<floatT, 14> rat_den(0.0);
-    // floatT rat_den[length/2];
 
     // break up vector with rat. coeff. into two arrays used in multishift inverter
     for (int i = 0; i < length/2+1; ++i)
@@ -679,8 +606,7 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_const_phi(Spinorfiel
 
 // explicit instantiation
 #define CLASS_INIT(floatT,HALO,HALOSPIN)			\
-template class rhmc<floatT,true, HALO, HALOSPIN>; /*\
-template class rhmc<floatT,false, HALO>;*/
+template class rhmc<floatT,true, HALO, HALOSPIN>;
 
 INIT_PHHS(CLASS_INIT)
 

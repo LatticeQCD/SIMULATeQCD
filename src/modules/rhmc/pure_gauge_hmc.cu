@@ -1,4 +1,9 @@
-// Created by Philipp Scior on 22.10.18
+/*
+ * pure_gauge_hmc.cu
+ *
+ * P. Scior
+ * 
+ */
 
 #include "pure_gauge_hmc.h"
 #include "../../gauge/gauge_kernels.cu"
@@ -17,12 +22,8 @@ struct add_f_r_f_r
     acc_a(a.getAccessor()), acc_b(b.getAccessor()), _aa(aa), _bb(bb) {}
 
     __device__ __host__ floatT operator()(gSite site) {
-
-
-    ret = _aa * acc_a.template getElement<floatT>(site) + _bb * acc_b.template getElement<floatT>(site);
-
-    return ret;
-
+        ret = _aa * acc_a.template getElement<floatT>(site) + _bb * acc_b.template getElement<floatT>(site);
+        return ret;
     }
 
 
@@ -58,35 +59,30 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
 
         _p = -1.0 * _p;
 
-    integrator.integrate();
+        integrator.integrate();
     }
 
     //get newaction
     floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info("Simple Delta H = " ,  new_hamiltonian- old_hamiltonian);
 
     int ret;
 
+    //make Metropolis step
+    bool accept = Metropolis();
 
-        //make Metropolis step
-        bool accept = Metropolis();
-
-        if (metro)
+    if (metro)
     {
         if (accept){
             ret=1;
             rootLogger.info("Update acepted!");
-    }
-        else{
+        } else {
             _gaugeField=_savedField;
             _gaugeField.updateAll();
             ret=0;
             rootLogger.info("Update declined!");
         }
-    }
-    else{
-
+    } else {
         //skip Metropolis step
         ret=1;
         rootLogger.warn("Skipped Metropolis step!");
@@ -122,9 +118,7 @@ struct get_momenta
         floatT result = 0;
 
         for (int mu = 0; mu < 4; mu++) {
-            {
-                result += tr_d(pAccessor.getLink(GInd::getSiteMu(site, mu)), pAccessor.getLink(GInd::getSiteMu(site, mu)));
-            }
+            result += tr_d(pAccessor.getLink(GInd::getSiteMu(site, mu)), pAccessor.getLink(GInd::getSiteMu(site, mu)));
         }
         return result;
     }
@@ -149,25 +143,14 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
     redBase.template iterateOverBulk<All, HaloDepth>(get_momenta<floatT, HaloDepth>(_p));
     redBase2.template iterateOverBulk<All, HaloDepth>(plaquetteKernel<floatT, true, HaloDepth,comp>(_gaugeField));
     redBase3.template iterateOverBulk<All, HaloDepth>(rectangleKernel<floatT, true, HaloDepth,comp>(_gaugeField));
-    // rootLogger.info("constructed momentum, plaquette and rectangle dens");
     redBase2.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(redBase2, redBase3, 5.0/3.0 , -1.0/12.0)); 
-    // rootLogger.info("added plaquette and rectangle dens to symanzik dens");
 
     floatT beta = _rhmc_param.beta() *3.0/5.0;
 
     energy_dens.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(redBase, redBase2, 0.5, -beta/3.0));
-    // rootLogger.info("added momentumm and symanzik dens to energy_dens");
 
     redBase.reduce(momenta, elems);
 
-
-    // floatT H;
-
-
-    // energy_dens.reduce(H, elems);
-
-    // rootLogger.info("reduced momentum dens");
-    
 
     GaugeAction<floatT, true, HaloDepth, comp> gaugeaction(_gaugeField);
     gaugeact = - _rhmc_param.beta() * gaugeaction.symanzik(); 
@@ -184,9 +167,6 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
 template<class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 bool pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::Metropolis(){
 
-    // std::random_device rd;
-    // std::mt19937 gen(rd());
-    // std::uniform_real_distribution<> dis(0.0, 1.0);
 
     dens_delta.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(energy_dens_new, energy_dens_old, 1.0, -1.0));
 
@@ -200,10 +180,9 @@ bool pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::Metropolis(){
 
     gpuMemcpy(&state, _rand_state, sizeof(uint4), gpuMemcpyDeviceToHost);
 
-    if (delta_E < 0.0)
+    if (delta_E < 0.0) {
         return true;
-    else{
-        // double rand = dis(gen);
+    } else {
         double rand = get_rand<double>(&state);
         _p.getComm().root2all(rand); // Is is important so sync the random numbers between processes!
         if(rand < exp(-delta_E))
@@ -240,11 +219,10 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
     //make Metropolis step
     bool accept = Metropolis();
 
-    if (accept){
+    if (accept) {
         ret=1;
         rootLogger.info("Update acepted!");
-    }
-    else{
+    } else {
         _gaugeField=_savedField;
         _gaugeField.updateAll();
         ret=0;
