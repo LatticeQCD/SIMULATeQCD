@@ -85,7 +85,7 @@ int main(int argc, char *argv[]) {
     
     Gaugefield<PREC,true,HaloDepth> force_reference(commBase);
 
-    force_reference.readconf_nersc("../test_conf/force_reference_conf");
+    force_reference.readconf_nersc("../test_conf/force_reference");
 
     
     force.writeconf_nersc("../test_conf/force_testrun");
