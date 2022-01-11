@@ -60,17 +60,17 @@ int main(int argc, char *argv[]) {
    
     SimpleArray<PREC, 14> shifts(0.0);
     
-    for (size_t i = 0; i <rat.r_2f_den.get().size(); ++i) {
-        shifts[i] = rat.r_2f_den[i] + rhmc_param.m_ud()*rhmc_param.m_ud();;
+    for (size_t i = 0; i <rat.r_lf_den.get().size(); ++i) {
+        shifts[i] = rat.r_lf_den[i] + rhmc_param.m_ud()*rhmc_param.m_ud();;
     }
   
     CG14.invert(dslash,SpinorOutMulti,SpinorIn,shifts,rhmc_param.cgMax(), rhmc_param.residue());
     
-    SpinorIn = (PREC)rat.r_2f_const() * SpinorIn;
+    SpinorIn = (PREC)rat.r_lf_const() * SpinorIn;
     
-    for (size_t i = 0; i < rat.r_2f_den.get().size(); ++i) {
+    for (size_t i = 0; i < rat.r_lf_den.get().size(); ++i) {
         spinortmp.copyFromStackToStack(SpinorOutMulti, 0, i);
-        SpinorIn = SpinorIn + (PREC)rat.r_2f_num[i]*spinortmp;
+        SpinorIn = SpinorIn + (PREC)rat.r_lf_num[i]*spinortmp;
     }
     SpinorIn.updateAll();
     

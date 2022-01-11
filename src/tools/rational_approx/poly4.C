@@ -111,16 +111,14 @@ x^(-1/2) * ( x + 0.0588037575330012^2 )^(1/2)
 #include"alg_remez.h"
 #define naik_term_epsilon 0.0
 using namespace std;
-int work( int y1,int z1, double m1,  int y2,int z2, double m2,  int y3,int z3, double m3,
-    int y4,int z4, double m4, int order, double lambda_low,  double lambda_high, int precision,
-   const char *tag1, const char *tag2 ,int index,int interval);
+int work( double y1, double z1, double m1, double y2, double z2, double m2, double y3, double z3, double m3, double y4, double z4, double m4, int order, double lambda_low, double lambda_high, int precision, const char *tag1, const char *tag2 ,int index,int interval);
 
 int main (int argc, char* argv[]) {
   double m1=0.0; // The mass for flavor 1
-  double m2;
-  int y3=0; // The numerator of the exponent for flavor 3
+  double m2=0.0;
+  double y3=0.0; // The numerator of the exponent for flavor 3
   double m3=0.0; // The mass for flavor 3
-  int y4=0; // The numerator of the exponent for flavor 4
+  double y4=0.0; // The numerator of the exponent for flavor 4
   double m4=0.0; // The mass for flavor 4
   int iphi,n_pseudo;
   int index;
@@ -156,8 +154,8 @@ exit(0);
 	fprintf(stderr,"ERROR: The first line in your input file should be the number of pseudofermions, it is %d, So you need %d parameters, But you only give %d parameters, please check it!\n", n_pseudo, (n_pseudo*9+1), i);
 	exit(0);}
 
-int y1[n_pseudo];
-int y2[n_pseudo];
+double y1[n_pseudo];
+double y2[n_pseudo];
 double mh[n_pseudo];
 double mq[n_pseudo];
 int order1[n_pseudo];
@@ -168,8 +166,8 @@ double lambda_high[n_pseudo];
 
 for(iphi = 0; iphi<n_pseudo; iphi++)   // read all the parameters
 {
-	y1[iphi] = atoi(str[iphi*9+1].c_str());
-	y2[iphi] = atoi(str[iphi*9+2].c_str());
+	y1[iphi] = atof(str[iphi*9+1].c_str());
+	y2[iphi] = atof(str[iphi*9+2].c_str());
 	mh[iphi] = atof(str[iphi*9+3].c_str());
 	mq[iphi] = atof(str[iphi*9+4].c_str());
 	order1[iphi] = atoi(str[iphi*9+5].c_str());
@@ -234,12 +232,12 @@ printf("\n");
     // Set the exponents and masses
     fprintf(stderr,"For pseudofermion %d\n",iphi);
 
-   m2=sqrt(mh[iphi]*mh[iphi] - mq[iphi]*mq[iphi]);
+   m2=sqrt(fabs(mh[iphi]*mh[iphi] - mq[iphi]*mq[iphi]));
    int interval;
    interval=order1[iphi]-order2[iphi];
-    work( y1[iphi],8,m1, y2[iphi],8,m2, y3,8,m3, y4,8,m4, order1[iphi], lambda_low[iphi], lambda_high[iphi], precision[iphi], "GR","FA",index,interval);
+    work( y1[iphi],8.0,m1, y2[iphi],8.0,m2, y3,8.0,m3, y4,8.0,m4, order1[iphi], lambda_low[iphi], lambda_high[iphi], precision[iphi], "GR","FA",index,interval);
     // For the MD term we need only the inverse
-    work( y1[iphi],4,m1,  y2[iphi],4,m2,  y3,4,m3,  y4,4,m4, order2[iphi], 
+    work( y1[iphi],4.0,m1,  y2[iphi],4.0,m2,  y3,4.0,m3,  y4,4.0,m4, order2[iphi], 
 	  lambda_low[iphi], lambda_high[iphi], precision[iphi], "OMIT", "MD",index,interval );
     // The random source term takes the function and action term,
     // the inverse
@@ -247,9 +245,9 @@ printf("\n");
 printf("#=================== End of File =====================#\n");
 }
 
-void print_check_ratfunc(int y1,int y2,int y3,int y4,
-			 int z1,int z2,int z3,int z4,
-			 double m1,double m2,double m3,double m4,
+void print_check_ratfunc(double y1, double y2, double y3, double y4,
+			 double z1, double z2, double z3, double z4,
+			 double m1, double m2, double m3, double m4,
 			 double lambda_low, int order,
 			 double norm,  double *res, double *pole, const char *tag,int index,int interval){
 
@@ -330,10 +328,10 @@ if(strcmp(tag,"MD")==0)
 
 
 
-int work(int y1,int z1, double m1,  
-	 int y2,int z2, double m2,  
-	 int y3,int z3, double m3,
-	 int y4,int z4, double m4, 
+int work(double y1, double z1, double m1,  
+	 double y2, double z2, double m2,  
+	 double y3, double z3, double m3,
+	 double y4, double z4, double m4, 
 	 int order, 
 	 double lambda_low,  double lambda_high, 
 	 int precision,
