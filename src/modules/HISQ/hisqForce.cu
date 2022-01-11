@@ -322,13 +322,13 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
   
     printResult<floatT,HaloDepth,R18>(_GaugeU3P);
   
-    if (_rhmc_param.mu_f() !=0 ){
+//    if (_rhmc_param.mu_f() !=0 ){
         staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P,_rhmc_param.mu_f());
         _GaugeU3P.iterateOverBulkAllMu(multPhase);
-    } else {
-     staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P); 
-     _GaugeU3P.iterateOverBulkAllMu(multPhase);
-    }
+//    } else {
+//     staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P); 
+//     _GaugeU3P.iterateOverBulkAllMu(multPhase);
+//    }
     
     _Dummy.template iterateOverBulkAllMu<64>(_createNaikF1);
     _TmpForce = _Dummy;
@@ -369,13 +369,13 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     printResult<floatT,HaloDepth,comp>(_TmpForce);
     _TmpForce.updateAll();
   
-    if(_rhmc_param.mu_f() != 0){
+//    if(_rhmc_param.mu_f() != 0){
         staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaselv1(_GaugeLvl1,_rhmc_param.mu_f());
         _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1); 
-    } else {
-        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaselv1(_GaugeLvl1); 
-        _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1); 
-    }
+//    } else {
+//        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaselv1(_GaugeLvl1); 
+//        _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1); 
+//    }
   
   
     Force.iterateOverBulkAllMu(_createF2);
@@ -383,13 +383,13 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     
     rootLogger.info("f2 intermediate result");
     printResult<floatT,HaloDepth,comp>(Force);
-    if (_rhmc_param.mu_f() !=0 ){
+//    if (_rhmc_param.mu_f() !=0 ){
         staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase,_rhmc_param.mu_f());
         _GaugeU3P.iterateOverBulkAllMu(multPhaseB); //reuse U3P Field here
-    } else {
-        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase); 
-        _GaugeU3P.iterateOverBulkAllMu(multPhaseB); //reuse U3P Field here
-    }
+//    } else {
+//        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase); 
+//        _GaugeU3P.iterateOverBulkAllMu(multPhaseB); //reuse U3P Field here
+//    }
     
    
     _TmpForce.template iterateOverBulkAllMu<64>(F3_create_3Link);
@@ -440,13 +440,13 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
     
     _smearing.template ProjectU3<R18,R18>(_GaugeLvl1,_GaugeU3P);
     
-    if (_rhmc_param.mu_f() !=0 ){
+//    if (_rhmc_param.mu_f() !=0 ){
         staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P,_rhmc_param.mu_f());
         _GaugeU3P.iterateOverBulkAllMu(multPhase);
-    } else {
-        staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P); 
-        _GaugeU3P.iterateOverBulkAllMu(multPhase);
-    }
+//    } else {
+//        staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P); 
+//        _GaugeU3P.iterateOverBulkAllMu(multPhase);
+//    }
    
     _GaugeU3P.updateAll();
     
@@ -486,24 +486,24 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
   
     
     
-    if (_rhmc_param.mu_f() !=0 ){
+//    if (_rhmc_param.mu_f() !=0 ){
         staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaselv1(_GaugeLvl1, _rhmc_param.mu_f());
         _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1); 
-    } else {
-        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaselv1(_GaugeLvl1);
-        _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1); 
-    }
+//    } else {
+//        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaselv1(_GaugeLvl1);
+//        _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1); 
+//    }
     
     Force.iterateOverBulkAllMu(_createF2);
     Force.updateAll();
     
-    if (_rhmc_param.mu_f() !=0 ){
+//    if (_rhmc_param.mu_f() !=0 ){
         staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase,_rhmc_param.mu_f());
         _GaugeU3P.iterateOverBulkAllMu(multPhaseB); // reuse U3P Field here
-    } else {
-        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase);
-        _GaugeU3P.iterateOverBulkAllMu(multPhaseB); // reuse U3P Field here
-    }
+//    } else {
+//        staggeredPhaseKernel<floatT,onDevice, HaloDepth,R18> multPhaseB(_GaugeBase);
+//        _GaugeU3P.iterateOverBulkAllMu(multPhaseB); // reuse U3P Field here
+//    }
     
     _GaugeU3P.updateAll();
     

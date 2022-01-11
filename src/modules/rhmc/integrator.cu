@@ -150,11 +150,11 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
                 evolveQ( sw_step );
                 updateP_gaugeforce( sw_step );
             }// end loop over steps of gauge part
-            if (_rhmc_param.mu_f() !=0){
+ //           if (_rhmc_param.mu_f() !=0){
                 _smearing.SmearAll(chmp0);
-            } else {
-                _smearing.SmearAll(); 
-            }
+//            } else {
+//                _smearing.SmearAll(); 
+//            }
             // update P using only the 1f part of the force
             rootLogger.info("strange force:");
             updateP_fermforce( step_1f, _phi_1f, false); 
@@ -179,12 +179,11 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
             evolveQ( sw_step );
             updateP_gaugeforce( sw_step );
         }
-        if (_rhmc_param.mu_f() != 0){
+//        if (_rhmc_param.mu_f() != 0){
              _smearing.SmearAll(chmp0);
-        }
-        else {
-            _smearing.SmearAll();
-        }
+//        } else {
+//            _smearing.SmearAll();
+//        }
         updateP_fermforce( step_1f, _phi_1f, false );
     }
 
@@ -199,11 +198,11 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
 
     // bring Q to the end of the trajectory
     evolveQ( sw_step );
-    if (_rhmc_param.mu_f() != 0){
+//    if (_rhmc_param.mu_f() != 0){
             _smearing.SmearAll(chmp0);
-        } else {
-            _smearing.SmearAll();
-        }
+//    } else {
+//            _smearing.SmearAll();
+//    }
 
     // bring P to the end of the trajectory by updating with all the forces
     updateP_fermforce( steph_1f, _phi_1f, false); 
