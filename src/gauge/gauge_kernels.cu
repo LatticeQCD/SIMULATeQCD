@@ -285,3 +285,22 @@ struct gaugeActKernel_double{
         return result;
     }
 };
+
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
+struct count_faulty_links {
+    gaugeAccessor<floatT,comp> gL;
+    gaugeAccessor<floatT,comp> gR;
+    count_faulty_links(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR) : gL(GaugeL.getAccessor()), gR(GaugeR.getAccessor()) {}
+
+    __host__ __device__ int operator() (gSite site) {
+        int sum = 0;
+        for (int mu = 0; mu < 4; mu++) {
+            gSiteMu siteMu = GIndexer<All,HaloDepth>::getSiteMu(site,mu);
+            
+            if (!compareGSU3(gL.getLink(siteMu), gR.getLink(siteMu),(floatT)1e-6)) {
+                sum++;
+            }
+        }
+        return sum;
+    }
+};
