@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
 
     LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
-    StopWatch<true> timer;
     param.readfile(commBase, "../parameter/tests/cudaIpcTest.param", argc, argv);
     commBase.init(param.nodeDim());
-
+    StopWatch<true> timer;
+    
     if (!commBase.useGpuP2P()) {
         throw std::runtime_error(stdLogger.fatal("P2P is not activated. Exit."));
     }
