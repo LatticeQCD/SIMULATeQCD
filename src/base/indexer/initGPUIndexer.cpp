@@ -7,7 +7,7 @@
 #include "../indexer/HaloIndexer.h"
 
 
-__device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO+1];
+//__device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO+1];
 
 void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos,unsigned int Nodes[4]){
 

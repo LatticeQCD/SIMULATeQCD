@@ -80,8 +80,8 @@
 
 
 #elif defined USE_HIP
-
 #include <hip/hip_runtime.h>
+#include <hip/hip_vector_types.h>
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_fp16.h>
 #include <utility>

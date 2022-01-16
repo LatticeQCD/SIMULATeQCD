@@ -35,11 +35,17 @@ public:
 
 #ifdef __GPUCC__
 
-#ifdef USE_HIP
+#ifdef USE_HIP_AMD
 
 __host__ __device__ static HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
 
         return HIP_vector_type<unsigned int, 3>(Idx.x, Idx.y, Idx.z);
+
+};
+#elif defined USE_HIP_NVIDIA
+__host__ __device__ static dim3 GetUint3(dim3 Idx){
+
+        return Idx;
 
 };
 #endif
