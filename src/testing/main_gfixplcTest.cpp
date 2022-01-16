@@ -165,8 +165,7 @@ int main(int argc, char *argv[]) {
             difa=abs(vec_plca[r2]-control_plca[controlindex]);
             dif1=abs(vec_plc1[r2]-control_plc1[controlindex]);
             dif8=abs(vec_plc8[r2]-control_plc8[controlindex]);
-            if ( difa>abs(tolp*control_plca[controlindex]) || dif1>abs(tolp*control_plc1[controlindex])
-                 || dif8>abs(tolp*control_plc8[controlindex]) ) {
+            if ( difa>abs(tolp*control_plca[controlindex]) || dif1>abs(tolp*control_plc1[controlindex]) || dif8>abs(tolp*control_plc8[controlindex]) ) {
                 rootLogger.error("Large correlator difference!");
                 rootLogger.info(control_plca[controlindex] ,  "  " ,  vec_plca[r2]);
                 rootLogger.info(control_plc1[controlindex] ,  "  " ,  vec_plc1[r2]);
@@ -181,9 +180,10 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Time to measure correlations: " ,  timer);
 
     if(lerror) {
-      rootLogger.error("At least one test " ,  CoutColors::red ,  "failed!" ,  CoutColors::reset);
+        rootLogger.error("At least one test failed!");
+        return -1;
     } else {
-      rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     }
 
     return 0;

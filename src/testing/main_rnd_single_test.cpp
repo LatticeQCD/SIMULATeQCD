@@ -71,7 +71,7 @@ struct is_rand_zero
 
 
 template< class floatT, size_t HaloDepth>
-void test_old_new_host_dev(CommunicationBase &commBase){
+bool test_old_new_host_dev(CommunicationBase &commBase){
 
     int seed = 1337;
 
@@ -135,18 +135,6 @@ void test_old_new_host_dev(CommunicationBase &commBase){
         new_old = new_old && false;
     }
 
-
-    if (host_dev)
-        rootLogger.info(CoutColors::green ,  "Host and device random numbers match",  CoutColors::reset);
-    else
-       rootLogger.info( CoutColors::red ,  "Host and device random numbers do not match",  CoutColors::reset);
-
-
-    if (new_old)
-        rootLogger.info(CoutColors::green ,  "Old code and new code random numbers match",  CoutColors::reset);
-    else
-       rootLogger.info( CoutColors::red ,  "Old code and new code random numbers do not match",  CoutColors::reset);
-
     std::string filename;
 
     if (typeid(floatT) == typeid(float))
@@ -156,6 +144,21 @@ void test_old_new_host_dev(CommunicationBase &commBase){
                                             
     host_state.write_to_file(filename, commBase, ENDIAN_LITTLE);
 
+    if (host_dev) {
+        rootLogger.info(CoutColors::green ,  "Host and device random numbers match",  CoutColors::reset);
+    } else { 
+        rootLogger.error("Host and device random numbers do not match");
+        return true;
+    }
+
+    if (new_old) {
+        rootLogger.info(CoutColors::green ,  "Old code and new code random numbers match",  CoutColors::reset);
+    } else {
+        rootLogger.error("Old code and new code random numbers do not match");
+        return true;
+    }
+
+    return false;
 }
 
 template <class floatT, size_t HaloDepth>
@@ -190,6 +193,7 @@ int main(int argc, char *argv[]) {
     int LatDim[] = {8, 8, 8, 4};
     int NodeDim[] = {1, 1, 1, 1};
     const int HaloDepth = 0;
+    bool lerror=false;
     
     param.latDim.set(LatDim);
     param.nodeDim.set(NodeDim);
@@ -200,11 +204,17 @@ int main(int argc, char *argv[]) {
     initIndexer(HaloDepth,param, commBase);
 
     rootLogger.info("Testig RNG for single prec:");
-    test_old_new_host_dev<float, HaloDepth>(commBase);
+    lerror = (lerror || test_old_new_host_dev<float, HaloDepth>(commBase));
 
     rootLogger.info("Testing RNG for double prec:");
-    test_old_new_host_dev<double, HaloDepth>(commBase);
+    lerror = (lerror || test_old_new_host_dev<double, HaloDepth>(commBase));
+
+    if(lerror) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+    }
 
     return 0;
 }
-

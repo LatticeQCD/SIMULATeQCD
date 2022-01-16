@@ -56,6 +56,7 @@ elseif (USE_HIP)
 
     include_directories(SYSTEM ${MPI_INCLUDE_PATH} $ENV{HIP_PATH}/include)
     link_libraries(${MPI_LIBRARIES} ${HIP_LIBRARIES}})
+    message(STATUS "HIP Architecture: ${ARCHITECTURE}")
 endif()
 
 
@@ -123,6 +124,10 @@ set(SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST
     src/modules/observables/ColorElectricCorr.cpp
     src/modules/observables/ColorMagneticCorr.cpp
     src/modules/observables/PolyakovLoop.cpp)
+set(SOURCE_FILES_DSLASH
+        src/modules/dslash/dslash.cpp 
+		src/modules/HISQ/hisqSmearing.cpp 
+		src/spinor/spinorfield.cpp)
 set(SOURCE_FILES_GENERATEQUENCHED
     src/modules/gauge_updates/PureGaugeUpdates.cpp
     src/modules/observables/PolyakovLoop.cpp)
@@ -294,6 +299,7 @@ set_SIMULATeQCD_gpu_backend(
     src/modules/dslash/dslash.cpp
     src/modules/inverter/inverter.cpp
     src/spinor/spinorfield.cpp
+    src/modules/rhmc/Spinorfield_container.h
     src/modules/gauge_updates/luscherweisz.cpp
     src/modules/gauge_updates/SubLatMeas_device.cpp
     src/modules/rhmc/pure_gauge_hmc.cpp
@@ -348,23 +354,6 @@ set_SIMULATeQCD_property(ColorElectricCorrTest PROPERTIES RUNTIME_OUTPUT_DIRECTO
 SIMULATeQCD_target_compile_definitions(ColorElectricCorrTest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests ColorElectricCorrTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_ColorElectricMagneticCloverTest.cpp)
-add_SIMULATeQCD_executable(ColorElectricMagneticCloverTest src/testing/main_ColorElectricMagneticCloverTest.cpp ${SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST})
-set_SIMULATeQCD_property(ColorElectricMagneticCloverTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(ColorElectricMagneticCloverTest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(tests ColorElectricMagneticCloverTest)
-
-set_SIMULATeQCD_gpu_backend(src/testing/main_FieldStrengthTensorTest.cpp)
-add_SIMULATeQCD_executable(FieldStrengthTensorTest src/testing/main_FieldStrengthTensorTest.cpp)
-set_SIMULATeQCD_property(FieldStrengthTensorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(FieldStrengthTensorTest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(tests FieldStrengthTensorTest)
-
-set_SIMULATeQCD_gpu_backend(src/testing/main_half_prec_math_test.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(half_prec_math_test src/testing/main_half_prec_math_test.cpp src/spinor/spinorfield.cpp )
-set_SIMULATeQCD_property(half_prec_math_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(half_prec_math_test PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
-
 set_SIMULATeQCD_gpu_backend(src/testing/main_CompressionTest.cpp)
 add_SIMULATeQCD_executable(CompressionTest src/testing/main_CompressionTest.cpp)
 set_SIMULATeQCD_property(CompressionTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -383,14 +372,20 @@ set_SIMULATeQCD_property(cudaIpcTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testin
 SIMULATeQCD_target_compile_definitions(cudaIpcTest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests cudaIpcTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_DslashTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(DslashTest src/testing/main_DslashTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_DslashTest.cpp ${SOURCE_FILES_DSLASH})
+add_SIMULATeQCD_executable(DslashTest src/testing/main_DslashTest.cpp ${SOURCE_FILES_DSLASH})
 set_SIMULATeQCD_property(DslashTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(DslashTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests DslashTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_DslashMultiTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(DslashMultiTest src/testing/main_DslashMultiTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_DslashImagmuTest.cpp ${SOURCE_FILES_DSLASH})
+add_SIMULATeQCD_executable(DslashImagmuTest src/testing/main_DslashImagmuTest.cpp ${SOURCE_FILES_DSLASH})
+set_SIMULATeQCD_property(DslashImagmuTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(DslashImagmuTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests DslashImagmuTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_DslashMultiTest.cpp ${SOURCE_FILES_DSLASH})
+add_SIMULATeQCD_executable(DslashMultiTest src/testing/main_DslashMultiTest.cpp ${SOURCE_FILES_DSLASH})
 set_SIMULATeQCD_property(DslashMultiTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(DslashMultiTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests DslashMultiTest)
@@ -425,6 +420,12 @@ set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_half_prec_math_test.cpp src/spinor/spinorfield.cpp )
+add_SIMULATeQCD_executable(halfPrecMathTest src/testing/main_half_prec_math_test.cpp src/spinor/spinorfield.cpp )
+set_SIMULATeQCD_property(halfPrecMathTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(halfPrecMathTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests halfPrecMathTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_HaloTest.cpp)
 add_SIMULATeQCD_executable(HaloTest src/testing/main_HaloTest.cpp)
 set_SIMULATeQCD_property(HaloTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -443,11 +444,17 @@ set_SIMULATeQCD_property(HBOR_single_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(HBOR_single_test PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests HBOR_single_test)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_hisqForce.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(hisqForce src/testing/main_hisqForce.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_hisqForce.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp) 
+add_SIMULATeQCD_executable(hisqForce src/testing/main_hisqForce.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp) 
 set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_HisqForceImagmu.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp)
+add_SIMULATeQCD_executable(hisqForceImagmu src/testing/main_HisqForceImagmu.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp)
+set_SIMULATeQCD_property(hisqForceImagmu PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqForceImagmu PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests hisqForceImagmu)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_HisqSmearingTestMulti.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(hisqSmearingMulti src/testing/main_HisqSmearingTestMulti.cpp src/spinor/spinorfield.cpp)
@@ -467,14 +474,20 @@ set_SIMULATeQCD_property(hisqSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(hisqSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_InverterTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/inverter/inverter.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(InverterTest src/testing/main_InverterTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/inverter/inverter.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_HisqSmearingImagmuTest.cpp src/modules/HISQ/hisqSmearing.cpp)
+add_SIMULATeQCD_executable(hisqSmearingImagmuTest src/testing/main_HisqSmearingImagmuTest.cpp src/modules/HISQ/hisqSmearing.cpp)
+set_SIMULATeQCD_property(hisqSmearingImagmuTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqSmearingImagmuTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(tests hisqSmearingImagmuTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_InverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
+add_SIMULATeQCD_executable(InverterTest src/testing/main_InverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
 set_SIMULATeQCD_property(InverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests InverterTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_MixedPrecInverterTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/inverter/inverter.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(MixedPrecInverterTest src/testing/main_MixedPrecInverterTest.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/inverter/inverter.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_MixedPrecInverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
+add_SIMULATeQCD_executable(MixedPrecInverterTest src/testing/main_MixedPrecInverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
 set_SIMULATeQCD_property(MixedPrecInverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(MixedPrecInverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 HALFPREC=1 SINGLEPREC=1 NSTACKS_1=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests MixedPrecInverterTest)
@@ -511,8 +524,14 @@ add_to_compound_SIMULATeQCD_target(tests PureGaugeHmcTest)
 set_SIMULATeQCD_gpu_backend(src/testing/main_rhmc_test.cpp)
 add_SIMULATeQCD_executable(rhmcTest src/testing/main_rhmc_test.cpp ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(rhmcTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(rhmcTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(rhmcTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests rhmcTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_rhmc_test_4pf.cpp ${SOURCE_FILES_RHMC})
+add_SIMULATeQCD_executable(rhmcTest_4pf src/testing/main_rhmc_test_4pf.cpp ${SOURCE_FILES_RHMC})
+set_SIMULATeQCD_property(rhmcTest_4pf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(rhmcTest_4pf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests rhmcTest_4pf)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_rnd_multiple_test.cpp)
 add_SIMULATeQCD_executable(RndMultipleTest src/testing/main_rnd_multiple_test.cpp)
@@ -571,9 +590,20 @@ add_to_compound_SIMULATeQCD_target(tests UtimesUdaggerTest)
 
 #-------------------------------------------------------------------------------------COMPILATION DEFINITIONS: PROFILING
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_ColorElectricMagneticCloverBenchmark.cpp ${SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST})
+add_SIMULATeQCD_executable(ColorElectricMagneticCloverBenchmark src/profiling/main_ColorElectricMagneticCloverBenchmark.cpp ${SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST})
+set_SIMULATeQCD_property(ColorElectricMagneticCloverBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(ColorElectricMagneticCloverBenchmark PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(profilers ColorElectricMagneticCloverBenchmark)
 
-set_SIMULATeQCD_gpu_backend(src/profiling/main_ForceProfiling.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(ForceProfiling src/profiling/main_ForceProfiling.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/profiling/main_FieldStrengthTensorBenchmark.cpp)
+add_SIMULATeQCD_executable(FieldStrengthTensorBenchmark src/profiling/main_FieldStrengthTensorBenchmark.cpp)
+set_SIMULATeQCD_property(FieldStrengthTensorBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(FieldStrengthTensorBenchmark PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(profilers FieldStrengthTensorBenchmark)
+
+set_SIMULATeQCD_gpu_backend(src/profiling/main_ForceProfiling.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp)
+add_SIMULATeQCD_executable(ForceProfiling src/profiling/main_ForceProfiling.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp)
 set_SIMULATeQCD_property(ForceProfiling PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
 SIMULATeQCD_target_compile_definitions(ForceProfiling PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers ForceProfiling)
@@ -584,20 +614,20 @@ set_SIMULATeQCD_property(HBOR_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "pro
 SIMULATeQCD_target_compile_definitions(HBOR_benchmark PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(profilers HBOR_benchmark)
 
-set_SIMULATeQCD_gpu_backend(src/profiling/main_InverterProfiling.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/inverter/inverter.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(InverterProf src/profiling/main_InverterProfiling.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/modules/inverter/inverter.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/profiling/main_InverterProfiling.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
+add_SIMULATeQCD_executable(InverterProf src/profiling/main_InverterProfiling.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
 set_SIMULATeQCD_property(InverterProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
 SIMULATeQCD_target_compile_definitions(InverterProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers InverterProf)
 
-set_SIMULATeQCD_gpu_backend(src/profiling/main_MrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(MultiRHSProf src/profiling/main_MrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/profiling/main_MrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
+add_SIMULATeQCD_executable(MultiRHSProf src/profiling/main_MrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
 set_SIMULATeQCD_property(MultiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 HALFPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_half_prec_dslash_test.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(MultiRHSProf_half src/testing/main_half_prec_dslash_test.cpp src/modules/dslash/dslash.cpp src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 
+add_SIMULATeQCD_executable(MultiRHSProf_half src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 
 set_SIMULATeQCD_property(MultiRHSProf_half PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
 SIMULATeQCD_target_compile_definitions(MultiRHSProf_half PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 HALFPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf_half)
@@ -679,7 +709,7 @@ add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 set_SIMULATeQCD_gpu_backend(src/applications/main_rhmc.cpp)
 add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cpp ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 HALFPREC=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications RHMC)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sublatticeUpdates.cpp)
@@ -691,7 +721,7 @@ add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 set_SIMULATeQCD_gpu_backend(src/applications/main_measureHadrons.cpp)
 add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})
 set_SIMULATeQCD_property(measureHadrons PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 HALFPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sampleTopology.cpp)
 add_SIMULATeQCD_executable(sampleTopology src/applications/main_sampleTopology.cpp ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GFIX} ${SOURCE_FILES_GENERATEQUENCHED})

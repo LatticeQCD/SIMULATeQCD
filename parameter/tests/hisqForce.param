@@ -8,7 +8,7 @@
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory
-#   no_step_1f: number of steps of strange quark integration
+#   no_step_sf: number of steps of strange quark integration
 #        no_sw: number of steps of gauge integration
 #      residue: residue for inversions
 #        cgMax: max cg steps for multi mass solver
@@ -32,7 +32,7 @@ mass_ud = 0.00591
 
 step_size  = 0.02
 no_md      = 10
-no_step_1f = 5
+no_step_sf = 5
 no_sw      = 10
 #residue   = 1e-12
 cgMax      = 6500

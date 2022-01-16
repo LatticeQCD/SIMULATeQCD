@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
     run1(commBase);
     run1(commBase);
 #endif
-    rootLogger.info("Test passed if no errors occured!");
+    rootLogger.info(CoutColors::green,"Test passed!",CoutColors::reset);
     return 0;
 }
 

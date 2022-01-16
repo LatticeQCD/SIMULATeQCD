@@ -80,7 +80,7 @@ void AlgRemez::allocate(int num_degree, int den_degree)
   if (!alloc) {
     // The coefficients of the sum in the exponential
     a = new bigfloat[SUM_MAX];
-    a_power = new int[SUM_MAX];
+    a_power = new double[SUM_MAX];
   }
 
   alloc = 1;
@@ -96,10 +96,10 @@ void AlgRemez::setBounds(double lower, double upper)
 
 // Generate the rational approximation x^(pnum/pden)
 double AlgRemez::generateApprox(int degree,
-                                unsigned long pnum1, unsigned long pden1, double m1,
-                                unsigned long pnum2, unsigned long pden2, double m2,
-                                unsigned long pnum3, unsigned long pden3, double m3,
-                                unsigned long pnum4, unsigned long pden4, double m4)
+                                double pnum1, double pden1, double m1,
+                                double pnum2, double pden2, double m2,
+                                double pnum3, double pden3, double m3,
+                                double pnum4, double pden4, double m4)
 {
   return generateApprox(degree, degree, pnum1, pden1, m1,
                 			pnum2, pden2, m2,
@@ -108,13 +108,13 @@ double AlgRemez::generateApprox(int degree,
 }
 
 double AlgRemez::generateApprox(int num_degree, int den_degree, 
-				unsigned long pnum1, unsigned long pden1, double m1,
-				unsigned long pnum2, unsigned long pden2, double m2,
-				unsigned long pnum3, unsigned long pden3, double m3,
-				unsigned long pnum4, unsigned long pden4, double m4)
+				double pnum1, double pden1, double m1,
+				double pnum2, double pden2, double m2,
+				double pnum3, double pden3, double m3,
+				double pnum4, double pden4, double m4)
 {
   double *a_param = 0;
-  int *a_pow = 0;
+  double *a_pow = 0;
   return generateApprox(num_degree, den_degree, pnum1, pden1, m1,
                                                 pnum2, pden2, m2,
                                                 pnum3, pden3, m3,
@@ -123,11 +123,11 @@ double AlgRemez::generateApprox(int num_degree, int den_degree,
 
 // Generate the rational approximation x^(pnum/pden)
 double AlgRemez::generateApprox(int num_degree, int den_degree, 
-				unsigned long pnum1, unsigned long pden1, double m1,
-				unsigned long pnum2, unsigned long pden2, double m2,
-				unsigned long pnum3, unsigned long pden3, double m3,
-				unsigned long pnum4, unsigned long pden4, double m4,
-				int a_len, double *a_param, int *a_pow)
+				double pnum1, double pden1, double m1,
+				double pnum2, double pden2, double m2,
+				double pnum3, double pden3, double m3,
+				double pnum4, double pden4, double m4,
+				int a_len, double *a_param, double *a_pow)
 {
   if( a_len > 0 )
   {
@@ -139,7 +139,7 @@ double AlgRemez::generateApprox(int num_degree, int den_degree,
 //  char *fname = "generateApprox(int, unsigned long, unsigned long)";
 
   printf("# Degree of the approximation is (%d,%d)\n", num_degree, den_degree);
-  printf("# Approximating the function (x+4*%f^2)^(%lu/%lu) (x+4*%f^2)^(%lu/%lu) (x+4*%f^2)^(%lu/%lu) (x+4*%f^2)^(%lu/%lu)\n", m1, pnum1, pden1, m2, pnum2, pden2, m3, pnum3, pden3, m4, pnum4, pden4);
+  printf("# Approximating the function (x+4*%f^2)^(%f/%f) (x+4*%f^2)^(%f/%f) (x+4*%f^2)^(%f/%f) (x+4*%f^2)^(%f/%f)\n", m1, pnum1, pden1, m2, pnum2, pden2, m3, pnum3, pden3, m4, pnum4, pden4);
 
   // Reallocate arrays, since degree has changed
   if (num_degree != n || den_degree != d) allocate(num_degree,den_degree);
@@ -498,13 +498,13 @@ bigfloat AlgRemez::func(const bigfloat x) {
   bigfloat z_flav_2;
   bigfloat z_flav_3;
   bigfloat z_flav_4;
-  if( (int)power_num_flav_1 >= 0) z_flav_1 = (bigfloat)power_num_flav_1 / (bigfloat)power_den_flav_1;
+  if( power_num_flav_1 >= 0) z_flav_1 = (bigfloat)power_num_flav_1 / (bigfloat)power_den_flav_1;
   else z_flav_1 = -((bigfloat)(-power_num_flav_1) / (bigfloat)power_den_flav_1);
-  if( (int)power_num_flav_2 >= 0) z_flav_2 = (bigfloat)power_num_flav_2 / (bigfloat)power_den_flav_2;
+  if( power_num_flav_2 >= 0) z_flav_2 = (bigfloat)power_num_flav_2 / (bigfloat)power_den_flav_2;
   else z_flav_2 = -((bigfloat)(-power_num_flav_2) / (bigfloat)power_den_flav_2);
-  if( (int)power_num_flav_3 >= 0) z_flav_3 = (bigfloat)power_num_flav_3 / (bigfloat)power_den_flav_3;
+  if( power_num_flav_3 >= 0) z_flav_3 = (bigfloat)power_num_flav_3 / (bigfloat)power_den_flav_3;
   else z_flav_3 = -((bigfloat)(-power_num_flav_3) / (bigfloat)power_den_flav_3);
-  if( (int)power_num_flav_4 >= 0) z_flav_4 = (bigfloat)power_num_flav_4 / (bigfloat)power_den_flav_4;
+  if( power_num_flav_4 >= 0) z_flav_4 = (bigfloat)power_num_flav_4 / (bigfloat)power_den_flav_4;
   else z_flav_4 = -((bigfloat)(-power_num_flav_4) / (bigfloat)power_den_flav_4);
 
   //bigfloat z_flav_2 = (bigfloat)power_num_flav_2 / (bigfloat)power_den_flav_2;

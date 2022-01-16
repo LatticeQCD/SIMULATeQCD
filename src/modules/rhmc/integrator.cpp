@@ -92,43 +92,52 @@ struct get_mom_tr
 
 // this is called from outside, append switch cases if other integration schemes are added
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(){
-    
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf){
+
     switch(_rhmc_param.integrator())
     {
         case 0:
-            SWleapfrog();
+            SWleapfrog(_phi_lf, _phi_sf);
+            break;
 
-             break;
+        case 1:
+            PQPQP2MN(_phi_lf, _phi_sf);
+            break;
 
         default:
-            rootLogger.error("Only SW leapfroger implemented!");
+            rootLogger.error("Unkown integration method!");
     }
 }
 
 
 // Sexton-Weingarten integration scheme
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf){
 
-    floatT ieps, iepsh, steph_1f, step_1f, sw_step, sw_steph;
-    
+    floatT ieps, iepsh, steph_sf, step_sf, sw_step, sw_steph;
+
+    floatT chmp0=_rhmc_param.mu_f();
+
     ieps = _rhmc_param.step_size();
     iepsh = 0.5 * ieps;
 
-    step_1f = _rhmc_param.step_size()/_rhmc_param.no_step_1f();
-    steph_1f = 0.5* step_1f;
+    step_sf = _rhmc_param.step_size()/_rhmc_param.no_step_sf();
+    steph_sf = 0.5* step_sf;
 
-    sw_step = step_1f/_rhmc_param.no_sw();
+    sw_step = step_sf/_rhmc_param.no_sw();
     sw_steph = 0.5 *sw_step;
 
     //==================================================//
     // Perform the first half step                      //
     //==================================================//
 
-    updateP_fermforce( iepsh, _phi_2f, true );
-    updateP_fermforce( steph_1f, _phi_1f, false );    
-
+    updateP_fermforce( iepsh, _phi_lf, true);
+    updateP_fermforce( steph_sf, _phi_sf, false);
+    
     updateP_gaugeforce( sw_steph );
 
 
@@ -139,23 +148,30 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     //==================================================//
 
 
-    for (int md=1; md<_rhmc_param.no_md(); md++)                  // start loop over steps of 2f
+    for (int md=1; md<_rhmc_param.no_md(); md++)                  // start loop over steps of lf
     {
-        for (int step=1; step<=_rhmc_param.no_step_1f();step++)   // start loop over steps of 1f
+        for (int step=1; step<=_rhmc_param.no_step_sf();step++)   // start loop over steps of sf
         {
             for (int sw=1; sw<=_rhmc_param.no_sw(); sw++)         // start loop over steps of gauge part
             {
                 evolveQ( sw_step );
                 updateP_gaugeforce( sw_step );
             }// end loop over steps of gauge part
-            _smearing.SmearAll();
-            // update P using only the 1f part of the force
+           if (_rhmc_param.mu_f() !=0){
+            _smearing.SmearAll(chmp0);
+           }
+           else {
+               _smearing.SmearAll(); 
+           }
+            // update P using only the sf part of the force
             rootLogger.info("strange force:");
-            updateP_fermforce( step_1f, _phi_1f, false );
-        }// end loop over steps of 1f
+            updateP_fermforce( step_sf, _phi_sf, false); 
+           
+        }// end loop over steps of sf
         rootLogger.info("light force:");
-        // update P using only the 2f part of the force
-        updateP_fermforce( ieps, _phi_2f, true );
+        // update P using only the lf part of the force
+          updateP_fermforce( ieps, _phi_lf, true); 
+       
     }  
 
 
@@ -163,17 +179,22 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     // Perform the last half step                       //
     //==================================================// 
 
-    // bring P steph_1f away from the end of the trajectory for 1f part of the force
+    // bring P steph_sf away from the end of the trajectory for sf part of the force
 
-    for (int step=1; step<_rhmc_param.no_step_1f(); step++)
+    for (int step=1; step<_rhmc_param.no_step_sf(); step++)
     {
         for (int sw = 1; sw<=_rhmc_param.no_sw(); sw++)
         {
             evolveQ( sw_step );
             updateP_gaugeforce( sw_step );
         }
-        _smearing.SmearAll();
-        updateP_fermforce( step_1f, _phi_1f, false );
+        if (_rhmc_param.mu_f() != 0){
+             _smearing.SmearAll(chmp0);
+        }
+        else {
+            _smearing.SmearAll();
+        }
+        updateP_fermforce( step_sf, _phi_sf, false );
     }
 
     // bring P sw_steph away from the end of the trajectory for gauge part of the force
@@ -188,11 +209,278 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     // bring Q to the end of the trajectory
 
     evolveQ( sw_step );
-    _smearing.SmearAll();
+   if (_rhmc_param.mu_f() != 0){
+             _smearing.SmearAll(chmp0);
+        }
+        else {
+            _smearing.SmearAll();
+        }
+
     // bring P to the end of the trajectory by updating with all the forces
-    updateP_fermforce( steph_1f, _phi_1f, false );
-    updateP_fermforce( iepsh, _phi_2f, true );
+    updateP_fermforce( steph_sf, _phi_sf, false); 
+    updateP_fermforce( iepsh, _phi_lf, true); 
     updateP_gaugeforce( sw_steph );
+}
+// 2MN PQPQP Omelyan integrator on all scales 
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::PQPQP2MN(
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf){
+
+  double ieps, ieps3, ieps6, ieps23;
+  double step_sf, step3_sf, step6_sf, step23_sf;
+  double sw_step, sw_steph, sw_step3, sw_step6, sw_step23;
+  double tauP1, forceP1;
+  double tauP2, forceP2;
+  double tauQ, tauG, forceG;
+  double chmp0;
+  double shadow1, shadow2;
+  
+  ieps = _rhmc_param.step_size();
+  ieps3 = ieps/3.0;
+  ieps6 = ieps/6.0;
+  ieps23 = 2.0*ieps/3.0;
+  
+  step_sf = _rhmc_param.step_size()/_rhmc_param.no_step_sf()/2.0;
+  step3_sf = step_sf/3.0;
+  step6_sf = step_sf/6.0;
+  step23_sf = 2.0*step_sf/3.0;
+  
+  sw_step = step_sf/_rhmc_param.no_sw()/2.0;
+  sw_steph = sw_step/2.0;
+  sw_step3 = sw_step/3.0;
+  sw_step6 = sw_step/6.0;
+  sw_step23 = 2.0*sw_step/3.0;
+
+  chmp0 = _rhmc_param.mu_f();
+
+  //==================================================//
+  // Perform the first half step                      //
+  //==================================================//
+  
+  updateP_fermforce( ieps6, _phi_lf, true);
+  forceP2 = forceinfo2();
+  tauP2=ieps6;
+
+  updateP_fermforce( step6_sf, _phi_sf, false);    
+  forceP1 = forceinfo2();
+  tauP1=step6_sf;
+  
+  updateP_gaugeforce( sw_step6);
+  forceG = forceinfo2();
+  tauG=sw_step6;
+
+  //calculation of the 2nd order Poisson brackets
+  //see 1801.06412
+  shadow1=forceP2+(forceP1/pow(2*_rhmc_param.no_step_sf(),2))+(forceG/pow(4*_rhmc_param.no_step_sf()*_rhmc_param.no_sw(),2));
+
+  rootLogger.info( "Done initial P integration step");
+
+  tauQ=0.0;
+  //==================================================//
+  // Perform the next ( _no_md - 1 ) steps            //
+  //==================================================//
+  for (int md=1; md< _rhmc_param.no_md(); md++)                  // start loop over steps of lf
+    {
+      for (int step=1; step <= _rhmc_param.no_step_sf(); step++)   // start loop over steps of sf
+        {
+	  for (int sw=1; sw <= _rhmc_param.no_sw(); sw++)         // start loop over steps of gauge part
+            {
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+            }// end loop over steps of gauge part
+
+	  forceinfo();
+
+	  _smearing.SmearAll(chmp0);
+	  // update P using only the sf part of the force
+	  rootLogger.info( "strange force:");
+	  updateP_fermforce( step23_sf, _phi_sf, false); tauP1+=step23_sf;
+
+	  for (int sw=1; sw <= _rhmc_param.no_sw(); sw++)         // start loop over steps of gauge part
+            {
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+            }// end loop over steps of gauge part
+
+	  forceinfo();
+
+	  _smearing.SmearAll(chmp0);
+	  // update P using only the sf part of the force
+	  rootLogger.info("strange force:");
+	  updateP_fermforce( step3_sf, _phi_sf, false); tauP1+=step3_sf;
+        }// end loop over steps of sf
+
+      rootLogger.info("light force:");
+      // update P using only the lf part of the force
+      updateP_fermforce( ieps23, _phi_lf, true); tauP2+=ieps23;
+
+      for (int step=1; step <= _rhmc_param.no_step_sf(); step++)   // start loop over steps of sf
+        {
+	  for (int sw=1; sw <= _rhmc_param.no_sw(); sw++)         // start loop over steps of gauge part
+            {
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+            }// end loop over steps of gauge part
+
+	  forceinfo();
+
+	  _smearing.SmearAll(chmp0);
+	  // update P using only the sf part of the force
+	  rootLogger.info("strange force:");
+	  updateP_fermforce( step23_sf, _phi_sf, false); tauP1+=step23_sf;
+
+	  for (int sw=1; sw <= _rhmc_param.no_sw(); sw++)         // start loop over steps of gauge part
+            {
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	      evolveQ( sw_steph );             tauQ += sw_steph;
+	      updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+            }// end loop over steps of gauge part
+
+	  forceinfo();
+
+	  _smearing.SmearAll(chmp0);
+	  // update P using only the sf part of the force
+	  rootLogger.info("strange force:");
+	  updateP_fermforce( step3_sf, _phi_sf, false); tauP1+=step3_sf;
+        }// end loop over steps of sf
+
+      rootLogger.info("light force:");
+      // update P using only the lf part of the force
+      updateP_fermforce( ieps3, _phi_lf, true); tauP2+=ieps3;
+    }  
+
+  //==================================================//
+  // Perform the last half step                       //
+  //==================================================// 
+  // bring P steph_sf away from the end of the trajectory for sf part of the force
+  for (int step=1; step <= _rhmc_param.no_step_sf(); step++)
+    {
+      for (int sw = 1; sw <= _rhmc_param.no_sw(); sw++)
+        {
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+        }
+
+      forceinfo();
+      
+      _smearing.SmearAll(chmp0);
+      rootLogger.info("strange force:");
+      updateP_fermforce( step23_sf, _phi_sf, false); tauP1 += step23_sf;
+
+      for (int sw = 1; sw <= _rhmc_param.no_sw(); sw++)
+        {
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+        }
+
+      forceinfo();
+
+      _smearing.SmearAll(chmp0);
+      rootLogger.info("strange force:");
+      updateP_fermforce( step3_sf, _phi_sf, false); tauP1+=step3_sf;
+    }
+    
+  rootLogger.info("light forces:");
+  // update P using only the lf part of the force
+  updateP_fermforce( ieps23, _phi_lf, true); tauP2+=ieps23;
+
+  for (int step=1; step < _rhmc_param.no_step_sf(); step++)
+    {
+      for (int sw = 1; sw <= _rhmc_param.no_sw(); sw++)
+        {
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+        }
+
+      forceinfo();
+      
+      _smearing.SmearAll(chmp0);
+      rootLogger.info("strange force:");
+      updateP_fermforce( step23_sf, _phi_sf, false); tauP1+=step23_sf;
+
+      for (int sw = 1; sw <= _rhmc_param.no_sw(); sw++)
+        {
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+	  evolveQ( sw_steph );             tauQ += sw_steph;
+	  updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+        }
+
+      forceinfo();
+
+      _smearing.SmearAll(chmp0);
+      rootLogger.info("strange force:");
+      updateP_fermforce( step3_sf, _phi_sf, false); tauP1+=step3_sf;
+    }
+
+  // bring P sw_steph away from the end of the trajectory for gauge part of the force
+  for (int sw=1; sw <= _rhmc_param.no_sw(); sw++)
+    {
+      evolveQ( sw_steph );             tauQ += sw_steph;
+      updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+      evolveQ( sw_steph );             tauQ += sw_steph;
+      updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+    }
+
+  forceinfo();
+
+  _smearing.SmearAll(chmp0);
+  updateP_fermforce( step23_sf, _phi_sf, false); tauP1+=step23_sf;
+
+  for (int sw=1; sw < _rhmc_param.no_sw(); sw++)
+    {
+      evolveQ( sw_steph );             tauQ += sw_steph;
+      updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+      evolveQ( sw_steph );             tauQ += sw_steph;
+      updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
+    }
+
+  forceinfo();
+
+  // bring Q to the end of the trajectory
+  evolveQ( sw_steph );             tauQ += sw_steph;
+  updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
+  evolveQ( sw_steph );             tauQ += sw_steph;
+
+  // bring P to the end of the trajectory by updating with all the forces
+  updateP_gaugeforce( sw_step6);
+  forceG=forceinfo2();
+  tauG+=sw_step6;
+
+  _smearing.SmearAll(chmp0);
+  updateP_fermforce( step6_sf, _phi_sf, false);
+  forceP1=forceinfo2();
+  tauP1+=step6_sf;
+
+  updateP_fermforce( ieps6, _phi_lf, true);
+  forceP2=forceinfo2();
+  tauP2+=ieps6;
+
+  rootLogger.info( "End of trajectory: ");
+  rootLogger.info(" ... tauQ  = ", tauQ);
+  rootLogger.info(" ... tauG  = ",tauG);
+  rootLogger.info(" ... tauP1 = ",tauP1);
+  rootLogger.info(" ... tauP2 = ",tauP2);
+    
+  //calculation of the 2nd order Poisson brackets
+  //see 1801.06412
+  shadow2=forceP2+(forceP1/pow(2*_rhmc_param.no_step_sf(),2))+(forceG/pow(4*_rhmc_param.no_step_sf()*_rhmc_param.no_sw(),2));
+  //Hamiltonian violations to 2nd order
+  rootLogger.info("Delta Shadow = ",pow(ieps,2)*(shadow2 - shadow1)/72.0);
 }
 
 
@@ -208,13 +496,13 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 //update P with the fermion force
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_fermforce(floatT stepsize, 
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, bool light/* std::vector<floatT> rat_coeff*/){
-
-    ip_dot_f2_hisq.updateForce(phi,ipdot,light);
-
-    forceinfo();
-
-    evolveP(stepsize);
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi, bool light/* std::vector<floatT> rat_coeff*/){
+    
+    for(int i = 0; i < _no_pf; i++) {
+        ip_dot_f2_hisq.updateForce(_phi.phi_container.at(i),ipdot,light);
+        forceinfo();
+        evolveP(stepsize);
+    }
 }
 
 template<class floatT, size_t HaloDepth>
@@ -267,6 +555,23 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::forc
 
 
 }
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
+floatT integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::forceinfo2(){
+
+    typedef GIndexer<All,HaloDepth> GInd;
+    LatticeContainer<onDevice,floatT> force_tr(_p.getComm(), "forcetr");
+    force_tr.adjustSize(GInd::getLatData().vol4);
+
+    force_tr.template iterateOverBulk<All, HaloDepth>(trace<floatT, HaloDepth>(ipdotAccessor));
+
+    floatT thing;
+    force_tr.reduce(thing, GInd::getLatData().vol4);
+
+    return thing;
+
+}
+
 
 // update the gauge field
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>

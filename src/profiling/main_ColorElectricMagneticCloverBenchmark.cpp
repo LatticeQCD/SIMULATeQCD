@@ -1,5 +1,5 @@
 /* 
- * main_ColorElectricMagneticCloverTest.cpp                                                               
+ * main_ColorElectricMagneticCloverBenchmark.cu                                                               
  *
  * Hai Tao Shu, 7 Apr 2021
  *
@@ -20,12 +20,12 @@ int main(int argc, char *argv[]) {
     typedef GIndexer<All,HaloDepth> GInd;
     stdLogger.setVerbosity(INFO);
     StopWatch<true> timer;
-    LatticeParameters                       lp;
-    CommunicationBase                       commBase(&argc, &argv);
+    LatticeParameters lp;
+    CommunicationBase commBase(&argc, &argv);
     lp.readfile(commBase, "../parameter/tests/ColorElectricMagneticCloverTest.param", argc, argv);
     commBase.init(lp.nodeDim());
     initIndexer(HaloDepth,lp,commBase);
-    Gaugefield<PREC,ON_DEVICE,HaloDepth>     gauge(commBase);
+    Gaugefield<PREC,ON_DEVICE,HaloDepth> gauge(commBase);
 
     const size_t Ntau  = GInd::getLatData().lt;
 

@@ -50,8 +50,7 @@ bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield
 
     if (faults > 0) {
         return false;
-    }
-    else {
+    } else {
         return true;
     }
 }
@@ -86,22 +85,20 @@ int main(int argc, char *argv[]) {
     bool pass2 = checkfields<PREC,true,HaloDepth,R18>(gaugeSingleGPU,gaugeMultiXGPU);
 
     if (pass) {
-      rootLogger.info("Fields Single and Multi are identical");
-    }
-    else {
-      rootLogger.info("Fields Single and Multi are not identical");
+        rootLogger.info("Fields Single and Multi are identical");
+    } else {
+        rootLogger.info("Fields Single and Multi are not identical");
     }
     if (pass2) {
-      rootLogger.info("Fields Single and MultiX are identical");
-    }
-    else {
-      rootLogger.info("Fields Single and MultiX are not identical");
+        rootLogger.info("Fields Single and MultiX are identical");
+    } else {
+        rootLogger.info("Fields Single and MultiX are not identical");
     }
     if (pass && pass2) {
-      rootLogger.info(CoutColors::green ,  "Test passed!");
-    }
-    else {
-      rootLogger.info(CoutColors::red ,  "Test failed!");
+        rootLogger.info(CoutColors::green ,  "Test passed!", CoutColors::reset);
+    } else {
+        rootLogger.error("Test failed!");
+        return -1;
     }
     
     return 0;

@@ -6,7 +6,9 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-
+#include "../gauge/gauge_kernels.cu"
+ 
+    
 
 template<class floatT, int HaloDepth>
 bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff rat){
@@ -54,7 +56,9 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     initIndexer(4,param, commBase);
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
-
+    Gaugefield<floatT, true, HaloDepth, R18> gauge_reference(commBase);
+    gauge_reference.readconf_nersc("../test_conf/rhmc_reference_conf");
+    gauge_reference.updateAll();
     grnd_state<true> d_rand;
     initialize_rng(param.seed(), d_rand);
 
@@ -75,7 +79,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     floatT acceptance = 0.0;
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
-    for (int i = 1; i <= 100; ++i) {
+    for (int i = 1; i <= param.no_updates(); ++i) {
         acc += HMC.update();
         acceptance = floatT(acc)/floatT(i);
 
@@ -85,11 +89,22 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
     bool ret = false;
+    
+    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
+    LatticeContainer<true, int> dummy(commBase);
+    dummy.adjustSize(elems);
 
-    if (acceptance > 0.7) {
+    
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+
+    int faults = 0;
+    dummy.reduce(faults,elems);
+
+    rootLogger.info(faults, " faulty links found!");
+
+    if (acceptance > 0.7 && faults == 0) {
         ret=true;
     }
-
     return ret;
 };
 
@@ -177,9 +192,10 @@ int main(int argc, char *argv[]) {
         rootLogger.info(CoutColors::green ,  "ALL TESTS PASSED" ,  CoutColors::reset);
         rootLogger.warn("This only indicates that force matches action.\n");
         rootLogger.warn("Check Observables to find out if action is correct!");
+    } else {
+        rootLogger.error("At least one test failed!");
+        return -1;
     }
-    else
-        rootLogger.error(CoutColors::red ,  "AT LEAST ONE TEST FAILED" ,  CoutColors::reset);
 
     return 0;
 }

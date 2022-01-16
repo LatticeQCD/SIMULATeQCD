@@ -137,7 +137,7 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
     rootLogger.info(" ");
 
 
-/// ================ Even Test ================ ///
+    /// ================ Even Test ================ ///
     rootLogger.info("----------------------------------------");
     rootLogger.info("           ");
     rootLogger.info("Initialize Lattice with even indices");
@@ -168,7 +168,7 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
     }
 
 
-/// ================ Odd Test ================ ///
+    /// ================ Odd Test ================ ///
     rootLogger.info("----------------------------------------");
     rootLogger.info("           ");
     rootLogger.info("Initialize Lattice with odd indices");
@@ -200,7 +200,7 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
 
 
 
-/// ================ Full Test ================ ///
+    /// ================ Full Test ================ ///
     rootLogger.info("----------------------------------------");
     rootLogger.info("           ");
     rootLogger.info("Initialize Lattice with all indices");

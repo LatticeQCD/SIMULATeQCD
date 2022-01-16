@@ -44,9 +44,9 @@ struct draw_rand {
 };
 
 template <class floatT, size_t HaloDepth>
-void test_single_multiple(CommunicationBase &commBase){
+bool test_single_multiple(CommunicationBase &commBase){
 
-int seed = 1337;
+    int seed = 1337;
 
     typedef GIndexer<All,HaloDepth> GInd;
 
@@ -92,10 +92,13 @@ int seed = 1337;
         }
     }
 
-    if (host_dev)
+    if (host_dev) {
         rootLogger.info(CoutColors::green ,  "Random numbers on one and multiple GPUs match" ,  CoutColors::reset);
-    else
-        rootLogger.info( CoutColors::red ,  "Random numbers on one and multiple GPU do not match" ,  CoutColors::reset);
+        return false;
+    } else {
+        rootLogger.error("Random numbers on one and multiple GPU do not match!");
+        return true;
+    }
 }
 
 
@@ -107,6 +110,7 @@ int main(int argc, char *argv[]) {
     int LatDim[] = {8, 8, 8, 4};
     int NodeDim[] = {2, 1, 1, 1};
     const int HaloDepth = 0;
+    bool lerror=false;
     
     param.latDim.set(LatDim);
     param.nodeDim.set(NodeDim);
@@ -119,10 +123,17 @@ int main(int argc, char *argv[]) {
     rootLogger.warn("Before running this test you have to run RndSingeTest!");
 
     rootLogger.info("Testing RNG for single prec:");
-    test_single_multiple<float, HaloDepth>(commBase);
+    lerror = (lerror || test_single_multiple<float, HaloDepth>(commBase));
 
     rootLogger.info("Testing RNG for double prec:");
-    test_single_multiple<float, HaloDepth>(commBase);
+    lerror = (lerror || test_single_multiple<float, HaloDepth>(commBase));
+
+    if(lerror) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+    }
 
     return 0;
 }

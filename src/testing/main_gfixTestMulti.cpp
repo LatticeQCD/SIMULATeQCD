@@ -164,6 +164,7 @@ int main(int argc, char *argv[]) {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
         rootLogger.error("At least one test failed!");
+        return -1;
     }
     rootLogger.info("==============================");
 

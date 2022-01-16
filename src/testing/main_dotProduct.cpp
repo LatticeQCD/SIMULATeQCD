@@ -87,27 +87,17 @@ int main(int argc, char **argv) {
         run_func<double, Even, 1, true>(commBase);
         run_func<float, Even, 2, true>(commBase);
         run_func<double, Even, 2, true>(commBase);
-        //        run_func<float, Even, 3, true>(commBase);
-        //run_func<double, Even, 3, true>(commBase);
         run_func<float, Even, 4, true>(commBase);
         run_func<double, Even, 4, true>(commBase);
-        // run_func<float, Even, 5, true>(commBase);
-        /*run_func<double, Even, 5, true>(commBase);
-        run_func<float, Even, 6, true>(commBase);
-        run_func<double, Even, 6, true>(commBase);
-        run_func<float, Even, 7, true>(commBase);
-        run_func<double, Even, 7, true>(commBase);*/
         run_func<float, Even, 8, true>(commBase);
         run_func<double, Even, 8, true>(commBase);
-        //        run_func<float, Even, 9, true>(commBase);
-        // run_func<double, Even, 9, true>(commBase);
         run_func<float, Even, 10, true>(commBase);
         run_func<double, Even, 10, true>(commBase);
         
         return 0;
     }
     catch (const std::runtime_error &error){
-        std::cout << "There has been a runtime error!";
+        rootLogger.error("There has been a runtime error!");
         return -1;
     }
 }

@@ -9,7 +9,7 @@ bool ParameterList::readfile(const CommunicationBase& comm, const std::string& f
         rootLogger.info("Reading parameters from file :: ", fname);
         std::ifstream in(fname.c_str(), std::ios::in);
         if (in.fail()) {
-            throw std::runtime_error(stdLogger.fatal("Unable to open parameter file!"));
+            throw std::runtime_error(stdLogger.fatal("Unable to open parameter file ", fname));
         }
         if (comm.single())
             return readstream(in,argc-2,argv+2);
@@ -47,11 +47,11 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
 
         //fix that!!
         if (p.isSet())
-            rootLogger.info("# " ,  prefix ,  " :: " ,  p.name);
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p);
         else if (p.hasdefault)
-            rootLogger.info("# " ,  prefix ,  " :: " ,  p.name ,  " (default)");
+            rootLogger.info("# " ,  prefix ,  " :: " ,  p ,  " (default)");
         else if (p.isRequired())
-            throw std::runtime_error(stdLogger.fatal("# ", prefix, " :: ", p.name, " required but NOT set"));
+            throw std::runtime_error(stdLogger.fatal("# ", prefix, " :: ", p, " required but NOT set"));
 
         if (p.isRequired() && !p.isSet()) abort = true;
     }

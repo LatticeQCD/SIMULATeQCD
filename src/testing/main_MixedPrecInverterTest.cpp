@@ -12,7 +12,7 @@
 
 
 template<class floatT, class floatT_inner, Layout LatLayout, size_t NStacks, bool onDevice>
-void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat, int cg_switch) {
+void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat) {
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
@@ -36,7 +36,6 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     gauge_smeared_half.convert_precision(gauge_smeared);
     gauge_naik_half.convert_precision(gauge_naik);
     
-    
     ConjugateGradient<floatT, NStacks> cg;
     
     HisqDSlash<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_naik, param.m_ud());
@@ -51,25 +50,11 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     spinorIn.gauss(d_rand.state);
     
     timer.start();
-    switch (cg_switch) {
-    case 1 :
-        cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
-        break;
-    case 2 :
-        cg.invert_res_replace(dslash, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
-        break;
-    case 3 :
-        cg.invert_new(dslash, spinorOut, spinorIn, param.cgMax(), param.residue());
-        break;
-    default :
-        throw std::runtime_error(stdLogger.fatal("CG inverter not specified, provide an option (1, 2 or 3) after parameter file"));
-        break;
-    }
+    cg.invert_mixed(dslash, dslash_half, spinorOut, spinorIn, param.cgMax(), param.residue(), param.cgMixedPrec_delta());
     
     timer.stop();
     
     dslash.applyMdaggM(spinorOut2, spinorOut);
-
     
     spinorOut = spinorOut2 - spinorIn;
 
@@ -84,8 +69,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     err_arr = real<double>(dot1)/real<double>(dot2);
 
-    for (size_t i = 0; i < NStacks; ++i)
-    {
+    for (size_t i = 0; i < NStacks; ++i) {
         rootLogger.info(err_arr[i]);
     }
 
@@ -97,55 +81,44 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     if (success)
         rootLogger.info("Inverter test: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
-        rootLogger.info("Inverter test: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
-
+        throw std::runtime_error(stdLogger.fatal("Inverter test failed!"));
 }
 
 
 int main(int argc, char **argv) {
-    try{
-    stdLogger.setVerbosity(DEBUG);
-
-    CommunicationBase commBase(&argc, &argv);
-    RhmcParameters param;
-
-    param.readfile(commBase, "../parameter/tests/MixedPrecInverterTest.param", argc, argv);
-
-    RationalCoeff rat;
-
-    rat.readfile(commBase, param.rat_file());
-
-    commBase.init(param.nodeDim(), param.gpuTopo());
-
-    const int HaloDepthSpin = 4;
-    initIndexer(HaloDepthSpin, param, commBase);
-
-    rootLogger.info("Running mixed precision inverter test");
-
-
-    int cg_sw = atoi(argv[2]);
-    if (cg_sw == 1) {
+    try {
+        stdLogger.setVerbosity(DEBUG);
+    
+        CommunicationBase commBase(&argc, &argv);
+        RhmcParameters param;
+    
+        param.readfile(commBase, "../parameter/tests/MixedPrecInverterTest.param", argc, argv);
+    
+        RationalCoeff rat;
+    
+        rat.readfile(commBase, param.rat_file());
+    
+        commBase.init(param.nodeDim(), param.gpuTopo());
+    
+        const int HaloDepthSpin = 4;
+        initIndexer(HaloDepthSpin, param, commBase);
+    
+        rootLogger.info("Running mixed precision inverter test");
+    
         rootLogger.info("testing float-half");
-        run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-        
+        run_func<float, __half, Even, 1, true>(commBase, param, rat);
+            
         rootLogger.info("testing double-float");
-        run_func<double, float, Even, 1, true>(commBase, param, rat, cg_sw);
-        
+        run_func<double, float, Even, 1, true>(commBase, param, rat);
+            
         rootLogger.info("testing double-half");
-        run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-    }
-    else {
-        rootLogger.info("testing float");
-        run_func<float, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-
-        rootLogger.info("testing double");
-        run_func<double, __half, Even, 1, true>(commBase, param, rat, cg_sw);
-    }
-    return 0;
+        run_func<double, __half, Even, 1, true>(commBase, param, rat);
+        
+        return 0;
     }
     
-    catch (const std::runtime_error &error){
-        std::cout << "There has been a runtime error!";
+    catch (const std::runtime_error &error) {
+        rootLogger.error("There has been a runtime error!");
         return -1;
     }
 }

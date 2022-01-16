@@ -14,8 +14,6 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
     CommunicationBase commBase(&argc, &argv);
 
-    StopWatch<true> timer, totaltime;
-
     RhmcParameters param;
 
     param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
@@ -34,7 +32,9 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim(), param.gpuTopo());
 
-    typedef double floatT;
+    StopWatch<true> timer, totaltime;
+
+    typedef float floatT;
 
     rootLogger.info("STARTING RHMC Update:");
 

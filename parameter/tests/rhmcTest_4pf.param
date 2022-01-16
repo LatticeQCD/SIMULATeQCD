@@ -1,0 +1,52 @@
+#
+# rhmcTest.param
+#
+# Parameter file for HISQ action.
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#      mass_ud: Light quark mass
+#       mass_s: Strange quark mass
+#
+#    step_size: step size of trajectory
+#        no_md: number of steps of trajectory
+#   no_step_sf: number of steps of strange quark integration
+#        no_sw: number of steps of gauge integration
+#      residue: residue for inversions
+#        cgMax: max cg steps for multi mass solver
+#   always_acc: always accept configuration in Metropolis
+#     rat_file:
+#
+#    rand_flag: new random numbers(0)/read in random numbers(1)
+#    rand_file: file name for random numbers and infos
+#         seed: myseed
+#    load_conf: flag_load (0=identity, 1=random, 2=getconf)
+#   gauge_file: file name for configuration
+#    config_nr: configuration number
+#   no_updates: number of updates
+#  write_every: write out configuration every
+#
+Lattice = 10 10 10 10
+Nodes   = 1  1  1  1
+beta    =  6.00
+mass_s  =  0.08
+mass_ud =  0.06
+
+step_size  = 0.05
+no_md      = 20
+no_step_sf = 5
+no_sw      = 10
+#residue   = 1e-12
+cgMax      = 6500
+always_acc = 0
+rat_file   = ../parameter/sample_eo_4pf.rat
+no_pf      = 4
+
+rand_flag    = 0
+rand_file    = rand
+seed         = 1337
+load_conf    = 0
+gauge_file   = l328f21b6260m00405m0810a_4000.
+config_nr    = 0
+no_updates   = 10
+write_every  = 5

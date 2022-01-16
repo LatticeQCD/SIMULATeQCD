@@ -44,7 +44,18 @@ class StopWatch {
     StopWatch() : _elapsed(0.0), _bytes(0), _flops(0) {
         if(device == true){
             gpuEventCreate(&_device_start_time);
+
+            gpuError_t gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpu Event creation" , gpuErr);
+            }
+
             gpuEventCreate(&_device_stop_time);
+
+            gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpu Event creation" , gpuErr);
+            }
         }
     }
 
@@ -58,6 +69,11 @@ class StopWatch {
     inline void start() { 
         if(device == true){
             gpuEventRecord(_device_start_time, 0); 
+            gpuError_t gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed after  CommunicationBase!" , gpuErr);
+            }
+
         }
         else{
             _host_start();
@@ -68,7 +84,15 @@ class StopWatch {
     inline double stop() {
         if(device == true){
             gpuEventRecord(_device_stop_time, 0);
+            gpuError_t gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpuEventRecord (stop)" , gpuErr);
+            }
             gpuEventSynchronize(_device_stop_time);
+            gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpuEventSynchronize" , gpuErr);
+            }
             float time;
             gpuEventElapsedTime(&time, _device_start_time, _device_stop_time);
             _elapsed += time;

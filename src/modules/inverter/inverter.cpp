@@ -503,6 +503,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             //r = b - Ax
             r = spinorIn;
             SimpleArray<double, NStacks> tmp_arr(-1.0);
+            spinorOut.updateAll();
             dslash.applyMdaggM(s,spinorOut, false);
             r.template axpyThisLoopd<32>(tmp_arr,s,NStacks);
 
@@ -637,7 +638,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             SimpleArray<double, NStacks> tmp_arr(-1.0);
             
             //reuse accum to save dslash result.
-            
+            spinorOut.updateAll();
             dslash.applyMdaggM(accum,spinorOut, false);
             r.template axpyThisLoopd<32>(tmp_arr,accum,NStacks);
             r_inner.convert_precision(r);
@@ -700,10 +701,14 @@ template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spino
                                                             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
 template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
                                                                     Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, double); \
-template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<__half, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double); \
-template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);
 
-#define CLASSMCG_INIT(floatT,LO,HALOSPIN,STACKS) \
+#define CLASSCG_FLOAT_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
+template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double); 
+
+#define CLASSCG_HALF_INV_INIT(floatT,LO,HALOSPIN,STACKS)  \
+template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<__half, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double); 
+
+#define CLASSMCG_INIT(floatT,LO,HALOSPIN,STACKS)                    \
     template class MultiShiftCG<floatT,true ,LO ,HALOSPIN, STACKS>;
 #define CLASSAMCG_INIT(floatT,STACKS) \
     template class AdvancedMultiShiftCG<floatT, STACKS>;
@@ -714,6 +719,12 @@ template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinor
 
 INIT_PN(CLASSCG_INIT)
 INIT_PLHSN(CLASSCG_INV_INIT)
+#if DOUBLEPREC == 1 && SINGLEPREC ==1
+INIT_PLHSN(CLASSCG_FLOAT_INV_INIT)
+#endif
+#if HALFPREC == 1
+INIT_PLHSN_HALF(CLASSCG_HALF_INV_INIT)
+#endif
 INIT_PLHSN(CLASSMCG_INIT)
 INIT_PN(CLASSAMCG_INIT)
 INIT_PLHSN(CLASSAMCG_INV_INIT)
