@@ -277,6 +277,7 @@ set_SIMULATeQCD_gpu_backend(
     src/base/math/grnd.cpp
     src/gauge/gaugefield_device.cpp
     src/gauge/GaugeAction.cpp
+    src/gauge/gauge_kernels.cpp
     src/base/LatticeContainer.cpp
     src/modules/observables/ColorElectricCorr.cpp
     src/modules/observables/PolyakovLoop.cpp
