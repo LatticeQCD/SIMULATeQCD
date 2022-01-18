@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
         datNameConf << param.measurements_dir() << "conf_ildg" << param.fileExt();
         gauge_field_in.writeconf_ildg(  datNameConf.str(),3,param.prec_out());
     }
-    //else
-    //    rootLogger.error("Output configuration format can only be nersc or ildg");
+    else
+        rootLogger.error("Output configurations format can only be nersc or ildg");
 
     return 0;
 

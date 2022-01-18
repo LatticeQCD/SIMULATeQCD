@@ -224,6 +224,10 @@ void CommunicationBase::root2all(int64_t &value) const {
     MPI_Bcast(&value, 1, MPI_INT64_T, 0, MPI_COMM_WORLD);
 }
 
+void CommunicationBase::root2all(size_t &value) const {
+    MPI_Bcast(&value, 1, MPI_INT32_T, 0, MPI_COMM_WORLD);
+}
+
 void CommunicationBase::root2all(bool &value) const {
     MPI_Bcast(&value, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 }

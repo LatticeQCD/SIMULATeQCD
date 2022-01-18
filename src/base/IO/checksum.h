@@ -59,6 +59,7 @@ void checksum_crc32_combine(Checksum  *checksum_crc32,size_t global_vol, uint32_
 
         checksum_crc32->checksuma ^= cs_crc32_sd[i] << site_id29 | cs_crc32_sd[i] >> (32 - site_id29);
         checksum_crc32->checksumb ^= cs_crc32_sd[i] << site_id31 | cs_crc32_sd[i] >> (32 - site_id31);
+        //std::cout<<checksum_crc32->checksuma<<"\t"<<checksum_crc32->checksumb<<std::endl;
     }
 
 }

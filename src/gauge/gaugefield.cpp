@@ -84,15 +84,13 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::st
 
 }
 
-template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
+template<class floatT,bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor,
                                                                        const std::string &fname, int rows,
                                                                        int diskprec, Endianness en)
 {
     Checksum crc32;
-    uint32_t index=0;
     InitializeChecksum(&crc32);
-    //uint32_t crc32_array_full[GInd::getLatData().globvol4];
     //dynamically allocate memory
     gMemoryPtr<false> crc32_array = MemoryManagement::getMemAt<false>("crc32_array");
     crc32_array->template adjustSize<uint32_t>(GInd::getLatData().globvol4);
@@ -117,9 +115,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
     }
 
     rootLogger.info("Writing ILDG file format: ", fname);
-
     const size_t filesize = ildg.header_size() + GInd::getLatData().globalLattice().mult() * ildg.bytes_per_site();
-
     this->getComm().initIOBinary(fname, filesize, ildg.bytes_per_site(), ildg.header_size(), global, local, WRITE);
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
@@ -127,20 +123,28 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
             for (size_t y = 0; y < GInd::getLatData().ly; y++)
                 for (size_t x = 0; x < GInd::getLatData().lx; x++) {
                     gSite site = GInd::getSite(x, y, z, t);
-                    std::vector<GSU3<floatT>> sitedata;
-                    for (size_t mu = 0; mu < 4; mu++) {
-                        GSU3<floatT> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
-                        sitedata.push_back(tmp);
-                        ildg.put(tmp);
+                    LatticeDimensions localCoor(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
+                    size_t index = GInd::localCoordToGlobalIndex(localCoor);
+                    if(diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float))){
+                        std::vector <GSU3<float>> sitedata;
+                        for (size_t mu = 0; mu < 4; mu++) {
+                            GSU3 <float> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+                            sitedata.push_back(tmp);
+                            ildg.put(tmp);
+                        }
+                        ildg.byte_swap_sitedata((char *) (&sitedata[0]), 4);
+                        crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
                     }
-                    //index=this->getComm().MyRank()*GInd::getLatData().vol4 + site.isite;
-                    index=this->getComm().MyRank()*GInd::getLatData().vol4 + index;
-                    //this->getComm().MyRank() gives mpi rank (GPU #)
-                    //ildg.byte_swap_sitedata((char *)&sitedata[0]);
-                    for (size_t bs = 0; bs < 72; bs++)
-                        Byte_swap((char *)(&sitedata[0]) + bs * sizeof(floatT), sizeof(floatT));
-                    crc32_array_ptr[index] = checksum_crc32_sitedata((char *)(&sitedata[0]), ildg.bytes_per_site());
-                    index++;
+                    else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double))) {
+                        std::vector <GSU3<double>> sitedata;
+                        for (size_t mu = 0; mu < 4; mu++) {
+                            GSU3 <double> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+                            sitedata.push_back(tmp);
+                            ildg.put(tmp);
+                        }
+                        ildg.byte_swap_sitedata((char *) (&sitedata[0]), 8);
+                        crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
+                    }
 
                     if (ildg.end_of_buffer()) {
                         ildg.process_write_data();
@@ -152,12 +156,9 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
     this->getComm().reduce(crc32_array_ptr, GInd::getLatData().globvol4);
     if(this->getComm().IamRoot()){
         checksum_crc32_combine(&crc32, GInd::getLatData().globvol4, crc32_array_ptr);
-        this->getComm().root2all(crc32.checksuma);
-        this->getComm().root2all(crc32.checksumb);
+        //this->getComm().root2all(crc32.checksuma);
+        //this->getComm().root2all(crc32.checksumb);
     }
-    //checksum_crc32_combine(&crc32, GInd::getLatData().globvol4, crc32_array_ptr);
-
-
 
     this->getComm().closeIOBinary();
 
@@ -291,6 +292,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
 
     this->getComm().initIOBinary(fname, 0, ildg.bytes_per_site(), ildg.header_size(), global, local, READ);
 
+    int id=0;
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
         for (size_t z = 0; z < GInd::getLatData().lz; z++)
@@ -304,6 +306,9 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
                         GSU3<floatT> ret = ildg.template get<floatT>();
                         gSite site = GInd::getSite(x, y, z, t);
                         gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+                        if(id==0)
+                            rootLogger.info(ret);
+                        id++;
                     }
                 }
 

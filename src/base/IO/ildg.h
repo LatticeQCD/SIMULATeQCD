@@ -454,7 +454,6 @@ public:
             rootLogger.error("diskprec should be 0, 1 or 2.");
             return false;
         }
-        rootLogger.info("float_size ", float_size);
         su3_size = 2 * 3 * rows * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
 
@@ -613,13 +612,10 @@ public:
         }
         return true;
     }
-    /*template<class floatT>
-    void byte_swap_sitedata(char *sitedata) {
-        char *sitedata_=(char *)(&sitedata);
-        for (size_t bs = 0; bs < 72; bs++) {
-            Byte_swap(sitedata_[bs * sizeof(floatT)], sizeof(floatT));
+    void byte_swap_sitedata(char *sitedata, int n) {
+        for (size_t bs = 0; bs < 72; bs++)
+            Byte_swap(sitedata + bs * n, n);
         }
-    }*/
 };
 
 #endif //SIMULATEQCD_ILDG_H
