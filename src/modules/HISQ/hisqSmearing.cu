@@ -98,33 +98,17 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
     
 
-//    if (mu_f != 0) {
-        if (multiplyPhase) {
+    if (multiplyPhase) {
         staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2,mu_f);
         _gauge_lvl2.iterateOverBulkAllMu(multPhase);
-        }
-//    } else {
-//        if (multiplyPhase) {
-//        staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2);
-//        _gauge_lvl2.iterateOverBulkAllMu(multPhase); 
-//        }
-//    }
+    }
     _gauge_lvl2.updateAll();
     
-//    if ( mu_f !=0 ) {
-        if (multiplyPhase) {
+    if (multiplyPhase) {
         staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1,mu_f);
         _gauge_lvl1.iterateOverBulkAllMu(multPhase);
         _gauge_lvl1.updateAll();
-        }
-//    } else {
-//       if (multiplyPhase) {
-//        staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1);
-//        _gauge_lvl1.iterateOverBulkAllMu(multPhase);
-//        _gauge_lvl1.updateAll(); 
-//                         }
-//    }
-    
+    }
     _gauge_naik.iterateOverBulkAllMu(stapleNaik);
     
     _gauge_naik.updateAll();
