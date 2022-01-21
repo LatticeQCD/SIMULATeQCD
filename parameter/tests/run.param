@@ -10,12 +10,12 @@
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory
-#   no_step_1f: number of steps of strange quark integration
+#   no_step_sf: number of steps of strange quark integration
 #        no_sw: number of steps of gauge integration
 #      residue: residue for inversions
 #        cgMax: max cg steps for multi mass solver
 #   always_acc: always accept configuration in Metropolis
-#     rat_file:
+#     rat_file: rational approximation input file
 #
 #    rand_flag: new random numbers(0)/read in random numbers(1)
 #    rand_file: file name for random numbers and infos

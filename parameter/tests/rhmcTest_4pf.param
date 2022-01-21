@@ -7,6 +7,7 @@
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass
+#        no_pf: Number of pseudo-fermion fields
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory
@@ -15,7 +16,7 @@
 #      residue: residue for inversions
 #        cgMax: max cg steps for multi mass solver
 #   always_acc: always accept configuration in Metropolis
-#     rat_file:
+#     rat_file: rational approximation input file
 #
 #    rand_flag: new random numbers(0)/read in random numbers(1)
 #    rand_file: file name for random numbers and infos

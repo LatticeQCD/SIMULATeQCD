@@ -1,40 +1,53 @@
-# input file for HISQ action
-
-# lattice parameters
-
+#
+# rhmc.param
+#
+# Parameter file for RHMC runs with HISQ.
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#      mass_ud: Light quark mass
+#       mass_s: Strange quark mass
+#        no_pf: Number of pseudo-fermion fields
+#
+#    step_size: step size of trajectory
+#        no_md: number of steps of trajectory
+#   no_step_sf: number of steps of strange quark integration
+#        no_sw: number of steps of gauge integration
+#      residue: residue for inversions
+#        cgMax: max cg steps for multi mass solver
+#   always_acc: always accept configuration in Metropolis
+#     rat_file: rational approximation input file
+#
+#    rand_flag: new random numbers(0)/read in random numbers(1)
+#    rand_file: file name for random numbers and infos
+#         seed: myseed
+#    load_conf: flag_load (0=identity, 1=random, 2=getconf)
+#    Gaugefile: Configuration to be read in
+#    config_nr: configuration number
+#   no_updates: number of updates
+#  write_every: write out configuration every
+#
 Lattice = 32 32 32 8
 Nodes = 1 1 1 1
+mass_ud = 0.0009875
+mass_s  =  0.0790
+beta    =  6.285
+no_pf      = 1
 
-# action parameters
-
-beta    =  6.285          # beta
-mass_s  =  0.0790         # strange quark mass
-mass_ud = 0.0009875       # up/down quark mass
-
-# RHMC parameters
-
-step_size  = 0.07142857 # step size of trajectory
-no_md      = 1          # number of steps of trajectory
-no_step_sf = 1          # number of steps of strange quark integration
-no_sw      = 1          # number of steps of gauge integration
-
-no_pf      = 1          # number of up/down and strange pseudofermion fields
-
-#residue   = 1e-12      # residue for inversions
-
-cgMax  = 20000          # max cg steps for multi mass solver
-always_acc = 0          # always accept configuration in Metropolis
-
+step_size  = 0.07142857
+no_md      = 1
+no_step_sf = 1
+no_sw      = 1
+#residue   = 1e-12
+cgMax  = 20000
+always_acc = 0
 rat_file = ../parameter/sample_eo.rat
 
-# run parameters
-
-rand_flag = 0                                                         # new random numbers(0)/read in random numbers(1)
-rand_file = rand                                                      # file name for random numbers and infos
-seed = 1337                                                           # myseed
-load_conf = 2                                                         # flag_load (0=einhei, 1=random, 2=getconf)
-gauge_file = ../../test_conf/l328f21b6285m0009875m0790a_019.995       # file name for configuration
-config_no = 876                                                       # configuration number
-no_updates = 1                                                        # number of updates
-write_every = 11                                                      # write out configuration every
-
+rand_flag = 0
+rand_file = rand
+seed = 1337
+load_conf = 2
+gauge_file = ../../test_conf/l328f21b6285m0009875m0790a_019.995
+config_no = 995
+no_updates = 1
+write_every = 11
