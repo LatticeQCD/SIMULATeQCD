@@ -24,7 +24,7 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool 
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase, "SHARED_GAUGELVL2");
     
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> smearing(gauge, smeared_W, smeared_X);
-    smearing.SmearAll(_rhmc_param.mu_f());
+    smearing.SmearAll(param.mu_f());
     
     ConjugateGradient<floatT, NStacks> cg;
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_e(smeared_W, smeared_X, 0.0);
