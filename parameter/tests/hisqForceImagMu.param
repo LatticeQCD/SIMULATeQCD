@@ -5,7 +5,7 @@
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass
-#         mu_f: Imaginary chemical potential
+#          mu0: Imaginary chemical potential
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory

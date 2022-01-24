@@ -7,6 +7,7 @@
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass
+#          mu0: Imaginary chemical potential
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory
@@ -39,6 +40,7 @@ Nodes       = 1 1 1 1
 beta        =  5.980
 mass_s      =  0.1173 
 mass_ud     =  0.004346
+mu0         = 0.4
 step_size   = 0.0166666666666666666
 no_md       = 30
 no_step_sf  = 5
