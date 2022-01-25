@@ -21,6 +21,7 @@ template <class floatT, size_t HaloDepth, bool onDevice, CompressionType comp>
 struct compare_links {
     gaugeAccessor<floatT,comp> gL;
     gaugeAccessor<floatT,comp> gR;
+    LatticeParameters param;
 
     compare_links(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeR) : gL(gaugeL.getAccessor()), gR(gaugeR.getAccessor()) {}
 
@@ -41,8 +42,10 @@ struct compare_links {
             sum += norm;
         }
         sum /= 4.0;
-
-        return (sum < 1e-6 ? 0 : 1);
+        /*if (param.prec_out() == 1 || (param.prec_out() == 0 && sizeof(floatT) == sizeof(float)))
+            return (sum < 1e-7 ? 0 : 1);
+        else if (param.prec_out() == 2 || (param.prec_out() == 0 && sizeof(floatT) == sizeof(double)))*/
+            return (sum < 1e-15 ? 0 : 1);
     }
 };
 
@@ -82,24 +85,27 @@ int main(int argc, char *argv[]){
     initIndexer(HaloDepth,param,commBase);
 
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge( commBase);
-	//Gaugefield<PREC, USE_GPU,HaloDepth> gauge_in_ildg( commBase);
-	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test(commBase);
+	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test( commBase);
+	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test1(commBase);
 
     rootLogger.info("Read configuration");
 
 	gauge.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB");
-	//gauge_in_ildg.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB_test");
+	//gauge.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB");
 
 	rootLogger.info("Store Lattice");
 
 	gauge.updateAll();
     //gauge_in_ildg.updateAll();
 	gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
-    gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB_test",3,2);
+    gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
 	rootLogger.info("Read test configuration");
 
-	gauge_test.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
+	//gauge_test.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
+	gauge_test.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test");
+	gauge_test.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
+	gauge_test1.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_ildg.l8t4b3360_bieHB_test");
 
 	gauge_test.updateAll();
 	rootLogger.info("Testing the configuration");
@@ -113,9 +119,9 @@ int main(int argc, char *argv[]){
     PREC plaq_test = gAction_test.plaquette();
 
 	if(abs(plaq - plaq_test) > error){
-		rootLogger.info(CoutColors::red,  "writeconf_nersc failed: Computed plaquettes are not equal " ,  plaq ,  " != " ,  plaq_test ,  CoutColors::reset);
+		rootLogger.info(CoutColors::red, "writeconf failed: Computed plaquettes are not equal ", plaq ," != ", plaq_test ,  CoutColors::reset);
 	} else {
-	    rootLogger.info(CoutColors::green , "writeconf_nersc succeeded: Computed plaquettes are equal" ,  CoutColors::reset);
+	    rootLogger.info(CoutColors::green, "writeconf succeeded: Computed plaquettes are equal", CoutColors::reset);
 	}
 
     PREC clov = gAction.clover();
@@ -123,18 +129,28 @@ int main(int argc, char *argv[]){
     PREC clov_test = gAction_test.clover();
 
 	if(abs(clov - clov_test) > error){
-		rootLogger.info(CoutColors::red,  "writeconf_nersc failed: Computed clovers are not equal " ,  clov ,  " != " ,  clov_test ,  CoutColors::reset);
+		rootLogger.info(CoutColors::red,  "writeconf failed: Computed clovers are not equal ", clov, " != ", clov_test ,  CoutColors::reset);
 	} else {
-	    rootLogger.info(CoutColors::green , "writeconf_nersc succeeded: Computed clovers are equal " ,  CoutColors::reset);
+	    rootLogger.info(CoutColors::green , "writeconf succeeded: Computed clovers are equal ", CoutColors::reset);
 	}
 
     bool pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge,gauge_test);
 
     if(!pass){
-		rootLogger.info(CoutColors::red ,  "writeconf_nersc failed: Binaries are not equal." ,  CoutColors::reset);
+		rootLogger.info(CoutColors::red ,  "writeconf failed: Binaries are not equal.", CoutColors::reset);
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
 	} else {
-		rootLogger.info(CoutColors::green , "Congratulations, writeconf_nersc worked!" ,  CoutColors::reset);
+		rootLogger.info(CoutColors::green , "Congratulations, writeconf worked!", CoutColors::reset);
+		remove("../test_conf/test_l20t20b06498a_nersc.302500");
+    }
+
+    pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge_test,gauge_test1);
+
+    if(!pass){
+		rootLogger.info(CoutColors::red ,  "writeconf failed: Binaries are not equal.", CoutColors::reset);
+		remove("../test_conf/test_l20t20b06498a_nersc.302500");
+	} else {
+		rootLogger.info(CoutColors::green , "Congratulations, writeconf worked!", CoutColors::reset);
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
     }
    

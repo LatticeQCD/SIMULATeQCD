@@ -55,9 +55,9 @@ public:
     void readconf_nersc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
     /// read in a ILDG file
-    void readconf_ildg(const std::string &fname);
+    void readconf_ildg(const std::string &fname, Endianness e = ENDIAN_BIG);
 
-    void readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
+    void readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname, Endianness e = ENDIAN_BIG);
 
     /// read in a MILC file
     void readconf_milc(const std::string &fname);
