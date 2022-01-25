@@ -31,14 +31,26 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
         strpair pair(line);
         if (pair.key.empty())
             continue;
+        bool found_match = false;
         for (auto & i : *this)
-            i->match(pair);
+            if (i->match(pair)){
+                found_match = true;
+            }
+        if (not found_match){
+            throw std::runtime_error(stdLogger.fatal("# ", pair.key, " is not a known parameter."));
+        }
     }
 
     for (int i=0; i<argc; i++) {
         strpair pair(argv[i]);
+        bool found_match = false;
         for (auto & it : *this)
-            it->match(pair);
+            if (it->match(pair)){
+                found_match = true;
+            }
+        if (not found_match) {
+            throw std::runtime_error(stdLogger.fatal("# ", pair.key, " is not a known parameter."));
+        }
     }
 
     bool abort = false;
