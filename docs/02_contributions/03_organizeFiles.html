@@ -95,12 +95,12 @@ For example, <code class="docutils literal notranslate"><span class="pre">src/ba
 <p>If you want to add a new executable, be it an application, a test, a profiler, etc., you should save it as <code class="docutils literal notranslate"><span class="pre">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cu</span></code>.
 If you have added additional <code class="docutils literal notranslate"><span class="pre">*.cpp</span></code> or <code class="docutils literal notranslate"><span class="pre">*.cu</span></code> or header files which are needed by your main, you should save them in a new module folder, e.g. <code class="docutils literal notranslate"><span class="pre">src/modules/&lt;exec_name&gt;/&lt;meaningfulName&gt;.cpp</span></code> and add them to the source files
 list in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> (root folder):</p>
-<div class="highlight-Cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_FILES_&lt;exec_name&gt;</span> <span class="s">&lt;path/to/file1.cu&gt;</span> <span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
-<span class="nb">add_SIMULATeQCD_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cu</span>
-                           <span class="o">${</span><span class="nv">SOURCE_FILES_&lt;exec_name&gt;</span><span class="o">}</span><span class="p">)</span>
-<span class="nb">set_SIMULATeQCD_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PROPERTIES</span> <span class="s">RUNTIME_OUTPUT_DIRECTORY</span> <span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
-<span class="nb">SIMULATeQCD_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PRIVATE</span> <span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
-<span class="nb">add_to_compound_SIMULATeQCD_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span> <span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
+<div class="highlight-Cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_FILES_&lt;exec_name&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file1.cu&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
+<span class="nb">add_SIMULATeQCD_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cu</span>
+<span class="w">                           </span><span class="o">${</span><span class="nv">SOURCE_FILES_&lt;exec_name&gt;</span><span class="o">}</span><span class="p">)</span>
+<span class="nb">set_SIMULATeQCD_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">PROPERTIES</span><span class="w"> </span><span class="s">RUNTIME_OUTPUT_DIRECTORY</span><span class="w"> </span><span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
+<span class="nb">SIMULATeQCD_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
+<span class="nb">add_to_compound_SIMULATeQCD_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span><span class="w"> </span><span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Header files should NOT be listed there!</p>
@@ -124,7 +124,7 @@ or
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Lukas Mazur.</p>
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -1,30 +1,127 @@
 # Gaugefield
 
-
-
-Gaugefield provides a template who has data member `_lattice` to store the gauge links for all the sites on a 4D lattice. Each link is a SU$($3$)$ matrix of data type `GSU3` . One could use the indexer `GIndexer<All, HaloDepth>` to reach any link, including those in the halo. Usually before or after a lattice calculation one needs to read in or write out the gauge fields from/to a file, and this can be done by the `readconf_nersc` and `writeconf_nersc` function members of this template. @writeconf_nersc@ takes the optional parameter @diskprec@, which can be set to either 1 or 2 for single or double precision, respectively. There are also several function members 
+The `Gaugefield` class provides a template who has data member `_lattice` to store the 
+gauge links for all 
+the sites on a 4D lattice. Each link is an SU$($3$)$ matrix of data type `GSU3`. One could use 
+the indexer `GIndexer<All, HaloDepth>` to reach any link, including those in the halo. 
+There are also several function members 
 
 * `one();`
 * `random(uint4* rand_state);`
 * `gauss(uint4* rand_state);`
 
-initiating the gauge links to some special numbers like unity, random numbers or gaussian algebra elements. Function `swap_memory(Gaugefield<floatT, onDevice, HaloDepth,comp> &gauge)` could swap two gauge fields `_lattice` and `gauge`.  Since the gauge links `_lattice` are `protected`, one can only visit them via `getAccessor()`. Gaugefield template also provides overloading for `=`, so that one could easily copy one gauge field to another. And the gauge links should always be unitary, so a `su3latunitarize` function is given. 
+initiating the gauge links to some special numbers like unity, random numbers or Gaussian 
+algebra elements. Function `swap_memory(Gaugefield<floatT, onDevice, HaloDepth,comp> &gauge)` 
+could swap two gauge fields `_lattice` and `gauge`.  Since the gauge links `_lattice` are 
+`protected`, one can only visit them via `getAccessor()`. `Gaugefield` also provides 
+overloading for `=`, so that one could easily copy one gauge field to another. And the gauge 
+links should always be unitary, so a `su3latunitarize` function is given. 
 
-Besides all the functions mentioned above, there are a bunch of  convenient iterators with which one could perform operations on each of the link considered:
+Besides all the functions mentioned above, there are a bunch of convenient iterators with which 
+one could perform operations on each of the link considered:
 ```C++
-    * void iterateOverFullAllMu(Operator op); //perform "op" on all links including those in the halo in all 4 (spacetime) directions.
+    * void iterateOverFullAllMu(Functor op); //perform "op" on all links including those in the halo in all 4 (spacetime) directions.
 
-    * deviceStream<onDevice> iterateOverBulkAllMu(Operator op, bool useStream = false); //perform "op" on all links excluding those in the halo in all 4 (spacetime) directions.
+    * deviceStream<onDevice> iterateOverBulkAllMu(Functor op, bool useStream = false); //perform "op" on all links excluding those in the halo in all 4 (spacetime) directions.
 
-    * void iterateOverFullLoopMu(Operator op); //perform "op" on all links including those in the halo for the first "Nloops" (default 4) directions.
+    * void iterateOverFullLoopMu(Functor op); //perform "op" on all links including those in the halo for the first "Nloops" (default 4) directions.
 
-    * void iterateOverBulkLoopMu(Operator op); //perform "op" on all links excluding those in the halo for the first "Nloops" (default 4) directions.
+    * void iterateOverBulkLoopMu(Functor op); //perform "op" on all links excluding those in the halo for the first "Nloops" (default 4) directions.
 
+    * void iterateOverFullAtMu(Functor op);  //perform "op" on all links including those in the halo in a specific direction "Mu".
 
-    * void iterateOverFullAtMu(Operator op);  //perform "op" on all links including those in the halo in a specific direction "Mu".
-
-    * void iterateOverBulkAtMu(Operator op); //perform "op" on all links excluding those in the halo in a specific direction "Mu".
+    * void iterateOverBulkAtMu(Functor op); //perform "op" on all links excluding those in the halo in a specific direction "Mu".
 
     * void iterateWithConst(Object ob); //set all links including those in the halo in all 4 (spacetime) directions to a constant value "ob".
 ```
-If the above explanation does not clear up your confusion, write an email to htshu@physik.uni-bielefeld.de
+
+## Reading and writing Gaugefields
+
+Usually 
+before or after a lattice calculation one needs to read in or write out the gauge fields from/to 
+a file, and this can be done by the `readconf_*` and `writeconf_*` function members of 
+this template. These the optional parameter @diskprec@, which can be set to 
+either 1 or 2 for single or double precision, respectively.
+
+In lattice QCD calculations, there are several popular gauge configuration formats on the market.
+These can differ in several ways, including how their header is implemented and how the to-be-saved
+`Gaugefield` object is converted to binary. At this stage we should stress: **The ILDG format is
+the preferred format for storing gauge configurations.** We will discuss the various available
+formats in the following.
+
+### ILDG
+
+The International Lattice Data Grid (ILDG) format is the preferred format for saving gauge
+configurations. The reasons for this are
+1. The ILDG is the largest attempt by the lattice community to make gauge configurations generated by groups around the world publicly available, and we strive to be part of that community. Therefore we must use their configuration format.
+2. The ILDG format is perhaps the most descriptive and safe (in the sense of being sensitive to corrupted configurations) format available to the lattice community.
+More information about the ILDG effort can be found [here](https://hpc.desy.de/ildg/). You may
+also be interested in [this](https://www.sciencedirect.com/science/article/abs/pii/S0010465511000476) ILDG publication.
+
+The ILDG format was originally intended as a format for storing gauge configurations, but in principle
+this format can be extended to other kinds of data, for instance correlation functions. A file saved
+in this format consists of several parts packaged using the Lattice QCD Interchange Message
+Encapsulation (LIME) format. LIME is organized as follows:
+- One encapsulates ASCII or binary data into _records_.
+- The records are packaged into _messages_. 
+
+The `ildg-format` record is an XML document with some set of non-mutable parameters needed to 
+read the binary. Here is an example:
+```XML
+<?xml version="1.0" encoding="UTF-8"?>
+<ildgFormat xmlns="http://www.lqcd.org/ildg"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://www.lqcd.org/ildg/filefmt.xsd">
+  <version> 1.0 </version>
+  <field> su3gauge </field>
+  <precision> 32 </precision>
+  <lx> 20 </lx> <ly> 20 </ly> <lz> 20 </lz> <lt> 64 </lt>
+</ildgFormat>
+```
+The `ildg-binary-data` record is the stored binary data. It is a sequence of IEEE floating
+point numbers. The precision is given in the `ildg-format` record. The endianness is big. 
+In this format a `Gaugefield` is stored as an 8 (or 7) dimensional array of floating point
+(or complex) numbers. The dimensions ordered from slowest to fastest running index are
+1. site index $t$
+2. site index $z$
+3. site index $y$
+4. site index $x$
+5. direction index $\mu$
+6. color index $a$
+7. color index $b$
+8. index indicating real (0) or imaginary (1) part 
+
+#### More about LIME
+
+A LIME record is packed as follows:
+1. A 144-byte header
+2. The data (maximum of $2^{63}$ bytes)
+3. Some null padding (0-7 bytes as needed)
+
+The header is organized into 18 64-bit (8 byte) _words_ as follows:
+
+| word | content|
+|:----:|:-------|
+|0     | subheader |
+|1     | data length in bytes|
+|2-17  | 128 byte LIME-type |
+
+where the subheader consists of
+
+| bits | content|
+|:----:|:-------|
+|0-31  | LIME magic number|
+|32-47 | LIME file version number|
+|48    | message begin bit|
+|49    | message end bit|
+|50-63 | reserved|
+
+The `long int` LIME magic number, $1164413355_{10}=456789ab_{16}$, is used to identify
+a record in LIME format. The version number is a `short int`. The three integer numbers in
+the header, i.e. the magic number, version number, and data length, are written in
+IEEE big-endian byte order for their data types, `long`, `short`, and
+`long long`, respectively.
+
+### MILC
+
+### NERSC

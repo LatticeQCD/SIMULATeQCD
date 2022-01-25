@@ -88,31 +88,162 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="gaugefield">
 <h1>Gaugefield<a class="headerlink" href="#gaugefield" title="Permalink to this headline"></a></h1>
-<p>Gaugefield provides a template who has data member <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> to store the gauge links for all the sites on a 4D lattice. Each link is a SU<span class="math notranslate nohighlight">\((\)</span>3<span class="math notranslate nohighlight">\()\)</span> matrix of data type <code class="docutils literal notranslate"><span class="pre">GSU3</span></code> . One could use the indexer <code class="docutils literal notranslate"><span class="pre">GIndexer&lt;All,</span> <span class="pre">HaloDepth&gt;</span></code> to reach any link, including those in the halo. Usually before or after a lattice calculation one needs to read in or write out the gauge fields from/to a file, and this can be done by the <code class="docutils literal notranslate"><span class="pre">readconf_nersc</span></code> and <code class="docutils literal notranslate"><span class="pre">writeconf_nersc</span></code> function members of this template. &#64;writeconf_nersc&#64; takes the optional parameter &#64;diskprec&#64;, which can be set to either 1 or 2 for single or double precision, respectively. There are also several function members</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> class provides a template who has data member <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> to store the
+gauge links for all
+the sites on a 4D lattice. Each link is an SU<span class="math notranslate nohighlight">\((\)</span>3<span class="math notranslate nohighlight">\()\)</span> matrix of data type <code class="docutils literal notranslate"><span class="pre">GSU3</span></code>. One could use
+the indexer <code class="docutils literal notranslate"><span class="pre">GIndexer&lt;All,</span> <span class="pre">HaloDepth&gt;</span></code> to reach any link, including those in the halo.
+There are also several function members</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">one();</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">random(uint4*</span> <span class="pre">rand_state);</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">gauss(uint4*</span> <span class="pre">rand_state);</span></code></p></li>
 </ul>
-<p>initiating the gauge links to some special numbers like unity, random numbers or gaussian algebra elements. Function <code class="docutils literal notranslate"><span class="pre">swap_memory(Gaugefield&lt;floatT,</span> <span class="pre">onDevice,</span> <span class="pre">HaloDepth,comp&gt;</span> <span class="pre">&amp;gauge)</span></code> could swap two gauge fields <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> and <code class="docutils literal notranslate"><span class="pre">gauge</span></code>.  Since the gauge links <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> are <code class="docutils literal notranslate"><span class="pre">protected</span></code>, one can only visit them via <code class="docutils literal notranslate"><span class="pre">getAccessor()</span></code>. Gaugefield template also provides overloading for <code class="docutils literal notranslate"><span class="pre">=</span></code>, so that one could easily copy one gauge field to another. And the gauge links should always be unitary, so a <code class="docutils literal notranslate"><span class="pre">su3latunitarize</span></code> function is given.</p>
-<p>Besides all the functions mentioned above, there are a bunch of  convenient iterators with which one could perform operations on each of the link considered:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullAllMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo in all 4 (spacetime) directions.</span>
+<p>initiating the gauge links to some special numbers like unity, random numbers or Gaussian
+algebra elements. Function <code class="docutils literal notranslate"><span class="pre">swap_memory(Gaugefield&lt;floatT,</span> <span class="pre">onDevice,</span> <span class="pre">HaloDepth,comp&gt;</span> <span class="pre">&amp;gauge)</span></code>
+could swap two gauge fields <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> and <code class="docutils literal notranslate"><span class="pre">gauge</span></code>.  Since the gauge links <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> are
+<code class="docutils literal notranslate"><span class="pre">protected</span></code>, one can only visit them via <code class="docutils literal notranslate"><span class="pre">getAccessor()</span></code>. <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> also provides
+overloading for <code class="docutils literal notranslate"><span class="pre">=</span></code>, so that one could easily copy one gauge field to another. And the gauge
+links should always be unitary, so a <code class="docutils literal notranslate"><span class="pre">su3latunitarize</span></code> function is given.</p>
+<p>Besides all the functions mentioned above, there are a bunch of convenient iterators with which
+one could perform operations on each of the link considered:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullAllMu</span><span class="p">(</span><span class="n">Functor</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo in all 4 (spacetime) directions.</span>
 
-<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="n">deviceStream</span><span class="o">&lt;</span><span class="n">onDevice</span><span class="o">&gt;</span><span class="w"> </span><span class="n">iterateOverBulkAllMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">useStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo in all 4 (spacetime) directions.</span>
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="n">deviceStream</span><span class="o">&lt;</span><span class="n">onDevice</span><span class="o">&gt;</span><span class="w"> </span><span class="n">iterateOverBulkAllMu</span><span class="p">(</span><span class="n">Functor</span><span class="w"> </span><span class="n">op</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">useStream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo in all 4 (spacetime) directions.</span>
 
-<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullLoopMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo for the first &quot;Nloops&quot; (default 4) directions.</span>
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullLoopMu</span><span class="p">(</span><span class="n">Functor</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo for the first &quot;Nloops&quot; (default 4) directions.</span>
 
-<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverBulkLoopMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo for the first &quot;Nloops&quot; (default 4) directions.</span>
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverBulkLoopMu</span><span class="p">(</span><span class="n">Functor</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo for the first &quot;Nloops&quot; (default 4) directions.</span>
 
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullAtMu</span><span class="p">(</span><span class="n">Functor</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w">  </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo in a specific direction &quot;Mu&quot;.</span>
 
-<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverFullAtMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w">  </span><span class="c1">//perform &quot;op&quot; on all links including those in the halo in a specific direction &quot;Mu&quot;.</span>
-
-<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverBulkAtMu</span><span class="p">(</span><span class="n">Operator</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo in a specific direction &quot;Mu&quot;.</span>
+<span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateOverBulkAtMu</span><span class="p">(</span><span class="n">Functor</span><span class="w"> </span><span class="n">op</span><span class="p">);</span><span class="w"> </span><span class="c1">//perform &quot;op&quot; on all links excluding those in the halo in a specific direction &quot;Mu&quot;.</span>
 
 <span class="w">    </span><span class="o">*</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">iterateWithConst</span><span class="p">(</span><span class="n">Object</span><span class="w"> </span><span class="n">ob</span><span class="p">);</span><span class="w"> </span><span class="c1">//set all links including those in the halo in all 4 (spacetime) directions to a constant value &quot;ob&quot;.</span>
 </pre></div>
 </div>
-<p>If the above explanation does not clear up your confusion, write an email to htshu&#64;physik.uni-bielefeld.de</p>
+<section id="reading-and-writing-gaugefields">
+<h2>Reading and writing Gaugefields<a class="headerlink" href="#reading-and-writing-gaugefields" title="Permalink to this headline"></a></h2>
+<p>Usually
+before or after a lattice calculation one needs to read in or write out the gauge fields from/to
+a file, and this can be done by the <code class="docutils literal notranslate"><span class="pre">readconf_*</span></code> and <code class="docutils literal notranslate"><span class="pre">writeconf_*</span></code> function members of
+this template. These the optional parameter &#64;diskprec&#64;, which can be set to
+either 1 or 2 for single or double precision, respectively.</p>
+<p>In lattice QCD calculations, there are several popular gauge configuration formats on the market.
+These can differ in several ways, including how their header is implemented and how the to-be-saved
+<code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> object is converted to binary. At this stage we should stress: <strong>The ILDG format is
+the preferred format for storing gauge configurations.</strong> We will discuss the various available
+formats in the following.</p>
+<section id="ildg">
+<h3>ILDG<a class="headerlink" href="#ildg" title="Permalink to this headline"></a></h3>
+<p>The International Lattice Data Grid (ILDG) format is the preferred format for saving gauge
+configurations. The reasons for this are</p>
+<ol class="simple">
+<li><p>The ILDG is the largest attempt by the lattice community to make gauge configurations generated by groups around the world publicly available, and we strive to be part of that community. Therefore we must use their configuration format.</p></li>
+<li><p>The ILDG format is perhaps the most descriptive and safe (in the sense of being sensitive to corrupted configurations) format available to the lattice community.
+More information about the ILDG effort can be found <a class="reference external" href="https://hpc.desy.de/ildg/">here</a>. You may
+also be interested in <a class="reference external" href="https://www.sciencedirect.com/science/article/abs/pii/S0010465511000476">this</a> ILDG publication.</p></li>
+</ol>
+<p>The ILDG format was originally intended as a format for storing gauge configurations, but in principle
+this format can be extended to other kinds of data, for instance correlation functions. A file saved
+in this format consists of several parts packaged using the Lattice QCD Interchange Message
+Encapsulation (LIME) format. LIME is organized as follows:</p>
+<ul class="simple">
+<li><p>One encapsulates ASCII or binary data into <em>records</em>.</p></li>
+<li><p>The records are packaged into <em>messages</em>.</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">ildg-format</span></code> record is an XML document with some set of non-mutable parameters needed to
+read the binary. Here is an example:</p>
+<div class="highlight-XML notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
+<span class="nt">&lt;ildgFormat</span> <span class="na">xmlns=</span><span class="s">&quot;http://www.lqcd.org/ildg&quot;</span>
+            <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+            <span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.lqcd.org/ildg/filefmt.xsd&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;version&gt;</span> 1.0 <span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;field&gt;</span> su3gauge <span class="nt">&lt;/field&gt;</span>
+  <span class="nt">&lt;precision&gt;</span> 32 <span class="nt">&lt;/precision&gt;</span>
+  <span class="nt">&lt;lx&gt;</span> 20 <span class="nt">&lt;/lx&gt;</span> <span class="nt">&lt;ly&gt;</span> 20 <span class="nt">&lt;/ly&gt;</span> <span class="nt">&lt;lz&gt;</span> 20 <span class="nt">&lt;/lz&gt;</span> <span class="nt">&lt;lt&gt;</span> 64 <span class="nt">&lt;/lt&gt;</span>
+<span class="nt">&lt;/ildgFormat&gt;</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">ildg-binary-data</span></code> record is the stored binary data. It is a sequence of IEEE floating
+point numbers. The precision is given in the <code class="docutils literal notranslate"><span class="pre">ildg-format</span></code> record. The endianness is big.
+In this format a <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> is stored as an 8 (or 7) dimensional array of floating point
+(or complex) numbers. The dimensions ordered from slowest to fastest running index are</p>
+<ol class="simple">
+<li><p>site index <span class="math notranslate nohighlight">\(t\)</span></p></li>
+<li><p>site index <span class="math notranslate nohighlight">\(z\)</span></p></li>
+<li><p>site index <span class="math notranslate nohighlight">\(y\)</span></p></li>
+<li><p>site index <span class="math notranslate nohighlight">\(x\)</span></p></li>
+<li><p>direction index <span class="math notranslate nohighlight">\(\mu\)</span></p></li>
+<li><p>color index <span class="math notranslate nohighlight">\(a\)</span></p></li>
+<li><p>color index <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<li><p>index indicating real (0) or imaginary (1) part</p></li>
+</ol>
+<section id="more-about-lime">
+<h4>More about LIME<a class="headerlink" href="#more-about-lime" title="Permalink to this headline"></a></h4>
+<p>A LIME record is packed as follows:</p>
+<ol class="simple">
+<li><p>A 144-byte header</p></li>
+<li><p>The data (maximum of <span class="math notranslate nohighlight">\(2^{63}\)</span> bytes)</p></li>
+<li><p>Some null padding (0-7 bytes as needed)</p></li>
+</ol>
+<p>The header is organized into 18 64-bit (8 byte) <em>words</em> as follows:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:center head"><p>word</p></th>
+<th class="text-align:left head"><p>content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:center"><p>0</p></td>
+<td class="text-align:left"><p>subheader</p></td>
+</tr>
+<tr class="row-odd"><td class="text-align:center"><p>1</p></td>
+<td class="text-align:left"><p>data length in bytes</p></td>
+</tr>
+<tr class="row-even"><td class="text-align:center"><p>2-17</p></td>
+<td class="text-align:left"><p>128 byte LIME-type</p></td>
+</tr>
+</tbody>
+</table>
+<p>where the subheader consists of</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:center head"><p>bits</p></th>
+<th class="text-align:left head"><p>content</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:center"><p>0-31</p></td>
+<td class="text-align:left"><p>LIME magic number</p></td>
+</tr>
+<tr class="row-odd"><td class="text-align:center"><p>32-47</p></td>
+<td class="text-align:left"><p>LIME file version number</p></td>
+</tr>
+<tr class="row-even"><td class="text-align:center"><p>48</p></td>
+<td class="text-align:left"><p>message begin bit</p></td>
+</tr>
+<tr class="row-odd"><td class="text-align:center"><p>49</p></td>
+<td class="text-align:left"><p>message end bit</p></td>
+</tr>
+<tr class="row-even"><td class="text-align:center"><p>50-63</p></td>
+<td class="text-align:left"><p>reserved</p></td>
+</tr>
+</tbody>
+</table>
+<p>The <code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">int</span></code> LIME magic number, <span class="math notranslate nohighlight">\(1164413355_{10}=456789ab_{16}\)</span>, is used to identify
+a record in LIME format. The version number is a <code class="docutils literal notranslate"><span class="pre">short</span> <span class="pre">int</span></code>. The three integer numbers in
+the header, i.e. the magic number, version number, and data length, are written in
+IEEE big-endian byte order for their data types, <code class="docutils literal notranslate"><span class="pre">long</span></code>, <code class="docutils literal notranslate"><span class="pre">short</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">long</span></code>, respectively.</p>
+</section>
+</section>
+<section id="milc">
+<h3>MILC<a class="headerlink" href="#milc" title="Permalink to this headline"></a></h3>
+</section>
+<section id="nersc">
+<h3>NERSC<a class="headerlink" href="#nersc" title="Permalink to this headline"></a></h3>
+</section>
+</section>
 </section>
 
 
@@ -123,7 +254,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, Lukas Mazur.</p>
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
