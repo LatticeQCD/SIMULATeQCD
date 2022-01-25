@@ -18,6 +18,8 @@ struct strpair {
         size_t pos = line.find_first_of('=');
         if (pos == std::string::npos)
             return; //key will be empty, so it will not match anything
+        if (line[line.find_first_not_of(' ')] == '#') // if first non-space character is '#' then it's a comment
+            return;
         key = line.substr(0, pos);
         key.erase(key.find_last_not_of(" \t\r\n\v\f") + 1); //remove whitespaces at end
         
