@@ -49,7 +49,7 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
                 found_match = true;
             }
         if (not found_match) {
-            throw std::runtime_error(stdLogger.fatal("# ", pair.key, " is not a known parameter."));
+            throw std::runtime_error(stdLogger.fatal(pair.key, " is not a known parameter."));
         }
     }
 
