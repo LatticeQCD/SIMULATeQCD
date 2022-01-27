@@ -24,7 +24,10 @@ void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt glo
     gpuErr = gpuMemcpyToSymbol(globLatDataGPU, &latDat, sizeof(LatticeData[MAXHALO+1]), 0, gpuMemcpyHostToDevice);
     if (gpuErr)
         GpuError("Failed to send LatticeData to device", gpuErr);
-    gpuDeviceSynchronize();
+
+    gpuErr = gpuDeviceSynchronize();
+    if (gpuErr)
+        GpuError("initGPUBulkIndexer: gpuDeviceSynchronize failed", gpuErr);
 }
 
 
@@ -45,10 +48,14 @@ void initGPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int
     gpuErr = gpuMemcpyToSymbol(globHalDataGPU, &halDat, sizeof(HaloData[MAXHALO+1]), 0, gpuMemcpyHostToDevice);
     if (gpuErr)
         GpuError("Failed to send HaloData to device", gpuErr);
-    gpuDeviceSynchronize();
+    gpuErr = gpuDeviceSynchronize();
+    if (gpuErr)
+        GpuError("initGPUHaloIndexer: gpuDeviceSynchronize failed (1)", gpuErr);
 
     gpuErr = gpuMemcpyToSymbol(globHalDataGPUReduced, &halDatReduced, sizeof(HaloData[MAXHALO+1]), 0, gpuMemcpyHostToDevice);
     if (gpuErr)
         GpuError("Failed to send HaloData to device", gpuErr);
-    gpuDeviceSynchronize();
+    gpuErr = gpuDeviceSynchronize();
+    if (gpuErr)
+        GpuError("initGPUHaloIndexer: gpuDeviceSynchronize failed (2)", gpuErr);
 }

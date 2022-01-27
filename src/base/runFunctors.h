@@ -662,7 +662,7 @@ struct CalcGSiteLoopStackFull {
 //! use this if you don't actually need to read in from any site, for example when initializing point sources
 template<Layout LatticeLayout, size_t HaloDepth>
 struct ReadDummy {
-    template<typename... Args> inline __host__ __device__ gSite operator()(Args... args) {
+    template<typename... Args> inline __host__ __device__ gSite operator()(__attribute__((unused)) Args... args) {
         return GIndexer<LatticeLayout, HaloDepth>::getSite(99999,99999,99999,99999);
     }
 };
@@ -705,7 +705,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtFixedSite {
     const gSite _fixed_site;
     explicit WriteAtFixedSite(const gSite mysite) : _fixed_site(mysite) {}
-    inline __host__ __device__ gSite operator()(const gSite dummy) {
+    inline __host__ __device__ gSite operator()(__attribute__((unused)) const gSite dummy) {
         return _fixed_site;
     }
 };

@@ -56,16 +56,21 @@ if (USE_CUDA OR USE_HIP_NVIDIA)
 endif()
 
 if (USE_HIP)
+    set(HIP_PATH "" CACHE STRING "Specify path to the HIP installation.")
 
-    set(CMAKE_MODULE_PATH "$ENV{HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
+    if(NOT HIP_PATH)
+        message(FATAL_ERROR "No HIP_PATH set!")
+    endif()
+
+    set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
     find_package(HIP REQUIRED)
-    find_package(hipcub REQUIRED CONFIG PATHS "$ENV{HIP_PATH}/hipcub/")
+    find_package(hipcub REQUIRED CONFIG PATHS "${HIP_PATH}/hipcub/")
 
     if(USE_HIP_AMD)
-        find_package(rocprim REQUIRED CONFIG PATHS "$ENV{HIP_PATH}/rocprim")
+        find_package(rocprim REQUIRED CONFIG PATHS "${HIP_PATH}/rocprim")
     endif()
     
-    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};$ENV{HIP_PATH}/include;${HIP_INCLUDE_DIRS}")
+    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_PATH}/include;${HIP_INCLUDE_DIRS}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${HIP_LIBRARIES}")
 endif()
 
@@ -116,9 +121,9 @@ elseif (USE_HIP_AMD)
     set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
 
 elseif (USE_HIP_NVIDIA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -Wno-unused-result -Wno-invalid-noreturn")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
 
-    add_definitions(-D__HIP_PLATFORM_NVIDIA__ -D__HIP_PLATFORM_NVCC__)
+    add_definitions(-D__HIP_PLATFORM_NVIDIA__ -D__HIP_PLATFORM_NVCC__ -D__HIP_NODISCARD)
     set(HIP_NVCC_FLAGS "${HIP_NVCC_FLAGS} -O3 -std=c++17 -D__HIP_PLATFORM_NVCC__ -D__HIP_PLATFORM_NVIDIA__ --generate-code arch=compute_${ARCHITECTURE},code=sm_${ARCHITECTURE} --generate-code arch=compute_${ARCHITECTURE},code=compute_${ARCHITECTURE} -rdc=true")
     set(NVCC_LINK_FLAGS "${NVCC_LINK_FLAGS} -rdc=true")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3")

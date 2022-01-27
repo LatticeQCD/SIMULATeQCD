@@ -141,6 +141,8 @@
 #define gpuStreamWaitEvent               hipStreamWaitEvent
 #define gpuSuccess                       hipSuccess
 
+// As soon as HIP supports these two functions below, we need to replace them!
+//
 [[nodiscard]] inline gpuError_t hipDummyFunction1(__attribute__((unused)) gpuIpcEventHandle_t* handle, __attribute__((unused)) hipEvent_t event) {
     __attribute__((unused)) hipError_t temp = hipErrorUnknown;
     return temp;
