@@ -24,7 +24,10 @@ bool ParameterList::readfile(const CommunicationBase& comm, const std::string& f
     return readstream(str,argc-2,argv+2);
 }
 
-bool ParameterList::readstream(std::istream& in, int argc, char** argv, const std::string& prefix) {
+bool ParameterList::readstream(std::istream& in, int argc, char** argv, const std::string& prefix,
+                               const bool ignore_unknown) {
+    std::string error_msg_suffix(" is either not a known parameter or its value could not be cast into the correct "
+                                 "data type.");
     while (in.good()) {
         std::string line;
         getline(in, line);
@@ -36,8 +39,8 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
             if (i->match(pair)){
                 found_match = true;
             }
-        if (not found_match){
-            throw std::runtime_error(stdLogger.fatal(pair.key, " is not a known parameter."));
+        if (not found_match and not ignore_unknown){
+            throw std::runtime_error(stdLogger.fatal(pair.key, error_msg_suffix));
         }
     }
 
@@ -48,8 +51,8 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
             if (it->match(pair)){
                 found_match = true;
             }
-        if (not found_match) {
-            throw std::runtime_error(stdLogger.fatal(pair.key, " is not a known parameter."));
+        if (not found_match and not ignore_unknown) {
+            throw std::runtime_error(stdLogger.fatal(pair.key, error_msg_suffix));
         }
     }
 

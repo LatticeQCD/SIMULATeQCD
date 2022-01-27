@@ -239,7 +239,8 @@ class CommunicationBase;
 //! see example LatticeParameters on how to use this
 class ParameterList : protected std::list<ParameterBase *> {
 private:
-    bool readstream(std::istream &, int argc, char **argv, const std::string& prefix = "PARAM");
+    bool readstream(std::istream &, int argc, char **argv, const std::string& prefix = "PARAM",
+                    bool ignore_unknown = false);
 
 public:
     //! Add a parameter to the internal list
@@ -274,8 +275,8 @@ public:
     /** Read parameters from stream, output them and check if every
      * parameter that is required is set.
     */
-    bool readstream(std::istream &in, const std::string& prefix = "PARAM") {
-        return readstream(in, 0, nullptr, prefix);
+    bool readstream(std::istream &in, const std::string& prefix = "PARAM", const bool ignore_unknown = false) {
+        return readstream(in, 0, nullptr, prefix, ignore_unknown);
     }
 
     /** Read parameters, output them and check if every parameter that
