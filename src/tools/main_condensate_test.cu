@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
     stdLogger.setVerbosity(INFO);
     CommunicationBase commBase(&argc, &argv);
     RhmcParameters param;
-    param.readfile(commBase, "condensate.param");
+    param.readfile(commBase, "condensate.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(2,param,commBase);
     Gaugefield<double,true,2> gauge(commBase);
