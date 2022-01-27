@@ -3,12 +3,11 @@
 # 
 #    Lattice: Nx Ny Nz Nt
 #      Nodes: Number of sublattices per direction
-#  Gaugefile: Name of input file
-#     Domain: The domain of the to-be-correlated fields (only needed for main_createCorrelatorNorm.cu)
+#  Gaugefile: Path to input file
+#
 #
 # Please do not split along any direction.
 #
 Lattice   = 8  8  8  4
 Nodes     = 1  1  1  1
 Gaugefile = ../test_conf/nersc.l8t4b3360_bieHB
-Domain    = spatial
