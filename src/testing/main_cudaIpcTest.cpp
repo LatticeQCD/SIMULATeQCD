@@ -51,7 +51,8 @@ uint8_t *sendRecvHandles(uint8_t *recvBuffer, int rank, MPI_Comm comm) {
     uint8_t handleBuffer[size];
 
     gpuIpcMemHandle_t recvHandle;
-    gpuIpcGetMemHandle(&recvHandle, recvBuffer);
+    gpuError_t gpuErr = gpuIpcGetMemHandle(&recvHandle, recvBuffer);
+    if (gpuErr) GpuError("gpuIpcGetMemHandle", gpuErr);
 
     MPI_Sendrecv((uint8_t *) (&recvHandle), size, MPI_CHAR, rank, 0,
                  handleBuffer, size, MPI_CHAR, rank, 0,
@@ -61,7 +62,8 @@ uint8_t *sendRecvHandles(uint8_t *recvBuffer, int rank, MPI_Comm comm) {
     memcpy((uint8_t *) (&neighborHandle), handleBuffer, sizeof(neighborHandle));
 
     uint8_t *neighborBuffer;
-    gpuIpcOpenMemHandle((void **) &neighborBuffer, neighborHandle, gpuIpcMemLazyEnablePeerAccess);
+    gpuErr = gpuIpcOpenMemHandle((void **) &neighborBuffer, neighborHandle, gpuIpcMemLazyEnablePeerAccess);
+    if (gpuErr) GpuError("gpuIpcOpenMemHandle", gpuErr);
 
     return neighborBuffer;
 }
@@ -85,7 +87,10 @@ void sendRecvBufferP2P(CommunicationBase& commBase, uint8_t *sendBufferDevice, u
     gpuError_t gpuErr;
     gpuErr = gpuMemcpyAsync(recvBufferDeviceP2P, sendBufferDevice, size, gpuMemcpyDefault, deviceStream);
     if (gpuErr) GpuError("gpuMemcpyAsync", gpuErr);
-    gpuStreamSynchronize(deviceStream);
+    
+    gpuErr = gpuStreamSynchronize(deviceStream);
+    if (gpuErr) GpuError("gpuStreamSynchronize", gpuErr);
+    
     commBase.nodeBarrier();
 }
 
@@ -129,7 +134,10 @@ int main(int argc, char *argv[]) {
 
     MPI_Request requestSend[2];
     gpuStream_t deviceStream;
-    gpuStreamCreate(&deviceStream);
+    
+    gpuError_t gpuErr;
+    gpuErr = gpuStreamCreate(&deviceStream);
+    if (gpuErr) GpuError("gpuStreamCreate", gpuErr);
 
 
     ////// CHECK TIMINGS WITH CUDA DIRECT P2P (IPC) COMMUNICATION //////
@@ -197,7 +205,8 @@ int main(int argc, char *argv[]) {
     rootLogger.info("MPI Last time: " ,  timer);
 
     rootLogger.info(CoutColors::green,"Test passed!",CoutColors::reset);
-    gpuIpcCloseMemHandle(recvBufferDeviceP2P);
+    gpuErr = gpuIpcCloseMemHandle(recvBufferDeviceP2P);
+    if (gpuErr) GpuError("gpuIpcCloseMemHandle", gpuErr);
     freeDevice(sendBufferDevice);
     freeDevice(recvBufferDevice);
     freeHost(sendBufferHost);

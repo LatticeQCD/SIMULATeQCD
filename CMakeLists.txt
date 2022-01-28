@@ -230,35 +230,6 @@ set(ALL_HALODEPTHS
 
 #-------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: CODEBASE
 
-
-add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
-
-target_compile_definitions(CodeBase PRIVATE
-    SINGLEPREC=1 DOUBLEPREC=1
-    COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
-    ${ALL_HALODEPTHS}
-    HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
-    ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
-    )
-if (USE_CUDA)
-    set_target_properties(CodeBase
-        PROPERTIES
-        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
-
-elseif (USE_HIP_AMD)
-    set_target_properties(CodeBase
-        PROPERTIES
-        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
-
-elseif (USE_HIP_NVIDIA)
-    set_target_properties(CodeBase
-        PROPERTIES
-        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-
-endif()
-
-#---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
-
 FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)
     if (USE_CUDA)
         set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CUDA)
@@ -266,47 +237,6 @@ FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)
           set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CXX HIP_SOURCE_PROPERTY_FORMAT 1)
     endif()
 ENDFUNCTION()
-
-FUNCTION(add_SIMULATeQCD_executable TARGET)
-    if (USE_CUDA)
-        add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
-        
-        target_link_libraries("_${TARGET}" CodeBase)
-        set_target_properties(${TARGET} _${TARGET}
-            PROPERTIES
-            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
-    elseif (USE_HIP_AMD)
-        hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-        hip_add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
-        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
-        set_target_properties(${TARGET} _${TARGET}
-            PROPERTIES
-            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
-
-    elseif (USE_HIP_NVIDIA)
-        hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-        hip_add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
-        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
-        set_target_properties(${TARGET} _${TARGET}
-            PROPERTIES
-            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
-    endif()
-ENDFUNCTION()
-
-FUNCTION(set_SIMULATeQCD_property TARGET)
-    set_target_properties(${TARGET} _${TARGET} ${ARGN})
-ENDFUNCTION()
-
-FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
-    target_compile_definitions(${TARGET} ${ARGN})
-    target_compile_definitions(_${TARGET} ${ARGN})
-ENDFUNCTION()
-
-FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
-    add_dependencies(${TARGET1} _${TARGET2})
-ENDFUNCTION()
-
 
 
 #-------------------------------------------------------------------------------------------------------SET GPU BACKEND
@@ -340,6 +270,90 @@ set_SIMULATeQCD_gpu_backend(
     src/modules/rhmc/rhmc.cpp
     src/spinor/spinorfield.cpp
     )
+
+
+if (USE_CUDA)
+    add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
+    target_compile_definitions(CodeBase PRIVATE
+        SINGLEPREC=1 DOUBLEPREC=1
+        COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
+        ${ALL_HALODEPTHS}
+        HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
+        ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
+        )
+# This might work in the future
+#elseif (USE_HIP)
+#    hip_add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
+endif()
+
+if (USE_CUDA)
+    set_target_properties(CodeBase
+        PROPERTIES
+        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+
+# This might work in the future
+#elseif (USE_HIP_AMD)
+#    set_target_properties(CodeBase
+#        PROPERTIES
+#        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
+#
+#elseif (USE_HIP_NVIDIA)
+#    set_target_properties(CodeBase
+#        PROPERTIES
+#        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+#
+endif()
+
+#---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
+
+
+FUNCTION(add_SIMULATeQCD_executable TARGET)
+    if (USE_CUDA)
+        add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+        
+        target_link_libraries("_${TARGET}" CodeBase)
+        set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+    elseif (USE_HIP_AMD)
+        hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        hip_add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+
+# This might work in the future
+#        hip_add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
+
+    elseif (USE_HIP_NVIDIA)
+        hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        hip_add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+
+# This might work in the future
+#        hip_add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+    endif()
+ENDFUNCTION()
+
+FUNCTION(set_SIMULATeQCD_property TARGET)
+    set_target_properties(${TARGET} _${TARGET} ${ARGN})
+ENDFUNCTION()
+
+FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
+    target_compile_definitions(${TARGET} ${ARGN})
+    target_compile_definitions(_${TARGET} ${ARGN})
+ENDFUNCTION()
+
+FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
+    add_dependencies(${TARGET1} _${TARGET2})
+ENDFUNCTION()
+
+
 
 
 #-------------------------------------------------------------------------------------------------------COMPOUND TARGETS
@@ -593,14 +607,18 @@ SIMULATeQCD_target_compile_definitions(cudaAwareMPITest PRIVATE HALODEPTH_1=1 DO
 
 # This one is special because it does not need the CodeBase
 set_SIMULATeQCD_gpu_backend(src/testing/main_SimpleFunctorTest.cpp)
-add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
-add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
 if (USE_CUDA)
+    add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON RUNTIME_OUTPUT_DIRECTORY "testing")
 elseif (USE_HIP_AMD)
+    hip_add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
 elseif (USE_HIP_NVIDIA)
+    hip_add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 endif()
