@@ -5,7 +5,7 @@
 
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
-#include "../gauge/gauge_kernels.cu"
+#include "../gauge/gauge_kernels.cpp"
 
 #define PREC double
 #define USE_GPU true

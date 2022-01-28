@@ -6,7 +6,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-#include "../gauge/gauge_kernels.cu"
+#include "../gauge/gauge_kernels.cpp"
 
 template<class floatT, int HaloDepth>
 bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff rat){

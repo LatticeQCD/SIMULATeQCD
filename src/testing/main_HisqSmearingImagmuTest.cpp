@@ -9,7 +9,7 @@
 
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
-#include "../gauge/gauge_kernels.cu" 
+#include "../gauge/gauge_kernels.cpp" 
 
 #define PREC double
 #define MY_BLOCKSIZE 256
