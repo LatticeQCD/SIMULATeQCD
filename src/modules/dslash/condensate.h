@@ -7,18 +7,18 @@
 #include "../HISQ/hisqSmearing.h"
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, size_t NStacks>
-void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool light, 
-    Gaugefield<floatT, onDevice, HaloDepth, R18> &gauge, grnd_state<onDevice> &d_rand)
-{
+SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool light, 
+    Gaugefield<floatT, onDevice, HaloDepth, R18> &gauge, grnd_state<onDevice> &d_rand) {
+
     typedef GIndexer<All,HaloDepth> GInd;
     
     floatT mass;
 
-    if (light)
+    if (light) {
         mass = param.m_ud();
-    else
+    } else {
         mass = param.m_s();
-
+    }
 
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase, "SHARED_GAUGENAIK");
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase, "SHARED_GAUGELVL2");
@@ -54,11 +54,6 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool 
     dot_e = eta_e.realdotProductStacked(w_e);
     dot_o = eta_o.realdotProductStacked(w_o);
 
-    for (size_t i = 0; i < NStacks; ++i) {
-        if(light)
-            rootLogger.info("CHI_UD = " ,   (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4));
-        else
-            rootLogger.info("CHI_S = " ,   (dot_o[i]+dot_e[i])/floatT(GInd::getLatData().globvol4));
-    }
+    return (dot_o + dot_e)/double(GInd::getLatData().globvol4);
 };
 
