@@ -38,7 +38,6 @@ step_size  = 0.07142857
 no_md      = 1
 no_step_sf = 1
 no_sw      = 1
-#residue   = 1e-12
 cgMax  = 20000
 always_acc = 0
 rat_file = ../parameter/sample_eo.rat

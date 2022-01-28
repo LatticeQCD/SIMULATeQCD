@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/pure_gauge_hmc.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/PureGaugeHmcTest.param", argc, argv);
 
     const int HaloDepth = 2;
     
