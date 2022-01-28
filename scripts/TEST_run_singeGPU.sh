@@ -200,18 +200,6 @@ ${prefix} ./_DslashImagmuTest ../parameter/tests/DslashTest.param Nodes="${nodes
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_RndMultipleTest ../parameter/tests/DslashTest.param Nodes="${nodes}"
-echo ==========================================================================================================
-${prefix} ./_RndMultipleTest ../parameter/tests/DslashTest.param Nodes="${nodes}"
-
-echo ""
-echo ==========================================================================================================
-echo Running Test: ./_hisqSmearingMulti ../parameter/tests/DslashTest.param Nodes="${nodes}"
-echo ==========================================================================================================
-${prefix} ./_hisqSmearingMulti ../parameter/tests/DslashTest.param Nodes="${nodes}"
-
-echo ""
-echo ==========================================================================================================
 echo Running Test: ./_memManTest
 echo ==========================================================================================================
 ${prefix} ./_memManTest 
