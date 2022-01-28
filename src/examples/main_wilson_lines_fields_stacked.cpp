@@ -549,7 +549,7 @@ int main(int argc, char *argv[]) {
     }
     else if(param.load_conf() == 2 || param.load_conf() == 1)
     {
-//        gauge_file = param.gauge_file() + std::to_string(param.config_no());
+//        gauge_file = param.gauge_file() + std::to_string(param.confnumber());
         rootLogger.info("Starting from configuration: " ,  gauge_file);
 //        gauge.readconf_nersc(gauge_file);
 //	gauge.readconf_nersc("../test/l328f21b6285m0009875m0790a_019.995");
@@ -577,7 +577,7 @@ int main(int argc, char *argv[]) {
 
     
 //    std::string gauge_file;
-//    gauge_file = param.gauge_file() + std::to_string(param.config_no());
+//    gauge_file = param.gauge_file() + std::to_string(param.confnumber());
 //    rootLogger.info("Starting from configuration: " ,  gauge_file);
 //    gauge.readconf_nersc(gauge_file);
 

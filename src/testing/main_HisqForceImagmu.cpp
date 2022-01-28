@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
 
     RationalCoeff rat;
-    rat.readfile(commBase, rhmc_param.rat_file(), argc, argv);
+    rat.readfile(commBase, rhmc_param.rat_file());
 
    
     rootLogger.info("Initialize Gaugefield & Spinorfield");
