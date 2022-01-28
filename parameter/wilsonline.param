@@ -2,7 +2,7 @@
 Lattice    = 20 20 20 20
 Nodes      = 1  1  1  1
 
-config_no    = 302500
+conf_nr    = 302500
 gauge_file = l20t20b06498a_nersc.302500
 
 load_conf  = 2

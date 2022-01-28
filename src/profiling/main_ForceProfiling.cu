@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     initIndexer(HaloDepthSpin,rhmc_param,commBase);
     RationalCoeff rat;
   
-    rat.readfile(commBase, rhmc_param.rat_file(), argc, argv);
+    rat.readfile(commBase, rhmc_param.rat_file());
       
     Gaugefield<PREC, true, HaloDepth, R18> gauge(commBase);
     Gaugefield<PREC, true, HaloDepth> gaugeLvl2(commBase,"SHARED_GAUGELVL2");

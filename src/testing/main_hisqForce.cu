@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     initIndexer(HaloDepth,rhmc_param,commBase);
 
     RationalCoeff rat;
-    rat.readfile(commBase, rhmc_param.rat_file(), argc, argv);
+    rat.readfile(commBase, rhmc_param.rat_file());
 
     Gaugefield<PREC, false,HaloDepth> force_host(commBase);
     rootLogger.info("Initialize Gaugefield & Spinorfield");

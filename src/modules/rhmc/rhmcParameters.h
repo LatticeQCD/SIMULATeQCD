@@ -35,7 +35,6 @@ public:
     Parameter <int> seed;
     Parameter <bool> load_rand;
     Parameter <int> load_conf;
-    Parameter <int> config_no;
 
     RhmcParameters(){
         addDefault(no_pf, "no_pf", 1);
@@ -63,7 +62,6 @@ public:
         addOptional(seed, "seed");
         addOptional(load_rand, "rand_flag");
         addDefault(load_conf, "load_conf", 0);
-        addDefault(config_no, "config_no", 0);
     };
 };
 

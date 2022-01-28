@@ -34,7 +34,7 @@ rand_file = rand                                                      # file nam
 seed = 1337                                                           # myseed
 load_conf = 2                                                         # flag_load (0=einhei, 1=random, 2=getconf)
 gauge_file = ../../test_conf/l328f21b6285m0009875m0790a_019.995       # file name for configuration
-config_no = 876                                                       # configuration number
+conf_nr = 876                                                       # configuration number
 no_updates = 1                                                        # number of updates
 write_every = 11                                                      # write out configuration every
 

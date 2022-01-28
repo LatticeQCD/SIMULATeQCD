@@ -17,6 +17,9 @@ int main(int argc, char *argv[]) {
     RhmcParameters param;
 
     param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
+    if (not param.confnumber.isSet()){
+        param.confnumber.set(0);
+    }
 
     const int HaloDepth = 2;
     const int Nmeas = 10; // Number of RHS in Condensate measurements
@@ -26,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     RationalCoeff rat;
 
-    rat.readfile(commBase, param.rat_file(), 0, NULL);
+    rat.readfile(commBase, param.rat_file());
 
     rat.check_rat(param);
 
@@ -53,7 +56,7 @@ int main(int argc, char *argv[]) {
 
     if (param.load_rand()) {
         grnd_state<false> h_rand;
-        rand_file = param.rand_file() + std::to_string(param.config_no());
+        rand_file = param.rand_file() + std::to_string(param.confnumber());
         rootLogger.info("With random numbers from file: " ,  rand_file);
         h_rand.read_from_file(rand_file, commBase);
         d_rand=h_rand;
@@ -69,7 +72,7 @@ int main(int argc, char *argv[]) {
         rootLogger.info("Starting from random configuration");
         gauge.random(d_rand.state);
     } else if(param.load_conf() == 2) {
-        gauge_file = param.gauge_file() + std::to_string(param.config_no());
+        gauge_file = param.gauge_file() + std::to_string(param.confnumber());
         rootLogger.info("Starting from configuration: " ,  gauge_file);
         gauge.readconf_nersc(gauge_file);
     }
@@ -97,7 +100,7 @@ int main(int argc, char *argv[]) {
         acceptance = floatT(acc)/floatT(i);
         rootLogger.info("current acceptance = " ,  acceptance);
 
-        rootLogger.info("MEASUREMENT: " ,  param.config_no()+i);
+        rootLogger.info("MEASUREMENT: " ,  param.confnumber()+i);
 
         rootLogger.info("Polyakov Loop = " ,  ploop.getPolyakovLoop());
         rootLogger.info("Plaquette = " ,  gaugeaction.plaquette());
@@ -116,8 +119,8 @@ int main(int argc, char *argv[]) {
 
         if (i % param.write_every()==0)
         {
-            gauge_file = param.gauge_file() + std::to_string(param.config_no()+i);
-            rand_file = param.rand_file() + std::to_string(param.config_no()+i);
+            gauge_file = param.gauge_file() + std::to_string(param.confnumber()+i);
+            rand_file = param.rand_file() + std::to_string(param.confnumber()+i);
             gauge.writeconf_nersc(gauge_file);
             grnd_state<false> h_rand;
             h_rand=d_rand;

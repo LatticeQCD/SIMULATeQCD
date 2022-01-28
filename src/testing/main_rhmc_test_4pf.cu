@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
 
     RationalCoeff rat;
 
-    rat.readfile(commBase, param.rat_file(), argc, argv);
+    rat.readfile(commBase, param.rat_file());
 
     commBase.init(param.nodeDim());
 
