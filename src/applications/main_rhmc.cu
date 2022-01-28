@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
     RationalCoeff rat;
 
-    rat.readfile(commBase, param.rat_file(), 0, NULL);
+    rat.readfile(commBase, param.rat_file());
 
     rat.check_rat(param);
 
