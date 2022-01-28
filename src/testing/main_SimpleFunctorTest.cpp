@@ -50,26 +50,34 @@ class Spinor{
     explicit Spinor(const int _size):_size(_size){
         _h_mem = new double[_size];
 #ifndef CPU
-        gpuMalloc((void **)&_d_mem, _size*sizeof(double));
+        gpuError_t gpuErr;
+        gpuErr = gpuMalloc((void **)&_d_mem, _size*sizeof(double));
+        if (gpuErr) GpuError("SimpleFunctorTest, Spinor::Spinor: gpuMalloc", gpuErr);
 #endif
     }
 
     void upload(){
 #ifndef CPU
-        gpuMemcpy(_d_mem, _h_mem, _size*sizeof(double), gpuMemcpyHostToDevice);
+        gpuError_t gpuErr;
+        gpuErr = gpuMemcpy(_d_mem, _h_mem, _size*sizeof(double), gpuMemcpyHostToDevice);
+        if (gpuErr) GpuError("SimpleFunctorTest, Spinor::upload: gpuMemcpy", gpuErr);
 #endif
     }
 
     void download(){
 #ifndef CPU
-        gpuMemcpy(_h_mem, _d_mem, _size*sizeof(double), gpuMemcpyDeviceToHost);
+        gpuError_t gpuErr;
+        gpuErr = gpuMemcpy(_h_mem, _d_mem, _size*sizeof(double), gpuMemcpyDeviceToHost);
+        if (gpuErr) GpuError("SimpleFunctorTest, Spinor::download: gpuMemcpy", gpuErr);
 #endif
     }
 
         
     ~Spinor(){
 #ifndef CPU
-        gpuFree(_d_mem);
+        gpuError_t gpuErr;
+        gpuErr = gpuFree(_d_mem);
+        if (gpuErr) GpuError("SimpleFunctorTest, Spinor::~Spinor: gpuFree", gpuErr);
 #endif
         delete[] _h_mem;
     }

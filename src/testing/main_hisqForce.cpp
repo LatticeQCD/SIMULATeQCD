@@ -68,9 +68,12 @@ int main(int argc, char *argv[]) {
     HisqForce<PREC, true, HaloDepth, HaloDepthSpin, R18, true> ip_dot_f2_hisq(gauge,force,CG,dslash,dslash_multi,rhmc_param,rat,smearing);
 
     timer.start();
-    gpuProfilerStart();
+    gpuError_t gpuErr;
+    gpuErr = gpuProfilerStart();
+    if (gpuErr) GpuError("hisqForce: gpuProfilerStart", gpuErr);
     ip_dot_f2_hisq.TestForce(SpinorIn,force,d_rand);
-    gpuProfilerStop();
+    gpuErr = gpuProfilerStop();
+    if (gpuErr) GpuError("hisqForce: gpuProfilerStop", gpuErr);
     timer.stop();
 
     force_host=force;

@@ -198,7 +198,9 @@ bool pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::Metropolis(){
 
     uint4 state;
 
-    gpuMemcpy(&state, _rand_state, sizeof(uint4), gpuMemcpyDeviceToHost);
+    gpuError_t gpuErr;
+    gpuErr = gpuMemcpy(&state, _rand_state, sizeof(uint4), gpuMemcpyDeviceToHost);
+    if (gpuErr) GpuError("pure_gauge_hmc::Metropolis: gpuMemcpy", gpuErr);
 
     if (delta_E < 0.0)
         return true;

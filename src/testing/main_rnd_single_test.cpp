@@ -87,7 +87,9 @@ bool test_old_new_host_dev(CommunicationBase &commBase){
     floatT h_rand[GInd::getLatData().vol4];
     floatT h_rand2[GInd::getLatData().vol4];
 
-    gpuMalloc(&d_rand, GInd::getLatData().vol4*sizeof(floatT));
+    gpuError_t gpuErr;
+    gpuErr = gpuMalloc(&d_rand, GInd::getLatData().vol4*sizeof(floatT));
+    if (gpuErr) GpuError("test_old_new_host_dev: gpuMalloc", gpuErr);
 
     ReadIndex<All,HaloDepth> index;
     const size_t elems=GInd::getLatData().vol4;
@@ -100,7 +102,8 @@ bool test_old_new_host_dev(CommunicationBase &commBase){
     iterateFunctorNoReturn<false>(draw_rand<floatT>(host_state.state, h_rand), index, elems);
     iterateFunctorNoReturn<false>(draw_rand<floatT>(host_state.state, h_rand), index, elems);
 
-    gpuMemcpy(h_rand2, d_rand, GInd::getLatData().vol4*sizeof(floatT), gpuMemcpyDeviceToHost);
+    gpuErr = gpuMemcpy(h_rand2, d_rand, GInd::getLatData().vol4*sizeof(floatT), gpuMemcpyDeviceToHost);
+    if (gpuErr) GpuError("test_old_new_host_dev: gpuMemcpy", gpuErr);
 
     bool host_dev = true;
     bool new_old = true;

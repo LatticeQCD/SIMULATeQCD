@@ -67,7 +67,9 @@ bool test_single_multiple(CommunicationBase &commBase){
     floatT h_rand[GInd::getLatData().vol4];
     floatT h_rand2[GInd::getLatData().vol4];
 
-    gpuMalloc(&d_rand, GInd::getLatData().vol4*sizeof(floatT));
+    gpuError_t gpuErr;
+    gpuErr = gpuMalloc(&d_rand, GInd::getLatData().vol4*sizeof(floatT));
+    if (gpuErr) GpuError("test_single_multiple: gpuMalloc", gpuErr);
 
     ReadIndex<All,HaloDepth> index;
     const size_t elems=GInd::getLatData().vol4;
@@ -80,7 +82,8 @@ bool test_single_multiple(CommunicationBase &commBase){
 
     iterateFunctorNoReturn<false>(draw_rand<floatT>(host_state.state, h_rand), index, elems);
 
-    gpuMemcpy(h_rand2, d_rand, GInd::getLatData().vol4*sizeof(floatT), gpuMemcpyDeviceToHost);
+    gpuErr = gpuMemcpy(h_rand2, d_rand, GInd::getLatData().vol4*sizeof(floatT), gpuMemcpyDeviceToHost);
+    if (gpuErr) GpuError("test_single_multiple: gpuMemcpy", gpuErr);
 
     bool host_dev = true;
 
