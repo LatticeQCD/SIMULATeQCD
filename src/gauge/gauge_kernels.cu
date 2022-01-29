@@ -283,8 +283,17 @@ struct count_faulty_links {
         int sum = 0;
         for (int mu = 0; mu < 4; mu++) {
             gSiteMu siteMu = GIndexer<All,HaloDepth>::getSiteMu(site,mu);
-            
-            if (!compareGSU3(gL.getLink(siteMu), gR.getLink(siteMu), tol)) {
+            GSU3<floatT> a = gL.getLink(siteMu);
+            GSU3<floatT> b = gR.getLink(siteMu);
+            if (!compareGSU3(a, b, tol)) {
+                for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++) {
+                    GCOMPLEX(floatT) diff = a(i, j) - b(i, j);
+                    floatT diff_abs = fabs(diff.cREAL);
+                    if (diff_abs > tol){
+                        printf("Link at site (%i %i %i %i) mu=%i, Matrix-Element (%i,%i) differ by %.4e \n", siteMu.coord.x, siteMu.coord.y, siteMu.coord.z, siteMu.coord.t, mu, i,j, diff_abs);
+                    }
+                }
                 sum++;
             }
         }
