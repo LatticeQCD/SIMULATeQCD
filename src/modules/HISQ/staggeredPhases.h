@@ -50,7 +50,11 @@ struct staggeredPhaseKernel {
 
     __host__ __device__ GSU3<floatT> operator()(gSiteMu siteMu) {
         GCOMPLEX(floatT) phase =1.0;
-        phase = staggPhase(siteMu) * staggBound(siteMu) * imaginaryPhase(siteMu, mu_f);
+        if (mu_f != 0.0) {
+            phase = staggPhase(siteMu) * staggBound(siteMu) * imaginaryPhase(siteMu, mu_f);
+        } else {
+            phase = staggPhase(siteMu) * staggBound(siteMu);
+        }
         return phase * gAcc.getLink(siteMu);
     }
 };
