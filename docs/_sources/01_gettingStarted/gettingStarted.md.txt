@@ -96,7 +96,7 @@ you need to make sure that
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
 cmake ../simulateqcd/ \
--DARCHITECTURE="70" \
+-DARCHITECTURE="gfx906,gfx908" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=OFF \
 -DBACKEND="hip_amd" \

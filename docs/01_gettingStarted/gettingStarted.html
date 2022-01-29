@@ -172,7 +172,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 </ul>
 <p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
--DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
+-DARCHITECTURE<span class="o">=</span><span class="s2">&quot;gfx906,gfx908&quot;</span> <span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
 -DUSE_GPU_P2P<span class="o">=</span>OFF <span class="se">\</span>
 -DBACKEND<span class="o">=</span><span class="s2">&quot;hip_amd&quot;</span> <span class="se">\</span>
