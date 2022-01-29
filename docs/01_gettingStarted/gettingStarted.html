@@ -146,7 +146,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
--DUSE_GPU_P2P<span class="o">=</span>ON <span class="se">\</span>
+-DUSE_GPU_P2P<span class="o">=</span>OFF <span class="se">\</span>
 -DBACKEND<span class="o">=</span><span class="s2">&quot;hip_nvidia&quot;</span> <span class="se">\</span>
 </pre></div>
 </div>
@@ -154,6 +154,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 You can set the HIP installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DHIP_PATH</span></code>.
 You can also set the CUDA installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DCUDA_TOOLKIT_ROOT_DIR</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.
+<code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.
 Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make NameOfExecutable
 </pre></div>
@@ -173,13 +174,14 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
--DUSE_GPU_P2P<span class="o">=</span>ON <span class="se">\</span>
+-DUSE_GPU_P2P<span class="o">=</span>OFF <span class="se">\</span>
 -DBACKEND<span class="o">=</span><span class="s2">&quot;hip_amd&quot;</span> <span class="se">\</span>
 </pre></div>
 </div>
 <p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">simulateqcd</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
 You can set the HIP installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DHIP_PATH</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture. For example gfx906,gfx908.
+<code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.
 Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make NameOfExecutable
 </pre></div>

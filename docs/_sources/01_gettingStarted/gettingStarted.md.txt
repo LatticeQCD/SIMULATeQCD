@@ -70,13 +70,14 @@ To setup the compilation, create a folder outside of the code directory (e.g. `.
 cmake ../simulateqcd/ \
 -DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
--DUSE_GPU_P2P=ON \
+-DUSE_GPU_P2P=OFF \
 -DBACKEND="hip_nvidia" \
 ``` 
 Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
 You can set the HIP installation path manually by setting the `cmake` parameter `-DHIP_PATH`.
 You can also set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
 `-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
+`-DUSE_GPU_P2P=ON` is not yet supported by this backend.
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
 ```shell
 make NameOfExecutable
@@ -97,12 +98,13 @@ To setup the compilation, create a folder outside of the code directory (e.g. `.
 cmake ../simulateqcd/ \
 -DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
--DUSE_GPU_P2P=ON \
+-DUSE_GPU_P2P=OFF \
 -DBACKEND="hip_amd" \
 ``` 
 Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
 You can set the HIP installation path manually by setting the `cmake` parameter `-DHIP_PATH`.
 `-DARCHITECTURE` sets the GPU architecture. For example gfx906,gfx908. 
+`-DUSE_GPU_P2P=ON` is not yet supported by this backend.
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
 ```shell
 make NameOfExecutable
