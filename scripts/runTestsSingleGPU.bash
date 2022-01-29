@@ -129,9 +129,9 @@ ${prefix} ./_hisqSmearingImagmuTest ../parameter/tests/hisqSmearingTest.param No
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_hisqSmearingMultiCreate ../parameter/run.param Nodes="${nodes}"
+echo Running Test: ./_hisqSmearingMultiCreate ../parameter/tests/run.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_hisqSmearingMultiCreate ../parameter/run.param Nodes="${nodes}"
+${prefix} ./_hisqSmearingMultiCreate ../parameter/tests/run.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
