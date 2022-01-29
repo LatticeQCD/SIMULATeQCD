@@ -16,17 +16,18 @@ source "../scripts/testingTools.bash"
 # that is run repeatedly with different parameters. For now I'm leaving this as is. This section is also used for tests
 # that don't require a parameter file, like the memManTest.
 declare -A testRoutinesNoParam
+testRoutinesNoParam[_condensateTest]="1"
 testRoutinesNoParam[_dotProductTest]="1"
 testRoutinesNoParam[_DslashImagmuTest]="1"
 testRoutinesNoParam[_gfixTestSingle]="1"
 testRoutinesNoParam[_halfPrecMathTest]="1"
 testRoutinesNoParam[_HBOR_single_test]="1"
-testRoutinesNoParam[_hisqForce]="1"              # The read in construction doesn't seem to work.
+testRoutinesNoParam[_hisqForce]="1"
 testRoutinesNoParam[_hisqForceImagmu]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
 testRoutinesNoParam[_memManTest]="1"
-testRoutinesNoParam[_rhmcTest]="1"               # The read in construction doesn't seem to work. Test is a bit too long (30 min)
+testRoutinesNoParam[_rhmcTest]="1"
 testRoutinesNoParam[_rhmcTest_4pf]="1"
 testRoutinesNoParam[_RndSingleTest]="1"
 testRoutinesNoParam[_SimpleFunctorTest]="1"
@@ -36,6 +37,9 @@ testRoutinesNoParam[_UtimesUdaggerTest]="1"
 numberOfTestRoutines="$((${#testRoutinesNoParam[@]}))"
 numberOfMultRoutines=4
 numberOfTestRoutines="$((${numberOfTestRoutines}+${numberOfMultRoutines}))"
+
+echo
+date
 
 # Run some test routines that have a fixed layout.
 for key in "${!testRoutinesNoParam[@]}"; do
@@ -64,15 +68,18 @@ runByLayout "_gfixTestMulti" "4s"
 createExec="_hisqSmearingMultiCreate"
 createOut="OUT"${createExec}
 createErr="runERR"${createExec}
-$run_command 1 ./${createExec} ../parameter/run.param Nodes="1 1 1 1" > ${createOut} 2> ${createErr}
-$run_command 2 ./${createExec} ../parameter/run.param Nodes="1 2 1 1" >> ${createOut} 2>> ${createErr}
-$run_command 4 ./${createExec} ../parameter/run.param Nodes="1 2 2 1" >> ${createOut} 2>> ${createErr}
+$run_command 1 ./${createExec} ../parameter/tests/run.param Nodes="1 1 1 1" > ${createOut} 2> ${createErr}
+$run_command 2 ./${createExec} ../parameter/tests/run.param Nodes="1 2 1 1" >> ${createOut} 2>> ${createErr}
+$run_command 4 ./${createExec} ../parameter/tests/run.param Nodes="1 2 2 1" >> ${createOut} 2>> ${createErr}
 if [ ! -s ${createErr} ]; then rm ${createErr}; fi
 if [ ! -s ${createOut} ]; then rm ${createOut}; fi
 ((jtest++))
 echo
 echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
 runTestRoutineNoParam "_hisqSmearingMulti" "1"
+
+echo
+date
 
 echo
 echo "${cyan}All tests done!${endc}"

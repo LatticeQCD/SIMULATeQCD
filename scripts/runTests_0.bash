@@ -37,6 +37,9 @@ testRoutines[_MixedPrecInverterTest]="4k"
 numberOfTestRoutines="${#testRoutines[@]}"
 numberOfTestRoutines="$((${numberOfTestRoutines}+${#testRoutinesNoParam[@]}))"
 
+echo
+date
+
 # Run the test routines that can vary their layout.
 jtest=0
 for key in "${!testRoutines[@]}"; do
@@ -45,6 +48,9 @@ for key in "${!testRoutines[@]}"; do
     echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
     runByLayout "${key}" "${testRoutines[$key]}"
 done
+
+echo
+date
 
 echo
 echo "${cyan}Now try runTests_1.bash.${endc}"

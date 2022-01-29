@@ -8,6 +8,7 @@
 #include "pure_gauge_hmc.h"
 #include "../../gauge/gauge_kernels.cu"
 
+
 template <bool onDevice, class floatT>
 struct add_f_r_f_r
 {
@@ -25,23 +26,17 @@ struct add_f_r_f_r
         ret = _aa * acc_a.template getElement<floatT>(site) + _bb * acc_b.template getElement<floatT>(site);
         return ret;
     }
-
-
 };
-
 
 
 template <class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, bool reverse){
 
-    //check unitarity of lattice
 
     //copy gaugefield to savedfield
-
     _savedField = _gaugeField;
 
     //make momenta
-
     generate_momenta();
 
     //get oldaction
@@ -56,9 +51,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
     if (reverse)
     {
         rootLogger.warn("Checking if integration is reversible");
-
         _p = -1.0 * _p;
-
         integrator.integrate();
     }
 
@@ -75,7 +68,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
     {
         if (accept){
             ret=1;
-            rootLogger.info("Update acepted!");
+            rootLogger.info("Update accepted!");
         } else {
             _gaugeField=_savedField;
             _gaugeField.updateAll();
@@ -91,17 +84,20 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
     return ret;
 }
 
+
 template<class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 void pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::generate_momenta(){
 
     _p.gauss(_rand_state);
 }
 
+
 template<class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 void pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::generate_const_momenta(){
 
     _p.iterateWithConst(glambda_1<floatT>());
 }
+
 
 template<class floatT, size_t HaloDepth>
 struct get_momenta
@@ -124,9 +120,9 @@ struct get_momenta
     }
 };
 
+
 template<class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(LatticeContainer<true,floatT> &energy_dens){
-
 
     LatticeContainer<true,floatT> redBase(_p.getComm(), "momenta");
     LatticeContainer<true,floatT> redBase2(_p.getComm(), "helper field for energy_dens");
@@ -135,7 +131,6 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
     redBase.adjustSize(elems);
     redBase2.adjustSize(elems);
     redBase3.adjustSize(elems);
-
 
     floatT momenta;
     floatT gaugeact;
@@ -159,14 +154,14 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
 
     hamiltonian+= gaugeact; 
 
-    rootLogger.info("momenta = " ,  0.5 *momenta ,  " glue = " ,  gaugeact);// << "H = " << H;
+    rootLogger.info("momenta = " ,  0.5 *momenta ,  " glue = " ,  gaugeact);
 
     return hamiltonian;
 }
 
+
 template<class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 bool pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::Metropolis(){
-
 
     dens_delta.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(energy_dens_new, energy_dens_old, 1.0, -1.0));
 
@@ -195,10 +190,7 @@ bool pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::Metropolis(){
 template <class floatT, Layout LatticeLayout, size_t HaloDepth, CompressionType comp>
 int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
 
-    //check unitarity of lattice
-
     //make momenta
-
     generate_const_momenta();
 
     //get oldaction
@@ -212,8 +204,6 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
     //get newaction
     floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-    // rootLogger.info("Delta H =" ,  new_hamiltonian - old_hamiltonian);
-
     int ret;
 
     //make Metropolis step
@@ -221,7 +211,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
 
     if (accept) {
         ret=1;
-        rootLogger.info("Update acepted!");
+        rootLogger.info("Update accepted!");
     } else {
         _gaugeField=_savedField;
         _gaugeField.updateAll();
@@ -237,4 +227,3 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
 template class pure_gauge_hmc<floatT, All, HALO, comp>;
 
 INIT_PHC(CLASS_INIT)
-

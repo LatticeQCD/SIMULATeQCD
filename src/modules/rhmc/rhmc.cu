@@ -8,6 +8,7 @@
 #include "rhmc.h"
 #include "../../gauge/gauge_kernels.cu"
 
+
 template <bool onDevice, class floatT>
 struct add_f_r_f_r
 {
@@ -50,10 +51,11 @@ struct get_fermion_act
         return ret;
     }
 };
+
+
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp=R18>
 struct do_check_unitarity
 {
-
     do_check_unitarity(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
 
     gaugeAccessor<floatT, comp> gAcc;
@@ -92,17 +94,16 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::check_unitarity()
 
 }
 
+
 // constructing the vectors with the coeff. for the rational approx. from the ones in the parameter file
 // This assumes that all approx without bar have that same degree, same for bar!
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::init_ratapprox()
 {
-    
     int length = _rat.r_inv_sf_num.get().size();
 
     floatT ml2 = _rhmc_param.m_ud() * _rhmc_param.m_ud();
     floatT ms2 = _rhmc_param.m_s() * _rhmc_param.m_s();
-
 
     rat_sf.push_back(_rat.r_sf_const());
     rat_lf.push_back(_rat.r_lf_const());
@@ -155,9 +156,7 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::init_ratapprox()
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool reverse){
 
-    //check unitarity of lattice, not implemented yet.
     check_unitarity();
-
 
     //copy gaugefield to savedfield
     _savedField = _gaugeField;
@@ -226,7 +225,6 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     //get newaction
     double new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
-
     int ret;
 
     bool accept = Metropolis();
@@ -236,7 +234,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
         //make Metropolis step
         if (accept){
             ret=1;
-            rootLogger.info("Update acepted!");
+            rootLogger.info("Update accepted!");
         } else {
             _gaugeField=_savedField;
             _gaugeField.updateAll();
@@ -298,7 +296,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
 
     if (accept){
         ret=1;
-        rootLogger.info("Update acepted!");
+        rootLogger.info("Update accepted!");
     } else {
         _gaugeField=_savedField;
         _gaugeField.updateAll();
@@ -417,7 +415,6 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     rootLogger.info("fermion action sf by   dotp = " ,  act_sf); 
 
     // gauge action
-
     redBase2.template iterateOverBulk<All, HaloDepth>(plaquetteKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
     redBase4.template iterateOverBulk<All, HaloDepth>(rectangleKernel_double<floatT, onDevice, HaloDepth, R18>(_gaugeField));
 
@@ -486,7 +483,6 @@ bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
     if (delta_E < 0.0) {
         return true;
     } else {
-        // double rand = dis(gen);
         double rand = get_rand<double>(&state);
         _p.getComm().root2all(rand); // Is is important so sync the random numbers between processes!
         if(rand < exp(-delta_E))
@@ -559,7 +555,6 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_chi(Spinorfield<floa
     }
 
     // using the multishift inverter
-   
     cgM.invert(dslash, spinorOutMulti, phi, rat_den, _rhmc_param.cgMax(), _rhmc_param.residue());
 
     chi = rat_num[0] * phi;
