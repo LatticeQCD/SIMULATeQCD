@@ -118,7 +118,7 @@ endif()
 if (USE_CUDA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
     set(CMAKE_CUDA_FLAGS
-        "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
+        "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
 
 elseif (USE_HIP_AMD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc --hip-link")
