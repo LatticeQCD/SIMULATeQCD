@@ -88,31 +88,61 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="testing-the-code">
 <h1>Testing the code<a class="headerlink" href="#testing-the-code" title="Permalink to this headline"></a></h1>
-<p>This is perhaps the most important aspect of code creation for SIMULATeQCD: <em>It is crucially important that you write a test for each new feature that you implement.</em> As indicated in the <a class="reference internal" href="03_organizeFiles.html#how-to-organize-new-files"><span class="std std-doc">Code Structure</span></a> wiki, new testing <code class="docutils literal notranslate"><span class="pre">main</span></code> programs should go in <code class="docutils literal notranslate"><span class="pre">src/testing</span></code>. <em>It is also crucially important that you run ALL tests after you have made major changes.</em> Please always do this, even if you are convinced that your changes could not have possibly broken anything, since</p>
+<p>This is perhaps the most important aspect of code creation for SIMULATeQCD:
+<strong>It is crucially important that you write a test for each new feature that you implement.</strong>
+As indicated in the <a class="reference internal" href="03_organizeFiles.html#how-to-organize-new-files"><span class="std std-doc">Code Structure</span></a> document,
+new testing <code class="docutils literal notranslate"><span class="pre">main</span></code> programs should go in <code class="docutils literal notranslate"><span class="pre">src/testing</span></code>. <strong>It is also crucially important that
+you run ALL tests after you have made major changes.</strong> Please always do this, even if
+you are convinced that your changes could not have possibly broken anything.</p>
+<p>To make running the tests a bit easier for you, we have included some scripts to do this
+automatically. In the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> directory one finds the Bash scripts</p>
 <ol class="simple">
-<li><p>you might be wrong about that, and</p></li>
-<li><p>someone else might have been lazy and not run the tests after they made changes.</p></li>
+<li><p>runTests_0.bash</p></li>
+<li><p>runTests_1.bash</p></li>
+<li><p>runTests_2.bash</p></li>
 </ol>
-<p>To make running the tests a bit easier for you, we have included some scripts to do this automatically. In the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> directory one finds <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code> as well as a job script <code class="docutils literal notranslate"><span class="pre">jobscript_TEST_run</span></code>. To run the tests navigate to your build folder and</p>
+<p>which should be run in that order. To compile the tests,
+navigate to your build folder and</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make -j tests
-<span class="nb">cd</span> testing
-sbatch jobscript_TEST_run
 </pre></div>
 </div>
-<p>Note that the tests will take some time to compile, usually more than an hour. The jobscript requests the <code class="docutils literal notranslate"><span class="pre">devel_gpu</span></code> queue with 4 GPUs. It calls <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code>, which runs the tests with different numbers of processors and GPU layouts with up to 4 GPUs. The output for each test is redirected to an <code class="docutils literal notranslate"><span class="pre">OUT</span></code> file. If there are errors for a test, it will be redirected to a <code class="docutils literal notranslate"><span class="pre">runERR</span></code> file. All empty <code class="docutils literal notranslate"><span class="pre">runERR</span></code> files are deleted.</p>
-<p>At the end of your test run, if there are no <code class="docutils literal notranslate"><span class="pre">runERR</span></code> files, that is a very good sign. A more careful check requires you to search through the <code class="docutils literal notranslate"><span class="pre">OUT</span></code> files for <code class="docutils literal notranslate"><span class="pre">fail</span></code>, <code class="docutils literal notranslate"><span class="pre">FAIL</span></code>, or <code class="docutils literal notranslate"><span class="pre">Fail</span></code>, since I am not sure whether every test script was written to return an error flag when a test fails.</p>
-<section id="adding-your-test-to-the-test-run-script">
-<h2>Adding your test to the <code class="docutils literal notranslate"><span class="pre">TEST_run</span></code> script<a class="headerlink" href="#adding-your-test-to-the-test-run-script" title="Permalink to this headline"></a></h2>
-<p>After your test is working, please add it to the <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code> script. This way your test will always be run automatically by future developers. To accomplish this:</p>
+<p>It may take some time to compile all the tests; in particular for CUDA versions lower than
+11.5, this seems to take more than an hour.
+Next, you should try to reserve 4 GPUs on whatever machine you are using. (If you are
+running locally and only have access to 1 GPU, you can use <code class="docutils literal notranslate"><span class="pre">runTestsSingleGPU.bash</span></code>.
+This is better than not doing any test at all, but please not we will not accept your
+pull request until we verify all multi-GPU tests pass.)
+We have collected test executables within each <code class="docutils literal notranslate"><span class="pre">runTests</span></code> script to run in
+less than 30 minutes on Pascal GPUs so that you can test interactively at most
+computing centers. When you are ready to run the tests,</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> testing
+../scripts/runTests_0.bash
+</pre></div>
+</div>
+<p>(On one GPU, instead call <code class="docutils literal notranslate"><span class="pre">../scripts/runTestsSingleGPU.bash</span></code>.)
+The output for each test is redirected to an <code class="docutils literal notranslate"><span class="pre">OUT</span></code> file. If there are errors for a test,
+it will be redirected to a <code class="docutils literal notranslate"><span class="pre">runERR</span></code> file. All empty <code class="docutils literal notranslate"><span class="pre">runERR</span></code> files are deleted. Once you
+have run script <code class="docutils literal notranslate"><span class="pre">0</span></code>, run scripts <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+<p>At the end of your test run, if there are no <code class="docutils literal notranslate"><span class="pre">runERR</span></code> files, then you are done.</p>
+<section id="adding-your-test-to-the-runtests-scripts">
+<h2>Adding your test to the <code class="docutils literal notranslate"><span class="pre">runTests</span></code> scripts<a class="headerlink" href="#adding-your-test-to-the-runtests-scripts" title="Permalink to this headline"></a></h2>
+<p>After your test is working, please add it to the last <code class="docutils literal notranslate"><span class="pre">runTests</span></code> script. This way your
+test will always be run automatically by future developers. To accomplish this:</p>
 <ol class="simple">
-<li><p>Make sure that you added your test to the <code class="docutils literal notranslate"><span class="pre">tests</span></code> executables in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>, i.e. you will need the line <code class="docutils literal notranslate"><span class="pre">add_to_compound_SIMULATeQCD_target(tests</span> <span class="pre">myTest)</span></code>.</p></li>
-<li><p>If your test takes a fixed GPU layout, simply add the entry <code class="docutils literal notranslate"><span class="pre">testRoutinesNoParam[_myTest]=&quot;N&quot;</span></code>, where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of GPUs required, to <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code>.</p></li>
-<li><p>Otherwise if you would like to run your test with various GPU layouts, make sure it has its own <code class="docutils literal notranslate"><span class="pre">.param</span></code> file in the <code class="docutils literal notranslate"><span class="pre">parameter/tests</span></code> with <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> as an adjustable parameter and</p></li>
-<li><p>add the entry <code class="docutils literal notranslate"><span class="pre">testRoutines[_BulkIndexerTest]=&quot;GPUkey&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code>.</p></li>
+<li><p>Make sure that you added your test to the <code class="docutils literal notranslate"><span class="pre">tests</span></code> executables in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>,
+i.e. you will need the line <code class="docutils literal notranslate"><span class="pre">add_to_compound_SIMULATeQCD_target(tests</span> <span class="pre">myTest)</span></code>. Please
+also add an entry to <code class="docutils literal notranslate"><span class="pre">runTestsSingleGPU.bash</span></code>.</p></li>
+<li><p>If your test takes a fixed GPU layout, simply add the entry <code class="docutils literal notranslate"><span class="pre">testRoutinesNoParam[_myTest]=&quot;N&quot;</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of GPUs required, to <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code>.</p></li>
+<li><p>Otherwise if you would like to run your test with various GPU layouts, make sure it
+has its own <code class="docutils literal notranslate"><span class="pre">.param</span></code> file in the <code class="docutils literal notranslate"><span class="pre">parameter/tests</span></code> with <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> as an adjustable parameter and</p></li>
+<li><p>add the entry <code class="docutils literal notranslate"><span class="pre">testRoutines[_BulkIndexerTest]=&quot;GPUkey&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">runTests</span></code>.</p></li>
 </ol>
-<p>For the last step, the <code class="docutils literal notranslate"><span class="pre">GPUkey</span></code> tells <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code> which GPU layouts it should test. The <code class="docutils literal notranslate"><span class="pre">GPUkey</span></code> consists for a number of GPUs concatenated with one of two layout symbols:</p>
+<p>For the last step, the <code class="docutils literal notranslate"><span class="pre">GPUkey</span></code> tells the <code class="docutils literal notranslate"><span class="pre">runTests</span></code> scrips which GPU layouts they should test.
+The <code class="docutils literal notranslate"><span class="pre">GPUkey</span></code> consists for a number of GPUs concatenated with one of two layout symbols:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: Split only in spatial directions. Useful for observables like the Polyakov loop, where one prefers not to split the lattice in the Euclidean time direction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code>: Split only in spatial directions. Useful for observables like the Polyakov loop,
+where one prefers not to split the lattice in the Euclidean time direction.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">k</span></code>: No long directions. Useful whenever 4 does not divide a lattice extension.</p></li>
 </ul>
 </section>
