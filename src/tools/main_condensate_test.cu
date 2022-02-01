@@ -85,33 +85,37 @@ void measure_condensate(CommunicationBase &commBase, RhmcParameters param, std::
 
 int main(int argc, char *argv[])
 {
-    stdLogger.setVerbosity(INFO);
-    CommunicationBase commBase(&argc, &argv);
+    try {
+        stdLogger.setVerbosity(INFO);
+        CommunicationBase commBase(&argc, &argv);
 
-    RhmcParameters param;
+        RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/run.param", 0, NULL);
+        param.readfile(commBase, "../parameter/run.param", 0, NULL);
 
-    std::string conf;
+        std::string conf;
 
-    if (argc != 2) {
-        throw std::runtime_error(stdLogger.fatal("Wrong number of arguments!"));
-    } else {
-        conf = argv[1];
+        if (argc != 2) {
+            throw std::runtime_error(stdLogger.fatal("Wrong number of arguments!"));
+        } else {
+            conf = argv[1];
+        }
+
+        commBase.init(param.nodeDim());
+
+        initIndexer(4, param, commBase);
+
+        const size_t numVec = 10;
+
+        // rootLogger.info("START MEASURING CHIRAL CONDENSATE IN DOUBLE");
+        // measure_condensate<double, true, 2, 4, numVec>(commBase, param, conf);
+
+        rootLogger.info("START MEASURING CHIRAL CONDENSATE IN SINGLE");
+        measure_condensate<float, true, 2, 4, numVec>(commBase, param, conf);
     }
-    
-    commBase.init(param.nodeDim());
-
-    initIndexer(4,param, commBase);
-
-    const size_t numVec=10;
-
-    // rootLogger.info("START MEASURING CHIRAL CONDENSATE IN DOUBLE");
-    // measure_condensate<double, true, 2, 4, numVec>(commBase, param, conf);
-
-    rootLogger.info("START MEASURING CHIRAL CONDENSATE IN SINGLE");
-    measure_condensate<float, true, 2, 4, numVec>(commBase, param, conf);
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

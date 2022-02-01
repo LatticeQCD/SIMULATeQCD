@@ -602,92 +602,92 @@ void gMoveOne( Gaugefield<floatT,true,HaloDepth> &gauge , int direction, int up)
 
 int main(int argc, char *argv[]) {
 
-    /// Controls whether DEBUG statements are shown as it runs; could also set to INFO, which is less verbose.
-    stdLogger.setVerbosity(INFO);
+    try {
 
-    /// Initialize parameter class.
+        /// Controls whether DEBUG statements are shown as it runs; could also set to INFO, which is less verbose.
+        stdLogger.setVerbosity(INFO);
+
+        /// Initialize parameter class.
 //    LatticeParameters param;
-    RhmcParameters param;
-    /// Initialize the Lattice dimension.
+        RhmcParameters param;
+        /// Initialize the Lattice dimension.
 //    const int LatDim[] = {96,96,96, 32}; // {Ns,Ns,Ns,Ntau}
 
-    /// Number of sublattices in each direction.
+        /// Number of sublattices in each direction.
 //    const int NodeDim[] = {1, 1, 8, 1};
 //    if(NodeDim[3] != 1){
- //       rootLogger.error("WilsonLines does not allow partitions in time direction");
- //       exit(1);
- //   }
+        //       rootLogger.error("WilsonLines does not allow partitions in time direction");
+        //       exit(1);
+        //   }
 
-    /// Pass these dimensions to the parameter class.
+        /// Pass these dimensions to the parameter class.
 //    param.latDim.set(LatDim);
 //    param.nodeDim.set(NodeDim);
 
 
-    /// Initialize a timer.
-    StopWatch<true> timer;
+        /// Initialize a timer.
+        StopWatch<true> timer;
 
-    /// Initialize the CommunicationBase.
-    CommunicationBase commBase(&argc, &argv);
+        /// Initialize the CommunicationBase.
+        CommunicationBase commBase(&argc, &argv);
 
-    param.readfile(commBase, "../parameter/test.param", argc, argv);
+        param.readfile(commBase, "../parameter/test.param", argc, argv);
 
 
-    commBase.init(param.nodeDim());
+        commBase.init(param.nodeDim());
 
-    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl; 
+        cout << param.nodeDim[0] << " param 0 " << param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 "
+             << param.nodeDim[3] << " param 3 " << endl;
 
-    /// Set the HaloDepth.
-    const size_t HaloDepth = 2;
+        /// Set the HaloDepth.
+        const size_t HaloDepth = 2;
 
-    rootLogger.info("Initialize Lattice");
+        rootLogger.info("Initialize Lattice");
 
-    /// Initialize the Lattice class.
-    initIndexer(HaloDepth,param,commBase);
+        /// Initialize the Lattice class.
+        initIndexer(HaloDepth, param, commBase);
 
-    /// Initialize the Gaugefield.
-    rootLogger.info("Initialize Gaugefield");
-    Gaugefield<PREC,true,HaloDepth> gauge(commBase);
+        /// Initialize the Gaugefield.
+        rootLogger.info("Initialize Gaugefield");
+        Gaugefield<PREC, true, HaloDepth> gauge(commBase);
 
-    /// Initialize gaugefield with unit-matrices.
-    gauge.one();
-
-    std::string gauge_file;
-
-    // load gauge file, 0 start from 1, 1 and 2 load file, 2 will also gauge fix
-    if (param.load_conf() == 0)
-    {
-        rootLogger.info("Starting from unit configuration");
+        /// Initialize gaugefield with unit-matrices.
         gauge.one();
-    }
-    else if(param.load_conf() == 2 || param.load_conf() == 1)
-    {
+
+        std::string gauge_file;
+
+        // load gauge file, 0 start from 1, 1 and 2 load file, 2 will also gauge fix
+        if (param.load_conf() == 0) {
+            rootLogger.info("Starting from unit configuration");
+            gauge.one();
+        } else if (param.load_conf() == 2 || param.load_conf() == 1) {
 //        gauge_file = param.gauge_file() + std::to_string(param.confnumber());
-        rootLogger.info("Starting from configuration: " ,  gauge_file);
+            rootLogger.info("Starting from configuration: ", gauge_file);
 //        gauge.readconf_nersc(gauge_file);
 //	gauge.readconf_nersc("../test/l328f21b6285m0009875m0790a_019.995");
-	cout << param.gauge_file() << endl;
-	gauge.readconf_nersc(param.gauge_file());
+            cout << param.gauge_file() << endl;
+            gauge.readconf_nersc(param.gauge_file());
 
-    }
+        }
 
-    /// Exchange Halos
-    gauge.updateAll();
+        /// Exchange Halos
+        gauge.updateAll();
 
 
-    /// Initialize ReductionBase.
+        /// Initialize ReductionBase.
 //    ReductionBase<true,GCOMPLEX(PREC)> redBase(commBase);
-    LatticeContainer<true,GCOMPLEX(PREC)> redBase(commBase);
+        LatticeContainer<true, GCOMPLEX(PREC) > redBase(commBase);
 
-    /// We need to tell the Reductionbase how large our array will be. Again it runs on the spacelike volume only,
-    /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
-    typedef GIndexer<All,HaloDepth> GInd;
-    redBase.adjustSize(GInd::getLatData().vol4);
-    rootLogger.info("volume size " ,  GInd::getLatData().globvol4);
-    /// Read a configuration from hard drive. For the given configuration you should find
- //   rootLogger.info("Read configuration");
+        /// We need to tell the Reductionbase how large our array will be. Again it runs on the spacelike volume only,
+        /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
+        typedef GIndexer<All, HaloDepth> GInd;
+        redBase.adjustSize(GInd::getLatData().vol4);
+        rootLogger.info("volume size ", GInd::getLatData().globvol4);
+        /// Read a configuration from hard drive. For the given configuration you should find
+        //   rootLogger.info("Read configuration");
 //    gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
-    
+
 //    std::string gauge_file;
 //    gauge_file = param.gauge_file() + std::to_string(param.confnumber());
 //    rootLogger.info("Starting from configuration: " ,  gauge_file);
@@ -696,55 +696,55 @@ int main(int argc, char *argv[]) {
 
 ///////////// gauge fixing
 
-    if(param.load_conf() ==2){
-    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge); 
-    int ngfstep=0;
-    PREC gftheta=1e10;
-    const PREC gtol=1e-6;          /// When theta falls below this number, stop...
-    const int ngfstepMAX=9000;     /// ...or stop after a fixed number of steps; this way the program doesn't get stuck.
-    const int nunit=20;            /// Re-unitarize every 20 steps.
-    while ( (ngfstep<ngfstepMAX) && (gftheta>gtol) ) {
-    /// Compute starting GF functional and update the lattice.
-        GFixing.gaugefixOR();
-    /// Due to the nature of the update, we have to re-unitarize every so often.
-        if ( (ngfstep%nunit) == 0 ) {
-            gauge.su3latunitarize();
+        if (param.load_conf() == 2) {
+            GaugeFixing<PREC, true, HaloDepth> GFixing(gauge);
+            int ngfstep = 0;
+            PREC gftheta = 1e10;
+            const PREC gtol = 1e-6;          /// When theta falls below this number, stop...
+            const int ngfstepMAX = 9000;     /// ...or stop after a fixed number of steps; this way the program doesn't get stuck.
+            const int nunit = 20;            /// Re-unitarize every 20 steps.
+            while ((ngfstep < ngfstepMAX) && (gftheta > gtol)) {
+                /// Compute starting GF functional and update the lattice.
+                GFixing.gaugefixOR();
+                /// Due to the nature of the update, we have to re-unitarize every so often.
+                if ((ngfstep % nunit) == 0) {
+                    gauge.su3latunitarize();
+                }
+                /// Re-calculate theta to determine whether we are sufficiently fixed.
+                gftheta = GFixing.getTheta();
+                ngfstep += 1;
+            }
+            gauge.su3latunitarize(); /// One final re-unitarization.
+
+
         }
-    /// Re-calculate theta to determine whether we are sufficiently fixed.
-        gftheta=GFixing.getTheta();
-        ngfstep+=1;
-    }
-    gauge.su3latunitarize(); /// One final re-unitarization.
 
 
-    }
+        /// Start timer.
+        timer.start();
 
+        /// Exchange Halos
+        gauge.updateAll();
 
-    /// Start timer.
-    timer.start();
-
-    /// Exchange Halos
-    gauge.updateAll();
-
-    GCOMPLEX(PREC) dot;
+        GCOMPLEX(PREC) dot;
 
 ///////////////// Structures needed for comparison
 
-        CorrelatorTools<PREC,true,HaloDepth> corrTools;
+        CorrelatorTools<PREC, true, HaloDepth> corrTools;
 
         GCOMPLEX(PREC) corrComplex;
         GCOMPLEX(PREC) corrComplex2;
         GCOMPLEX(PREC) corrComplex3;
 
-        Gaugefield<PREC,false,HaloDepth>  gaugeCPU(commBase);
+        Gaugefield<PREC, false, HaloDepth> gaugeCPU(commBase);
 
         gaugeAccessor<PREC> _gaugeCPU(gaugeCPU.getAccessor());
 
-        CorrField<false,GSU3<PREC>> CPUfield3(commBase, corrTools.vol4);
-        CorrField<false,GSU3<PREC>> CPUfield4(commBase, corrTools.vol4);
-        Correlator<false,PREC> CPUnorm(commBase, corrTools.UAr2max);
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplex(commBase, corrTools.UAr2max);
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplexTemp(commBase, corrTools.UAr2max);
+        CorrField<false, GSU3<PREC>> CPUfield3(commBase, corrTools.vol4);
+        CorrField<false, GSU3<PREC>> CPUfield4(commBase, corrTools.vol4);
+        Correlator<false, PREC> CPUnorm(commBase, corrTools.UAr2max);
+        Correlator<false, GCOMPLEX(PREC) > CPUcorrComplex(commBase, corrTools.UAr2max);
+        Correlator<false, GCOMPLEX(PREC) > CPUcorrComplexTemp(commBase, corrTools.UAr2max);
 
         LatticeContainerAccessor _CPUfield3(CPUfield3.getAccessor());
         LatticeContainerAccessor _CPUfield4(CPUfield4.getAccessor());
@@ -752,244 +752,253 @@ int main(int argc, char *argv[]) {
         LatticeContainerAccessor _CPUcorrComplex(CPUcorrComplex.getAccessor());
         LatticeContainerAccessor _CPUcorrComplexTemp(CPUcorrComplexTemp.getAccessor());
 
-        Correlator<false,GCOMPLEX(PREC)> CPUresults(commBase, corrTools.UAr2max);
+        Correlator<false, GCOMPLEX(PREC) > CPUresults(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUresults(CPUresults.getAccessor());
-        Correlator<false,GCOMPLEX(PREC)> CPUnormR(commBase, corrTools.UAr2max);
+        Correlator<false, GCOMPLEX(PREC) > CPUnormR(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUnormR(CPUnormR.getAccessor());
 
-	
+
 ///////////////
 
-    std::vector<GCOMPLEX(PREC)> dotVector;
-    GCOMPLEX(PREC) * results;
-    results = new GCOMPLEX(PREC)[GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY];
-    ///  
-    timer.start();
-    //// loop over length of wilson lines
-    for(int length = 1; length < 2;length++){
-    //for(int length = 1; length<GInd::getLatData().globLT+1;length++){
+        std::vector<GCOMPLEX(PREC) > dotVector;
+        GCOMPLEX(PREC) *results;
+        results = new GCOMPLEX(PREC)[GInd::getLatData().globvol3 / 2 +
+                                     GInd::getLatData().globLX * GInd::getLatData().globLY];
+        ///
+        timer.start();
+        //// loop over length of wilson lines
+        for (int length = 1; length < 2; length++) {
+            //for(int length = 1; length<GInd::getLatData().globLT+1;length++){
 
-        /// calculate the wilson line starting from any spacetime point save in mu=0 direction
-        gWilson<PREC,HaloDepth>(gauge, length);
+            /// calculate the wilson line starting from any spacetime point save in mu=0 direction
+            gWilson<PREC, HaloDepth>(gauge, length);
 
-        /// copy from mu=0 to mu=1
-        gauge.template iterateOverBulkAtMu<1,256>(CopyFromMu<PREC,HaloDepth,All,0>(gauge));
-        gauge.updateAll();
-        //    dot = lines.dotProduct(shifted)/3.0/GInd::getLatData().globvol4;
-        /// check that dot product is with conjugate, hack
+            /// copy from mu=0 to mu=1
+            gauge.template iterateOverBulkAtMu<1, 256>(CopyFromMu<PREC, HaloDepth, All, 0>(gauge));
+            gauge.updateAll();
+            //    dot = lines.dotProduct(shifted)/3.0/GInd::getLatData().globvol4;
+            /// check that dot product is with conjugate, hack
 
-        //    rootLogger.info(0 ,  " " ,  0 ,  " ",  0 ,  " " ,  length ,  " " ,  dot);
+            //    rootLogger.info(0 ,  " " ,  0 ,  " ",  0 ,  " " ,  length ,  " " ,  dot);
 
-        // initial position x0=-1 due to adding dx in first line
-        int x0 = -STACKS;
-        int y0 = 0;
-        int z0 = 0;
+            // initial position x0=-1 due to adding dx in first line
+            int x0 = -STACKS;
+            int y0 = 0;
+            int z0 = 0;
 
-        int dx = STACKS;
-        int dy = 1;
-        int dz = 1;
+            int dx = STACKS;
+            int dy = 1;
+            int dz = 1;
 
-        for(size_t i = 0; i<GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY;i+=STACKS){
-            x0 += dx;
-
-            if(x0 >= (int)GInd::getLatData().globLX || x0 <0){
-                dx *= -1;
+            for (size_t i = 0; i < GInd::getLatData().globvol3 / 2 +
+                                   GInd::getLatData().globLX * GInd::getLatData().globLY; i += STACKS) {
                 x0 += dx;
-                y0 += dy;
-                if(y0 >= (int)GInd::getLatData().globLY|| y0 <0){
-                    dy *= -1;
+
+                if (x0 >= (int) GInd::getLatData().globLX || x0 < 0) {
+                    dx *= -1;
+                    x0 += dx;
                     y0 += dy;
-                    z0 += dz;
-                    /// move mu=1 direction by dz
-                    gMoveOne(gauge,2,dz);
-                    gauge.updateAll();
-                }
-                else if(param.nodeDim[1]>1){
-                    /// mode mu=1 direction by dy
-                    gMoveOne(gauge,1,dy);
-                    gauge.updateAll();
-                }
-            }
-
-    // A(x).A(x+r)^dag along direction x and also y if not split on different GPU's
-            if(param.nodeDim[1] == 1){
-//                 dot = gDotAlongXY(gauge,x0,y0,redBase);
-                 if(dx>0){
-            //         dotVector = gDotAlongXYStacked<PREC,HaloDepth,STACKS>(gauge,x0,y0,redBase);
-                     dotVector = gDotAlongXYStackedShared<PREC,HaloDepth,SHARED>(gauge,x0,y0,redBase);
-                     for(int j = 0;j < STACKS ; j++){
-                         results[i+j] = dotVector[j];
-                     }
-                 }
-                 else{
-                  //   dotVector = gDotAlongXYStacked<PREC,HaloDepth,STACKS>(gauge,x0,y0,redBase);
-                     dotVector = gDotAlongXYStackedShared<PREC,HaloDepth,SHARED>(gauge,x0,y0,redBase);     
-                     for(int j = 0;j < STACKS ; j++){
-                         results[i+STACKS-1-j] = dotVector[j];
-                     } 
-                 }
-            }
-            else{
-                 dot = gDotAlongXY(gauge,x0,0,redBase);
-            }
-
-            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[0] ,  " " ,  dotVector[1]); 
-    
-            }
-
-        x0 = -1;
-        y0 = 0;
-        z0 = 0;
-
-        dx = 1;
-        dy = 1;
-        dz = 1;
-
-        for(size_t i = 0; i<GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY;i++){
-            x0 += dx;
-
-            if(x0 >= (int)GInd::getLatData().globLX || x0 <0){
-                dx *= -1;
-                x0 += dx;
-                y0 += dy;
-                if(y0 >= (int)GInd::getLatData().globLY|| y0 <0){
-                    dy *= -1;
-                    y0 += dy;
-                    z0 += dz;
-                }
-            }
-
-            dot = results[i];
-
-            // save results
-            if(length == 1){
-                
-
-	        int ir2 = 0;
-	        if(x0 > (int)GInd::getLatData().globLX/2){
-	            ir2 += (x0-(int)GInd::getLatData().globLX)*(x0-(int)GInd::getLatData().globLX);
-	        }
-	        else{
-	            ir2 += x0*x0;
-	        }
-
-                if(y0 > (int)GInd::getLatData().globLY/2){
-                    ir2 += (y0-(int)GInd::getLatData().globLY)*(y0-(int)GInd::getLatData().globLY);
-                }
-                else{
-                    ir2 += y0*y0;
-                }
-
-                if(z0 > (int)GInd::getLatData().globLZ/2){
-                    ir2 += (z0-(int)GInd::getLatData().globLZ)*(z0-(int)GInd::getLatData().globLZ);
-                }
-                else{
-                    ir2 += z0*z0;
-                }
-
-                // factor for counting contributions
-                // Initial factor 2 for symmetry between z and -z
-                // double the factor if x or y = l/2 due to periodicity
-                double factor = 1.0;
-
-                if(z0 == (int)GInd::getLatData().globLZ/2 || z0 == 0){
-                    factor = 0.5*factor;
-                    if((y0 == (int)GInd::getLatData().globLY/2 || y0 == 0) && (x0 == (int)GInd::getLatData().globLX/2 || x0==0) ){
-                        factor = 2.0*factor;
+                    if (y0 >= (int) GInd::getLatData().globLY || y0 < 0) {
+                        dy *= -1;
+                        y0 += dy;
+                        z0 += dz;
+                        /// move mu=1 direction by dz
+                        gMoveOne(gauge, 2, dz);
+                        gauge.updateAll();
+                    } else if (param.nodeDim[1] > 1) {
+                        /// mode mu=1 direction by dy
+                        gMoveOne(gauge, 1, dy);
+                        gauge.updateAll();
                     }
-		}
-
-                if( (z0 == (int)GInd::getLatData().globLZ/2 || z0==0) && (y0 == (int)GInd::getLatData().globLY/2 || y0 == 0) && (x0 == (int)GInd::getLatData().globLX/2 || x0==0) ){
-		    factor = 0.5*factor;
                 }
 
-                _CPUresults.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-                corrComplex += factor*dot;
-	        _CPUresults.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                // A(x).A(x+r)^dag along direction x and also y if not split on different GPU's
+                if (param.nodeDim[1] == 1) {
+//                 dot = gDotAlongXY(gauge,x0,y0,redBase);
+                    if (dx > 0) {
+                        //         dotVector = gDotAlongXYStacked<PREC,HaloDepth,STACKS>(gauge,x0,y0,redBase);
+                        dotVector = gDotAlongXYStackedShared<PREC, HaloDepth, SHARED>(gauge, x0, y0, redBase);
+                        for (int j = 0; j < STACKS; j++) {
+                            results[i + j] = dotVector[j];
+                        }
+                    } else {
+                        //   dotVector = gDotAlongXYStacked<PREC,HaloDepth,STACKS>(gauge,x0,y0,redBase);
+                        dotVector = gDotAlongXYStackedShared<PREC, HaloDepth, SHARED>(gauge, x0, y0, redBase);
+                        for (int j = 0; j < STACKS; j++) {
+                            results[i + STACKS - 1 - j] = dotVector[j];
+                        }
+                    }
+                } else {
+                    dot = gDotAlongXY(gauge, x0, 0, redBase);
+                }
+
+                rootLogger.info(x0, " ", y0, " ", z0, " ", length, " ", dotVector[0], " ", dotVector[1]);
+
+            }
+
+            x0 = -1;
+            y0 = 0;
+            z0 = 0;
+
+            dx = 1;
+            dy = 1;
+            dz = 1;
+
+            for (size_t i = 0;
+                 i < GInd::getLatData().globvol3 / 2 + GInd::getLatData().globLX * GInd::getLatData().globLY; i++) {
+                x0 += dx;
+
+                if (x0 >= (int) GInd::getLatData().globLX || x0 < 0) {
+                    dx *= -1;
+                    x0 += dx;
+                    y0 += dy;
+                    if (y0 >= (int) GInd::getLatData().globLY || y0 < 0) {
+                        dy *= -1;
+                        y0 += dy;
+                        z0 += dz;
+                    }
+                }
+
+                dot = results[i];
+
+                // save results
+                if (length == 1) {
+
+
+                    int ir2 = 0;
+                    if (x0 > (int) GInd::getLatData().globLX / 2) {
+                        ir2 += (x0 - (int) GInd::getLatData().globLX) * (x0 - (int) GInd::getLatData().globLX);
+                    } else {
+                        ir2 += x0 * x0;
+                    }
+
+                    if (y0 > (int) GInd::getLatData().globLY / 2) {
+                        ir2 += (y0 - (int) GInd::getLatData().globLY) * (y0 - (int) GInd::getLatData().globLY);
+                    } else {
+                        ir2 += y0 * y0;
+                    }
+
+                    if (z0 > (int) GInd::getLatData().globLZ / 2) {
+                        ir2 += (z0 - (int) GInd::getLatData().globLZ) * (z0 - (int) GInd::getLatData().globLZ);
+                    } else {
+                        ir2 += z0 * z0;
+                    }
+
+                    // factor for counting contributions
+                    // Initial factor 2 for symmetry between z and -z
+                    // double the factor if x or y = l/2 due to periodicity
+                    double factor = 1.0;
+
+                    if (z0 == (int) GInd::getLatData().globLZ / 2 || z0 == 0) {
+                        factor = 0.5 * factor;
+                        if ((y0 == (int) GInd::getLatData().globLY / 2 || y0 == 0) &&
+                            (x0 == (int) GInd::getLatData().globLX / 2 || x0 == 0)) {
+                            factor = 2.0 * factor;
+                        }
+                    }
+
+                    if ((z0 == (int) GInd::getLatData().globLZ / 2 || z0 == 0) &&
+                        (y0 == (int) GInd::getLatData().globLY / 2 || y0 == 0) &&
+                        (x0 == (int) GInd::getLatData().globLX / 2 || x0 == 0)) {
+                        factor = 0.5 * factor;
+                    }
+
+                    _CPUresults.getValue<GCOMPLEX(PREC) >(ir2, corrComplex);
+                    corrComplex += factor * dot;
+                    _CPUresults.setValue<GCOMPLEX(PREC) >(ir2, corrComplex);
 
 //                rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  ir2 ,  " " ,  dot ,  " " ,  corrComplex);
 
-                _CPUnormR.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-                corrComplex += factor;
-                _CPUnormR.setValue<GCOMPLEX(PREC)>(ir2, corrComplex);
+                    _CPUnormR.getValue<GCOMPLEX(PREC) >(ir2, corrComplex);
+                    corrComplex += factor;
+                    _CPUnormR.setValue<GCOMPLEX(PREC) >(ir2, corrComplex);
 
-                rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dot ,  " " ,  corrComplex ,  " " ,  factor ,  " " ,  i ,  " r2 " ,  ir2);
+                    rootLogger.info(x0, " ", y0, " ", z0, " ", length, " ", dot, " ", corrComplex, " ", factor, " ", i,
+                                    " r2 ", ir2);
+
+                }
 
             }
 
         }
 
-    }
+        timer.stop();
+        rootLogger.info("Time for operators: ", timer);
+        /// stop timer and print time
+        timer.stop();
 
-    timer.stop();
-    rootLogger.info("Time for operators: " ,  timer);
-    /// stop timer and print time
-    timer.stop();
-
-    /////// Comparison with correlator class
+        /////// Comparison with correlator class
 
 
-    gaugeCPU = gauge;
-    corrTools.createNorm("spatial",commBase);
+        gaugeCPU = gauge;
+        corrTools.createNorm("spatial", commBase);
 
 //    for(int m=0; m<corrTools.vol4; m++) {
 //        _CPUfield3.setValue(m, _gaugeCPU.getLink(GInd::getSiteMu(m,0)));
 //        _CPUfield4.setValue(m, _gaugeCPU.getLink(GInd::getSiteMu(m,0)));
 //    }
 
-    for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
-        _CPUcorrComplex.setValue<GCOMPLEX(PREC)>(ir2,0.0);
-    }
+        for (int ir2 = 0; ir2 < corrTools.UAr2max + 1; ir2++) {
+            _CPUcorrComplex.setValue<GCOMPLEX(PREC) >(ir2, 0.0);
+        }
 
 
-    for(size_t itau = 0; itau<GInd::getLatData().globLT;itau++){
+        for (size_t itau = 0; itau < GInd::getLatData().globLT; itau++) {
 
-    for(size_t it = 0; it<GInd::getLatData().globLT;it++){
-        for(size_t ix = 0; ix<GInd::getLatData().globLX;ix++){
-            for(size_t iy = 0; iy<GInd::getLatData().globLY;iy++){
-                for(size_t iz = 0; iz<GInd::getLatData().globLZ;iz++){
-                _CPUfield3.setValue(GInd::getSite(ix,iy,iz,it).isite, _gaugeCPU.getLink(GInd::getSiteMu(GInd::getSite(ix,iy,iz,itau).isite,0)));
-                _CPUfield4.setValue(GInd::getSite(ix,iy,iz,it).isite, _gaugeCPU.getLink(GInd::getSiteMu(GInd::getSite(ix,iy,iz,itau).isite,0)));
+            for (size_t it = 0; it < GInd::getLatData().globLT; it++) {
+                for (size_t ix = 0; ix < GInd::getLatData().globLX; ix++) {
+                    for (size_t iy = 0; iy < GInd::getLatData().globLY; iy++) {
+                        for (size_t iz = 0; iz < GInd::getLatData().globLZ; iz++) {
+                            _CPUfield3.setValue(GInd::getSite(ix, iy, iz, it).isite, _gaugeCPU.getLink(
+                                    GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau).isite, 0)));
+                            _CPUfield4.setValue(GInd::getSite(ix, iy, iz, it).isite, _gaugeCPU.getLink(
+                                    GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau).isite, 0)));
+                        }
+                    }
                 }
             }
+
+
+            corrTools.correlateAt<GSU3<PREC>, GCOMPLEX(PREC), trAxBt<PREC>>("spatial", CPUfield3, CPUfield4, CPUnorm,
+                                                                            CPUcorrComplexTemp, true);
+
+            for (int ir2 = 0; ir2 < corrTools.UAr2max + 1; ir2++) {
+                _CPUcorrComplex.getValue<GCOMPLEX(PREC) >(ir2, corrComplex);
+                _CPUcorrComplexTemp.getValue<GCOMPLEX(PREC) >(ir2, corrComplex2);
+                corrComplex = corrComplex + corrComplex2;
+                _CPUcorrComplex.setValue<GCOMPLEX(PREC) >(ir2, corrComplex);
+            }
+
         }
+
+        double difference = 0.0;
+        for (int ir2 = 0; ir2 < corrTools.UAr2max + 1; ir2++) {
+
+            _CPUcorrComplex.getValue<GCOMPLEX(PREC) >(ir2, corrComplex);
+            _CPUresults.getValue<GCOMPLEX(PREC) >(ir2, corrComplex2);
+            _CPUnormR.getValue<GCOMPLEX(PREC) >(ir2, corrComplex3);
+            if (real(corrComplex3) > 0.1) {
+                corrComplex2 = corrComplex2 / real(corrComplex3);
+            }
+
+            rootLogger.info(ir2, " ", corrComplex / 3.0 / GInd::getLatData().globLT, " , ", corrComplex2, "    ",
+                            real(corrComplex / 3.0 / GInd::getLatData().globLT - corrComplex2), "   Norm ",
+                            real(corrComplex3));
+            difference += abs(real(corrComplex / 3.0 / GInd::getLatData().globLT - corrComplex2));
+            if (abs(real(corrComplex / 3.0 / GInd::getLatData().globLT - corrComplex2)) > 1e-10) {
+                rootLogger.info(" Error, large difference");
+            }
+        }
+
+        rootLogger.info("Total difference between all resuls are ", difference);
+
+        ///////
+
+        delete[] results;
     }
-
-
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),trAxBt<PREC>>("spatial", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplexTemp, true);
-
-    for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
-        _CPUcorrComplex.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-        _CPUcorrComplexTemp.getValue<GCOMPLEX(PREC)>(ir2,corrComplex2);
-        corrComplex = corrComplex + corrComplex2;
-        _CPUcorrComplex.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+    catch (const std::runtime_error &error) {
+        return 1;
     }
-
-    }
-
-    double difference = 0.0;
-    for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
-
-        _CPUcorrComplex.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-        _CPUresults.getValue<GCOMPLEX(PREC)>(ir2,corrComplex2);
-        _CPUnormR.getValue<GCOMPLEX(PREC)>(ir2,corrComplex3);
-	if(real(corrComplex3) > 0.1){
-	    corrComplex2 = corrComplex2/real(corrComplex3);
-	}
-
-    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));            
-    difference += abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2));
-    if(abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2)) > 1e-10){
-	   rootLogger.info(" Error, large difference");
-	}
-    }
-
-   rootLogger.info("Total difference between all resuls are "  ,  difference);
-
-    ///////
-
-    delete [] results;
-
     return 0;
 }
 

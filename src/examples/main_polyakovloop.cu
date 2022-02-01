@@ -88,78 +88,82 @@ GCOMPLEX(floatT) gPloop(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeContain
 
 int main(int argc, char *argv[]) {
 
-    /// Controls whether DEBUG statements are shown as it runs; could also set to INFO, which is less verbose.
-    stdLogger.setVerbosity(INFO);
+    try {
+        /// Controls whether DEBUG statements are shown as it runs; could also set to INFO, which is less verbose.
+        stdLogger.setVerbosity(INFO);
 
-    /// Initialize parameter class.
-    LatticeParameters param;
+        /// Initialize parameter class.
+        LatticeParameters param;
 
-    /// Initialize the Lattice dimension.
-    const int LatDim[] = {32,32,32, 8}; // {Ns,Ns,Ns,Ntau}
+        /// Initialize the Lattice dimension.
+        const int LatDim[] = {32, 32, 32, 8}; // {Ns,Ns,Ns,Ntau}
 
-    /// Number of sublattices in each direction.
-    const int NodeDim[] = {2, 1, 2, 1};
+        /// Number of sublattices in each direction.
+        const int NodeDim[] = {2, 1, 2, 1};
 
-    /// Pass these dimensions to the parameter class.
-    param.latDim.set(LatDim);
-    param.nodeDim.set(NodeDim);
+        /// Pass these dimensions to the parameter class.
+        param.latDim.set(LatDim);
+        param.nodeDim.set(NodeDim);
 
-    /// Initialize a timer.
-    StopWatch<true> timer;
+        /// Initialize a timer.
+        StopWatch<true> timer;
 
-    /// Initialize the CommunicationBase.
-    CommunicationBase commBase(&argc, &argv);
-    commBase.init(param.nodeDim());
+        /// Initialize the CommunicationBase.
+        CommunicationBase commBase(&argc, &argv);
+        commBase.init(param.nodeDim());
 
-    /// Set the HaloDepth.
-    const size_t HaloDepth = 1;
+        /// Set the HaloDepth.
+        const size_t HaloDepth = 1;
 
-    rootLogger.info("Initialize Lattice");
+        rootLogger.info("Initialize Lattice");
 
-    /// Initialize the Lattice class.
-    initIndexer(HaloDepth,param,commBase);
+        /// Initialize the Lattice class.
+        initIndexer(HaloDepth, param, commBase);
 
-    /// Initialize the Gaugefield.
-    rootLogger.info("Initialize Gaugefield");
-    Gaugefield<PREC,true,HaloDepth> gauge(commBase);
+        /// Initialize the Gaugefield.
+        rootLogger.info("Initialize Gaugefield");
+        Gaugefield<PREC, true, HaloDepth> gauge(commBase);
 
-    /// Initialize gaugefield with unit-matrices.
-    gauge.one();
+        /// Initialize gaugefield with unit-matrices.
+        gauge.one();
 
-    /// Initialize LatticeContainer.
-    LatticeContainer<true,GCOMPLEX(PREC)> redBase(commBase);
+        /// Initialize LatticeContainer.
+        LatticeContainer<true, GCOMPLEX(PREC) > redBase(commBase);
 
-    /// We need to tell the Reductionbase how large our array will be. Again it runs on the spacelike volume only,
-    /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
-    typedef GIndexer<All,HaloDepth> GInd;
-    redBase.adjustSize(GInd::getLatData().vol3);
+        /// We need to tell the Reductionbase how large our array will be. Again it runs on the spacelike volume only,
+        /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
+        typedef GIndexer<All, HaloDepth> GInd;
+        redBase.adjustSize(GInd::getLatData().vol3);
 
-    /// Read a configuration from hard drive. For the given configuration you should find
-    ///   Reduced RE(ploop) =  0.00358613
-    ///   Reduced IM(ploop) = -0.000869849
-    rootLogger.info("Read configuration");
-    gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
+        /// Read a configuration from hard drive. For the given configuration you should find
+        ///   Reduced RE(ploop) =  0.00358613
+        ///   Reduced IM(ploop) = -0.000869849
+        rootLogger.info("Read configuration");
+        gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
-    /// Start timer.
-    timer.start();
+        /// Start timer.
+        timer.start();
 
-    /// Ploop variable
-    GCOMPLEX(PREC) ploop;
+        /// Ploop variable
+        GCOMPLEX(PREC) ploop;
 
-    /// Exchange Halos
-    gauge.updateAll();
+        /// Exchange Halos
+        gauge.updateAll();
 
-    /// Calculate and report Ploop.
-    timer.start();
-    ploop = gPloop<PREC,HaloDepth>(gauge, redBase);
-    timer.stop();
-    rootLogger.info("Time for operators: " ,  timer);
-    rootLogger.info(std::setprecision(20) ,  "Reduced RE(ploop) = " ,  ploop.cREAL);
-    rootLogger.info(std::setprecision(20) ,  "Reduced IM(ploop) = " ,  ploop.cIMAG);
+        /// Calculate and report Ploop.
+        timer.start();
+        ploop = gPloop<PREC, HaloDepth>(gauge, redBase);
+        timer.stop();
+        rootLogger.info("Time for operators: ", timer);
+        rootLogger.info(std::setprecision(20), "Reduced RE(ploop) = ", ploop.cREAL);
+        rootLogger.info(std::setprecision(20), "Reduced IM(ploop) = ", ploop.cIMAG);
 
-    /// stop timer and print time
-    timer.stop();
-
+        /// stop timer and print time
+        timer.stop();
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

@@ -289,26 +289,29 @@ bool testSmearLink(CommunicationBase &commBase) {
 
 
 int main(int argc, char **argv) {
+    try {
+        LatticeParameters param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/LinkPathTest.param", argc, argv);
+        commBase.init(param.nodeDim());
 
-    LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/LinkPathTest.param", argc, argv);
-    commBase.init(param.nodeDim());
+        const int HaloDepth = 0;
 
-    const int HaloDepth = 0;
+        initIndexer(HaloDepth, param, commBase);
 
-    initIndexer(HaloDepth,param, commBase);
-
-    stdLogger.setVerbosity(INFO);
-    rootLogger.setVerbosity(INFO);
-    rootLogger.info("Testing LinkPath Feature for smearing constructs");
-    if (testSmearLink<PREC,HaloDepth>(commBase)) {
-        rootLogger.info("Test " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
-    } else {
-        rootLogger.error("Test failed!");
-        return -1;
+        stdLogger.setVerbosity(INFO);
+        rootLogger.setVerbosity(INFO);
+        rootLogger.info("Testing LinkPath Feature for smearing constructs");
+        if (testSmearLink<PREC, HaloDepth>(commBase)) {
+            rootLogger.info("Test ", CoutColors::green, "passed!", CoutColors::reset);
+        } else {
+            rootLogger.error("Test failed!");
+            return 1;
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

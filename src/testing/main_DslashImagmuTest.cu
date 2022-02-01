@@ -174,44 +174,47 @@ bool test_dslash(CommunicationBase &commBase){
 }
 
 int main(int argc, char **argv) {
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    stdLogger.setVerbosity(INFO);
 
+        LatticeParameters param;
+        const int LatDim[] = {8, 8, 8, 4};
+        const int NodeDim[] = {1, 1, 1, 1};
 
+        CommunicationBase commBase(&argc, &argv);
 
-    LatticeParameters param;
-    const int LatDim[] = {8, 8, 8, 4};
-    const int NodeDim[] = {1, 1, 1, 1};
+        param.latDim.set(LatDim);
+        param.nodeDim.set(NodeDim);
 
-    CommunicationBase commBase(&argc, &argv);
+        commBase.init(param.nodeDim());
 
-    param.latDim.set(LatDim);
-    param.nodeDim.set(NodeDim);
+        const int HaloDepth = 0;
+        initIndexer(HaloDepth, param, commBase);
+        const int HaloDepthSpin = 0;
+        initIndexer(HaloDepthSpin, param, commBase);
+        stdLogger.setVerbosity(INFO);
 
-    commBase.init(param.nodeDim());
+        rootLogger.info("Test with old values done for imaginary chemical potential = 0.4");
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Running on Device");
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Testing Even - Odd");
+        rootLogger.info("------------------");
+        bool lerror = test_dslash<float, Even, Odd, 1, true>(commBase);
+        rootLogger.info("------------------");
+        rootLogger.info("Testing Odd - Even");
+        rootLogger.info("------------------");
+        lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
 
-    const int HaloDepth = 0;
-    initIndexer(HaloDepth,param, commBase);
-    const int HaloDepthSpin = 0;
-    initIndexer(HaloDepthSpin,param, commBase);
-    stdLogger.setVerbosity(INFO);
-
-    rootLogger.info("Test with old values done for imaginary chemical potential = 0.4");
-    rootLogger.info("-------------------------------------");
-    rootLogger.info( "Running on Device");
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Testing Even - Odd");
-    rootLogger.info("------------------");
-    bool lerror = test_dslash<float, Even, Odd, 1, true>(commBase);
-    rootLogger.info( "------------------");
-    rootLogger.info( "Testing Odd - Even");
-    rootLogger.info("------------------");
-    lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
-
-    if(lerror) {
-        rootLogger.error("At least one test failed!");
-        return -1;
-    } else {
-        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+        if (lerror) {
+            rootLogger.error("At least one test failed!");
+            return 1;
+        } else {
+            rootLogger.info("All tests ", CoutColors::green, "passed!", CoutColors::reset);
+        }
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
     }
 }

@@ -40,79 +40,77 @@ struct milcInfo : ParameterList {
 
 
 int main(int argc, char *argv[]) {
+    try {
+        /// Controls whether DEBUG statements are shown as it runs; could also set to INFO, which is less verbose.
+        stdLogger.setVerbosity(INFO);
 
-    /// Controls whether DEBUG statements are shown as it runs; could also set to INFO, which is less verbose.
-    stdLogger.setVerbosity(INFO);
+        /// Initialize parameter class.
+        LoadParam<PREC> param;
 
-    /// Initialize parameter class.
-    LoadParam<PREC> param;
+        /// Initialize the CommunicationBase.
+        CommunicationBase commBase(&argc, &argv);
 
-    /// Initialize the CommunicationBase.
-    CommunicationBase commBase(&argc, &argv);
-
-    param.readfile(commBase, "../parameter/test.param", argc, argv);
-
-
-    commBase.init(param.nodeDim());
+        param.readfile(commBase, "../parameter/test.param", argc, argv);
 
 
-    /// Set the HaloDepth.
-    const size_t HaloDepth = 2;
+        commBase.init(param.nodeDim());
 
-    rootLogger.info("Initialize Lattice");
 
-    /// Initialize the Lattice class.
-    initIndexer(HaloDepth,param,commBase);
+        /// Set the HaloDepth.
+        const size_t HaloDepth = 2;
 
-    /// Initialize the Gaugefield.
-    rootLogger.info("Initialize Gaugefield");
-    Gaugefield<PREC,true,HaloDepth> gauge(commBase);
+        rootLogger.info("Initialize Lattice");
 
-    /// Initialize gaugefield with unit-matrices.
-    gauge.one();
+        /// Initialize the Lattice class.
+        initIndexer(HaloDepth, param, commBase);
 
-    std::string gauge_file;
+        /// Initialize the Gaugefield.
+        rootLogger.info("Initialize Gaugefield");
+        Gaugefield<PREC, true, HaloDepth> gauge(commBase);
+
+        /// Initialize gaugefield with unit-matrices.
+        gauge.one();
+
+        std::string gauge_file;
 
         std::string file_path = param.directory();
-        file_path.append(param.gauge_file()); 
-        rootLogger.info("Starting from configuration: " ,  file_path);
+        file_path.append(param.gauge_file());
+        rootLogger.info("Starting from configuration: ", file_path);
 
-            gauge.readconf_milc(file_path);
+        gauge.readconf_milc(file_path);
 
-            gauge.updateAll();         
-            GaugeAction<PREC,true,HaloDepth> enDensity(gauge);
-            PREC SpatialPlaq  = enDensity.plaquetteSS();
-            PREC TemporalPlaq = enDensity.plaquette()*2.0-SpatialPlaq;
+        gauge.updateAll();
+        GaugeAction<PREC, true, HaloDepth> enDensity(gauge);
+        PREC SpatialPlaq = enDensity.plaquetteSS();
+        PREC TemporalPlaq = enDensity.plaquette() * 2.0 - SpatialPlaq;
 //            rootLogger.info("plaquetteST: "   ,  TemporalPlaq);
 //            rootLogger.info("plaquetteSS: " ,  SpatialPlaq);
 
 
 
-            std::string info_path = file_path;
-            info_path.append(".info");
-            milcInfo<PREC> paramMilc;
+        std::string info_path = file_path;
+        info_path.append(".info");
+        milcInfo<PREC> paramMilc;
 //            paramMilc.readfile(commBase,info_path);
-            rootLogger.info("plaquette SS: " ,  SpatialPlaq ,  "  and info file: " ,  (paramMilc.ssplaq())/3.0);
-            rootLogger.info("plaquette ST: "  ,  TemporalPlaq ,  "  and info file: ",   (paramMilc.stplaq())/3.0);
-            rootLogger.info("linktr info file: " ,  paramMilc.linktr());
-            if(!(abs((paramMilc.ssplaq())/3.0-SpatialPlaq) < 1e-5)){
+        rootLogger.info("plaquette SS: ", SpatialPlaq, "  and info file: ", (paramMilc.ssplaq()) / 3.0);
+        rootLogger.info("plaquette ST: ", TemporalPlaq, "  and info file: ", (paramMilc.stplaq()) / 3.0);
+        rootLogger.info("linktr info file: ", paramMilc.linktr());
+        if (!(abs((paramMilc.ssplaq()) / 3.0 - SpatialPlaq) < 1e-5)) {
 //                throw std::runtime_error(stdLogger.fatal("Error ssplaq!"));
-            }
-            else{
-                rootLogger.info("Passed ssplaq check");
-            }
-            if(!(abs((paramMilc.stplaq())/3.0-TemporalPlaq) < 1e-5)){
+        } else {
+            rootLogger.info("Passed ssplaq check");
+        }
+        if (!(abs((paramMilc.stplaq()) / 3.0 - TemporalPlaq) < 1e-5)) {
 //                throw std::runtime_error(stdLogger.fatal("Error stplaq!"));
-            }
-            else{
-                rootLogger.info("Passed stplaq check");
-            }
+        } else {
+            rootLogger.info("Passed stplaq check");
+        }
 
 
-        
 
-    /// Exchange Halos
-    gauge.updateAll();
+
+        /// Exchange Halos
+        gauge.updateAll();
 /*
    
 
@@ -126,10 +124,12 @@ int main(int argc, char *argv[]) {
     rootLogger.info("volume size " ,  GInd::getLatData().globvol4);
 */
 
-    file_path.append("_nersc");
-    gauge.writeconf_nersc(file_path);
-
-
+        file_path.append("_nersc");
+        gauge.writeconf_nersc(file_path);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

@@ -237,25 +237,29 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
 }
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(DEBUG);
 
-    stdLogger.setVerbosity(DEBUG);
+        HaloTestParam param;
 
-    HaloTestParam param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/SpinorHaloTest.param", argc, argv);
+        commBase.init(param.nodeDim());
 
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/SpinorHaloTest.param", argc, argv);
-    commBase.init(param.nodeDim());
+        const int HaloDepth = 2;
 
-    const int HaloDepth = 2;
+        initIndexer(HaloDepth, param, commBase, param.forceHalos());
 
-    initIndexer(HaloDepth,param, commBase, param.forceHalos());
+        run_func<HaloDepth, true, 1>(commBase, param.nodeDim(), param.forceHalos());
+        run_func<HaloDepth, true, 8>(commBase, param.nodeDim(), param.forceHalos());
+        run_func<HaloDepth, true, 14>(commBase, param.nodeDim(), param.forceHalos());
 
-    run_func<HaloDepth,true, 1>(commBase, param.nodeDim(),param.forceHalos());
-    run_func<HaloDepth,true, 8>(commBase, param.nodeDim(),param.forceHalos());
-    run_func<HaloDepth,true, 14>(commBase, param.nodeDim(),param.forceHalos());
-
-    run_func<HaloDepth,false, 1>(commBase, param.nodeDim(),param.forceHalos());
-    run_func<HaloDepth,false, 8>(commBase, param.nodeDim(),param.forceHalos());
+        run_func<HaloDepth, false, 1>(commBase, param.nodeDim(), param.forceHalos());
+        run_func<HaloDepth, false, 8>(commBase, param.nodeDim(), param.forceHalos());
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

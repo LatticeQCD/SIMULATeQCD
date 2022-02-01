@@ -517,19 +517,7 @@ int main(int argc, char **argv) {
     }
     catch (std::runtime_error& error){
         rootLogger.error("Test failed!");
-        return -1;
+        return 1;
     }
     return 0;
 }
-
-template<Layout LatLayout, size_t HaloDepth>
-size_t getGlobalIndex(LatticeDimensions coord) {
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-
-    LatticeData lat = GInd::getLatData();
-    LatticeDimensions globCoord = lat.globalPos(coord);
-
-    return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
-        globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
-}
-

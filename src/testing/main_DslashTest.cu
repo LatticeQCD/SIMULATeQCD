@@ -171,43 +171,35 @@ bool test_dslash(CommunicationBase &commBase){
 }
 
 int main(int argc, char **argv) {
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    stdLogger.setVerbosity(INFO);
+        LatticeParameters param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/DslashTest.param", argc, argv);
+        bool lerror = false;
 
-    LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/DslashTest.param", argc, argv);
-    bool lerror=false;
+        commBase.init(param.nodeDim());
 
-    commBase.init(param.nodeDim());
+        const int HaloDepth = 0;
+        initIndexer(HaloDepth, param, commBase);
+        const int HaloDepthSpin = 0;
+        initIndexer(HaloDepthSpin, param, commBase);
+        stdLogger.setVerbosity(INFO);
 
-    const int HaloDepth = 0;
-    initIndexer(HaloDepth,param, commBase);
-    const int HaloDepthSpin = 0;
-    initIndexer(HaloDepthSpin,param, commBase);
-    stdLogger.setVerbosity(INFO);
-
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Running on Device");
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Testing Even - Odd");
-    rootLogger.info("------------------");
-    lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
-    rootLogger.info("------------------");
-    rootLogger.info("Testing Odd - Even");
-    rootLogger.info("------------------");
-    lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Running on Device");
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Testing Even - Odd");
+        rootLogger.info("------------------");
+        lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
+        rootLogger.info("------------------");
+        rootLogger.info("Testing Odd - Even");
+        rootLogger.info("------------------");
+        lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
+    return 0;
 }
-
-
-template<Layout LatLayout, size_t HaloDepth>
-size_t getGlobalIndex(LatticeDimensions coord) {
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-
-    LatticeData lat = GInd::getLatData();
-    LatticeDimensions globCoord = lat.globalPos(coord);
-
-    return globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
-           globCoord[3] * lat.globLX * lat.globLY * lat.globLZ;
-}
-

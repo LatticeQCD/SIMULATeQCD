@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
         run_func<float, Even, Odd, 1, 14, true>(commBase, param, rat);
     }
     catch (const std::runtime_error &error) {
-        rootLogger.error("There has been a runtime error!");
-        return -1;
+        return 1;
     }
+    return 0;
 }

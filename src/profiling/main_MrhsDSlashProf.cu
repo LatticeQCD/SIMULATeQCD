@@ -100,40 +100,45 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 }
 
 int main(int argc, char **argv) {
+    try {
+        stdLogger.setVerbosity(INFO);
+        CommunicationBase commBase(&argc, &argv);
 
-    stdLogger.setVerbosity(INFO);
-    CommunicationBase commBase(&argc, &argv);
+        LatticeParameters param;
+        param.readfile(commBase, "../parameter/profiling/InverterProfile.param", argc, argv);
 
-    LatticeParameters param;
-    param.readfile(commBase, "../parameter/profiling/InverterProfile.param", argc, argv);
- 
-    const int LatDim[] = {param.latDim[0],param.latDim[1],param.latDim[2],param.latDim[3]};
+        const int LatDim[] = {param.latDim[0], param.latDim[1], param.latDim[2], param.latDim[3]};
 
-    int Vol = LatDim[0]*LatDim[1]*LatDim[2]*LatDim[3];
+        int Vol = LatDim[0] * LatDim[1] * LatDim[2] * LatDim[3];
 
-    param.latDim.set(LatDim);
+        param.latDim.set(LatDim);
 
-    commBase.init(param.nodeDim());
+        commBase.init(param.nodeDim());
 
-    const int HaloDepthSpin = 4;
-    initIndexer(HaloDepthSpin,param, commBase);
-    stdLogger.setVerbosity(INFO);
+        const int HaloDepthSpin = 4;
+        initIndexer(HaloDepthSpin, param, commBase);
+        stdLogger.setVerbosity(INFO);
 
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Running on Device");
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Testing Even - Odd");
-    rootLogger.info("------------------");
-    test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 8, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Running on Device");
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Testing Even - Odd");
+        rootLogger.info("------------------");
+        test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 8, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
+        test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
+    return 0;
 }

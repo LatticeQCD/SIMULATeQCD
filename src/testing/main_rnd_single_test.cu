@@ -187,34 +187,38 @@ void test_for_zeros(){
 
 
 int main(int argc, char *argv[]) {
-    stdLogger.setVerbosity(DEBUG);
+    try {
+        stdLogger.setVerbosity(DEBUG);
 
-    RhmcParameters param;
-    int LatDim[] = {8, 8, 8, 4};
-    int NodeDim[] = {1, 1, 1, 1};
-    const int HaloDepth = 0;
-    bool lerror=false;
-    
-    param.latDim.set(LatDim);
-    param.nodeDim.set(NodeDim);
+        RhmcParameters param;
+        int LatDim[] = {8, 8, 8, 4};
+        int NodeDim[] = {1, 1, 1, 1};
+        const int HaloDepth = 0;
+        bool lerror = false;
 
-    CommunicationBase commBase(&argc, &argv);
-    commBase.init(param.nodeDim());
+        param.latDim.set(LatDim);
+        param.nodeDim.set(NodeDim);
 
-    initIndexer(HaloDepth,param, commBase);
+        CommunicationBase commBase(&argc, &argv);
+        commBase.init(param.nodeDim());
 
-    rootLogger.info("Testig RNG for single prec:");
-    lerror = (lerror || test_old_new_host_dev<float, HaloDepth>(commBase));
+        initIndexer(HaloDepth, param, commBase);
 
-    rootLogger.info("Testing RNG for double prec:");
-    lerror = (lerror || test_old_new_host_dev<double, HaloDepth>(commBase));
+        rootLogger.info("Testig RNG for single prec:");
+        lerror = (lerror || test_old_new_host_dev<float, HaloDepth>(commBase));
 
-    if(lerror) {
-        rootLogger.error("At least one test failed!");
-        return -1;
-    } else {
-        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+        rootLogger.info("Testing RNG for double prec:");
+        lerror = (lerror || test_old_new_host_dev<double, HaloDepth>(commBase));
+
+        if (lerror) {
+            rootLogger.error("At least one test failed!");
+            return 1;
+        } else {
+            rootLogger.info("All tests ", CoutColors::green, "passed!", CoutColors::reset);
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }

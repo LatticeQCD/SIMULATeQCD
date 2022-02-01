@@ -168,23 +168,26 @@ void run_func(CommunicationBase& commBase, const int * NodeDim, bool forceHalos)
 
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    stdLogger.setVerbosity(INFO);
+        HaloTestParam param;
 
-    HaloTestParam param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/HaloTest.param", argc, argv);
+        commBase.init(param.nodeDim());
 
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/HaloTest.param", argc, argv);
-    commBase.init(param.nodeDim());
+        const int HaloDepth = 4;
 
-    const int HaloDepth = 4;
+        rootLogger.info("Initialize Lattice");
+        initIndexer(HaloDepth, param, commBase, param.forceHalos());
 
-    rootLogger.info("Initialize Lattice");
-    initIndexer(HaloDepth,param, commBase, param.forceHalos());
-
-    run_func<HaloDepth,true>(commBase,  param.nodeDim(), param.forceHalos());
-    run_func<HaloDepth,false>(commBase, param.nodeDim(), param.forceHalos());
-
+        run_func<HaloDepth, true>(commBase, param.nodeDim(), param.forceHalos());
+        run_func<HaloDepth, false>(commBase, param.nodeDim(), param.forceHalos());
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

@@ -13,45 +13,47 @@
 #define ON_DEVICE true
 
 int main(int argc, char *argv[]) {
+    try {
+        const size_t HaloDepth = 1;
 
-    const size_t HaloDepth = 1;
+        ///Initialize Base
+        typedef GIndexer<All, HaloDepth> GInd;
+        stdLogger.setVerbosity(INFO);
+        StopWatch<true> timer;
+        LatticeParameters lp;
+        CommunicationBase commBase(&argc, &argv);
+        lp.readfile(commBase, "../parameter/tests/ColorElectricMagneticCloverTest.param", argc, argv);
+        commBase.init(lp.nodeDim());
+        initIndexer(HaloDepth, lp, commBase);
+        Gaugefield<PREC, ON_DEVICE, HaloDepth> gauge(commBase);
 
-    ///Initialize Base
-    typedef GIndexer<All,HaloDepth> GInd;
-    stdLogger.setVerbosity(INFO);
-    StopWatch<true> timer;
-    LatticeParameters lp;
-    CommunicationBase commBase(&argc, &argv);
-    lp.readfile(commBase, "../parameter/tests/ColorElectricMagneticCloverTest.param", argc, argv);
-    commBase.init(lp.nodeDim());
-    initIndexer(HaloDepth,lp,commBase);
-    Gaugefield<PREC,ON_DEVICE,HaloDepth> gauge(commBase);
+        const size_t Ntau = GInd::getLatData().lt;
 
-    const size_t Ntau  = GInd::getLatData().lt;
+        rootLogger.info("Read configuration", lp.GaugefileName());
+        gauge.readconf_nersc(lp.GaugefileName());
 
-    rootLogger.info("Read configuration" ,  lp.GaugefileName());
-    gauge.readconf_nersc(lp.GaugefileName());
+        /// Calculate and report ColorElectricCorr.
+        ColorElectricCorr<PREC, ON_DEVICE, HaloDepth> CEC(gauge);
+        ColorMagneticCorr<PREC, ON_DEVICE, HaloDepth> CMC(gauge);
+        timer.start();
+        gauge.updateAll();
 
-    /// Calculate and report ColorElectricCorr.
-    ColorElectricCorr<PREC,ON_DEVICE,HaloDepth> CEC(gauge);
-    ColorMagneticCorr<PREC,ON_DEVICE,HaloDepth> CMC(gauge);
-    timer.start();
-    gauge.updateAll();
+        std::vector<GCOMPLEX(PREC) > resultColElecCorSl_clover;
+        std::vector<GCOMPLEX(PREC) > resultColMagnCorSl_clover;
 
-    std::vector<GCOMPLEX(PREC)> resultColElecCorSl_clover;
-    std::vector<GCOMPLEX(PREC)> resultColMagnCorSl_clover;
-
-    timer.start();
-    resultColElecCorSl_clover = CEC.getColorElectricCorr_clover();
-    timer.stop();
-    rootLogger.info("Time for clover color-electric corrs: " ,  timer);
-    timer.reset();
-    timer.start();
-    resultColMagnCorSl_clover = CMC.getColorMagneticCorr_clover();
-    timer.stop();
-    rootLogger.info("Time for clover color-magnetic corrs: " ,  timer);
-
-
+        timer.start();
+        resultColElecCorSl_clover = CEC.getColorElectricCorr_clover();
+        timer.stop();
+        rootLogger.info("Time for clover color-electric corrs: ", timer);
+        timer.reset();
+        timer.start();
+        resultColMagnCorSl_clover = CMC.getColorMagneticCorr_clover();
+        timer.stop();
+        rootLogger.info("Time for clover color-magnetic corrs: ", timer);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

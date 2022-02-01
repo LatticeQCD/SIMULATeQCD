@@ -143,59 +143,63 @@ bool no_rng_test(CommunicationBase &commBase, RhmcParameters param, RationalCoef
 };
 
 int main(int argc, char *argv[]) {
-    stdLogger.setVerbosity(INFO);
-    CommunicationBase commBase(&argc, &argv);
+    try {
+        stdLogger.setVerbosity(INFO);
+        CommunicationBase commBase(&argc, &argv);
 
-    RhmcParameters param;
+        RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
+        param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
 
-    const int HaloDepth = 2;
+        const int HaloDepth = 2;
 
-    RationalCoeff rat;
+        RationalCoeff rat;
 
-    rat.readfile(commBase, param.rat_file());
+        rat.readfile(commBase, param.rat_file());
 
-    commBase.init(param.nodeDim());
+        commBase.init(param.nodeDim());
 
-    initIndexer(HaloDepth,param, commBase);
+        initIndexer(HaloDepth, param, commBase);
 
-    rootLogger.info("STARTING RHMC TESTS:\n");
-    rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
+        rootLogger.info("STARTING RHMC TESTS:\n");
+        rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
 
-    rootLogger.info("STARTING REVERSIBILITY TEST:");
+        rootLogger.info("STARTING REVERSIBILITY TEST:");
 
-    typedef float floatT;
+        typedef float floatT;
 
-    bool revers = reverse_test<floatT, HaloDepth>(commBase, param, rat);
-
-
-    if (revers)
-        rootLogger.info("REVERSIBILITY TEST: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
-    else
-        rootLogger.error("REVERSIBILITY TEST: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
+        bool revers = reverse_test<floatT, HaloDepth>(commBase, param, rat);
 
 
-    rootLogger.info("STARTING FULL UPDATE TEST:");
-    rootLogger.info("Now, there should be some dynamics");
+        if (revers)
+            rootLogger.info("REVERSIBILITY TEST: ", CoutColors::green, "passed", CoutColors::reset);
+        else
+            rootLogger.error("REVERSIBILITY TEST: ", CoutColors::red, "failed", CoutColors::reset);
 
 
-    bool full = full_test<floatT, HaloDepth>(commBase, param, rat);
-
-    if (full)
-        rootLogger.info("FULL UPDATE TEST: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
-    else
-        rootLogger.error("FULL UPDATE TEST: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
+        rootLogger.info("STARTING FULL UPDATE TEST:");
+        rootLogger.info("Now, there should be some dynamics");
 
 
-    if (revers /*&& no_rng*/ && full)  {
-        rootLogger.info(CoutColors::green ,  "ALL TESTS PASSED" ,  CoutColors::reset);
-        rootLogger.warn("This only indicates that force matches action.\n");
-        rootLogger.warn("Check Observables to find out if action is correct!");
-    } else {
-        rootLogger.error("At least one test failed!");
-        return -1;
+        bool full = full_test<floatT, HaloDepth>(commBase, param, rat);
+
+        if (full)
+            rootLogger.info("FULL UPDATE TEST: ", CoutColors::green, "passed", CoutColors::reset);
+        else
+            rootLogger.error("FULL UPDATE TEST: ", CoutColors::red, "failed", CoutColors::reset);
+
+
+        if (revers /*&& no_rng*/ && full) {
+            rootLogger.info(CoutColors::green, "ALL TESTS PASSED", CoutColors::reset);
+            rootLogger.warn("This only indicates that force matches action.\n");
+            rootLogger.warn("Check Observables to find out if action is correct!");
+        } else {
+            rootLogger.error("At least one test failed!");
+            return 1;
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }

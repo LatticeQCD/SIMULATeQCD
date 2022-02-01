@@ -33,23 +33,26 @@ struct corrParam : LatticeParameters {
 };
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(INFO);
+        const size_t HaloDepth = 0;
 
-    stdLogger.setVerbosity(INFO);
-    const size_t HaloDepth  = 0;
+        rootLogger.info("Initialization.");
+        corrParam param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../test_parameter/correlatorTest.param", argc, argv);
+        commBase.init(param.nodeDim());
+        initIndexer(HaloDepth, param, commBase);
+        typedef GIndexer<All, HaloDepth> GInd;
+        CorrelatorTools<PREC, false, HaloDepth> corrTools;
 
-    rootLogger.info("Initialization.");
-    corrParam param;
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../test_parameter/correlatorTest.param", argc, argv);
-    commBase.init(param.nodeDim());
-    initIndexer(HaloDepth,param,commBase);
-    typedef GIndexer<All,HaloDepth> GInd;
-    CorrelatorTools<PREC,false,HaloDepth> corrTools;
+        std::string domain = param.domain();
 
-    std::string domain = param.domain();
-
-    corrTools.createNorm(domain,commBase);
-
+        corrTools.createNorm(domain, commBase);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 
