@@ -487,110 +487,113 @@ floatT start_tests_on_device(LatticeContainer<true,floatT> &redBase){
 }
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(DEBUG);
 
-    stdLogger.setVerbosity(DEBUG);
+        LatticeParameters param;
 
-    LatticeParameters param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/BulkIndexerTest.param", argc, argv);
+        commBase.init(param.nodeDim());
 
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/BulkIndexerTest.param", argc, argv);
-    commBase.init(param.nodeDim());
+        const int HaloDepth = 2;
 
-    const int HaloDepth = 2;
-
-    rootLogger.info("Check indices");
-    GIndexer<All,HaloDepth> GInd;
-    GIndexer<Even,HaloDepth> GIndEven;
-    GIndexer<Odd,HaloDepth> GIndOdd;
-    initIndexer(HaloDepth,param,commBase);
+        rootLogger.info("Check indices");
+        GIndexer<All, HaloDepth> GInd;
+        GIndexer<Even, HaloDepth> GIndEven;
+        GIndexer<Odd, HaloDepth> GIndOdd;
+        initIndexer(HaloDepth, param, commBase);
 
 /// ================ Full Test ================ ///
-    rootLogger.info("----------------------------------------");
-    rootLogger.info("           ");
-    rootLogger.info("Initialize Lattice with all indices");
+        rootLogger.info("----------------------------------------");
+        rootLogger.info("           ");
+        rootLogger.info("Initialize Lattice with all indices");
 
-    const Layout LatLayout = All;
-    
-    bool testDevice = true;
+        const Layout LatLayout = All;
 
-    bool fullTest = checkSites<LatLayout, HaloDepth>(GInd);
-    fullTest = fullTest & checkSitesSpatial<LatLayout, HaloDepth>(GInd);
-    fullTest = fullTest & checkIndex<LatLayout, HaloDepth>(GInd);
-    fullTest = fullTest & checkMoves<LatLayout, HaloDepth>(GInd);
+        bool testDevice = true;
 
-    if(!fullTest)
-        rootLogger.error("Test on the host failed");
+        bool fullTest = checkSites<LatLayout, HaloDepth>(GInd);
+        fullTest = fullTest & checkSitesSpatial<LatLayout, HaloDepth>(GInd);
+        fullTest = fullTest & checkIndex<LatLayout, HaloDepth>(GInd);
+        fullTest = fullTest & checkMoves<LatLayout, HaloDepth>(GInd);
 
-    LatticeContainer<true,double > redBase(commBase);
-    redBase.adjustSize(GInd.getLatData().vol4);
+        if (!fullTest)
+            rootLogger.error("Test on the host failed");
 
-    double sum = 0;
-    sum = start_tests_on_device<double, LatLayout, HaloDepth>(redBase);
+        LatticeContainer<true, double> redBase(commBase);
+        redBase.adjustSize(GInd.getLatData().vol4);
 
-    if (int(sum) != GInd.getLatData().globalLattice().mult()){
-        rootLogger.error("Test on device failed");
-        testDevice = false;
-    }
+        double sum = 0;
+        sum = start_tests_on_device<double, LatLayout, HaloDepth>(redBase);
+
+        if (int(sum) != GInd.getLatData().globalLattice().mult()) {
+            rootLogger.error("Test on device failed");
+            testDevice = false;
+        }
 
 
 /// ================ Even Test ================ ///
-    rootLogger.info("----------------------------------------");
-    rootLogger.info("           ");
-    rootLogger.info("Initialize Lattice with even indices");
-    const Layout LatLayout2 = Even;
+        rootLogger.info("----------------------------------------");
+        rootLogger.info("           ");
+        rootLogger.info("Initialize Lattice with even indices");
+        const Layout LatLayout2 = Even;
 
-    bool EvenTest = checkSites<LatLayout2, HaloDepth>(GIndEven);
-    EvenTest = checkSitesSpatial<LatLayout2, HaloDepth>(GIndEven);
-    EvenTest = EvenTest & checkIndex<LatLayout2, HaloDepth>(GIndEven);
-    EvenTest = EvenTest & checkMoves<LatLayout2, HaloDepth>(GIndEven);
+        bool EvenTest = checkSites<LatLayout2, HaloDepth>(GIndEven);
+        EvenTest = checkSitesSpatial<LatLayout2, HaloDepth>(GIndEven);
+        EvenTest = EvenTest & checkIndex<LatLayout2, HaloDepth>(GIndEven);
+        EvenTest = EvenTest & checkMoves<LatLayout2, HaloDepth>(GIndEven);
 
-    if(!EvenTest)
-        rootLogger.error("Test on the host failed");
+        if (!EvenTest)
+            rootLogger.error("Test on the host failed");
 
-    sum = start_tests_on_device<double, LatLayout2, HaloDepth>(redBase);
+        sum = start_tests_on_device<double, LatLayout2, HaloDepth>(redBase);
 
-    if (int(sum) != GIndEven.getLatData().globalLattice().mult()/2){
-        rootLogger.error("Test on device failed");
-        testDevice = false;
-    }
+        if (int(sum) != GIndEven.getLatData().globalLattice().mult() / 2) {
+            rootLogger.error("Test on device failed");
+            testDevice = false;
+        }
 
 /// ================ Odd Test ================ ///
-    rootLogger.info("----------------------------------------");
-    rootLogger.info("           ");
-    rootLogger.info("Initialize Lattice with odd indices");
-    const Layout LatLayout3 = Odd;
-
-    bool OddTest = checkSites<LatLayout3, HaloDepth>(GIndOdd);
-    OddTest = checkSitesSpatial<LatLayout3, HaloDepth>(GIndOdd);
-    OddTest = OddTest & checkIndex<LatLayout3, HaloDepth>(GIndOdd);
-    OddTest = OddTest & checkMoves<LatLayout3, HaloDepth>(GIndOdd);
-
-    if(!OddTest)
-        rootLogger.error("Test on the host failed");
-
-    sum = start_tests_on_device<double, LatLayout3, HaloDepth>(redBase);
-
-    if (int(sum) != GInd.getLatData().globalLattice().mult()/2){
-        rootLogger.error("Test on device failed");
-        testDevice = false;
-    }
-
-    rootLogger.info("           ");
-    if (fullTest && EvenTest && OddTest && testDevice) {
-        rootLogger.info("==========================================");
+        rootLogger.info("----------------------------------------");
         rootLogger.info("           ");
-        rootLogger.info("All Tests passed!");
-        rootLogger.info("           ");
-        rootLogger.info("==========================================");
-    } else {
-        rootLogger.error("==========================================");
-        rootLogger.error("           ");
-        rootLogger.error("At least one test failed!");
-        rootLogger.error("           ");
-        rootLogger.error("==========================================");
-        return -1; 
-    }
+        rootLogger.info("Initialize Lattice with odd indices");
+        const Layout LatLayout3 = Odd;
 
+        bool OddTest = checkSites<LatLayout3, HaloDepth>(GIndOdd);
+        OddTest = checkSitesSpatial<LatLayout3, HaloDepth>(GIndOdd);
+        OddTest = OddTest & checkIndex<LatLayout3, HaloDepth>(GIndOdd);
+        OddTest = OddTest & checkMoves<LatLayout3, HaloDepth>(GIndOdd);
+
+        if (!OddTest)
+            rootLogger.error("Test on the host failed");
+
+        sum = start_tests_on_device<double, LatLayout3, HaloDepth>(redBase);
+
+        if (int(sum) != GInd.getLatData().globalLattice().mult() / 2) {
+            rootLogger.error("Test on device failed");
+            testDevice = false;
+        }
+
+        rootLogger.info("           ");
+        if (fullTest && EvenTest && OddTest && testDevice) {
+            rootLogger.info("==========================================");
+            rootLogger.info("           ");
+            rootLogger.info("All Tests passed!");
+            rootLogger.info("           ");
+            rootLogger.info("==========================================");
+        } else {
+            rootLogger.error("==========================================");
+            rootLogger.error("           ");
+            rootLogger.error("At least one test failed!");
+            rootLogger.error("           ");
+            rootLogger.error("==========================================");
+            return 1;
+        }
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

@@ -103,81 +103,85 @@ floatT gPlaq(Gaugefield<floatT,true, HaloDepth> &gauge, LatticeContainer<true,fl
 
 int main(int argc, char *argv[]) {
 
-    stdLogger.setVerbosity(DEBUG);
+    try {
+        stdLogger.setVerbosity(DEBUG);
 
-    /// Initialize parameter class. This class can also read parameter from textfiles!
-    LatticeParameters param;
+        /// Initialize parameter class. This class can also read parameter from textfiles!
+        LatticeParameters param;
 
-    /// Initialize the Lattice dimension
-    const int LatDim[] = {20, 20, 20, 20};
+        /// Initialize the Lattice dimension
+        const int LatDim[] = {20, 20, 20, 20};
 
-    /// How the lattice should be distributed on different GPU's.
-    /// In this case we don't split the lattice into sub-lattices.
-    /// If we would set it to {1,2,1,1}, then the lattice will be split in y-dimension. This would mean that
-    /// we have two sub-lattices, which are stored on two different GPU's
-    const int NodeDim[] = {1, 1, 1, 1};
+        /// How the lattice should be distributed on different GPU's.
+        /// In this case we don't split the lattice into sub-lattices.
+        /// If we would set it to {1,2,1,1}, then the lattice will be split in y-dimension. This would mean that
+        /// we have two sub-lattices, which are stored on two different GPU's
+        const int NodeDim[] = {1, 1, 1, 1};
 
-    /// Just pass these dimensions to the parameter class
-    param.latDim.set(LatDim);
-    param.nodeDim.set(NodeDim);
+        /// Just pass these dimensions to the parameter class
+        param.latDim.set(LatDim);
+        param.nodeDim.set(NodeDim);
 
-    /// Initialize a timer
-    StopWatch<true> timer;
+        /// Initialize a timer
+        StopWatch<true> timer;
 
-    /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
-    CommunicationBase commBase(&argc, &argv);
-    commBase.init(param.nodeDim());
+        /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
+        CommunicationBase commBase(&argc, &argv);
+        commBase.init(param.nodeDim());
 
-    /// Set the HaloDepth. It should be a constant values, since this value should be passed as an non-type template
-    /// parameter to each kernel.
-    const size_t HaloDepth = 1;
-
-
-    /// rootLogger.info() is a method which prints messages. It can be used as std::cout, but it involves always a newline.
-    /// This rootLogger class makes sure that only the root Core/GPU prints something.
-    /// Alternatively, one can use stdLogger.info() where each Core/GPU will print something.
-    /// Apart from the method info() there is also alloc() trace() debug() info() warn() error() fatal() which
-    /// highlight the output differently.
-    rootLogger.info("Initialize Lattice");
-    /// Initialize the Indexer on GPU and CPU.  
-    initIndexer(HaloDepth,param,commBase,true);
-    typedef GIndexer<All,HaloDepth> GInd;
+        /// Set the HaloDepth. It should be a constant values, since this value should be passed as an non-type template
+        /// parameter to each kernel.
+        const size_t HaloDepth = 1;
 
 
-    /// Initialize the Gaugefield. Basically, this object holds all SU(3)-matrices of the gaugefield.
-    /// The second template parameter determines whether the gaugefield should be stored on GPU or CPU but this will
-    /// be changed in the future ...
-    rootLogger.info("Initialize Gaugefield");
-    Gaugefield<PREC, true,HaloDepth> gauge(commBase);
+        /// rootLogger.info() is a method which prints messages. It can be used as std::cout, but it involves always a newline.
+        /// This rootLogger class makes sure that only the root Core/GPU prints something.
+        /// Alternatively, one can use stdLogger.info() where each Core/GPU will print something.
+        /// Apart from the method info() there is also alloc() trace() debug() info() warn() error() fatal() which
+        /// highlight the output differently.
+        rootLogger.info("Initialize Lattice");
+        /// Initialize the Indexer on GPU and CPU.
+        initIndexer(HaloDepth, param, commBase, true);
+        typedef GIndexer<All, HaloDepth> GInd;
 
-    /// Initialize gaugefield with unity-matrices.
-    gauge.one();
 
-    /// Initialize LatticeContainer. This is in principle the "array", where the values of the plaquette are
-    /// stored which are summed up in the end
-    LatticeContainer<true,PREC> redBase(commBase);
-    /// We need to tell the Reductionbase how large our Array will be
-    redBase.adjustSize(GInd::getLatData().vol4);
+        /// Initialize the Gaugefield. Basically, this object holds all SU(3)-matrices of the gaugefield.
+        /// The second template parameter determines whether the gaugefield should be stored on GPU or CPU but this will
+        /// be changed in the future ...
+        rootLogger.info("Initialize Gaugefield");
+        Gaugefield<PREC, true, HaloDepth> gauge(commBase);
 
-    /// Read a configuration from hard drive.
-    rootLogger.info("Read configuration");
-    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
+        /// Initialize gaugefield with unity-matrices.
+        gauge.one();
 
-    /// start timer...
-    timer.start();
-    /// define variable where the plaquette should be stored.
-    PREC plaq = 0;
-    
-    /// Exchange Halos before calculating the plaquette!
-    gauge.updateAll();
+        /// Initialize LatticeContainer. This is in principle the "array", where the values of the plaquette are
+        /// stored which are summed up in the end
+        LatticeContainer<true, PREC> redBase(commBase);
+        /// We need to tell the Reductionbase how large our Array will be
+        redBase.adjustSize(GInd::getLatData().vol4);
 
-    timer.start();
-    /// compute plaquette
-    plaq = gPlaq<PREC,HaloDepth>(gauge, redBase);
-    /// stop timer and print time
-    timer.stop();
-    rootLogger.info("Time for operators " ,  timer);
-    rootLogger.info("Reduced Plaquette is: " ,  plaq);
+        /// Read a configuration from hard drive.
+        rootLogger.info("Read configuration");
+        gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
+        /// start timer...
+        timer.start();
+        /// define variable where the plaquette should be stored.
+        PREC plaq = 0;
+
+        /// Exchange Halos before calculating the plaquette!
+        gauge.updateAll();
+
+        timer.start();
+        /// compute plaquette
+        plaq = gPlaq<PREC, HaloDepth>(gauge, redBase);
+        /// stop timer and print time
+        timer.stop();
+        rootLogger.info("Time for operators ", timer);
+        rootLogger.info("Reduced Plaquette is: ", plaq);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }

@@ -56,51 +56,54 @@ bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield
 }
 						    
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(INFO);
+        LatticeParameters param;
+        const int LatDim[] = {20, 20, 20, 20};
+        const int NodeDim[] = {1, 1, 1, 1};
 
-    stdLogger.setVerbosity(INFO);
-    LatticeParameters param;
-    const int LatDim[] = {20, 20, 20, 20};
-    const int NodeDim[] = {1, 1, 1, 1};
+        param.latDim.set(LatDim);
+        param.nodeDim.set(NodeDim);
 
-    param.latDim.set(LatDim);
-    param.nodeDim.set(NodeDim);
+        CommunicationBase commBase(&argc, &argv);
+        commBase.init(param.nodeDim());
 
-    CommunicationBase commBase(&argc, &argv);
-    commBase.init(param.nodeDim());
+        const size_t HaloDepth = 0;
 
-    const size_t HaloDepth = 0;
+        rootLogger.info("Initialize Lattice");
+        typedef GIndexer<All, HaloDepth> GInd;
+        initIndexer(HaloDepth, param, commBase);
 
-    rootLogger.info("Initialize Lattice");
-    typedef GIndexer<All,HaloDepth> GInd;
-    initIndexer(HaloDepth,param,commBase);
+        Gaugefield<PREC, true, HaloDepth> gaugeSingleGPU(commBase);
+        Gaugefield<PREC, true, HaloDepth> gaugeMultiGPU(commBase);
+        Gaugefield<PREC, true, HaloDepth> gaugeMultiXGPU(commBase);
+        gaugeSingleGPU.readconf_nersc("../test_conf/pgpu_naik_smearing_single.nersc");
+        gaugeMultiGPU.readconf_nersc("../test_conf/pgpu_naik_smearing_multi.nersc");
+        gaugeMultiXGPU.readconf_nersc("../test_conf/pgpu_naik_smearing_multi_x.nersc");
 
-    Gaugefield<PREC,true, HaloDepth> gaugeSingleGPU(commBase);
-    Gaugefield<PREC,true, HaloDepth> gaugeMultiGPU(commBase);
-    Gaugefield<PREC,true, HaloDepth> gaugeMultiXGPU(commBase);
-    gaugeSingleGPU.readconf_nersc("../test_conf/pgpu_naik_smearing_single.nersc");
-    gaugeMultiGPU.readconf_nersc("../test_conf/pgpu_naik_smearing_multi.nersc");
-    gaugeMultiXGPU.readconf_nersc("../test_conf/pgpu_naik_smearing_multi_x.nersc");
+        bool pass = checkfields<PREC, true, HaloDepth, R18>(gaugeSingleGPU, gaugeMultiGPU);
+        bool pass2 = checkfields<PREC, true, HaloDepth, R18>(gaugeSingleGPU, gaugeMultiXGPU);
 
-    bool pass = checkfields<PREC,true,HaloDepth,R18>(gaugeSingleGPU,gaugeMultiGPU);
-    bool pass2 = checkfields<PREC,true,HaloDepth,R18>(gaugeSingleGPU,gaugeMultiXGPU);
-
-    if (pass) {
-        rootLogger.info("Fields Single and Multi are identical");
-    } else {
-        rootLogger.info("Fields Single and Multi are not identical");
+        if (pass) {
+            rootLogger.info("Fields Single and Multi are identical");
+        } else {
+            rootLogger.info("Fields Single and Multi are not identical");
+        }
+        if (pass2) {
+            rootLogger.info("Fields Single and MultiX are identical");
+        } else {
+            rootLogger.info("Fields Single and MultiX are not identical");
+        }
+        if (pass && pass2) {
+            rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
+        } else {
+            rootLogger.error("Test failed!");
+            return 1;
+        }
     }
-    if (pass2) {
-        rootLogger.info("Fields Single and MultiX are identical");
-    } else {
-        rootLogger.info("Fields Single and MultiX are not identical");
+    catch (const std::runtime_error &error) {
+        return 1;
     }
-    if (pass && pass2) {
-        rootLogger.info(CoutColors::green ,  "Test passed!", CoutColors::reset);
-    } else {
-        rootLogger.error("Test failed!");
-        return -1;
-    }
-    
     return 0;
 }
 

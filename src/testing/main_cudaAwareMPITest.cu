@@ -251,26 +251,30 @@ void run0(CommunicationBase &commBase) {
 }
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(DEBUG);
 
-    stdLogger.setVerbosity(DEBUG);
+        LatticeParameters param;
+        const int LatDim[] = {20, 20, 20, 20};
+        const int NodeDim[] = {2, 1, 1, 1};
+        param.latDim.set(LatDim);
+        param.nodeDim.set(NodeDim);
 
-    LatticeParameters param;
-    const int LatDim[] = {20, 20, 20, 20};
-    const int NodeDim[] = {2, 1, 1, 1};
-    param.latDim.set(LatDim);
-    param.nodeDim.set(NodeDim);
+        CommunicationBase commBase(&argc, &argv);
+        commBase.init(param.nodeDim());
 
-    CommunicationBase commBase(&argc, &argv);
-    commBase.init(param.nodeDim());
-
-    run0(commBase);
+        run0(commBase);
 
 #ifdef USE_CUDA_AWARE_MPI
-    run1(commBase);
-    run1(commBase);
-    run1(commBase);
+        run1(commBase);
+        run1(commBase);
+        run1(commBase);
 #endif
-    rootLogger.info(CoutColors::green,"Test passed!",CoutColors::reset);
+        rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

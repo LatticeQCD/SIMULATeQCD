@@ -299,64 +299,67 @@ struct ComplexReferenceFunctor{
 
 
 int main(){
+    try {
+        rootLogger.setVerbosity(DEBUG);
 
-    rootLogger.setVerbosity(DEBUG);
+        int nelems = 1e5;
+        Spinor a(nelems);
+        Spinor b(nelems);
+        Spinor c(nelems);
+        Spinor d(nelems);
 
-    int nelems = 1e5;
-    Spinor a(nelems);
-    Spinor b(nelems);
-    Spinor c(nelems);
-    Spinor d(nelems);
+        //result
+        Spinor res(nelems);
 
-    //result
-    Spinor res(nelems);
+        //reference
+        Spinor ref(nelems);
 
-    //reference
-    Spinor ref(nelems);
+        a.fill();
+        b.fill();
+        c.fill();
+        d.fill();
 
-    a.fill();
-    b.fill();
-    c.fill();
-    d.fill();
+        StopWatch<true> timer;
+        timer.start();
 
-    StopWatch<true> timer;
-    timer.start();
+        res = a + b * c + 5 * d;
+        timer.stop();
+        timer.print("combined operators");
 
-    res = a + b * c + 5 * d;
-    timer.stop();
-    timer.print("combined operators");
+        timer.start();
+        ref = ReferenceFunctor(a, b, c, d);
+        timer.stop();
+        timer.print("reference operator");
 
-    timer.start();
-    ref = ReferenceFunctor(a, b, c, d);
-    timer.stop();
-    timer.print("reference operator");
+        compare_relative(res, ref, 1e-8, 1e-8, "Combined operators vs one operator test");
 
-    compare_relative(res, ref, 1e-8, 1e-8, "Combined operators vs one operator test");
+        timer.start();
 
-    timer.start();
+        referenceLaunch(res.getAccessor(), a.getAccessor(), b.getAccessor(), c.getAccessor(),
+                        d.getAccessor(), nelems);
 
-    referenceLaunch(res.getAccessor(), a.getAccessor(), b.getAccessor(), c.getAccessor(),
-            d.getAccessor(), nelems);
+        timer.stop();
+        timer.print("reference kernel");
 
-    timer.stop();
-    timer.print("reference kernel");
+        compare_relative(res, ref, 1e-8, 1e-8, "Reference kernel vs operators test");
 
-    compare_relative(res, ref, 1e-8, 1e-8, "Reference kernel vs operators test");
-    
-    //This should cover all existing kinds of operator combinations
-    res = a*b + a/b
-              - ((a + b) / (a - 2.3*b)) * (2*a)
-              + (a*2) * (a/2) / (2/a)
+        //This should cover all existing kinds of operator combinations
+        res = a * b + a / b
+              - ((a + b) / (a - 2.3 * b)) * (2 * a)
+              + (a * 2) * (a / 2) / (2 / a)
               + (c + 4) + (4 + c) + (c - 4) + (4 - c) + c * (a + c)
-              + (a*b)*2 + 2*(a*c)
-              + (a*b)/2 + 2/(a*c)
-              + (2 + (a*b)) + (2+(a*c))
-              + (2 - (a*b)) + (2-(a*c));
-    
-    ref = ComplexReferenceFunctor(a, b, c, d);
+              + (a * b) * 2 + 2 * (a * c)
+              + (a * b) / 2 + 2 / (a * c)
+              + (2 + (a * b)) + (2 + (a * c))
+              + (2 - (a * b)) + (2 - (a * c));
 
-    compare_relative(res, ref, 1e-8, 1e-8, "Complex operators vs one operator test");
+        ref = ComplexReferenceFunctor(a, b, c, d);
 
+        compare_relative(res, ref, 1e-8, 1e-8, "Complex operators vs one operator test");
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

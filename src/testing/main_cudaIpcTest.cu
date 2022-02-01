@@ -90,82 +90,98 @@ void sendRecvBufferP2P(CommunicationBase& commBase, uint8_t *sendBufferDevice, u
 }
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(DEBUG);
 
-    stdLogger.setVerbosity(DEBUG);
+        LatticeParameters param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/cudaIpcTest.param", argc, argv);
+        commBase.init(param.nodeDim());
+        StopWatch<true> timer;
 
-    LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/cudaIpcTest.param", argc, argv);
-    commBase.init(param.nodeDim());
-    StopWatch<true> timer;
-    
-    if (!commBase.useGpuP2P()) {
-        throw std::runtime_error(stdLogger.fatal("P2P is not activated. Exit."));
-    }
+        if (!commBase.useGpuP2P()) {
+            throw std::runtime_error(stdLogger.fatal("P2P is not activated. Exit."));
+        }
 
-    size_t size = 200000000;
+        size_t size = 200000000;
 
-    uint8_t *sendBufferDevice;
-    uint8_t *recvBufferDevice;
+        uint8_t *sendBufferDevice;
+        uint8_t *recvBufferDevice;
 
-    allocDevice(&sendBufferDevice, size);
-    allocDevice(&recvBufferDevice, size);
+        allocDevice(&sendBufferDevice, size);
+        allocDevice(&recvBufferDevice, size);
 
-    int offset = 0;
-    uint8_t *recvBufferDeviceP2P;
-    recvBufferDeviceP2P = sendRecvHandles(recvBufferDevice, !commBase.MyRank(), commBase.getCart_comm());
+        int offset = 0;
+        uint8_t *recvBufferDeviceP2P;
+        recvBufferDeviceP2P = sendRecvHandles(recvBufferDevice, !commBase.MyRank(), commBase.getCart_comm());
 
-    uint8_t *sendBufferHost;
-    uint8_t *recvBufferHost;
+        uint8_t *sendBufferHost;
+        uint8_t *recvBufferHost;
 
-    allocHost(&sendBufferHost, size);
-    allocHost(&recvBufferHost, size);
+        allocHost(&sendBufferHost, size);
+        allocHost(&recvBufferHost, size);
 
-    for (size_t i = 0; i < size; i++) {
-        sendBufferHost[i] = (uint8_t) (i % 100 + commBase.MyRank());
-    }
+        for (size_t i = 0; i < size; i++) {
+            sendBufferHost[i] = (uint8_t) (i % 100 + commBase.MyRank());
+        }
 
-    copyHostToDevice(sendBufferHost, sendBufferDevice, size);
+        copyHostToDevice(sendBufferHost, sendBufferDevice, size);
 
-    MPI_Request requestSend[2];
-    gpuStream_t deviceStream;
-    gpuStreamCreate(&deviceStream);
+        MPI_Request requestSend[2];
+        gpuStream_t deviceStream;
+        gpuStreamCreate(&deviceStream);
 
 
-    ////// CHECK TIMINGS WITH CUDA DIRECT P2P (IPC) COMMUNICATION //////
+        ////// CHECK TIMINGS WITH CUDA DIRECT P2P (IPC) COMMUNICATION //////
 
-    for (int j = 0; j < 4; ++j) {
+        for (int j = 0; j < 4; ++j) {
+
+            timer.reset();
+            timer.start();
+
+            sendRecvBufferP2P(commBase, sendBufferDevice, &recvBufferDeviceP2P[offset], size - offset, deviceStream);
+            timer.stop();
+
+            copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
+
+            rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
+            stdLogger.info(recvBufferHost[0], recvBufferHost[(int) (size / 2.)], recvBufferHost[size - 1]);
+
+            rootLogger.info("P2P Time: ", timer);
+        }
 
         timer.reset();
         timer.start();
 
-        sendRecvBufferP2P(commBase,sendBufferDevice, &recvBufferDeviceP2P[offset], size-offset, deviceStream);
+        sendRecvBufferP2P(commBase, sendBufferDevice, recvBufferDeviceP2P + offset, size - offset, deviceStream);
         timer.stop();
 
         copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
         rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
-        stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
+        stdLogger.info(recvBufferHost[0], recvBufferHost[(int) (size / 2.)], recvBufferHost[size - 1]);
 
-        rootLogger.info("P2P Time: " ,  timer);
-    }
+        rootLogger.info("P2P Last time: ", timer);
 
-    timer.reset();
-    timer.start();
+        ////// CHECK TIMINGS WITH STANDARD MPI COMMUNICATION //////
 
-    sendRecvBufferP2P(commBase,sendBufferDevice, recvBufferDeviceP2P+offset, size-offset, deviceStream);
-    timer.stop();
+        for (int j = 0; j < 4; ++j) {
 
-    copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
+            timer.reset();
+            timer.start();
 
-    rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
-    stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
+            sendRecvBufferMPI(!commBase.MyRank(), sendBufferHost, recvBufferHost, sendBufferDevice, recvBufferDevice,
+                              size,
+                              requestSend, commBase.getCart_comm());
+            timer.stop();
 
-    rootLogger.info("P2P Last time: " ,  timer);
+            copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
-    ////// CHECK TIMINGS WITH STANDARD MPI COMMUNICATION //////
+            rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
+            stdLogger.info(recvBufferHost[0], recvBufferHost[(int) (size / 2.)], recvBufferHost[size - 1]);
 
-    for (int j = 0; j < 4; ++j) {
+            rootLogger.info("MPI Time: ", timer);
+        }
 
         timer.reset();
         timer.start();
@@ -177,32 +193,20 @@ int main(int argc, char *argv[]) {
         copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
 
         rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
-        stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
+        stdLogger.info(recvBufferHost[0], recvBufferHost[(int) (size / 2.)], recvBufferHost[size - 1]);
 
-        rootLogger.info("MPI Time: " ,  timer);
+        rootLogger.info("MPI Last time: ", timer);
+
+        rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
+        gpuIpcCloseMemHandle(recvBufferDeviceP2P);
+        freeDevice(sendBufferDevice);
+        freeDevice(recvBufferDevice);
+        freeHost(sendBufferHost);
+        freeHost(recvBufferHost);
     }
-
-    timer.reset();
-    timer.start();
-
-    sendRecvBufferMPI(!commBase.MyRank(), sendBufferHost, recvBufferHost, sendBufferDevice, recvBufferDevice, size,
-                      requestSend, commBase.getCart_comm());
-    timer.stop();
-
-    copyDeviceToHost(recvBufferDevice, recvBufferHost, size);
-
-    rootLogger.info("Note that in what follows, the output will look strange. It's okay.");
-    stdLogger.info(recvBufferHost[0] ,  recvBufferHost[(int) (size / 2.)] ,  recvBufferHost[size - 1]);
-
-    rootLogger.info("MPI Last time: " ,  timer);
-
-    rootLogger.info(CoutColors::green,"Test passed!",CoutColors::reset);
-    gpuIpcCloseMemHandle(recvBufferDeviceP2P);
-    freeDevice(sendBufferDevice);
-    freeDevice(recvBufferDevice);
-    freeHost(sendBufferHost);
-    freeHost(recvBufferHost);
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

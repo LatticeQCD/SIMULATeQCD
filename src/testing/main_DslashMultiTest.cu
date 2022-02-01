@@ -372,39 +372,44 @@ bool test_dslash2(CommunicationBase &commBase){
 
 
 int main(int argc, char **argv) {
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    stdLogger.setVerbosity(INFO);
+        LatticeParameters param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/DslashMultiTest.param", argc, argv);
+        bool lerror = false;
 
-    LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/DslashMultiTest.param", argc, argv);
-    bool lerror=false;
+        commBase.init(param.nodeDim());
+        initIndexer(2, param, commBase);
+        initIndexer(4, param, commBase);
+        stdLogger.setVerbosity(INFO);
 
-    commBase.init(param.nodeDim());
-    initIndexer(2,param, commBase);
-    initIndexer(4,param, commBase);
-    stdLogger.setVerbosity(INFO);
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Running on Device");
+        rootLogger.info("-------------------------------------");
+        rootLogger.info("Testing All - All");
+        rootLogger.info("------------------");
+        lerror = (lerror || test_dslash2<double, All, All, 1, true>(commBase));
+        rootLogger.info("------------------");
+        rootLogger.info("Testing Even - Odd");
+        rootLogger.info("------------------");
+        lerror = (lerror || test_dslash2<double, Even, Odd, 1, true>(commBase));
+        rootLogger.info("------------------");
+        rootLogger.info("Testing Odd - Even");
+        rootLogger.info("------------------");
+        lerror = (lerror || test_dslash2<double, Odd, Even, 1, true>(commBase));
+        rootLogger.info("------------------");
 
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Running on Device");
-    rootLogger.info("-------------------------------------");
-    rootLogger.info("Testing All - All");
-    rootLogger.info("------------------");
-    lerror = (lerror || test_dslash2<double, All, All, 1, true>(commBase));
-    rootLogger.info("------------------");
-    rootLogger.info("Testing Even - Odd");
-    rootLogger.info("------------------");
-    lerror = (lerror || test_dslash2<double, Even, Odd, 1, true>(commBase));
-    rootLogger.info("------------------");
-    rootLogger.info("Testing Odd - Even");
-    rootLogger.info("------------------");
-    lerror = (lerror || test_dslash2<double, Odd, Even, 1, true>(commBase));
-    rootLogger.info("------------------");
-
-    if(lerror) {
-        rootLogger.error("At least one test failed!");
-        return -1;
-    } else {
-        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+        if (lerror) {
+            rootLogger.error("At least one test failed!");
+            return 1;
+        } else {
+            rootLogger.info("All tests ", CoutColors::green, "passed!", CoutColors::reset);
+        }
     }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
+    return 0;
 }

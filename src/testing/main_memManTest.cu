@@ -105,32 +105,35 @@ bool run(){
 
 
 int main() {
+    try {
+        rootLogger.setVerbosity(TRACE);
 
-    rootLogger.setVerbosity(TRACE);
+        ///-------------------------------------------------------------------------------------------------------HOST TESTS
+        rootLogger.info("oooooooooooooooooooo");
+        rootLogger.info("o BEGIN HOST TESTS o");
+        rootLogger.info("oooooooooooooooooooo");
 
-    ///-------------------------------------------------------------------------------------------------------HOST TESTS
-    rootLogger.info("oooooooooooooooooooo");
-    rootLogger.info("o BEGIN HOST TESTS o");
-    rootLogger.info("oooooooooooooooooooo");
+        bool passed_host = run<false>();
+        if (!passed_host) rootLogger.error("Host test failed!");
 
-    bool passed_host = run<false>();
-    if(!passed_host) rootLogger.error("Host test failed!");
+        ///-----------------------------------------------------------------------------------------------------DEVICE TESTS
+        rootLogger.info("oooooooooooooooooooooo");
+        rootLogger.info("o BEGIN DEVICE TESTS o");
+        rootLogger.info("oooooooooooooooooooooo");
 
-    ///-----------------------------------------------------------------------------------------------------DEVICE TESTS
-    rootLogger.info("oooooooooooooooooooooo");
-    rootLogger.info("o BEGIN DEVICE TESTS o");
-    rootLogger.info("oooooooooooooooooooooo");
+        bool passed_dev = run<true>();
+        if (!passed_dev) rootLogger.error("Device test failed!");
 
-    bool passed_dev = run<true>();
-    if(!passed_dev) rootLogger.error("Device test failed!");
-
-    if(passed_host&&passed_dev) {
-        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
-    } else {
-        rootLogger.error("At least one test failed!");
-        return -1;
+        if (passed_host && passed_dev) {
+            rootLogger.info("All tests ", CoutColors::green, "passed!", CoutColors::reset);
+        } else {
+            rootLogger.error("At least one test failed!");
+            return 1;
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

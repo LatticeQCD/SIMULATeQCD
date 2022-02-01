@@ -73,39 +73,45 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 }
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    stdLogger.setVerbosity(INFO);
+        CommunicationBase commBase(&argc, &argv);
+        gradientFlowParam<PREC> lp;
+        lp.readfile(commBase, "../parameter/gradientFlow.param", argc, argv);
+        commBase.init(lp.nodeDim());
 
-    CommunicationBase commBase(&argc, &argv);
-    gradientFlowParam<PREC> lp;
-    lp.readfile(commBase, "../parameter/gradientFlow.param", argc, argv);
-    commBase.init(lp.nodeDim());
+        if (lp.force() != "zeuthen"
+            or (lp.RK_method() != "adaptive_stepsize" and lp.RK_method() != "adaptive_stepsize_allgpu")) {
+            throw std::runtime_error(stdLogger.fatal("Force is not zeuthen or RK_method is not adaptive stepsize!"));
+        }
+        const size_t HaloDepth = 3;
 
-    if (lp.force() != "zeuthen"
-        or (lp.RK_method() != "adaptive_stepsize" and lp.RK_method() != "adaptive_stepsize_allgpu")) {
-        throw std::runtime_error(stdLogger.fatal("Force is not zeuthen or RK_method is not adaptive stepsize!"));
+        initIndexer(HaloDepth, lp, commBase);
+        Gaugefield<PREC, USE_GPU, HaloDepth> gauge(commBase);
+
+        ///initialize gradient flow class & run with the given parameters
+        if (lp.RK_method() == "adaptive_stepsize") {
+
+            zeuthenFlow<PREC, HaloDepth, adaptive_stepsize> gradFlow(gauge, lp.start_step_size(),
+                                                                     lp.measurement_intervall()[0],
+                                                                     lp.measurement_intervall()[1],
+                                                                     lp.necessary_flow_times.get(), lp.accuracy());
+            run<PREC, HaloDepth, zeuthenFlow<PREC, HaloDepth, adaptive_stepsize> >(gradFlow, gauge, lp);
+
+        } else if (lp.RK_method() == "adaptive_stepsize_allgpu") {
+
+            zeuthenFlow<PREC, HaloDepth, adaptive_stepsize_allgpu> gradFlow(gauge, lp.start_step_size(),
+                                                                            lp.measurement_intervall()[0],
+                                                                            lp.measurement_intervall()[1],
+                                                                            lp.necessary_flow_times.get(),
+                                                                            lp.accuracy());
+            run<PREC, HaloDepth, zeuthenFlow<PREC, HaloDepth, adaptive_stepsize_allgpu> >(gradFlow, gauge, lp);
+        }
     }
-    const size_t HaloDepth = 3;
-
-    initIndexer(HaloDepth, lp, commBase);
-    Gaugefield<PREC, USE_GPU, HaloDepth> gauge(commBase);
-
-    ///initialize gradient flow class & run with the given parameters
-    if (lp.RK_method() == "adaptive_stepsize") {
-
-        zeuthenFlow<PREC, HaloDepth, adaptive_stepsize> gradFlow(gauge, lp.start_step_size(),
-                                              lp.measurement_intervall()[0], lp.measurement_intervall()[1],
-                                              lp.necessary_flow_times.get(), lp.accuracy());
-        run<PREC, HaloDepth, zeuthenFlow<PREC, HaloDepth, adaptive_stepsize> >(gradFlow, gauge, lp);
-
-    } else if (lp.RK_method() == "adaptive_stepsize_allgpu") {
-
-        zeuthenFlow<PREC, HaloDepth, adaptive_stepsize_allgpu> gradFlow(gauge, lp.start_step_size(),
-                                              lp.measurement_intervall()[0], lp.measurement_intervall()[1],
-                                              lp.necessary_flow_times.get(), lp.accuracy());
-        run<PREC, HaloDepth, zeuthenFlow<PREC, HaloDepth, adaptive_stepsize_allgpu> >(gradFlow, gauge, lp);
+    catch (const std::runtime_error &error) {
+        return 1;
     }
-
     return 0;
 }
 

@@ -73,39 +73,42 @@ GSU3<floatT> getFmunu_temporal(Gaugefield<floatT,true, HaloDepth> &gauge, Lattic
 }
 
 int main(int argc, char *argv[]) {
+    try {
+        const size_t HaloDepth = 1;
 
-    const size_t HaloDepth = 1;
+        ///Initialize Base
+        typedef GIndexer<All, HaloDepth> GInd;
+        stdLogger.setVerbosity(INFO);
+        StopWatch<true> timer;
+        LatticeParameters lp;
+        CommunicationBase commBase(&argc, &argv);
+        lp.readfile(commBase, "../parameter/tests/FieldStrengthTensorTest.param", argc, argv);
+        commBase.init(lp.nodeDim());
+        initIndexer(HaloDepth, lp, commBase);
+        Gaugefield<PREC, ON_DEVICE, HaloDepth> gauge(commBase);
 
-    ///Initialize Base
-    typedef GIndexer<All,HaloDepth> GInd;
-    stdLogger.setVerbosity(INFO);
-    StopWatch<true> timer;
-    LatticeParameters                       lp;
-    CommunicationBase                       commBase(&argc, &argv);
-    lp.readfile(commBase, "../parameter/tests/FieldStrengthTensorTest.param", argc, argv);
-    commBase.init(lp.nodeDim());
-    initIndexer(HaloDepth,lp,commBase);
-    Gaugefield<PREC,ON_DEVICE,HaloDepth>     gauge(commBase);
+        rootLogger.info("Reference values in this test come from l328f21b6285m0009875m0790a_019.995");
+        rootLogger.info("Read configuration", lp.GaugefileName());
+        gauge.readconf_nersc(lp.GaugefileName());
 
-    rootLogger.info("Reference values in this test come from l328f21b6285m0009875m0790a_019.995");
-    rootLogger.info("Read configuration" ,  lp.GaugefileName());
-    gauge.readconf_nersc(lp.GaugefileName());
+        LatticeContainer<true, GSU3<PREC>> redBase(commBase);
+        redBase.adjustSize(GInd::getLatData().vol4);
 
-    LatticeContainer<true,GSU3<PREC>> redBase(commBase);
-    redBase.adjustSize(GInd::getLatData().vol4);
-
-    GSU3<PREC> F_temporal;
-    GSU3<PREC> F_spatial;
-    timer.start();
-    F_temporal = getFmunu_temporal<PREC,HaloDepth>(gauge, redBase);
-    timer.stop();
-    rootLogger.info("Time for temporal Fmunu computation: " ,  timer);
-    timer.reset();
-    timer.start();
-    F_spatial = getFmunu_spatial<PREC,HaloDepth>(gauge, redBase);
-    timer.stop();
-    rootLogger.info("Time for spatial Fmunu computation: " ,  timer);
-
+        GSU3<PREC> F_temporal;
+        GSU3<PREC> F_spatial;
+        timer.start();
+        F_temporal = getFmunu_temporal<PREC, HaloDepth>(gauge, redBase);
+        timer.stop();
+        rootLogger.info("Time for temporal Fmunu computation: ", timer);
+        timer.reset();
+        timer.start();
+        F_spatial = getFmunu_spatial<PREC, HaloDepth>(gauge, redBase);
+        timer.stop();
+        rootLogger.info("Time for spatial Fmunu computation: ", timer);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

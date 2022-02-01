@@ -113,12 +113,10 @@ int main(int argc, char **argv) {
             
         rootLogger.info("testing double-half");
         run_func<double, __half, Even, 1, true>(commBase, param, rat);
-        
-        return 0;
     }
     
     catch (const std::runtime_error &error) {
-        rootLogger.error("There has been a runtime error!");
-        return -1;
+        return 1;
     }
+    return 0;
 }

@@ -236,27 +236,31 @@ template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &
 }
 
 int main(int argc, char *argv[]) {
-    stdLogger.setVerbosity(INFO);
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    CommunicationBase commBase(&argc, &argv);
+        CommunicationBase commBase(&argc, &argv);
 
-    //how large can the difference to the reference values be?
-    const double double_acceptance = 1e-9;
+        //how large can the difference to the reference values be?
+        const double double_acceptance = 1e-9;
 
-    //adaptive stepsize accuracy. just a parameter for reference values, do not change!
-    const double double_accuracy = 1e-9;
+        //adaptive stepsize accuracy. just a parameter for reference values, do not change!
+        const double double_accuracy = 1e-9;
 
-    stdLogger.info("TEST DOUBLE PRECISION");
-    bool passfail_double = run_test<double>(argc, argv, commBase, double_acceptance, double_accuracy);
+        stdLogger.info("TEST DOUBLE PRECISION");
+        bool passfail_double = run_test<double>(argc, argv, commBase, double_acceptance, double_accuracy);
 
-    rootLogger.info(CoutColors::green ,  "           ");
-    if (passfail_double) { // || passfail_float
-        rootLogger.error("At least one test failed!");
-        return -1;
-    } else {
-        rootLogger.info(CoutColors::green ,  "All Tests passed!" ,  CoutColors::reset);
+        rootLogger.info(CoutColors::green, "           ");
+        if (passfail_double) { // || passfail_float
+            rootLogger.error("At least one test failed!");
+            return 1;
+        } else {
+            rootLogger.info(CoutColors::green, "All Tests passed!", CoutColors::reset);
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

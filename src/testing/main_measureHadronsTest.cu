@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
     }
 
     catch (const std::runtime_error &error) {
-        return -1;
+        return 1;
     }
     return 0;
 }

@@ -423,57 +423,60 @@ void init(CommunicationBase &commBase,
 
 int main(int argc, char* argv[]) {
 
-    ///Initialize Base
-    stdLogger.setVerbosity(INFO);
+    try {
+        ///Initialize Base
+        stdLogger.setVerbosity(INFO);
 
-    sampleTopologyParameters<PREC> lp;
-    CommunicationBase commBase(&argc, &argv);
-    lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
-    commBase.init(lp.nodeDim());
+        sampleTopologyParameters<PREC> lp;
+        CommunicationBase commBase(&argc, &argv);
+        lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
+        commBase.init(lp.nodeDim());
 
-    if (  lp.nsweeps_HBwithOR() % lp.nsweeps_btwn_topology_meas() != 0){
-        throw std::runtime_error(stdLogger.fatal("nsweeps_HBwithOR has to be a multiple of nsweeps_btwn_topology_meas"));
-    }
+        if (lp.nsweeps_HBwithOR() % lp.nsweeps_btwn_topology_meas() != 0) {
+            throw std::runtime_error(
+                    stdLogger.fatal("nsweeps_HBwithOR has to be a multiple of nsweeps_btwn_topology_meas"));
+        }
 
-    ///Convert input strings to enum for switching
-    Force input_force = Force_map[lp.force()];
-    RungeKuttaMethod input_RK_method = RK_map[lp.RK_method()];
+        ///Convert input strings to enum for switching
+        Force input_force = Force_map[lp.force()];
+        RungeKuttaMethod input_RK_method = RK_map[lp.RK_method()];
 
-    if (input_RK_method == fixed_stepsize && lp.ignore_fixed_startstepsize() && lp.necessary_flow_times.isSet()) {
-        rootLogger.info("Ignoring fixed start_step_size. "
-                             "Stepsizes are dynamically deduced from necessary_flow_times.");
-        lp.start_step_size.set(lp.measurement_intervall()[1]);
-    }
+        if (input_RK_method == fixed_stepsize && lp.ignore_fixed_startstepsize() && lp.necessary_flow_times.isSet()) {
+            rootLogger.info("Ignoring fixed start_step_size. "
+                            "Stepsizes are dynamically deduced from necessary_flow_times.");
+            lp.start_step_size.set(lp.measurement_intervall()[1]);
+        }
 
-    ///Set HaloDepth. The ifdefs can reduce compile time (only define what you need in CMakeLists).
-    ///Wilson flow with topological charge (correlator) needs HaloDepth=2, without 1.
-    ///Zeuthen flow always needs 3.
-    switch (input_force) {
+        ///Set HaloDepth. The ifdefs can reduce compile time (only define what you need in CMakeLists).
+        ///Wilson flow with topological charge (correlator) needs HaloDepth=2, without 1.
+        ///Zeuthen flow always needs 3.
+        switch (input_force) {
 #ifdef WILSON_FLOW
-        case wilson: {
-            const size_t HaloDepth = 2;
-            switch (input_RK_method) {
+            case wilson: {
+                const size_t HaloDepth = 2;
+                switch (input_RK_method) {
 #ifdef FIXED_STEPSIZE
-                case fixed_stepsize:
-                    init<PREC, USE_GPU, HaloDepth, fixed_stepsize, wilsonFlow>(commBase, lp);
-                    break;
+                    case fixed_stepsize:
+                        init<PREC, USE_GPU, HaloDepth, fixed_stepsize, wilsonFlow>(commBase, lp);
+                        break;
 #endif
 #ifdef ADAPTIVE_STEPSIZE
-                case adaptive_stepsize:
-                    init<PREC, USE_GPU, HaloDepth, adaptive_stepsize, wilsonFlow>(commBase, lp);
-                    break;
-                case adaptive_stepsize_allgpu:
-                    init<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, wilsonFlow>(commBase, lp);
-                    break;
+                    case adaptive_stepsize:
+                        init<PREC, USE_GPU, HaloDepth, adaptive_stepsize, wilsonFlow>(commBase, lp);
+                        break;
+                    case adaptive_stepsize_allgpu:
+                        init<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, wilsonFlow>(commBase, lp);
+                        break;
 #endif
-                default:
-                    throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
+                    default:
+                        throw std::runtime_error(
+                                stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
+                }
+                break;
             }
-            break;
-        }
 #endif
 #ifdef ZEUTHEN_FLOW
-        case zeuthen: {
+            case zeuthen: {
                 const size_t HaloDepth = 3;
                 switch (input_RK_method) {
 #ifdef FIXED_STEPSIZE
@@ -490,15 +493,20 @@ int main(int argc, char* argv[]) {
                         break;
 #endif
                     default:
-                        throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
+                        throw std::runtime_error(
+                                stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
                 }
                 break;
             }
 #endif
-        default:
-            throw std::runtime_error(stdLogger.fatal("Invalid force. Did you set the compile definitions accordingly?"));
+            default:
+                throw std::runtime_error(
+                        stdLogger.fatal("Invalid force. Did you set the compile definitions accordingly?"));
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 

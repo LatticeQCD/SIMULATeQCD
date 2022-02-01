@@ -672,32 +672,37 @@ void run_func(CommunicationBase &commBase) {
 
 int main(int argc, char **argv) {
 
+    try {
+        stdLogger.setVerbosity(INFO);
 
-    stdLogger.setVerbosity(INFO);
+        LatticeParameters param;
+        CommunicationBase commBase(&argc, &argv);
+        param.readfile(commBase, "../parameter/tests/GeneralFunctorTest.param", argc, argv);
+        commBase.init(param.nodeDim());
 
-    LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/GeneralFunctorTest.param", argc, argv);
-    commBase.init(param.nodeDim());
+        const int HaloDepth = 2;
 
-    const int HaloDepth = 2;
+        /// Let's force Halos in all directions; otherwise the test doesn't work... (last parameter)
+        initIndexer(HaloDepth, param, commBase, true);
+        const int HaloDepthSpin = 4;
+        initIndexer(HaloDepthSpin, param, commBase, true);
 
-    /// Let's force Halos in all directions; otherwise the test doesn't work... (last parameter)
-    initIndexer(HaloDepth,param, commBase, true);
-    const int HaloDepthSpin = 4;
-    initIndexer(HaloDepthSpin,param, commBase, true);
-
-    rootLogger.info("------------------");
-    rootLogger.info("Testing All - All");
-    rootLogger.info("------------------");
-    run_func<double, All, All>(commBase);
-    rootLogger.info("------------------");
-    rootLogger.info("Testing Even - Odd");
-    rootLogger.info("------------------");
-    run_func<double, Even, Odd>(commBase);
-    rootLogger.info("------------------");
-    rootLogger.info("Testing Odd - Even");
-    rootLogger.info("------------------");
-    run_func<double, Odd, Even>(commBase);
+        rootLogger.info("------------------");
+        rootLogger.info("Testing All - All");
+        rootLogger.info("------------------");
+        run_func<double, All, All>(commBase);
+        rootLogger.info("------------------");
+        rootLogger.info("Testing Even - Odd");
+        rootLogger.info("------------------");
+        run_func<double, Even, Odd>(commBase);
+        rootLogger.info("------------------");
+        rootLogger.info("Testing Odd - Even");
+        rootLogger.info("------------------");
+        run_func<double, Odd, Even>(commBase);
+    }
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
+    return 0;
 }
 

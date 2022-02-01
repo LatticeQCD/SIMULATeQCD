@@ -130,61 +130,64 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
 
 
 int main(int argc, char *argv[]) {
+    try {
+        stdLogger.setVerbosity(INFO);
+        CommunicationBase commBase(&argc, &argv);
 
-    stdLogger.setVerbosity(INFO);
-    CommunicationBase commBase(&argc, &argv);
+        RhmcParameters param;
 
-    RhmcParameters param;
+        param.readfile(commBase, "../parameter/tests/PureGaugeHmcTest.param", argc, argv);
 
-    param.readfile(commBase, "../parameter/tests/PureGaugeHmcTest.param", argc, argv);
+        const int HaloDepth = 2;
 
-    const int HaloDepth = 2;
-    
-    commBase.init(param.nodeDim());
+        commBase.init(param.nodeDim());
 
-    initIndexer(HaloDepth,param, commBase);
+        initIndexer(HaloDepth, param, commBase);
 
-    rootLogger.info("STARTING PURE GAUGE HMC TESTS:\n");
-    rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
+        rootLogger.info("STARTING PURE GAUGE HMC TESTS:\n");
+        rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
 
-    rootLogger.info("STARTING REVERSIBILITY TEST:");
+        rootLogger.info("STARTING REVERSIBILITY TEST:");
 
-    bool revers = reverse_test<HaloDepth>(commBase, param);
+        bool revers = reverse_test<HaloDepth>(commBase, param);
 
-    if (revers)
-        rootLogger.info("REVERSIBILITY TEST: passed");
-    else
-        rootLogger.error("REVERSIBILITY TEST: failed");
+        if (revers)
+            rootLogger.info("REVERSIBILITY TEST: passed");
+        else
+            rootLogger.error("REVERSIBILITY TEST: failed");
 
-    rootLogger.info("STARTING NO_RNG TEST:");
-    rootLogger.info("There should be no dynamics!");
+        rootLogger.info("STARTING NO_RNG TEST:");
+        rootLogger.info("There should be no dynamics!");
 
-    bool no_rng = no_rng_test<HaloDepth>(commBase, param);
+        bool no_rng = no_rng_test<HaloDepth>(commBase, param);
 
-    if (no_rng)
-        rootLogger.info("UPDATE WITHOUT RNG: passed");
-    else
-        rootLogger.error("UPDATE WITHOUT RNG: failed");
+        if (no_rng)
+            rootLogger.info("UPDATE WITHOUT RNG: passed");
+        else
+            rootLogger.error("UPDATE WITHOUT RNG: failed");
 
-    rootLogger.info("STARTING FULL UPDATE TEST:");
-    rootLogger.info("Now, there should be some dynamics"); 
+        rootLogger.info("STARTING FULL UPDATE TEST:");
+        rootLogger.info("Now, there should be some dynamics");
 
-    bool full = full_test<HaloDepth>(commBase, param);
+        bool full = full_test<HaloDepth>(commBase, param);
 
-    if (full)
-        rootLogger.info("FULL UPDATE TEST: passed");
-    else
-        rootLogger.error("FULL UPDATE TEST: failed");
+        if (full)
+            rootLogger.info("FULL UPDATE TEST: passed");
+        else
+            rootLogger.error("FULL UPDATE TEST: failed");
 
-    if (revers && no_rng && full)  {
-        rootLogger.info("ALL TESTS PASSED");
-        rootLogger.warn("This only indicates that force matches action.\n");
-        rootLogger.warn("Check Observables to find out if action is correct!");
-    } else {
-        rootLogger.error("At least one test failed!");
-        return -1;
+        if (revers && no_rng && full) {
+            rootLogger.info("ALL TESTS PASSED");
+            rootLogger.warn("This only indicates that force matches action.\n");
+            rootLogger.warn("Check Observables to find out if action is correct!");
+        } else {
+            rootLogger.error("At least one test failed!");
+            return 1;
+        }
     }
-
+    catch (const std::runtime_error &error) {
+        return 1;
+    }
     return 0;
 }
 
