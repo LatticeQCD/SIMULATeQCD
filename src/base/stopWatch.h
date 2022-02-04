@@ -35,7 +35,7 @@ class StopWatch {
         return _elapsed;
     }
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIP_PLATFORM_AMD__)
     gpuEvent_t _device_start_time, _device_stop_time;
 
     public:

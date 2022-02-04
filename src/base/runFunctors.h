@@ -37,7 +37,7 @@ public:
 
 #ifdef USE_HIP_AMD
 
-__host__ __device__ static HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
+__host__ __device__ static inline HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
 
         return HIP_vector_type<unsigned int, 3>(Idx.x, Idx.y, Idx.z);
 

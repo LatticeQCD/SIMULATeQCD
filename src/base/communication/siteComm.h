@@ -13,7 +13,9 @@
 #include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
-#include "nvToolsExt.h"
+#ifndef USE_HIP_AMD
+    #include "nvToolsExt.h"
+#endif
 #include "deviceEvent.h"
 #include "HaloLoop.h"
 #include "deviceStream.h"

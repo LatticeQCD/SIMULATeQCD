@@ -7,7 +7,7 @@
 #include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-__device__ GSU3<floatT> linkDerivativeLepage(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu) {
+__host__ __device__ GSU3<floatT> linkDerivativeLepage(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
     GSU3<floatT> temp;
     gSite origin = site;

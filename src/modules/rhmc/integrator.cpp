@@ -14,7 +14,7 @@ struct do_evolve_Q
     gaugeAccessor<floatT> _pAccessor;
     gaugeAccessor<floatT, comp> _gAcc;
 
-    __device__ __host__ GSU3<floatT> operator()(gSiteMu site){
+    __host__ __device__ __host__ GSU3<floatT> operator()(gSiteMu site){
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<double> temp;
