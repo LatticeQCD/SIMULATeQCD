@@ -6,7 +6,7 @@
 #
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
-set(BACKEND "hip_amd" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
+set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
 
 if (BACKEND STREQUAL "cuda")
     add_definitions(-DUSE_CUDA)
@@ -758,11 +758,20 @@ set_SIMULATeQCD_property(polSuscRenorm PROPERTIES RUNTIME_OUTPUT_DIRECTORY "appl
 SIMULATeQCD_target_compile_definitions(polSuscRenorm PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 
+
+if (USE_HIP_AMD)
 set_SIMULATeQCD_gpu_backend(src/applications/main_rhmc.cpp)
 add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cpp ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications RHMC)
+else()
+set_SIMULATeQCD_gpu_backend(src/applications/main_rhmc.cpp)
+add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cpp ${SOURCE_FILES_RHMC})
+set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(applications RHMC)
+endif()
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sublatticeUpdates.cpp)
 add_SIMULATeQCD_executable(sublatticeUpdates src/applications/main_sublatticeUpdates.cpp ${SOURCE_FILES_SUBLATTICEUPDATES})
