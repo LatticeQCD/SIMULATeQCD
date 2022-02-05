@@ -1,5 +1,5 @@
 #include "dslash.h"
-#define BLOCKSIZE 32
+#define BLOCKSIZE 64
 
 //! HisqDslash
 

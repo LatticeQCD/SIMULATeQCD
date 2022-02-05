@@ -1,5 +1,5 @@
 #include "inverter.h"
-#define BLOCKSIZE 32
+#define BLOCKSIZE 64
 
 template<class floatT, size_t NStacks>
     template <typename Spinor_t>
@@ -271,7 +271,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
 
         // rootLogger.info("residue =" ,  lambda2);
 
-        spinorOut.template axpyThisLoop<32>(((floatT)(-1.0))*B, pi,max_term); 
+        spinorOut.template axpyThisLoop<64>(((floatT)(-1.0))*B, pi,max_term); 
         //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
         
 
@@ -282,7 +282,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         //################################        
 
 
-        pi.template axupbyThisLoop<32>(Z, a, r, max_term);
+        pi.template axupbyThisLoop<64>(Z, a, r, max_term);
         //     pi[i] = Z[i] * r + a[i] * pi[i];
 
 
