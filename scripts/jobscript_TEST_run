@@ -7,8 +7,7 @@
 
 #Resources
 #SBATCH --time=00:30:00
-#SBATCH --partition=volta
-#SBATCH --qos=devel_gpu
+#SBATCH --partition=volta_devel
 #SBATCH --ntasks=4
 #SBATCH --cores-per-socket=1
 #SBATCH --nodes=1

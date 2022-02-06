@@ -13,7 +13,7 @@
 template<class floatT, int HaloDepth>
 bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff rat){
 
-    initIndexer(4,param, commBase);
+    initIndexer(4 ,param, commBase);
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
 
@@ -57,13 +57,14 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
     Gaugefield<floatT, true, HaloDepth, R18> gauge_reference(commBase);
-    gauge_reference.readconf_nersc("../test_conf/rhmc_reference_conf");
-    gauge_reference.updateAll();
+    gauge_reference.readconf_nersc(param.gauge_file());
+    //gauge_reference.updateAll();
     grnd_state<true> d_rand;
     initialize_rng(param.seed(), d_rand);
 
     gauge.one();
     gauge.updateAll();
+    gauge.su3latunitarize();
 
     rootLogger.info("constructed gauge field");
 
@@ -80,7 +81,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
     for (int i = 1; i <= param.no_updates(); ++i) {
-        acc += HMC.update();
+        acc += HMC.update(!param.always_acc());
         acceptance = floatT(acc)/floatT(i);
 
         rootLogger.info("|Ploop|(" ,  i , ")= " ,  abs(ploop.getPolyakovLoop()));
@@ -88,6 +89,8 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
+    //gauge.writeconf_nersc(param.gauge_file()+std::to_string(param.no_updates()));
+    
     bool ret = false;
     
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
@@ -148,24 +151,41 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/null", argc, argv);
+        if (not param.confnumber.isSet()){
+        param.confnumber.set(0);
+    }
 
     const int HaloDepth = 2;
+    
+    std::string rand_file;
+    std::string gauge_file;
 
     RationalCoeff rat;
 
     rat.readfile(commBase, param.rat_file());
+    
+    rat.check_rat(param);
 
-    commBase.init(param.nodeDim());
+    commBase.init(param.nodeDim(), param.gpuTopo());
 
-    initIndexer(HaloDepth,param, commBase);
+    typedef float floatT;
+
+    rootLogger.info("STARTING RHMC Update:");
+
+    if (sizeof(floatT)==4)
+        rootLogger.info("update done in single precision");
+    else if(sizeof(floatT)==8)
+        rootLogger.info("update done in double precision");
+    else
+        rootLogger.info("update done in unknown precision");
+
+    initIndexer(HaloDepth, param, commBase);
 
     rootLogger.info("STARTING RHMC TESTS:\n");
     rootLogger.info("This will take some minutes. Go grab a coffee/tea.");
 
     rootLogger.info("STARTING REVERSIBILITY TEST:");
-
-    typedef float floatT;
 
     bool revers = reverse_test<floatT, HaloDepth>(commBase, param, rat);
 

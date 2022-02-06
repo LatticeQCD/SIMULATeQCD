@@ -47,6 +47,20 @@ function runTestRoutineNoParam {
     if [ ! -s ${outFile} ]; then rm ${outFile}; fi
 }
 
+function runTestRoutineRHMC {
+    routine="$1"
+    paramFile="$2"
+    file="$3"
+    outFile='OUT_rhmcTest'"${file}"
+    errFile='runERR_rhmcTest'"${file}"
+    echo '  '${routine}' using 1 GPU.'
+    $run_command 1 ./${routine} "../parameter/tests/${paramFile}" >> ${outFile} 2>> ${errFile}
+    echo " " >> ${outFile}
+    # This is just to remove these files if they are empty.
+    if [ ! -s ${errFile} ]; then rm ${errFile}; fi
+    if [ ! -s ${outFile} ]; then rm ${outFile}; fi
+}
+
 # The GPUkey tells you the number of processors and sometimes extra info about the node layout:
 #    s: Split only in spatial directions. Useful for observables like the Polyakov loop, where one prefers not to
 #       split the lattice in the Euclidean time direction.
@@ -137,8 +151,6 @@ testRoutinesNoParam[_hisqForceImagmu]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
 testRoutinesNoParam[_memManTest]="1"
-testRoutinesNoParam[_rhmcTest]="1"               # The read in construction doesn't seem to work. Test is a bit too long (30 min)
-testRoutinesNoParam[_rhmcTest_4pf]="1"
 testRoutinesNoParam[_RndSingleTest]="1"
 testRoutinesNoParam[_SimpleFunctorTest]="1"
 testRoutinesNoParam[_UtimesUdaggerTest]="1"
@@ -165,6 +177,11 @@ for key in "${!testRoutinesNoParam[@]}"; do
     echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
     runTestRoutineNoParam "${key}" "${testRoutinesNoParam[$key]}"
 done
+
+# run rhmc test for no_pf=1 and no_pf=4
+runTestRoutineRHMC "_rhmcTest" "rhmcTest.param" ""
+runTestRoutineRHMC "_rhmcTest" "rhmcTest_4pf.param" "_4pf"
+
 
 # These tests have to be run after their single counterparts, so we have to run them by hand here because the
 # associative array is not ordered.

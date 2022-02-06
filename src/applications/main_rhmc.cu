@@ -10,7 +10,6 @@
 #include "../modules/dslash/condensate.h"
 
 int main(int argc, char *argv[]) {
-
     stdLogger.setVerbosity(INFO);
     CommunicationBase commBase(&argc, &argv);
 

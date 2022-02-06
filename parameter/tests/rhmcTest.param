@@ -40,12 +40,13 @@ no_sw      = 10
 cgMax      = 6500
 always_acc = 0
 rat_file   = ../parameter/sample_eo.rat
+no_pf      = 1
 
 rand_flag    = 0
 rand_file    = rand
 seed         = 1337
 load_conf    = 0
-gauge_file   = l328f21b6260m00405m0810a_4000.
-conf_nr    = 0
+gauge_file   = ../test_conf/rhmc_reference_conf    # reference conf to compare with ones() after 10 updates
+conf_nr      = 0
 no_updates   = 10
 write_every  = 5
