@@ -12,7 +12,7 @@
 #include "../gauge/gauge_kernels.cu"
 
 
-#define PREC float
+#define PREC double 
 #define USE_GPU true
 
 
@@ -46,16 +46,12 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC, true, HaloDepth> force(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin> SpinorIn(commBase);
 
-    gauge.readconf_nersc("../test_conf/gauge12750");
-
-    gauge.updateAll();
-
-    grnd_state<false> h_rand;
     grnd_state<true> d_rand;
 
-    h_rand.make_rng_state(rhmc_param.seed());
-
-    d_rand = h_rand;
+    initialize_rng(rhmc_param.seed(),d_rand);    
+    rootLogger.info("seed=",rhmc_param.seed());
+    gauge.random(d_rand.state);
+    gauge.updateAll();
 
     HisqSmearing<PREC, true, HaloDepth,R18> smearing(gauge,gaugeLvl2,gaugeNaik);
     smearing.SmearAll();
@@ -73,6 +69,8 @@ int main(int argc, char *argv[]) {
     gpuProfilerStop();
     timer.stop();
 
+    force.writeconf_nersc("force_reference",3,2);
+
     force_host=force;
 
     GSU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
@@ -88,7 +86,7 @@ int main(int argc, char *argv[]) {
     force_reference.readconf_nersc("../test_conf/force_reference");
 
     
-    force.writeconf_nersc("../test_conf/force_testrun");
+    force.writeconf_nersc("../test_conf/force_testrun",3,2);
 
     force.readconf_nersc("../test_conf/force_testrun");
 
@@ -97,7 +95,7 @@ int main(int argc, char *argv[]) {
     dummy.adjustSize(elems);
 
     
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(force,force_reference));
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(force,force_reference,1e-15));
 
     int faults = 0;
     dummy.reduce(faults,elems);

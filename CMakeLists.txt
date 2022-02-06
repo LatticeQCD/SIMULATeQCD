@@ -294,7 +294,7 @@ add_to_compound_SIMULATeQCD_target(tests HBOR_single_test)
 
 add_SIMULATeQCD_executable(hisqForce src/testing/main_hisqForce.cu ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cu src/modules/HISQ/hisqForce.cu) 
 set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
 
 add_SIMULATeQCD_executable(hisqForceImagmu src/testing/main_HisqForceImagmu.cu ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cu src/modules/HISQ/hisqForce.cu)
