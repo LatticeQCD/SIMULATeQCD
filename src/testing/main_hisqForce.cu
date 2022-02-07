@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     gpuProfilerStop();
     timer.stop();
 
-    force.writeconf_nersc("force_reference",3,2);
+//    force.writeconf_nersc("force_reference",3,2);
 
     force_host=force;
 
@@ -83,8 +83,8 @@ int main(int argc, char *argv[]) {
     
     Gaugefield<PREC,true,HaloDepth> force_reference(commBase);
 
-    force_reference.readconf_nersc("../test_conf/force_reference");
-
+//    rootLogger.warn("gauge_file=",rhmc_param.GaugefileName());
+    force_reference.readconf_nersc(rhmc_param.GaugefileName());
     
     force.writeconf_nersc("../test_conf/force_testrun",3,2);
 
@@ -93,9 +93,8 @@ int main(int argc, char *argv[]) {
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
     LatticeContainer<true, int> dummy(commBase);
     dummy.adjustSize(elems);
-
     
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(force,force_reference,1e-15));
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(force,force_reference,3e-9));
 
     int faults = 0;
     dummy.reduce(faults,elems);
