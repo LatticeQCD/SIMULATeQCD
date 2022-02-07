@@ -23,7 +23,6 @@ testRoutinesNoParam[_gfixTestSingle]="1"
 testRoutinesNoParam[_halfPrecMathTest]="1"
 testRoutinesNoParam[_HBOR_single_test]="1"
 testRoutinesNoParam[_hisqForce]="1"
-testRoutinesNoParam[_hisqForceImagmu]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
 testRoutinesNoParam[_memManTest]="1"
@@ -35,7 +34,7 @@ testRoutinesNoParam[_UtimesUdaggerTest]="1"
 
 # Counting the number of test sets lets us give the user some indication of progress.
 numberOfTestRoutines="$((${#testRoutinesNoParam[@]}))"
-numberOfMultRoutines=4
+numberOfMultRoutines=5
 numberOfTestRoutines="$((${numberOfTestRoutines}+${numberOfMultRoutines}))"
 
 echo
@@ -48,6 +47,12 @@ for key in "${!testRoutinesNoParam[@]}"; do
     echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
     runTestRoutineNoParam "${key}" "${testRoutinesNoParam[$key]}"
 done
+
+# This test needs to be rerun with a different parameter.
+forceExec="_hisqForce"
+forceOut="OUT"${forceExec}
+forceErr="runERR"${forceExec}
+$run_command 1 ./${forceExec} ../parameter/tests/hisqForceImagMu.param Nodes="1 1 1 1" > ${forceOut} 2> ${forceErr}
 
 # These tests have to be run after their single counterparts, so we have to run them by hand here because the
 # associative array is not ordered.

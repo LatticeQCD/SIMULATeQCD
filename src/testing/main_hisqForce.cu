@@ -69,8 +69,6 @@ int main(int argc, char *argv[]) {
     gpuProfilerStop();
     timer.stop();
 
-//    force.writeconf_nersc("force_reference",3,2);
-
     force_host=force;
 
     GSU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
@@ -83,11 +81,11 @@ int main(int argc, char *argv[]) {
     
     Gaugefield<PREC,true,HaloDepth> force_reference(commBase);
 
-//    rootLogger.warn("gauge_file=",rhmc_param.GaugefileName());
     force_reference.readconf_nersc(rhmc_param.GaugefileName());
-    
-    force.writeconf_nersc("../test_conf/force_testrun",3,2);
 
+    // readconf_nersc does some reunitarization. Writing and reading makes sure the comparison between this generated
+    // force field and force_reference have both been reunitarized in the same way.    
+    force.writeconf_nersc("../test_conf/force_testrun",3,2);
     force.readconf_nersc("../test_conf/force_testrun");
 
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
@@ -103,8 +101,7 @@ int main(int argc, char *argv[]) {
 
     if (faults == 0) {
         rootLogger.info(CoutColors::green, "Force is correct", CoutColors::reset);
-    }
-    else {
+    } else {
         rootLogger.error("Force is wrong!");
         return 1;
     }
