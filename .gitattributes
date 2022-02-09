@@ -5,6 +5,7 @@ test_conf/gauge12750 filter=lfs diff=lfs merge=lfs -text
 test_conf/l20t20b06498a_nersc.302500 filter=lfs diff=lfs merge=lfs -text
 test_conf/nersc.l8t4b3360_bie_readtest filter=lfs diff=lfs merge=lfs -text
 test_conf/smearing_link_lv2_110_nersc filter=lfs diff=lfs merge=lfs -text
+test_conf/smearing_reference_conf filter=lfs diff=lfs merge=lfs -text
 test_conf/hisqF_BIGPU.nersc filter=lfs diff=lfs merge=lfs -text
 test_conf/nersc.l8t4b3360_bieHB filter=lfs diff=lfs merge=lfs -text
 test_conf/nersc.l8t4b3360_bieOR filter=lfs diff=lfs merge=lfs -text

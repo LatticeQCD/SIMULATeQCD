@@ -4,7 +4,7 @@
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
 #    Gaugefile: Name of input file
-#    config_nr: configuration number
+#    conf_nr: configuration number
 #       format: Format of the binary file.
 #   endianness: For output storage.
 #

@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
 
-    bool lerror = false;
+
 
     LatticeParameters param;
     const int LatDim[] = {8, 8, 8, 4};
@@ -202,7 +202,7 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
+    bool lerror = test_dslash<float, Even, Odd, 1, true>(commBase);
     rootLogger.info( "------------------");
     rootLogger.info( "Testing Odd - Even");
     rootLogger.info("------------------");
