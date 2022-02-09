@@ -10,7 +10,7 @@ The Conjugate Gradient (CG) inverter solves the equation $Ax=b$, where $A$ is a 
 Given an initial guess $x_0$ and a target residual $\epsilon$, compute $r_0=b-Ax$ and set $p_0=r_0$.
 
 > **while** $|r_{i+1}|^2 < \epsilon$ \
-> $\qquad \alpha_{i} = \frac{|r_i|^2}{p^{\intercal}Ap}$\
+> $\qquad \alpha_{i} = \frac{|r_i|^2}{p^{\dagger}Ap}$\
 > $\qquad x_{i+1} = x_{i} + \alpha_{i}p_{i}$\
 > $\qquad r_{i+1} = r_{i} - \alpha_{i}r_{i}$\
 > $\qquad \beta_{i} = \frac{|r_{i+1}|^2}{|r_i|^2}$\
