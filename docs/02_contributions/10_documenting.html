@@ -88,12 +88,31 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="documenting-your-code">
 <h1>Documenting your code<a class="headerlink" href="#documenting-your-code" title="Permalink to this headline"></a></h1>
-<p>You have written some <a class="reference internal" href="01_codeStyle.html"><span class="doc std std-doc">readable code</span></a> that is <a class="reference internal" href="03_organizeFiles.html"><span class="doc std std-doc">reasonably organized</span></a> and, crucially, you <a class="reference internal" href="09_testing.html"><span class="doc std std-doc">wrote a test for it</span></a>. There is only one thing left for you to do, to make sure your code can be easily used and adapted by future developers: You must document it!</p>
-<p>To create some documentation, please navigate to <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/doc_src/</span></code>, where you can find its source code. Our source code is written using <a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a>, a python documentation generator, combined with <a class="reference external" href="https://myst-parser.readthedocs.io/en/latest/">MyST</a>, which is an extension for Sphinx supporting <a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a>. You can follow those links to learn more in detail about this syntax. With this documentation, we just want to show you how to get started.</p>
+<p>You have written some <a class="reference internal" href="01_codeStyle.html"><span class="doc std std-doc">readable code</span></a> that is
+<a class="reference internal" href="03_organizeFiles.html"><span class="doc std std-doc">reasonably organized</span></a> and, crucially, you
+<a class="reference internal" href="09_testing.html"><span class="doc std std-doc">wrote a test for it</span></a>. There is only one thing left for you to do,
+to make sure your code can be easily used and adapted by future developers:
+You must document it!</p>
+<p>To create some documentation, please navigate to <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/doc_src/</span></code>,
+where you can find its source code. Our source code is written
+using <a class="reference external" href="https://www.sphinx-doc.org/en/master/">Sphinx</a>, a python documentation
+generator, combined with <a class="reference external" href="https://myst-parser.readthedocs.io/en/latest/">MyST</a>,
+which is an extension for Sphinx supporting
+<a class="reference external" href="https://daringfireball.net/projects/markdown/">Markdown</a>. You can follow those
+links to learn more in detail about this syntax. With this documentation, we
+just want to show you how to get started.</p>
+<p>Before you compile the documentation, make sure you</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install -r requirements.txt
+</pre></div>
+</div>
+<p>If you would like to use the convenience function <code class="docutils literal notranslate"><span class="pre">docs_src/build/auto_compile.sh</span></code>,
+you will also need to install the shell command <code class="docutils literal notranslate"><span class="pre">entr</span></code>.</p>
 <section id="documentation-syntax">
 <h2>Documentation syntax<a class="headerlink" href="#documentation-syntax" title="Permalink to this headline"></a></h2>
-<p>You can <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">Title</span> <span class="pre">Your</span> <span class="pre">Page</span></code> like so. Each <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Heading</span></code> and <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">Subheading</span></code> just requires more pound symbols #.</p>
-<p>Links to <code class="docutils literal notranslate"><span class="pre">[other</span> <span class="pre">documentation](path_to_documentation.md)</span></code> and to <code class="docutils literal notranslate"><span class="pre">[webpages](https://www.web_link.org)</span></code> are accomplished in the same way.</p>
+<p>You can <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">Title</span> <span class="pre">Your</span> <span class="pre">Page</span></code> like so. Each <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Heading</span></code> and <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">Subheading</span></code> just
+requires more pound symbols #.</p>
+<p>Links to <code class="docutils literal notranslate"><span class="pre">[other</span> <span class="pre">documentation](path_to_documentation.md)</span></code> and to
+<code class="docutils literal notranslate"><span class="pre">[webpages](https://www.web_link.org)</span></code> are accomplished in the same way.</p>
 <p>To make a numbered list</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span>1. all you have to do
 2. is start typing the numbers

@@ -1,14 +1,34 @@
 # Documenting your code 
 
-You have written some [readable code](01_codeStyle.md) that is [reasonably organized](03_organizeFiles.md) and, crucially, you [wrote a test for it](09_testing.md). There is only one thing left for you to do, to make sure your code can be easily used and adapted by future developers: You must document it!
+You have written some [readable code](01_codeStyle.md) that is 
+[reasonably organized](03_organizeFiles.md) and, crucially, you 
+[wrote a test for it](09_testing.md). There is only one thing left for you to do, 
+to make sure your code can be easily used and adapted by future developers: 
+You must document it!
 
-To create some documentation, please navigate to `SIMULATeQCD/doc_src/`, where you can find its source code. Our source code is written using [Sphinx](https://www.sphinx-doc.org/en/master/), a python documentation generator, combined with [MyST](https://myst-parser.readthedocs.io/en/latest/), which is an extension for Sphinx supporting [Markdown](https://daringfireball.net/projects/markdown/). You can follow those links to learn more in detail about this syntax. With this documentation, we just want to show you how to get started.
+To create some documentation, please navigate to `SIMULATeQCD/doc_src/`, 
+where you can find its source code. Our source code is written 
+using [Sphinx](https://www.sphinx-doc.org/en/master/), a python documentation 
+generator, combined with [MyST](https://myst-parser.readthedocs.io/en/latest/), 
+which is an extension for Sphinx supporting 
+[Markdown](https://daringfireball.net/projects/markdown/). You can follow those 
+links to learn more in detail about this syntax. With this documentation, we 
+just want to show you how to get started.
+
+Before you compile the documentation, make sure you
+```shell
+pip install -r requirements.txt
+```
+If you would like to use the convenience function `docs_src/build/auto_compile.sh`,
+you will also need to install the shell command `entr`. 
 
 ## Documentation syntax
 
-You can `# Title Your Page` like so. Each `## Heading` and `### Subheading` just requires more pound symbols #.
+You can `# Title Your Page` like so. Each `## Heading` and `### Subheading` just 
+requires more pound symbols #.
 
-Links to `[other documentation](path_to_documentation.md)` and to `[webpages](https://www.web_link.org)` are accomplished in the same way.
+Links to `[other documentation](path_to_documentation.md)` and to 
+`[webpages](https://www.web_link.org)` are accomplished in the same way.
 
 To make a numbered list
 ```html
