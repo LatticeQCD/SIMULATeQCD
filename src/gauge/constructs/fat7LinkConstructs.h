@@ -88,6 +88,7 @@ __host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_second_level(gaugeAcc
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
 __host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_third_level(gaugeAccessor<floatT,comp> gAcc_0, gaugeAccessor<floatT,comp> gAcc_1, gaugeAccessor<floatT,comp> gAcc_2, gaugeAccessor<floatT,comp> gAcc_3, gSiteMu siteMu) {
+
   typedef GIndexer<All,HaloDepth> GInd;
   GSU3<floatT> temp = gsu3_zero<floatT>();
   int mu = siteMu.mu;
@@ -100,7 +101,7 @@ __host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_third_level(gaugeAcce
   else if(mu == 2)gAcc_mu.push_back(gAcc_2);
   else if(mu == 3)gAcc_mu.push_back(gAcc_3);
  
-  for (int nu_h = 0; nu_h < 4; nu_h++) {
+  for (int nu_h = 1; nu_h < 4; nu_h++) {
     int nu = (mu+nu_h)%4;
     gSite downNu = GInd::site_dn(origin,nu);
     gSite upNu = GInd::site_up(origin,nu);
