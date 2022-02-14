@@ -271,13 +271,17 @@ set_SIMULATeQCD_gpu_backend(
     src/modules/observables/PolyakovLoop.cpp
     src/modules/observables/Topology.cpp
     src/modules/observables/WilsonLineCorrelator.cpp
-    src/modules/rhmc/Spinorfield_container.h
     src/modules/rhmc/integrator.cpp
     src/modules/rhmc/pure_gauge_hmc.cpp
     src/modules/rhmc/rhmc.cpp
     src/spinor/spinorfield.cpp
     )
 
+if (USE_HIP_AMD)
+set_SIMULATeQCD_gpu_backend(
+    src/gauge/gaugefield.cpp
+    )
+endif()
 
 if (USE_CUDA)
     add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
