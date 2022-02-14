@@ -468,11 +468,15 @@ set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
 
+
+
+if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/testing/main_half_prec_math_test.cpp src/spinor/spinorfield.cpp )
 add_SIMULATeQCD_executable(halfPrecMathTest src/testing/main_half_prec_math_test.cpp src/spinor/spinorfield.cpp )
 set_SIMULATeQCD_property(halfPrecMathTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(halfPrecMathTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_U3R14=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests halfPrecMathTest)
+endif()
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_HaloTest.cpp)
 add_SIMULATeQCD_executable(HaloTest src/testing/main_HaloTest.cpp)
@@ -534,11 +538,13 @@ set_SIMULATeQCD_property(InverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testi
 SIMULATeQCD_target_compile_definitions(InverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests InverterTest)
 
+if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/testing/main_MixedPrecInverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
 add_SIMULATeQCD_executable(MixedPrecInverterTest src/testing/main_MixedPrecInverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
 set_SIMULATeQCD_property(MixedPrecInverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(MixedPrecInverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 HALFPREC=1 SINGLEPREC=1 NSTACKS_1=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests MixedPrecInverterTest)
+endif()
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_dotProduct.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(dotProductTest src/testing/main_dotProduct.cpp src/spinor/spinorfield.cpp)
