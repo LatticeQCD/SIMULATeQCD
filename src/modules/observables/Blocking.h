@@ -160,9 +160,10 @@ struct EMTtraceless {
         FS[7] = FS13;
         FS[11] = FS23;
         
+        floatT factor = -1;
         for (size_t mu=1;mu<4;mu++) {
             for(size_t nu=0;nu<mu;nu++) {
-                FS[mu*4+nu] = -1.*FS[nu*4+mu];
+                FS[mu*4+nu] = factor*FS[nu*4+mu];
             }
         }
         
