@@ -162,11 +162,6 @@ echo Running Test: ./_PureGaugeHmcTest ../parameter/tests/PureGaugeHmcTest.param
 echo ==========================================================================================================
 ${prefix} ./_PureGaugeHmcTest ../parameter/tests/PureGaugeHmcTest.param Nodes="${nodes}"
 
-echo ""
-echo ==========================================================================================================
-echo Running Test: ./_rhmcTest_4pf ../parameter/tests/rhmcTest_4pf.param Nodes="${nodes}"
-echo ==========================================================================================================
-${prefix} ./_rhmcTest_4pf ../parameter/tests/rhmcTest_4pf.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
