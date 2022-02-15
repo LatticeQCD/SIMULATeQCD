@@ -95,12 +95,13 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     dummy.adjustSize(elems);
 
     
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference,3e-9));
 
     int faults = 0;
     dummy.reduce(faults,elems);
 
     rootLogger.info(faults, " faulty links found!");
+
 
     if (acceptance > 0.7 && faults == 0) {
         ret=true;
@@ -165,7 +166,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("STARTING REVERSIBILITY TEST:");
 
-    typedef float floatT;
+    typedef double floatT;
 
     bool revers = reverse_test<floatT, HaloDepth>(commBase, param, rat);
 
