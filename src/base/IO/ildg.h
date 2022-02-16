@@ -60,13 +60,14 @@ private:
         if(magic_number != 1164413355){
             if(__builtin_bswap32(magic_number) == 1164413355){
                 Endian = true;
+                rootLogger.info("testing magic number");
             }
             else{
                 rootLogger.info("could not read magic number");
                 return false;
             }
+            std::cout<<"magic_number = "<<magic_number<<std::endl;
         }
-        rootLogger.info("magic_number = ",magic_number);
 
         in.clear();
         in.seekg(0);
@@ -278,7 +279,7 @@ private:
 
             }
         if (rows == 2 || sizeof(f1) != sizeof(f2))
-            U.su3unitarize();
+            //U.su3unitarize();
         return U;
     }
 

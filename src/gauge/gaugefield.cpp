@@ -211,7 +211,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_ildg(const std::stri
         readconf_ildg_host(getAccessor(),fname, en);
     }
 
-    this->su3latunitarize();
+    //this->su3latunitarize();
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
