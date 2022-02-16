@@ -31,7 +31,6 @@ public:
     Parameter <double> m_ud;
     Parameter <double> m_s;
     Parameter <std::string> rand_file;
-    Parameter <std::string> gauge_file;
     Parameter <int> seed;
     Parameter <bool> load_rand;
     Parameter <int> load_conf;
@@ -58,7 +57,6 @@ public:
         addOptional(m_ud, "mass_ud");
         addOptional(m_s, "mass_s");
         addOptional(rand_file, "rand_file");
-        addOptional(gauge_file, "gauge_file");
         addOptional(seed, "seed");
         addOptional(load_rand, "rand_flag");
         addDefault(load_conf, "load_conf", 0);
