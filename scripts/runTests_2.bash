@@ -52,7 +52,13 @@ done
 forceExec="_hisqForce"
 forceOut="OUT"${forceExec}
 forceErr="runERR"${forceExec}
-$run_command 1 ./${forceExec} ../parameter/tests/hisqForceImagMu.param Nodes="1 1 1 1" > ${forceOut} 2> ${forceErr}
+((jtest++))
+echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
+echo '  '"${forceExec}"' using 1 GPU, mu_I == 0.0'
+$run_command 1 ./${forceExec} ../parameter/tests/hisqForce.param Nodes="1 1 1 1" > ${forceOut} 2> ${forceErr}
+echo '  '"${forceExec}"' using 1 GPU, mu_I != 0.0'
+$run_command 1 ./${forceExec} ../parameter/tests/hisqForceImagMu.param Nodes="1 1 1 1" >> ${forceOut} 2>> ${forceErr}
+if [ ! -s ${forceErr} ]; then rm ${forceErr}; fi
 
 # These tests have to be run after their single counterparts, so we have to run them by hand here because the
 # associative array is not ordered.
