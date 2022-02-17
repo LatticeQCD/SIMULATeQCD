@@ -1,7 +1,7 @@
 /* 
  * main_HisqSmearingImagmuTest.cu
  *
- * J. Goswami 
+ * D. Bollweg 
  *
  * Quick single-GPU test comparing the output of the imaginary mu smearing against the old results from the ParallelGPUCode. 
  *
@@ -75,8 +75,7 @@ int main(int argc, char *argv[]) {
 
     if (faults == 0) {
         rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
-    }
-    else {
+    } else {
         rootLogger.error("Test failed!");
         return 1;
     }
