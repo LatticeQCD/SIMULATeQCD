@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     bool lerror=false;
     for (int i = 0; i < numVec; ++i) {
-        if(!cmp_rel(chi_l[i],chi_lCONTROL[i],1e-6,1e-6)) {
+        if(!cmp_rel(chi_l[i],chi_lCONTROL[i],1e-5,1e-5)) {
             rootLogger.error("chi_l, chi_lCONTROL = ",chi_l[i],"  ",chi_lCONTROL[i]);
             lerror=true;
         };
