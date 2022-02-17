@@ -22,8 +22,8 @@
 #    rand_file: file name for random numbers and infos
 #         seed: myseed
 #    load_conf: flag_load (0=identity, 1=random, 2=getconf)
-#   gauge_file: file name for configuration
-#    conf_nr: configuration number
+#   gauge_file: prefix for the gauge configuration's file name 
+#      conf_nr: configuration number
 #   no_updates: number of updates
 #  write_every: write out configuration every
 #
