@@ -108,7 +108,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
         if (this->getComm().IamRoot())
             out.open(fname.c_str(),std::ios::out | std::ios::binary);
         //changed open to binary
-        if (!ildg.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, crc32, out,true)) {
+        if (!ildg.template write_header<floatT, onDevice, comp>(rows, diskprec, en, crc32, out,true)) {
             rootLogger.error("Unable to write ILDG file: ", fname);
             return;
         }
@@ -173,7 +173,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
         std::ofstream out;
         if (this->getComm().IamRoot())
             out.open(fname.c_str(),std::ios::app | std::ios::binary);
-        if (!ildg.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, crc32, out,false)) {
+        if (!ildg.template write_header<floatT, onDevice, comp>(rows, diskprec, en, crc32, out,false)) {
             rootLogger.error("Unable to write ILDG file: ", fname);
             return;
         }
@@ -198,17 +198,17 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_nersc(const std::str
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_ildg(const std::string &fname, Endianness en) {
+void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_ildg(const std::string &fname) {
 
     if(onDevice){
 
         rootLogger.info("readconf_ildg: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
-        readconf_ildg_host(lattice_host.getAccessor(),fname, en);
+        readconf_ildg_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
     }
     else{
-        readconf_ildg_host(getAccessor(),fname, en);
+        readconf_ildg_host(getAccessor(),fname);
     }
 
     //this->su3latunitarize();
@@ -279,7 +279,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor,
-                                                                       const std::string &fname, Endianness en)
+                                                                       const std::string &fname)
 {
     IldgFormat<HaloDepth> ildg(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;

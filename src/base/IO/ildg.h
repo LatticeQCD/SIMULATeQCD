@@ -1,5 +1,5 @@
 //
-// Created by Rasmus Larsen and sajid Ali on 12/13/21.
+// R. Larsen, S. Ali
 //
 
 #ifndef SIMULATEQCD_ILDG_H
@@ -51,11 +51,15 @@ private:
     bool read_info(std::istream &in) {
         int32_t magic_number;
         int64_t data_length;
-        int dimx, dimy, dimz, dimt;
-        int dataPos;
+        int dimx=-1; 
+        int dimy=-1; 
+        int dimz=-1; 
+        int dimt=-1;
+        int dataPos=-1;
         std::string precision, dataType, suma, sumb, typesize, datacount;
         bool Endian=false;
 
+        // TODO: look into the logic of this section in detail, then get rid of the dimx, dimy, dimz, dimt, dataPos assignments.
         in.read(reinterpret_cast<char *>(&magic_number),sizeof(magic_number));
         if(magic_number != 1164413355){
             if(__builtin_bswap32(magic_number) == 1164413355){
@@ -278,7 +282,7 @@ private:
                 U(j, k) = GCOMPLEX(f2)(re, im);
 
             }
-        if (rows == 2 || sizeof(f1) != sizeof(f2))
+      //  if (rows == 2 || sizeof(f1) != sizeof(f2))
             //U.su3unitarize();
         return U;
     }
@@ -405,7 +409,7 @@ public:
 
     //##########################################################################################
 
-    void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data, int su3_size){
+    void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data){
         int32_t magic_number = 1164413355;
         int16_t version_number = 1;
         int8_t zero_8bit=0;
@@ -454,7 +458,7 @@ public:
     }
 
     template<class floatT,bool onDevice, CompressionType comp>
-    bool write_header(Gaugefield<floatT, onDevice, HaloDepth,comp> &gf, gaugeAccessor<floatT,comp> gaugeAccessor, int _rows,
+    bool write_header(int _rows,
                       int diskprec, Endianness en, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
         rows = _rows;
         if (diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)))
@@ -519,12 +523,12 @@ public:
                        + " " + std::to_string(GInd::getLatData().globLZ)
                        + " " + std::to_string(GInd::getLatData().globLT)
                        + " </dims><volfmt>0</volfmt></scidacFile>";
-                lime_record(out, switch_endian, header_ildg, data, su3_size);
+                lime_record(out, switch_endian, header_ildg, data);
 
                 // second lime record (header)
                 header_ildg = "scidac-file-xml";
                 data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><title>ILDG archival gauge configuration</title>";
-                lime_record(out, switch_endian, header_ildg, data, su3_size);
+                lime_record(out, switch_endian, header_ildg, data);
 
                 // third lime record (header)
                 header_ildg = "scidac-private-record-xml";
@@ -533,17 +537,17 @@ public:
                 data += "USQCD_F3_ColorMatrix</datatype><precision>" + fp +
                         "</precision><colors>3</colors><typesize>"
                         + header.dattype() + "</typesize><datacount>4</datacount></scidacRecord>";
-                lime_record(out, switch_endian, header_ildg, data, su3_size);
+                lime_record(out, switch_endian, header_ildg, data);
 
                 // fourth lime record (header)
                 header_ildg = "scidac-record-xml";
                 data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><title>Dummy QCDML</title>";
-                lime_record(out, switch_endian, header_ildg, data, su3_size);
+                lime_record(out, switch_endian, header_ildg, data);
 
                 // fifth lime record (binary data)
                 header_ildg = "scidac-binary-data";
                 data = "";
-                lime_record(out, switch_endian, header_ildg, data, su3_size);
+                lime_record(out, switch_endian, header_ildg, data);
             } else {
                 std::stringstream crc32a, crc32b;
                 crc32a<<std::hex<<computed_checksum_crc32.checksuma;
@@ -554,7 +558,7 @@ public:
                 // sixth lime record (tail)
                 header_ildg = "scidac-checksum";
                 data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacChecksum><version>1.0</version><suma>"+crc32a.str()+"</suma><sumb>"+crc32b.str()+"</sumb></scidacChecksum>";
-                lime_record(out, switch_endian, header_ildg, data, su3_size);
+                lime_record(out, switch_endian, header_ildg, data);
             }
         }
         return header.write(out);
@@ -592,7 +596,6 @@ public:
         index = 0;
     }
 
-    //void get(GSU3<floatT> &U) {
     template<class floatT>
     GSU3<floatT> get() {
         char *start = &buf[index];
@@ -643,7 +646,7 @@ public:
         } else if (header.dattype() == "96" || header.dattype() == "144"){
             precision=2;
         } else {
-            rootLogger.error("DATATYPE = ", header.dattype(), "not recognized.");
+            throw std::runtime_error(stdLogger.fatal("DATATYPE = ", header.dattype(), "not recognized."));
         }
         return precision;
     }
