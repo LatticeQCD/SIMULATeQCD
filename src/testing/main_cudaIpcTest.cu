@@ -94,11 +94,11 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(DEBUG);
 
     LatticeParameters param;
-    StopWatch<true> timer;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/cudaIpcTest.param", argc, argv);
     commBase.init(param.nodeDim());
-
+    StopWatch<true> timer;
+    
     if (!commBase.useGpuP2P()) {
         throw std::runtime_error(stdLogger.fatal("P2P is not activated. Exit."));
     }
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("MPI Last time: " ,  timer);
 
-    rootLogger.info("Test passed (since it didn't crash)");
+    rootLogger.info(CoutColors::green,"Test passed!",CoutColors::reset);
     gpuIpcCloseMemHandle(recvBufferDeviceP2P);
     freeDevice(sendBufferDevice);
     freeDevice(recvBufferDevice);

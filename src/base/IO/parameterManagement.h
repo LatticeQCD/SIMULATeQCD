@@ -18,6 +18,8 @@ struct strpair {
         size_t pos = line.find_first_of('=');
         if (pos == std::string::npos)
             return; //key will be empty, so it will not match anything
+        if (line[line.find_first_not_of(' ')] == '#') // if first non-space character is '#' then it's a comment
+            return;
         key = line.substr(0, pos);
         key.erase(key.find_last_not_of(" \t\r\n\v\f") + 1); //remove whitespaces at end
         
@@ -237,7 +239,8 @@ class CommunicationBase;
 //! see example LatticeParameters on how to use this
 class ParameterList : protected std::list<ParameterBase *> {
 private:
-    bool readstream(std::istream &, int argc, char **argv, const std::string& prefix = "PARAM");
+    bool readstream(std::istream &, int argc, char **argv, const std::string& prefix = "PARAM",
+                    bool ignore_unknown = false);
 
 public:
     //! Add a parameter to the internal list
@@ -272,8 +275,8 @@ public:
     /** Read parameters from stream, output them and check if every
      * parameter that is required is set.
     */
-    bool readstream(std::istream &in, const std::string& prefix = "PARAM") {
-        return readstream(in, 0, nullptr, prefix);
+    bool readstream(std::istream &in, const std::string& prefix = "PARAM", const bool ignore_unknown = false) {
+        return readstream(in, 0, nullptr, prefix, ignore_unknown);
     }
 
     /** Read parameters, output them and check if every parameter that

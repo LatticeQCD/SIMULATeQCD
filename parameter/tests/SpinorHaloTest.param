@@ -6,7 +6,7 @@
 #      Gaugefile: Configuration to be read in
 #     forceHalos: Simulate halos in all directions
 # SimulatedNodes: In case one wants to simulate halos only in specific directions, one can also set the SimulatedNodes
-#                 array. In this case one should set forceHalos=false.
+#                 array. In this case one should set forceHalos=0.
 #        conf_nr: Configuration number (optional). This will sppear in the name of output files.
 #         format: Format of the binary file.
 #     endianness: For output storage.

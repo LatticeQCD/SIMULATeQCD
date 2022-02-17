@@ -110,7 +110,7 @@ public:
         if (!success)
             return false;
         std::istringstream str(content);
-        return readstream(str, "NERSC");
+        return readstream(str, "NERSC", true);
     }
 
     bool write(std::ostream &out) {

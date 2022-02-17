@@ -127,7 +127,8 @@ int main() {
     if(passed_host&&passed_dev) {
         rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
     } else {
-        rootLogger.info("At least one test " ,  CoutColors::red ,  "failed..." ,  CoutColors::reset);
+        rootLogger.error("At least one test failed!");
+        return -1;
     }
 
     return 0;

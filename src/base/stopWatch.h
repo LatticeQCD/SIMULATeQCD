@@ -6,7 +6,6 @@
 #include <chrono>
 #include <ctime>
 #include <iostream>
-#include <math.h>
 #include <cmath>
 
 //! A class to time events/function calls
@@ -42,22 +41,38 @@ class StopWatch {
     public:
 
     StopWatch() : _elapsed(0.0), _bytes(0), _flops(0) {
-        if(device == true){
+        if(device){
             gpuEventCreate(&_device_start_time);
+
+            gpuError_t gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpu Event creation" , gpuErr);
+            }
+
             gpuEventCreate(&_device_stop_time);
+
+            gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpu Event creation" , gpuErr);
+            }
         }
     }
 
     ~StopWatch() {
-        if(device == true){
+        if(device){
             gpuEventDestroy(_device_start_time);
             gpuEventDestroy(_device_stop_time);
         }
     }
 
     inline void start() { 
-        if(device == true){
-            gpuEventRecord(_device_start_time, 0); 
+        if(device){
+            gpuEventRecord(_device_start_time, nullptr);
+            gpuError_t gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed after  CommunicationBase!" , gpuErr);
+            }
+
         }
         else{
             _host_start();
@@ -66,9 +81,17 @@ class StopWatch {
     }
 
     inline double stop() {
-        if(device == true){
-            gpuEventRecord(_device_stop_time, 0);
+        if(device){
+            gpuEventRecord(_device_stop_time, nullptr);
+            gpuError_t gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpuEventRecord (stop)" , gpuErr);
+            }
             gpuEventSynchronize(_device_stop_time);
+            gpuErr = gpuGetLastError();
+            if (gpuErr) {
+                GpuError("Error in gpuEventSynchronize" , gpuErr);
+            }
             float time;
             gpuEventElapsedTime(&time, _device_start_time, _device_stop_time);
             _elapsed += time;
@@ -105,15 +128,15 @@ class StopWatch {
 
     void reset() { _elapsed = 0; }
 
-    double microseconds() const { return _elapsed*1000; }
-    double milliseconds() const { return _elapsed; }
-    double seconds() const { return milliseconds()/1000; }
-    double minutes() const { return seconds()/60; }
-    double hours() const { return minutes()/60; }
-    double days() const { return hours()/24; }
+    [[nodiscard]] double microseconds() const { return _elapsed*1000; }
+    [[nodiscard]] double milliseconds() const { return _elapsed; }
+    [[nodiscard]] double seconds() const { return milliseconds()/1000; }
+    [[nodiscard]] double minutes() const { return seconds()/60; }
+    [[nodiscard]] double hours() const { return minutes()/60; }
+    [[nodiscard]] double days() const { return hours()/24; }
 
 
-    std::string autoFormat() const {
+    [[nodiscard]] std::string autoFormat() const {
         if(days() > 2){
             return sformat("%.0fd %.0fh %.2fmin", days(), hours(), std::fmod(minutes(),60.0));
         }
@@ -134,7 +157,7 @@ class StopWatch {
         }
     }
 
-    void print(std::string text) {
+    void print(const std::string& text) {
         rootLogger.info("Time for " + text + " " , autoFormat());
     }
 
@@ -144,12 +167,12 @@ class StopWatch {
     void setFlops(const long f ) { _flops = f ; } 
 
     //! return MBytes/s (be sure to call setBytes() before)
-    double mbs() const {
+    [[nodiscard]] double mbs() const {
         return (_bytes / (seconds()*1024*1024));
     }
 
     //! return MFLOP/s (be sure to call setFlops() before)
-    double mflps() const {
+    [[nodiscard]] double mflps() const {
         return (_flops / seconds());
     }
 
@@ -220,7 +243,7 @@ class StopWatch {
 };
 
 template<bool device>
-std::ostream &operator<<(std::ostream &stream, const StopWatch<device> &rhs) {
+inline std::ostream &operator<<(std::ostream &stream, const StopWatch<device> &rhs) {
     stream << rhs.autoFormat();
     return stream;
 }

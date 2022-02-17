@@ -51,7 +51,7 @@ bool RNDHeader::read(std::istream &in, CommunicationBase &comm) {
     if (!success)
         return false;
     std::istringstream str(content);
-    return readstream(str, "RNG");
+    return readstream(str, "RNG", true);
 }
 
 bool RNDHeader::write(std::ostream &out, CommunicationBase &comm) {

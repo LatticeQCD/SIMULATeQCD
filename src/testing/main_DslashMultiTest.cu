@@ -133,7 +133,7 @@ bool local_site(sitexyzt globalPos, gSite * site, CommunicationBase &commBase){
 
 //the Dslash test function. Please start reading here.
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, bool onDevice>
-void test_dslash2(CommunicationBase &commBase){
+bool test_dslash2(CommunicationBase &commBase){
 
     //Initialization as usual
     const int HaloDepth = 2;
@@ -335,34 +335,38 @@ void test_dslash2(CommunicationBase &commBase){
     if (success[0] && success[1] && success[2] && success[3]) {
         stdLogger.info("Test of Dslash: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     } else {
-        stdLogger.info("Test of Dslash: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
-        stdLogger.info("mycoords = " ,  commBase.mycoords()*GInd::getLatData().localLattice()
-        ,  ": " ,   success[0] ,  " " ,  success[1] ,  " " ,  success[2] ,  " " ,  success[3]);
+        stdLogger.error("Test of Dslash: failed");
+        stdLogger.info("mycoords = " ,  commBase.mycoords()*GInd::getLatData().localLattice(),  
+                       ": " ,   success[0] ,  " " ,  success[1] ,  " " ,  success[2] ,  " " ,  success[3]);
+        return true;
     }
 
     bool simple = false;
 
-    GCOMPLEX(floatT) reference;
+    GCOMPLEX(floatT) scalarProduct, reference;
 
     spinorOut.updateAll();
 
     if (LatLayoutRHS==All)
-        reference = GCOMPLEX(floatT)(-20.616311,-374.686257);
+        reference = GCOMPLEX(floatT)(-20.616344023,-374.68626006);
     
     else if(LatLayoutRHS==Odd)
-        reference = GCOMPLEX(floatT)(-245.142995,983.585942);
+        reference = GCOMPLEX(floatT)(-245.143001,983.5859418);
     
     else
-        reference = GCOMPLEX(floatT)(-34.2590158,-404.02229);
+        reference = GCOMPLEX(floatT)(-34.25902057,-404.02228596);
 
-    if (spinor.dotProduct(spinorOut) == reference)
+    scalarProduct = spinor.dotProduct(spinorOut);
+    if (scalarProduct == reference)
         simple = true;
 
-
-    if (simple)
-        rootLogger.info("Simple Test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
-    else
-        rootLogger.info("Simple Test using scalar product: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
+    if (simple) {
+        stdLogger.info("Simple test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
+        return false;
+    } else {
+        stdLogger.error("Simple test using scalar product failed!");
+        return true;
+    }
 }
 
 
@@ -374,6 +378,7 @@ int main(int argc, char **argv) {
     LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/DslashMultiTest.param", argc, argv);
+    bool lerror=false;
 
     commBase.init(param.nodeDim());
     initIndexer(2,param, commBase);
@@ -385,14 +390,21 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing All - All");
     rootLogger.info("------------------");
-    test_dslash2<double, All, All, 1, true>(commBase);
+    lerror = (lerror || test_dslash2<double, All, All, 1, true>(commBase));
     rootLogger.info("------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    test_dslash2<double, Even, Odd, 1, true>(commBase);
+    lerror = (lerror || test_dslash2<double, Even, Odd, 1, true>(commBase));
     rootLogger.info("------------------");
     rootLogger.info("Testing Odd - Even");
     rootLogger.info("------------------");
-    test_dslash2<double, Odd, Even, 1, true>(commBase);
+    lerror = (lerror || test_dslash2<double, Odd, Even, 1, true>(commBase));
     rootLogger.info("------------------");
+
+    if(lerror) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("All tests " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
+    }
 }

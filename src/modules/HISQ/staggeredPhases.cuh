@@ -1,13 +1,15 @@
-//
-// Created by Lukas Mazur on 04.01.19.
-//
+/* 
+ * staggeredPhases.cuh 
+ *
+ * L. Mazur 
+ *
+ */
 
-#ifndef PARALLELGPUCODE_STAGGEREDPHASES_HCU
-#define PARALLELGPUCODE_STAGGEREDPHASES_HCU
+#ifndef STAGGEREDPHASES_HCU
+#define STAGGEREDPHASES_HCU
 
 #include "../../define.h"
 #include "../../base/indexer/BulkIndexer.h"
-
 
 
 struct calcStaggeredPhase {
@@ -18,8 +20,6 @@ struct calcStaggeredPhase {
         sitexyzt localCoord = siteMu.coord;
         /// I think we don't need to compute global coord here..
         sitexyzt globalCoord = GInd::getLatData().globalPos(localCoord);
-
-        // printf("Is this even used?\n");
 
         int rest = globalCoord.x % 2;
         if (rest == 1 && siteMu.mu == 1) return -1;
@@ -52,5 +52,4 @@ struct calcStaggeredBoundary {
     }
 };
 
-#endif //PARALLELGPUCODE_STAGGEREDPHASES_HCU
-
+#endif //STAGGEREDPHASES_HCU

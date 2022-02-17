@@ -13,15 +13,14 @@ struct plaquetteKernel{
         floatT result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
-                    result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
-                }
+                GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
             }
         }
         return result;
     }
 };
+
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct plaquetteKernelSS{
@@ -38,16 +37,13 @@ struct plaquetteKernelSS{
         floatT result = 0;
         for (int nu = 1; nu < 3; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
-                    result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
-                }
+                GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
             }
         }
         return result;
     }
 };
-
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
@@ -60,26 +56,20 @@ struct plaquetteKernel_double{
     __device__ __host__ double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-        // GSU3<double> temp;
-
         double result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    GSU3<double> tmp = gAcc.template getLink<double>(GInd::getSiteMu(site, mu));
-                                 tmp*= gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_up(site, mu),nu));
-                                 tmp*= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_up(site, nu),mu));
-                                 tmp*= gAcc.template getLinkDagger<double>(GInd::getSiteMu(site, nu));
-
-                    // gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
-                    // result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
-                                 result+=tr_d(tmp);
-                }
+                GSU3<double> tmp = gAcc.template getLink<double>(GInd::getSiteMu(site, mu));
+                             tmp*= gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_up(site, mu),nu));
+                             tmp*= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_up(site, nu),mu));
+                             tmp*= gAcc.template getLinkDagger<double>(GInd::getSiteMu(site, nu));
+                result+=tr_d(tmp);
             }
         }
         return result;
     }
 };
+
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct UtauMinusUsigmaKernel{
@@ -95,13 +85,11 @@ struct UtauMinusUsigmaKernel{
         floatT result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
-                    if ( mu == 0 ) {
-                        result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
-                    } else {
-                        result -= tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
-                    }
+                GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                if ( mu == 0 ) {
+                    result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
+                } else {
+                    result -= tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
                 }
             }
         }
@@ -150,20 +138,18 @@ struct rectangleKernel{
         floatT result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    temp =  gAcc.getLink(GInd::getSiteMu(GInd::site_up(site, mu), mu) )
-                            *  gAcc.getLink(GInd::getSiteMu(GInd::site_2up(site, mu), nu) )
-                            *  gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), mu))
-                            *   gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site, nu), mu))
-                            *   gAcc.getLinkDagger(GInd::getSiteMu(site, nu));
-                    temp +=  gAcc.getLink(GInd::getSiteMu(GInd::site_up(site, mu), nu) )
-                             * gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), nu) )
-                             *  gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_2up(site, nu), mu))
-                             *   gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site, nu), nu))
-                             *  gAcc.getLinkDagger(GInd::getSiteMu(site, nu));
+                temp = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site, mu), mu) )
+                        * gAcc.getLink(GInd::getSiteMu(GInd::site_2up(site, mu), nu) )
+                        * gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), mu))
+                        * gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site, nu), mu))
+                        * gAcc.getLinkDagger(GInd::getSiteMu(site, nu));
+                temp += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site, mu), nu) )
+                         * gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), nu) )
+                         * gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_2up(site, nu), mu))
+                         * gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site, nu), nu))
+                         * gAcc.getLinkDagger(GInd::getSiteMu(site, nu));
 
-                    result += tr_d(gAcc.getLink(GInd::getSiteMu(site, mu)), temp);
-                }
+                result += tr_d(gAcc.getLink(GInd::getSiteMu(site, mu)), temp);
             }
         }
         return result;
@@ -187,7 +173,6 @@ struct rectangleKernel_double{
         double result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
                     temp =  gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_up(site, mu), mu) );
                     temp *= gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_2up(site, mu), nu) );
                     temp *= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), mu));
@@ -205,12 +190,12 @@ struct rectangleKernel_double{
                     temp2 = gAcc.getLink(GInd::getSiteMu(site, mu));
 
                     result += tr_d(temp2, temp);
-                }
             }
         }
         return result;
     }
 };
+
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct gaugeActKernel_double{
@@ -283,5 +268,35 @@ struct gaugeActKernel_double{
             }
         }
         return result;
+    }
+};
+
+
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
+struct count_faulty_links {
+    gaugeAccessor<floatT,comp> gL;
+    gaugeAccessor<floatT,comp> gR;
+    floatT tol;
+    count_faulty_links(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR, floatT tolerance=1e-6) : gL(GaugeL.getAccessor()), gR(GaugeR.getAccessor()), tol(tolerance) {}
+
+    __host__ __device__ int operator() (gSite site) {
+        int sum = 0;
+        for (int mu = 0; mu < 4; mu++) {
+            gSiteMu siteMu = GIndexer<All,HaloDepth>::getSiteMu(site,mu);
+            GSU3<floatT> a = gL.getLink(siteMu);
+            GSU3<floatT> b = gR.getLink(siteMu);
+            if (!compareGSU3(a, b, tol)) {
+                for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++) {
+                    GCOMPLEX(floatT) diff = a(i, j) - b(i, j);
+                    floatT diff_abs = fabs(diff.cREAL);
+                    if (diff_abs > tol){
+                        printf("Link at site (%i %i %i %i) mu=%i, Matrix-Element (%i,%i) differ by %.4e \n", siteMu.coord.x, siteMu.coord.y, siteMu.coord.z, siteMu.coord.t, mu, i,j, diff_abs);
+                    }
+                }
+                sum++;
+            }
+        }
+        return sum;
     }
 };

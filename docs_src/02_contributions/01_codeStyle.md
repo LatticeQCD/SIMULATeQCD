@@ -28,33 +28,42 @@ Use proper and consistent naming for everything. Use the same name for file name
         `this_is_my_parameter`
         For example: `thisIsMyFunction(double this_is_my_parameter);`
 - **Formatting**\
-Format your code in a nice way:
-    - DO NOT USE TABS. Use spaces instead.
+These are the conventions we have chosen for SIMULATeQCD. Please stick to them. Besides making the code a bit more readable, it will look more professional if we all follow the same conventions.
+    - DO NOT USE TABS. Instead, please indent using 4 spaces.
     - Try for a maximum line length of 120 characters.
     - Try for a maximum function length of 80 lines.
     - Use braces:
       ```C++
       for(int i = 0; i < 10; i++) {
-              std::cout << i << std::endl;
+          ...
       }
       ```
       instead of 
       ```C++
       for(int i = 0; i < 10; i++)
-              std::cout << i << std::endl;
+          ...
       ```
     - Do not put multiple statements in one line:
       ```C++
       if (true) {
-              std::cout << "True" << std::endl;
+          ...
       }
       ```
       instead of 
       ```C++
-      if (true) {std::cout << "True" << std::endl;}
+      if (true) { ... }
       ```
-- **Write helpful comments**\
-Give comments about complex sections, tricks that you used, relevant visualizations, DOIs for papers, your design philosophy (when relevant), etc. DO NOT comment trivial code. Remove commented-out code. (It is anyway in the git history if we need it later.)
+    - Please format your if-else statements like so:
+      ```C++
+      if (true) {
+          ...
+      } else {
+          ...
+      }
+      ```
+- **Write helpful comments**
+    - Give comments about complex sections, tricks that you used, relevant visualizations, DOIs for papers, your design philosophy (when relevant), etc. DO NOT comment trivial code. Remove commented-out code. (It is anyway in the git history if we need it later.)
+    - Use `SIMULATeQCD/scripts/comments.bash` to put some leading comments at the top of your code. This helps ensure that we all include the same information in the same way at the beginning of our code.
 - **Remove old features**\
 If features are not needed any more, remove them. 
 - **Use `C++11/14/17/20` features** (lambda expressions, move constructor, initializer_list,...)\

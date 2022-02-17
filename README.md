@@ -15,27 +15,18 @@ SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it simple and easy f
 
 The following software is required to compile SIMULATeQCD:
 
-1. [git-lfs](https://git-lfs.github.com/) to also be able to clone test configurations:
-    ```shell
-    # For Debian-based system
-    sudo apt install git-lfs
-     
-    # For Arch-based system
-    sudo pacman -S git-lfs
-    ```
-    and activate it by calling `git lfs install`
-2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
-3. `C++` compiler with `C++17` support  (e.g. `g++-9`).
-4. `MPI` (e.g. `openmpi-4.0.4`).
-5. `CUDA Toolkit` version 11.0/11.3/11.4/11.5 (NOT 11.1 or 11.2).
-6. `pip install -r requirements.txt` to build the documentation.
+* `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
+* `C++` compiler with `C++17` support  (e.g. `g++-9`).
+* `MPI` (e.g. `openmpi-4.0.4`).
+* `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2. CUDA 11.4 has a fast compilation time, but we have not yet checked the performance.)
+* `pip install -r requirements.txt` to build the documentation.
 
 ## Downloading the code
 
-First, make sure you have activated git-lfs using `git lfs install`, as mentioned above. 
-The code can then be cloned to your folder using:
+
+First download and activate `git-lfs`. The code can then be cloned to your machine using:
 ```shell
-git clone https://github.com/LatticeQCD/SIMULATeQCD.git
+git clone git@github.com:LatticeQCD/SIMULATeQCD.git
 ```
 
 
@@ -109,9 +100,9 @@ Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
 If none of the above cases apply, you may also send an email to lukas.mazur(at)uni-paderborn(dot)de.
 
 
-## Main contributors
+## Contributors
 
-[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), [P. Scior](https://github.com/philomat), [H.-T. Shu](https://github.com/haitaoshu), R. Larsen, M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74), [S. Ali](https://github.com/Sajidali1031)
+[L. Mazur](https://github.com/lukas-mazur), [H. Sandmeyer](https://github.com/hsandmeyer), [D. Bollweg](https://github.com/dbollweg), [D. Clarke](https://github.com/clarkedavida), [L. Altenkort](https://github.com/luhuhis), [P. Scior](https://github.com/philomat), [H.-T. Shu](https://github.com/haitaoshu), [R. Larsen](https://github.com/RasmusNL), M. Rodekamp, [O. Kaczmarek](https://github.com/olaf-kaczmarek), [C. Schmidt](https://github.com/schmidt74), [S. Ali](https://github.com/Sajidali1031), [J. Goswami](https://github.com/jishnuxx)
 
 ## Citing SIMULATeQCD
 

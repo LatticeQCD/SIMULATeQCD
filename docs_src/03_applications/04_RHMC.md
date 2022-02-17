@@ -16,6 +16,11 @@ The function update will generate one molecular dynamics trajectory, if no argum
 The update routine saves a copy of the gauge field, applies the smearing to the gauge field (not implemented yes), builds the pseudo-fermion fields, generates the conjugate momenta and calculates the Hamiltonian. 
 Then it starts the molecular dynamics evolution by calling `integrate()` from the integrator class (the integrator object is instantiated by the rhmc constructor). After the MD trajectory the new Hamiltonian is calculated and - depending on the arguments - the Metropolis step is done.
 
+## Multiple pseudofermions
+
+When you want to use multiple pseudofermion fields, set `no_pf` in the RHMC input file to the respective number. Be aware, that this changes the way you have to construct your ratapprox:
+In the remez in.file, if you want to generate Nf flavors using Npf pseudofermion fields, you have to use Nf/Npf as an input (which is then used Npf times). Note that Nf/Npf must be < 4.
+`no_pf` is 1 per default.
 
 ## TODO
 

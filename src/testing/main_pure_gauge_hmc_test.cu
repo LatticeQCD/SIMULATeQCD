@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/pure_gauge_hmc.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/PureGaugeHmcTest.param", argc, argv);
 
     const int HaloDepth = 2;
     
@@ -176,17 +176,15 @@ int main(int argc, char *argv[]) {
     else
         rootLogger.error("FULL UPDATE TEST: failed");
 
-    int ret = 1;
-
     if (revers && no_rng && full)  {
-        ret = 0;
         rootLogger.info("ALL TESTS PASSED");
         rootLogger.warn("This only indicates that force matches action.\n");
         rootLogger.warn("Check Observables to find out if action is correct!");
+    } else {
+        rootLogger.error("At least one test failed!");
+        return -1;
     }
-    else
-        rootLogger.error("AT LEAST ONE TEST FAILED");
 
-    return ret;
+    return 0;
 }
 

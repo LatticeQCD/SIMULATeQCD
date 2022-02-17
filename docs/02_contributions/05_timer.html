@@ -97,7 +97,7 @@ It is capable of measuring the time duration CPU-only routines as well as the ti
 <p>where <code class="docutils literal notranslate"><span class="pre">device</span></code> is boolean template parameter.
 If <code class="docutils literal notranslate"><span class="pre">device</span> <span class="pre">=</span> <span class="pre">false</span></code> then only the time duration of CPU routines of the current rank will be considered.
 If <code class="docutils literal notranslate"><span class="pre">device</span> <span class="pre">=</span> <span class="pre">true</span></code> then the time duration of GPU-kernel executions will be considered
-as well.</p>
+as well. <strong>Please do not construct the StopWatch before the CommBase!</strong></p>
 <section id="measuring-time-duration">
 <h2>Measuring time duration<a class="headerlink" href="#measuring-time-duration" title="Permalink to this headline"></a></h2>
 <p>Measuring the time duration is quite easy. Here is an example:</p>
@@ -124,7 +124,7 @@ as well.</p>
 </section>
 <section id="combining-different-timers">
 <h2>Combining different timers<a class="headerlink" href="#combining-different-timers" title="Permalink to this headline"></a></h2>
-<p>It’s also possible to add/multiply/… different timers, e.g.:</p>
+<p>It’s also possible to add/multiply/etc. different timers, e.g.:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">StopWatch</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="w"> </span><span class="n">timer1</span><span class="p">,</span><span class="w"> </span><span class="n">timer2</span><span class="p">,</span><span class="w"> </span><span class="n">timer3</span><span class="p">;</span><span class="w"></span>
 
 <span class="n">timer1</span><span class="p">.</span><span class="n">start</span><span class="p">();</span><span class="w"></span>
