@@ -1,7 +1,9 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
-
+/* 
+ * gaugefield.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef _gaugefield_h_
 #define _gaugefield_h_

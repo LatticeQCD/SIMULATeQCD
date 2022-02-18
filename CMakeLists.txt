@@ -475,8 +475,13 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
 
-add_SIMULATeQCD_executable(fluxtube src/applications/main_flt.cu ${SOURCE_FILES_BASE} ${SOURCE_FILES_GFIX})
-set_SIMULATeQCD_property( fluxtube PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cu)
+set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_1=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(applications configConverter)
+
+add_SIMULATeQCD_executable(fluxtube src/applications/main_fluxtube.cu ${SOURCE_FILES_BASE} ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(fluxtube PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(fluxtube PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 #add_to_compound_SIMULATeQCD_target(applications fluxtube)
 
@@ -485,10 +490,10 @@ set_SIMULATeQCD_property(GenerateQuenched PROPERTIES RUNTIME_OUTPUT_DIRECTORY "a
 SIMULATeQCD_target_compile_definitions(GenerateQuenched PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications GenerateQuenched)
 
-add_SIMULATeQCD_executable(gfix src/applications/main_gaugeFixing.cu ${SOURCE_FILES_GFIX})
-set_SIMULATeQCD_property(gfix PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(gfix PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(applications gfix)
+add_SIMULATeQCD_executable(gaugeFixing src/applications/main_gaugeFixing.cu ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(gaugeFixing PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(gaugeFixing PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(applications gaugeFixing)
 
 add_SIMULATeQCD_executable(gradientFlow src/applications/main_gradientFlow.cu ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GFIX})
 set_SIMULATeQCD_property(gradientFlow PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications") 
@@ -500,44 +505,34 @@ set_SIMULATeQCD_property(gradientFlow_zeuthen PROPERTIES RUNTIME_OUTPUT_DIRECTOR
 SIMULATeQCD_target_compile_definitions(gradientFlow_zeuthen PRIVATE COMP_R18=1 DOUBLEPREC=1 HALODEPTH_3=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1 ZEUTHEN_FLOW=1)
 add_to_compound_SIMULATeQCD_target(applications gradientFlow_zeuthen)
 
+add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cu ${SOURCE_FILES_MEASUREHADRONS})
+set_SIMULATeQCD_property(measureHadrons PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
+
 add_SIMULATeQCD_executable(polSuscRenorm src/applications/main_polSuscRenorm.cu src/modules/observables/PolyakovLoop.cu)
 set_SIMULATeQCD_property(polSuscRenorm PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(polSuscRenorm PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 
-add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cu ${SOURCE_FILES_RHMC})
-set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+add_SIMULATeQCD_executable(rhmc src/applications/main_rhmc.cu ${SOURCE_FILES_RHMC})
+set_SIMULATeQCD_property(rhmc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(applications RHMC)
-
-add_SIMULATeQCD_executable(sublatticeUpdates src/applications/main_sublatticeUpdates.cu ${SOURCE_FILES_SUBLATTICEUPDATES})
-set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
-
-add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cu ${SOURCE_FILES_MEASUREHADRONS})
-set_SIMULATeQCD_property(measureHadrons PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(applications rhmc)
 
 add_SIMULATeQCD_executable(sampleTopology src/applications/main_sampleTopology.cu ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GFIX} ${SOURCE_FILES_GENERATEQUENCHED})
 set_SIMULATeQCD_property(sampleTopology PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(sampleTopology PRIVATE COMP_R18=1 HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 DOUBLEPREC=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications sampleTopology)
 
-add_SIMULATeQCD_executable(WilsonLinesCorrelatorMiltiGPUStacked src/applications/main_wilson_lines_correlator_stacked.cu src/modules/gaugeFixing/gfix.cu src/modules/observables/WilsonLineCorrelatorMultiGPU.cu)
-set_SIMULATeQCD_property(WilsonLinesCorrelatorMiltiGPUStacked PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(WilsonLinesCorrelatorMiltiGPUStacked PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
-add_to_compound_SIMULATeQCD_target(applications WilsonLinesCorrelatorMiltiGPUStacked)
+add_SIMULATeQCD_executable(sublatticeUpdates src/applications/main_sublatticeUpdates.cu ${SOURCE_FILES_SUBLATTICEUPDATES})
+set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
-add_SIMULATeQCD_executable(MilcToNersc src/applications/main_milc_to_nersc.cu)
-set_SIMULATeQCD_property(MilcToNersc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(MilcToNersc PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
-add_to_compound_SIMULATeQCD_target(applications MilcToNersc)
-
-add_SIMULATeQCD_executable(NERSC_ILDG_Converter src/applications/main_NERSC_ILDG_Converter.cu)
-set_SIMULATeQCD_property(NERSC_ILDG_Converter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(NERSC_ILDG_Converter PRIVATE HALODEPTH_1=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
-add_to_compound_SIMULATeQCD_target(applications NERSC_ILDG_Converter)
+add_SIMULATeQCD_executable(wilsonLinesCorrelatorMultiGPUStacked src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cu src/modules/gaugeFixing/gfix.cu src/modules/observables/WilsonLineCorrelatorMultiGPU.cu)
+set_SIMULATeQCD_property(wilsonLinesCorrelatorMultiGPUStacked PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorMultiGPUStacked PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(applications wilsonLinesCorrelatorMultiGPUStacked)
 
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS

@@ -1,14 +1,15 @@
 /* 
  * main_SaveTest.cu                                                               
  * 
- * Marcel Rodekamp, 19 Jul 2018
+ * Test to check whether that the NERSC and ILDG read/write as well as the MILC read work correctly.
+ * 
+ * M. Rodekamp, S. Ali, D. Clarke 
  * 
  */
 
 #include "../SIMULATeQCD.h"
 
 #define PREC double
-#define USE_GPU true
 #define MY_BLOCKSIZE 256
 #define epsilon 0.00001
 
@@ -42,10 +43,7 @@ struct compare_links {
             sum += norm;
         }
         sum /= 4.0;
-        /*if (param.prec_out() == 1 || (param.prec_out() == 0 && sizeof(floatT) == sizeof(float)))
-            return (sum < 1e-7 ? 0 : 1);
-        else if (param.prec_out() == 2 || (param.prec_out() == 0 && sizeof(floatT) == sizeof(double)))*/
-            return (sum < 1e-15 ? 0 : 1);
+        return (sum < 1e-15 ? 0 : 1);
     }
 };
 
@@ -84,9 +82,9 @@ int main(int argc, char *argv[]){
 	typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
 
-	Gaugefield<PREC, USE_GPU,HaloDepth> gauge( commBase);
-	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test( commBase);
-	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test1(commBase);
+	Gaugefield<PREC,true,HaloDepth> gauge(commBase);
+	Gaugefield<PREC,true,HaloDepth> gauge_test(commBase);
+	Gaugefield<PREC,true,HaloDepth> gauge_test1(commBase);
 
     rootLogger.info("Read configuration");
 
@@ -110,9 +108,9 @@ int main(int argc, char *argv[]){
 	gauge_test.updateAll();
 	rootLogger.info("Testing the configuration");
 
-    GaugeAction<PREC, USE_GPU,HaloDepth,R18> gAction(gauge);
+    GaugeAction<PREC, true,HaloDepth,R18> gAction(gauge);
 
-	GaugeAction<PREC, USE_GPU,HaloDepth,R18> gAction_test(gauge_test);
+	GaugeAction<PREC, true,HaloDepth,R18> gAction_test(gauge_test);
 
     PREC plaq = gAction.plaquette();
 
@@ -136,7 +134,7 @@ int main(int argc, char *argv[]){
 	    rootLogger.info(CoutColors::green , "writeconf succeeded: Computed clovers are equal ", CoutColors::reset);
 	}
 
-    bool pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge,gauge_test);
+    bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test);
 
     if(!pass) {
 		rootLogger.error("Binaries are not equal.");
@@ -149,4 +147,3 @@ int main(int argc, char *argv[]){
    
     return 0;
 }
-

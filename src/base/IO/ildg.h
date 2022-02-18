@@ -1,6 +1,9 @@
-//
-// R. Larsen, S. Ali
-//
+/* 
+ * ildg.h                                                               
+ * 
+ * R. Larsen, S. Ali 
+ * 
+ */
 
 #ifndef SIMULATEQCD_ILDG_H
 #define SIMULATEQCD_ILDG_H
@@ -30,8 +33,7 @@ floatT returnEndian(floatT input,bool change){
     }
 }
 
-//ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
-//ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+
 
 class IldgHeader : virtual private ParameterList {
 private:
@@ -43,10 +45,9 @@ private:
     Parameter<std::string> checksuma;
     Parameter<std::string> checksumb;
     Parameter<std::string> floatingpoint;
-//////////////////////////////
+
     Parameter<double> linktrace;
     Parameter<double> plaq;
-///////////////////////////////
 
     bool read_info(std::istream &in) {
         int32_t magic_number;
@@ -86,8 +87,7 @@ private:
                     in.ignore(8*16);
                     dataPos = in.tellg();
                     in.ignore(returnEndian(data_length,Endian));
-                }
-                else{
+                } else {
                     int bytes = ceil(returnEndian(data_length,Endian)/8.0)*8;
 
                     in.ignore(8*16);
@@ -157,14 +157,13 @@ private:
         checksumb.set(sumb);
         floatingpoint.set(precision);
         header_size=dataPos;
-        //std::cout<<"header_size "<<header_size<<std::endl;
 
         in.clear();
         in.seekg(0);
 
         return true;
-
     }
+
     IldgHeader(const CommunicationBase &_comm) : comm(_comm) {
         header_size = 0;
         add(dattype, "DATATYPE");
@@ -177,7 +176,6 @@ private:
         add(linktrace, "LINK_TRACE");
         add(plaq, "PLAQUETTE");
         addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
-        //addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32LITTLE"));
     }
 
 
@@ -233,7 +231,7 @@ public:
             return false;
         return true;
     }
-////////////////////////////
+
     bool write(std::ostream &out) {
         bool success = true;
         if (comm.IamRoot()) {
@@ -248,8 +246,8 @@ public:
         return success;
     }
 };
-//ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
-//ssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss
+
+
 template<size_t HaloDepth>
 class IldgFormat {
 private:
@@ -265,11 +263,9 @@ private:
     size_t index; //position in buffer
     static const bool sep_lines = false; // make the buffer smaller and
     // read each xline separately
-    // (slow on large lattices, but
-    // needs less memory)
+    // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
-    //void from_buf(f1 *buf, GSU3<f2> &U) const {
     template<class f1, class f2>
     GSU3<f2> from_buf(f1 *buf) const {
         int i = 0;
@@ -278,9 +274,7 @@ private:
             for (int k = 0; k < 3; k++) {
                 f2 re = buf[i++];
                 f2 im = buf[i++];
-                //U.set(j, k, complex<f2>(re, im));
                 U(j, k) = GCOMPLEX(f2)(re, im);
-
             }
       //  if (rows == 2 || sizeof(f1) != sizeof(f2))
             //U.su3unitarize();
@@ -348,7 +342,7 @@ public:
                 rootLogger.error("Stored dimension ", i, " not equal to current lattice size.");
                 error = true;
             }
-        //su3_size=2*3*rows*float_size, float_size=4 or 8.
+
         if (header.dattype() == "48"){
             float_size=4;
             rows=2;
@@ -394,11 +388,6 @@ public:
         rootLogger.info(header.dim[2]);
         rootLogger.info(header.dim[3]);
 
-        /*s >> std::hex >> stored_checksum_nersc;
-        if (s.fail()) {
-            rootLogger.error("Could not interpret checksum ", header.checksum(), "as hexadecimal number.");
-            error = true;
-        }*/
 
         su3_size = 2 * 3 * rows * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
@@ -407,7 +396,7 @@ public:
         return !error;
     }
 
-    //##########################################################################################
+
 
     void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data){
         int32_t magic_number = 1164413355;
@@ -418,11 +407,9 @@ public:
         int64_t data_length,data_length_swap;
         int data_mod, null_padding;
 
-        if (data==""){
-
+        if (data=="") {
             data_length=GInd::getLatData().globvol4*bytes_per_site();//lattice volume x #(links) x link_enteries(re+im) x precision
-        }
-        else{
+        } else {
             data_length=data.length();
         }
         data_length_swap=data_length;
@@ -451,7 +438,7 @@ public:
             data_mod=data.length()%8;
             if (data_mod==0) null_padding=0;
             else null_padding = 8-data_mod;
-            for(int i =0;i < null_padding; i++){
+            for(int i =0;i < null_padding; i++) {
                 out.write((char *) &zero_8bit, sizeof(zero_8bit));
             }
         }
@@ -485,7 +472,6 @@ public:
             else {
                 rootLogger.error("ILDG format must have a single or double precision.");
                 return false;
-
             }
         else {
             rootLogger.error("ILDG format must store 2 or 3 rows.");
@@ -497,10 +483,8 @@ public:
 
         std::string fp;
         if (float_size == 4)
-            //fp = "F";
             fp = "IEEE32BIG";
         else if (float_size == 8)
-            //fp = "D";
             fp = "IEEE64BIG";
         else {
             rootLogger.error("ILDG format must store single or double precision.");
@@ -548,7 +532,9 @@ public:
                 header_ildg = "scidac-binary-data";
                 data = "";
                 lime_record(out, switch_endian, header_ildg, data);
+
             } else {
+
                 std::stringstream crc32a, crc32b;
                 crc32a<<std::hex<<computed_checksum_crc32.checksuma;
                 crc32b<<std::hex<<computed_checksum_crc32.checksumb;
@@ -634,6 +620,7 @@ public:
             return false;
         }
     }
+
     void byte_swap_sitedata(char *sitedata, int n) {
         for (size_t bs = 0; bs < 72; bs++)
             Byte_swap(sitedata + bs * n, n);

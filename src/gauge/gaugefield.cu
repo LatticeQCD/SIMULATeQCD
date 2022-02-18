@@ -1,3 +1,11 @@
+/* 
+ * gaugefield.cu                                                               
+ * 
+ * L. Mazur
+ * 
+ */
+
+
 #include "gaugefield.h"
 
 template<class floatT>
@@ -9,7 +17,6 @@ struct fill_with_rand
     GSU3<floatT> my_mat;
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite site){
-        //We do not need to initialize anything...
     }
 
     __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){

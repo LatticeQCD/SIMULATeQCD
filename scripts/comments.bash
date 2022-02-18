@@ -25,14 +25,14 @@ USAGE: sh $0 [options] [program name]
 
 OPTIONS:
  -h  Show this message
- -l  Language {bash, cpp (default), fortran, python, param}
+ -l  Language {bash, c (default), fortran, python, param}
  -f  Put comments on top of a previously existing file 
 
 EOF
 }
 
 # Set default program option.
-LANGUAGE="cpp"
+LANGUAGE="c"
 FRONT=false
 
 # Parse options.

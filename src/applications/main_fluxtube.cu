@@ -1,5 +1,5 @@
 /* 
- * main_flt.cu
+ * main_fluxtube.cu
  *
  * v1.0: Sodbileg Ch., Battogtokh P. & Enkhtuya G.
  *
