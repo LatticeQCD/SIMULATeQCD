@@ -70,7 +70,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::string &fname, int rows,
                                                                    int diskprec, Endianness en) {
     if(onDevice) {
-        rootLogger.info("writeconf_ildg: Create temporary GSU3Array!");
+//        rootLogger.info("writeconf_ildg: Create temporary GSU3Array!");
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
         writeconf_ildg_host(lattice_host.getAccessor(),fname,rows,diskprec,en);

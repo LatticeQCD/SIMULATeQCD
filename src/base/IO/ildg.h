@@ -243,6 +243,7 @@ public:
             comm.root2all(header_size);
             comm.root2all(success);
         }
+        rootLogger.info("I got here",success);
         return success;
     }
 };

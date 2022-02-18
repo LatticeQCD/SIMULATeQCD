@@ -1,8 +1,22 @@
 # 
-# SaveTest.param                                                               
+# configConverter.param                                                               
 # 
-#    Lattice: Nx Ny Nz Nt
-#      Nodes: Number of sublattices per direction 
-#
-Lattice    = 20 20 20 20 
-Nodes      = 2  1  1  1
+#     Lattice: 
+#       Nodes: 
+#   Gaugefile: 
+# 
+Lattice = 8 8 8 4
+Nodes = 1 1 1 1
+beta = 3.360
+
+# Path to input configuration.
+Gaugefile = /home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB
+
+format = nersc                               	# Format of input configuration.
+use_unit_conf = 0				# Unit configuration
+endianness = auto                               # Endianness of input configuration.
+conf_nr = 1                                     # Configuration number (optional).
+measurements_dir = ./                           # Measurement output directory
+format_out = ildg                               # Format of output configuration, nersc and ildg are supported.
+prec_out = 2                                    # Precision of the output configuration, 1 for single and 2 for double
+

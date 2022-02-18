@@ -69,11 +69,11 @@ bool compare_fields(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gauge
 }
 
 int main(int argc, char *argv[]){
-	stdLogger.setVerbosity(DEBUG);
+	stdLogger.setVerbosity(INFO);
 
 	LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "/home/sali/measurements/measurePlaquette/readWriteConf/SaveTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/SaveTest.param", argc, argv);
 	commBase.init(param.nodeDim());
 
 	rootLogger.info("Initialize Lattice");
@@ -84,26 +84,21 @@ int main(int argc, char *argv[]){
 
 	Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 	Gaugefield<PREC,true,HaloDepth> gauge_test(commBase);
-	Gaugefield<PREC,true,HaloDepth> gauge_test1(commBase);
 
     rootLogger.info("Read configuration");
 
-	gauge.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB");
-	//gauge.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB");
+	gauge.readconf_nersc("../test_conf/nersc.l8t4b3360_bieHB");
 
 	rootLogger.info("Store Lattice");
 
 	gauge.updateAll();
-    //gauge_in_ildg.updateAll();
-	gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
-    gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
+	gauge.writeconf_nersc("nersc.l8t4b3360_bieHB_test");
+    gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
 	rootLogger.info("Read test configuration");
 
-	//gauge_test.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
-	gauge_test.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test");
-	gauge_test.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
-	gauge_test1.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_ildg.l8t4b3360_bieHB_test");
+	gauge_test.readconf_ildg("nersc_ildg.l8t4b3360_bieHB_test");
+	gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
 	gauge_test.updateAll();
 	rootLogger.info("Testing the configuration");
@@ -112,26 +107,22 @@ int main(int argc, char *argv[]){
 
 	GaugeAction<PREC, true,HaloDepth,R18> gAction_test(gauge_test);
 
-    PREC plaq = gAction.plaquette();
-
+    PREC plaq      = gAction.plaquette();
     PREC plaq_test = gAction_test.plaquette();
 
 	if(abs(plaq - plaq_test) > epsilon) {
 		rootLogger.error("Computed plaquettes are not equal " ,  plaq ,  " != " ,  plaq_test );
-        return -1;
 	} else {
-	    rootLogger.info(CoutColors::green, "writeconf succeeded: Computed plaquettes are equal", CoutColors::reset);
+	    rootLogger.info("Computed plaquettes are equal.");
 	}
 
-    PREC clov = gAction.clover();
-
+    PREC clov      = gAction.clover();
     PREC clov_test = gAction_test.clover();
 
 	if(abs(clov - clov_test) > epsilon) {
 		rootLogger.error("Computed clovers are not equal " ,  clov ,  " != " ,  clov_test );
-        return -1;
 	} else {
-	    rootLogger.info(CoutColors::green , "writeconf succeeded: Computed clovers are equal ", CoutColors::reset);
+	    rootLogger.info("Computed clovers are equal.");
 	}
 
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test);
