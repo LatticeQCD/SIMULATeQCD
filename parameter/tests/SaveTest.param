@@ -10,7 +10,7 @@ Nodes = 1 1 1 1
 beta = 3.360
 
 # Path to input configuration.
-Gaugefile = /home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB
+Gaugefile = ../test_conf/nersc.l8t4b3360_bieHB
 
 format = nersc                               	# Format of input configuration.
 use_unit_conf = 0				# Unit configuration
