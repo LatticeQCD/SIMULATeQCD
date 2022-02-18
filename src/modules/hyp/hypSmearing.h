@@ -13,6 +13,8 @@ private:
   gaugeAccessor<floatT, comp> _gAcc_1;
   gaugeAccessor<floatT, comp> _gAcc_2;
   gaugeAccessor<floatT, comp> _gAcc_3;
+  gaugeAccessor<floatT, comp> _gAcc_temp1;
+  gaugeAccessor<floatT, comp> _gAcc_temp2;
   int _excluded_dir1;
   int _excluded_dir2;
 public:
@@ -22,13 +24,14 @@ public:
 	    gaugeAccessor<floatT, comp> gAccIn_3,
 	    int excluded_dir1 = -1,
 	    int excluded_dir2 = -1 ) : _gAcc_0(gAccIn_0),_gAcc_1(gAccIn_1), _gAcc_2(gAccIn_2), _gAcc_3(gAccIn_3),
+				       _gAcc_temp1(gAccIn_0), _gAcc_temp2(gAccIn_0),
 				       _excluded_dir1(excluded_dir1), _excluded_dir2(excluded_dir2){}
   __host__ __device__ GSU3<floatT> operator() (gSiteMu site) {
     switch (linkNumber) {
     case 1:
-      return hypThreeLinkStaple_third_level<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, _gAcc_2, _gAcc_3, site);
+      return hypThreeLinkStaple_third_level<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, _gAcc_2, _gAcc_3, site, _gAcc_temp1, _gAcc_temp2);
     case 2:
-      return hypThreeLinkStaple_second_level<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, _gAcc_2, site, _excluded_dir1);
+      return hypThreeLinkStaple_second_level<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, _gAcc_2, site, _excluded_dir1, _gAcc_temp1, _gAcc_temp2);
     case 3:
       return threeLinkStaple<floatT, HaloDepth, comp>(_gAcc_0, site, _excluded_dir1, _excluded_dir2);
     case 4:
