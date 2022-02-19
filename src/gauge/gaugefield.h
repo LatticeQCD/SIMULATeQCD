@@ -5,6 +5,7 @@
  * 
  */
 
+
 #ifndef _gaugefield_h_
 #define _gaugefield_h_
 
@@ -51,14 +52,17 @@ public:
 
     const GSU3array<floatT, onDevice,comp> &get_lattice_pointer() const { return _lattice; }
 
+    /// read in a NERSC file
     void readconf_nersc(const std::string &fname);
 
     void readconf_nersc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
+    /// read in a ILDG file
     void readconf_ildg(const std::string &fname);
 
     void readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
+    /// read in a MILC file
     void readconf_milc(const std::string &fname);
 
     void readconf_milc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);

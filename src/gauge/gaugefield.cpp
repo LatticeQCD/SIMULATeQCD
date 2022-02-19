@@ -1,8 +1,6 @@
 /* 
  * gaugefield.cpp                                                               
  * 
- * L. Mazur 
- * 
  */
 
 #include "gaugefield.h"
@@ -15,7 +13,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_nersc(const std::string &fname, int rows,
                                                                              int diskprec, Endianness en) {
     if(onDevice) {
-        rootLogger.info("writeconf_nersc: Create temporary GSU3Array!");
+        rootLogger.info("writeconf_nersc: Writing NERSC configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
         writeconf_nersc_host(lattice_host.getAccessor(),fname,rows,diskprec,en);
@@ -35,15 +33,15 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_nersc_host(gaugeAcc
 
     NerscFormat<HaloDepth> nersc(this->getComm());
 
-    std::ofstream out;
-    if (this->getComm().IamRoot())
-        out.open(fname.c_str());
-    if (!nersc.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, out)) {
-        rootLogger.error("Unable to write NERSC file: " ,  fname);
-        return;
+    {
+        std::ofstream out;
+        if (this->getComm().IamRoot())
+            out.open(fname.c_str());
+        if (!nersc.template write_header<floatT, onDevice, comp>(*this, gaugeAccessor, rows, diskprec, en, out)) {
+            rootLogger.error("Unable to write NERSC file: " ,  fname);
+            return;
+        }
     }
-
-    rootLogger.info("Writing NERSC file format: " ,  fname);
 
     const size_t filesize = nersc.header_size() + GInd::getLatData().globalLattice().mult() * nersc.bytes_per_site();
 
@@ -70,13 +68,14 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::string &fname, int rows,
                                                                    int diskprec, Endianness en) {
     if(onDevice) {
-//        rootLogger.info("writeconf_ildg: Create temporary GSU3Array!");
+        rootLogger.info("writeconf_ildg: Writing ILDG configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
         writeconf_ildg_host(lattice_host.getAccessor(),fname,rows,diskprec,en);
     } else {
         writeconf_ildg_host(getAccessor(),fname,rows,diskprec,en);
     }
+
 }
 
 template<class floatT,bool onDevice, size_t HaloDepth, CompressionType comp>
@@ -86,7 +85,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
 {
     Checksum crc32;
     InitializeChecksum(&crc32);
-    //dynamically allocate memory
+
     gMemoryPtr<false> crc32_array = MemoryManagement::getMemAt<false>("crc32_array");
     crc32_array->template adjustSize<uint32_t>(GInd::getLatData().globvol4);
     crc32_array->memset(0);
@@ -98,16 +97,16 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
 
     IldgFormat<HaloDepth> ildg(this->getComm());
 
-    std::ofstream out;
-    if (this->getComm().IamRoot())
-        out.open(fname.c_str(),std::ios::out | std::ios::binary);
-    //changed open to binary
-    if (!ildg.template write_header<floatT, onDevice, comp>(rows, diskprec, en, crc32, out,true)) {
-        rootLogger.error("Unable to write ILDG file: ", fname);
-        return;
+    {
+        std::ofstream out;
+        if (this->getComm().IamRoot())
+            out.open(fname.c_str(),std::ios::out | std::ios::binary);
+        if (!ildg.template write_header<floatT, onDevice, comp>(rows, diskprec, en, crc32, out,true)) {
+            rootLogger.error("Unable to write ILDG file: ", fname);
+            return;
+        }
     }
 
-    rootLogger.info("Writing ILDG file format: ", fname);
     const size_t filesize = ildg.header_size() + GInd::getLatData().globalLattice().mult() * ildg.bytes_per_site();
     this->getComm().initIOBinary(fname, filesize, ildg.bytes_per_site(), ildg.header_size(), global, local, WRITE);
     typedef GIndexer<All, HaloDepth> GInd;
@@ -119,7 +118,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
                     LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
                     size_t index = GInd::localCoordToGlobalIndex(localCoord);
 
-                    if(diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float))){
+                    if(diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float))) {
                         std::vector <GSU3<float>> sitedata;
                         for (size_t mu = 0; mu < 4; mu++) {
                             GSU3 <float> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
@@ -146,7 +145,6 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
                         this->getComm().writeBinary(ildg.buf_ptr(), ildg.buf_size() / ildg.bytes_per_site());
                     }
                 }
-
     this->getComm().reduce(crc32_array_ptr, GInd::getLatData().globvol4);
     if(this->getComm().IamRoot()) {
         checksum_crc32_combine(&crc32, GInd::getLatData().globvol4, crc32_array_ptr);
@@ -154,19 +152,22 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
 
     this->getComm().closeIOBinary();
 
-    if (this->getComm().IamRoot())
-        out.open(fname.c_str(),std::ios::app | std::ios::binary);
-    if (!ildg.template write_header<floatT, onDevice, comp>(rows, diskprec, en, crc32, out,false)) {
-        rootLogger.error("Unable to write ILDG file: ", fname);
-        return;
+    {
+        std::ofstream out;
+        if (this->getComm().IamRoot())
+            out.open(fname.c_str(),std::ios::app | std::ios::binary);
+        if (!ildg.template write_header<floatT, onDevice, comp>(rows, diskprec, en, crc32, out,false)) {
+            rootLogger.error("Unable to write ILDG file: ", fname);
+            return;
+        }
     }
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_nersc(const std::string &fname) {
 
-    if(onDevice) {
-        rootLogger.info("readconf_nersc: Create temporary GSU3Array!");
+    if(onDevice){
+        rootLogger.info("readconf_nersc: Reading NERSC configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_nersc_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -180,8 +181,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_ildg(const std::string &fname) {
 
     if(onDevice) {
-
-        rootLogger.info("readconf_ildg: Create temporary GSU3Array!");
+        rootLogger.info("readconf_ildg: Reading ILDG configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_ildg_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -194,7 +194,7 @@ template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_milc(const std::string &fname) {
 
     if(onDevice) {
-        rootLogger.info("readconf_milc: Create temporary GSU3Array!");
+        rootLogger.info("readconf_milc: Reading MILC configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
         readconf_milc_host(lattice_host.getAccessor(),fname);
         _lattice.copyFrom(lattice_host);
@@ -241,6 +241,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
                     }
                 }
 
+
     this->getComm().closeIOBinary();
 
     if (!nersc.checksums_match()) {
@@ -254,14 +255,14 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
 {
     IldgFormat<HaloDepth> ildg(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
-
-    std::ifstream in;
-    if (this->getComm().IamRoot())
-        in.open(fname.c_str(), std::ios::in | std::ios::binary);
-    if (!ildg.read_header(in)){
-        throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
+    {
+        std::ifstream in;
+        if (this->getComm().IamRoot())
+            in.open(fname.c_str(), std::ios::in | std::ios::binary);
+        if (!ildg.read_header(in)){
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
+        }
     }
-
     Checksum read_crc32;
     InitializeChecksum(&read_crc32);
     gMemoryPtr<false> crc32_array_read = MemoryManagement::getMemAt<false>("crc32_array_read");
@@ -311,7 +312,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
                     }
                 }
     this->getComm().reduce(crc32_array_read_ptr, GInd::getLatData().globvol4);
-    if(this->getComm().IamRoot()) {
+    if(this->getComm().IamRoot()){
         checksum_crc32_combine(&read_crc32, GInd::getLatData().globvol4, crc32_array_read_ptr);
         ildg.checksums_match(read_crc32);
     }
@@ -368,6 +369,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     if (!milc.checksums_match()) {
         throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
+
 }
 
 

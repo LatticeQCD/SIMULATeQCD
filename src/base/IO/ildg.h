@@ -18,21 +18,19 @@
 #include <iostream>
 #include <time.h>
 
+
 template<class floatT>
-floatT returnEndian(floatT input,bool change){
-    if(change){
-        if(sizeof(input) == 8){
+floatT returnEndian(floatT input,bool change) {
+    if(change) {
+        if(sizeof(input) == 8) {
             return __builtin_bswap64(input);
-        }
-        else if(sizeof(input) == 4){
+        } else if(sizeof(input) == 4) {
             return __builtin_bswap32(input);
         }
-    }
-    else{
+    } else {
         return input;
     }
 }
-
 
 
 class IldgHeader : virtual private ParameterList {
@@ -53,25 +51,22 @@ private:
         int32_t magic_number;
         int64_t data_length;
         int dimx=-1; 
-        int dimy=-1; 
+        int dimy=-1;
         int dimz=-1; 
         int dimt=-1;
         int dataPos=-1;
         std::string precision, dataType, suma, sumb, typesize, datacount;
         bool Endian=false;
 
-        // TODO: look into the logic of this section in detail, then get rid of the dimx, dimy, dimz, dimt, dataPos assignments.
         in.read(reinterpret_cast<char *>(&magic_number),sizeof(magic_number));
-        if(magic_number != 1164413355){
-            if(__builtin_bswap32(magic_number) == 1164413355){
+        if(magic_number != 1164413355) {
+            if(__builtin_bswap32(magic_number) == 1164413355) {
                 Endian = true;
                 rootLogger.info("testing magic number");
-            }
-            else{
+            } else {
                 rootLogger.info("could not read magic number");
                 return false;
             }
-            std::cout<<"magic_number = "<<magic_number<<std::endl;
         }
 
         in.clear();
@@ -79,11 +74,11 @@ private:
 
         while(in.read(reinterpret_cast<char *>(&magic_number),sizeof(magic_number))){
 
-            if(returnEndian(magic_number,Endian) == 1164413355){
+            if(returnEndian(magic_number,Endian) == 1164413355) {
                 in.ignore(4);
                 in.read(reinterpret_cast<char *>(&data_length),sizeof(data_length));
 
-                if(returnEndian(data_length,Endian) > 100000){
+                if(returnEndian(data_length,Endian) > 100000) {
                     in.ignore(8*16);
                     dataPos = in.tellg();
                     in.ignore(returnEndian(data_length,Endian));
@@ -95,7 +90,7 @@ private:
                     in.read(info,sizeof(info));
                     std::string myString(info, bytes);
 
-                    if(myString.find("<dims>") != std::string::npos){
+                    if(myString.find("<dims>") != std::string::npos) {
                         int pos = myString.find("<dims>");
                         int posEnd = myString.find("</dims>");
                         std::string part;
@@ -109,37 +104,38 @@ private:
                         std::getline(content,part,' ');
                         dimt = atoi(part.c_str());
                     }
-                    if(myString.find("<datatype>") != std::string::npos){
+
+                    if(myString.find("<datatype>") != std::string::npos) {
                         int pos = myString.find("<datatype>");
                         int posEnd = myString.find("</datatype>");
                         dataType = myString.substr(pos+10,posEnd-10-pos);
                     }
 
-                    if(myString.find("<precision>") != std::string::npos){
+                    if(myString.find("<precision>") != std::string::npos) {
                         int pos = myString.find("<precision>");
                         int posEnd = myString.find("</precision>");
                         precision = myString.substr(pos+11,posEnd-11-pos);
                     }
 
-                    if(myString.find("<suma>") != std::string::npos){
+                    if(myString.find("<suma>") != std::string::npos) {
                         int pos = myString.find("<suma>");
                         int posEnd = myString.find("</suma>");
                         suma = myString.substr(pos+6,posEnd-6-pos);
                     }
 
-                    if(myString.find("<sumb>") != std::string::npos){
+                    if(myString.find("<sumb>") != std::string::npos) {
                         int pos = myString.find("<sumb>");
                         int posEnd = myString.find("</sumb>");
                         sumb = myString.substr(pos+6,posEnd-6-pos);
                     }
 
-                    if(myString.find("<typesize>") != std::string::npos){
+                    if(myString.find("<typesize>") != std::string::npos) {
                         int pos = myString.find("<typesize>");
                         int posEnd = myString.find("</typesize>");
                         typesize = myString.substr(pos+10,posEnd-10-pos);
                     }
 
-                    if(myString.find("<datacount>") != std::string::npos){
+                    if(myString.find("<datacount>") != std::string::npos) {
                         int pos = myString.find("<datacount>");
                         int posEnd = myString.find("</datacount>");
                         datacount = myString.substr(pos+11,posEnd-11-pos);
@@ -162,8 +158,8 @@ private:
         in.seekg(0);
 
         return true;
-    }
 
+    }
     IldgHeader(const CommunicationBase &_comm) : comm(_comm) {
         header_size = 0;
         add(dattype, "DATATYPE");
@@ -191,7 +187,7 @@ public:
     bool read(std::istream &in) {
         std::string content;
         bool success = true;
-        if (this->comm.IamRoot()){
+        if (this->comm.IamRoot()) {
             success = read_info(in);
         }
 
@@ -243,7 +239,6 @@ public:
             comm.root2all(header_size);
             comm.root2all(success);
         }
-        rootLogger.info("I got here",success);
         return success;
     }
 };
@@ -276,8 +271,9 @@ private:
                 f2 re = buf[i++];
                 f2 im = buf[i++];
                 U(j, k) = GCOMPLEX(f2)(re, im);
+
             }
-      //  if (rows == 2 || sizeof(f1) != sizeof(f2))
+    //    if (rows == 2 || sizeof(f1) != sizeof(f2))
             //U.su3unitarize();
         return U;
     }
@@ -331,7 +327,7 @@ public:
 
     bool read_header(std::istream &in) {
         rootLogger.push_verbosity(OFF);
-        if (!header.read(in)){
+        if (!header.read(in)) {
             rootLogger.error("header.read() failed!");
             return false;
         }
@@ -343,17 +339,17 @@ public:
                 rootLogger.error("Stored dimension ", i, " not equal to current lattice size.");
                 error = true;
             }
-
-        if (header.dattype() == "48"){
+        //su3_size=2*3*rows*float_size, float_size=4 or 8.
+        if (header.dattype() == "48") {
             float_size=4;
             rows=2;
-        } else if (header.dattype() == "96"){
+        } else if (header.dattype() == "96") {
             float_size=8;
             rows=2;
-        } else if (header.dattype() == "72"){
+        } else if (header.dattype() == "72") {
             float_size=4;
             rows=3;
-        } else if (header.dattype() == "144"){
+        } else if (header.dattype() == "144") {
             float_size=8;
             rows=3;
         } else {
@@ -398,8 +394,7 @@ public:
     }
 
 
-
-    void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data){
+    void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data) {
         int32_t magic_number = 1164413355;
         int16_t version_number = 1;
         int8_t zero_8bit=0;
@@ -430,11 +425,11 @@ public:
         out.write((char *) &data_length_swap, sizeof(data_length_swap));
 
         out.write(header_ildg.c_str(), header_ildg.length());
-        for(int i =header_ildg.length();i <128; i++){
+        for(int i =header_ildg.length();i <128; i++) {
             out.write((char *) &zero_8bit, sizeof(zero_8bit));
         }
 
-        if (data!=""){
+        if (data!="") {
             out.write(data.c_str(), data_length);
             data_mod=data.length()%8;
             if (data_mod==0) null_padding=0;
@@ -463,18 +458,18 @@ public:
         for (int mu = 0; mu < 4; mu++)
             header.dim[mu].set(GInd::getLatData().globalLattice()[mu]);
 
-        if (rows == 2)
+        if (rows == 2) {
             header.dattype.set("48");
-        else if (rows == 3)
-            if (float_size == 4)
+        } else if (rows == 3) {
+            if (float_size == 4) {
                 header.dattype.set("72");
-            else if (float_size == 8)
+            } else if (float_size == 8) {
                 header.dattype.set("144");
-            else {
+            } else {
                 rootLogger.error("ILDG format must have a single or double precision.");
                 return false;
             }
-        else {
+        } else {
             rootLogger.error("ILDG format must store 2 or 3 rows.");
             return false;
         }
@@ -535,7 +530,6 @@ public:
                 lime_record(out, switch_endian, header_ildg, data);
 
             } else {
-
                 std::stringstream crc32a, crc32b;
                 crc32a<<std::hex<<computed_checksum_crc32.checksuma;
                 crc32b<<std::hex<<computed_checksum_crc32.checksumb;
@@ -614,14 +608,13 @@ public:
             rootLogger.info("Checksumb: ",std::hex, header.checksumb()," (Stored) = ", sum.checksumb," (Computed)");
             rootLogger.info(CoutColors::green, "Checksums match successfully!", CoutColors::reset);
             return true;
-        } else{
+        } else {
             rootLogger.info("Checksuma: ",std::hex, header.checksuma()," (Stored) != ", sum.checksuma," (Computed)");
             rootLogger.info("Checksumb: ",std::hex, header.checksumb()," (Stored) != ", sum.checksumb," (Computed)");
             throw std::runtime_error(stdLogger.fatal("Checksum mismatch!"));
             return false;
         }
     }
-
     void byte_swap_sitedata(char *sitedata, int n) {
         for (size_t bs = 0; bs < 72; bs++)
             Byte_swap(sitedata + bs * n, n);
@@ -629,9 +622,9 @@ public:
 
     int precision_read() {
         int precision;
-        if (header.dattype() == "48" || header.dattype() == "72"){
+        if (header.dattype() == "48" || header.dattype() == "72") {
             precision=1;
-        } else if (header.dattype() == "96" || header.dattype() == "144"){
+        } else if (header.dattype() == "96" || header.dattype() == "144") {
             precision=2;
         } else {
             throw std::runtime_error(stdLogger.fatal("DATATYPE = ", header.dattype(), "not recognized."));
