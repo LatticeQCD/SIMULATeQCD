@@ -558,7 +558,7 @@ set_SIMULATeQCD_property(LinkPathTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testi
 SIMULATeQCD_target_compile_definitions(LinkPathTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests LinkPathTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_measureHadronsTest.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_measureHadronsTest.cpp ${SOURCE_FILES_MEASUREHADRONS})
 add_SIMULATeQCD_executable(measureHadronsTest src/testing/main_measureHadronsTest.cpp ${SOURCE_FILES_MEASUREHADRONS})
 set_SIMULATeQCD_property(measureHadronsTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(measureHadronsTest PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
@@ -789,11 +789,11 @@ set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_measureHadrons.cpp)
+set_SIMULATeQCD_gpu_backend(src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})
 add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})
 set_SIMULATeQCD_property(measureHadrons PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(applications measureHadrons)
+#add_to_compound_SIMULATeQCD_target(applications measureHadrons)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sampleTopology.cpp)
 add_SIMULATeQCD_executable(sampleTopology src/applications/main_sampleTopology.cpp ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GENERATEQUENCHED})
