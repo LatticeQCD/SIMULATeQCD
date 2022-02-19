@@ -306,7 +306,7 @@ if (USE_CUDA)
 #elseif (USE_HIP_AMD)
 #    set_target_properties(CodeBase
 #        PROPERTIES
-#        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
+#        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
 #
 #elseif (USE_HIP_NVIDIA)
 #    set_target_properties(CodeBase
@@ -336,7 +336,7 @@ FUNCTION(add_SIMULATeQCD_executable TARGET)
 #        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
         set_target_properties(${TARGET} _${TARGET}
             PROPERTIES
-            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
 
     elseif (USE_HIP_NVIDIA)
         hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
@@ -627,12 +627,12 @@ set_SIMULATeQCD_gpu_backend(src/testing/main_SimpleFunctorTest.cpp)
 if (USE_CUDA)
     add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
-    set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON RUNTIME_OUTPUT_DIRECTORY "testing")
+    set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON CUDA_SEPARABLE_COMPILATION ON RUNTIME_OUTPUT_DIRECTORY "testing")
 elseif (USE_HIP_AMD)
     hip_add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
-        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
+        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
 elseif (USE_HIP_NVIDIA)
     hip_add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
