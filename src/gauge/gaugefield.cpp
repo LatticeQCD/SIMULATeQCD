@@ -110,13 +110,12 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
     NerscFormat<HaloDepth> nersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
-    {
-        std::ifstream in;
-        if (this->getComm().IamRoot())
-            in.open(fname.c_str());
-        if (!nersc.read_header(in)){
-            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
-        }
+    std::ifstream in;
+    if (this->getComm().IamRoot()) {
+        in.open(fname.c_str());
+    }
+    if (!nersc.read_header(in)) {
+        throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 
     LatticeDimensions global = GInd::getLatData().globalLattice();
@@ -143,10 +142,9 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
 
     this->getComm().closeIOBinary();
 
-    if (!nersc.checksums_match()){
+    if (!nersc.checksums_match()) {
         throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
-
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
@@ -156,13 +154,11 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     MilcFormat<HaloDepth> milc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
-    {
-        std::ifstream in;
-        if (this->getComm().IamRoot())
-            in.open(fname.c_str());
-        if (!milc.read_header()){
-            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
-        }
+    std::ifstream in;
+    if (this->getComm().IamRoot())
+        in.open(fname.c_str());
+    if (!milc.read_header()){
+        throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 
     LatticeDimensions global = GInd::getLatData().globalLattice();
@@ -200,8 +196,8 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     rootLogger.info("Trace sum is = " ,  traceSum);
 
 
-    if (!milc.checksums_match()){
-//        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
+    if (!milc.checksums_match()) {
+        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
 
 }

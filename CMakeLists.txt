@@ -408,6 +408,12 @@ set_SIMULATeQCD_property(CompressionTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "te
 SIMULATeQCD_target_compile_definitions(CompressionTest PRIVATE HALODEPTH_2=1  DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1)
 add_to_compound_SIMULATeQCD_target(tests CompressionTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_condensate_test.cpp)
+add_SIMULATeQCD_executable(condensateTest src/testing/main_condensate_test.cpp ${SOURCE_FILES_RHMC})
+set_SIMULATeQCD_property(condensateTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(condensateTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests condensateTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_correlatorTest.cpp)
 add_SIMULATeQCD_executable(correlatorTest src/testing/main_correlatorTest.cpp ${SOURCE_FILES_GFIX})
 set_SIMULATeQCD_property(correlatorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -499,14 +505,8 @@ add_to_compound_SIMULATeQCD_target(tests HBOR_single_test)
 set_SIMULATeQCD_gpu_backend(src/testing/main_hisqForce.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp) 
 add_SIMULATeQCD_executable(hisqForce src/testing/main_hisqForce.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp) 
 set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
-
-set_SIMULATeQCD_gpu_backend(src/testing/main_HisqForceImagmu.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp)
-add_SIMULATeQCD_executable(hisqForceImagmu src/testing/main_HisqForceImagmu.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/HISQ/hisqForce.cpp)
-set_SIMULATeQCD_property(hisqForceImagmu PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForceImagmu PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(tests hisqForceImagmu)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_HisqSmearingTestMulti.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(hisqSmearingMulti src/testing/main_HisqSmearingTestMulti.cpp src/spinor/spinorfield.cpp)
@@ -816,12 +816,6 @@ add_to_compound_SIMULATeQCD_target(applications MilcToNersc)
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS
 
-
-set_SIMULATeQCD_gpu_backend(src/tools/main_condensate_test.cpp)
-add_SIMULATeQCD_executable(condensateTest src/tools/main_condensate_test.cpp ${SOURCE_FILES_RHMC})
-set_SIMULATeQCD_property(condensateTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tools")
-SIMULATeQCD_target_compile_definitions(condensateTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(tools condensateTest)
 
 set_SIMULATeQCD_gpu_backend(src/tools/main_createCorrelatorNorm.cpp)
 add_SIMULATeQCD_executable(correlatorNorm src/tools/main_createCorrelatorNorm.cpp)

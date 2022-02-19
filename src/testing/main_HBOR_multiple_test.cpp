@@ -137,11 +137,11 @@ int main(int argc, char *argv[]) {
         gUpdate.updateOR();
         /// Print plaquette to screen.
         plaq = gAction.plaquette();
+        if (isweep >= nskip) {
+            plaqav += plaq;
+        }
         if (commBase.MyRank() == 0) {
             std::cout << std::setw(7) << isweep << "  " << std::setw(13) << std::scientific << plaq << std::endl;
-            if (isweep >= nskip) {
-                plaqav += plaq;
-            }
         }
     }
     if (commBase.MyRank() == 0 ) std::cout << std::endl;
