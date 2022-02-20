@@ -20,11 +20,9 @@ struct fill_with_rand
     }
 
     __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){
-
         my_mat.random(&_rand_state[site.isite]);
         return my_mat;
     }
-
 };
 
 template<class floatT>
@@ -34,14 +32,11 @@ struct fill_with_gauss {
 
     GSU3<floatT> my_mat;
 
-    __host__ __device__ void initialize(__attribute__((unused)) gSite site){
-        //We do not need to initialize anything...
+    __host__ __device__ void initialize(__attribute__((unused)) gSite site) {
     }
 
-    __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){
-
+    __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu) {
         my_mat.gauss(&_rand_state[site.isite]);
-
         return my_mat;
     }
 };
@@ -69,9 +64,9 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::random(uint4* rand_state) {
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::gauss(uint4* rand_state) {
-    if (comp != R18){
+    if (comp != R18) {
         rootLogger.error("Gaussian matrices are only possible in R18 fields!");
-    }else{
+    } else {
         iterateOverBulkLoopMu(fill_with_gauss<floatT>(rand_state));
     }
 }

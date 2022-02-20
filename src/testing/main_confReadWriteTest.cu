@@ -1,5 +1,5 @@
 /* 
- * main_SaveTest.cu                                                               
+ * main_confReadWriteTest.cu                                                               
  * 
  * Test to check whether that the NERSC and ILDG read/write as well as the MILC read work correctly.
  * 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
 
 	LatticeParameters param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/SaveTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/confReadWriteTest.param", argc, argv);
 	commBase.init(param.nodeDim());
 
 	rootLogger.info("Initialize Lattice");

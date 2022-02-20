@@ -24,7 +24,7 @@ testRoutines[_gfixplcTest]="1"
 testRoutines[_InverterTest]="4k"
 testRoutines[_LinkPathTest]="4k"
 testRoutines[_PureGaugeHmcTest]="4ks"
-testRoutines[_SaveTest]="4k"
+testRoutines[_confReadWriteTest]="4k"
 testRoutines[_SpinorHaloTest]="4k"
 testRoutines[_StackedSpinorTest]="4k"
 
