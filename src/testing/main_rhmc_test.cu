@@ -13,7 +13,7 @@
 template<class floatT, int HaloDepth>
 bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff rat){
 
-    initIndexer(4 ,param, commBase);
+    initIndexer(4,param, commBase);
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
 
@@ -89,8 +89,6 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
-    //gauge.writeconf_nersc(param.gauge_file()+std::to_string(param.no_updates()));
-    
     bool ret = false;
     
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;

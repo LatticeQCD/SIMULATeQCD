@@ -2,7 +2,7 @@
 #define BLOCKSIZE 32
 
 template<class floatT, size_t NStacks>
-    template <typename Spinor_t>
+template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
         Spinor_t& spinorIn, int max_iter, double precision)
 {
@@ -25,8 +25,6 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
     SimpleArray<floatT, NStacks> rsold = real<floatT>(dot);
     SimpleArray<floatT, NStacks> rsnew(0.0);
     SimpleArray<floatT, NStacks> remain;
-
-    // SimpleArray<floatT, NStacks> norm = rsold;
 
     for (int i = 0; i < max_iter; i++) {
         vp.updateAll(COMM_BOTH | Hyperplane);
@@ -115,80 +113,7 @@ struct StackMinusFloatTimeStack
     }
 };
 
-//     template <typename floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
-// void MultiShiftCG<floatT, onDevice, LatLayout, HaloDepth, NStacks>::invert(
-//         LinearOperator<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>>& dslash,
-//         Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut,
-//         Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>& spinorIn,
-//         SimpleArray<floatT, NStacks> sigma, int max_iter, double precision)
-// {
-//     Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> p(spinorIn.getComm());
-//     Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> Ap(spinorIn.getComm());
-//     Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> r(spinorIn.getComm());
-//     Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> p0(spinorIn.getComm());
 
-//     SimpleArray<floatT, NStacks> alpha(0.0);
-//     SimpleArray<floatT, NStacks> beta(1.0);
-//     SimpleArray<floatT, NStacks> zeta(1.0);
-//     SimpleArray<floatT, NStacks> z(1.0);
-
-//     r = spinorIn;
-
-//     double rnormsqr = real<floatT>(r.dotProduct(r));;
-//     const double in_normsqr = rnormsqr;
-
-//     for (size_t i = 0; i < NStacks; i++) {
-//         p.copyFromStackToStack(spinorIn, i ,0);
-//     }
-
-//     spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
-
-//     int cg = 0;
-
-//     while ((cg < max_iter) && (rnormsqr/in_normsqr > precision)) {
-
-//         p0.copyFromStackToStack(p, 0, 0);
-
-//         dslash.applyMdaggM(Ap, p0);
-
-//         Ap = sigma[0] * p0 + Ap;
-
-//         const double lastbeta = beta[0];
-
-//         beta[0] = - rnormsqr / real<floatT>(p0.dotProduct(Ap));
-//         r = r + beta[0] * Ap;
-
-//         for (size_t i = 1; i < NStacks; i++) {
-//             z[i] = lastbeta/(beta[0]*alpha[0]*(1-z[i])+lastbeta*(1-(sigma[i]-sigma[0])*beta[0]));
-//             beta[i] = beta[0]*z[i];
-//         }
-
-//         alpha[0] = 1/rnormsqr;
-//         rnormsqr = real<floatT>(r.dotProduct(r));
-//         alpha[0] *= rnormsqr;
-
-//         for (size_t i = 0; i < NStacks; i++) {
-//             alpha[i] = alpha[0]*z[i]*beta[i]/beta[0];
-//             zeta[i] *= z[i];
-//         }
-//         spinorOut.template iterateOverBulk<BLOCKSIZE>( StackMinusFloatTimeStack<floatT, onDevice, LatLayout, HaloDepth, NStacks>
-//                 (spinorOut, p, beta));
-//         p.template iterateOverBulk<BLOCKSIZE>(StackTimesFloatPlusFloatTimesNoStack<floatT, onDevice, LatLayout, HaloDepth,
-//                 NStacks>(p, alpha, r, zeta));
-
-//         spinorOut.updateAll();
-//         p.updateAll();
-
-//         cg++;
-//     }
-
-//     if(cg >= max_iter -1){
-//         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
-//     } else {
-//         rootLogger.info("CG: # iterations " ,  cg);
-//         rootLogger.info("residue " ,  rnormsqr/in_normsqr);
-//     }
-// }
 template<class floatT, size_t NStacks>
 template <typename SpinorIn_t, typename SpinorOut_t>
 void AdvancedMultiShiftCG<floatT, NStacks>::invert(
@@ -213,11 +138,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
 
     double norm_r2 = r.realdotProduct(r);
 
-    // rootLogger.info("Norm of input = " ,  norm_r2);
-
     double  pAp,lambda, lambda2, rr_1, Bm1;
-
-    // floatT old_norm=norm_r2;
 
     Bm1 = 1.0;
 
@@ -228,38 +149,26 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
 
 
-    do{
+    do {
         cg++;
-
-        // rootLogger.info("max_term = " , max_term);
 
         pi0.copyFromStackToStack(pi, 0, 0);
         pi0.updateAll(COMM_BOTH | Hyperplane);
-        // pi0.updateAll();
-        // rootLogger.info("Norm2 of pi0 = " ,  pi0.realdotProduct(pi0));
 
         dslash.applyMdaggM(s, pi0, false);
 
-        // rootLogger.info("Norm2 of s after DeoDoe = " ,  s.realdotProduct(s));
-
-
         s = sigma[0] * pi0 - s;
-
-        // rootLogger.info("Norm2 of s after lin alg = " ,  s.realdotProduct(s));
-
-        //s.axpyThisB(sigma[0], pi0);
 
         pAp = pi0.realdotProduct(s);
 
         B[0] = - norm_r2 / pAp;
 
-        // r = r + B[0] * s;
         r.template axpyThisB<64>(B[0], s);
 
 
         for (int j=1; j<max_term; j++) {
-            rr_1   = Bm1 * Zm1[j] / ( B[0] * a[0] * (Zm1[j] - Z[j]) +
-                    Zm1[j] * Bm1 * (1.0 - sigma[j] * B[0]) );
+            rr_1   = Bm1 * Zm1[j] / ( B[0] * a[0] * (Zm1[j] - Z[j]) 
+                       + Zm1[j] * Bm1 * (1.0 - sigma[j] * B[0]) );
             Zm1[j] = Z[j];
             Z[j]   = Z[j] * rr_1;
             B[j]   = B[0] * rr_1;
@@ -269,24 +178,14 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         a[0]  = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        // rootLogger.info("residue =" ,  lambda2);
-
         spinorOut.template axpyThisLoop<32>(((floatT)(-1.0))*B, pi,max_term); 
-        //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
         
 
-        //################################
         for (int j=1; j<max_term; j++) {
             a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]);
         }
-        //################################        
-
 
         pi.template axupbyThisLoop<32>(Z, a, r, max_term);
-        //     pi[i] = Z[i] * r + a[i] * pi[i];
-
-
-        //################################
 
         do {
             lambda = Z[max_term-1] * Z[max_term-1] * lambda2;
@@ -345,25 +244,12 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
 
 
-    do{
+    do {
         cg++;
 
-        // rootLogger.info("max_term = " , max_term);
-
         pi.updateAll(COMM_BOTH | Hyperplane);
-        // pi0.updateAll();
-        // rootLogger.info("Norm2 of pi0 = " ,  pi0.realdotProduct(pi0));
 
         dslash.applyMdaggM(s, pi, false);
-
-        // rootLogger.info("Norm2 of s after DeoDoe = " ,  s.realdotProduct(s));
-
-
-        // s = floatT(mass*mass) * pi - s;
-
-        // rootLogger.info("Norm2 of s after lin alg = " ,  s.realdotProduct(s));
-
-        //s.axpyThisB(sigma[0], pi0);
 
         dot = pi.dotProductStacked(s);
 
@@ -371,47 +257,17 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
         B = -1.0* norm_r2 / pAp;
 
-        // r[i] = r[i] + B[i] * s[i];
         r.template axpyThisLoopd<32>(B, s, NStacks); 
-        // r.template axpyThisB<64>(B[0], s); //WRONG
 
-
-        // for (int j=1; j<max_term; j++) {
-        //     rr_1   = Bm1 * Zm1[j] / ( B[0] * a[0] * (Zm1[j] - Z[j]) +
-        //             Zm1[j] * Bm1 * (1.0 - sigma[j] * B[0]) );
-        //     Zm1[j] = Z[j];
-        //     Z[j]   = Z[j] * rr_1;
-        //     B[j]   = B[0] * rr_1;
-        // }
-        // Bm1 = B[0];
         dot2 = r.dotProductStacked(r);
 
         lambda2 = real<double>(dot2);
         a = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        // std::cout << cg << std::endl;
-
-        // std::cout << cg << "    " << /*lambda2[0]/in_norm[0] << "    " << lambda2[1]/in_norm[1] << "    " << lambda2[2] << "    " << */ max(lambda2/in_norm) << std::endl;
-
-
         spinorOut.template axpyThisLoopd<32>(-1.0*B, pi,NStacks); 
-        //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
-        
-
-        //################################
-        // for (int j=1; j<max_term; j++) {
-        //     a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]);
-        // }
-        //################################        
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
-
-        // pi = r + a * pi;
-        //     pi[i] = Z[i] * r + a[i] * pi[i];
-
-
-        //################################
 
     } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
 
@@ -468,8 +324,6 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
     
     do {
         cg++;
-
-       
         
         
         pi.updateAll(COMM_BOTH | Hyperplane);
@@ -526,15 +380,12 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);       
             norm_r2 = lambda2;
             norm_comp = lambda2;
-            // rootLogger.debug("recompute precise residual " ,  max(norm_restart/norm_input));
         
-        }
-        else {
+        } else {
             //p_k+1 = r_k - beta*p_k
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             
         }
-        //  rootLogger.info("CG-Mixed: residual ",  max(lambda2/norm_input));
     } while ( (max(lambda2/norm_input) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
@@ -556,14 +407,12 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
                                                      const int max_iter, const double precision, double delta)
 {
     Spinor_t pi(spinorIn.getComm());
-    // Spinor_t s(spinorIn.getComm());
     Spinor_t r(spinorIn.getComm());
     Spinor_t accum(spinorIn.getComm());
    
     Spinor_t_inner r_inner(spinorIn.getComm());
     Spinor_t_inner pi_inner(spinorIn.getComm());
     Spinor_t_inner s_inner(spinorIn.getComm());
-    //  Spinor_t_inner r_inner(spinorIn.getComm());
     
     int cg = 0;
   
@@ -630,7 +479,6 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             //reliable update
             
             //cumulative update of solution vector
-            //  accum.convert_precision<__inner>(accum_inner);
             spinorOut += accum;
 
             //r = b - Ax
@@ -664,20 +512,16 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             pi_inner.convert_precision(pi);
             norm_r2 = lambda2;
             norm_comp = lambda2;
-            //rootLogger.debug("recompute precise residual " ,  max(norm_restart/norm_input));
             steps_since_restart = 0;
             
-        }
-        else {
+        } else {
             //p_k+1 = r_k - a*p_k
             pi_inner.template xpayThisBd<SimpleArray<double, NStacks>, BLOCKSIZE>(beta,r_inner);
             pi.convert_precision(pi_inner);
-            //pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             
             steps_since_restart++;
         }
         
-        //rootLogger.info("CG-Mixed: residual ",  max(lambda2/norm_input));
     } while ( (max(lambda2/norm_input) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {

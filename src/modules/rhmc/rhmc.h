@@ -1,5 +1,9 @@
-// THIS A RHMC CLASS
-// Created by Philipp Scior on 10.12.18
+/*
+ * rhmc.h
+ *
+ * P. Scior
+ * 
+ */
 
 #ifndef RHMC
 #define RHMC

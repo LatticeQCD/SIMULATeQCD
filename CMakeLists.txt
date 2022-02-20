@@ -18,18 +18,18 @@ link_libraries(${MPI_LIBRARIES} ${CUDA_LIBRARIES})
 # Read architecture, CUDA-aware MPI, CUDA P2P settings
 set(ARCHITECTURE "" CACHE STRING "Set the architecture. For example 70 will compile for Volta support")
 if(NOT ARCHITECTURE)
-	message(FATAL_ERROR "No GPU architecture set!")
+    message(FATAL_ERROR "No GPU architecture set!")
 endif()
 message(STATUS "CUDA Architecture: ${ARCHITECTURE}")
 set(CMAKE_CUDA_ARCHITECTURES "${ARCHITECTURE}")
 
 set(USE_CUDA_AWARE_MPI OFF CACHE BOOL "Set to ON to build cuda-aware MPI code (default = OFF)")
 if (USE_CUDA_AWARE_MPI)
-	add_definitions(-DUSE_CUDA_AWARE_MPI)
+    add_definitions(-DUSE_CUDA_AWARE_MPI)
 endif()
 set(USE_CUDA_P2P ON CACHE BOOL "Set to ON to build with CUDA Direct P2P (default = ON)")
 if (USE_CUDA_P2P)
-	add_definitions(-DUSE_CUDA_P2P)
+    add_definitions(-DUSE_CUDA_P2P)
 endif()
 
 option(USE_MPFR "Set to ON to include MPFR - needed for rat_approx (default - OFF)" OFF)
@@ -45,91 +45,91 @@ set(CMAKE_CUDA_FLAGS
 
 
 set(SOURCE_FILES_BASE
-		src/base/gutils.cpp
-		src/base/memoryManagement.cpp
-		src/base/indexer/initGPUIndexer.cu
-		src/base/indexer/initCPUIndexer.cpp
-		src/base/communication/communicationBase_mpi.cpp
+        src/base/gutils.cpp
+        src/base/memoryManagement.cpp
+        src/base/indexer/initGPUIndexer.cu
+        src/base/indexer/initCPUIndexer.cpp
+        src/base/communication/communicationBase_mpi.cpp
         src/base/IO/parameterManagement.cpp
         src/base/IO/fileWriter.cpp
         src/base/math/grnd.cu
-		src/gauge/gaugefield.cu
-		src/gauge/gaugefield.cpp
-		src/gauge/GaugeAction.cu
+        src/gauge/gaugefield.cu
+        src/gauge/gaugefield.cpp
+        src/gauge/GaugeAction.cu
         src/base/LatticeContainer.cu)
 set(SOURCE_FILES_COLORELECTRICCORRTEST
-		src/modules/observables/ColorElectricCorr.cu
-		src/modules/observables/PolyakovLoop.cu)
+        src/modules/observables/ColorElectricCorr.cu
+        src/modules/observables/PolyakovLoop.cu)
 set(SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST
         src/modules/observables/ColorElectricCorr.cu
         src/modules/observables/ColorMagneticCorr.cu
         src/modules/observables/PolyakovLoop.cu)
 set(SOURCE_FILES_DSLASH
         src/modules/dslash/dslash.cu 
-		src/modules/HISQ/hisqSmearing.cu 
-		src/spinor/spinorfield.cu)
+        src/modules/HISQ/hisqSmearing.cu 
+        src/spinor/spinorfield.cu)
 set(SOURCE_FILES_GENERATEQUENCHED
         src/modules/gauge_updates/PureGaugeUpdates.cu
-		src/modules/observables/PolyakovLoop.cu)
+        src/modules/observables/PolyakovLoop.cu)
 set(SOURCE_FILES_GFIX
-		src/modules/gaugeFixing/gfix.cu
-		src/modules/observables/PolyakovLoop.cu
+        src/modules/gaugeFixing/gfix.cu
+        src/modules/observables/PolyakovLoop.cu
         src/modules/gaugeFixing/PolyakovLoopCorrelator.cu
-		src/modules/observables/WilsonLineCorrelator.cu)
+        src/modules/observables/WilsonLineCorrelator.cu)
 set(SOURCE_FILES_GFLOW
-		src/modules/observables/Topology.cu
-		src/modules/observables/Blocking.cu
-		src/modules/observables/ColorElectricCorr.cu
-		src/modules/observables/ColorMagneticCorr.cu)
+        src/modules/observables/Topology.cu
+        src/modules/observables/Blocking.cu
+        src/modules/observables/ColorElectricCorr.cu
+        src/modules/observables/ColorMagneticCorr.cu)
 set(SOURCE_FILES_GETMAGICTRACEANOMALY
-		src/modules/gauge_updates/SubLatMeas.cu)
+        src/modules/gauge_updates/SubLatMeas.cu)
 set(SOURCE_FILES_MEASUREHADRONS
-		src/modules/measureHadrons/measureHadrons.cu
-		src/modules/HISQ/hisqSmearing.cu
-		src/modules/dslash/dslash.cu
-		src/modules/inverter/inverter.cu
-		src/spinor/spinorfield.cu)
+        src/modules/measureHadrons/measureHadrons.cu
+        src/modules/HISQ/hisqSmearing.cu
+        src/modules/dslash/dslash.cu
+        src/modules/inverter/inverter.cu
+        src/spinor/spinorfield.cu)
 set(SOURCE_FILES_SUBLATTICEUPDATES
-		src/modules/gauge_updates/luscherweisz.cu
-		src/modules/gauge_updates/SubLatMeas.cpp
-		src/modules/gauge_updates/SubLatMeas.cu)
+        src/modules/gauge_updates/luscherweisz.cu
+        src/modules/gauge_updates/SubLatMeas.cpp
+        src/modules/gauge_updates/SubLatMeas.cu)
 set(SOURCE_FILES_HMC
-		src/modules/rhmc/pure_gauge_hmc.cu
-		src/modules/rhmc/integrator.cu
+        src/modules/rhmc/pure_gauge_hmc.cu
+        src/modules/rhmc/integrator.cu
         src/modules/dslash/dslash.cu
-		src/modules/inverter/inverter.cu
+        src/modules/inverter/inverter.cu
         src/modules/HISQ/hisqSmearing.cu
         src/modules/HISQ/hisqForce.cu
-		src/spinor/spinorfield.cu)
+        src/spinor/spinorfield.cu)
 set(SOURCE_FILES_RHMC
-		src/modules/rhmc/rhmc.cu
-		src/modules/rhmc/integrator.cu
+        src/modules/rhmc/rhmc.cu
+        src/modules/rhmc/integrator.cu
         src/modules/dslash/dslash.cu
-		src/modules/inverter/inverter.cu
+        src/modules/inverter/inverter.cu
         src/modules/HISQ/hisqSmearing.cu
         src/modules/HISQ/hisqForce.cu
-		src/modules/observables/PolyakovLoop.cu
-		src/spinor/spinorfield.cu)
+        src/modules/observables/PolyakovLoop.cu
+        src/spinor/spinorfield.cu)
 set(ALL_NSTACK
-		NSTACKS_1=1
-		NSTACKS_2=1
-		NSTACKS_4=1
-		NSTACKS_8=1
-		NSTACKS_12=1
-		NSTACKS_14=1)
+        NSTACKS_1=1
+        NSTACKS_2=1
+        NSTACKS_4=1
+        NSTACKS_8=1
+        NSTACKS_12=1
+        NSTACKS_14=1)
 set(REALLY_ALL_NSTACK
-		${ALL_NSTACK}
-		NSTACKS_3=1
-		NSTACKS_5=1
-		NSTACKS_6=1
-		NSTACKS_7=1
-		NSTACKS_9=1
-		NSTACKS_10=1
-		NSTACKS_11=1)
+        ${ALL_NSTACK}
+        NSTACKS_3=1
+        NSTACKS_5=1
+        NSTACKS_6=1
+        NSTACKS_7=1
+        NSTACKS_9=1
+        NSTACKS_10=1
+        NSTACKS_11=1)
 set(ALL_LAYOUTS
-		LAYOUT_ALL=1
-		LAYOUT_ODD=1
-		LAYOUT_EVEN=1)
+        LAYOUT_ALL=1
+        LAYOUT_ODD=1
+        LAYOUT_EVEN=1)
 set(ALL_HALODEPTHS
         HALODEPTH_0=1
         HALODEPTH_1=1
@@ -143,39 +143,39 @@ set(ALL_HALODEPTHS
 
 add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
 target_compile_definitions(CodeBase PRIVATE
-		ARCHITECTURE=${ARCHITECTURE}
-		SINGLEPREC=1 DOUBLEPREC=1
-		COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
-	    ${ALL_HALODEPTHS}
-	    HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
-		${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
-		)
+        ARCHITECTURE=${ARCHITECTURE}
+        SINGLEPREC=1 DOUBLEPREC=1
+        COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
+        ${ALL_HALODEPTHS}
+        HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
+        ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
+        )
 set_target_properties(CodeBase
-		PROPERTIES
-		COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+        PROPERTIES
+        COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
 
 
 #---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
 
 
 FUNCTION(add_SIMULATeQCD_executable TARGET)
-	add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-	add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
-	target_link_libraries("_${TARGET}" CodeBase)
-	set_target_properties(${TARGET} _${TARGET}
-			PROPERTIES
-			COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+    add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+    add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+    target_link_libraries("_${TARGET}" CodeBase)
+    set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
 ENDFUNCTION()
 FUNCTION(set_SIMULATeQCD_property TARGET)
-	set_target_properties(${TARGET} _${TARGET} ${ARGN})
+    set_target_properties(${TARGET} _${TARGET} ${ARGN})
 ENDFUNCTION()
 FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
-	target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
-	target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
+    target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
+    target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
 ENDFUNCTION()
 
 FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
-	add_dependencies(${TARGET1} _${TARGET2})
+    add_dependencies(${TARGET1} _${TARGET2})
 ENDFUNCTION()
 
 
@@ -191,12 +191,12 @@ add_custom_target(tests)
 add_custom_target(tools)
 add_custom_target(everything)
 add_dependencies(everything
-		applications
-		examples
-		profilers
-		tests
-		tools
-		)
+        applications
+        examples
+        profilers
+        tests
+        tools
+        )
 
 
 #----------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: TESTS
@@ -216,6 +216,11 @@ add_SIMULATeQCD_executable(CompressionTest src/testing/main_CompressionTest.cu)
 set_SIMULATeQCD_property(CompressionTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(CompressionTest PRIVATE HALODEPTH_2=1  DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1)
 add_to_compound_SIMULATeQCD_target(tests CompressionTest)
+
+add_SIMULATeQCD_executable(condensateTest src/testing/main_condensate_test.cu ${SOURCE_FILES_RHMC})
+set_SIMULATeQCD_property(condensateTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(condensateTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests condensateTest)
 
 add_SIMULATeQCD_executable(correlatorTest src/testing/main_correlatorTest.cu ${SOURCE_FILES_GFIX})
 set_SIMULATeQCD_property(correlatorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -289,13 +294,8 @@ add_to_compound_SIMULATeQCD_target(tests HBOR_single_test)
 
 add_SIMULATeQCD_executable(hisqForce src/testing/main_hisqForce.cu ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cu src/modules/HISQ/hisqForce.cu) 
 set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
-
-add_SIMULATeQCD_executable(hisqForceImagmu src/testing/main_HisqForceImagmu.cu ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cu src/modules/HISQ/hisqForce.cu)
-set_SIMULATeQCD_property(hisqForceImagmu PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(hisqForceImagmu PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(tests hisqForceImagmu)
 
 add_SIMULATeQCD_executable(hisqSmearingMulti src/testing/main_HisqSmearingTestMulti.cu src/spinor/spinorfield.cu)
 set_SIMULATeQCD_property(hisqSmearingMulti PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -532,11 +532,6 @@ add_to_compound_SIMULATeQCD_target(applications MilcToNersc)
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS
 
-
-add_SIMULATeQCD_executable(condensateTest src/tools/main_condensate_test.cu ${SOURCE_FILES_RHMC})
-set_SIMULATeQCD_property(condensateTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tools")
-SIMULATeQCD_target_compile_definitions(condensateTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(tools condensateTest)
 
 add_SIMULATeQCD_executable(correlatorNorm src/tools/main_createCorrelatorNorm.cu)
 set_SIMULATeQCD_property(correlatorNorm PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tools")

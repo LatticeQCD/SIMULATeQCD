@@ -1,6 +1,9 @@
 /* 
  * main_rhmc.cu                                                               
- * 
+ *
+ * This is the main to use RHMC to generate Nf=2+1 HISQ configurations. By default it will also measure
+ * the chiral condensate.
+ *  
  */
 
 #include "../SIMULATeQCD.h"
@@ -11,9 +14,9 @@
 
 int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
-    CommunicationBase commBase(&argc, &argv);
 
-    RhmcParameters param;
+    CommunicationBase commBase(&argc, &argv);
+    RhmcParameters    param;
 
     param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
     if (not param.confnumber.isSet()){
@@ -21,7 +24,7 @@ int main(int argc, char *argv[]) {
     }
 
     const int HaloDepth = 2;
-    const int Nmeas = 10; // Number of RHS in Condensate measurements
+    const size_t Nmeas  = 10; // Number of RHS in Condensate measurements
 
     std::string rand_file;
     std::string gauge_file;
@@ -36,16 +39,17 @@ int main(int argc, char *argv[]) {
 
     StopWatch<true> timer, totaltime;
 
-    typedef float floatT;
+    typedef float floatT; // Define the precision here
 
     rootLogger.info("STARTING RHMC Update:");
 
-    if (sizeof(floatT)==4)
+    if (sizeof(floatT)==4) {
         rootLogger.info("update done in single precision");
-    else if(sizeof(floatT)==8)
+    } else if(sizeof(floatT)==8) {
         rootLogger.info("update done in double precision");
-    else
+    } else {
         rootLogger.info("update done in unknown precision");
+    }
 
     initIndexer(4,param, commBase);
 
@@ -77,8 +81,9 @@ int main(int argc, char *argv[]) {
     }
     gauge.updateAll();
     gauge.su3latunitarize();
-    if(param.always_acc())
+    if(param.always_acc()) {
         rootLogger.warn("Skipping Metropolis step!");
+    }
 
     rhmc<floatT, true, HaloDepth> HMC(param, rat, gauge, d_rand.state);
 
@@ -97,27 +102,29 @@ int main(int argc, char *argv[]) {
 
         acc += HMC.update(!param.always_acc());
         acceptance = floatT(acc)/floatT(i);
-        rootLogger.info("current acceptance = " ,  acceptance);
+        rootLogger.info("current acceptance = ",  acceptance);
 
-        rootLogger.info("MEASUREMENT: " ,  param.confnumber()+i);
+        rootLogger.info("MEASUREMENT: ",  param.confnumber()+i);
 
-        rootLogger.info("Polyakov Loop = " ,  ploop.getPolyakovLoop());
-        rootLogger.info("Plaquette = " ,  gaugeaction.plaquette());
-        rootLogger.info("Rectangle = " ,  gaugeaction.rectangle());
-	
-        measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, true, gauge, d_rand);
-	
-        measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, false, gauge, d_rand);
-        
+        rootLogger.info("Polyakov Loop = ",  ploop.getPolyakovLoop());
+        rootLogger.info("Plaquette = ",  gaugeaction.plaquette());
+        rootLogger.info("Rectangle = ",  gaugeaction.rectangle());
+        	
+        SimpleArray<double,Nmeas> chi_l = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, true,  gauge, d_rand);
+        for (int j = 0; j < Nmeas; ++j) {
+            rootLogger.info("CHI_UD = ", chi_l[j]);  
+        }
+        SimpleArray<double,Nmeas> chi_s = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, false, gauge, d_rand);
+        for (int j = 0; j < Nmeas; ++j) {
+            rootLogger.info("CHI_S = ", chi_s[j]);  
+        }
+
         timer.stop();
         totaltime += timer;
-        rootLogger.info("Time (TTRAJ) for trajectory without IO: " , timer,  
-                " | avg traj. time : " , totaltime/i);
-        
+        rootLogger.info("Time (TTRAJ) for trajectory without IO: ", timer, " | avg traj. time : " , totaltime/i);
         timer.reset();
 
-        if (i % param.write_every()==0)
-        {
+        if (i % param.write_every()==0) {
             gauge_file = param.gauge_file() + std::to_string(param.confnumber()+i);
             rand_file = param.rand_file() + std::to_string(param.confnumber()+i);
             gauge.writeconf_nersc(gauge_file);
@@ -128,7 +135,6 @@ int main(int argc, char *argv[]) {
     }
 
     rootLogger.info("Run has ended! acceptance = " ,  acceptance);
-
 
     return 0;
 }
