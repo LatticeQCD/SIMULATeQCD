@@ -84,36 +84,47 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="rational-hybrid-monte-carlo">
 <h1>Rational Hybrid Monte Carlo<a class="headerlink" href="#rational-hybrid-monte-carlo" title="Permalink to this headline"></a></h1>
-<p>The rational hybrid Monte Carlo (RHMC) class does the update of the gauge fields when simulating
-with dynamical fermions. The user will only have to call the constructor and two functions</p>
+<p><a class="reference external" href="https://doi.org/10.1016/S0920-5632(99)85217-7">The rational hybrid Monte Carlo (RHMC)</a>
+algorithm is a way of updating gauge fields when simulating dynamical fermions.
+It uses a <a class="reference external" href="https://doi.org/10.1016/0550-3213(92)90263-B">three-stepsize integrator</a>
+that profits from the <a class="reference external" href="https://doi.org/10.1016/S0370-2693(01)01102-9">Hasenbusch trick</a>.
+By default integration uses a leapfrog, but it is possible to use an Omelyan
+integrator on the largest scale, if you choose.
+The inverter is a <a class="reference internal" href="../05_modules/01_inverter.html"><span class="doc std std-doc">multi-shift conjugate gradient</span></a>.</p>
+<p>To use the RHMC class, the user will only have to call the constructor and two functions</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rhmc</span><span class="p">(</span><span class="n">RhmcParameters</span><span class="w"> </span><span class="n">rhmc_param</span><span class="p">,</span><span class="w"> </span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="n">onDevice</span><span class="p">,</span><span class="n">All</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeField</span><span class="p">,</span><span class="w"> </span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">rand_state</span><span class="p">)</span><span class="w"></span>
 <span class="kt">void</span><span class="w"> </span><span class="n">init_ratapprox</span><span class="p">(</span><span class="n">RationalCoeff</span><span class="w"> </span><span class="n">rat</span><span class="p">)</span><span class="w"></span>
 <span class="kt">int</span><span class="w"> </span><span class="n">update</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">metro</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">reverse</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
-<p>The constructor has to be called with the usual template arguments and passed an instance of
-<code class="docutils literal notranslate"><span class="pre">RhmcParameters</span></code>, the gauge field, and an <code class="docutils literal notranslate"><span class="pre">uint4</span></code> array with the RNG state.
-The function <code class="docutils literal notranslate"><span class="pre">init_ratapprox</span></code> will set the coefficients for all the rational approximations and
-has to be called before update!
-The function update will generate one molecular dynamics (MD) trajectory. If no arguments are passed
-to <code class="docutils literal notranslate"><span class="pre">update()</span></code> it will also perform a Metropolis step after the trajectory. The Metropolis step can
-also be omitted by passing the argument <code class="docutils literal notranslate"><span class="pre">false</span></code> to update. This is handy in the beginning of
-thermalization. The second argument is <code class="docutils literal notranslate"><span class="pre">false</span></code> by default; passing <code class="docutils literal notranslate"><span class="pre">true</span></code> to update will make
-the updater run the trajectory forward and backwards for testing if the integration is reversible.</p>
+<p>The constructor has to be called with the usual template arguments and passed
+an instance of <code class="docutils literal notranslate"><span class="pre">RhmcParameters</span></code>, the gauge field, and an <code class="docutils literal notranslate"><span class="pre">uint4</span></code> array with
+the RNG state. The function <code class="docutils literal notranslate"><span class="pre">init_ratapprox</span></code> will set the coefficients for
+all the rational approximations and has to be called before update!
+The function update will generate one molecular dynamics (MD) trajectory.
+If no arguments are passed to <code class="docutils literal notranslate"><span class="pre">update()</span></code> it will also perform a Metropolis
+step after the trajectory. The Metropolis step can
+also be omitted by passing the argument <code class="docutils literal notranslate"><span class="pre">false</span></code> to update. This is handy in
+the beginning of thermalization. The second argument is <code class="docutils literal notranslate"><span class="pre">false</span></code> by default;
+passing <code class="docutils literal notranslate"><span class="pre">true</span></code> to update will make the updater run the trajectory forward
+and backwards for testing if the integration is reversible.</p>
 <section id="update">
 <h2>Update<a class="headerlink" href="#update" title="Permalink to this headline"></a></h2>
-<p>The update routine saves a copy of the gauge field, applies the smearing to the gauge field,
-builds the pseudo-fermion fields, generates the conjugate momenta and calculates the Hamiltonian.
-Then it starts the MD evolution by calling <code class="docutils literal notranslate"><span class="pre">integrate()</span></code> from the integrator class
-(the integrator object is instantiated by the RHMC constructor). After the MD trajectory the new
-Hamiltonian is calculated and - depending on the arguments - the Metropolis step is done.</p>
+<p>The update routine saves a copy of the gauge field, applies the smearing to
+the gauge field, builds the pseudo-fermion fields, generates the conjugate
+momenta and calculates the Hamiltonian.
+Then it starts the MD evolution by calling <code class="docutils literal notranslate"><span class="pre">integrate()</span></code> from the integrator
+class (the integrator object is instantiated by the RHMC constructor). After
+the MD trajectory the new Hamiltonian is calculated and - depending on the
+arguments - the Metropolis step is done.</p>
 </section>
 <section id="multiple-pseudo-fermions">
 <h2>Multiple pseudo-fermions<a class="headerlink" href="#multiple-pseudo-fermions" title="Permalink to this headline"></a></h2>
-<p>When you want to use multiple pseudo-fermion fields, set <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> in the RHMC input file to the
-respective number. Be aware that this changes the way you have to construct your ratapprox:
-In the remez <code class="docutils literal notranslate"><span class="pre">in.file</span></code>, if you want to generate Nf flavors using Npf pseudo-fermion fields,
-you have to use Nf/Npf as an input (which is then used Npf times). Note that Nf/Npf must be &lt; 4.
+<p>When you want to use multiple pseudo-fermion fields, set <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> in the RHMC
+input file to the respective number. Be aware that this changes the way you
+have to construct your ratapprox: In the remez <code class="docutils literal notranslate"><span class="pre">in.file</span></code>, if you want to
+generate Nf flavors using Npf pseudo-fermion fields, you have to use Nf/Npf
+as an input (which is then used Npf times). Note that Nf/Npf must be &lt; 4.
 <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> is 1 per default.</p>
 </section>
 <section id="imaginary-chemical-potential">
