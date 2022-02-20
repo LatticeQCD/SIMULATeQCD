@@ -1,5 +1,9 @@
-// THIS A SIMPLE HMC CLASS
-// Created by Philipp Scior on 22.10.18
+/*
+ * pure_gauge_hmc.h
+ *
+ * P. Scior
+ * 
+ */
 
 #ifndef PURE_GAUGE_HMC
 #define PURE_GAUGE_HMC

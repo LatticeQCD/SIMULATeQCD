@@ -16,7 +16,6 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
-    bool success = true;
     Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_naik(commBase);
@@ -75,8 +74,9 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     rootLogger.info("relative error of (D^+D) * (D^+D)^-1 * phi - phi : " ,  max(err_arr));
     rootLogger.info("Time for inversion: " ,  timer);
+    bool success = true;
     if (!(max(err_arr) < 10*param.residue()))
-        success = success && false;
+        success = false;
     
     if (success)
         rootLogger.info("Inverter test: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);

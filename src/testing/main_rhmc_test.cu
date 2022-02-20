@@ -36,7 +36,7 @@ bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoe
     double acceptance = 0.0;
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
-    for (int i = 1; i <= 2; ++i) {
+    for (int i = 1; i <= 10; ++i) {
         acc += HMC.update(true, true);
         acceptance = double(acc)/double(i);
     }
@@ -95,12 +95,13 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     dummy.adjustSize(elems);
 
     
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference,3e-9));
 
     int faults = 0;
     dummy.reduce(faults,elems);
 
     rootLogger.info(faults, " faulty links found!");
+
 
     if (acceptance > 0.7 && faults == 0) {
         ret=true;
@@ -154,7 +155,7 @@ int main(int argc, char *argv[]) {
 
     RationalCoeff rat;
 
-    rat.readfile(commBase, param.rat_file(), argc, argv);
+    rat.readfile(commBase, param.rat_file());
 
     commBase.init(param.nodeDim());
 
@@ -165,7 +166,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("STARTING REVERSIBILITY TEST:");
 
-    typedef float floatT;
+    typedef double floatT;
 
     bool revers = reverse_test<floatT, HaloDepth>(commBase, param, rat);
 

@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
 
     RhmcParameters param;
-    param.readfile(commBase,"../parameter/run.param", argc, argv);
+    param.readfile(commBase,"../parameter/tests/run.param", argc, argv);
     
     commBase.init(param.nodeDim());
 

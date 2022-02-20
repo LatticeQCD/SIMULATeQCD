@@ -1,5 +1,9 @@
-//A class for the HMC Integrator
-// Created by Philipp Scior on 24.10.18
+/*
+ * integrator.h
+ *
+ * P. Scior
+ * 
+ */
 
 #ifndef INTEGRATOR
 #define INTEGRATOR
@@ -7,7 +11,6 @@
 #include "../../gauge/gaugefield.h"
 #include "./rhmcParameters.h"
 #include "../../base/math/gsu3.h"
-//#include "../../base/indexer/gSite.h"
 #include "../../gauge/gaugeActionDeriv.h"
 #include "../../base/LatticeContainer.h"
 #include <iostream>
@@ -54,8 +57,6 @@ private:
 
     //this is only a placeholder function for testing, real implementation is in HISQ force! REMOVE for production!
     void make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector <floatT> rat_coeff);
-
-    // HisqForce<floatT, onDevice, HaloDepth> ip_dot_f2_hisq;//(gauge,force,CG,dslash,rhmc_param,commBase,memMan);
 
     // The different integration schemes
     void SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
