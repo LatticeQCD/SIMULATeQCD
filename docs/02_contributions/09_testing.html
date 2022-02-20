@@ -146,6 +146,29 @@ where one prefers not to split the lattice in the Euclidean time direction.</p><
 <li><p><code class="docutils literal notranslate"><span class="pre">k</span></code>: No long directions. Useful whenever 4 does not divide a lattice extension.</p></li>
 </ul>
 </section>
+<section id="using-the-testing-h-header-file">
+<h2>Using the <code class="docutils literal notranslate"><span class="pre">testing.h</span></code> header file<a class="headerlink" href="#using-the-testing-h-header-file" title="Permalink to this headline"></a></h2>
+<p>It is very important that your code yields correct scientific results. One of the most
+straightforward ways to carry out such a test is to make a comparison with known results.
+For your convenience, there are several functions in <code class="docutils literal notranslate"><span class="pre">testing.h</span></code> for exactly this
+purpose.</p>
+<p>If you are doing any calculation with affects the <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, for example an
+over-relaxation update, please check this using a link-by-link comparison against
+some known reference. One can compare <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects
+using</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">compare_fields</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>which check that every element of every link of <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> agree
+within a relative error of <code class="docutils literal notranslate"><span class="pre">tol</span></code>. It returns <code class="docutils literal notranslate"><span class="pre">true</span></code> if every single element of
+both <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects agree.</p>
+<p>To compare scalars <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> one can use</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">compare_relative</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">prec</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>which makes sure they agree within relative error <code class="docutils literal notranslate"><span class="pre">rel</span></code> as well as absolute
+error <code class="docutils literal notranslate"><span class="pre">prec</span></code>. It will display custom <code class="docutils literal notranslate"><span class="pre">text</span></code> along with pass and fail messages.</p>
+</section>
 </section>
 
 

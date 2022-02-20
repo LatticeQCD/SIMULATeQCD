@@ -59,3 +59,28 @@ The `GPUkey` consists for a number of GPUs concatenated with one of two layout s
 * `s`: Split only in spatial directions. Useful for observables like the Polyakov loop, 
 where one prefers not to split the lattice in the Euclidean time direction.
 * `k`: No long directions. Useful whenever 4 does not divide a lattice extension.
+
+## Using the `testing.h` header file
+
+It is very important that your code yields correct scientific results. One of the most
+straightforward ways to carry out such a test is to make a comparison with known results.
+For your convenience, there are several functions in `testing.h` for exactly this
+purpose.
+
+If you are doing any calculation with affects the `Gaugefield`, for example an
+over-relaxation update, please check this using a link-by-link comparison against
+some known reference. One can compare `test` and `reference` `Gaugefield` objects
+using
+```c++
+bool compare_fields(test, reference, tol=1e-6)
+```
+which check that every element of every link of `test` and `reference` agree
+within a relative error of `tol`. It returns `true` if every single element of
+both `Gaugefield` objects agree.
+
+To compare scalars `test` and `reference` one can use
+```c++
+void compare_relative(test, reference, rel, prec, text)
+```
+which makes sure they agree within relative error `rel` as well as absolute
+error `prec`. It will display custom `text` along with pass and fail messages.
