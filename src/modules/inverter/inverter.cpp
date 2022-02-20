@@ -178,14 +178,23 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         a[0]  = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        spinorOut.template axpyThisLoop<32>(((floatT)(-1.0))*B, pi,max_term); 
+
+        spinorOut.template axpyThisLoop<64>(((floatT)(-1.0))*B, pi,max_term); 
+        //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
         
 
+        //################################
         for (int j=1; j<max_term; j++) {
             a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]);
         }
+        //################################        
 
-        pi.template axupbyThisLoop<32>(Z, a, r, max_term);
+
+        pi.template axupbyThisLoop<64>(Z, a, r, max_term);
+        //     pi[i] = Z[i] * r + a[i] * pi[i];
+
+
+        //################################
 
         do {
             lambda = Z[max_term-1] * Z[max_term-1] * lambda2;
