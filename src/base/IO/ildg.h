@@ -339,7 +339,7 @@ public:
                 rootLogger.error("Stored dimension ", i, " not equal to current lattice size.");
                 error = true;
             }
-        //su3_size=2*3*rows*float_size, float_size=4 or 8.
+
         if (header.dattype() == "48") {
             float_size=4;
             rows=2;
@@ -370,10 +370,10 @@ public:
         } else if (header.floatingpoint() == "IEEE64LITTLE") {
             //float_size = 8;
             disken = ENDIAN_LITTLE;
-        } /*else {
+        } else {
             rootLogger.error("Unrecognized FLOATING_POINT ", header.floatingpoint());
             error = true;
-        }*/
+        }
         switch_endian = switch_endianness(disken);
 
         rootLogger.info(header.checksuma);
@@ -385,7 +385,6 @@ public:
         rootLogger.info(header.dim[2]);
         rootLogger.info(header.dim[3]);
 
-
         su3_size = 2 * 3 * rows * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
         index = buf.size();
@@ -395,6 +394,7 @@ public:
 
 
     void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data) {
+
         int32_t magic_number = 1164413355;
         int16_t version_number = 1;
         int8_t zero_8bit=0;
@@ -404,7 +404,7 @@ public:
         int data_mod, null_padding;
 
         if (data=="") {
-            data_length=GInd::getLatData().globvol4*bytes_per_site();//lattice volume x #(links) x link_enteries(re+im) x precision
+            data_length=GInd::getLatData().globvol4*bytes_per_site(); // lattice volume x #(links) x link_enteries(re+im) x precision
         } else {
             data_length=data.length();
         }
@@ -441,17 +441,18 @@ public:
     }
 
     template<class floatT,bool onDevice, CompressionType comp>
-    bool write_header(int _rows,
-                      int diskprec, Endianness en, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
+    bool write_header(int _rows, int diskprec, Endianness en, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
+
         rows = _rows;
-        if (diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)))
+        if ( diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)) ) {
             float_size = 4;
-        else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double)))
+        } else if ( diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double)) ) {
             float_size = 8;
-        else {
+        } else {
             rootLogger.error("diskprec should be 0, 1 or 2.");
             return false;
         }
+
         su3_size = 2 * 3 * rows * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
 
@@ -478,14 +479,15 @@ public:
         switch_endian = switch_endianness(en);
 
         std::string fp;
-        if (float_size == 4)
+        if (float_size == 4) {
             fp = "IEEE32BIG";
-        else if (float_size == 8)
+        } else if (float_size == 8) {
             fp = "IEEE64BIG";
-        else {
+        } else {
             rootLogger.error("ILDG format must store single or double precision.");
             return false;
         }
+
         if (comm.IamRoot()) {
 
             std::string header_ildg, data, dt;
@@ -498,7 +500,7 @@ public:
                 // first lime record (header)
                 header_ildg = "scidac-private-file-xml";
                 data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacFile><version>1.1</version><spacetime>4</spacetime><dims>"
-                       + std::to_string(GInd::getLatData().globLX)
+                             + std::to_string(GInd::getLatData().globLX)
                        + " " + std::to_string(GInd::getLatData().globLY)
                        + " " + std::to_string(GInd::getLatData().globLZ)
                        + " " + std::to_string(GInd::getLatData().globLT)
@@ -530,6 +532,7 @@ public:
                 lime_record(out, switch_endian, header_ildg, data);
 
             } else {
+
                 std::stringstream crc32a, crc32b;
                 crc32a<<std::hex<<computed_checksum_crc32.checksuma;
                 crc32b<<std::hex<<computed_checksum_crc32.checksumb;
@@ -615,6 +618,7 @@ public:
             return false;
         }
     }
+
     void byte_swap_sitedata(char *sitedata, int n) {
         for (size_t bs = 0; bs < 72; bs++)
             Byte_swap(sitedata + bs * n, n);

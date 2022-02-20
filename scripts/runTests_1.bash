@@ -16,6 +16,7 @@ source "../scripts/testingTools.bash"
 # and give any special directions needed for the splitting.
 declare -A testRoutines
 testRoutines[_CompressionTest]="4k"
+testRoutines[_confReadWriteTest]="4k"
 testRoutines[_correlatorTest]="1"             # All tests involving correlators work only for one GPU.
 testRoutines[_cudaIpcTest]="2"                # Only works for two GPUs.
 testRoutines[_DslashTest]="1"
@@ -24,7 +25,6 @@ testRoutines[_gfixplcTest]="1"
 testRoutines[_InverterTest]="4k"
 testRoutines[_LinkPathTest]="4k"
 testRoutines[_PureGaugeHmcTest]="4ks"
-testRoutines[_confReadWriteTest]="4k"
 testRoutines[_SpinorHaloTest]="4k"
 testRoutines[_StackedSpinorTest]="4k"
 

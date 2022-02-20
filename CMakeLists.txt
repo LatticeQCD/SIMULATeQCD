@@ -222,6 +222,11 @@ set_SIMULATeQCD_property(condensateTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tes
 SIMULATeQCD_target_compile_definitions(condensateTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests condensateTest)
 
+add_SIMULATeQCD_executable(confReadWriteTest src/testing/main_confReadWriteTest.cu)
+set_SIMULATeQCD_property(confReadWriteTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(confReadWriteTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(tests confReadWriteTest)
+
 add_SIMULATeQCD_executable(correlatorTest src/testing/main_correlatorTest.cu ${SOURCE_FILES_GFIX})
 set_SIMULATeQCD_property(correlatorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(correlatorTest PRIVATE HALODEPTH_0=1  DOUBLEPREC=1 COMP_R18=1)
@@ -370,11 +375,6 @@ add_SIMULATeQCD_executable(RndSingleTest src/testing/main_rnd_single_test.cu)
 set_SIMULATeQCD_property(RndSingleTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(RndSingleTest PRIVATE HALODEPTH_1=1 HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests RndSingleTest)
-
-add_SIMULATeQCD_executable(confReadWriteTest src/testing/main_confReadWriteTest.cu)
-set_SIMULATeQCD_property(confReadWriteTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(confReadWriteTest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(tests confReadWriteTest)
 
 add_SIMULATeQCD_executable(SpinorHaloTest src/testing/main_SpinorHaloTest.cu)
 set_SIMULATeQCD_property(SpinorHaloTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
 
 	rootLogger.info("Initialize Lattice");
 
-	const size_t HaloDepth = 1;
+	const size_t HaloDepth = 0;
 	typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
 
@@ -91,7 +91,6 @@ int main(int argc, char *argv[]){
 
 	rootLogger.info("Store Lattice");
 
-	gauge.updateAll();
 	gauge.writeconf_nersc("nersc.l8t4b3360_bieHB_test");
     gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
@@ -100,7 +99,6 @@ int main(int argc, char *argv[]){
 	gauge_test.readconf_ildg("nersc_ildg.l8t4b3360_bieHB_test");
 	gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
-	gauge_test.updateAll();
 	rootLogger.info("Testing the configuration");
 
     GaugeAction<PREC, true,HaloDepth,R18> gAction(gauge);
