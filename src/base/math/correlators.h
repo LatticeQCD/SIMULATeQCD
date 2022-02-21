@@ -907,8 +907,8 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::createNorm(std::string domain, 
     std::string normfilePrefix;
     floatT norm;
 
-    r2max = getr2max(domain, comm);
-    normfilePrefix = getnormfilePrefix(domain, comm);
+    r2max = getr2max(domain);
+    normfilePrefix = getnormfilePrefix(domain);
 
     Correlator<false,floatT> normalization(comm, r2max);
 
