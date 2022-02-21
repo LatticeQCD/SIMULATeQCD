@@ -12,11 +12,11 @@ beta = 3.360
 # Path to input configuration.
 Gaugefile = ../test_conf/nersc.l8t4b3360_bieHB
 
-format = nersc                               	# Format of input configuration.
+format = nersc                 	# Format of input configuration.
 use_unit_conf = 0				# Unit configuration
-endianness = auto                               # Endianness of input configuration.
-conf_nr = 1                                     # Configuration number (optional).
-measurements_dir = ./                           # Measurement output directory
-format_out = ildg                               # Format of output configuration, nersc and ildg are supported.
-prec_out = 2                                    # Precision of the output configuration, 1 for single and 2 for double
+endianness = auto               # Endianness of input configuration.
+conf_nr = 1                     # Configuration number (optional).
+measurements_dir = ./           # Measurement output directory
+format_out = ildg               # Format of output configuration, nersc and ildg are supported.
+prec_out = 2                    # Precision of the output configuration, 1 for single and 2 for double
 

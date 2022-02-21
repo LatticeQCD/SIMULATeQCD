@@ -6,8 +6,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-#include "../gauge/gauge_kernels.cu"
- 
+#include "testing.h" 
     
 
 template<class floatT, int HaloDepth>
@@ -82,30 +81,19 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     for (int i = 1; i <= param.no_updates(); ++i) {
         acc += HMC.update();
         acceptance = floatT(acc)/floatT(i);
-
         rootLogger.info("|Ploop|(" ,  i , ")= " ,  abs(ploop.getPolyakovLoop()));
     }
 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
     bool ret = false;
-    
-    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    LatticeContainer<true, int> dummy(commBase);
-    dummy.adjustSize(elems);
 
-    
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference,3e-9));
+    bool pass = compare_fields<floatT,HaloDepth,true,R18>(gauge,gauge_reference,3e-9);
 
-    int faults = 0;
-    dummy.reduce(faults,elems);
-
-    rootLogger.info(faults, " faulty links found!");
-
-
-    if (acceptance > 0.7 && faults == 0) {
+    if (acceptance > 0.7 && pass) {
         ret=true;
     }
+
     return ret;
 };
 
@@ -189,7 +177,7 @@ int main(int argc, char *argv[]) {
         rootLogger.error("FULL UPDATE TEST: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 
 
-    if (revers /*&& no_rng*/ && full)  {
+    if (revers && full)  {
         rootLogger.info(CoutColors::green ,  "ALL TESTS PASSED" ,  CoutColors::reset);
         rootLogger.warn("This only indicates that force matches action.\n");
         rootLogger.warn("Check Observables to find out if action is correct!");

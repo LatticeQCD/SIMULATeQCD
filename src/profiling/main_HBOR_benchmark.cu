@@ -9,6 +9,7 @@
 
 #include "../modules/gauge_updates/PureGaugeUpdates.h"
 #include "../gauge/GaugeAction.h"
+#include "../testing/testing.h"
 
 #include <unistd.h>
 
@@ -17,31 +18,6 @@
 #define MAKE_TEST_CONF 1
 #define READ_TEST_CONF 0
 
-template<class floatT, size_t HaloDepth>
-bool test_function(Gaugefield<floatT, false, HaloDepth> &gauge, Gaugefield<floatT, false, HaloDepth> &refgauge,
-                   floatT tol)
-{
-    size_t totalchecks=0;
-    size_t failedchecks=0;
-    typedef GIndexer<All, HaloDepth> GInd;
-    bool lpassed=true;
-
-    for (int ix=0; ix<(int)GInd::getLatData().lx; ix++)
-    for (int iy=0; iy<(int)GInd::getLatData().ly; iy++)
-    for (int iz=0; iz<(int)GInd::getLatData().lz; iz++)
-    for (int it=0; it<(int)GInd::getLatData().lt; it++) {
-        for (int mu=0; mu<4; mu++) {
-            totalchecks++;
-            gSiteMu siteMu=GInd::getSiteMu(ix,iy,iz,it,mu);
-            if( !compareGSU3<floatT>(gauge.getAccessor().getLink(siteMu),refgauge.getAccessor().getLink(siteMu),tol) )
-                failedchecks++;
-        }
-    }
-    floatT failedfrac=1.0*failedchecks/totalchecks;
-    rootLogger.info("test_function: " ,  failedfrac*100 ,  "% of tests failed with tolerance " ,  tol);
-    if(failedfrac>0.01) lpassed=false;
-    return lpassed;
-}
 
 int main(int argc, char *argv[]) {
 
@@ -105,11 +81,12 @@ int main(int argc, char *argv[]) {
         rootLogger.info("Read from file...");
         refgauge.readconf_nersc("config_HBOR_benchmark");
         rootLogger.info("Running comparison test...");
-        bool lpassed=test_function(hostgauge,refgauge,1e-13);
-        if (lpassed) {
+        bool pass=compare_fields<PREC,HaloDepth,false,R18>(hostgauge,refgauge,1e-13)
+        if (pass) {
             rootLogger.info("Comparison test " ,  CoutColors::green ,  "passed!" ,  CoutColors::reset);
         } else {
             rootLogger.error("Comparison test failed!");
+            return -1;
         }
     )
     return 0;

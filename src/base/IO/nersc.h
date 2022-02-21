@@ -2,6 +2,7 @@
  * nersc.h                                                               
  * 
  */
+
 #ifndef INC_NERSC_H
 #define INC_NERSC_H
 
@@ -126,7 +127,8 @@ private:
     uint32_t stored_checksum, computed_checksum;
     int su3_size;
     size_t index; //position in buffer
-    static const bool sep_lines = false; // make the buffer smaller and read each xline separately (slow on large lattices, but needs less memory)
+    static const bool sep_lines = false; // make the buffer smaller and read each xline separately 
+                                         // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
     template<class f1, class f2>

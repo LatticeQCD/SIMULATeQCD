@@ -1,5 +1,5 @@
 /* 
- * main_gfixTestSingle.cu
+ * main_gfixTestMulti.cu
  *
  * D. Clarke
  *
@@ -8,11 +8,9 @@
  *
  */
 
+#include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/gfix.h"
-
-#include <iostream>
-#include <iomanip>
-#include <unistd.h>
+#include "testing.h"
 
 #define PREC double 
 #define MY_BLOCKSIZE 256
@@ -54,32 +52,6 @@ floatT getTrU(Gaugefield<floatT,true, HaloDepth> &gauge, LatticeContainer<true,f
     return trU;
 }
 
-/// Function to compare gauge with refgauge link-by-link
-template<class floatT, size_t HaloDepth>
-bool test_function(Gaugefield<floatT, false, HaloDepth> &gauge, Gaugefield<floatT, false, HaloDepth> &refgauge,
-                   floatT tol)
-{
-    size_t totalchecks=0;
-    size_t failedchecks=0;
-    typedef GIndexer<All, HaloDepth> GInd;
-    bool lpassed=true;
-
-    for (int ix=0; ix<(int)GInd::getLatData().lx; ix++)
-    for (int iy=0; iy<(int)GInd::getLatData().ly; iy++)
-    for (int iz=0; iz<(int)GInd::getLatData().lz; iz++)
-    for (int it=0; it<(int)GInd::getLatData().lt; it++) {
-        for (int mu=0; mu<4; mu++) {
-            totalchecks++;
-            gSiteMu siteMu=GInd::getSiteMu(ix,iy,iz,it,mu);
-            if( !compareGSU3<floatT>(gauge.getAccessor().getLink(siteMu),refgauge.getAccessor().getLink(siteMu),tol) )
-                failedchecks++;
-        }
-    }
-    floatT failedfrac=1.0*failedchecks/totalchecks;
-    rootLogger.info("test_function: " ,  failedfrac*100 ,  "% of tests failed with tolerance " ,  tol);
-    if(failedfrac>0.01) lpassed=false;
-    return lpassed;
-}
 
 int main(int argc, char *argv[]) {
 
@@ -93,7 +65,7 @@ int main(int argc, char *argv[]) {
     const int  ngfstepMAX = 30;
     const int  nunit      = 20;
     const PREC gtol       = 1e-6;
-    const PREC tolp       = 1e-14; /// 15 digit agreement
+    const PREC tolp       = 1e-14; 
     param.latDim.set(LatDim);
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/gfixTestMulti.param", argc, argv);
@@ -151,7 +123,7 @@ int main(int argc, char *argv[]) {
     refgauge.readconf_nersc("gfixTestSingle_conf");
     hostgauge=gauge;
 
-    if(test_function(hostgauge,refgauge,tolp)) {
+    if(compare_fields<PREC,HaloDepth,false,R18>(hostgauge,refgauge,tolp)) {
         rootLogger.info("Direct link check (read) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
         rootLogger.info("Direct link check (read) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);

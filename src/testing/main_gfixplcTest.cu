@@ -12,10 +12,6 @@
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 
-#include <iostream>
-#include <unistd.h>
-#include <vector>
-
 #include "refValues_gfixplc.h"
 
 #define PREC double 

@@ -180,12 +180,10 @@ class DynamicParameter : public ParameterBase {
     };
 
     bool readstream(std::stringstream &s) override {
-        // values.clear();
         isset = false;
         while (s.good()) {
             T tmp;
             s >> tmp;
-//                     stdLogger.trace(s.fail());
             if (s.fail())
                 break;
             values.push_back(tmp);

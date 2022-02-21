@@ -8,67 +8,15 @@
  */
 
 #include "../SIMULATeQCD.h"
+#include "testing.h"
 
 #define PREC double
 #define MY_BLOCKSIZE 256
 #define epsilon 0.00001
 
-__host__ __device__ PREC dabs(PREC z){
-	if(z < 0){return -z;}
-	else{return z;}
-}
 
-template <class floatT, size_t HaloDepth, bool onDevice, CompressionType comp>
-struct compare_links {
-    gaugeAccessor<floatT,comp> gL;
-    gaugeAccessor<floatT,comp> gR;
-    LatticeParameters param;
+int main(int argc, char *argv[]) {
 
-    compare_links(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeR) : gL(gaugeL.getAccessor()), gR(gaugeR.getAccessor()) {}
-
-    __host__ __device__ int operator() (gSite site) {
-
-        floatT sum = 0.0;
-        for (int mu = 0; mu < 4; mu++) {
-
-            gSiteMu siteMu=GIndexer<All,HaloDepth>::getSiteMu(site,mu);
-            GSU3<floatT> diff = gL.getLink(siteMu) - gR.getLink(siteMu);
-            floatT norm = 0.0;
-
-            for (int i = 0; i < 3; i++) {
-            	for (int j = 0; j < 3; j++) {
-    	            norm += abs2(diff(i,j));
-    	        }
-            }
-            sum += norm;
-        }
-        sum /= 4.0;
-        return (sum < 1e-15 ? 0 : 1);
-    }
-};
-
-template <class floatT, size_t HaloDepth, bool onDevice, CompressionType comp>
-bool compare_fields(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeR) {
-    LatticeContainer<onDevice, int> redBase(gaugeL.getComm());
-    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-
-    redBase.adjustSize(elems);
-
-    redBase.template iterateOverBulk<All,HaloDepth>(compare_links<floatT,HaloDepth,onDevice,comp>(gaugeL, gaugeR));
-
-    int faults = 0;
-    redBase.reduce(faults, elems);
-
-    rootLogger.info(faults ,  " faults detected!");
-
-    if (faults > 0) {
-        return false;
-    } else {
-        return true;
-    }
-}
-
-int main(int argc, char *argv[]){
 	stdLogger.setVerbosity(INFO);
 
 	LatticeParameters param;
@@ -85,53 +33,28 @@ int main(int argc, char *argv[]){
 	Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 	Gaugefield<PREC,true,HaloDepth> gauge_test(commBase);
 
-    rootLogger.info("Read configuration");
-
+    rootLogger.info("Try NERSC read...");
 	gauge.readconf_nersc("../test_conf/nersc.l8t4b3360_bieHB");
 
-	rootLogger.info("Store Lattice");
-
+    rootLogger.info("Try NERSC write...");
 	gauge.writeconf_nersc("nersc.l8t4b3360_bieHB_test");
+
+    rootLogger.info("Try ILDG write...");
     gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
-	rootLogger.info("Read test configuration");
-
+    rootLogger.info("Try ILDG read...");
 	gauge_test.readconf_ildg("nersc_ildg.l8t4b3360_bieHB_test");
+
+    rootLogger.info("One last ILDG write to verify the checksum worked...");
 	gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
-	rootLogger.info("Testing the configuration");
-
-    GaugeAction<PREC, true,HaloDepth,R18> gAction(gauge);
-
-	GaugeAction<PREC, true,HaloDepth,R18> gAction_test(gauge_test);
-
-    PREC plaq      = gAction.plaquette();
-    PREC plaq_test = gAction_test.plaquette();
-
-	if(abs(plaq - plaq_test) > epsilon) {
-		rootLogger.error("Computed plaquettes are not equal " ,  plaq ,  " != " ,  plaq_test );
-	} else {
-	    rootLogger.info("Computed plaquettes are equal.");
-	}
-
-    PREC clov      = gAction.clover();
-    PREC clov_test = gAction_test.clover();
-
-	if(abs(clov - clov_test) > epsilon) {
-		rootLogger.error("Computed clovers are not equal " ,  clov ,  " != " ,  clov_test );
-	} else {
-	    rootLogger.info("Computed clovers are equal.");
-	}
-
-    bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test);
-
+    rootLogger.info("Link-by-link comparison of NERSC config with written ILDG config...");
+    bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test,1e-15);
     if(!pass) {
 		rootLogger.error("Binaries are not equal.");
-		remove("../test_conf/test_l20t20b06498a_nersc.302500");
         return -1;
 	} else {
-		rootLogger.info(CoutColors::green , "Congratulations, writeconf worked!", CoutColors::reset);
-		remove("../test_conf/test_l20t20b06498a_nersc.302500");
+		rootLogger.info(CoutColors::green , "All tests passed!", CoutColors::reset);
     }
    
     return 0;

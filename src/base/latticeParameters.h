@@ -1,19 +1,25 @@
+/* 
+ * latticeParameters.h                                                               
+ * 
+ * Contains basic parameters common to all types of lattice calculation. 
+ * 
+ */
 
 #ifndef _INC_LATTICE_PARAMETERS
 #define _INC_LATTICE_PARAMETERS
 
 #include <string>
-
 #include "../base/communication/communicationBase.h"
 #include "IO/parameterManagement.h"
 #include "LatticeDimension.h"
 
 
-
-//! Class for basic lattice parameters
 class LatticeParameters : virtual public ParameterList {
+
     int nuller[4] = {0,0,0,0};
+
 public:
+
     Parameter<int, 4> latDim;
     Parameter<int, 4> nodeDim;
     Parameter<int, 4> gpuTopo;
@@ -23,11 +29,11 @@ public:
     Parameter<std::string> GaugefileName;
     Parameter<std::string> format;
     Parameter<std::string> endianness;  //!< one of "little", "big", "auto"
-    //my parameters
     Parameter<std::string> format_out;
     Parameter<int> prec_out;
     Parameter<std::string> measurements_dir;
     Parameter<bool> use_unit_conf;
+
     LatticeParameters() {
         add(latDim, "Lattice");
         add(nodeDim, "Nodes");
@@ -38,10 +44,9 @@ public:
         addDefault(endianness, "endianness", std::string("auto"));
         addOptional(confnumber, "conf_nr");
         addOptional(streamName, "stream");
-        //my parameters
         addDefault(format_out, "format_out",std::string("nersc"));
         addDefault(prec_out, "prec_out",0);
-        add(measurements_dir, "measurements_dir");
+        addDefault(measurements_dir, "measurements_dir", std::string("./"));
         addDefault(use_unit_conf, "use_unit_conf", false);
     }
 

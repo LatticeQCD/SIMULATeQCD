@@ -10,39 +10,15 @@
 
 #include "../SIMULATeQCD.h"
 #include "../modules/gauge_updates/PureGaugeUpdates.h"
+#include "testing.h"
 
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
 
-/// It's true that the old code is in single precision, but I'm pretty sure you don't lose any information running
-/// this code in double precision. But you should decrease rounding error near the 6th decimal.
 #define PREC double
 #define MY_BLOCKSIZE 256
 
-template<class floatT, size_t HaloDepth>
-bool test_function(Gaugefield<floatT, false, HaloDepth> &gauge, Gaugefield<floatT, false, HaloDepth> &refgauge, floatT tol) {
-    size_t totalchecks=0;
-    size_t failedchecks=0;
-    typedef GIndexer<All, HaloDepth> GInd;
-    bool lpassed=true;
-
-    for (int ix=0; ix<(int)GInd::getLatData().lx; ix++)
-    for (int iy=0; iy<(int)GInd::getLatData().ly; iy++)
-    for (int iz=0; iz<(int)GInd::getLatData().lz; iz++)
-    for (int it=0; it<(int)GInd::getLatData().lt; it++) {
-        for (int mu=0; mu<4; mu++) {
-            totalchecks++;
-            gSiteMu siteMu=GInd::getSiteMu(ix,iy,iz,it,mu);
-            if( !compareGSU3<floatT>(gauge.getAccessor().getLink(siteMu),refgauge.getAccessor().getLink(siteMu),tol) )
-                failedchecks++;
-        }
-    }
-    floatT failedfrac=1.0*failedchecks/totalchecks;
-    rootLogger.info("test_function: " ,  failedfrac*100 ,  "% of tests failed with tolerance " ,  tol);
-    if(failedfrac>0.01) lpassed=false;
-    return lpassed;
-}
 
 int main(int argc, char *argv[]) {
 
@@ -88,7 +64,7 @@ int main(int argc, char *argv[]) {
     hostgauge=gauge;
     refgauge.readconf_nersc("../test_conf/nersc.l8t4b3360_bie_readtest");
     refgauge.updateAll();
-    if(test_function(hostgauge,refgauge,(PREC)1e-7)) {
+    if(compare_fields<PREC,HaloDepth,false,R18>(hostgauge,refgauge,1e-7)) {
         rootLogger.info("Direct link check (read) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
         rootLogger.info("Direct link check (read) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
@@ -97,17 +73,13 @@ int main(int argc, char *argv[]) {
     hostgauge.writeconf_nersc("config_HBORTestRD",3,2); /// To be analyzed by multiGPU test later...
 
     /// Reset the configuration and repeat test, this time after one HB sweep.
-    /// Tolerance is chosen to be 3e-6 for the following reason: The old code performed calculations in single
-    /// precision, which guarantees only 6 correct significant digits, assuming IEEE 754. Link components
-    /// lie in [-1,1], which means 1e-6 is the best agreement possible. 3e-6 allows for some small rounding.
-    /// The agreement between the old code and the new code for reading the same configuration is only 1e-7.
     gauge.readconf_nersc("../test_conf/gauge12750");
     gauge.updateAll();
     gUpdate.updateHB(dev_state.state, beta0); /// HB update the entire gauge field
     hostgauge=gauge;
     refgauge.readconf_nersc("../test_conf/nersc.l8t4b3360_bieHB");
     refgauge.updateAll();
-    if(test_function(hostgauge,refgauge,(PREC)1e-6)) {
+    if(compare_fields<PREC,HaloDepth,false,R18>(hostgauge,refgauge,3e-6)) {
         rootLogger.info("Direct link check (HB) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
         rootLogger.info("Direct link check (HB) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);
@@ -122,7 +94,7 @@ int main(int argc, char *argv[]) {
     hostgauge=gauge;
     refgauge.readconf_nersc("../test_conf/nersc.l8t4b3360_bieOR");
     refgauge.updateAll();
-    if(test_function(hostgauge,refgauge,(PREC)1e-6)) {
+    if(compare_fields<PREC,HaloDepth,false,R18>(hostgauge,refgauge,3e-6)) {
         rootLogger.info("Direct link check (OR) " ,  CoutColors::green ,  "passed." ,  CoutColors::reset);
     } else {
         rootLogger.info("Direct link check (OR) " ,  CoutColors::red ,  "failed." ,  CoutColors::reset);

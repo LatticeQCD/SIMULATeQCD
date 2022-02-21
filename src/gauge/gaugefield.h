@@ -5,7 +5,6 @@
  * 
  */
 
-
 #ifndef _gaugefield_h_
 #define _gaugefield_h_
 
