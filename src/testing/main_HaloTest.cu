@@ -1,7 +1,7 @@
 /* 
  * main_HaloTest.cu                                                               
  * 
- * Lukas Mazur, 9 Oct 2017
+ * L. Mazur, 9 Oct 2017
  * 
  */
 

@@ -1,7 +1,7 @@
 /* 
  * main_cudaAwareMPITest.cu                                                               
  * 
- * Lukas Mazur
+ * L. Mazur
  * 
  */
 

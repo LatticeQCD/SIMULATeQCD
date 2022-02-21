@@ -8,12 +8,8 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
 
-#include <iostream>
-using namespace std;
-
 #define PREC double
 #define STACKS 96 
-#define MY_BLOCKSIZE 256
 
 
 template<class floatT>

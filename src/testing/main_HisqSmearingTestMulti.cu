@@ -6,7 +6,6 @@
 #include "../SIMULATeQCD.h"
 
 #define PREC double
-#define MY_BLOCKSIZE 256
 #define USE_GPU true
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>

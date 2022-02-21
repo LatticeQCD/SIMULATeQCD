@@ -8,12 +8,8 @@
  */
 
 #include "../SIMULATeQCD.h"
-#include <iostream>
-#include <iomanip>
-#include <unistd.h>
 
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 /// Get tr_d(UxUdagger) for each link
 template<class floatT,size_t HaloDepth>

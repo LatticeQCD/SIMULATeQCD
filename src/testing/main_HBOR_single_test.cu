@@ -12,12 +12,7 @@
 #include "../modules/gauge_updates/PureGaugeUpdates.h"
 #include "testing.h"
 
-#include <iostream>
-#include <iomanip>
-#include <unistd.h>
-
 #define PREC double
-#define MY_BLOCKSIZE 256
 
 
 int main(int argc, char *argv[]) {

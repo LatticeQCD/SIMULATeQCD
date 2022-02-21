@@ -11,7 +11,6 @@
 #include "testing.h"
 
 #define PREC double
-#define MY_BLOCKSIZE 256
 #define epsilon 0.00001
 
 

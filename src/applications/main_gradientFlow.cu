@@ -19,7 +19,7 @@
 #include "../modules/observables/ColorMagneticCorr.h"
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
-#include <cstdio>
+
 
 #define USE_GPU true
 //define precision

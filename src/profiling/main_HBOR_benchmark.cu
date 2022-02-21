@@ -11,10 +11,7 @@
 #include "../gauge/GaugeAction.h"
 #include "../testing/testing.h"
 
-#include <unistd.h>
-
 #define PREC double
-#define MY_BLOCKSIZE 256
 #define MAKE_TEST_CONF 1
 #define READ_TEST_CONF 0
 

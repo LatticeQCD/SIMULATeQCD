@@ -8,14 +8,10 @@
  *
  */
 
+#include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/gfix.h"
 
-#include <iostream>
-#include <iomanip>
-#include <unistd.h>
-
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 /// Get tr U for each link
 template<class floatT,size_t HaloDepth>

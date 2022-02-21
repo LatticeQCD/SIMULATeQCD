@@ -475,9 +475,9 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
 
-add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cu)
+add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cu src/gauge/gaugefield.cu src/gauge/gaugefield.cpp)
 set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_1=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
+SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_2=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(applications configConverter)
 
 add_SIMULATeQCD_executable(fluxtube src/applications/main_fluxtube.cu ${SOURCE_FILES_BASE} ${SOURCE_FILES_GFIX})

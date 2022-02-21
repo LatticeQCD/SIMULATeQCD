@@ -15,7 +15,6 @@
 #include "refValues_gfixplc.h"
 
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 /// Create our own parameter structure, which inherits from LatticeParameters.
 template<class floatT>

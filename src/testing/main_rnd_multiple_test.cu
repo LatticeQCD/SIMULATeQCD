@@ -1,14 +1,11 @@
 /* 
  * main_rnd_multiple_test.cu                                                               
  * 
- * Philipp Scior, 14 May 2019
+ * P. Scior
  * 
  */
 
 #include "../SIMULATeQCD.h"
-#include <iostream>
-#include <stdlib.h>
-#include <string>
 #include "../modules/rhmc/rhmcParameters.h"
 
 std::ostream& operator<< (std::ostream &out, const uint4 &rand){

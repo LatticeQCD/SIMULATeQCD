@@ -18,13 +18,7 @@
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 #include "../modules/observables/WilsonLineCorrelator.h"
 
-#include <iostream>
-#include <iomanip>
-#include <unistd.h>
-#include <vector>
-
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 template<class floatT>
 struct gfixParam : LatticeParameters {

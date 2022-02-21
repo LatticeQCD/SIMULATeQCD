@@ -11,7 +11,6 @@
 #include "../modules/gauge_updates/PureGaugeUpdates.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/observables/Topology.h"
-#include <cstdio>
 #include <chrono>
 
 #define PREC double

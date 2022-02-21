@@ -1,13 +1,12 @@
 /* 
  * main_SpinorHaloTest.cu                                                               
  * 
- * Lukas Mazur, 9 Oct 2017
+ * L. Mazur
  * 
  */
 
 #include "../SIMULATeQCD.h"
 #include "testing.h"
-#include <sstream>
 #include "HaloTestParam.h"
 
 #define PREC double

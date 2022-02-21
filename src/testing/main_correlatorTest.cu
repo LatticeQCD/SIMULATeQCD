@@ -10,12 +10,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 
-#include <iostream>
-#include <unistd.h>
-#include <vector>
-
 #define PREC double 
-#define MY_BLOCKSIZE 256
 #define HAVECONFIG true
 
 /// INTENT:  IN--CPUcorr, CPUnorm, testName, r2max, referenceValue; OUT--lerror

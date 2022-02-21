@@ -10,7 +10,6 @@
 #include "../SIMULATeQCD.h"
 
 #define PREC double
-#define MY_BLOCKSIZE 256
 
 gMemoryPtr<true> createRvalueRef(gMemoryPtr<true> mem){
     rootLogger.info("Create Rvalue ref...");

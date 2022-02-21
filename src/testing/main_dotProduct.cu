@@ -1,7 +1,7 @@
 /* 
  * main_dotProduct.cu                                                               
  * 
- * Dennis Bollweg, 3 Feb 2021
+ * D. Bollweg
  * 
  */
 
