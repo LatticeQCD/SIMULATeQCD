@@ -143,7 +143,11 @@ int main(int argc, char *argv[]) {
     size_t elem4 = elem1*lp.latDim()[3];
     size_t P2P = elem3 + 2*(elem3-elem4);
 
-    gpuMemGetInfo( &AvailDevice, &TotalDevice );
+    gpuError_t gpuErr = gpuMemGetInfo( &AvailDevice, &TotalDevice );
+    if (gpuErr) {
+      GpuError("main_subLatticeUpdates.cpp: gpuMemGetInfo" , gpuErr);
+    }
+
     UsedDevice = TotalDevice - AvailDevice;
     double StarterUsedInMB = UsedDevice/1024./1024.;
     rootLogger.info("Memory for the starter[MB]: " ,  StarterUsedInMB);

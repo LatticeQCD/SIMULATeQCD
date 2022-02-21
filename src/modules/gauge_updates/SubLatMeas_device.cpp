@@ -61,12 +61,12 @@ void SubLatMeas<floatT, onDevice, HaloDepth>::updateSubNorm(int pos_t, std::vect
         _redBaseE.reduce(result_tmp, _elems1);
         SubTbarbp00[pos_t*(_sub_lt-3)+dist] += result_tmp/_spatialvol;
 
-        _redBaseE.template iterateOverSpatialBulk<All, HaloDepth>(SubSbpKernel<floatT, HaloDepth, onDevice>(_gauge, (pos_t+dist+2)%_Nt));
+        _redBaseE.template iterateOverSpatialBulk<All, HaloDepth>(SubSbpKernel<floatT, onDevice, HaloDepth>(_gauge, (pos_t+dist+2)%_Nt));
         result_tmp = 0.;
         _redBaseE.reduce(result_tmp, _elems1);
         SubSbp[pos_t*(_sub_lt-3)+dist] += result_tmp/_spatialvol;
 
-        _redBaseCE.template iterateOverSpatialBulk<All, HaloDepth>(SubTbarbc00SubSbcKernel<floatT, HaloDepth, onDevice>(_gauge, (pos_t+dist+2)%_Nt));
+        _redBaseCE.template iterateOverSpatialBulk<All, HaloDepth>(SubTbarbc00SubSbcKernel<floatT, onDevice, HaloDepth>(_gauge, (pos_t+dist+2)%_Nt));
         GCOMPLEX(floatT) result_tmp1(0,0);
         _redBaseCE.reduce(result_tmp1, _elems1);
         SubTbarbc00_SubSbc[pos_t*(_sub_lt-3)+dist] += result_tmp1/_spatialvol;
@@ -138,7 +138,9 @@ struct updateSubPoly_Kernel{
         }
         GSU3<floatT> temp2;
         sub_poly_Nt.getValue<GSU3<floatT>>(pos_t*elems1+Id, temp2);
-        sub_poly_Nt.setValue<GSU3<floatT>>(pos_t*elems1+Id, temp1*(1./count)+temp2);
+
+        floatT factor = (1./count);
+        sub_poly_Nt.setValue<GSU3<floatT>>(pos_t*elems1+Id, temp1*factor+temp2);
     }
 };
 
@@ -227,9 +229,10 @@ struct updateSubCorr_Kernel{
                 }
                 //Distinct indexing for the combination
                 sub1_cec_Nt.getValue<GSU3<floatT>>(pos_t*(elems1*6*(sub_lt-2)) + 6*elems1*sqPos + mu*elems1 + Id1, temp1);
-                sub1_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems1*6*(sub_lt-2)) + 6*elems1*sqPos + mu*elems1 + Id1, temp1 + p_up*(1./count));
+                floatT factor = (1./count);
+                sub1_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems1*6*(sub_lt-2)) + 6*elems1*sqPos + mu*elems1 + Id1, temp1 + p_up*factor);
                 sub1_cec_Nt.getValue<GSU3<floatT>>(pos_t*(elems1*6*(sub_lt-2)) + 6*elems1*sqPos + (mu+3)*elems1 + Id1, temp2);
-                sub1_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems1*6*(sub_lt-2)) + 6*elems1*sqPos + (mu+3)*elems1 + Id1, temp2 + p_dn*(1./count));
+                sub1_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems1*6*(sub_lt-2)) + 6*elems1*sqPos + (mu+3)*elems1 + Id1, temp2 + p_dn*factor);
             }
         }
 /*caculate contribution from the right sublattice. consider only the ones on the boundary.
@@ -308,9 +311,10 @@ struct updateSubCorr_Kernel{
                     }
                     //Distinct indexing for the combination
                     sub2_cec_Nt.getValue<GSU3<floatT>>(pos_t*(elems2*6*(sub_lt-2)) + 6*elems2*sqPos + mu*elems2 + Id2, temp1);
-                    sub2_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems2*6*(sub_lt-2)) + 6*elems2*sqPos + mu*elems2 + Id2, temp1 + p_up*(1./count));
+                    floatT factor = (1./count);
+                    sub2_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems2*6*(sub_lt-2)) + 6*elems2*sqPos + mu*elems2 + Id2, temp1 + p_up*factor);
                     sub2_cec_Nt.getValue<GSU3<floatT>>(pos_t*(elems2*6*(sub_lt-2)) + 6*elems2*sqPos + (mu+3)*elems2 + Id2, temp2);
-                    sub2_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems2*6*(sub_lt-2)) + 6*elems2*sqPos + (mu+3)*elems2 + Id2, temp2 + p_dn*(1./count));
+                    sub2_cec_Nt.setValue<GSU3<floatT>>(pos_t*(elems2*6*(sub_lt-2)) + 6*elems2*sqPos + (mu+3)*elems2 + Id2, temp2 + p_dn*factor);
                 }
             }
         }

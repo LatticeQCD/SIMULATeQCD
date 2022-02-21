@@ -243,7 +243,7 @@ public:
     }
 
     /// Accessors for certain variables relevant to the problem at hand. TODO: Maybe make into maps or an enum
-    inline int getr2max(std::string domain, CommunicationBase &comm) {
+    inline int getr2max(std::string domain) {
         int r2max;
         if(domain=="spacetime") {
             r2max=UAr2max;
@@ -255,7 +255,7 @@ public:
         return r2max;
     }
 
-    inline size_t getdvol(std::string domain, CommunicationBase &comm) {
+    inline size_t getdvol(std::string domain) {
         size_t dvol;
         if(domain=="spacetime") {
             dvol=svol4;
@@ -267,7 +267,7 @@ public:
         return dvol;
     }
 
-    inline std::string getnormfilePrefix(std::string domain, CommunicationBase &comm){
+    inline std::string getnormfilePrefix(std::string domain){
         std::string normfilePrefix;
         if(domain=="spacetime") {
             normfilePrefix="UA_s";
@@ -304,7 +304,7 @@ public:
             LatticeContainer<onDevice,size_t>(commBase,degenName), _degenName(degenName) {
 
         size_t dvol;
-        dvol = this->getdvol(domain, commBase);
+        dvol = this->getdvol(domain);
 
         _degenPtr = this->get_ContainerArrayPtr();
         _degenPtr->template adjustSize<size_t>(dvol);
@@ -1009,8 +1009,8 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::readNorm(std::string domain, Co
     normalization.zero();
     LatticeContainerAccessor _normalization(normalization.getAccessor());
 
-    r2max = getr2max(domain, normalization.getCommBase());
-    normfilePrefix = getnormfilePrefix(domain, normalization.getCommBase());
+    r2max = getr2max(domain);
+    normfilePrefix = getnormfilePrefix(domain);
 
     std::stringstream normfilename;
     std::ifstream normfile;
@@ -1047,7 +1047,7 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::correlateAt(std::string domain,
 
     verifySingleProc(field1.getCommBase());
 
-    r2max = getr2max(domain,field1.getCommBase());
+    r2max = getr2max(domain);
 
     /// Initialize the correlator array.
     field1Xfield2.zero();
