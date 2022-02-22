@@ -34,7 +34,7 @@ public:
     _mode(obj._mode)
     {
         obj._initialized = false;
-        obj._event = cudaEventDefault;
+        obj._event = gpuEventDefault;
         obj._mode = 999;
     }
 
@@ -45,7 +45,7 @@ public:
         _mode = obj._mode;
 
         obj._initialized = false;
-        obj._event = cudaEventDefault;
+        obj._event = gpuEventDefault;
         obj._mode = 999;
         return *this;
     }
@@ -64,10 +64,10 @@ public:
             gpuError_t gpuErr = gpuEventCreate(&_event);
             if (gpuErr != gpuSuccess) GpuError("deviceEvent.h: deviceEvent(0): gpuEventCreate", gpuErr);
         } else if (_mode == 1) {
-            gpuError_t gpuErr = gpuEventCreate(&_event, gpuEventDisableTiming);
+            gpuError_t gpuErr = gpuEventCreateWithFlags(&_event, gpuEventDisableTiming);
             if (gpuErr != gpuSuccess) GpuError("deviceEvent.h: deviceEvent(1): gpuEventCreate", gpuErr);
         } else if (_mode == 2) {
-            gpuError_t gpuErr = gpuEventCreate(&_event, gpuEventDisableTiming | gpuEventInterprocess);
+            gpuError_t gpuErr = gpuEventCreateWithFlags(&_event, gpuEventDisableTiming | gpuEventInterprocess);
             if (gpuErr != gpuSuccess) GpuError("deviceEvent.h: deviceEvent(2): gpuEventCreate", gpuErr);
         }
         _initialized = true;

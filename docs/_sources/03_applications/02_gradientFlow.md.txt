@@ -13,7 +13,7 @@ make gradientFlow -j<NumberOfCores>
 This can take up to 60+ minutes (depending on the Hardware). If you only
 want to use the zeuthen force and the adaptive stepsize Runge-Kutta, you
 can also compile `gradientFlow_zeuthen`, which will only take 20 minutes
-to compile. (The most compile time is consumed by `Topology.cu`.)
+to compile. (The most compile time is consumed by `Topology.cpp`.)
 
 To run the program, one needs a parameter file. It should take these
 parameters:

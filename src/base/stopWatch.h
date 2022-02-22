@@ -35,40 +35,43 @@ class StopWatch {
         return _elapsed;
     }
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIP_PLATFORM_AMD__)
     gpuEvent_t _device_start_time, _device_stop_time;
 
     public:
 
     StopWatch() : _elapsed(0.0), _bytes(0), _flops(0) {
         if(device){
-            gpuEventCreate(&_device_start_time);
+            gpuError_t gpuErr = gpuEventCreate(&_device_start_time);
 
-            gpuError_t gpuErr = gpuGetLastError();
             if (gpuErr) {
-                GpuError("Error in gpu Event creation" , gpuErr);
+                GpuError("Error in gpu Event creation (start)" , gpuErr);
             }
 
-            gpuEventCreate(&_device_stop_time);
+            gpuErr = gpuEventCreate(&_device_stop_time);
 
-            gpuErr = gpuGetLastError();
             if (gpuErr) {
-                GpuError("Error in gpu Event creation" , gpuErr);
+                GpuError("Error in gpu Event creation (stop)" , gpuErr);
             }
         }
     }
 
     ~StopWatch() {
         if(device){
-            gpuEventDestroy(_device_start_time);
-            gpuEventDestroy(_device_stop_time);
+            gpuError_t gpuErr = gpuEventDestroy(_device_start_time);
+            if (gpuErr) {
+                GpuError("Error in gpu Event destruction (start)" , gpuErr);
+            }
+            gpuErr = gpuEventDestroy(_device_stop_time);
+            if (gpuErr) {
+                GpuError("Error in gpu Event destruction (stop)" , gpuErr);
+            }
         }
     }
 
     inline void start() { 
         if(device){
-            gpuEventRecord(_device_start_time, nullptr);
-            gpuError_t gpuErr = gpuGetLastError();
+            gpuError_t gpuErr = gpuEventRecord(_device_start_time, nullptr);
             if (gpuErr) {
                 GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed after  CommunicationBase!" , gpuErr);
             }
@@ -82,18 +85,19 @@ class StopWatch {
 
     inline double stop() {
         if(device){
-            gpuEventRecord(_device_stop_time, nullptr);
-            gpuError_t gpuErr = gpuGetLastError();
+            gpuError_t gpuErr = gpuEventRecord(_device_stop_time, nullptr);
             if (gpuErr) {
                 GpuError("Error in gpuEventRecord (stop)" , gpuErr);
             }
-            gpuEventSynchronize(_device_stop_time);
-            gpuErr = gpuGetLastError();
+            gpuErr = gpuEventSynchronize(_device_stop_time);
             if (gpuErr) {
                 GpuError("Error in gpuEventSynchronize" , gpuErr);
             }
             float time;
-            gpuEventElapsedTime(&time, _device_start_time, _device_stop_time);
+            gpuErr = gpuEventElapsedTime(&time, _device_start_time, _device_stop_time);
+            if (gpuErr) {
+                GpuError("Error in gpuEventElapsedTime" , gpuErr);
+            }
             _elapsed += time;
             return _elapsed;
         }

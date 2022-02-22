@@ -125,7 +125,10 @@ public:
         fail.coord = LatticeDimensions(-99, -99, -99, -99);
         fail.onNode = false;
 
-        gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
+        gpuError_t gpuErr = gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
+        if (gpuErr != gpuSuccess) {
+            GpuError("neighborInfo.h: gpuGetDeviceProperties failed:", gpuErr);
+        }
 
         rootLogger.info("> Checking support for P2P (Peer-to-Peer) and UVA (Unified Virtual Addressing):");
         MPI_Barrier(cart_comm);
@@ -450,7 +453,10 @@ inline void NeighborInfo::checkP2P() {
                 ProcessInfo &nInfo = getNeighborInfo(hseg, dir, leftRight);
                 if (nInfo.onNode) {
                     int can_access_peer;
-                    gpuDeviceCanAccessPeer(&can_access_peer, myInfo.deviceRank, nInfo.deviceRank);
+                    gpuError_t gpuErr = gpuDeviceCanAccessPeer(&can_access_peer, myInfo.deviceRank, nInfo.deviceRank);
+                    if (gpuErr != gpuSuccess) {
+                        GpuError("neighborInfo.h: gpuDeviceCanAccessPeer failed:", gpuErr);
+                    }
                     nInfo.p2p = (bool) can_access_peer;
 #ifdef PEERACCESSINFO
                     if (!nInfo.sameRank)
@@ -465,12 +471,16 @@ inline void NeighborInfo::checkP2P() {
     }
 
     stdLogger.info("> " ,  myInfo.nodeName ,  " GPU_" ,  std::uppercase ,  std::hex ,  myProp.pciBusID ,  "(" ,  myProp.name ,  "): "
-#if USE_CUDA_P2P
+#if USE_GPU_P2P
      ,  "P2P " ,  (IsGPUCapableP2P() ? "YES" : "NO") ,  "; "
 #else
      , "P2P NO ; "
 #endif
-    , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+#ifdef USE_CUDA
+      , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+#elif defined USE_HIP
+      , "UVA ", "Unknown (HIP does not support this!)");
+#endif
 }
 
 #endif //NEIGHBORINFO_H

@@ -13,7 +13,7 @@ If you are using two-factor authentication on GitHub, you may need to use the co
 git clone git@github.com:LatticeQCD/SIMULATeQCD.git
 ```
 
-## How to compile
+## Prerequisites
 
 The following software is required to compile SIMULATeQCD:
 
@@ -35,24 +35,82 @@ The following software is required to compile SIMULATeQCD:
 2. `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 3. `C++` compiler with `C++17` support  (e.g. `g++-9`).
 4. `MPI` (e.g. `openmpi-4.0.4`).
-5. `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2. CUDA 11.4 has a fast compilation time, but we have not yet checked the performance.)
 6. `pip install -r requirements.txt` to build the documentation.
 
+## Building source with CUDA
+To build the source with CUDA, you need to have the `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2. CUDA 11.4 has a fast compilation time, but we have not yet checked the performance.) installed on your machine.
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
 cmake ../simulateqcd/ \
 -DARCHITECTURE="70" \
--DUSE_CUDA_AWARE_MPI=ON \
--DUSE_CUDA_P2P=ON \
+-DUSE_GPU_AWARE_MPI=ON \
+-DUSE_GPU_P2P=ON \
 ``` 
 Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
-You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
+You can set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
 `-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
 ```shell
 make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
+
+## Building source with HIP for NVIDIA plattforms (Experimental!)
+
+In order to build the source with HIP for NVIDIA plattforms, 
+
+you need to make sure that
+- HIP is properly installed on your machine
+- CUDA is properly installed on your machine
+- The environment variable `HIP_PATH` holds the path to the HIP installation folder
+- The environment variables `CC` and `CCX` hold the path to the HIP clang compiler
+
+To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
+```shell
+cmake ../simulateqcd/ \
+-DARCHITECTURE="70" \
+-DUSE_GPU_AWARE_MPI=ON \
+-DUSE_GPU_P2P=OFF \
+-DBACKEND="hip_nvidia" \
+``` 
+Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
+You can set the HIP installation path manually by setting the `cmake` parameter `-DHIP_PATH`.
+You can also set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
+`-DUSE_GPU_P2P=ON` is not yet supported by this backend.
+Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
+```shell
+make NameOfExecutable
+```
+If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
+
+## Building source with HIP for AMD plattforms (Experimental!)
+
+In order to build the source with HIP for AMD plattforms, 
+
+you need to make sure that
+- HIP is properly installed on your machine
+- The environment variable `HIP_PATH` holds the path to the HIP installation folder
+- The environment variables `CC` and `CCX` hold the path to the HIP clang compiler
+
+To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
+```shell
+cmake ../simulateqcd/ \
+-DARCHITECTURE="gfx906,gfx908" \
+-DUSE_GPU_AWARE_MPI=ON \
+-DUSE_GPU_P2P=OFF \
+-DBACKEND="hip_amd" \
+``` 
+Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
+You can set the HIP installation path manually by setting the `cmake` parameter `-DHIP_PATH`.
+`-DARCHITECTURE` sets the GPU architecture. For example gfx906,gfx908. 
+`-DUSE_GPU_P2P=ON` is not yet supported by this backend.
+Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
+```shell
+make NameOfExecutable
+```
+If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
+
 
 ## How to run
 

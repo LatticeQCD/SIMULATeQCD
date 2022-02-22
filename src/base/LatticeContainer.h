@@ -168,14 +168,14 @@ public:
                     gpuError_t gpuErr = CubReduce<elemType>(NULL, &temp_storage_bytes,
                                                             ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
                     
-                    if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: cub::DeviceReduce::Sum (1)", gpuErr);
+                    if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (1)", gpuErr);
                     
                     HelperArray->template adjustSize<void *>(temp_storage_bytes);
                     
                     gpuErr = CubReduce<elemType>(HelperArray->getPointer(), &temp_storage_bytes,
                                                  ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
                     
-                    if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: cub::DeviceReduce::Sum (2)", gpuErr);
+                    if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (2)", gpuErr);
                 }
                 
             }
@@ -196,7 +196,7 @@ public:
                                                                ContainerArray->getPointer(), ReductionResult->getPointer(), NStacks,
                                                                StackOffsetsTemp->getPointer());
                 
-                if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: cub::DeviceSegmentedReduce::Sum (1)", gpuErr);
+                if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceSegmentedReduce::Sum (1)", gpuErr);
                 
                 HelperArray->template adjustSize<void *>(temp_storage_bytes);
                 
@@ -204,7 +204,7 @@ public:
                                                     ContainerArray->getPointer(), ReductionResult->getPointer(), NStacks,
                                                     StackOffsetsTemp->getPointer());
                 
-                if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: cub::DeviceSegmentedReduce::Sum (2)", gpuErr);
+                if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceSegmentedReduce::Sum (2)", gpuErr);
             }
             
             ReductionResultHost->copyFrom(ReductionResult, NStacks* sizeof(elemType));
@@ -244,13 +244,13 @@ public:
 
             gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                                     d_out->template getPointer<elemType>(), size);
-            if (gpuErr) GpuError("LatticeContainer::reduce: cub::DeviceReduce::Sum (1)", gpuErr);
+            if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
 
             HelperArray->template adjustSize<void *>(temp_storage_bytes);
 
             gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                             d_out->template getPointer<elemType>(), size);
-            if (gpuErr) GpuError("LatticeContainer::reduce: cub::DeviceReduce::Sum (2)", gpuErr);
+            if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
 
             gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
             if (gpuErr)
@@ -277,13 +277,13 @@ public:
 
             gpuError_t gpuErr = CubReduceMax(NULL, &temp_storage_bytes, ContainerArray->getPointer(),
                                     d_out->template getPointer<elemType>(), size);
-            if (gpuErr) GpuError("LatticeContainer::reduceMax: cub::DeviceReduce::Max (1)", gpuErr);
+            if (gpuErr) GpuError("LatticeContainer::reduceMax: gpucub::DeviceReduce::Max (1)", gpuErr);
 
             HelperArray->template adjustSize<void *>(temp_storage_bytes);
 
             gpuErr = CubReduceMax(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->getPointer(),
                              d_out->template getPointer<elemType>() , size);
-            if (gpuErr) GpuError("LatticeContainer::reduceMax: cub::DeviceReduce::Max (2)", gpuErr);
+            if (gpuErr) GpuError("LatticeContainer::reduceMax: gpucub::DeviceReduce::Max (2)", gpuErr);
             gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
             if (gpuErr)
                 GpuError("Reductionbase.h: Failed to copy data", gpuErr);

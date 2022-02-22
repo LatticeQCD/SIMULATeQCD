@@ -25,7 +25,7 @@ private:
     typedef GIndexer<All, HaloDepth> GInd;
 
 public:
-    BlockingMethod(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield, size_t binsize): _redBase(gaugefield.getComm()), _gauge(gaugefield), _commBase(gaugefield.getComm()) {
+    BlockingMethod(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield): _redBase(gaugefield.getComm()), _gauge(gaugefield), _commBase(gaugefield.getComm()) {
         _redBase.adjustSize(GInd::getLatData().vol3);
     }
 
@@ -72,7 +72,6 @@ struct ReadIndexSpatialBlock {
         size_t i = blockDim.x * blockIdx.x + threadIdx.x;
         size_t numBlocksInX = GInd::getLatData().lx/_binsize; 
         size_t numBlocksInY = GInd::getLatData().ly/_binsize;
-        size_t numBlocksInZ = GInd::getLatData().lz/_binsize;
 
         size_t rem, x, y, z; //the coordinate of small lattice
         divmod(i,numBlocksInX*numBlocksInY,z,rem); 
@@ -160,9 +159,10 @@ struct EMTtraceless {
         FS[7] = FS13;
         FS[11] = FS23;
         
+        floatT factor = -1;
         for (size_t mu=1;mu<4;mu++) {
             for(size_t nu=0;nu<mu;nu++) {
-                FS[mu*4+nu] = -1.*FS[nu*4+mu];
+                FS[mu*4+nu] = factor*FS[nu*4+mu];
             }
         }
         
@@ -205,7 +205,6 @@ struct BlockingKernel {
 
         size_t nx = (size_t)GInd::getLatData().lx;
         size_t ny = (size_t)GInd::getLatData().ly;
-        size_t nz = (size_t)GInd::getLatData().lz;
 
         size_t Id = coord[0] + coord[1]*nx + coord[2]*ny*nx;
         dataType data = _Ob(site);

@@ -1,6 +1,6 @@
 # Random Number Generator
 
-The random number generator is using using the hybrid tausworthe generator from [](https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch37.html). The state of the random number generator consists of four unsigned integers (We use the CUDA type `uint4`) and every site of the lattice has its own state. A random number, e.g. in a Kernel is generated with the function
+The random number generator is using using the hybrid tausworthe generator from [](https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch37.html). The state of the random number generator consists of four unsigned integers (We use the GPU type `uint4`) and every site of the lattice has its own state. A random number, e.g. in a Kernel is generated with the function
 ```C++
 floatT get_rand(uint4* state)
 ```
