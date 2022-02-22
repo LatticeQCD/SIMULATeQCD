@@ -689,11 +689,14 @@ set_SIMULATeQCD_property(MultiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profi
 SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf)
 
+
+if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 
 add_SIMULATeQCD_executable(MultiRHSProf_half src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 
 set_SIMULATeQCD_property(MultiRHSProf_half PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
 SIMULATeQCD_target_compile_definitions(MultiRHSProf_half PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 HALFPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf_half)
+endif()
 
 
 #--------------------------------------------------------------------------------------COMPILATION DEFINITIONS: EXAMPLES
