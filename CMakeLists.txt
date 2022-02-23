@@ -735,8 +735,8 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
 # This gives a cmake error when using hip, so commented it out.
-#set_SIMULATeQCD_gpu_backend(src/applications/main_flt.cpp)
-#add_SIMULATeQCD_executable(fluxtube src/applications/main_flt.cpp ${SOURCE_FILES_BASE} ${SOURCE_FILES_GFIX})
+#set_SIMULATeQCD_gpu_backend(src/applications/main_fluxtube.cpp)
+#add_SIMULATeQCD_executable(fluxtube src/applications/main_fluxtube.cpp ${SOURCE_FILES_BASE} ${SOURCE_FILES_GFIX})
 #set_SIMULATeQCD_property(fluxtube PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 #SIMULATeQCD_target_compile_definitions(fluxtube PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 ##add_to_compound_SIMULATeQCD_target(applications fluxtube)
@@ -782,7 +782,6 @@ set_SIMULATeQCD_property(polSuscRenorm PROPERTIES RUNTIME_OUTPUT_DIRECTORY "appl
 SIMULATeQCD_target_compile_definitions(polSuscRenorm PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 
-
 if (USE_HIP_AMD)
 set_SIMULATeQCD_gpu_backend(src/applications/main_rhmc.cpp)
 add_SIMULATeQCD_executable(RHMC src/applications/main_rhmc.cpp ${SOURCE_FILES_RHMC})
@@ -796,18 +795,6 @@ set_SIMULATeQCD_property(RHMC PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications"
 SIMULATeQCD_target_compile_definitions(RHMC PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 HALFPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications RHMC)
 endif()
-
-set_SIMULATeQCD_gpu_backend(src/applications/main_sublatticeUpdates.cpp)
-add_SIMULATeQCD_executable(sublatticeUpdates src/applications/main_sublatticeUpdates.cpp ${SOURCE_FILES_SUBLATTICEUPDATES})
-set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
-
-set_SIMULATeQCD_gpu_backend(src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})
-add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})
-set_SIMULATeQCD_property(measureHadrons PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(measureHadrons PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(applications measureHadrons)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sampleTopology.cpp)
 add_SIMULATeQCD_executable(sampleTopology src/applications/main_sampleTopology.cpp ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GENERATEQUENCHED})
