@@ -126,7 +126,9 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 
 
     int num_devices = 0;
-    gpuGetDeviceCount(&num_devices);
+    gpuError_t gpuErr = gpuGetDeviceCount(&num_devices);
+    if (gpuErr != gpuSuccess)
+            GpuError("communicationBase_mpi.cpp: Failed to count devices (gpuGetDeviceCount)", gpuErr);
     if (num_devices == 0) {
         throw std::runtime_error(stdLogger.fatal(myInfo.nodeName, " CPU_", sched_getcpu(),
                     " MPI world_rank=", myInfo.world_rank,
@@ -152,10 +154,14 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
-    gpuSetDevice(myInfo.deviceRank);
+    gpuErr = gpuSetDevice(myInfo.deviceRank);
+    if (gpuErr != gpuSuccess)
+            GpuError("communicationBase_mpi.cpp: Failed to set device (gpuSetDevice)", gpuErr);
 
     gpuDeviceProp tmpProp;
-    gpuGetDeviceProperties(&tmpProp, myInfo.deviceRank);
+    gpuErr = gpuGetDeviceProperties(&tmpProp, myInfo.deviceRank);
+    if (gpuErr != gpuSuccess)
+            GpuError("communicationBase_mpi.cpp: Failed to get device properties (gpuGetDeviceProperties)", gpuErr);
 
     globalBarrier();
     rootLogger.info("> Running on:");

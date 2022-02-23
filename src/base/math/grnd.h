@@ -5,7 +5,10 @@
 #ifndef GRAND_STATE
 #define GRAND_STATE
 
+#ifdef USE_CUDA
 #include <curand_kernel.h>
+#endif
+
 #include "../../define.h"
 #include "../gutils.h"
 #include "../IO/misc.h"

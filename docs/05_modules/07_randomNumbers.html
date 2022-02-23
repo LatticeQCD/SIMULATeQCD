@@ -86,7 +86,7 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="random-number-generator">
 <h1>Random Number Generator<a class="headerlink" href="#random-number-generator" title="Permalink to this headline"></a></h1>
-<p>The random number generator is using using the hybrid tausworthe generator from <a class="reference external" href="https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch37.html"></a>. The state of the random number generator consists of four unsigned integers (We use the CUDA type <code class="docutils literal notranslate"><span class="pre">uint4</span></code>) and every site of the lattice has its own state. A random number, e.g. in a Kernel is generated with the function</p>
+<p>The random number generator is using using the hybrid tausworthe generator from <a class="reference external" href="https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch37.html"></a>. The state of the random number generator consists of four unsigned integers (We use the GPU type <code class="docutils literal notranslate"><span class="pre">uint4</span></code>) and every site of the lattice has its own state. A random number, e.g. in a Kernel is generated with the function</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">floatT</span><span class="w"> </span><span class="n">get_rand</span><span class="p">(</span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>

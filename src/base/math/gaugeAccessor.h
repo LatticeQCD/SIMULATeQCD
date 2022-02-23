@@ -46,7 +46,7 @@ public:
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline void setElementComm(size_t isiteFull, size_t mu, const GSU3<floatT_compute>& mat) {
+    __host__ __device__ inline void setElementComm(size_t isiteFull, const GSU3<floatT_compute>& mat) {
         gSiteMu siteMu;
         siteMu.indexMuFull = isiteFull;
         setElement<floatT_compute>(siteMu, mat);

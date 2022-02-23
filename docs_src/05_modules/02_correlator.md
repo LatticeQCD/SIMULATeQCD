@@ -11,7 +11,7 @@ The `CPUnorm` vector is a `Correlator`-type object that keeps track of how many 
 
 ## Example correlator calculation
 
-Here is an example taken from `src/testing/main_correlatorTest.cu`. In this example we will correlate the $\mu=2$ component of a gauge field with itself using the 4d all-to-all domain. Here $f(A,B)={\rm tr}~(AB)$. 
+Here is an example taken from `src/testing/main_correlatorTest.cpp`. In this example we will correlate the $\mu=2$ component of a gauge field with itself using the 4d all-to-all domain. Here $f(A,B)={\rm tr}~(AB)$. 
 ```C++
 gaugeAccessor<PREC> _gauge(gauge.getAccessor());
 
@@ -51,7 +51,7 @@ for (int r2=0 ; r2<distmax ; r2++) {
     }
 }
 ``` 
-**NOTE:** The singlet and octet Polyakov loop correlations depend on the gauge, and in particular, they should be measured in the Coulomb gauge. This means you must fix the gauge before measuring these quantities! Do learn how to do this, please have a look at the [[Gauge Fixing]] wiki page. Don't forget to re-unitarize before taking your measurements! The singlet, octet, and average correlators are tested in `src/testing/main_gfixplcTest.cu`.
+**NOTE:** The singlet and octet Polyakov loop correlations depend on the gauge, and in particular, they should be measured in the Coulomb gauge. This means you must fix the gauge before measuring these quantities! Do learn how to do this, please have a look at the [[Gauge Fixing]] wiki page. Don't forget to re-unitarize before taking your measurements! The singlet, octet, and average correlators are tested in `src/testing/main_gfixplcTest.cpp`.
 
 ## Some benchmarks: 
 
