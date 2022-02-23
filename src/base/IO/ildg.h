@@ -1,7 +1,7 @@
 /* 
  * ildg.h                                                               
  * 
- * R. Larsen, S. Ali 
+ * R. Larsen, S. Ali, D. Clarke 
  * 
  */
 
@@ -39,13 +39,12 @@ private:
     int header_size;
 
     Parameter<std::string> dattype;
-    Parameter<int> dim[4];
     Parameter<std::string> checksuma;
     Parameter<std::string> checksumb;
-    Parameter<std::string> floatingpoint;
-
-    Parameter<double> linktrace;
-    Parameter<double> plaq;
+    Parameter<std::string> floatingpoint; // Precision conf is saved in
+    Parameter<int>         dim[4];
+    Parameter<double>      linktrace;
+    Parameter<double>      plaq;
 
     bool read_info(std::istream &in) {
         int32_t magic_number;
@@ -158,8 +157,8 @@ private:
         in.seekg(0);
 
         return true;
-
     }
+
     IldgHeader(const CommunicationBase &_comm) : comm(_comm) {
         header_size = 0;
         add(dattype, "DATATYPE");
@@ -171,9 +170,8 @@ private:
         add(checksumb, "CHECKSUMB");
         add(linktrace, "LINK_TRACE");
         add(plaq, "PLAQUETTE");
-        addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
+        addDefault(floatingpoint, "FLOATING_POINT", std::string("32BIG"));
     }
-
 
     template <size_t HaloDepth>
     friend class IldgFormat;
@@ -251,7 +249,6 @@ private:
     const CommunicationBase &comm;
     IldgHeader header;
     typedef GIndexer<All,HaloDepth> GInd;
-    int rows;
     int float_size;
     bool switch_endian;
     uint32_t stored_checksum_nersc, computed_checksum_nersc;
@@ -265,26 +262,23 @@ private:
     GSU3<f2> from_buf(f1 *buf) const {
         int i = 0;
         GSU3<f2> U;
-        for (int j = 0; j < rows; j++)
-            for (int k = 0; k < 3; k++) {
-                f2 re = buf[i++];
-                f2 im = buf[i++];
-                U(j, k) = GCOMPLEX(f2)(re, im);
-
-            }
-    //    if (rows == 2 || sizeof(f1) != sizeof(f2))
-            //U.su3unitarize();
+        for (int j = 0; j < 3; j++)
+        for (int k = 0; k < 3; k++) {
+            f2 re = buf[i++];
+            f2 im = buf[i++];
+            U(j, k) = GCOMPLEX(f2)(re, im);
+        }
         return U;
     }
 
     template<class f1, class f2>
     void to_buf(f1 *buf, const GSU3<f2> &U) const {
         int i = 0;
-        for (int j = 0; j < rows; j++)
-            for (int k = 0; k < 3; k++) {
-                buf[i++] = U(j, k).cREAL;
-                buf[i++] = U(j, k).cIMAG;
-            }
+        for (int j = 0; j < 3; j++)
+        for (int k = 0; k < 3; k++) {
+            buf[i++] = U(j, k).cREAL;
+            buf[i++] = U(j, k).cIMAG;
+        }
     }
 
     void byte_swap() {
@@ -313,9 +307,7 @@ private:
 
 public:
 
-    IldgFormat(CommunicationBase &comm)
-            :comm(comm), header(comm) {
-        rows = 3;
+    IldgFormat(CommunicationBase &comm) : comm(comm), header(comm) {
         float_size = 0;
         su3_size = 0;
         switch_endian = false;
@@ -333,40 +325,33 @@ public:
         rootLogger.pop_verbosity();
 
         bool error = false;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
             if (header.dim[i]() != GInd::getLatData().globalLattice()[i]) {
                 rootLogger.error("Stored dimension ", i, " not equal to current lattice size.");
                 error = true;
             }
+        }
 
-        if (header.dattype() == "48") {
+        if (header.dattype() == "72") {
             float_size=4;
-            rows=2;
-        } else if (header.dattype() == "96") {
-            float_size=8;
-            rows=2;
-        } else if (header.dattype() == "72") {
-            float_size=4;
-            rows=3;
         } else if (header.dattype() == "144") {
             float_size=8;
-            rows=3;
         } else {
             rootLogger.error("DATATYPE = ", header.dattype(), "not recognized.");
             error = true;
         }
 
         Endianness disken = ENDIAN_AUTO;
-        if (header.floatingpoint() == "IEEE32BIG" || header.floatingpoint() == "IEEE32") {
+        if (header.floatingpoint() == "32BIG" || header.floatingpoint() == "32") {
             //float_size = 4;
             disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "IEEE64BIG") {
+        } else if (header.floatingpoint() == "64BIG") {
             //float_size = 8;
             disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "IEEE32LITTLE") {
+        } else if (header.floatingpoint() == "32LITTLE") {
             //float_size = 4;
             disken = ENDIAN_LITTLE;
-        } else if (header.floatingpoint() == "IEEE64LITTLE") {
+        } else if (header.floatingpoint() == "64LITTLE") {
             //float_size = 8;
             disken = ENDIAN_LITTLE;
         } else {
@@ -384,7 +369,7 @@ public:
         rootLogger.info(header.dim[2]);
         rootLogger.info(header.dim[3]);
 
-        su3_size = 2 * 3 * rows * float_size;
+        su3_size = 2 * 3 * 3 * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
         index = buf.size();
 
@@ -440,9 +425,10 @@ public:
     }
 
     template<class floatT,bool onDevice, CompressionType comp>
-    bool write_header(int _rows, int diskprec, Endianness en, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
+    bool write_header(int diskprec, Endianness en, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
 
-        rows = _rows;
+        std::string xmlProlog = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+
         if ( diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)) ) {
             float_size = 4;
         } else if ( diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double)) ) {
@@ -452,25 +438,18 @@ public:
             return false;
         }
 
-        su3_size = 2 * 3 * rows * float_size;
+        su3_size = 2 * 3 * 3 * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
 
         for (int mu = 0; mu < 4; mu++)
             header.dim[mu].set(GInd::getLatData().globalLattice()[mu]);
 
-        if (rows == 2) {
-            header.dattype.set("48");
-        } else if (rows == 3) {
-            if (float_size == 4) {
-                header.dattype.set("72");
-            } else if (float_size == 8) {
-                header.dattype.set("144");
-            } else {
-                rootLogger.error("ILDG format must have a single or double precision.");
-                return false;
-            }
+        if (float_size == 4) {
+            header.dattype.set("72");
+        } else if (float_size == 8) {
+            header.dattype.set("144");
         } else {
-            rootLogger.error("ILDG format must store 2 or 3 rows.");
+            rootLogger.error("ILDG format must have a single or double precision.");
             return false;
         }
 
@@ -479,9 +458,9 @@ public:
 
         std::string fp;
         if (float_size == 4) {
-            fp = "IEEE32BIG";
+            fp = "32BIG";
         } else if (float_size == 8) {
-            fp = "IEEE64BIG";
+            fp = "64BIG";
         } else {
             rootLogger.error("ILDG format must store single or double precision.");
             return false;
@@ -493,12 +472,13 @@ public:
             time_t current_time = time(0);
             struct tm *tm = localtime(&current_time);
             dt = asctime(tm);
+            dt.pop_back();
 
             if (head) {
 
                 // first lime record (header)
                 header_ildg = "scidac-private-file-xml";
-                data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacFile><version>1.1</version><spacetime>4</spacetime><dims>"
+                data = xmlProlog + "<scidacFile><version>1.1</version><spacetime>4</spacetime><dims>"
                              + std::to_string(GInd::getLatData().globLX)
                        + " " + std::to_string(GInd::getLatData().globLY)
                        + " " + std::to_string(GInd::getLatData().globLZ)
@@ -508,21 +488,21 @@ public:
 
                 // second lime record (header)
                 header_ildg = "scidac-file-xml";
-                data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><title>ILDG archival gauge configuration</title>";
+                data = xmlProlog + "<title>ILDG archival gauge configuration</title>";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // third lime record (header)
                 header_ildg = "scidac-private-record-xml";
-                data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacRecord><version>1.1</version><date>" +
+                data = xmlProlog + "<scidacRecord><version>1.1</version><date>" +
                        dt + "</date><recordtype>0</recordtype><datatype>";
-                data += "USQCD_F3_ColorMatrix</datatype><precision>" + fp +
+                data += "SIMULATeQCD_GAUGE_CONF</datatype><precision>" + fp +
                         "</precision><colors>3</colors><typesize>"
                         + header.dattype() + "</typesize><datacount>4</datacount></scidacRecord>";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // fourth lime record (header)
                 header_ildg = "scidac-record-xml";
-                data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><title>Dummy QCDML</title>";
+                data = xmlProlog + "<title>Dummy QCDML</title>";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // fifth lime record (binary data)
@@ -540,7 +520,7 @@ public:
 
                 // sixth lime record (tail)
                 header_ildg = "scidac-checksum";
-                data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><scidacChecksum><version>1.0</version><suma>"+crc32a.str()+"</suma><sumb>"+crc32b.str()+"</sumb></scidacChecksum>";
+                data = xmlProlog + "<scidacChecksum><version>1.0</version><suma>"+crc32a.str()+"</suma><sumb>"+crc32b.str()+"</sumb></scidacChecksum>";
                 lime_record(out, switch_endian, header_ildg, data);
             }
         }

@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
 
 	Gaugefield<PREC,true,HaloDepth> gauge(commBase);
 	Gaugefield<PREC,true,HaloDepth> gauge_test(commBase);
-
     rootLogger.info("Try NERSC read...");
 	gauge.readconf_nersc("../test_conf/nersc.l8t4b3360_bieHB");
 
@@ -39,16 +38,20 @@ int main(int argc, char *argv[]) {
 	gauge.writeconf_nersc("nersc.l8t4b3360_bieHB_test");
 
     rootLogger.info("Try ILDG write...");
-    gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
+    gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",param.prec_out());
 
     rootLogger.info("Try ILDG read...");
 	gauge_test.readconf_ildg("nersc_ildg.l8t4b3360_bieHB_test");
 
     rootLogger.info("One last ILDG write to verify the checksum worked...");
-	gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
+	gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",param.prec_out());
 
     rootLogger.info("Link-by-link comparison of NERSC config with written ILDG config...");
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test,1e-15);
+
+//    rootLogger.info("Try reading QUDA configuration...");
+//    gauge.readconf_ildg("conf_wilsonFlow_s008t04_b0336000_FT0.0");
+
     if(!pass) {
 		rootLogger.error("Binaries are not equal.");
         return -1;
