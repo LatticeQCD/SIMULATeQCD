@@ -391,7 +391,7 @@ public:
         return _e00;
     }
 
-    __host__ __device__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+    __host__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
         switch (i * 3 + j) {
             case 0:
                 return _e00;
@@ -412,7 +412,7 @@ public:
             case 8:
                 return _e22;
         }
-        return GCOMPLEX(floatT)(nan(""), nan(""));
+        throw std::runtime_error(stdLogger.fatal("GSU3 access to element (", i, ",", j, ") not possible!"));
     }
 
     __host__ __device__ GSU3<floatT> getAccessor() const {
