@@ -139,7 +139,7 @@ CAVE: The rhmc class assumes that r_1f, r_2f, r_inv_1f and r_inv_2f are of the s
 
 ## Using your own Parameter Class
 
-If you need more parameters that they are not in the `LatticeParameters` class, consider to create your own parameter class. Some example of how to construct an input parameter class can be found in `main_gradientFlow.cu`, in particular see the `gradientFlowParam` class. 
+If you need more parameters that they are not in the `LatticeParameters` class, consider to create your own parameter class. Some example of how to construct an input parameter class can be found in `main_gradientFlow.cpp`, in particular see the `gradientFlowParam` class. 
 
 In your executable file define something like that, for each parameter that you need (see the example above). Notice that the capital words are the one that you have to change:
 
@@ -172,7 +172,7 @@ YOUROWNCLASS<PREC> OBJECT_NAME;
 ```
 
 
-Of course you should define the precision at the beginning of your `.cu` file with, e.g.:
+Of course you should define the precision at the beginning of your `.cpp` file with, e.g.:
 
 ```C++
 #define PREC float

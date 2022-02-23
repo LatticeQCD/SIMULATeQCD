@@ -2,7 +2,7 @@
 
 The gauge fixing class allows one to gauge fix using [over-relaxation (GFOR)](https://doi.org/10.1016/0370-2693(90)90031-Z). A more recent and detailed discussion especially with respect to multi GPUs can be found [here](https://doi.org/10.1016/j.cpc.2013.03.021).
 
-To use this class include the `src/gfixing/gfix.h` header file and include `src/gfixing/gfix.cu` as a source file for your program in `CMakeLists.txt`.  The gauge fixing class is initialized with, for example,
+To use this class include the `src/gfixing/gfix.h` header file and include `src/gfixing/gfix.cpp` as a source file for your program in `CMakeLists.txt`.  The gauge fixing class is initialized with, for example,
 ```C++
 GaugeFixing<PREC,true,HaloDepth> GFixing(gauge); 
 ```
@@ -22,7 +22,7 @@ You can decide a good threshold for your purposes looking out for a window where
 ```C++
 gauge.su3latunitarize();
 ```
-Don't forget to do one final unitarization before making any measurements! The gauge fixing is tested in `src/testing/main_gfixplcTest.cu`.
+Don't forget to do one final unitarization before making any measurements! The gauge fixing is tested in `src/testing/main_gfixplcTest.cpp`.
 
 ## Minimal Working Example
 

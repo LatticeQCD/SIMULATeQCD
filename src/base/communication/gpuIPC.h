@@ -2,8 +2,8 @@
 // Created by Lukas Mazur on 28.04.19.
 //
 
-#ifndef CUDAIPC_H
-#define CUDAIPC_H
+#ifndef GPUIPC_H
+#define GPUIPC_H
 
 #include <mpi.h>
 #include "../../define.h"
@@ -44,7 +44,7 @@ private:
             gpuErr = gpuIpcGetMemHandle((gpuIpcMemHandle_t *) &_myHandle.handle, _myMemory);
             if (gpuErr != gpuSuccess) GpuError("gpuIPC.h: exchangeHandle: gpuIpcGetMemHandle", gpuErr);
 
-            gpuErr = gpuEventCreate(&_myEvent, gpuEventDisableTiming | gpuEventInterprocess);
+            gpuErr = gpuEventCreateWithFlags(&_myEvent, gpuEventDisableTiming | gpuEventInterprocess);
             if (gpuErr != gpuSuccess) GpuError("gpuIPC.h: exchangeHandle: gpuEventCreate", gpuErr);
 
             gpuErr = gpuIpcGetEventHandle((gpuIpcEventHandle_t *) &_myHandle.eventHandle, _myEvent);
@@ -438,4 +438,4 @@ public:
 
 };
 
-#endif //CUDAIPC_H
+#endif //GPUIPC_H

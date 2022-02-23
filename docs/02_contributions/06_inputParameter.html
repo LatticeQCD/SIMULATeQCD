@@ -218,10 +218,10 @@ If you write the .param file in the right directory, indeed, when you compile yo
 </section>
 <section id="using-your-own-parameter-class">
 <h2>Using your own Parameter Class<a class="headerlink" href="#using-your-own-parameter-class" title="Permalink to this headline"></a></h2>
-<p>If you need more parameters that they are not in the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code> class, consider to create your own parameter class. Some example of how to construct an input parameter class can be found in <code class="docutils literal notranslate"><span class="pre">main_gradientFlow.cu</span></code>, in particular see the <code class="docutils literal notranslate"><span class="pre">gradientFlowParam</span></code> class.</p>
+<p>If you need more parameters that they are not in the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code> class, consider to create your own parameter class. Some example of how to construct an input parameter class can be found in <code class="docutils literal notranslate"><span class="pre">main_gradientFlow.cpp</span></code>, in particular see the <code class="docutils literal notranslate"><span class="pre">gradientFlowParam</span></code> class.</p>
 <p>In your executable file define something like that, for each parameter that you need (see the example above). Notice that the capital words are the one that you have to change:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
-<span class="k">struct</span> <span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
 <span class="w">  </span><span class="n">Parameter</span><span class="o">&lt;</span><span class="n">TYPE</span><span class="p">,</span><span class="w"> </span><span class="n">DIMENSION</span><span class="o">&gt;</span><span class="w"> </span><span class="n">NAME_OF_THE_PARAMETER</span><span class="p">;</span><span class="w"></span>
 
@@ -243,7 +243,7 @@ In the constructor of <code class="docutils literal notranslate"><span class="pr
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">YOUROWNCLASS</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">OBJECT_NAME</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Of course you should define the precision at the beginning of your <code class="docutils literal notranslate"><span class="pre">.cu</span></code> file with, e.g.:</p>
+<p>Of course you should define the precision at the beginning of your <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> file with, e.g.:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define PREC float</span>
 </pre></div>
 </div>

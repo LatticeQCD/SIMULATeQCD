@@ -67,7 +67,6 @@ struct emTensorElementsE {
 
         int nx = (int)GInd::getLatData().lx;
         int ny = (int)GInd::getLatData().ly;
-        int nz = (int)GInd::getLatData().lz;
         sitexyzt coord = site.coord;
         size_t Id = coord[0] + coord[1]*nx + coord[2]*ny*nx;
 
@@ -141,7 +140,6 @@ struct energyMomentumTensorEKernel {
         sitexyzt coord = site.coord;
         int nx = (int)GInd::getLatData().lx;
         int ny = (int)GInd::getLatData().ly;
-        int nz = (int)GInd::getLatData().lz;
         int Nz = (int)GInd::getLatData().globLZ;
         size_t Id = coord[0] + coord[1]*nx + coord[2]*ny*nx;
         gSite newSite = GInd::getSite(coord[0],coord[1],coord[2],tau);
@@ -184,7 +182,6 @@ struct emTensorElementsU {
 
         int nx = (int)GInd::getLatData().lx;
         int ny = (int)GInd::getLatData().ly;
-        int nz = (int)GInd::getLatData().lz;
         sitexyzt coord = site.coord;
         size_t Id = coord[0] + coord[1]*nx + coord[2]*ny*nx;
 
@@ -195,10 +192,11 @@ struct emTensorElementsU {
                 FS[mu*4+nu] = FT(site, mu, nu);
             }
         }
-
+        
+        floatT factor = -1.;
         for (int mu=1;mu<4;mu++) {
             for(int nu=0;nu<mu;nu++) {
-                FS[mu*4+nu] = -1.*FS[nu*4+mu];
+                FS[mu*4+nu] = factor*FS[nu*4+mu];
             }
         }
 
@@ -248,7 +246,6 @@ struct energyMomentumTensorUKernel {
         sitexyzt coord = site.coord;
         int nx = (int)GInd::getLatData().lx;
         int ny = (int)GInd::getLatData().ly;
-        int nz = (int)GInd::getLatData().lz;
         int Nz = (int)GInd::getLatData().globLZ;
         size_t Id = coord[0] + coord[1]*nx + coord[2]*ny*nx;
         gSite newSite = GInd::getSite(coord[0],coord[1],coord[2],tau);

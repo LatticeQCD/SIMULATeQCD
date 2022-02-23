@@ -52,11 +52,11 @@ HisqSmearing<PREC, USE_GPU,HaloDepth> N(gauge_in, gauge_out, redBase);
 ```
 
 The smearing classes is implemented in 
-> hisqSmearing.cu.
+> hisqSmearing.cpp.
 
 How to constructs the smeared links are defined in 
 ```shell
-main_HisqSmearing.cu. 
+main_HisqSmearing.cpp. 
 ```
 
 Ref. [hep-lat](https://doi.org/10.1103/PhysRevD.82.074501)

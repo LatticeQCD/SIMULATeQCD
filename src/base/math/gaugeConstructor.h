@@ -7,7 +7,7 @@
 
 #include "generalAccessor.h"
 #include "gsu3.h"
-#include "../../modules/HISQ/staggeredPhases.cuh"
+#include "../../modules/HISQ/staggeredPhases.h"
 
 template <CompressionType comp>
 class EntryCount; // implement this one as well, if you want to have a default...

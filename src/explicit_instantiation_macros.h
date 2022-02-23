@@ -246,7 +246,7 @@ enum CompressionType {
     IF(BOOL(DOUBLEPREC)) (HALO_LOOP_PH(INIT_TEMPLATES, double)) \
     IF(BOOL(SINGLEPREC)) (HALO_LOOP_PH(INIT_TEMPLATES, float))
 
-/// 1. INIT_TEMPLATES is passed here from the .cu file. We define INIT_PH = FLOAT_LOOP_PH.
+/// 1. INIT_TEMPLATES is passed here from the .cpp file. We define INIT_PH = FLOAT_LOOP_PH.
 #define INIT_PH(INIT_TEMPLATES) \
     FLOAT_LOOP_PH(INIT_TEMPLATES)
 
@@ -265,7 +265,7 @@ enum CompressionType {
 #define FLOAT_LOOP_H_HALF(INIT_TEMPLATES) \
     IF(BOOL(HALFPREC)) (HALO_LOOP_H_HALF(INIT_TEMPLATES, __half))
 
-/// 1. INIT_TEMPLATES is passed here from the .cu file. We define INIT_PH = FLOAT_LOOP_PH.
+/// 1. INIT_TEMPLATES is passed here from the .cpp file. We define INIT_PH = FLOAT_LOOP_PH.
 #define INIT_H_HALF(INIT_TEMPLATES) \
     FLOAT_LOOP_H_HALF(INIT_TEMPLATES)
 
@@ -286,7 +286,7 @@ enum CompressionType {
     IF(BOOL(SINGLEPREC)) (HALO_LOOP_PH_HALF(INIT_TEMPLATES, float)) \
     IF(BOOL(HALFPREC)) (HALO_LOOP_PH_HALF(INIT_TEMPLATES, __half))
 
-/// 1. INIT_TEMPLATES is passed here from the .cu file. We define INIT_PH = FLOAT_LOOP_PH.
+/// 1. INIT_TEMPLATES is passed here from the .cpp file. We define INIT_PH = FLOAT_LOOP_PH.
 #define INIT_PH_HALF(INIT_TEMPLATES) \
     FLOAT_LOOP_PH_HALF(INIT_TEMPLATES)
 

@@ -143,7 +143,7 @@ public:
 
 
     bool gpuAwareMPIAvail() const {
-#ifdef USE_CUDA_AWARE_MPI
+#ifdef USE_GPU_AWARE_MPI
         return true;
 #else
         return false;
@@ -151,7 +151,7 @@ public:
     }
 
     bool useGpuP2P() {
-#ifdef USE_CUDA_P2P
+#ifdef USE_GPU_P2P
         return true;
 #else
         return false;

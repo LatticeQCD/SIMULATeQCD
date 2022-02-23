@@ -73,7 +73,9 @@ __host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn
     GSU3<double> temp_svd;
 
     if (fabs(detQ/(g0*g1*g2)-1.0) > 1e-5) {
-        printf("Using SVD!\n");
+#ifndef USE_HIP_AMD
+	    printf("Using SVD!\n");
+#endif
         temp_svd=svd3x3core<double,double>(V,sv);
         g0 = sv[0];
         g1 = sv[1];
@@ -82,7 +84,9 @@ __host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn
 
     //force cut-off
     if (g0 < delta || g1 < delta || g2 < delta) {
-        printf("HISQ FORCE filter active\n");
+#ifndef USE_HIP_AMD        
+	    printf("HISQ FORCE filter active\n");
+#endif	    
         g0 = g0 + delta;
         g1 = g1 + delta;
         g2 = g2 + delta;

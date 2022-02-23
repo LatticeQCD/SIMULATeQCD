@@ -89,7 +89,7 @@
   <section class="tex2jax_ignore mathjax_ignore" id="gauge-fixing">
 <h1>Gauge Fixing<a class="headerlink" href="#gauge-fixing" title="Permalink to this headline"></a></h1>
 <p>The gauge fixing class allows one to gauge fix using <a class="reference external" href="https://doi.org/10.1016/0370-2693(90)90031-Z">over-relaxation (GFOR)</a>. A more recent and detailed discussion especially with respect to multi GPUs can be found <a class="reference external" href="https://doi.org/10.1016/j.cpc.2013.03.021">here</a>.</p>
-<p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.cu</span></code> as a source file for your program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The gauge fixing class is initialized with, for example,</p>
+<p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.cpp</span></code> as a source file for your program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The gauge fixing class is initialized with, for example,</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"> </span>
 </pre></div>
 </div>
@@ -109,7 +109,7 @@
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Don’t forget to do one final unitarization before making any measurements! The gauge fixing is tested in <code class="docutils literal notranslate"><span class="pre">src/testing/main_gfixplcTest.cu</span></code>.</p>
+<p>Don’t forget to do one final unitarization before making any measurements! The gauge fixing is tested in <code class="docutils literal notranslate"><span class="pre">src/testing/main_gfixplcTest.cpp</span></code>.</p>
 <section id="minimal-working-example">
 <h2>Minimal Working Example<a class="headerlink" href="#minimal-working-example" title="Permalink to this headline"></a></h2>
 <p>Here’s a short segment of code that will fix to the Coulomb gauge, assuming you’ve already initialized everything else like the Gaugefield:</p>

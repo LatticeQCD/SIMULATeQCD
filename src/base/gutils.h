@@ -29,20 +29,20 @@ __host__ void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
 }
 
 /**
- * Utility class to report errors in CUDA code.
+ * Utility class to report errors in GPU code.
  */
 class GpuError {
-    public:
-        explicit GpuError(gpuError_t err);
+public:
+  explicit GpuError(gpuError_t err);
 
-        GpuError(const char *warn, gpuError_t err);
+  GpuError(const char *warn, gpuError_t err);
 
-        gpuError_t getError();
+  gpuError_t getError();
 
-        const std::string getErrorMessage();
+  const std::string getErrorMessage();
 
-    private:
-        gpuError_t gpuErr;
+private:
+  gpuError_t gpuErr;
 };
 
 /**
