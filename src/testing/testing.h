@@ -4,7 +4,7 @@
 #include "../base/gutils.h"
 #include "../base/math/floatComparison.h"
 #include "../define.h"
-#include "../gauge/gauge_kernels.cu"
+#include "../gauge/gauge_kernels.cpp"
 
 void check(bool condition, const std::string text) {
     if (condition) {

@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim());
 
-    const size_t HaloDepth = 2;
+    const size_t HaloDepth = 0;
 
     rootLogger.info("Initialize Lattice");
     initIndexer(HaloDepth,param,commBase);
