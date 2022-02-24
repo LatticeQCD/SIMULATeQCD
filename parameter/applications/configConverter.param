@@ -1,22 +1,21 @@
 # 
 # configConverter.param                                                               
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#    Gaugefile: Name of input gauge configuration
+#   endianness: Endianness of input configuration
+#       format: Format of input configuration (ildg, milc, or nersc) 
+#   format_out: Format of output configuration (ildg or nersc) 
+#     prec_out: Precision of the output configuration, 1 for single and 2 for double
 # 
-#     Lattice: 
-#       Nodes: 
-#   Gaugefile: 
-# 
-Lattice = 8 8 8 4
-Nodes = 1 1 1 1
-beta = 3.360
-
-# Path to input configuration.
-Gaugefile = /home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB
-
-format = nersc                               	# Format of input configuration.
-use_unit_conf = 0				# Unit configuration
-endianness = auto                               # Endianness of input configuration.
-conf_nr = 1                                     # Configuration number (optional).
-measurements_dir = ./                           # Measurement output directory
-format_out = ildg                               # Format of output configuration, nersc and ildg are supported.
-prec_out = 2                                    # Precision of the output configuration, 1 for single and 2 for double
-
+Lattice       = 8 8 8 4
+Nodes         = 1 1 1 1
+beta          = 3.360
+Gaugefile     = ../test_conf/nersc.l8t4b3360_bie_readtest
+format        = nersc
+endianness    = auto
+Gaugefile_out = ./ildg.l8t4b3360_bie_readtest
+format_out    = ildg
+prec_out      = 2
+compress_out  = 0 

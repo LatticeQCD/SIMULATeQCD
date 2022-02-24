@@ -26,12 +26,12 @@ public:
     Parameter<int, 1> confnumber;
     Parameter<std::string> streamName;
     Parameter<double> beta;
-    Parameter<std::string> GaugefileName;
-    Parameter<std::string> format;
-    Parameter<std::string> endianness;  //!< one of "little", "big", "auto"
-    Parameter<std::string> format_out;
-    Parameter<int> prec_out;
     Parameter<std::string> measurements_dir;
+    Parameter<std::string> endianness;  //!< one of "little", "big", "auto"
+    Parameter<std::string> GaugefileName;
+    Parameter<std::string> GaugefileName_out;
+    Parameter<std::string> format;
+    Parameter<int> prec_out;
     Parameter<bool> use_unit_conf;
 
     LatticeParameters() {
@@ -40,11 +40,11 @@ public:
         addDefault<int, 4>(gpuTopo, "Topology", nuller);
         addOptional(beta, "beta");
         addOptional(GaugefileName, "Gaugefile");
+        addOptional(GaugefileName_out, "Gaugefile_out");
         addOptional(format, "format");
         addDefault(endianness, "endianness", std::string("auto"));
         addOptional(confnumber, "conf_nr");
         addOptional(streamName, "stream");
-        addDefault(format_out, "format_out",std::string("nersc"));
         addDefault(prec_out, "prec_out",0);
         addDefault(measurements_dir, "measurements_dir", std::string("./"));
         addDefault(use_unit_conf, "use_unit_conf", false);
