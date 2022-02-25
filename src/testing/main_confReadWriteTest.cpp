@@ -44,13 +44,13 @@ int main(int argc, char *argv[]) {
 	gauge_test.readconf_ildg("nersc_ildg.l8t4b3360_bieHB_test");
 
     rootLogger.info("One last ILDG write to verify the checksum worked...");
-	gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",param.prec_out());
+    gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",param.prec_out());
 
     rootLogger.info("Link-by-link comparison of NERSC config with written ILDG config...");
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test,1e-15);
 
-//    rootLogger.info("Try reading QUDA configuration...");
-//    gauge.readconf_ildg("conf_wilsonFlow_s008t04_b0336000_FT0.0");
+    rootLogger.info("Try reading QUDA configuration...");
+    gauge.readconf_ildg("../test_conf/ildg.l8t4b3360_QUDA");
 
     if(!pass) {
 		rootLogger.error("Binaries are not equal.");

@@ -170,7 +170,7 @@ private:
         add(checksumb, "CHECKSUMB");
         add(linktrace, "LINK_TRACE");
         add(plaq, "PLAQUETTE");
-        addDefault(floatingpoint, "FLOATING_POINT", std::string("32BIG"));
+        addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
     }
 
     template <size_t HaloDepth>
@@ -332,28 +332,13 @@ public:
             }
         }
 
-        if (header.dattype() == "72") {
-            float_size=4;
-        } else if (header.dattype() == "144") {
-            float_size=8;
-        } else {
-            rootLogger.error("DATATYPE = ", header.dattype(), "not recognized.");
-            error = true;
-        }
-
-        Endianness disken = ENDIAN_AUTO;
-        if (header.floatingpoint() == "32BIG" || header.floatingpoint() == "32") {
-            //float_size = 4;
-            disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "64BIG") {
-            //float_size = 8;
-            disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "32LITTLE") {
-            //float_size = 4;
-            disken = ENDIAN_LITTLE;
-        } else if (header.floatingpoint() == "64LITTLE") {
-            //float_size = 8;
-            disken = ENDIAN_LITTLE;
+        // ILDG binaries are always saved in BIG endian
+        Endianness disken = ENDIAN_BIG;
+        ///                          SIMULATeQCD                              QUDA
+        if (header.floatingpoint() == "IEEE32BIG" || header.floatingpoint() == "F") {
+            float_size = 4;
+        } else if (header.floatingpoint() == "IEEE64BIG" || header.floatingpoint() == "D") {
+            float_size = 8;
         } else {
             rootLogger.error("Unrecognized FLOATING_POINT ", header.floatingpoint());
             error = true;
@@ -458,9 +443,9 @@ public:
 
         std::string fp;
         if (float_size == 4) {
-            fp = "32BIG";
+            fp = "IEEE32BIG";
         } else if (float_size == 8) {
-            fp = "64BIG";
+            fp = "IEEE64BIG";
         } else {
             rootLogger.error("ILDG format must store single or double precision.");
             return false;
@@ -468,44 +453,39 @@ public:
 
         if (comm.IamRoot()) {
 
-            std::string header_ildg, data, dt;
-            time_t current_time = time(0);
-            struct tm *tm = localtime(&current_time);
-            dt = asctime(tm);
-            dt.pop_back();
+            std::string header_ildg, data;
 
             if (head) {
 
-                // first lime record (header)
+                // lime record (header)
                 header_ildg = "scidac-private-file-xml";
-                data = xmlProlog + "<scidacFile><version>1.1</version><spacetime>4</spacetime><dims>"
-                             + std::to_string(GInd::getLatData().globLX)
-                       + " " + std::to_string(GInd::getLatData().globLY)
-                       + " " + std::to_string(GInd::getLatData().globLZ)
-                       + " " + std::to_string(GInd::getLatData().globLT)
-                       + " </dims><volfmt>0</volfmt></scidacFile>";
+                data = xmlProlog + "<scidacFile><version>1.1</version><spacetime>4</spacetime>"
+                                 + "<dims>" + std::to_string(GInd::getLatData().globLX)
+                                      + " " + std::to_string(GInd::getLatData().globLY)
+                                      + " " + std::to_string(GInd::getLatData().globLZ)
+                                      + " " + std::to_string(GInd::getLatData().globLT)
+                                      + " </dims><volfmt>0</volfmt></scidacFile>";
                 lime_record(out, switch_endian, header_ildg, data);
 
-                // second lime record (header)
+                // garbage needed for QUDA to read
                 header_ildg = "scidac-file-xml";
                 data = xmlProlog + "<title>ILDG archival gauge configuration</title>";
                 lime_record(out, switch_endian, header_ildg, data);
 
-                // third lime record (header)
+                // lime record (header)
                 header_ildg = "scidac-private-record-xml";
-                data = xmlProlog + "<scidacRecord><version>1.1</version><date>" +
-                       dt + "</date><recordtype>0</recordtype><datatype>";
-                data += "SIMULATeQCD_GAUGE_CONF</datatype><precision>" + fp +
-                        "</precision><colors>3</colors><typesize>"
-                        + header.dattype() + "</typesize><datacount>4</datacount></scidacRecord>";
+                data = xmlProlog + "<scidacRecord><version>1.1</version>"
+                                 + "<recordtype>0</recordtype><datatype>SIMULATeQCD_GAUGE_CONF</datatype>"
+                                 + "<precision>" + fp + "</precision><colors>3</colors>"
+                                 + "<typesize>" + header.dattype() + "</typesize><datacount>4</datacount></scidacRecord>";
                 lime_record(out, switch_endian, header_ildg, data);
 
-                // fourth lime record (header)
+                // garbage needed for QUDA to read 
                 header_ildg = "scidac-record-xml";
                 data = xmlProlog + "<title>Dummy QCDML</title>";
                 lime_record(out, switch_endian, header_ildg, data);
 
-                // fifth lime record (binary data)
+                // lime record (binary data)
                 header_ildg = "scidac-binary-data";
                 data = "";
                 lime_record(out, switch_endian, header_ildg, data);
@@ -518,7 +498,7 @@ public:
                 rootLogger.info("checksuma (ildg): ", crc32a.str());
                 rootLogger.info("checksumb (ildg): ", crc32b.str());
 
-                // sixth lime record (tail)
+                // lime record (checksum)
                 header_ildg = "scidac-checksum";
                 data = xmlProlog + "<scidacChecksum><version>1.0</version><suma>"+crc32a.str()+"</suma><sumb>"+crc32b.str()+"</sumb></scidacChecksum>";
                 lime_record(out, switch_endian, header_ildg, data);
