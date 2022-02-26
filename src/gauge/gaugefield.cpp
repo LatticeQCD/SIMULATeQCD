@@ -63,23 +63,21 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_nersc_host(gaugeAcc
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::string &fname,
-                                                                   int diskprec, Endianness en) {
+void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::string &fname, int diskprec) {
     if(onDevice) {
         rootLogger.info("writeconf_ildg: Writing ILDG configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
-        writeconf_ildg_host(lattice_host.getAccessor(),fname,diskprec,en);
+        writeconf_ildg_host(lattice_host.getAccessor(),fname,diskprec);
     } else {
-        writeconf_ildg_host(getAccessor(),fname,diskprec,en);
+        writeconf_ildg_host(getAccessor(),fname,diskprec);
     }
 
 }
 
 template<class floatT,bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor,
-                                                                       const std::string &fname,
-                                                                       int diskprec, Endianness en)
+                                                                       const std::string &fname, int diskprec)
 {
     Checksum crc32;
     InitializeChecksum(&crc32);
@@ -98,7 +96,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
     std::ofstream out;
     if (this->getComm().IamRoot())
         out.open(fname.c_str(),std::ios::out | std::ios::binary);
-    if (!ildg.template write_header<floatT, onDevice, comp>(diskprec, en, crc32, out,true)) {
+    if (!ildg.template write_header<floatT, onDevice, comp>(diskprec, crc32, out,true)) {
         rootLogger.error("Unable to write ILDG file: ", fname);
         return;
     }
@@ -153,7 +151,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
 
     if (this->getComm().IamRoot())
         out.open(fname.c_str(),std::ios::app | std::ios::binary);
-    if (!ildg.template write_header<floatT, onDevice, comp>(diskprec, en, crc32, out,false)) {
+    if (!ildg.template write_header<floatT, onDevice, comp>(diskprec, crc32, out,false)) {
         rootLogger.error("Unable to write ILDG file: ", fname);
         return;
     }

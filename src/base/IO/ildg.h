@@ -410,7 +410,7 @@ public:
     }
 
     template<class floatT,bool onDevice, CompressionType comp>
-    bool write_header(int diskprec, Endianness en, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
+    bool write_header(int diskprec, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
 
         std::string xmlProlog = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
@@ -438,7 +438,7 @@ public:
             return false;
         }
 
-        if (en == ENDIAN_AUTO) en = get_endianness(false);
+        Endianness en = ENDIAN_BIG;
         switch_endian = switch_endianness(en);
 
         std::string fp;
@@ -467,22 +467,12 @@ public:
                                       + " </dims><volfmt>0</volfmt></scidacFile>";
                 lime_record(out, switch_endian, header_ildg, data);
 
-                // garbage needed for QUDA to read
-                header_ildg = "scidac-file-xml";
-                data = xmlProlog + "<title>ILDG archival gauge configuration</title>";
-                lime_record(out, switch_endian, header_ildg, data);
-
                 // lime record (header)
                 header_ildg = "scidac-private-record-xml";
                 data = xmlProlog + "<scidacRecord><version>1.1</version>"
                                  + "<recordtype>0</recordtype><datatype>SIMULATeQCD_GAUGE_CONF</datatype>"
                                  + "<precision>" + fp + "</precision><colors>3</colors>"
                                  + "<typesize>" + header.dattype() + "</typesize><datacount>4</datacount></scidacRecord>";
-                lime_record(out, switch_endian, header_ildg, data);
-
-                // garbage needed for QUDA to read 
-                header_ildg = "scidac-record-xml";
-                data = xmlProlog + "<title>Dummy QCDML</title>";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // lime record (binary data)
