@@ -57,7 +57,7 @@ public:
     __host__ __device__ gVect3(floatT v0) : _v0(v0), _v1(v0), _v2(v0) {};
     __host__ __device__ gVect3(GCOMPLEX(floatT) v0, GCOMPLEX(floatT) v1, GCOMPLEX(floatT) v2) : _v0(v0), _v1(v1), _v2(v2) {};
 
-#if (!defined __CUDACC__)
+#if (!defined __GPUCC__)
     __host__ friend std::ostream &operator << <> (std::ostream &, const gVect3<floatT> &);
 #endif
     __host__ friend std::istream &operator >> <> (std::istream &, gVect3<floatT> &);
@@ -90,7 +90,9 @@ public:
     __device__ __host__ void random( rndstateT * const);   // set gvect3 randomly
     __device__ __host__ void gauss( uint4 * state )
     {
-        if constexpr (!std::is_same<floatT,__half>::value) {
+#ifndef USE_HIP_AMD 
+   	if constexpr (!std::is_same<floatT,__half>::value) {
+#endif
         floatT radius0,radius1,radius2,phi0,phi1,phi2;
 
         phi0 = 2.0*M_PI * get_rand<floatT>(state);
@@ -110,9 +112,10 @@ public:
         _v0 = GCOMPLEX(floatT)(radius0 * cos(phi0), radius0 * sin(phi0));
         _v1 = GCOMPLEX(floatT)(radius1 * cos(phi1), radius1 * sin(phi1));
         _v2 = GCOMPLEX(floatT)(radius2 * cos(phi2), radius2 * sin(phi2));
-            }
+#ifndef USE_HIP_AMD
+	    }
         else {
-            #ifdef __CUDA_ARCH__
+            #ifdef __GPU_ARCH__
             float radius0,radius1,radius2,phi0,phi1,phi2;
             phi0 = 2.0*M_PI * get_rand<float>(state);
         phi1 = 2.0*M_PI * get_rand<float>(state);
@@ -133,7 +136,7 @@ public:
         _v2 = GCOMPLEX(__half)(__float2half(radius2 * cos(phi2)), __float2half(radius2 * sin(phi2)));
         #endif
         }
-        
+#endif
     };
 
     // cast operations single <-> double precision
@@ -228,7 +231,7 @@ __device__ __host__ inline gVect3<floatT> gvect3_unity(const int& i)
 // default value
     return gVect3<floatT> (1, 0, 0);
 }
-
+#ifndef USE_HIP_AMD
 template <>
 __device__ inline gVect3<__half> gvect3_unity(const int& i)
 {
@@ -244,7 +247,7 @@ return gVect3<__half> (__float2half(0), __float2half(0), __float2half(1));
 return gVect3<__half> (__float2half(1), __float2half(0), __float2half(0));
 
 }
-
+#endif
 // cvect3 = (1,1,1)
 template <class floatT>
 __device__ __host__ inline gVect3<floatT> gvect3_one()
@@ -260,12 +263,13 @@ __device__ __host__ inline gVect3<floatT> gvect3_zero()
 {
     return gVect3<floatT> (0, 0, 0);
 }
-
+#ifndef USE_HIP_AMD
 template<>
 __device__ inline gVect3<__half> gvect3_zero()
 {
     return gVect3<__half> (__float2half(0), __float2half(0), __float2half(0));
 }
+#endif
 template <class floatT>
 __device__ __host__ gVect3<floatT> &gVect3<floatT>::operator=(const gVect3<floatT> &y)
 {
@@ -451,7 +455,7 @@ __device__ __host__ gVect3<floatT> conj(const gVect3<floatT> &x)
 }
 
 
-#ifdef __CUDACC__
+#ifdef __GPUCC__
 
 template <class floatT>
 __host__ std::ostream &operator << (std::ostream &s, const gVect3<floatT> &x)

@@ -16,7 +16,6 @@
 #include "grnd.h"
 #include <float.h>
 #include <type_traits>
-#include <cuda_fp16.h>
 
 
 
@@ -125,7 +124,7 @@ public:
 
 
 
-#if (!defined __CUDACC__)
+#if (!defined __GPUCC__)
     __host__ friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
 #endif
 
@@ -866,7 +865,7 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
             _e22 = GCOMPLEX(floatT)(-2. / sqrt(3.0) * temp2[3], 0.0);
         }
     else {
-#ifdef __CUDA_ARCH__
+#ifdef __GPU_ARCH__
         float rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
 
     for (int i = 0; i < 4; ++i) {
@@ -960,7 +959,7 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
         }
     else {
- #ifdef __CUDA_ARCH__
+ #ifdef __GPU_ARCH__
     double quadnorm, invnorm;
     double Cre, Cim;
 
