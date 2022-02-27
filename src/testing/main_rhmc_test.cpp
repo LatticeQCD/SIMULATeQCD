@@ -58,7 +58,6 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
     Gaugefield<floatT, true, HaloDepth, R18> gauge_reference(commBase);
     gauge_reference.readconf_nersc(param.gauge_file());
-    //gauge_reference.updateAll();
     grnd_state<true> d_rand;
     initialize_rng(param.seed(), d_rand);
 
@@ -96,7 +95,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     dummy.adjustSize(elems);
 
     
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference,3e-9));
 
     int faults = 0;
     dummy.reduce(faults,elems);
@@ -167,7 +166,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim(), param.gpuTopo());
 
-    typedef float floatT;
+    typedef double floatT;
 
     rootLogger.info("STARTING RHMC Update:");
 

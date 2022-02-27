@@ -6,8 +6,10 @@
 # D. Clarke
 # 
 # The runTests scripts break all the test routines down into < 30 min chunks (at least on Pascal GPUs), 
-# so that these can easily be run interactively or in a a cluster's debug queue, where the time limit is 
-# commonly only 30 min. 
+# so that these can easily be run interactively or in a a cluster's debug queue, where the time limit 
+# is commonly only 30 min. 
+#
+# With CUDA 11.6 on Pascal: Takes ~22 min
 # 
 
 source "../scripts/testingTools.bash"
