@@ -62,5 +62,11 @@ gauge.writeconf_ildg("path/to/gaugefile", diskprec = 1);
 In the case of ILDG configurations, the endianness is fixed to BIG and they are not
 compressed by definition, so these are not options that can be passed.
 
+Reading a MILC configuration to a `Gaugefield` object `gauge` is done with
+```C++
+gauge.readconf_milc("path/to/gaugefile");
+```
+There is no MILC writer.
+
 To learn more about the various configuration formats, look
 [here](09_configurationIO.md).

@@ -148,3 +148,8 @@ END_HEADER
 ```
 followed by the binary. The NERSC `checksum` is essentially a sum over all elements of
 all links in the lattice. This `checksum` is not as sensitive as the ILDG checksum.
+
+## MILC
+
+MILC format is the format of the [MILC](https://github.com/milc-qcd/milc_qcd) code base.
+As of v7.7.11, these binaries are always in single-precision.

@@ -146,6 +146,11 @@ accomplished with</p>
 </div>
 <p>In the case of ILDG configurations, the endianness is fixed to BIG and they are not
 compressed by definition, so these are not options that can be passed.</p>
+<p>Reading a MILC configuration to a <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> object <code class="docutils literal notranslate"><span class="pre">gauge</span></code> is done with</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_milc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>There is no MILC writer.</p>
 <p>To learn more about the various configuration formats, look
 <a class="reference internal" href="09_configurationIO.html"><span class="doc std std-doc">here</span></a>.</p>
 </section>
