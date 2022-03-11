@@ -29,7 +29,7 @@ public:
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-                            const int max_iter, const double precision, double delta);
+                            const int max_iter, const double precision, double delta = 0.1);
 
     template <typename Spinor_t, typename Spinor_t_half>
 void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta);

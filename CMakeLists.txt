@@ -689,6 +689,13 @@ set_SIMULATeQCD_property(MultiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profi
 SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf)
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_MrhsCGProf.cpp ${SOURCE_FILES_DSLASH} src/modules/invert/inverter.cpp) 
+add_SIMULATeQCD_executable(mrhs_cg_benchmark src/profiling/main_MrhsCGProf.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
+set_SIMULATeQCD_property(mrhs_cg_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(mrhs_cg_benchmark PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers mrhs_cg_benchmark)
+
+
 
 if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 
