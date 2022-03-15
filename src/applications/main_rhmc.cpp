@@ -9,7 +9,6 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-#include <stdlib.h>
 #include "../modules/dslash/condensate.h"
 
 int main(int argc, char *argv[]) {

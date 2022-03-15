@@ -1,7 +1,7 @@
 /* 
  * main_createCorrelatorNorm.cpp
  *
- * v1.0: D. Clarke, 2 Jan 2020
+ * D. Clarke
  *
  * The way the correlator is coded, it needs a normalization vector that is slow to calculate. My workaround is to save
  * this vector to a file, created by this script, that will be read by the correlator main later. Each lattice geometry
@@ -9,20 +9,9 @@
  *
  */
 
-//#include "../base/stopWatch.h"
-#include "../base/IO/fileWriter.h"
-#include "../gauge/gaugefield.h"
-#include "../base/math/correlators.h"
-
-#include <iostream>
-#include <iomanip>
-#include <ctime>
-#include <stdio.h>
-#include <unistd.h>
-#include <vector>
+#include "../SIMULATeQCD.h"
 
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 struct corrParam : LatticeParameters {
     Parameter<std::string>  domain;

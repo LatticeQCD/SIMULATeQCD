@@ -9,8 +9,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
 #include "../modules/HISQ/hisqForce.h"
-#include "../gauge/gauge_kernels.cpp"
-
+#include "testing.h"
 
 #define PREC double 
 #define USE_GPU true
@@ -91,24 +90,13 @@ int main(int argc, char *argv[]) {
     force.writeconf_nersc("../test_conf/force_testrun",3,2);
     force.readconf_nersc("../test_conf/force_testrun");
 
-    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    LatticeContainer<true, int> dummy(commBase);
-    dummy.adjustSize(elems);
-    
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(force,force_reference,3e-9));
-
-    int faults = 0;
-    dummy.reduce(faults,elems);
-
-    rootLogger.info(faults, " faulty links found!");
-
-    if (faults == 0) {
+    bool pass = compare_fields<PREC,HaloDepth,true,R18>(force,force_reference,3e-9);
+    if (pass) {
         rootLogger.info(CoutColors::green, "Force is correct", CoutColors::reset);
     } else {
         rootLogger.error("Force is wrong!");
         return 1;
     }
-
        
     return 0;
 }

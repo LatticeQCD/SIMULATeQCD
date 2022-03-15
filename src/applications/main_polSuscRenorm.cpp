@@ -7,13 +7,10 @@
  *
  */
 
+#include "../SIMULATeQCD.h"
 #include "../modules/observables/PolyakovLoop.h"
 
-#include <iostream>
-#include <unistd.h>
-
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 /// Custom parameter structure for this program.
 template<class floatT>

@@ -12,14 +12,9 @@
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 
-#include <iostream>
-#include <unistd.h>
-#include <vector>
-
 #include "refValues_gfixplc.h"
 
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 /// Create our own parameter structure, which inherits from LatticeParameters.
 template<class floatT>

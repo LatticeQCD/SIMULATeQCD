@@ -1,7 +1,7 @@
 /* 
  * main_cudaAwareMPITest.cpp                                                               
  * 
- * Lukas Mazur
+ * L. Mazur
  * 
  */
 

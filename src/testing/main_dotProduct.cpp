@@ -1,7 +1,7 @@
 /* 
  * main_dotProduct.cpp                                                               
  * 
- * Dennis Bollweg, 3 Feb 2021
+ * D. Bollweg
  * 
  */
 

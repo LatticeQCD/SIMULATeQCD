@@ -1,5 +1,5 @@
 /* 
- * main_flt.cpp
+ * main_fluxtube.cu
  *
  * v1.0: Sodbileg Ch., Battogtokh P. & Enkhtuya G.
  *
@@ -36,7 +36,6 @@ for((j=101; j<=125; j++)); do for ((i=50;i<=2300;i=i+50)); do mpiexec -np 1 ./fl
 #include "../modules/observables/PolyakovLoop.h"
 
 #define PREC double 
-#define MY_BLOCKSIZE 256
 
 template<class floatT,size_t HaloDepth>
 struct CalcPloop{
@@ -731,7 +730,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     
     iterateFunctorNoReturn<true>(calcTmpPL<floatT,HaloDepth>(gauge, _tmp_pl01GPU, _tmp_pl02GPU, _tmp_pl03GPU, _tmp_pl12GPU, _tmp_pl13GPU, _tmp_pl23GPU),calcReadIndexSpatial,elems);
 
-    for(register int dist = 4; dist <= 10; dist=dist+2){
+    for( int dist = 4; dist <= 10; dist=dist+2){
 
     	redBase7.template iterateOverSpatialBulk<All, HaloDepth>(calcPPCORR<floatT,HaloDepth>(_ploopGPU, _tmp_pl01GPU, _tmp_pl02GPU, _tmp_pl03GPU, _tmp_pl12GPU, _tmp_pl13GPU, _tmp_pl23GPU, _tmp_plc01GPU, _tmp_plc02GPU, _tmp_plc03GPU, _tmp_plc12GPU, _tmp_plc13GPU, _tmp_plc23GPU, dist));
     
@@ -815,9 +814,9 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     	flt_out3 = fopen(flt_name_b_par, "a");
     	flt_out4 = fopen(flt_name_2e_ort, "a");
 
-    	for(register int dx=0; dx<=dist+2*dxmax-3;dx++)
-        	for(register int dz=0;dz<=dzmax;dz++)
-            		for(register int dy=0;dy<=dz;dy++){
+    	for( int dx=0; dx<=dist+2*dxmax-3;dx++)
+        	for( int dz=0;dz<=dzmax;dz++)
+            		for( int dy=0;dy<=dz;dy++){
                 
 		indx = dx + dy * Nx + dz * Nx * (dymax + 1);
 

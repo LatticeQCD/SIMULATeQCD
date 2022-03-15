@@ -5,8 +5,6 @@
  * 
  */
 
-#include <iostream>
-#include <exception>
 #include "../SIMULATeQCD.h"
 
 #define RELEVANT_SIZE 10

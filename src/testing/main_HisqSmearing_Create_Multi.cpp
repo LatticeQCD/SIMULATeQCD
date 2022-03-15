@@ -8,13 +8,11 @@
 #include "../modules/rhmc/rhmcParameters.h"
 
 #define PREC double
-#define MY_BLOCKSIZE 256
 #define USE_GPU true
 
 int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
-    
     
     CommunicationBase commBase(&argc, &argv);
 

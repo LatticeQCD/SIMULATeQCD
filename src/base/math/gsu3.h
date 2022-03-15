@@ -388,11 +388,10 @@ public:
                 return _e22;
         }
         _e00 = GCOMPLEX(floatT)(nan(""), nan(""));
-
         return _e00;
     }
 
-    __host__ __device__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+    __host__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
         switch (i * 3 + j) {
             case 0:
                 return _e00;

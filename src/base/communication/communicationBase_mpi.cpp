@@ -230,6 +230,10 @@ void CommunicationBase::root2all(int64_t &value) const {
     MPI_Bcast(&value, 1, MPI_INT64_T, 0, MPI_COMM_WORLD);
 }
 
+void CommunicationBase::root2all(size_t &value) const {
+    MPI_Bcast(&value, 1, MPI_INT32_T, 0, MPI_COMM_WORLD);
+}
+
 void CommunicationBase::root2all(bool &value) const {
     MPI_Bcast(&value, 1, MPI_CHAR, 0, MPI_COMM_WORLD);
 }
@@ -388,6 +392,13 @@ GSU3<double> CommunicationBase::reduce(GSU3<double> in) const {
     GSU3<double> recv;
     MPI_Allreduce(&in, &recv, 9, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
     return recv;
+}
+
+void CommunicationBase::reduce(uint32_t *in, int nr) const {
+    uint32_t *buf = new uint32_t[nr];
+    MPI_Allreduce(in, buf, nr, MPI_UINT32_T, MPI_SUM, cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
 }
 
 void CommunicationBase::reduce(float *in, int nr) const {

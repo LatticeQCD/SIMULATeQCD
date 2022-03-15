@@ -31,10 +31,7 @@ The spatial links on the border won't be updated.
 #include "../SIMULATeQCD.h"
 #include "../modules/gauge_updates/luscherweisz.h"
 #include "../modules/gauge_updates/SubLatMeas.h"
-#include <stdio.h>
-#include <iostream>                                                                                        
 
-//define precision
 #define PREC double
 #define USE_GPU true
 

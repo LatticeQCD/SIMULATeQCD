@@ -9,10 +9,9 @@
 
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
-#include "../gauge/gauge_kernels.cpp" 
+#include "testing.h"
 
 #define PREC double
-#define MY_BLOCKSIZE 256
 #define USE_GPU true
 
 int main(int argc, char *argv[]) {
@@ -32,9 +31,8 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC, true, HaloDepth> gauge_in(commBase);
-    Gaugefield<PREC, true,HaloDepth> gauge_smeared_reference(commBase);
+    Gaugefield<PREC, true, HaloDepth> gauge_smeared_reference(commBase);
     Gaugefield<PREC, true, HaloDepth> gauge_Lv2(commBase);
-    
     Gaugefield<PREC, true, HaloDepth> gauge_naik(commBase);
     GCOMPLEX(PREC) imgchmp;
 
@@ -50,7 +48,6 @@ int main(int argc, char *argv[]) {
     gauge_in.readconf_nersc("../test_conf/gauge12750");
     
     gauge_in.updateAll();
-
    
     timer.start();
     smearing.SmearAll(chmp);
@@ -61,19 +58,9 @@ int main(int argc, char *argv[]) {
     
     gauge_Lv2.readconf_nersc("../test_conf/smearing_imagmu_testrun");
 
-    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    LatticeContainer<true, int> dummy(commBase);
-    dummy.adjustSize(elems);
+    bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge_Lv2,gauge_smeared_reference);
 
-
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(gauge_Lv2,gauge_smeared_reference));
-
-    int faults = 0;
-    dummy.reduce(faults,elems);
-
-    rootLogger.info(faults, " faulty links found!");
-
-    if (faults == 0) {
+    if (pass) {
         rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
     } else {
         rootLogger.error("Test failed!");
