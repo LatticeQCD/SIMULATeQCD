@@ -22,11 +22,11 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
     //Our gaugefield
-    Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
+    //Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
 
-    HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
+    //HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
     rootLogger.info("Starting Test with " ,  NStacks ,  " Stacks");
     rootLogger.info("Initialize random state");
     grnd_state<false> h_rand;
@@ -37,23 +37,25 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     rootLogger.info("gen conf");
 
-    gauge.random(d_rand.state);
+    gauge_smeared.random(d_rand.state);
+    gauge_Naik.random(d_rand.state);
 
     gpuError_t gpuErr = gpuGetLastError();
     if (gpuErr)
         rootLogger.info("Error in random gauge field");
 
-    gauge.updateAll();
+    gauge_smeared.updateAll();
+    gauge_Naik.updateAll();
 
     gpuErr = gpuGetLastError();
     if (gpuErr)
         rootLogger.info("Error updateAll");
 
-    smearing.SmearAll();
+    //smearing.SmearAll();
 
-    gpuErr = gpuGetLastError();
-    if (gpuErr)
-        rootLogger.info("Error in smearing");
+    //gpuErr = gpuGetLastError();
+    //if (gpuErr)
+    //    rootLogger.info("Error in smearing");
 
 
     rootLogger.info("Initialize spinors");
@@ -82,7 +84,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     if (gpuErr)
         rootLogger.info("Error in Initialization of DSlash");
     
-    for (int i = 0; i < 500; ++i) {
+    for (int i = 0; i < 1; ++i) {
         timer.start();
         dslash.applyMdaggM(spinorOut, spinorIn, false);
         timer.stop();
@@ -91,12 +93,13 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     
 
      
-    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
+    //rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
   
-    float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
+    //float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
   
-    float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
-    rootLogger.info("Achieved TFLOP/s " ,  TFlops);
+    //float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
+    //rootLogger.info("Achieved TFLOP/s " ,  TFlops);
+
 }
 
 int main(int argc, char **argv) {
@@ -125,15 +128,15 @@ int main(int argc, char **argv) {
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 8, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
+//    test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
 }
