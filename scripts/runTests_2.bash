@@ -26,8 +26,6 @@ testRoutinesNoParam[_hisqForce]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
 testRoutinesNoParam[_memManTest]="1"
-testRoutinesNoParam[_rhmcTest]="1"
-testRoutinesNoParam[_rhmcTest_4pf]="1"
 testRoutinesNoParam[_RndSingleTest]="1"
 testRoutinesNoParam[_SimpleFunctorTest]="1"
 testRoutinesNoParam[_UtimesUdaggerTest]="1"
@@ -48,7 +46,7 @@ for key in "${!testRoutinesNoParam[@]}"; do
     runTestRoutineNoParam "${key}" "${testRoutinesNoParam[$key]}"
 done
 
-# This test needs to be rerun with a different parameter.
+# These tests need to be rerun with a different parameter.
 forceExec="_hisqForce"
 forceOut="OUT"${forceExec}
 forceErr="runERR"${forceExec}
@@ -59,6 +57,20 @@ $run_command 1 ./${forceExec} ../parameter/tests/hisqForce.param Nodes="1 1 1 1"
 echo '  '"${forceExec}"' using 1 GPU, mu_I != 0.0'
 $run_command 1 ./${forceExec} ../parameter/tests/hisqForceImagMu.param Nodes="1 1 1 1" >> ${forceOut} 2>> ${forceErr}
 if [ ! -s ${forceErr} ]; then rm ${forceErr}; fi
+
+rhmcExec="_rhmcTest"
+rhmcOut="OUT"${rhmcExec}
+rhmcErr="runERR"${rhmcExec}
+((jtest++))
+echo
+echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
+echo '  '"${rhmcExec}"' using 1 GPU, no_pf == 1'
+$run_command 1 ./${rhmcExec} ../parameter/tests/rhmcTest.param Nodes="1 1 1 1" > ${rhmcOut} 2> ${rhmcErr}
+echo '  '"${rhmcExec}"' using 1 GPU, no_pf == 4'
+$run_command 1 ./${rhmcExec} ../parameter/tests/rhmcTest_4pf.param Nodes="1 1 1 1" >> ${rhmcOut}_4pf 2>> ${rhmcErr}_4pf
+if [ ! -s ${rhmcErr} ]; then rm ${rhmcErr}; fi
+if [ ! -s ${rhmcErr}_4pf ]; then rm ${rhmcErr}_4pf; fi
+
 
 # These tests have to be run after their single counterparts, so we have to run them by hand here because the
 # associative array is not ordered.

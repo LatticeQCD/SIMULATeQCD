@@ -56,7 +56,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
     Gaugefield<floatT, true, HaloDepth, R18> gauge_reference(commBase);
-    gauge_reference.readconf_nersc("../test_conf/rhmc_reference_conf");
+    gauge_reference.readconf_nersc(param.gauge_file());
     gauge_reference.updateAll();
     grnd_state<true> d_rand;
     initialize_rng(param.seed(), d_rand);
@@ -79,16 +79,18 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
     for (int i = 1; i <= param.no_updates(); ++i) {
-        acc += HMC.update();
+        acc += HMC.update(!param.always_acc());
         acceptance = floatT(acc)/floatT(i);
         rootLogger.info("|Ploop|(" ,  i , ")= " ,  abs(ploop.getPolyakovLoop()));
     }
 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
+    gauge.writeconf_nersc(param.gauge_file()+std::to_string(param.no_updates()));
+
     bool ret = false;
 
-    bool pass = compare_fields<floatT,HaloDepth,true,R18>(gauge,gauge_reference,3e-9);
+    bool pass = compare_fields<floatT,HaloDepth,true,R18>(gauge,gauge_reference,1e-7);
 
     if (acceptance > 0.7 && pass) {
         ret=true;
@@ -137,7 +139,7 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/null", argc, argv);
 
     const int HaloDepth = 2;
 
