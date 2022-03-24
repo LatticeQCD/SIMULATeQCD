@@ -31,6 +31,8 @@ __host__ __device__ GSU3<floatT> inline threeLinkStaple(gaugeAccessor<floatT,com
   gSite site = GInd::getSite(siteMu.isite);
   gSite site_save = site;
   int mu = siteMu.mu;
+  if(mu == excluded_dir1 || mu == excluded_dir2) return temp*(floatT)NAN;
+  if(excluded_dir1 == excluded_dir2) return temp*(floatT)NAN;
     
   for (int nu_h = 1; nu_h < 4; nu_h++) {
     int nu = (mu+nu_h)%4;
@@ -49,37 +51,47 @@ __host__ __device__ GSU3<floatT> inline threeLinkStaple(gaugeAccessor<floatT,com
 // in other words, the primary excluded direction in this example is 2, so the extra excluded directions go in asending order:  0, 1, 3.
 template<class floatT,size_t HaloDepth,CompressionType comp>
 __host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_second_level(gaugeAccessor<floatT,comp> gAcc_0, gaugeAccessor<floatT,comp> gAcc_1, gaugeAccessor<floatT,comp> gAcc_2, gSiteMu siteMu, int excluded_dir, gaugeAccessor<floatT,comp> temp_gAcc_mu_excluded_dir, gaugeAccessor<floatT,comp> temp_gAcc_nu_excluded_dir) {
+
   typedef GIndexer<All,HaloDepth> GInd;
   GSU3<floatT> temp = gsu3_zero<floatT>();
   int mu = siteMu.mu;
+  if(mu==excluded_dir) return temp*(floatT)NAN;
   gSite origin = GInd::getSite(siteMu.isite);
   gSite upMu = GInd::site_up(origin,mu);
 
-  //std::vector<gaugeAccessor<floatT,comp>> temp_gAcc_mu_excluded_dir;// delayed construction trick, I learned from https://stackoverflow.com/questions/38603409/what-is-the-most-idiomatic-way-to-delay-the-construction-of-a-c-object
+  //ex = 0, then mu=1,2,3, => 10, 20, 30 (0, 1, 2) = (mu-1, mu-1, mu-1)
+  //ex = 1, then mu=0,2,3, => 10, 21, 31 (0, 1, 2) = (mu, mu-1, mu-1)
+  //ex = 2, then mu=0,1,3, => 20, 21, 32 (0, 1, 2) = (mu, mu, mu-1)
+  //ex = 3, then mu=0,1,2, => 30, 31, 32 (0, 1, 2) = (mu, mu, mu)
+  //=>gAcc_idx = mu > excluded_dir ? mu - 1 : mu
+
   int gAcc_idx = mu > excluded_dir ? mu - 1 : mu;
   assert(gAcc_idx < 3);
   if(gAcc_idx == 0)temp_gAcc_mu_excluded_dir=gAcc_0;
   else if(gAcc_idx == 1)temp_gAcc_mu_excluded_dir=gAcc_1;
   else if(gAcc_idx == 2)temp_gAcc_mu_excluded_dir=gAcc_2;
+  else assert(0);
 
   int nu_add = 0;
   for (int nu_h = 0; nu_h < 3; nu_h++) {
 
-    if(nu_h == mu) nu_add = 1;
-    int nu = nu_h + nu_add;  // we want nu here to go in ascending order; if excluded_dir == 1, then nu should go 0, 2, 3
-    if(nu == excluded_dir) continue;
+    if(nu_h == excluded_dir) nu_add = 1;
+    int nu = nu_h + nu_add; // we want nu here to go in ascending order; if excluded_dir == 1, then nu should go 0, 2, 3
+    if(nu == mu) continue;
+    //if(nu == excluded_dir) assert(0); //shouldn't occur
 
     gSite downNu = GInd::site_dn(origin,nu);
     gSite upNu = GInd::site_up(origin,nu);
     gSite upMudownNu = GInd::site_dn(upMu, nu);
+    assert(gAcc_idx != nu_h);
 
-    if(nu_h == 0){temp_gAcc_nu_excluded_dir=gAcc_0;assert(gAcc_idx != 0);}
-    else if(nu_h == 1){temp_gAcc_nu_excluded_dir=gAcc_1;assert(gAcc_idx != 1);}
-    else if(nu_h == 2){temp_gAcc_nu_excluded_dir=gAcc_2;assert(gAcc_idx != 2);}
+    if(nu_h == 0)temp_gAcc_nu_excluded_dir=gAcc_0;
+    else if(nu_h == 1)temp_gAcc_nu_excluded_dir=gAcc_1;
+    else if(nu_h == 2)temp_gAcc_nu_excluded_dir=gAcc_2;
       
     // nu > 0
     temp += temp_gAcc_mu_excluded_dir.getLink(GInd::getSiteMu(origin,nu))*temp_gAcc_nu_excluded_dir.getLink(GInd::getSiteMu(upNu,mu))*temp_gAcc_mu_excluded_dir.getLinkDagger(GInd::getSiteMu(upMu,nu));
-      // nu < 0
+    // nu < 0
     temp += temp_gAcc_mu_excluded_dir.getLinkDagger(GInd::getSiteMu(downNu,nu))*temp_gAcc_nu_excluded_dir.getLink(GInd::getSiteMu(downNu,mu))*temp_gAcc_mu_excluded_dir.getLink(GInd::getSiteMu(upMudownNu,nu));
   }
   return temp;
