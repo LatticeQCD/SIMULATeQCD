@@ -76,15 +76,17 @@ private:
                 if (onDevice) {
                     gpuError_t gpuErr = gpuMalloc((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(false, false, true, true);
                         std::stringstream err_msg;
-                        err_msg << "_rawPointer: Failed to allocate " << size/1000000000. << " GB of memory on device";
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on device";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
                 } else {
                     gpuError_t gpuErr = gpuMallocHost((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(true,true,false, false);
                         std::stringstream err_msg;
-                        err_msg << "_rawPointer: Failed to allocate " << size/1000000000. << " GB of memory on host";
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
                 }
@@ -106,6 +108,7 @@ private:
                     gpuError_t gpuErr = gpuFree(_rawPointer);
 
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(false, false, true, true);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on device";
@@ -115,6 +118,7 @@ private:
                 } else {
                     gpuError_t gpuErr = gpuFreeHost(_rawPointer);
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(true,true,false, false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on host";
