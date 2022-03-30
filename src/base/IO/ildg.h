@@ -27,9 +27,9 @@ floatT returnEndian(floatT input,bool change) {
         } else if(sizeof(input) == 4) {
             return __builtin_bswap32(input);
         }
-    } else {
-        return input;
-    }
+    } 
+    return input;
+    
 }
 
 
