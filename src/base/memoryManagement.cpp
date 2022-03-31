@@ -164,7 +164,7 @@ std::map<std::string,size_t> MemoryManagement::hostCounts;
 
 /// Easy access to the state of the MemoryManagement for the purpose of debugging.
 void MemoryManagement::memorySummary(bool show_counts_host, bool show_size_host,
-                                     bool show_counts_device, bool show_size_device) {
+                                     bool show_counts_device, bool show_size_device, bool rootOnly) {
      std::stringstream output;
      output << "MemoryManagement::memorySummary():\n";
     if (show_size_host || show_counts_host) {
@@ -197,7 +197,12 @@ void MemoryManagement::memorySummary(bool show_counts_host, bool show_size_host,
                    << "\t" << devContainer;
         }
     }
-    rootLogger.info(output.str());
+    if(rootOnly){
+        rootLogger.info(output.str());
+    }
+    else{
+        stdLogger.info(output.str());
+    }
 }
 
 

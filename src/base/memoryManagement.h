@@ -76,7 +76,7 @@ private:
                 if (onDevice) {
                     gpuError_t gpuErr = gpuMalloc((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(false, false, true, true);
+                        MemoryManagement::memorySummary(false, false, true, true,false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on device";
                         GpuError(err_msg.str().c_str(), gpuErr);
@@ -84,7 +84,7 @@ private:
                 } else {
                     gpuError_t gpuErr = gpuMallocHost((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(true,true,false, false);
+                        MemoryManagement::memorySummary(true,true,false, false,false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
@@ -432,7 +432,7 @@ public:
     template<bool onDevice>
     static gMemoryPtr<onDevice> getMemAt(const std::string& name, size_t size = 0);
     static void memorySummary(bool show_counts_host=true, bool show_size_host=true,
-                              bool show_counts_device=true, bool show_size_device=true);
+                              bool show_counts_device=true, bool show_size_device=true, bool rootOnly=true);
 
 };
 
