@@ -108,7 +108,7 @@ private:
                     gpuError_t gpuErr = gpuFree(_rawPointer);
 
                     if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(false, false, true, true);
+                        MemoryManagement::memorySummary(false, false, true, true, false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on device";
@@ -118,7 +118,7 @@ private:
                 } else {
                     gpuError_t gpuErr = gpuFreeHost(_rawPointer);
                     if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(true,true,false, false);
+                        MemoryManagement::memorySummary(true,true,false, false false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on host";
