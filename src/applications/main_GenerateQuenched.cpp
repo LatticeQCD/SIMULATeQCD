@@ -55,15 +55,13 @@ void set_seed( CommunicationBase &commBase, Parameter<int64_t> &seed ){
 int main(int argc, char* argv[]) {
 
     const size_t HaloDepth = 1;
-
-    ///Initialize Base
     typedef GIndexer<All,HaloDepth> GInd;
     stdLogger.setVerbosity(INFO);
-    StopWatch<true> timer;
     generateQuenchedParameters              lp;
     CommunicationBase                       commBase(&argc, &argv);
     lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
     commBase.init(lp.nodeDim());
+    StopWatch<true> timer;
     initIndexer(HaloDepth,lp,commBase);
     Gaugefield<PREC,ONDEVICE,HaloDepth>     gauge(commBase);
     GaugeAction<PREC,ONDEVICE,HaloDepth>    gaugeAction(gauge);
@@ -71,7 +69,6 @@ int main(int argc, char* argv[]) {
 
     grnd_state<false> host_state;
     grnd_state<true> dev_state;
-    ///Initialization Complete
 
     ///Start new stream or continue existing one?
     if ( lp.prev_conf.isSet()
