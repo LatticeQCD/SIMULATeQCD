@@ -17,6 +17,7 @@
 #include <float.h>
 #include <type_traits>
 #include <cuda_fp16.h>
+#include "gsu2.h"
 
 
 
@@ -188,6 +189,7 @@ public:
     __device__ __host__ void random(uint4 *state);                 // set links randomly
     __device__ __host__ void gauss(uint4 *state);                  // set links gauss
     __device__ __host__ void su3unitarize();                       // project to su3 using first two rows of link
+    __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol); // project to su3 using first two rows of link
     __device__ __host__ void su3reconstruct12()                    // project to su3 using first two rows of link
     {
         _e20 = GCOMPLEX(floatT)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
@@ -895,6 +897,136 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
 #endif
     }
 }
+
+/******************  realtr.c  (in su3.a) *******************************
+*									*
+* Real realtrace_su3( su3_matrix *a,*b)				*
+* return Re( Tr( A_adjoint*B )  					*
+*/
+// ported from Milc by Dan Hoying, 2022
+template<class floatT>
+__device__ __host__ floatT realtrace_su3( GSU3<floatT> a, GSU3<floatT> b ){
+int i,j;
+floatT sum;
+    for(sum=0.0,i=0;i<3;i++)for(j=0;j<3;j++)
+	sum+= a(i,j).cREAL*b(i,j).cREAL + a(i,j).cIMAG*b(i,j).cIMAG;
+    return(sum);
+}
+
+// ported from Milc by Dan Hoying, 2022
+template<class floatT>
+__device__ __host__ void left_su2_hit_n(GSU2_mat<floatT> *u, int p, int q, GSU3<floatT> *link)
+{
+  /* link <- u * link */
+  /* The 0 row of the SU(2) matrix u matches row p of the SU(3) matrix */
+  /* The 1 row of the SU(2) matrix u matches row q of the SU(3) matrix */
+  /* C. DeTar 18 Oct 1990 */
+
+  int m;
+
+  for (m = 0; m < 3; m++)
+    mult_su2_mat_vec_elem_n(u, &((*link)(p,m)), &((*link)(q,m)));
+
+} /* l_su2_hit_n.c */
+
+// ported from Milc by Dan Hoying, 2022
+template<class floatT>
+__device__ __host__ void mult_su2_mat_vec_elem_n(GSU2_mat<floatT> *u, GCOMPLEX(floatT) *x0,GCOMPLEX(floatT) *x1)
+{
+  /* Multiplies the complex column spinor (x0, x1) by the SU(2) matrix u */
+  /* and puts the result in (x0,x1).  */
+  /* Thus x <- u * x          */
+  /* C. DeTar 3 Oct 1990 */
+  
+  GCOMPLEX(floatT) z0, z1, t0, t1;
+
+  t0 = *x0; t1 = *x1;
+
+  z0 = u->operator()(0,0) * t0;
+  z1 = u->operator()(0,1) * t1;
+  *x0 = z0 + z1;
+  z0 = u->operator()(1,0) * t0;
+  z1 = u->operator()(1,1) * t1;
+  *x1 = z0 + z1;
+
+} /* m_su2_mat_vec_elem_n.c */
+
+
+
+// project to su3 by maximizing Re(Tr(guess*(toproj)))
+template<class floatT>
+__device__ __host__ int GSU3<floatT>::su3unitarize_hits(const int Nhit, floatT tol) {
+
+	// maximize the real trace of guess*this.  ported from project_su3_hit.c in Milc by Dan Hoying, 2022
+	//
+   GSU3<floatT> w;//guess,output	
+
+   int index1, ina, inb,ii;
+   floatT v0,v1,v2,v3, vsq;
+   floatT z;
+   GSU3<floatT> action;
+   GSU2_mat<floatT> h;
+   const int Nc = 3;
+   double conver, old_tr = 0, new_tr;
+
+   if(tol > 0)
+     old_tr = realtrace_su3(w,(*this))/3.0;
+   conver = 1.0;
+
+   /* Do SU(2) hits */
+   for(index1=0;index1<Nhit && conver > tol; index1++)
+   {
+      /*  pick out an SU(2) subgroup */
+      ina =  index1    % Nc;
+      inb = (index1+1) % Nc;
+      if(ina > inb){ ii=ina; ina=inb; inb=ii; }
+
+      //mult_su3_na( w, q, &action );
+      action = w * dagger(*this);
+
+      /* decompose the action into SU(2) subgroups using
+         Pauli matrix expansion */
+      /* The SU(2) hit matrix is represented as v0 + i *
+         Sum j (sigma j * vj)*/
+      v0 =  action(ina,ina).cREAL + action(inb,inb).cREAL;
+      v3 =  action(ina,ina).cIMAG - action(inb,inb).cIMAG;
+      v1 =  action(ina,inb).cIMAG + action(inb,ina).cIMAG;
+      v2 =  action(ina,inb).cREAL - action(inb,ina).cREAL;
+
+      /* Normalize v */
+      vsq = v0*v0 + v1*v1 + v2*v2 + v3*v3;
+      z = sqrt((double)vsq );
+      if(z == 0.){z = 1.;v0 = 1.;}
+      else {v0 = v0/z; v1 = v1/z; v2 = v2/z; v3 = v3/z;}
+
+      /* Elements of SU(2) matrix */
+
+      h(0,0) = GCOMPLEX(floatT)( v0,-v3);
+      h(0,1) = GCOMPLEX(floatT)(-v2,-v1);
+      h(1,0) = GCOMPLEX(floatT)( v2,-v1);
+      h(1,1) = GCOMPLEX(floatT)( v0, v3);
+
+      /* update the link */
+      left_su2_hit_n(&h,ina,inb,&w);
+
+      /* convergence measure every third hit */
+      if(tol>0 && (index1 % 3) == 2){
+	new_tr = realtrace_su3(w,*this)/3.;
+	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
+	old_tr = new_tr;
+      }
+      
+   } /* hits */
+
+   int status = 0;
+   if( Nhit > 0 && tol > 0 && conver > tol )
+     status = 1;
+   *this = w;
+   return status;
+
+}
+
+
 
 // project to su3 using first two rows of link
 template<class floatT>

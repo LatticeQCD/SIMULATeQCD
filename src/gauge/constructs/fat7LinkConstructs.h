@@ -33,15 +33,22 @@ __host__ __device__ GSU3<floatT> inline threeLinkStaple(gaugeAccessor<floatT,com
   int mu = siteMu.mu;
   if(mu == excluded_dir1 || mu == excluded_dir2) return temp*(floatT)NAN;
   if(excluded_dir1 == excluded_dir2) return temp*(floatT)NAN;
+
+  int check_count = 0;
     
   for (int nu_h = 1; nu_h < 4; nu_h++) {
     int nu = (mu+nu_h)%4;
     if(nu == excluded_dir1 || nu == excluded_dir2) continue;
+    check_count += 1;
     temp += gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
     site = site_save;
     temp += gAcc.template getLinkPath<All, HaloDepth>(site, Back(nu), mu, nu);
     site = site_save;
   }
+
+  if(excluded_dir1 >= 0 || excluded_dir2 >= 0) assert(check_count == 1); //loop length is 1 in the case of use in hyp smearing
+  if(excluded_dir1 >= 0 || excluded_dir2 >= 0) assert(excluded_dir1 >= 0 && excluded_dir2 >= 0); //only one excluded dir not supported
+
   return temp;
 }
 
@@ -141,7 +148,8 @@ __host__ __device__ GSU3<floatT> inline su3unitarize(gaugeAccessor<floatT,comp> 
   gSite origin = GInd::getSite(siteMu.isite);
   temp += gAcc.getLink(GInd::getSiteMu(origin,mu));
   //temp += gAcc.template getLink<All, HaloDepth>(siteMu);
-  temp.su3unitarize();
+  temp.su3unitarize_hits(9, 0.);
+  //temp.su3unitarize();
   return temp;
 }
 

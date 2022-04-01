@@ -18,7 +18,6 @@ void HypSmearing<floatT, onDevice, HaloDepth, comp>::Su3Unitarize(Gaugefield<flo
     if(update_all)gauge_out.updateAll();
 }
 
-
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void HypSmearing<floatT, onDevice, HaloDepth, comp>::SmearAll(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out) {
 

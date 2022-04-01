@@ -89,7 +89,7 @@ public:
   __device__  GSU2 &operator/=(const floatT &y) {
     *this=*this/y;
     return *this;
-  }
+  }  
 
   __device__  floatT tr2() {
     return( real(_e11) );
@@ -227,4 +227,54 @@ __device__ __host__  inline floatT realtrace(const GSU3<floatT> &x) {
   return ( real(x.getLink00() + x.getLink11() +  x.getLink22()) );
 }
 
+
+template<typename floatT>
+__device__ __host__  inline floatT realtrace(const GSU2<floatT> &x) {
+  return ( real(x.getLink00() + x.getLink11()) );
+}
+
+//SU(2) matrix class, stub for now
+template<class floatT>
+class GSU2_mat;
+
+template<class floatT>
+class GSU2_mat {
+private:
+    GCOMPLEX(floatT) _e00, _e01,
+                     _e10, _e11;
+
+public:
+
+    constexpr GSU2_mat(const GSU2_mat<floatT>&) = default;
+    __host__ __device__ GSU2_mat() {};
+
+    __host__ __device__ GSU2_mat(const floatT x) {
+        _e00 = x;
+        _e01 = x;
+        _e10 = x;
+        _e11 = x;
+    };
+
+    __host__ __device__ GSU2_mat(GCOMPLEX(floatT) e00, GCOMPLEX(floatT) e01, 
+                                 GCOMPLEX(floatT) e10, GCOMPLEX(floatT) e11) :
+                                 _e00(e00), _e01(e01), 
+                                 _e10(e10), _e11(e11) {};
+
+
+    __host__ __device__ GCOMPLEX(floatT) &operator()(int i, int j) {
+        switch (i * 2 + j) {
+            case 0:
+                return _e00;
+            case 1:
+                return _e01;
+            case 2:
+                return _e10;
+            case 3:
+                return _e11;
+        }
+        _e00 = GCOMPLEX(floatT)(nan(""), nan(""));
+
+        return _e00;
+    }
+};
 #endif

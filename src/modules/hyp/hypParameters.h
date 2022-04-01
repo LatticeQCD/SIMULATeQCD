@@ -14,8 +14,8 @@ struct HypSmearingParameters{
     floatT alpha_3;               
     HypSmearingParameters() :
         alpha_1(0.75),
-        alpha_2(0.6),
-        alpha_3(0.3) {}
+        alpha_2(0.0),
+        alpha_3(0.0) {}
 };
 
 #endif
