@@ -3,6 +3,17 @@
 
 //! HisqDslash
 
+template<Layout LatLayoutRHS, size_t HaloDepthSpin>
+__host__ __device__ size_t spinor_coord_to_ind(sitexyzt coord, int stack){
+
+    typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
+
+    return GInd::coordToIndex_Full_eo(coord) + stack * GInd::getLatData().sizehFull;
+
+}
+
+//! HisqDslash
+
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const{
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
@@ -11,22 +22,32 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 
     for (int mu = 0; mu < 4; mu++) {
 
+
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(
-                GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu))) *
-            _spinorIn.getElement(GInd::site_up(site, mu));
+                GIndexer<All, HaloDepthGauge>::coordMuToIndexMu_Full(site.coordFull.x, site.coordFull.y, site.coordFull.z, site.coordFull.t,  mu)) *
+            _spinorIn.getElement(spinor_coord_to_ind<LatLayoutRHS, HaloDepthSpin>(GInd::template site_move<1>(site.coordFull, mu), site.stack));
         Stmp -= static_cast<floatT>(C_1000) * _gAcc_smeared.getLinkDagger(
-                GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu))) *
-            _spinorIn.getElement(GInd::site_dn(site, mu));
+                GIndexer<All, HaloDepthGauge>::coordMuToIndexMu_Full(GInd::template site_move<-1>(site.coordFull, mu).x, 
+			GInd::template site_move<-1>(site.coordFull, mu).y, GInd::template site_move<-1>(site.coordFull, mu).z, 
+			GInd::template site_move<-1>(site.coordFull, mu).t,  mu)) *
+            _spinorIn.getElement(spinor_coord_to_ind<LatLayoutRHS, HaloDepthSpin>(GInd::template site_move<-1>(site.coordFull, mu), site.stack));
 
         Stmp += static_cast<floatT>(_c_3000) * _gAcc_Naik.getLink(
-                GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_up(site, mu), mu))) *
-            _spinorIn.getElement(GInd::site_up_up_up(site, mu, mu, mu));
+                GIndexer<All, HaloDepthGauge>::coordMuToIndexMu_Full(GInd::template site_move<1>(site.coordFull, mu).x, 
+			GInd::template site_move<1>(site.coordFull, mu).y, GInd::template site_move<1>(site.coordFull, mu).z, 
+			GInd::template site_move<1>(site.coordFull, mu).t,  mu)) *
+            _spinorIn.getElement(spinor_coord_to_ind<LatLayoutRHS, HaloDepthSpin>(GInd::template site_move<3>(site.coordFull, mu), site.stack));
+
+
         Stmp -= static_cast<floatT>(_c_3000) * _gAcc_Naik.getLinkDagger(
-                GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn_dn(site, mu, mu), mu))) *
-            _spinorIn.getElement(GInd::site_dn_dn_dn(site, mu, mu, mu));
+                GIndexer<All, HaloDepthGauge>::coordMuToIndexMu_Full(GInd::template site_move<-2>(site.coordFull, mu).x, 
+			GInd::template site_move<-2>(site.coordFull, mu).y, GInd::template site_move<-2>(site.coordFull, mu).z, 
+			GInd::template site_move<-2>(site.coordFull, mu).t,  mu)) *
+            _spinorIn.getElement(spinor_coord_to_ind<LatLayoutRHS, HaloDepthSpin>(GInd::template site_move<-3>(site.coordFull, mu), site.stack));
     }
     return Stmp;
 }
+
 
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 __host__ __device__ auto HisqMdaggMFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site){

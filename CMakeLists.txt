@@ -75,7 +75,7 @@ if (USE_HIP)
     endif()
     
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_PATH}/include;${HIP_INCLUDE_DIRS}")
-    set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${HIP_LIBRARIES}")
+    set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${HIP_LIBRARIES};/opt/cray/pe/mpich/8.1.12/gtl/lib/libmpi_gtl_hsa.so")
 endif()
 
 include_directories(SYSTEM "${SIMULATEQCD_INCLUDE_DIRS}")

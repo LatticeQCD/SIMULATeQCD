@@ -33,6 +33,7 @@ public:
         return static_cast<GSU3<floatT_compute>>(this->reconstruct(siteMu));
     }
 
+
     template<Layout LatLayout, size_t HaloDepth>
     __host__ __device__ inline size_t getIndexComm(size_t isiteFull, size_t mu) const {
         gSiteMu siteMu = GIndexer<LatLayout, HaloDepth>::getSiteMuFull(isiteFull, mu);
@@ -66,6 +67,18 @@ public:
     __host__ __device__ inline GSU3<floatT_compute> getLinkDagger(const gSiteMu &siteMu) const {
         return static_cast<GSU3<floatT_compute>>(this->reconstructDagger(siteMu));
     }
+
+
+    template<class floatT_compute=floatT_memory>
+    __host__ __device__ inline GSU3<floatT_compute> getLink(const size_t &siteMu) const {
+        return static_cast<GSU3<floatT_compute>>(this->reconstruct2(siteMu));
+    }
+
+    template<class floatT_compute=floatT_memory>
+    __host__ __device__ inline GSU3<floatT_compute> getLinkDagger(const size_t &siteMu) const {
+        return static_cast<GSU3<floatT_compute>>(this->reconstructDagger2(siteMu));
+    }
+
 
     template<class floatT_compute=floatT_memory>
     __host__ __device__ inline void setLink(const gSiteMu &siteMu, GSU3<floatT_compute> mat) {

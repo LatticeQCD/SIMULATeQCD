@@ -99,6 +99,34 @@ struct GaugeConstructor<floatT_memory, R18> : public GeneralAccessor<GCOMPLEX(
                                    conj(this->template getElementEntry<e12>(idx.indexMuFull)),
                                    conj(this->template getElementEntry<e22>(idx.indexMuFull)));
     }
+
+
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct2(const size_t& idx) const {
+        GSU3<floatT_memory> ret(
+                this->template getElementEntry<e00>(idx),
+                this->template getElementEntry<e01>(idx),
+                this->template getElementEntry<e02>(idx),
+                this->template getElementEntry<e10>(idx),
+                this->template getElementEntry<e11>(idx),
+                this->template getElementEntry<e12>(idx),
+                this->template getElementEntry<e20>(idx),
+                this->template getElementEntry<e21>(idx),
+                this->template getElementEntry<e22>(idx));
+        return ret;
+    }
+
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger2(const size_t& idx) const {
+        return GSU3<floatT_memory>(conj(this->template getElementEntry<e00>(idx)),
+                                   conj(this->template getElementEntry<e10>(idx)),
+                                   conj(this->template getElementEntry<e20>(idx)),
+                                   conj(this->template getElementEntry<e01>(idx)),
+                                   conj(this->template getElementEntry<e11>(idx)),
+                                   conj(this->template getElementEntry<e21>(idx)),
+                                   conj(this->template getElementEntry<e02>(idx)),
+                                   conj(this->template getElementEntry<e12>(idx)),
+                                   conj(this->template getElementEntry<e22>(idx)));
+    }
+
 };
 
 template<class floatT_memory>
@@ -166,6 +194,45 @@ struct GaugeConstructor<floatT_memory, U3R14> : public GeneralAccessor<GCOMPLEX(
         tmp.u3reconstructDagger(conj(phase));
         return tmp;
     }
+
+
+
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct2(const size_t& idx) const {
+        GSU3<floatT_memory> ret(
+                this->template getElementEntry<e00>(idx),
+                this->template getElementEntry<e01>(idx),
+                this->template getElementEntry<e02>(idx),
+                this->template getElementEntry<e10>(idx),
+                this->template getElementEntry<e11>(idx),
+                this->template getElementEntry<e12>(idx),
+                (floatT_memory)1.0, (floatT_memory)1.0, (floatT_memory)1.0);
+        GCOMPLEX(floatT_memory) phase = this->template getElementEntry<e20>(idx);
+        ret.u3reconstruct(phase);
+
+        return ret;
+    }
+
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger2(const size_t& idx) const {
+        GSU3<floatT_memory> tmp = GSU3<floatT_memory>(
+                conj(this->template getElementEntry<e00>(idx)),
+                conj(this->template getElementEntry<e10>(idx)),
+                GCOMPLEX(floatT_memory)(0., 0.),
+                conj(this->template getElementEntry<e01>(idx)),
+                conj(this->template getElementEntry<e11>(idx)),
+                GCOMPLEX(floatT_memory)(0., 0.),
+                conj(this->template getElementEntry<e02>(idx)),
+                conj(this->template getElementEntry<e12>(idx)),
+                GCOMPLEX(floatT_memory)(0., 0.));
+
+        GCOMPLEX(floatT_memory) phase = this->template getElementEntry<e20>(idx);
+        tmp.u3reconstructDagger(conj(phase));
+        return tmp;
+    }
+
+
+
+
+
 };
 
 template<class floatT_memory>

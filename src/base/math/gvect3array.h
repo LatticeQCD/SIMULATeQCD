@@ -46,6 +46,18 @@ struct gVect3arrayAcc : public GeneralAccessor<GCOMPLEX(floatT), 3 > {
         return static_cast<gVect3<floatT_compute>>(ret);
     }
 
+
+    template<class floatT_compute=floatT>
+    __host__ __device__ inline gVect3<floatT_compute> getElement(const size_t &isiteStackFull) const {
+        gVect3<floatT> ret(
+                this->template getElementEntry<0>(isiteStackFull),
+                this->template getElementEntry<1>(isiteStackFull),
+                this->template getElementEntry<2>(isiteStackFull));
+        return static_cast<gVect3<floatT_compute>>(ret);
+    }
+
+
+
     template<class floatT_compute=floatT>
     __host__ __device__ inline void setElement(const gSiteStack &site, const gVect3<floatT_compute> &vec) {
         this->template setElementEntry<0>(site.isiteStackFull, vec.getElement0());
