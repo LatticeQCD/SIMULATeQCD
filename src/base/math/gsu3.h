@@ -954,24 +954,26 @@ __device__ __host__ void mult_su2_mat_vec_elem_n(GSU2_mat<floatT> *u, GCOMPLEX(f
 
 
 // project to su3 by maximizing Re(Tr(guess*(toproj)))
+// ported from Milc by Dan Hoying, 2022
 template<class floatT>
-__device__ __host__ int GSU3<floatT>::su3unitarize_hits(const int Nhit, floatT tol) {
+__device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<floatT> *q) {
 
 	// maximize the real trace of guess*this.  ported from project_su3_hit.c in Milc by Dan Hoying, 2022
 	//
-   GSU3<floatT> w;//guess,output	
+   GSU3<floatT> w = *q; //w = guess, set equal to input q
 
    int index1, ina, inb,ii;
    floatT v0,v1,v2,v3, vsq;
    floatT z;
-   GSU3<floatT> action;
+   GSU3<floatT> action(0);
    GSU2_mat<floatT> h;
    const int Nc = 3;
    double conver, old_tr = 0, new_tr;
 
    if(tol > 0)
-     old_tr = realtrace_su3(w,(*this))/3.0;
+     old_tr = realtrace_su3(w,*q)/3.0;
    conver = 1.0;
+   assert(!std::isnan(old_tr));
 
    /* Do SU(2) hits */
    for(index1=0;index1<Nhit && conver > tol; index1++)
@@ -982,16 +984,18 @@ __device__ __host__ int GSU3<floatT>::su3unitarize_hits(const int Nhit, floatT t
       if(ina > inb){ ii=ina; ina=inb; inb=ii; }
 
       //mult_su3_na( w, q, &action );
-      action = w * dagger(*this);
+      assert(!std::isnan(real(q->operator()(ina,ina))));
+      action = w * dagger(*q);
 
       /* decompose the action into SU(2) subgroups using
          Pauli matrix expansion */
       /* The SU(2) hit matrix is represented as v0 + i *
          Sum j (sigma j * vj)*/
-      v0 =  action(ina,ina).cREAL + action(inb,inb).cREAL;
-      v3 =  action(ina,ina).cIMAG - action(inb,inb).cIMAG;
-      v1 =  action(ina,inb).cIMAG + action(inb,ina).cIMAG;
-      v2 =  action(ina,inb).cREAL - action(inb,ina).cREAL;
+      v0 =  real(action(ina,ina)) + real(action(inb,inb));
+      assert(!std::isnan(v0));
+      v3 =  imag(action(ina,ina)) - imag(action(inb,inb));
+      v1 =  imag(action(ina,inb)) + imag(action(inb,ina));
+      v2 =  real(action(ina,inb)) - real(action(inb,ina));
 
       /* Normalize v */
       vsq = v0*v0 + v1*v1 + v2*v2 + v3*v3;
@@ -1011,7 +1015,7 @@ __device__ __host__ int GSU3<floatT>::su3unitarize_hits(const int Nhit, floatT t
 
       /* convergence measure every third hit */
       if(tol>0 && (index1 % 3) == 2){
-	new_tr = realtrace_su3(w,*this)/3.;
+	new_tr = realtrace_su3(w,*q)/3.;
 	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
 	old_tr = new_tr;
       }
@@ -1021,7 +1025,7 @@ __device__ __host__ int GSU3<floatT>::su3unitarize_hits(const int Nhit, floatT t
    int status = 0;
    if( Nhit > 0 && tol > 0 && conver > tol )
      status = 1;
-   *this = w;
+   *q = w;
    return status;
 
 }

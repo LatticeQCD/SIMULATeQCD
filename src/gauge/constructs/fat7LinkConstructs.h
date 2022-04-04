@@ -147,8 +147,9 @@ __host__ __device__ GSU3<floatT> inline su3unitarize(gaugeAccessor<floatT,comp> 
   int mu = siteMu.mu;
   gSite origin = GInd::getSite(siteMu.isite);
   temp += gAcc.getLink(GInd::getSiteMu(origin,mu));
+  if(std::isnan(real(temp(0,0)))) return temp;
   //temp += gAcc.template getLink<All, HaloDepth>(siteMu);
-  temp.su3unitarize_hits(9, 0.);
+  su3unitarize_hits(9, 0., &temp);
   //temp.su3unitarize();
   return temp;
 }
