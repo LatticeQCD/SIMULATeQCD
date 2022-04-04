@@ -19,7 +19,7 @@
 #include "../modules/observables/ColorMagneticCorr.h"
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
-#include <cstdio>
+
 
 #define USE_GPU true
 //define precision
@@ -366,9 +366,9 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
     EnergyMomentumTensor<floatT, USE_GPU, HaloDepth> EMT(gauge);
 
-    BlockingMethod<floatT, true, HaloDepth, floatT, topChargeDens_imp<floatT, HaloDepth, true>, CorrType<floatT>> BlockTopChDens(gauge, lp.binsize());
-    BlockingMethod<floatT, true, HaloDepth, floatT, EMTtrace<floatT, true, HaloDepth>, CorrType<floatT>> BlockBulk(gauge, lp.binsize());
-    BlockingMethod<floatT, true, HaloDepth, Matrix4x4Sym<floatT>, EMTtraceless<floatT, true, HaloDepth>, CorrType<floatT>> BlockShear(gauge, lp.binsize());
+    BlockingMethod<floatT, true, HaloDepth, floatT, topChargeDens_imp<floatT, HaloDepth, true>, CorrType<floatT>> BlockTopChDens(gauge);
+    BlockingMethod<floatT, true, HaloDepth, floatT, EMTtrace<floatT, true, HaloDepth>, CorrType<floatT>> BlockBulk(gauge);
+    BlockingMethod<floatT, true, HaloDepth, Matrix4x4Sym<floatT>, EMTtraceless<floatT, true, HaloDepth>, CorrType<floatT>> BlockShear(gauge);
 
     ColorElectricCorr<floatT, USE_GPU, HaloDepth> CEC(gauge);
     ColorMagneticCorr<floatT, USE_GPU, HaloDepth> CMC(gauge);

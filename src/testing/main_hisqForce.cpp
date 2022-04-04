@@ -9,10 +9,9 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/HISQ/hisqSmearing.h"
 #include "../modules/HISQ/hisqForce.h"
-#include "../gauge/gauge_kernels.cpp"
+#include "testing.h"
 
-
-#define PREC float
+#define PREC double 
 #define USE_GPU true
 
 
@@ -46,16 +45,12 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC, true, HaloDepth> force(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin> SpinorIn(commBase);
 
-    gauge.readconf_nersc("../test_conf/gauge12750");
-
-    gauge.updateAll();
-
-    grnd_state<false> h_rand;
     grnd_state<true> d_rand;
 
-    h_rand.make_rng_state(rhmc_param.seed());
-
-    d_rand = h_rand;
+    initialize_rng(rhmc_param.seed(),d_rand);    
+    rootLogger.info("seed=",rhmc_param.seed());
+    gauge.random(d_rand.state);
+    gauge.updateAll();
 
     HisqSmearing<PREC, true, HaloDepth,R18> smearing(gauge,gaugeLvl2,gaugeNaik);
     smearing.SmearAll();
@@ -88,33 +83,20 @@ int main(int argc, char *argv[]) {
     
     Gaugefield<PREC,true,HaloDepth> force_reference(commBase);
 
-    force_reference.readconf_nersc("../test_conf/force_reference");
+    force_reference.readconf_nersc(rhmc_param.GaugefileName());
 
-    
-    force.writeconf_nersc("../test_conf/force_testrun");
-
+    // readconf_nersc does some reunitarization. Writing and reading makes sure the comparison between this generated
+    // force field and force_reference have both been reunitarized in the same way.    
+    force.writeconf_nersc("../test_conf/force_testrun",3,2);
     force.readconf_nersc("../test_conf/force_testrun");
 
-    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    LatticeContainer<true, int> dummy(commBase);
-    dummy.adjustSize(elems);
-
-    
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<PREC,true,HaloDepth,R18>(force,force_reference));
-
-    int faults = 0;
-    dummy.reduce(faults,elems);
-
-    rootLogger.info(faults, " faulty links found!");
-
-    if (faults == 0) {
+    bool pass = compare_fields<PREC,HaloDepth,true,R18>(force,force_reference,3e-9);
+    if (pass) {
         rootLogger.info(CoutColors::green, "Force is correct", CoutColors::reset);
-    }
-    else {
+    } else {
         rootLogger.error("Force is wrong!");
         return 1;
     }
-
        
     return 0;
 }

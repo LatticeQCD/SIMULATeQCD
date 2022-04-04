@@ -6,8 +6,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-#include "../gauge/gauge_kernels.cpp"
- 
+#include "testing.h" 
     
 
 template<class floatT, int HaloDepth>
@@ -36,7 +35,7 @@ bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoe
     double acceptance = 0.0;
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
-    for (int i = 1; i <= 2; ++i) {
+    for (int i = 1; i <= 10; ++i) {
         acc += HMC.update(true, true);
         acceptance = double(acc)/double(i);
     }
@@ -57,7 +56,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
 
     Gaugefield<floatT, true, HaloDepth, R18> gauge(commBase);
     Gaugefield<floatT, true, HaloDepth, R18> gauge_reference(commBase);
-    gauge_reference.readconf_nersc("../test_conf/rhmc_reference_conf");
+    gauge_reference.readconf_nersc(param.gauge_file());
     gauge_reference.updateAll();
     grnd_state<true> d_rand;
     initialize_rng(param.seed(), d_rand);
@@ -80,31 +79,23 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff 
     PolyakovLoop<floatT, true, HaloDepth, R18> ploop(gauge);
 
     for (int i = 1; i <= param.no_updates(); ++i) {
-        acc += HMC.update();
+        acc += HMC.update(!param.always_acc());
         acceptance = floatT(acc)/floatT(i);
-
         rootLogger.info("|Ploop|(" ,  i , ")= " ,  abs(ploop.getPolyakovLoop()));
     }
 
     rootLogger.info("Run has ended. acceptance = " ,  acceptance);
 
+    gauge.writeconf_nersc(param.gauge_file()+std::to_string(param.no_updates()));
+
     bool ret = false;
-    
-    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    LatticeContainer<true, int> dummy(commBase);
-    dummy.adjustSize(elems);
 
-    
-    dummy.template iterateOverBulk<All,HaloDepth>(count_faulty_links<floatT,true,HaloDepth,R18>(gauge,gauge_reference));
+    bool pass = compare_fields<floatT,HaloDepth,true,R18>(gauge,gauge_reference,1e-7);
 
-    int faults = 0;
-    dummy.reduce(faults,elems);
-
-    rootLogger.info(faults, " faulty links found!");
-
-    if (acceptance > 0.7 && faults == 0) {
+    if (acceptance > 0.7 && pass) {
         ret=true;
     }
+
     return ret;
 };
 
@@ -148,7 +139,7 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/rhmcTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/null", argc, argv);
 
     const int HaloDepth = 2;
 
@@ -165,7 +156,7 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("STARTING REVERSIBILITY TEST:");
 
-    typedef float floatT;
+    typedef double floatT;
 
     bool revers = reverse_test<floatT, HaloDepth>(commBase, param, rat);
 
@@ -188,7 +179,7 @@ int main(int argc, char *argv[]) {
         rootLogger.error("FULL UPDATE TEST: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
 
 
-    if (revers /*&& no_rng*/ && full)  {
+    if (revers && full)  {
         rootLogger.info(CoutColors::green ,  "ALL TESTS PASSED" ,  CoutColors::reset);
         rootLogger.warn("This only indicates that force matches action.\n");
         rootLogger.warn("Check Observables to find out if action is correct!");

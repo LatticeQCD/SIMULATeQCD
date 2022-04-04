@@ -1,5 +1,5 @@
 #
-# run.param
+# condensate.param
 #
 # Parameter file for HISQ action.
 #
@@ -7,15 +7,16 @@
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass
+#          mu0: Imaginary chemical potential
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory
-#   no_step_1f: number of steps of strange quark integration
+#   no_step_sf: number of steps of strange quark integration
 #        no_sw: number of steps of gauge integration
 #      residue: residue for inversions
 #        cgMax: max cg steps for multi mass solver
 #   always_acc: always accept configuration in Metropolis
-#     rat_file:
+#     rat_file: rational approximation input file
 #
 #    rand_flag: new random numbers(0)/read in random numbers(1)
 #    rand_file: file name for random numbers and infos
@@ -26,26 +27,23 @@
 #   no_updates: number of updates
 #  write_every: write out configuration every
 #
-Lattice = 20 20 20 20
-Nodes   = 2 1 1 1
-beta    =  3.85
-mass_s  =  0.0591
-mass_ud =  0.00591
-
-step_size  = 0.02
-no_md      = 10
-no_step_sf = 5
-no_sw      = 10
-#residue   = 1e-12
-cgMax      = 6500
-always_acc = 0
-rat_file   = ../parameter/sample_eo.rat
-
+Lattice     = 32 32 32 8
+Nodes       = 1 1 1 1
+beta        = 6.285 
+mass_s      = 0.0790
+mass_ud     = 0.0009875
+mu0         = 0.4
+step_size   = 0.0166666666666666666
+no_md       = 30
+no_step_sf  = 5
+no_sw       = 15
+cgMax       = 6500
+always_acc  = 0
+rat_file    = /work/data/dclarke/imaginaryMu/in.rational_l244f21b5980m004346m1173 
 rand_flag   = 0
 rand_file   = rand
-seed        = 1337
-load_conf   = 1
-Gaugefile   = l328f21b6260m00405m0810a_4000.
-conf_nr   = 0
+seed        = 20214
+Gaugefile   = ../test_conf/l328f21b6285m0009875m0790a_019.995
+conf_nr     = 0
 no_updates  = 100
 write_every = 10

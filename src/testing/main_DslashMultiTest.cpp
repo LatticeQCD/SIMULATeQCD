@@ -343,28 +343,28 @@ bool test_dslash2(CommunicationBase &commBase){
 
     bool simple = false;
 
-    GCOMPLEX(floatT) reference;
+    GCOMPLEX(floatT) scalarProduct, reference;
 
     spinorOut.updateAll();
 
     if (LatLayoutRHS==All)
-        reference = GCOMPLEX(floatT)(-20.616311,-374.686257);
+        reference = GCOMPLEX(floatT)(-20.616344023,-374.68626006);
     
     else if(LatLayoutRHS==Odd)
-        reference = GCOMPLEX(floatT)(-245.142995,983.585942);
+        reference = GCOMPLEX(floatT)(-245.143001,983.5859418);
     
     else
-        reference = GCOMPLEX(floatT)(-34.2590158,-404.02229);
+        reference = GCOMPLEX(floatT)(-34.25902057,-404.02228596);
 
-    if (spinor.dotProduct(spinorOut) == reference)
+    scalarProduct = spinor.dotProduct(spinorOut);
+    if (scalarProduct == reference)
         simple = true;
 
-
     if (simple) {
-        rootLogger.info("Simple test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
+        stdLogger.info("Simple test using scalar product: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
         return false;
     } else {
-        rootLogger.error("Simple test using scalar product failed!");
+        stdLogger.error("Simple test using scalar product failed!");
         return true;
     }
 }

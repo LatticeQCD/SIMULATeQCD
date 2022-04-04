@@ -15,4 +15,5 @@ maxdepth: 1
 06_gaugefield.md
 07_spinorfield.md
 08_topology.md
+09_configurationIO.md
 ```

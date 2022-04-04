@@ -1,31 +1,86 @@
 # Testing the code
 
-This is perhaps the most important aspect of code creation for SIMULATeQCD: *It is crucially important that you write a test for each new feature that you implement.* As indicated in the [Code Structure](03_organizeFiles.md#how-to-organize-new-files) wiki, new testing `main` programs should go in `src/testing`. *It is also crucially important that you run ALL tests after you have made major changes.* Please always do this, even if you are convinced that your changes could not have possibly broken anything, since
+This is perhaps the most important aspect of code creation for SIMULATeQCD: 
+**It is crucially important that you write a test for each new feature that you implement.** 
+As indicated in the [Code Structure](03_organizeFiles.md#how-to-organize-new-files) document, 
+new testing `main` programs should go in `src/testing`. **It is also crucially important that 
+you run ALL tests after you have made major changes.** Please always do this, even if 
+you are convinced that your changes could not have possibly broken anything. 
 
-1. you might be wrong about that, and
-2. someone else might have been lazy and not run the tests after they made changes.
+To make running the tests a bit easier for you, we have included some scripts to do this 
+automatically. In the `scripts` directory one finds the Bash scripts
 
-To make running the tests a bit easier for you, we have included some scripts to do this automatically. In the `scripts` directory one finds `TEST_run.bash` as well as a job script `jobscript_TEST_run`. To run the tests navigate to your build folder and
+1. runTests_0.bash
+2. runTests_1.bash
+3. runTests_2.bash
+
+which should be run in that order. To compile the tests,
+navigate to your build folder and
 ```shell
 make -j tests
-cd testing
-sbatch jobscript_TEST_run
 ```
+It may take some time to compile all the tests; in particular for CUDA versions lower than
+11.5, this seems to take more than an hour. 
+Next, you should try to reserve 4 GPUs on whatever machine you are using. (If you are
+running locally and only have access to 1 GPU, you can use `runTestsSingleGPU.bash`.
+This is better than not doing any test at all, but please not we will not accept your
+pull request until we verify all multi-GPU tests pass.)
+We have collected test executables within each `runTests` script to run in
+less than 30 minutes on Pascal GPUs so that you can test interactively at most
+computing centers. When you are ready to run the tests,
+```shell
+cd testing
+../scripts/runTests_0.bash
+```
+(On one GPU, instead call `../scripts/runTestsSingleGPU.bash`.) 
+The output for each test is redirected to an `OUT` file. If there are errors for a test, 
+it will be redirected to a `runERR` file. All empty `runERR` files are deleted. Once you
+have run script `0`, run scripts `1` and `2`.
 
-Note that the tests will take some time to compile, usually more than an hour. The jobscript requests the `devel_gpu` queue with 4 GPUs. It calls `TEST_run.bash`, which runs the tests with different numbers of processors and GPU layouts with up to 4 GPUs. The output for each test is redirected to an `OUT` file. If there are errors for a test, it will be redirected to a `runERR` file. All empty `runERR` files are deleted.
+At the end of your test run, if there are no `runERR` files, then you are done. 
 
-At the end of your test run, if there are no `runERR` files, that is a very good sign. A more careful check requires you to search through the `OUT` files for `fail`, `FAIL`, or `Fail`, since I am not sure whether every test script was written to return an error flag when a test fails.
+## Adding your test to the `runTests` scripts
 
-## Adding your test to the `TEST_run` script
+After your test is working, please add it to the last `runTests` script. This way your 
+test will always be run automatically by future developers. To accomplish this:
 
-After your test is working, please add it to the `TEST_run.bash` script. This way your test will always be run automatically by future developers. To accomplish this:
+1. Make sure that you added your test to the `tests` executables in `CMakeLists.txt`, 
+i.e. you will need the line `add_to_compound_SIMULATeQCD_target(tests myTest)`. Please
+also add an entry to `runTestsSingleGPU.bash`.
+2. If your test takes a fixed GPU layout, simply add the entry `testRoutinesNoParam[_myTest]="N"`, 
+where `N` is the number of GPUs required, to `TEST_run.bash`.
+3. Otherwise if you would like to run your test with various GPU layouts, make sure it 
+has its own `.param` file in the `parameter/tests` with `Nodes` as an adjustable parameter and
+4. add the entry `testRoutines[_BulkIndexerTest]="GPUkey"` to `runTests`.
 
-1. Make sure that you added your test to the `tests` executables in `CMakeLists.txt`, i.e. you will need the line `add_to_compound_SIMULATeQCD_target(tests myTest)`.
-2. If your test takes a fixed GPU layout, simply add the entry `testRoutinesNoParam[_myTest]="N"`, where `N` is the number of GPUs required, to `TEST_run.bash`.
-3. Otherwise if you would like to run your test with various GPU layouts, make sure it has its own `.param` file in the `parameter/tests` with `Nodes` as an adjustable parameter and
-4. add the entry `testRoutines[_BulkIndexerTest]="GPUkey"` to `TEST_run.bash`.
+For the last step, the `GPUkey` tells the `runTests` scrips which GPU layouts they should test. 
+The `GPUkey` consists for a number of GPUs concatenated with one of two layout symbols:
 
-For the last step, the `GPUkey` tells `TEST_run.bash` which GPU layouts it should test. The `GPUkey` consists for a number of GPUs concatenated with one of two layout symbols:
-
-* `s`: Split only in spatial directions. Useful for observables like the Polyakov loop, where one prefers not to split the lattice in the Euclidean time direction.
+* `s`: Split only in spatial directions. Useful for observables like the Polyakov loop, 
+where one prefers not to split the lattice in the Euclidean time direction.
 * `k`: No long directions. Useful whenever 4 does not divide a lattice extension.
+
+## Using the `testing.h` header file
+
+It is very important that your code yields correct scientific results. One of the most
+straightforward ways to carry out such a test is to make a comparison with known results.
+For your convenience, there are several functions in `testing.h` for exactly this
+purpose.
+
+If you are doing any calculation with affects the `Gaugefield`, for example an
+over-relaxation update, please check this using a link-by-link comparison against
+some known reference. One can compare `test` and `reference` `Gaugefield` objects
+using
+```c++
+bool compare_fields(test, reference, tol=1e-6)
+```
+which check that every element of every link of `test` and `reference` agree
+within a relative error of `tol`. It returns `true` if every single element of
+both `Gaugefield` objects agree.
+
+To compare scalars `test` and `reference` one can use
+```c++
+void compare_relative(test, reference, rel, prec, text)
+```
+which makes sure they agree within relative error `rel` as well as absolute
+error `prec`. It will display custom `text` along with pass and fail messages.

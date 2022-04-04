@@ -6,9 +6,6 @@
  */
 
 #include "../SIMULATeQCD.h"
-#include <iostream>
-#include <string>
-#include <stdlib.h>
 #include "../modules/rhmc/rhmcParameters.h"
 
 

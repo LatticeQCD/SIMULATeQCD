@@ -1,3 +1,8 @@
+/* 
+ * nersc.h                                                               
+ * 
+ */
+
 #ifndef INC_NERSC_H
 #define INC_NERSC_H
 
@@ -122,13 +127,10 @@ private:
     uint32_t stored_checksum, computed_checksum;
     int su3_size;
     size_t index; //position in buffer
-    static const bool sep_lines = false; // make the buffer smaller and
-    // read each xline separately
-    // (slow on large lattices, but
-    // needs less memory)
+    static const bool sep_lines = false; // make the buffer smaller and read each xline separately 
+                                         // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
-    //void from_buf(f1 *buf, GSU3<f2> &U) const {
     template<class f1, class f2>
     GSU3<f2> from_buf(f1 *buf) const {
         int i = 0;
@@ -137,7 +139,6 @@ private:
             for (int k = 0; k < 3; k++) {
                 f2 re = buf[i++];
                 f2 im = buf[i++];
-                //U.set(j, k, complex<f2>(re, im));
                 U(j, k) = GCOMPLEX(f2)(re, im);
 
             }
@@ -204,7 +205,8 @@ public:
         bool error = false;
         for (int i = 0; i < 4; i++)
             if (header.dim[i]() != GInd::getLatData().globalLattice()[i]) {
-                rootLogger.error("Stored dimension " ,  i ,  " not equal to current lattice size.");
+                rootLogger.error( "Stored extension N_", i," = ",header.dim[i](),
+                                  " not equal to expected extension N_", i," = ",GInd::getLatData().globalLattice()[i] );
                 error = true;
             }
 
@@ -302,13 +304,13 @@ public:
         for (size_t t = 0; t < GInd::getLatData().lt; t++)
             for (size_t z = 0; z < GInd::getLatData().lz; z++)
                 for (size_t y = 0; y < GInd::getLatData().ly; y++)
-                    for (size_t x = 0; x < GInd::getLatData().lx; x++) //{
-                for (int mu = 0; mu < 4; mu++) {
-                    gSite site = GInd::getSite(x, y, z, t);
-                    GSU3<floatT> temp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
-                    linktrace += tr_d(temp);
-                    stored_checksum += checksum(temp);
-                }
+                    for (size_t x = 0; x < GInd::getLatData().lx; x++)
+                        for (int mu = 0; mu < 4; mu++) {
+                            gSite site = GInd::getSite(x, y, z, t);
+                            GSU3<floatT> temp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+                            linktrace += tr_d(temp);
+                            stored_checksum += checksum(temp);
+                        }
 
         header.linktrace.set(comm.reduce(linktrace) / (3 * 4 * GInd::getLatData().globalLattice().mult()));
 
@@ -357,7 +359,6 @@ public:
         index = 0;
     }
 
-    //void get(GSU3<floatT> &U) {
     template<class floatT>
     GSU3<floatT> get() {
         char *start = &buf[index];

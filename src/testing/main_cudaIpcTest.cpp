@@ -1,7 +1,7 @@
 /* 
  * main_cudaIpcTest.cpp                                                               
  * 
- * Lukas Mazur
+ * L. Mazur
  * 
  */
 #include "../SIMULATeQCD.h"

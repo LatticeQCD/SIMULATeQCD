@@ -26,7 +26,7 @@ The following software is required to compile SIMULATeQCD:
 
 First download and activate `git-lfs`. The code can then be cloned to your machine using:
 ```shell
-git clone git@github.com:LatticeQCD/SIMULATeQCD.git
+git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 ```
 
 

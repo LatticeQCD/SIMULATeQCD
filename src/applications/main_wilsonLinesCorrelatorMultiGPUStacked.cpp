@@ -1,5 +1,5 @@
 /* 
- * main_wilson_lines_correlator_stacked.cpp                                                               
+ * main_wilson_lines_correlator_stacked.cu                                                               
  * 
  * Rasmus Larsen, 25 Feb 2021
  * 
@@ -8,12 +8,8 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
 
-#include <iostream>
-using namespace std;
-
 #define PREC double
 #define STACKS 96 
-#define MY_BLOCKSIZE 256
 
 
 template<class floatT>

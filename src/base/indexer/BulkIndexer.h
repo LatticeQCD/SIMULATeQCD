@@ -694,6 +694,12 @@ public:
         return ((coordFull.x + coordFull.y*getLatData().vol1Full
                  + coordFull.z*getLatData().vol2Full) >> 0x1);
     }
+    __host__ inline static size_t localCoordToGlobalIndex(LatticeDimensions coord) {
+        LatticeData lat = GIndexer<LatLayout, HaloDepth>::getLatData();
+        LatticeDimensions globCoord = lat.globalPos(coord);
+        return (globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +
+               globCoord[3] * lat.globLX * lat.globLY * lat.globLZ);
+    }
 
     /// -------------------------------------------------------------------- CONVERT DATA INDEX TO SPACETIME COORDINATES
     /// BULK (NO HALOS)

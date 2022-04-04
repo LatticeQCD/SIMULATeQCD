@@ -1,7 +1,9 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
-
+/* 
+ * gaugefield.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef _gaugefield_h_
 #define _gaugefield_h_
@@ -54,6 +56,10 @@ public:
 
     void readconf_nersc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
+    /// read in a ILDG file
+    void readconf_ildg(const std::string &fname);
+
+    void readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
     /// read in a MILC file
     void readconf_milc(const std::string &fname);
@@ -67,6 +73,11 @@ public:
 
     void writeconf_nersc_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, int rows = 2,
                               int diskprec = 1, Endianness e = ENDIAN_BIG);
+
+    /// write gaugefield to ILDG file
+    void writeconf_ildg(const std::string &fname, int diskprec = 1);
+
+    void writeconf_ildg_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, int diskprec = 1);
 
     /// init lattice
     void one();                        /// set all links to one

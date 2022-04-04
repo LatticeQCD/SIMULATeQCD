@@ -105,7 +105,7 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         //! Now we want to compute G_o = -1/m * D_oe G_e:
         //! First apply D_oe to G_e, then factor in -1/m
         dslash.Dslash(d_Go, d_Ge, true);
-        d_Go = (-1. / mass) * d_Go;
+        d_Go = (static_cast<floatT>(-1.) / mass) * d_Go;
         h_Go = d_Go;
         //! same for odd part
         prop_containers[i].template iterateOverOddBulkAtStack<color0>(
@@ -119,7 +119,7 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         prop_containers[i].template iterateOverEvenBulkAtStack<color1>(
                 returnSpinor<floatT, false, Even, HaloDepthSpin, NStacks>(h_Ge));
         dslash.Dslash(d_Go, d_Ge, true);
-        d_Go = (-1. / mass) * d_Go;
+        d_Go = (static_cast<floatT>(-1.) / mass) * d_Go;
         h_Go = d_Go;
         prop_containers[i].template iterateOverOddBulkAtStack<color1>(
                 returnSpinor<floatT, false, Odd, HaloDepthSpin, NStacks>(h_Go));
@@ -132,7 +132,7 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         prop_containers[i].template iterateOverEvenBulkAtStack<color2>(
                 returnSpinor<floatT, false, Even, HaloDepthSpin, NStacks>(h_Ge));
         dslash.Dslash(d_Go, d_Ge, true);
-        d_Go = (-1. / mass) * d_Go;
+        d_Go = (static_cast<floatT>(-1.) / mass) * d_Go;
         h_Go = d_Go;
         prop_containers[i].template iterateOverOddBulkAtStack<color2>(
                 returnSpinor<floatT, false, Odd, HaloDepthSpin, NStacks>(h_Go));

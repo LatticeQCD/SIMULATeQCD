@@ -21,35 +21,35 @@ public:
   __device__ __host__ GSU2(GCOMPLEX(floatT) e11, GCOMPLEX(floatT) e12) : _e11(e11), _e12(e12) {}
 
 
-  __device__  friend GSU2 operator+(const GSU2 &x,const GSU2 &y) {
+  __device__ __host__  friend GSU2 operator+(const GSU2 &x,const GSU2 &y) {
     return GSU2 (x._e11+y._e11,x._e12+y._e12);
   }
 
-  __device__  friend GSU2 operator-(const GSU2 &x,const GSU2 &y) {
+  __device__ __host__  friend GSU2 operator-(const GSU2 &x,const GSU2 &y) {
     return GSU2 (x._e11-y._e11,x._e12-y._e12);
   }
 
-  __device__  friend GSU2 operator*(const GSU2 &x,const GCOMPLEX(floatT)  &y) {
+  __device__ __host__  friend GSU2 operator*(const GSU2 &x,const GCOMPLEX(floatT)  &y) {
     return GSU2 (x._e11*y,x._e12*y);
   }
 
-  __device__  friend GSU2 operator*(const GCOMPLEX(floatT)  &x,const GSU2 &y) {
+  __device__ __host__  friend GSU2 operator*(const GCOMPLEX(floatT)  &x,const GSU2 &y) {
     return GSU2 (x*y._e11,x*y._e12);
   }
 
-  __device__  friend GSU2 operator*(const GSU2 &x,const floatT  &y) {
+  __device__ __host__  friend GSU2 operator*(const GSU2 &x,const floatT  &y) {
     return GSU2 (x._e11*y,x._e12*y);
   }
 
-  __device__  friend GSU2 operator*(const floatT  &x,const GSU2 &y) {
+  __device__ __host__  friend GSU2 operator*(const floatT  &x,const GSU2 &y) {
     return GSU2 (x*y._e11,x*y._e12);
   }
 
-  __device__  friend GSU2 operator/(const GSU2 &x,const floatT  &y) {
+  __device__ __host__  friend GSU2 operator/(const GSU2 &x,const floatT  &y) {
     return GSU2 (x._e11/y,x._e12/y);
   }
 
-  __device__  friend GSU2 operator*(const GSU2 &x,const GSU2 &y) {
+  __device__ __host__  friend GSU2 operator*(const GSU2 &x,const GSU2 &y) {
     GCOMPLEX(floatT) tmp1,tmp2;
     tmp1=y._e12;
     tmp2=y._e11;
@@ -58,48 +58,48 @@ public:
     return GSU2 (tmp1,tmp2);
   }
 
-  __device__  GSU2 &operator =(const GSU2 &y) {
+  __device__ __host__  GSU2 &operator =(const GSU2 &y) {
     _e11=y._e11;
     _e12=y._e12;
     return *this;
   }
-  __device__  GSU2 &operator+=(const GSU2 &y) {
+  __device__ __host__  GSU2 &operator+=(const GSU2 &y) {
     _e11+=y._e11;
     _e12+=y._e12;
     return *this;
   }
-  __device__  GSU2 &operator-=(const GSU2 &y) {
+  __device__ __host__  GSU2 &operator-=(const GSU2 &y) {
     _e11-=y._e11;
     _e12-=y._e12;
     return *this;
   }
-  __device__  GSU2 &operator*=(const GSU2 &y) {
+  __device__ __host__  GSU2 &operator*=(const GSU2 &y) {
     *this=*this*y;
     return *this;
   }
-  __device__  GSU2 &operator*=(const GCOMPLEX(floatT) &y) {
+  __device__ __host__  GSU2 &operator*=(const GCOMPLEX(floatT) &y) {
     _e11*=y;
     _e12*=y;
     return *this;
   }
-  __device__  GSU2 &operator*=(const floatT &y) {
+  __device__ __host__  GSU2 &operator*=(const floatT &y) {
     *this=*this*y;
     return *this;
   }
-  __device__  GSU2 &operator/=(const floatT &y) {
+  __device__ __host__  GSU2 &operator/=(const floatT &y) {
     *this=*this/y;
     return *this;
   }
 
-  __device__  floatT tr2() {
+  __device__ __host__  floatT tr2() {
     return( real(_e11) );
   }
 
-  __device__  GCOMPLEX(floatT) det() {
+  __device__ __host__  GCOMPLEX(floatT) det() {
     return( real(_e11) );
   }
 
-  __device__  void unitarize() {
+  __device__ __host__  void unitarize() {
     floatT res;
 
     res = real(_e11)*real(_e11) + imag(_e11)*imag(_e11) +
@@ -110,7 +110,7 @@ public:
     _e12=_e12*res;
   }
 
-  __device__  GSU2 dagger() const {
+  __device__ __host__  GSU2 dagger() const {
     GSU2 tmp;
 
     tmp._e11 = conj(_e11);
@@ -119,7 +119,7 @@ public:
     return tmp;
   }
 
-  __device__  floatT         norm2() const {
+  __device__ __host__  floatT norm2() const {
     return (real(_e11)*real(_e11) + real(_e12)*real(_e12)
 	    +   imag(_e11)*imag(_e11) + imag(_e12)*imag(_e12));
   }
@@ -133,7 +133,7 @@ private:
 };
 
 template<typename floatT>
-__device__ inline GSU2<floatT> dagger(const GSU2<floatT> &x) {
+__device__ __host__ inline GSU2<floatT> dagger(const GSU2<floatT> &x) {
     GSU2<floatT> tmp;
     tmp._e11 = conj(x._e11);
     tmp._e12 = - x._e12;
@@ -141,7 +141,7 @@ __device__ inline GSU2<floatT> dagger(const GSU2<floatT> &x) {
 }
 
 template<typename floatT>
-__device__  inline floatT norm2(const GSU2<floatT> &x) {
+__device__ __host__  inline floatT norm2(const GSU2<floatT> &x) {
   return (  real(x._e11)*real(x._e11) + real(x._e12)*real(x._e12)
 	        + imag(x._e11)*imag(x._e11) + imag(x._e12)*imag(x._e12) );
 }

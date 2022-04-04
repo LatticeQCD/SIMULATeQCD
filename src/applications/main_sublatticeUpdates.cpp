@@ -31,10 +31,7 @@ The spatial links on the border won't be updated.
 #include "../SIMULATeQCD.h"
 #include "../modules/gauge_updates/luscherweisz.h"
 #include "../modules/gauge_updates/SubLatMeas.h"
-#include <stdio.h>
-#include <iostream>                                                                                        
 
-//define precision
 #define PREC double
 #define USE_GPU true
 
@@ -143,7 +140,11 @@ int main(int argc, char *argv[]) {
     size_t elem4 = elem1*lp.latDim()[3];
     size_t P2P = elem3 + 2*(elem3-elem4);
 
-    gpuMemGetInfo( &AvailDevice, &TotalDevice );
+    gpuError_t gpuErr = gpuMemGetInfo( &AvailDevice, &TotalDevice );
+    if (gpuErr) {
+      GpuError("main_subLatticeUpdates.cpp: gpuMemGetInfo" , gpuErr);
+    }
+
     UsedDevice = TotalDevice - AvailDevice;
     double StarterUsedInMB = UsedDevice/1024./1024.;
     rootLogger.info("Memory for the starter[MB]: " ,  StarterUsedInMB);

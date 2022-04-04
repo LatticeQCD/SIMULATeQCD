@@ -1,5 +1,10 @@
 #include "dslash.h"
+
+#ifdef USE_HIP_AMD
 #define BLOCKSIZE 64
+#else
+#define BLOCKSIZE 32
+#endif
 
 //! HisqDslash
 

@@ -181,6 +181,8 @@ public:
 
     void root2all(int64_t &) const EMPTY_IF_SCALAR;
 
+    void root2all(size_t &) const EMPTY_IF_SCALAR;
+
     void root2all(bool &) const EMPTY_IF_SCALAR;
 
     void root2all(float &) const EMPTY_IF_SCALAR;
@@ -236,6 +238,8 @@ public:
 
     /// Reduce (summing up) an array of double values, replacing values
     void reduce(float *, int) const EMPTY_IF_SCALAR;
+
+    void reduce(uint32_t *, int) const EMPTY_IF_SCALAR;
 
     void reduce(double *, int) const EMPTY_IF_SCALAR;
 
