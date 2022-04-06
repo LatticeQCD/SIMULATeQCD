@@ -13,7 +13,7 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
     gVect3<floatT> Stmp(0.0);
-
+#pragma unroll    
     for (int mu = 0; mu < 4; mu++) {
 
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(
@@ -38,7 +38,6 @@ __host__ __device__ auto HisqMdaggMFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
     gVect3<floatT> Stmp(0.0);
-
     for (int mu = 0; mu < 4; mu++) {
 
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(
