@@ -422,8 +422,6 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     while (continueFlow) {
 
-        continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
-
         //! -------------------------------prepare log output-----------------------------------------------------------
 
         logStream.str("");
@@ -712,11 +710,16 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         }
 
         rootLogger.info(logStream.str());
-        flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
-        gauge.updateAll();
 
-        gAction.recomputeField();
-        topology.recomputeField();
+        continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
+        if (continueFlow){
+            flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
+            gauge.updateAll();
+
+            gAction.recomputeField();
+            topology.recomputeField();
+        }
+
     }
     timer.stop();
     rootLogger.info("complete time = " ,  timer.minutes() ,  " min");
