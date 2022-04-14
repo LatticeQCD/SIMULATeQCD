@@ -93,7 +93,7 @@ struct gradientFlowParam : LatticeParameters {
         addOptional(necessary_flow_times, "necessary_flow_times");
         addDefault(ignore_fixed_startstepsize, "ignore_start_step_size", false);
 
-        addDefault(save_conf, "save_configurations", false);
+        addDefault(save_conf, "save_configurations", false);  //! write gauge conf to disk at each flow time
 
         addDefault(use_unit_conf, "use_unit_conf", false);
 
