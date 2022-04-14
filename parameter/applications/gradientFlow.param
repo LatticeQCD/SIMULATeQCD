@@ -39,9 +39,8 @@ measurements_dir      = ./
 measurement_intervall = 0 1
 necessary_flow_times  = 0.25 0.5
 
-ignore_fixed_startstepsize = 0
-save_conf                  = 0
-save_at_flow_time          = 0 0.5 1
+ignore_start_step_size     = 0
+save_configurations        = 0
 
 #
 # Set to 1 if you want to measure any of these observables (or 0 if not):
