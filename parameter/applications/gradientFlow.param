@@ -25,6 +25,7 @@
 Lattice    = 20 20 20 20
 Nodes      = 1 1 1 1
 beta       = 6.498
+use_unit_conf = 0
 Gaugefile  = ../test_conf/l20t20b06498a_nersc.302500
 format     = nersc
 endianness = auto
