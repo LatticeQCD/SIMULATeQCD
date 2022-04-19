@@ -96,7 +96,7 @@ rand_file = rand           # file name for random numbers and infos
 seed = 1337                   # myseed
 load_conf = 1                        # flag_load (0=einhei, 1=random, 2=getconf)
 Gaugefile      = l328f21b6260m00405m0810a_4000.          # file name for configuration
-config_nr      = 0  # configuration number
+conf_nr      = 0  # configuration number
 no_updates     = 100      # number of updates
 write_every = 10      # write out configuration every
 ```

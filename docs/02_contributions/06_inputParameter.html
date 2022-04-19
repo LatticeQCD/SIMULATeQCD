@@ -177,7 +177,7 @@ If you write the .param file in the right directory, indeed, when you compile yo
 <span class="nv">seed</span> <span class="o">=</span> <span class="m">1337</span>                   <span class="c1"># myseed</span>
 <span class="nv">load_conf</span> <span class="o">=</span> <span class="m">1</span>                        <span class="c1"># flag_load (0=einhei, 1=random, 2=getconf)</span>
 <span class="nv">Gaugefile</span>      <span class="o">=</span> l328f21b6260m00405m0810a_4000.          <span class="c1"># file name for configuration</span>
-<span class="nv">config_nr</span>      <span class="o">=</span> <span class="m">0</span>  <span class="c1"># configuration number</span>
+<span class="nv">conf_nr</span>      <span class="o">=</span> <span class="m">0</span>  <span class="c1"># configuration number</span>
 <span class="nv">no_updates</span>     <span class="o">=</span> <span class="m">100</span>      <span class="c1"># number of updates</span>
 <span class="nv">write_every</span> <span class="o">=</span> <span class="m">10</span>      <span class="c1"># write out configuration every</span>
 </pre></div>
@@ -220,8 +220,8 @@ If you write the .param file in the right directory, indeed, when you compile yo
 <h2>Using your own Parameter Class<a class="headerlink" href="#using-your-own-parameter-class" title="Permalink to this headline"></a></h2>
 <p>If you need more parameters that they are not in the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code> class, consider to create your own parameter class. Some example of how to construct an input parameter class can be found in <code class="docutils literal notranslate"><span class="pre">main_gradientFlow.cpp</span></code>, in particular see the <code class="docutils literal notranslate"><span class="pre">gradientFlowParam</span></code> class.</p>
 <p>In your executable file define something like that, for each parameter that you need (see the example above). Notice that the capital words are the one that you have to change:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">struct</span> <span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
 <span class="w">  </span><span class="n">Parameter</span><span class="o">&lt;</span><span class="n">TYPE</span><span class="p">,</span><span class="w"> </span><span class="n">DIMENSION</span><span class="o">&gt;</span><span class="w"> </span><span class="n">NAME_OF_THE_PARAMETER</span><span class="p">;</span><span class="w"></span>
 
