@@ -23,7 +23,7 @@
 #         seed: myseed
 #    load_conf: flag_load (0=identity, 1=random, 2=getconf)
 #   gauge_file: prefix for the gauge configuration's file name 
-#    config_nr: configuration number
+#    conf_nr: configuration number
 #   no_updates: number of updates
 #  write_every: write out configuration every
 #
@@ -47,6 +47,6 @@ rand_file = rand
 seed = 1337
 load_conf = 2
 gauge_file = ../../test_conf/l328f21b6285m0009875m0790a_019.
-config_no = 995
+conf_nr = 995
 no_updates = 1
 write_every = 11
