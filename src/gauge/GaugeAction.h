@@ -61,6 +61,8 @@ public:
     }
 
     floatT UtauMinusUsigma() {
+        // using definition Sg=\beta \sum_n \sum_{\mu\nu}  (1 - 1/3*ReTrU_{\mu\nu})
+        // calculates the mean value of 1/3*ReTrU_{\mu\nu} (without mu,nu running)
         return bareUtauMinusUsigma()/(GInd::getLatData().globalLattice().mult() * 18);
     }
 
