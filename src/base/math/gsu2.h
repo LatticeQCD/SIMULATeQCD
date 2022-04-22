@@ -255,10 +255,20 @@ public:
         _e11 = x;
     };
 
+    __device__ __host__ bool operator==(const GSU2_mat<floatT> &);
+
     __host__ __device__ GSU2_mat(GCOMPLEX(floatT) e00, GCOMPLEX(floatT) e01, 
                                  GCOMPLEX(floatT) e10, GCOMPLEX(floatT) e11) :
                                  _e00(e00), _e01(e01), 
                                  _e10(e10), _e11(e11) {};
+
+    /*
+    __host__ __device__ void isid() {
+    	    GCOMPLEX(floatT) _id(1.0,0.0); //for debug
+	    assert(_e00==_id);
+    };
+    */
+
 
 
     __host__ __device__ GCOMPLEX(floatT) &operator()(int i, int j) {
@@ -277,4 +287,15 @@ public:
         return _e00;
     }
 };
+
+
+template<class floatT>
+__device__ __host__ bool GSU2_mat<floatT>::operator==(const GSU2_mat<floatT> &y) {
+    if (_e00 == y._e00 &&
+        _e01 == y._e01 &&
+        _e10 == y._e10 &&
+        _e11 == y._e11) {
+        return true;
+    } else return false;
+}
 #endif

@@ -909,7 +909,7 @@ __device__ __host__ floatT realtrace_su3( GSU3<floatT> a, GSU3<floatT> b ){
 int i,j;
 floatT sum;
     for(sum=0.0,i=0;i<3;i++)for(j=0;j<3;j++)
-	sum+= a(i,j).cREAL*b(i,j).cREAL + a(i,j).cIMAG*b(i,j).cIMAG;
+	sum+= real(a(i,j))*real(b(i,j)) + imag(a(i,j))*imag(b(i,j));
     return(sum);
 }
 
@@ -960,6 +960,15 @@ __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<float
 
 	// maximize the real trace of guess*this.  ported from project_su3_hit.c in Milc by Dan Hoying, 2022
 	//
+   //GCOMPLEX(floatT) id(1.0,0.0);
+   //GSU3<floatT> test(id,0,0,0,id,0,0,0,id); // for debug
+   //GSU2_mat<floatT> test2(id,0,0,id); // for debug
+   //assert(real(test2(0,0))==1);
+   //assert(imag(test2(0,0))==0);
+   //assert(real(test2(1,1))==1);
+   //assert(real(test2(1,0))==0);
+   //assert(real(test2(0,1))==0);
+   //*q = test;
    GSU3<floatT> w = *q; //w = guess, set equal to input q
 
    int index1, ina, inb,ii;
