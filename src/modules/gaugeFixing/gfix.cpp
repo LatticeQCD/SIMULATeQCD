@@ -1,7 +1,7 @@
 /* 
  * gfix.cpp
  *
- * v2.4: D. Clarke, 11 Feb 2019
+ * D. Clarke
  *
  * Gpu file with kernel definitions for main_gfix, as well as the functions calling these kernels.
  *
@@ -38,9 +38,9 @@ struct GFThetaKernel{
         GSU3<floatT> delta,temp;
         delta=gsu3_zero<floatT>();
         for(int mu=0;mu<I_FIX;mu++){
-            temp=        gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
+            temp=       gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
                  -gaugeAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
-                 -       gaugeAccessor.getLink(GInd::getSiteMu(site, mu))
+                 -      gaugeAccessor.getLink(GInd::getSiteMu(site, mu))
                  +gaugeAccessor.getLinkDagger(GInd::getSiteMu(site, mu));
             temp=temp-1./3.*tr_c(temp)*gsu3_one<floatT>();
             delta+=temp;

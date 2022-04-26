@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-GPU: Distribution of local lattices on the individual GPUs &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Testing the code" href="testing.html" />
+    <link rel="prev" title="Memory Management" href="memoryAllocation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="codeStyle.html">How to write clean and readable code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="organizeFiles.html">How to organize new files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminalIO.html">Terminal output &amp; terminating the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html">Timing your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inputParameter.html">How to make an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html">Documenting your code</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>Multi-GPU: Distribution of local lattices on the individual GPUs</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/02_contributions/multiGPU.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="multi-gpu-distribution-of-local-lattices-on-the-individual-gpus">
+<h1>Multi-GPU: Distribution of local lattices on the individual GPUs<a class="headerlink" href="#multi-gpu-distribution-of-local-lattices-on-the-individual-gpus" title="Permalink to this headline"></a></h1>
+<p>If we consider a lattice of size <code class="docutils literal notranslate"><span class="pre">Nx*Ny*Nz*Nt</span></code>, each GPU has a local Lattice of size</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="p">(</span><span class="n">Nx_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">Ny_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Nz_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Nt_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">),</span><span class="w"></span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">N_sub</span> <span class="pre">=</span> <span class="pre">N/Cores_i</span></code> with <code class="docutils literal notranslate"><span class="pre">i=x,y,z,t</span></code>.
+For example if we have a lattice of size <span class="math notranslate nohighlight">\(32^3\times 8\)</span> and we split the lattice in x direction with
+<code class="docutils literal notranslate"><span class="pre">halo_depth=1</span></code>, both GPU’s will have a local lattice size of <span class="math notranslate nohighlight">\(18\times 34\times 34\times 10\)</span>.</p>
+<p>For example code I would do that like that:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LatDim</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">};</span><span class="w"></span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">NodeDim</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+<p>When using P2P, for a lattice with size e.g. <span class="math notranslate nohighlight">\(120^3 \times 30\)</span>, it is best (=lowest overall memory consumption) to split the lattice like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span> <span class="n">GPU</span><span class="p">:</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span>  <span class="mf">28476.5625</span> <span class="n">MiB</span> 
+<span class="mi">2</span> <span class="n">GPUs</span><span class="p">:</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span> <span class="mf">18509.765625</span> <span class="n">MiB</span>
+<span class="mi">4</span> <span class="n">GPUs</span><span class="p">:</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span>  <span class="mf">11390.625</span> <span class="n">MiB</span>
+<span class="mi">8</span> <span class="n">GPUs</span><span class="p">:</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">4</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">2</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">2</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">4</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span> <span class="mf">6976.7578125</span> <span class="n">MiB</span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

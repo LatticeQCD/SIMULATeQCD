@@ -13,14 +13,14 @@ Here are some more detailed articles:
 ---
 maxdepth: 1
 ---
-01_codeStyle.md
-02_git.md
-03_organizeFiles.md
-04_terminalIO.md
-05_timer.md
-06_inputParameter.md
-07_memoryAllocation.md
-08_multiGPU.md
-09_testing.md
-10_documenting.md
+codeStyle.md
+git.md
+organizeFiles.md
+terminalIO.md
+timer.md
+inputParameter.md
+memoryAllocation.md
+multiGPU.md
+testing.md
+documenting.md
 ```

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Writer &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Lattice Container" href="latticeContainer.html" />
+    <link rel="prev" title="Indexer" href="indexer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="codeBase.html">Code base</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="indexer.html">Indexer</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">File Writer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="latticeContainer.html">Lattice Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="communicationBase.html">CommunicationBase</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functorSyntax.html">Functor/operator() syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugefield.html">Gaugefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spinorfield.html">Spinorfield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topology.html">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurationIO.html">Input and output formats for gauge configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
+      <li>File Writer</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/04_codeBase/fileWriter.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="file-writer">
+<h1>File Writer<a class="headerlink" href="#file-writer" title="Permalink to this headline"></a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> contains objects to help streamline output to files. The to-be-outputted data
+are stored in <code class="docutils literal notranslate"><span class="pre">LineFormatter</span></code> objects, which are essentially <code class="docutils literal notranslate"><span class="pre">ostream</span></code> objects. They automatically
+end the line whenever they are destructed; for example they will end lines automatically
+inside a loop. At the end of each line there is appended a <code class="docutils literal notranslate"><span class="pre">tag</span></code>, which is a <code class="docutils literal notranslate"><span class="pre">#</span></code> followed by a
+string. The <code class="docutils literal notranslate"><span class="pre">tag</span></code> allows the user to append a label to a line to make for easy searching later
+with <code class="docutils literal notranslate"><span class="pre">grep</span></code> or shell scripts.</p>
+<p>The other object is the <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> object, which opens the output file stream, and closes
+it automatically when it is destroyed. The <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> is the object that gives the <code class="docutils literal notranslate"><span class="pre">ostream</span></code>;
+this <code class="docutils literal notranslate"><span class="pre">ostream</span></code> can be passed to the <code class="docutils literal notranslate"><span class="pre">LineFormatter</span></code> for data output using, for example,
+the <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> <code class="docutils literal notranslate"><span class="pre">header()</span></code> method.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> is used extensively in the <code class="docutils literal notranslate"><span class="pre">gradientFlow</span></code> application. Very generally, the
+<code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> can be used following an example like this one:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">FileWriter</span><span class="w"> </span><span class="nf">filePolyCorrSinglet</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">latticeParameters</span><span class="p">);</span><span class="w"></span>
+<span class="n">filePolyCorrSinglet</span><span class="p">.</span><span class="n">createFile</span><span class="p">(</span><span class="s">&quot;PolyCorrFileName&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">LineFormatter</span><span class="w"> </span><span class="n">newLineplc1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filePolyCorrSinglet</span><span class="p">.</span><span class="n">tag</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">/// Passes ostream to newLineplc1</span>
+<span class="n">newLineplc1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">flow_time</span><span class="p">;</span><span class="w"></span>
+<span class="c1">/// Write std::vector vec_plc1 to output file</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dx</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">dx</span><span class="o">&lt;</span><span class="n">distmax</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">dx</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">newLineplc1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">[</span><span class="n">dx</span><span class="p">];</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Remember that when <code class="docutils literal notranslate"><span class="pre">newLineplc1</span></code> leaves scope, it will end the line in the output file. By
+default there will be some white space between output from the <code class="docutils literal notranslate"><span class="pre">LineFormatter</span></code>. This can be
+seen from the <code class="docutils literal notranslate"><span class="pre">fieldwidth</span></code> argument in its constructor</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LineFormatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ostr</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">tag</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">prec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"></span>
+<span class="w">            </span><span class="n">_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">),</span><span class="w"> </span><span class="n">_ostr</span><span class="p">(</span><span class="n">ostr</span><span class="p">),</span><span class="w"> </span><span class="n">fieldwidth</span><span class="p">(</span><span class="n">prec</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">8</span><span class="p">),</span><span class="w"> </span><span class="n">endl</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>which is then used in the <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> stream operator</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="n">LineFormatter</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">&amp;</span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">_ostr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="n">fieldwidth</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="k">this</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
