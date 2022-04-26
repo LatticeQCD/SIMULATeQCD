@@ -1,7 +1,7 @@
 # Documenting your code 
 
 You have written some [readable code](codeStyle.md) that is 
-[reasonably organized](organizeFiles.md) and, crucially, you 
+[reasonably organized](codeStructure.md) and, crucially, you 
 [wrote a test for it](testing.md). There is only one thing left for you to do, 
 to make sure your code can be easily used and adapted by future developers: 
 You must document it!
@@ -46,6 +46,12 @@ Boxes with short code snippets, like what you have seen above, are surrounded by
 aside a block of code. You can specify the language for the code block so it correctly applies syntax highlighting. 
 Possible languages include, but are not limited to, `shell`, `python`, and `html`. (Besides following the web links above, 
 you can also see examples of the block code in action by looking into the documentation yourself.)
+
+You can also add an image with this syntax:
+```html
+![alt](../relative/path/to/image.png)
+```
+Note that not all file types for images are supported.
 
 ## Compilation
 

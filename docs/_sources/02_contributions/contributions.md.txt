@@ -15,7 +15,7 @@ maxdepth: 1
 ---
 codeStyle.md
 git.md
-organizeFiles.md
+codeStructure.md
 terminalIO.md
 timer.md
 inputParameter.md

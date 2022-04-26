@@ -2,7 +2,7 @@
 
 This is perhaps the most important aspect of code creation for SIMULATeQCD: 
 **It is crucially important that you write a test for each new feature that you implement.** 
-As indicated in the [Code Structure](organizeFiles.md#how-to-organize-new-files) document, 
+As indicated in the [Code Structure](codeStructure.md#how-to-organize-new-files) document, 
 new testing `main` programs should go in `src/testing`. **It is also crucially important that 
 you run ALL tests after you have made major changes.** Please always do this, even if 
 you are convinced that your changes could not have possibly broken anything. 

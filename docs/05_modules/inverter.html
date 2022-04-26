@@ -94,7 +94,7 @@
 <p>Given an initial guess <span class="math notranslate nohighlight">\(x_0\)</span> and a target residual <span class="math notranslate nohighlight">\(\epsilon\)</span>, compute <span class="math notranslate nohighlight">\(r_0=b-Ax\)</span> and set <span class="math notranslate nohighlight">\(p_0=r_0\)</span>.</p>
 <blockquote>
 <div><p><strong>while</strong> <span class="math notranslate nohighlight">\(|r_{i+1}|^2 &lt; \epsilon\)</span> <br />
-<span class="math notranslate nohighlight">\(\qquad \alpha_{i} = \frac{|r_i|^2}{p^{\intercal}Ap}\)</span><br />
+<span class="math notranslate nohighlight">\(\qquad \alpha_{i} = \frac{|r_i|^2}{p^{\dagger}Ap}\)</span><br />
 <span class="math notranslate nohighlight">\(\qquad x_{i+1} = x_{i} + \alpha_{i}p_{i}\)</span><br />
 <span class="math notranslate nohighlight">\(\qquad r_{i+1} = r_{i} - \alpha_{i}r_{i}\)</span><br />
 <span class="math notranslate nohighlight">\(\qquad \beta_{i} = \frac{|r_{i+1}|^2}{|r_i|^2}\)</span><br />

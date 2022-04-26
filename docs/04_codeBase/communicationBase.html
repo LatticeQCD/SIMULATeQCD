@@ -87,6 +87,15 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="communicationbase">
 <h1>CommunicationBase<a class="headerlink" href="#communicationbase" title="Permalink to this headline"></a></h1>
+<p>Communication between multiple CPUs and multiple nodes is handled with MPI, which also allows
+for communication between multiple GPUs.
+For NVIDIA hardware, communication via CUDA
+GPUDirect P2P for intra-node and CUDA-aware MPI for inter-node channels is supported.
+We boost performance by allowing the code to
+carry out certain computations while communicating, such as copying halo buffers
+into the bulk, whenever possible. A schematic of a typical communication scheme is
+shown below.</p>
+<p><img alt="alt" src="../_images/communicationChannel.png" /></p>
 </section>
 
 
