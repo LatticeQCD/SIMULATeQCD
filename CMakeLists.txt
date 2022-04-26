@@ -286,6 +286,7 @@ endif()
 if (USE_CUDA)
     add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
     target_compile_definitions(CodeBase PRIVATE
+        ARCHITECTURE=${ARCHITECTURE}
         SINGLEPREC=1 DOUBLEPREC=1
         COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
         ${ALL_HALODEPTHS}
@@ -356,8 +357,8 @@ FUNCTION(set_SIMULATeQCD_property TARGET)
 ENDFUNCTION()
 
 FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
-    target_compile_definitions(${TARGET} ${ARGN})
-    target_compile_definitions(_${TARGET} ${ARGN})
+    target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
+    target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
 ENDFUNCTION()
 
 FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
@@ -633,8 +634,8 @@ elseif (USE_HIP_NVIDIA)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
 endif()
-target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1)
-target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1)
+target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE})
+target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE})
 add_to_compound_SIMULATeQCD_target(tests SimpleFunctorTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_UtimesUdaggerTest.cpp)
