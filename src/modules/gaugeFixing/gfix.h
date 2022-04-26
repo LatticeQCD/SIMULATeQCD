@@ -1,7 +1,7 @@
 /* 
  * gfix.h
  *
- * v2.4: D. Clarke, 11 Feb 2019
+ * D. Clarke
  *
  * Header file with function definitions for main_gfix.
  *
