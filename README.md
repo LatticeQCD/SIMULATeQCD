@@ -28,6 +28,12 @@ First download and activate `git-lfs`. The code can then be cloned to your machi
 ```shell
 git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 ```
+If you would like to make contributions to the code, you will need to set up an 
+[ssh key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account). Contributors
+to the code will clone instead using:
+```shell
+git clone git@github.com:LatticeQCD/SIMULATeQCD.git
+```
 
 
 ## Building the code
