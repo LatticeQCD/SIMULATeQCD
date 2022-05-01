@@ -177,8 +177,10 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     const int gpu_arch = tmpProp.major * static_cast<int>(10) + tmpProp.minor;
     rootLogger.info("> GPU compute capability: ", gpu_arch);
 
-#ifdef ARCHITECTURE
-    if (static_cast<int>(ARCHITECTURE) != gpu_arch) {
+// Fix that for hip backend!
+#if defined(ARCHITECTURE) && defined(USE_CUDA)
+    std::string compiled_arch = TOSTRING(ARCHITECTURE);
+    if (std::stoi(compiled_arch) != gpu_arch) {
         throw std::runtime_error(stdLogger.fatal("You compiled for ARCHITECTURE=", ARCHITECTURE,
                     " but the GPUs here are ", gpu_arch));
     }
