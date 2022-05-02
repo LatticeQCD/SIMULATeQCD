@@ -85,6 +85,9 @@ template<class floatT>
 __device__ __host__ GSU3<floatT> su3_exp(GSU3<floatT>);
 
 template<class floatT>
+__device__ __host__ void dumpmat();
+
+template<class floatT>
 __device__ __host__ gVect3<floatT> operator*(const GSU3<floatT> &, const gVect3<floatT> &);
 
 template<class floatT>
@@ -369,6 +372,7 @@ public:
     __host__ __device__ inline void setLink21(GCOMPLEX(floatT) x);
     __host__ __device__ inline void setLink22(GCOMPLEX(floatT) x);
 
+
     __host__ __device__ inline GCOMPLEX(floatT) &operator()(int i, int j) {
         switch (i * 3 + j) {
             case 0:
@@ -393,6 +397,17 @@ public:
         _e00 = GCOMPLEX(floatT)(nan(""), nan(""));
 
         return _e00;
+    }
+
+    //ported from Milc ~dsh
+    __device__ __host__ void dumpmat(){
+    int i,j;
+    for(i=0;i<3;i++){
+        for(j=0;j<3;j++)printf("(%.2e,%.2e)\t",
+            real((*this)(i,j)),imag((*this)(i,j)));
+        printf("\n");
+    }
+    	printf("\n");
     }
 
     __host__ __device__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
@@ -956,20 +971,15 @@ __device__ __host__ void mult_su2_mat_vec_elem_n(GSU2_mat<floatT> *u, GCOMPLEX(f
 // project to su3 by maximizing Re(Tr(guess*(toproj)))
 // ported from Milc by Dan Hoying, 2022
 template<class floatT>
-__device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<floatT> *q) {
-
-	// maximize the real trace of guess*this.  ported from project_su3_hit.c in Milc by Dan Hoying, 2022
-	//
-   //GCOMPLEX(floatT) id(1.0,0.0);
-   //GSU3<floatT> test(id,0,0,0,id,0,0,0,id); // for debug
-   //GSU2_mat<floatT> test2(id,0,0,id); // for debug
-   //assert(real(test2(0,0))==1);
-   //assert(imag(test2(0,0))==0);
-   //assert(real(test2(1,1))==1);
-   //assert(real(test2(1,0))==0);
-   //assert(real(test2(0,1))==0);
-   //*q = test;
-   GSU3<floatT> w = *q; //w = guess, set equal to input q
+__device__ __host__ int su3unitarize_hits(
+	GSU3<floatT> *w,         /* input initial guess. output resulting SU(3) matrix */
+	GSU3<floatT> *q,         /* 3 x 3 complex matrix to be projected */
+   	int Nhit,              /* number of SU(2) hits. 0 for no projection */
+   	floatT tol              /* tolerance for SU(3) projection.
+			     If nonzero, treat Nhit as a maximum
+			     number of hits.  If zero, treat Nhit
+			     as a prescribed number of hits. */ 
+		) {
 
    int index1, ina, inb,ii;
    floatT v0,v1,v2,v3, vsq;
@@ -980,7 +990,7 @@ __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<float
    double conver, old_tr = 0, new_tr;
 
    if(tol > 0)
-     old_tr = realtrace_su3(w,*q)/3.0;
+     old_tr = realtrace_su3(*w,*q)/3.0;
    conver = 1.0;
    assert(!std::isnan(old_tr));
 
@@ -994,7 +1004,7 @@ __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<float
 
       //mult_su3_na( w, q, &action );
       assert(!std::isnan(real(q->operator()(ina,ina))));
-      action = w * dagger(*q);
+      action = (*w) * dagger(*q);
 
       /* decompose the action into SU(2) subgroups using
          Pauli matrix expansion */
@@ -1020,11 +1030,11 @@ __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<float
       h(1,1) = GCOMPLEX(floatT)( v0, v3);
 
       /* update the link */
-      left_su2_hit_n(&h,ina,inb,&w);
+      left_su2_hit_n(&h,ina,inb,w);
 
       /* convergence measure every third hit */
       if(tol>0 && (index1 % 3) == 2){
-	new_tr = realtrace_su3(w,*q)/3.;
+	new_tr = realtrace_su3(*w,*q)/3.;
 	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
 	old_tr = new_tr;
       }
@@ -1034,7 +1044,6 @@ __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol, GSU3<float
    int status = 0;
    if( Nhit > 0 && tol > 0 && conver > tol )
      status = 1;
-   *q = w;
    return status;
 
 }

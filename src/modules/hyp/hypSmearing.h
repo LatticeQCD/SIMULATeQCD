@@ -17,6 +17,7 @@ private:
   gaugeAccessor<floatT, comp> _gAcc_temp2;
   int _excluded_dir1;
   int _excluded_dir2;
+
 public:
   HypStaple(gaugeAccessor<floatT, comp> gAccIn_0, //this is really the only required arg, but I'm not sure what the default is for gAcc 
 	    gaugeAccessor<floatT, comp> gAccIn_1,
@@ -35,7 +36,7 @@ public:
     case 3:
       return threeLinkStaple<floatT, HaloDepth, comp>(_gAcc_0, site, _excluded_dir1, _excluded_dir2);
     case 4:
-      return su3unitarize<floatT, HaloDepth, comp>(_gAcc_0, site);
+      return su3unitarize<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, site);
     default:
       return gsu3_zero<floatT>();
     }
@@ -106,7 +107,7 @@ public:
 
   void SmearAll(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out);
   void SmearTest(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out);
-  void Su3Unitarize(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out);
+  void Su3Unitarize(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out, Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_base);
  
  
 

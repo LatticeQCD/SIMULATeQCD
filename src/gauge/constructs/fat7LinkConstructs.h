@@ -141,17 +141,23 @@ __host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_third_level(gaugeAcce
 
 //project to su3
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ GSU3<floatT> inline su3unitarize(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu) {
+__host__ __device__ GSU3<floatT> inline su3unitarize(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT,comp> gAcc_base, gSiteMu siteMu) {
+
   typedef GIndexer<All,HaloDepth> GInd;
+
   GSU3<floatT> temp = gsu3_zero<floatT>();
+  GSU3<floatT> temp_guess = gsu3_zero<floatT>();
+
   int mu = siteMu.mu;
   gSite origin = GInd::getSite(siteMu.isite);
   temp += gAcc.getLink(GInd::getSiteMu(origin,mu));
+  temp_guess += gAcc_base.getLink(GInd::getSiteMu(origin,mu));
+
   if(std::isnan(real(temp(0,0)))) return temp;
-  //temp += gAcc.template getLink<All, HaloDepth>(siteMu);
-  su3unitarize_hits(9, 0., &temp);
-  //temp.su3unitarize();
-  return temp;
+  int status = su3unitarize_hits(&temp_guess, &temp, 9, 0.);
+  assert(!status);
+
+  return temp_guess;
 }
 
 
