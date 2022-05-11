@@ -38,7 +38,7 @@ The following software is required to compile SIMULATeQCD:
 6. `pip install -r requirements.txt` to build the documentation.
 
 ## Building source with CUDA
-To build the source with CUDA, you need to have the `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2. CUDA 11.4 has a fast compilation time, but we have not yet checked the performance.) installed on your machine.
+To build the source with CUDA, you need to have the `CUDA Toolkit` version 11.0 or higher installed on your machine.
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
 cmake ../simulateqcd/ \
@@ -63,7 +63,7 @@ you need to make sure that
 - HIP is properly installed on your machine
 - CUDA is properly installed on your machine
 - The environment variable `HIP_PATH` holds the path to the HIP installation folder
-- The environment variables `CC` and `CCX` hold the path to the HIP clang compiler
+- The environment variables `CC` and `CXX` hold the path to the HIP clang compiler
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
@@ -91,7 +91,7 @@ In order to build the source with HIP for AMD plattforms,
 you need to make sure that
 - HIP is properly installed on your machine
 - The environment variable `HIP_PATH` holds the path to the HIP installation folder
-- The environment variables `CC` and `CCX` hold the path to the HIP clang compiler
+- The environment variables `CC` and `CXX` hold the path to the HIP clang compiler
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell

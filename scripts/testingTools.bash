@@ -16,8 +16,9 @@ endc="\e[0m"
 # ----------------------------------------------------------------------------------------------------- DEFINE FUNCTIONS
 
 
-# use srun inside a slurm script, and mpiexec everywhere else
+# You may need either mpiexec or srun depending on the system. 
 run_command="mpiexec --oversubscribe -np";
+#run_command="srun -n";
 
 
 function runTestRoutine {

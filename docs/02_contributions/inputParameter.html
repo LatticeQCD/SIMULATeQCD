@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to make an input parameter file &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Memory Management" href="memoryAllocation.html" />
+    <link rel="prev" title="Timing your code" href="timer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="codeStyle.html">How to write clean and readable code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeStructure.html">General structure of the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminalIO.html">Terminal output &amp; terminating the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html">Timing your code</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">How to make an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html">Documenting your code</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>How to make an input parameter file</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/02_contributions/inputParameter.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="how-to-make-an-input-parameter-file">
+<h1>How to make an input parameter file<a class="headerlink" href="#how-to-make-an-input-parameter-file" title="Permalink to this headline"></a></h1>
+<section id="using-latticeparameters">
+<h2>Using LatticeParameters<a class="headerlink" href="#using-latticeparameters" title="Permalink to this headline"></a></h2>
+<p>After creating your own executable, maybe you want to use an input file with some parameters.
+In order to to that, create an input file in <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/parameter</span></code> with the name:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">custom_name</span><span class="o">&gt;.</span><span class="n">param</span>
+</pre></div>
+</div>
+<p>Some examples can be find directly in that directory. If you are interested in a very basic input file, you can use
+the following set: this one uses, for example, a lattice <span class="math notranslate nohighlight">\(20^4\)</span> and a test configuration.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># This is pre-defined in LatticeParameters in src/base/LatticeParameters.h</span>
+
+<span class="c1">#add the lattice dimensions</span>
+<span class="nv">Lattice</span> <span class="o">=</span> <span class="m">20</span> <span class="m">20</span> <span class="m">20</span> <span class="m">20</span>
+
+<span class="c1">#add the number of GPU&#39;s which shall be used in each direction</span>
+<span class="nv">Nodes</span> <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
+
+<span class="c1">#controlling the Layout of the GPU topology | If you do not know the topology of a given machine, just leave it a 0 0 0 0</span>
+<span class="nv">Topology</span> <span class="o">=</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span> <span class="m">0</span>
+
+<span class="c1">#add the beta value</span>
+<span class="nv">beta</span> <span class="o">=</span> <span class="m">6</span>.498
+
+<span class="c1">#add the path to the lattice binary</span>
+<span class="nv">Gaugefile</span> <span class="o">=</span> ../test_conf/l20t20b06498a_nersc.302500
+
+<span class="c1">#Configuration Number (optional). This Number will appear in the name of the Output-files</span>
+<span class="nv">conf_nr</span> <span class="o">=</span> <span class="m">302500</span>
+
+<span class="c1">#format of the binary</span>
+<span class="nv">format</span> <span class="o">=</span> nersc
+
+<span class="c1">#This is for the storage process.</span>
+<span class="nv">endianness</span> <span class="o">=</span> auto
+</pre></div>
+</div>
+<p>Once you have created your own input file, you have to modify your source code in the following way.
+First of all define an object of a parameter class. If you need only basic input parameter you can use, for example:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeParameters</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourParameterObject</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Then, when you need to read the input file use the following command:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">YourParameterObject</span><span class="o">&gt;</span><span class="p">.</span><span class="n">readfile</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;../parameter/&lt;YourInputFile&gt;.param&quot;</span><span class="p">,</span><span class="n">argc</span><span class="p">,</span><span class="n">argv</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">argc</span></code> and <code class="docutils literal notranslate"><span class="pre">argv</span></code> are the input parameter of your main function.
+If you write the .param file in the right directory, indeed, when you compile your executable, this is copied
+in <code class="docutils literal notranslate"><span class="pre">&lt;YourBuildDirectory&gt;/parameter</span></code>. Then, go in your build directory, create a new run directory and then launch your
+executable, without input parameter. Notice that your executable is in <code class="docutils literal notranslate"><span class="pre">&lt;YourBuildDirectory&gt;/&lt;MeaningfulDirectory&gt;</span></code>.
+Then, the path <code class="docutils literal notranslate"><span class="pre">../parameter/&lt;YourInputFile&gt;.param</span></code> exists and it is always correct.</p>
+</section>
+<section id="rhmcparameters">
+<h2>RhmcParameters<a class="headerlink" href="#rhmcparameters" title="Permalink to this headline"></a></h2>
+<p>There is also a class with all the necessary parameters for the RHMC updates. Generate an object with</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">RhmcParameters</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourRhmcParameterObject</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>This class inherits from the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code> class, so basically everything works like for the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code>
+class. A typical .param file should look like this:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
+<span class="c1"># rhmc.param</span>
+<span class="c1">#</span>
+<span class="c1"># Parameter file for RHMC runs with HISQ.</span>
+<span class="c1">#</span>
+<span class="c1">#      Lattice: Nx Ny Nz Nt</span>
+<span class="c1">#        Nodes: Number of nodes per direction</span>
+<span class="c1">#      mass_ud: Light quark mass</span>
+<span class="c1">#       mass_s: Strange quark mass</span>
+<span class="c1">#        no_pf: Number of pseudo-fermion fields</span>
+<span class="c1">#</span>
+<span class="c1">#    step_size: step size of trajectory</span>
+<span class="c1">#        no_md: number of steps of trajectory</span>
+<span class="c1">#   no_step_sf: number of steps of strange quark integration</span>
+<span class="c1">#        no_sw: number of steps of gauge integration</span>
+<span class="c1">#      residue: residue for inversions</span>
+<span class="c1">#        cgMax: max cg steps for multi mass solver</span>
+<span class="c1">#   always_acc: always accept configuration in Metropolis</span>
+<span class="c1">#     rat_file: rational approximation input file</span>
+<span class="c1">#</span>
+<span class="c1">#    rand_flag: new random numbers(0)/read in random numbers(1)</span>
+<span class="c1">#    rand_file: file name for random numbers and infos</span>
+<span class="c1">#         seed: myseed</span>
+<span class="c1">#    load_conf: flag_load (0=identity, 1=random, 2=getconf)</span>
+<span class="c1">#   gauge_file: prefix for the gauge configuration&#39;s file name </span>
+<span class="c1">#      conf_nr: configuration number</span>
+<span class="c1">#   no_updates: number of updates</span>
+<span class="c1">#  write_every: write out configuration every</span>
+<span class="c1">#</span>
+<span class="nv">Lattice</span> <span class="o">=</span> <span class="m">32</span> <span class="m">32</span> <span class="m">32</span> <span class="m">8</span>
+<span class="nv">Nodes</span>   <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
+<span class="nv">mass_ud</span> <span class="o">=</span> <span class="m">0</span>.0009875
+<span class="nv">mass_s</span>  <span class="o">=</span> <span class="m">0</span>.0790
+<span class="nv">beta</span>    <span class="o">=</span> <span class="m">6</span>.285
+<span class="nv">no_pf</span>   <span class="o">=</span> <span class="m">1</span>
+
+<span class="nv">step_size</span>  <span class="o">=</span> <span class="m">0</span>.07142857
+<span class="nv">no_md</span>      <span class="o">=</span> <span class="m">1</span>
+<span class="nv">no_step_sf</span> <span class="o">=</span> <span class="m">1</span>
+<span class="nv">no_sw</span>      <span class="o">=</span> <span class="m">1</span>
+<span class="nv">cgMax</span>      <span class="o">=</span> <span class="m">20000</span>
+<span class="nv">always_acc</span> <span class="o">=</span> <span class="m">0</span>
+<span class="nv">rat_file</span>   <span class="o">=</span> ../parameter/sample_eo.rat
+
+<span class="nv">rand_flag</span>   <span class="o">=</span> <span class="m">0</span>
+<span class="nv">rand_file</span>   <span class="o">=</span> rand
+<span class="nv">seed</span>        <span class="o">=</span> <span class="m">1337</span>
+<span class="nv">load_conf</span>   <span class="o">=</span> <span class="m">2</span>
+<span class="nv">gauge_file</span>  <span class="o">=</span> ../../test_conf/l328f21b6285m0009875m0790a_019.
+<span class="nv">conf_nr</span>     <span class="o">=</span> <span class="m">995</span>
+<span class="nv">no_updates</span>  <span class="o">=</span> <span class="m">1</span>
+<span class="nv">write_every</span> <span class="o">=</span> <span class="m">11</span>
+</pre></div>
+</div>
+</section>
+<section id="rational-approximation-coefficients">
+<h2>Rational Approximation Coefficients<a class="headerlink" href="#rational-approximation-coefficients" title="Permalink to this headline"></a></h2>
+<p>There is a class holding the coefficients for the rational approximation, again it is a child class of <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code>. To read in rational coefficients, just use</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">RationalCoeff</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourRatCoeffObject</span><span class="o">&gt;</span><span class="p">;</span><span class="w"></span>
+<span class="o">&lt;</span><span class="n">YourRatCoeffObject</span><span class="o">&gt;</span><span class="p">.</span><span class="n">readfile</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourRhmcParameterObject</span><span class="o">&gt;</span><span class="p">.</span><span class="n">rat_file</span><span class="p">(),</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>There are two possibilities how to structure this parameter file: 1) Use the “old” syntax:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">r_inv_1f_const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">9.17375410974739</span><span class="w"></span>
+<span class="n">r_inv_1f_num</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.29980743171857e-05</span><span class="w"></span>
+<span class="n">r_inv_1f_num</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-5.96418051684967e-05</span><span class="w"></span>
+<span class="n">r_inv_1f_num</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.84191327855302e-04</span><span class="w"></span>
+<span class="n">r_inv_1f_num</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-5.11036492922649e-04</span><span class="w"></span>
+<span class="p">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>or 2) use the syntax for arrays like in the <code class="docutils literal notranslate"><span class="pre">LatticeParameter</span></code> class:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">r_inv_1f_const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">9.17375410974739</span><span class="w"></span>
+<span class="n">r_inv_1f_num</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">-1.29980743171857e-05</span><span class="w"> </span><span class="mf">-5.96418051684967e-05</span><span class="w"> </span><span class="mf">-1.84191327855302e-04</span><span class="w"> </span><span class="mf">-5.11036492922649e-04</span><span class="w"> </span><span class="mf">-1.36684253994444e-03</span><span class="w"> </span><span class="mf">-3.61063551029741e-03</span><span class="w"> </span><span class="mf">-9.53178316015436e-03</span><span class="w"> </span><span class="mf">-2.54008994145594e-02</span><span class="w"> </span><span class="mf">-6.93286757511966e-02</span><span class="w"> </span><span class="mf">-1.99112173338843e-01</span><span class="w"> </span><span class="mf">-6.35953935299528e-01</span><span class="w"> </span><span class="mf">-2.55301677256660</span><span class="w"> </span><span class="mf">-17.69834374752580</span><span class="w"> </span><span class="mf">-797.12863440290698</span><span class="w"></span>
+</pre></div>
+</div>
+<p>However you like, the file has to contain the following keys:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">r_inv_1f_const</span><span class="p">,</span><span class="w"> </span><span class="n">r_inv_1f_num</span><span class="p">,</span><span class="w"> </span><span class="n">r_inv_1f_den</span><span class="p">,</span><span class="w"> </span>
+<span class="n">r_inv_2f_const</span><span class="p">,</span><span class="w"> </span><span class="n">r_inv_2f_num</span><span class="p">,</span><span class="w"> </span><span class="n">r_inv_2f_den</span><span class="p">,</span><span class="w"></span>
+<span class="n">r_1f_const</span><span class="p">,</span><span class="w"> </span><span class="n">r_1f_num</span><span class="p">,</span><span class="w"> </span><span class="n">r_1f_den</span><span class="p">,</span><span class="w"></span>
+<span class="n">r_2f_const</span><span class="p">,</span><span class="w"> </span><span class="n">r_2f_num</span><span class="p">,</span><span class="w"> </span><span class="n">r_2f_den</span><span class="p">,</span><span class="w"></span>
+<span class="n">r_bar_1f_const</span><span class="p">,</span><span class="w"> </span><span class="n">r_bar_1f_num</span><span class="p">,</span><span class="w"> </span><span class="n">r_bar_1f_den</span><span class="p">,</span><span class="w"></span>
+<span class="n">r_bar_2f_const</span><span class="p">,</span><span class="w"> </span><span class="n">r_bar_2f_num</span><span class="p">,</span><span class="w"> </span><span class="n">r_bar_2f_den</span><span class="p">.</span><span class="w"></span>
+</pre></div>
+</div>
+<p>CAVE: The rhmc class assumes that r_1f, r_2f, r_inv_1f and r_inv_2f are of the same order! Same goes for r_bar_1f and r_bar_2f.</p>
+</section>
+<section id="using-your-own-parameter-class">
+<h2>Using your own Parameter Class<a class="headerlink" href="#using-your-own-parameter-class" title="Permalink to this headline"></a></h2>
+<p>If you need more parameters that they are not in the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code> class, consider to create your own parameter class.
+Some example of how to construct an input parameter class can be found in <code class="docutils literal notranslate"><span class="pre">main_gradientFlow.cpp</span></code>, in particular see
+the <code class="docutils literal notranslate"><span class="pre">gradientFlowParam</span></code> class.</p>
+<p>In your executable file define something like that, for each parameter that you need (see the example above). Notice that the
+capital words are the one that you have to change:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">struct</span> <span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">  </span><span class="n">Parameter</span><span class="o">&lt;</span><span class="n">TYPE</span><span class="p">,</span><span class="w"> </span><span class="n">DIMENSION</span><span class="o">&gt;</span><span class="w"> </span><span class="n">NAME_OF_THE_PARAMETER</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">  </span><span class="c1">//Constructor</span>
+<span class="w">  </span><span class="n">YOUROWNCLASS</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//Each Parameter object has a Parameter.name variable. This set that name to &quot;x&quot;</span>
+<span class="w">    </span><span class="n">add</span><span class="p">(</span><span class="n">NAME_OF_THE_PARAMETER</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;NAME_OF_THE_PARAMETER&quot;</span><span class="p">);</span><span class="w"></span>
+
+<span class="w">  </span><span class="p">}</span><span class="w"></span>
+
+<span class="p">};</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Your class should inherit from <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code>, where there are the parameters explained in
+the previous section. In the code above <code class="docutils literal notranslate"><span class="pre">TYPE</span></code> is the variable type of your
+parameter (<code class="docutils literal notranslate"><span class="pre">float,</span> <span class="pre">std::string</span></code>…). If you want to write an array of parameters,
+than put the <code class="docutils literal notranslate"><span class="pre">DIMENSION</span></code> in the second term of the template input variables.
+Of course you have to modify accordingly your input file, adding a new line in the
+example written in the first section. If you want to add an array of parameters, you
+should separate the elements with a space, as <code class="docutils literal notranslate"><span class="pre">&quot;Lattice</span> <span class="pre">=</span> <span class="pre">20</span> <span class="pre">20</span> <span class="pre">20</span> <span class="pre">20&quot;</span></code> in the first example.
+In the constructor of <code class="docutils literal notranslate"><span class="pre">YOUROWNCLASS</span></code> for each new parameter you should call <code class="docutils literal notranslate"><span class="pre">add</span></code> or <code class="docutils literal notranslate"><span class="pre">addDefault</span></code>.
+This function set the name of the parameter inside the class. If you want to put a default value of
+the new parameter, just use <code class="docutils literal notranslate"><span class="pre">addDefault</span></code>, with a third argument that is the default value.</p>
+<p>Than, in your main function just declare your new parameter object, in the usual way:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">YOUROWNCLASS</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">OBJECT_NAME</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Of course you should define the precision at the beginning of your <code class="docutils literal notranslate"><span class="pre">.cpp</span></code> file with, e.g.:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#define PREC float</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

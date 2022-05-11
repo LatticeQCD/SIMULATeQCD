@@ -53,6 +53,9 @@ public:
     MemoryAccessor getRectangleField();
 
     floatT plaquette() {
+        // using definition Sg=\beta \sum_n \sum_{\mu\nu}  (1 - 1/3*ReTrU_{\mu\nu})
+        // calculates the mean value of 1/3*ReTrU_{\mu\nu} (without mu,nu running)
+        // 18 = 3*6. 3 from beta/3, 6 from 6 distinct plaq on each site
         return barePlaquette()/(GInd::getLatData().globalLattice().mult() * 18);
     }
 
