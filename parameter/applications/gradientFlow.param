@@ -25,6 +25,7 @@
 Lattice    = 20 20 20 20
 Nodes      = 1 1 1 1
 beta       = 6.498
+use_unit_conf = 0
 Gaugefile  = ../test_conf/l20t20b06498a_nersc.302500
 format     = nersc
 endianness = auto
@@ -39,9 +40,8 @@ measurements_dir      = ./
 measurement_intervall = 0 1
 necessary_flow_times  = 0.25 0.5
 
-ignore_fixed_startstepsize = 0
-save_conf                  = 0
-save_at_flow_time          = 0 0.5 1
+ignore_start_step_size     = 0
+save_configurations        = 0
 
 #
 # Set to 1 if you want to measure any of these observables (or 0 if not):
