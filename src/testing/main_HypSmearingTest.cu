@@ -115,5 +115,23 @@ int main(int argc, char *argv[]) {
         rootLogger.info() << CoutColors::red << "Test failed! sum: " << sum;
     }
     */
+    //! Check plaquette
+        GaugeAction<PREC, USE_GPU, HaloDepth> gAction(gauge_out);
+        PREC plaq;
+        plaq = gAction.plaquette();
+        rootLogger.info("plaquette: " ,  plaq);
+
+    int faults = 0;
+    if(std::abs(plaq - 0.9753800616)>1E-7)faults+=1; //depending on the compilation, we have seen (empirically) differences on the order of 6E-8, so the difference we look for is 1E-7.
+
+    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.9753800616));
+
+    if (faults == 0) {
+        rootLogger.info(CoutColors::green, "Hyp test passed!", CoutColors::reset);
+    }
+    else {
+        rootLogger.error("Hyp test failed!");
+        return 1;
+    }
     return 0;
 }
