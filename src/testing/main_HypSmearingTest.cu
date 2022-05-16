@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
     timer.reset();
 
     rootLogger.info("Read configuration");
-    gauge_in.readconf_nersc("../test_conf/gauge12750");
+    gauge_in.readconf_nersc("../test_conf/lat.sample.l6666_nersc");
 
     //gauge_smeared_bielefeldgpu.readconf_nersc("../test_conf/smearing_link_lv2_110_nersc");
 
