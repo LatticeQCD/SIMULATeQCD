@@ -677,7 +677,7 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
     if (mode == WRITE) mpi_mode = MPI_MODE_WRONLY;
     if (mode == READWRITE) mpi_mode = MPI_MODE_RDWR;
 
-    if (MPI_File_open(getCart_comm(), const_cast<char *>(fileName.c_str()),
+    if (MPI_File_open(MPI_COMM_WORLD, const_cast<char *>(fileName.c_str()),
                 mpi_mode, MPI_INFO_NULL, &fh) != MPI_SUCCESS) {
         throw std::runtime_error(stdLogger.fatal("Unable to read/write binary file: ", fileName));
     }
