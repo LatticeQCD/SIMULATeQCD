@@ -442,6 +442,19 @@ int main(int argc, char *argv[]) {
     delete [] results_r2;
     delete [] norm_r2;
 
+    bool lerror = false;
+    if(abs(sum-226.453970794328308)> 1e-9){
+        lerror = true;
+    }
+
+
+    if(lerror) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("test passed!" );
+    }
+
 
     return 0;
 }

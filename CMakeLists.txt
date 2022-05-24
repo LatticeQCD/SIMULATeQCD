@@ -647,7 +647,7 @@ set_SIMULATeQCD_gpu_backend(src/testing/main_wilsonLinesCorrelatorTest.cpp src/m
 add_SIMULATeQCD_executable(wilsonLinesCorrelatorTest src/testing/main_wilsonLinesCorrelatorTest.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp )
 set_SIMULATeQCD_property(wilsonLinesCorrelatorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
-add_to_compound_SIMULATeQCD_target(applications wilsonLinesCorrelatorTest)
+add_to_compound_SIMULATeQCD_target(tests wilsonLinesCorrelatorTest)
 
 #-------------------------------------------------------------------------------------COMPILATION DEFINITIONS: PROFILING
 

@@ -2,7 +2,7 @@ Lattice    = 32 32 32 8
 Nodes      = 1  1  1  1
 
 gauge_file = ../test_conf/l328f21b6285m0009875m0790a_019.995
-directory  = /home/rlarsen/simulateQCD/test/
+directory  = ./
 file_type  = nersc
 
 load_conf  = 2  #load( 0 = integer), (1=configuration) (2=configuration+ gauge fixing)
