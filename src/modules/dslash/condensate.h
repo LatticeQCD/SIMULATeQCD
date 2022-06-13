@@ -7,18 +7,10 @@
 #include "../HISQ/hisqSmearing.h"
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, size_t NStacks>
-SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool light, 
+SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, RhmcParameters param, floatT mass,
     Gaugefield<floatT, onDevice, HaloDepth, R18> &gauge, grnd_state<onDevice> &d_rand) {
 
     typedef GIndexer<All,HaloDepth> GInd;
-    
-    floatT mass;
-
-    if (light) {
-        mass = param.m_ud();
-    } else {
-        mass = param.m_s();
-    }
 
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase, "SHARED_GAUGELVL2");

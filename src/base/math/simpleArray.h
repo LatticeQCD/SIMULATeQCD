@@ -56,6 +56,14 @@ class SimpleArray{
         }
     }
 
+    __device__ __host__ T sum() {
+        T s = static_cast<T>(0.0);
+        for(size_t i = 0; i < N; i++){
+            s += values[i];
+        }
+        return s;
+    }
+
     __device__ __host__ SimpleArray getAccessor() const {
         return *this;
     }
