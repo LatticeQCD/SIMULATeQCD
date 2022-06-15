@@ -25,6 +25,13 @@
 #endif
 
 
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define AT __FILE__ ":" TOSTRING(__LINE__)
+
+
+
 enum Layout {
     All, Even, Odd
 };

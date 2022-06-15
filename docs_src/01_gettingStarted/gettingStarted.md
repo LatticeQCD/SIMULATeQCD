@@ -63,7 +63,7 @@ you need to make sure that
 - HIP is properly installed on your machine
 - CUDA is properly installed on your machine
 - The environment variable `HIP_PATH` holds the path to the HIP installation folder
-- The environment variables `CC` and `CCX` hold the path to the HIP clang compiler
+- The environment variables `CC` and `CXX` hold the path to the HIP clang compiler
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
@@ -90,7 +90,7 @@ In order to build the source with HIP for AMD platforms,
 you need to make sure that
 - HIP is properly installed on your machine
 - The environment variable `HIP_PATH` holds the path to the HIP installation folder
-- The environment variables `CC` and `CCX` hold the path to the HIP clang compiler
+- The environment variables `CC` and `CXX` hold the path to the HIP clang compiler
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell

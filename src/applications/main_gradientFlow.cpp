@@ -93,7 +93,7 @@ struct gradientFlowParam : LatticeParameters {
         addOptional(necessary_flow_times, "necessary_flow_times");
         addDefault(ignore_fixed_startstepsize, "ignore_start_step_size", false);
 
-        addDefault(save_conf, "save_configurations", false);
+        addDefault(save_conf, "save_configurations", false);  //! write gauge conf to disk at each flow time
 
         addDefault(use_unit_conf, "use_unit_conf", false);
 
@@ -422,8 +422,6 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     while (continueFlow) {
 
-        continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
-
         //! -------------------------------prepare log output-----------------------------------------------------------
 
         logStream.str("");
@@ -712,11 +710,16 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         }
 
         rootLogger.info(logStream.str());
-        flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
-        gauge.updateAll();
 
-        gAction.recomputeField();
-        topology.recomputeField();
+        continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
+        if (continueFlow){
+            flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
+            gauge.updateAll();
+
+            gAction.recomputeField();
+            topology.recomputeField();
+        }
+
     }
     timer.stop();
     rootLogger.info("complete time = " ,  timer.minutes() ,  " min");

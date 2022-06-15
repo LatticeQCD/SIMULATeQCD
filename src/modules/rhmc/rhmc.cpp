@@ -362,7 +362,7 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     double momenta;
     double gaugeact;
-    double act_sf;
+    double act_sf=0.0;
 
     // strange fermion action
     make_chi(chi, phi_sf_container.phi_container[0], rat_sf);
@@ -387,12 +387,12 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
 
     rootLogger.info("fermion action sf by reduce = " ,  fermionaction1); 
 
-    double act_lf;
+    double act_lf=0.0;
     double mom_ferms=0.0;
     redBase3.reduce(mom_ferms, elems_full);
 
     rootLogger.info("mom + ferm sf = " ,  mom_ferms);
-
+    
     // light fermion action
     for(int i = 0; i < _no_pf; i++) {
         make_chi(chi, phi_lf_container.phi_container[i], rat_lf);
