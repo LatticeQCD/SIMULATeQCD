@@ -44,9 +44,11 @@ int main(int argc, char **argv) {
     rootLogger.info("Measure Plaquette");
     timer.start();
 
-    PREC plaq = gauge_action.barePlaquette()
+    PREC plaq = gauge_action.plaquette()
 
     rootLogger.info("Plaquette ", plaq);
+
+    // output file name: "TaylorMeasurement_" + ensemble_id (like l328...) + "." + param.conf_nr
 
     return 0;
 }

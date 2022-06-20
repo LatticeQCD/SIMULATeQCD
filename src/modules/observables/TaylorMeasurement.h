@@ -8,19 +8,18 @@
 #include "latticeParameters.h"
 
 template<class floatT>
-struct gradientFlowParam : LatticeParameters {
+struct TaylorMeasurementParameters : LatticeParameters {
 {
     // TODO not sure yet what belongs here
-    DynamicParameter<int> operatorIds;
-    DynamicParameter<int> masses;
-    Parameter<int> max_num_iter;
-    Parameter<std::string> results_out;
+    DynamicParameter<int> operator_ids;
+    DynamicParameter<floatT> valence_masses;
+    Parameter<int> num_random_vectors;
+    // I will also need residue_meas, CGmax, residue from LatticeParameters
 
     TaylorMeasurementParameters() {
-        add(operatorIds, "OperatorIds");
-        add(masses, "Masses");
-        add(max_num_iter, "Iterations");
-        add(result_out, "OutputFile");
+        add(operator_ids, "OperatorIds");
+        add(valence_masses, "ValenceMasses");
+        add(num_random_vectors, "NumberRandomVectors");
     }
 };
 
