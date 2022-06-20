@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     initialize_rng(param.seed(), d_rand);
 
     const size_t numVec=10; // Do not change this.
-    SimpleArray<PREC,numVec> chi_l = measure_condensate<PREC, true, 2, 4, numVec>(commBase, param, true, gauge, d_rand);
+    SimpleArray<PREC,numVec> chi_l = measure_condensate<PREC, true, 2, 4, numVec>(commBase, param, param.m_ud(), gauge, d_rand);
 
     SimpleArray<PREC,numVec> chi_lCONTROL(0.0);
     chi_lCONTROL[0]=0.0632172;
