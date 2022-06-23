@@ -4,7 +4,7 @@ struct CheckParams : LatticeParameters {
     Parameter<std::string> prec;
 
     CheckParams() {
-        addDefault(prec, "prec", std::string("single"));
+        addDefault(prec, "prec", std::string("double"));
     }
 };
 

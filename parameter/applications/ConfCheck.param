@@ -1,4 +1,4 @@
-prec          = single     # single or double
+prec          = double     # single or double
 Lattice       = 8 8 8 4
 Gaugefile     = ../test_conf/nersc.l8t4b3360_bie_readtest
 format        = nersc
