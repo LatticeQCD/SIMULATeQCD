@@ -107,9 +107,10 @@ tar -xf git-lfs-linux-amd64-v3.0.2.tar.gz
 </div>
 <p>and you can activate it with <code class="docutils literal notranslate"><span class="pre">/path/to/install/dir/bin/git-lfs</span> <span class="pre">install</span></code>. Finally you will need to add <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PATH=/path/to/install/dir/bin:$PATH</span></code> to your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code>.</p>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code> (Some versions have the “–phtread” compiler bug. Versions that definitely work are <a class="reference external" href="https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6">3.14.6</a> or 3.19.2.)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">C++</span></code> compiler with <code class="docutils literal notranslate"><span class="pre">C++17</span></code> support  (e.g. <code class="docutils literal notranslate"><span class="pre">g++-9</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code> (Some versions have the “–pthread” compiler bug. Versions that definitely work are <a class="reference external" href="https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6">3.14.6</a> or 3.19.2.)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">C++</span></code> compiler with <code class="docutils literal notranslate"><span class="pre">C++17</span></code> support.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MPI</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">openmpi-4.0.4</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">Toolkit</span></code> version 11+ or <code class="docutils literal notranslate"><span class="pre">HIP</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> to build the documentation.</p></li>
 </ol>
 </section>
@@ -117,13 +118,13 @@ tar -xf git-lfs-linux-amd64-v3.0.2.tar.gz
 <h2>Building source with CUDA<a class="headerlink" href="#building-source-with-cuda" title="Permalink to this headline"></a></h2>
 <p>To build the source with CUDA, you need to have the <code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">Toolkit</span></code> version 11.0 or higher installed on your machine.
 To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../SIMULATeQCD/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
 -DUSE_GPU_P2P<span class="o">=</span>ON <span class="se">\</span>
 </pre></div>
 </div>
-<p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">simulateqcd</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
+<p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
 You can set the CUDA installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DCUDA_TOOLKIT_ROOT_DIR</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.
 Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
@@ -132,10 +133,10 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 </div>
 <p>If you would like to speed up the compiling process, add the option <code class="docutils literal notranslate"><span class="pre">-j</span></code>, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">4</span></code>.</p>
 </section>
-<section id="building-source-with-hip-for-nvidia-plattforms-experimental">
-<h2>Building source with HIP for NVIDIA plattforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-nvidia-plattforms-experimental" title="Permalink to this headline"></a></h2>
-<p>In order to build the source with HIP for NVIDIA plattforms,</p>
-<p>you need to make sure that</p>
+<section id="building-source-with-hip-for-nvidia-platforms-experimental">
+<h2>Building source with HIP for NVIDIA platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-nvidia-platforms-experimental" title="Permalink to this headline"></a></h2>
+<p>In order to build the source with HIP for NVIDIA platforms,
+you need to make sure that</p>
 <ul class="simple">
 <li><p>HIP is properly installed on your machine</p></li>
 <li><p>CUDA is properly installed on your machine</p></li>
@@ -143,14 +144,14 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <li><p>The environment variables <code class="docutils literal notranslate"><span class="pre">CC</span></code> and <code class="docutils literal notranslate"><span class="pre">CXX</span></code> hold the path to the HIP clang compiler</p></li>
 </ul>
 <p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../SIMULATeQCD/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span> <span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
 -DUSE_GPU_P2P<span class="o">=</span>OFF <span class="se">\</span>
 -DBACKEND<span class="o">=</span><span class="s2">&quot;hip_nvidia&quot;</span> <span class="se">\</span>
 </pre></div>
 </div>
-<p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">simulateqcd</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
+<p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
 You can set the HIP installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DHIP_PATH</span></code>.
 You can also set the CUDA installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DCUDA_TOOLKIT_ROOT_DIR</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.
@@ -161,24 +162,24 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 </div>
 <p>If you would like to speed up the compiling process, add the option <code class="docutils literal notranslate"><span class="pre">-j</span></code>, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">4</span></code>.</p>
 </section>
-<section id="building-source-with-hip-for-amd-plattforms-experimental">
-<h2>Building source with HIP for AMD plattforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-amd-plattforms-experimental" title="Permalink to this headline"></a></h2>
-<p>In order to build the source with HIP for AMD plattforms,</p>
-<p>you need to make sure that</p>
+<section id="building-source-with-hip-for-amd-platforms-experimental">
+<h2>Building source with HIP for AMD platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-amd-platforms-experimental" title="Permalink to this headline"></a></h2>
+<p>In order to build the source with HIP for AMD platforms,
+you need to make sure that</p>
 <ul class="simple">
 <li><p>HIP is properly installed on your machine</p></li>
 <li><p>The environment variable <code class="docutils literal notranslate"><span class="pre">HIP_PATH</span></code> holds the path to the HIP installation folder</p></li>
 <li><p>The environment variables <code class="docutils literal notranslate"><span class="pre">CC</span></code> and <code class="docutils literal notranslate"><span class="pre">CXX</span></code> hold the path to the HIP clang compiler</p></li>
 </ul>
 <p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../simulateqcd/ <span class="se">\</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake ../SIMULATeQCD/ <span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;gfx906,gfx908&quot;</span> <span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON <span class="se">\</span>
 -DUSE_GPU_P2P<span class="o">=</span>OFF <span class="se">\</span>
 -DBACKEND<span class="o">=</span><span class="s2">&quot;hip_amd&quot;</span> <span class="se">\</span>
 </pre></div>
 </div>
-<p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">simulateqcd</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
+<p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
 You can set the HIP installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DHIP_PATH</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture. For example gfx906,gfx908.
 <code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.
@@ -204,7 +205,7 @@ For example:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mpiexec -np &lt;NoGPUs&gt; ./&lt;program&gt; 
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">&lt;NoGPUs&gt;</span></code> is the number of GPU’s you want to use.</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;NoGPUs&gt;</span></code> is the number of GPUs you want to use.</p>
 </section>
 </section>
 </section>
