@@ -47,9 +47,11 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
     LatticeDimensions globalpos = comm.mycoords() * _localLattice;
     sitexyzt gPos(globalpos[0], globalpos[1], globalpos[2], globalpos[3]);
 
+#ifndef CPUONLY
     initGPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos,Nodes);
-    initCPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos,Nodes);
     initGPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
+#endif
+    initCPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos,Nodes);
     initCPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
 
     stdLogger.debug("Local size without Halos: " ,  globLatDataCPU[HaloDepth].lx ,  " "

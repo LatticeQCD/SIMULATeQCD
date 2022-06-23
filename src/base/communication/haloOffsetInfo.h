@@ -146,10 +146,12 @@ public:
     }
 
 
-    void init(int deviceStreamCount = 2) {
-        for (int i = 0; i < deviceStreamCount; ++i) {
+    void init(__attribute__((unused)) int deviceStreamCount = 2) {
+#ifndef CPUONLY
+    for (int i = 0; i < deviceStreamCount; ++i) {
             addDeviceStream();
         }
+#endif
         MpiType = MPI_DATATYPE_NULL;
         hostRequestSend = MPI_REQUEST_NULL;
         hostRequestRecv = MPI_REQUEST_NULL;
