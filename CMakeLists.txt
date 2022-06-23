@@ -747,7 +747,7 @@ add_to_compound_SIMULATeQCD_target(applications configConverter)
 set_SIMULATeQCD_gpu_backend(src/applications/main_ConfCheck.cpp)
 add_SIMULATeQCD_executable(ConfCheck src/applications/main_ConfCheck.cpp)
 set_SIMULATeQCD_property(ConfCheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(ConfCheck PRIVATE HALODEPTH_0=1 COMP_R18=1 SINGLEPREC=1 DOUBLEPREC=1)
+SIMULATeQCD_target_compile_definitions(ConfCheck PRIVATE HALODEPTH_0=1 COMP_R18=1 SINGLEPREC=1 DOUBLEPREC=1 CPUONLY=1)
 add_to_compound_SIMULATeQCD_target(applications ConfCheck)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_GenerateQuenched.cpp) 

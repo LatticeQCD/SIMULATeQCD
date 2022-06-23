@@ -125,6 +125,7 @@ public:
         fail.coord = LatticeDimensions(-99, -99, -99, -99);
         fail.onNode = false;
 
+#ifndef CPUONLY
         gpuError_t gpuErr = gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
         if (gpuErr != gpuSuccess) {
             GpuError("neighborInfo.h: gpuGetDeviceProperties failed:", gpuErr);
@@ -133,6 +134,7 @@ public:
         rootLogger.info("> Checking support for P2P (Peer-to-Peer) and UVA (Unified Virtual Addressing):");
         MPI_Barrier(cart_comm);
         checkP2P();
+#endif
         MPI_Barrier(cart_comm);
     }
 

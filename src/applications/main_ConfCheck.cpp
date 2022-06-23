@@ -11,7 +11,6 @@ struct CheckParams : LatticeParameters {
 template<typename floatT, size_t HaloDepth>
 void CheckConf(CommunicationBase &commBase, std::string format, std::string Gaugefile){
     Gaugefield<floatT, false, HaloDepth> gauge(commBase);
-
     /// Read in:
     if (format == "nersc") {
         gauge.readconf_nersc(Gaugefile);
@@ -22,7 +21,6 @@ void CheckConf(CommunicationBase &commBase, std::string format, std::string Gaug
     } else {
         throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
     }
-
     GaugeAction<floatT, false, HaloDepth> gaugeAction(gauge);
     rootLogger.info("Plaquette = ", gaugeAction.plaquette());
 }
