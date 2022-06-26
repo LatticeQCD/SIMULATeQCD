@@ -95,6 +95,20 @@ void GaugeUpdate<floatT,onDevice,HaloDepth>::updateHB(uint4* state, floatT beta,
     }
 }
 
+template<class floatT, bool onDevice, size_t HaloDepth>
+void GaugeUpdate<floatT, onDevice, HaloDepth>::set_gauge_to_reference() {
+    rootLogger.info("Calculating reference gaugefield: start from U=1, apply 100 HB updates with beta=8.0 using random "
+                    "numbers generated with seed=0.");
+    _gauge.one();
+    grnd_state<false> host_state;
+    grnd_state<true> dev_state;
+    host_state.make_rng_state(0);
+    dev_state = host_state;
+    for (int i = 0; i < 100; ++i) {
+        this->updateHB(dev_state.state, 8.0);
+    }
+}
+
 ///initialize various instances of the class
 #define CLASS_INIT(floatT,HALO, comp) \
 template class GaugeUpdate<floatT,true,HALO>;
