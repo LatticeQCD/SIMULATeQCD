@@ -13,17 +13,22 @@
 #include "su3rungeKutta3.h"
 #include "../../gauge/gaugeActionDeriv.h"
 
-enum RungeKuttaMethod { fixed_stepsize, adaptive_stepsize, adaptive_stepsize_allgpu };
+
+///Map user input strings to enums. The order of entries is important for loops; it has to be reversed
+///compared to the enum!
 enum Force { wilson, zeuthen };
-///convert string to enum for switch()
- std::map<std::string, Force> Force_map = {
-        {std::string("wilson"), wilson},
-        {std::string("zeuthen"), zeuthen}
+const std::vector<std::string> Forces = {"wilson", "zeuthen"};
+std::map<std::string, Force> Force_map = {
+         {Forces[0], wilson},
+         {Forces[1], zeuthen}
 };
+
+enum RungeKuttaMethod { fixed_stepsize, adaptive_stepsize, adaptive_stepsize_allgpu };
+const std::vector<std::string> RungeKuttaMethods = {"fixed_stepsize", "adaptive_stepsize", "adaptive_stepsize_allgpu"};
 std::map<std::string, RungeKuttaMethod > RK_map = {
-        {std::string("fixed_stepsize"), fixed_stepsize},
-        {std::string("adaptive_stepsize"), adaptive_stepsize},
-        {std::string("adaptive_stepsize_allgpu"), adaptive_stepsize_allgpu}
+        {RungeKuttaMethods[0], fixed_stepsize},
+        {RungeKuttaMethods[1], adaptive_stepsize},
+        {RungeKuttaMethods[2], adaptive_stepsize_allgpu}
 };
 
 /*Z_i( GSU3<floatT> &, GSU3<floatT> &,  GSU3<floatT> &, floatT )

@@ -34,11 +34,13 @@ struct gradientFlowParam : LatticeParameters {
 };
 
 template<typename floatT>
-bool compare(std::stringstream &logStream, const std::string& obs, floatT value, floatT reference, floatT acceptance){
-    logStream << " " << obs << " = " << value;
-    bool success = isApproximatelyEqual(value, reference, acceptance);
+bool compare(std::stringstream &logStream, std::stringstream &logStream_ref, floatT value, floatT reference, floatT tolerance){
+    logStream << value << "  " ;
+    bool success = isApproximatelyEqual(value, reference, tolerance);
     if (!success) {
-        logStream << CoutColors::red << " != " << reference << CoutColors::reset << "|";
+        logStream_ref << CoutColors::red << reference << CoutColors::reset << "  ";
+    } else {
+        logStream_ref << CoutColors::green << reference << CoutColors::reset << "  ";
     }
     return !success;
 }
@@ -49,40 +51,49 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         Topology<floatT, USE_GPU, HaloDepth> &topology,
         gradientFlowParam<floatT> &lp,
         std::vector<std::vector<double>> &reference_values,
-        const floatT acceptance){
+        const floatT acceptance,
+        unsigned int &flow_time_count){
 
     gradientFlow<floatT, HaloDepth, RKmethod, force> gFlow(gauge, lp.start_step_size(), lp.measurement_intervall()[0],
     lp.measurement_intervall()[1], lp.necessary_flow_times.get(), lp.accuracy());
 
-    // initialize some values for the measurement
+    //! initialize some values for the measurement
     floatT flow_time = 0;
-    unsigned int flow_time_count = 0;
     floatT plaq, clov, topChar;
-    std::stringstream logStream;
+    std::stringstream logStream, logStream_ref;
     logStream << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
+    logStream_ref << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
 
     bool failed = false;
     bool continueFlow = true;
 
-    // flow the field until max flow time
+    rootLogger.info("Flowtime            Plaquette           Clover              topCharge");
+
+    //! flow the field until max flow time
     while(continueFlow) {
 
         if (flow_time_count >= reference_values.size()) {
-            rootLogger.info("End of reference values reached!");
+            rootLogger.info("End of reference values reached! Is the lattice size correct?");
             failed = true;
             return failed;
         }
 
         continueFlow = gFlow.continueFlow();
-        logStream.str("");
-        logStream << "   t = " << flow_time;
+        logStream << "     ";
+        logStream_ref << "ref: ";
 
-        compare<floatT>(logStream, "", flow_time, floatT(reference_values[flow_time_count][0]), floatT(acceptance));
-        compare<floatT>(logStream, "Plaquette", gAction.plaquette(), floatT(reference_values[flow_time_count][1]), floatT(acceptance));
-        compare<floatT>(logStream, "Clover", gAction.clover(), floatT(reference_values[flow_time_count][2]), floatT(acceptance));
-        compare<floatT>(logStream, "topCharge", topology.topCharge(), floatT(reference_values[flow_time_count][3]), floatT(acceptance));
+        const size_t n_obs = 4;
+        floatT values[n_obs] = {flow_time, gAction.plaquette(), gAction.clover(), topology.topCharge()};
+
+        for (int i=0; i<n_obs; i++){
+            bool tmpfailed = compare<floatT>(logStream, logStream_ref, values[i], floatT(reference_values[flow_time_count][i]), floatT(acceptance));
+            failed = failed || tmpfailed;
+        }
 
         rootLogger.info(logStream.str());
+        rootLogger.info(logStream_ref.str());
+        logStream.str(std::string()); logStream.clear();
+        logStream_ref.str(std::string()); logStream_ref.clear();
 
         flow_time += gFlow.updateFlow();
         flow_time_count++;
@@ -92,16 +103,16 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 }
 
 template<class floatT>
-bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT acceptance, const floatT accuracy) {
+bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT tolerance) {
     stdLogger.setVerbosity(INFO);
     const size_t HaloDepth = 3;
 
     gradientFlowParam<floatT> lp;
 
     //! do not change these! they are hardcoded to match the reference values.
-    lp.accuracy.set(accuracy);
+    lp.accuracy.set(1e-5);
     lp.latDim.set({32, 32, 32, 16});
-    lp.start_step_size.set(0.01);
+    lp.start_step_size.set(0.05);
     lp.measurements_dir.set("./");
     lp.measurement_intervall.set({0.0, 1.0});
     lp.necessary_flow_times.set({0.0, 0.1, 0.5, 1.0});
@@ -113,26 +124,33 @@ bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT 
     initIndexer(HaloDepth, lp, commBase);
     Gaugefield<floatT, USE_GPU, HaloDepth> gauge(commBase);
     GaugeUpdate<floatT, USE_GPU, HaloDepth> gaugeUpdate(gauge);
-    gaugeUpdate.set_gauge_to_reference();
 
     LatticeContainer<USE_GPU, floatT> latticeContainer(commBase);
     GaugeAction<floatT, USE_GPU, HaloDepth> gAction(gauge);
-    rootLogger.info(gAction.plaquette());
+
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
 
-    rootLogger.info("Comparison-tolerance to reference is ", acceptance);
+    rootLogger.info("Comparison-tolerance to reference is ", tolerance);
 
     bool failed = false;
+    unsigned int flow_time_count = 0;  // running index for the reference values
 
     //! loop over RK methods and forces.
      static_for<0, 3>::apply([&](auto i){
-         const auto RKmethod = static_cast<RungeKuttaMethod>(static_cast<int>(i));
+         const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
          static_for<0, 2>::apply([&](auto j){
-             const auto myforce = static_cast<Force>(static_cast<int>(j));
-             failed = failed || run<floatT, HaloDepth, RKmethod, myforce>(gauge, gAction, topology, lp,wilson_values, acceptance);
+             ///Reset Gaugefield to reference.
+             gaugeUpdate.set_gauge_to_reference();
+             gauge.updateAll();
+             rootLogger.info("Plaquette = ", gAction.plaquette());
+
+             ///Run test
+             rootLogger.info(">>>>>>>>>>> RK_method=", RungeKuttaMethods[i], ", Force=", Forces[j], " <<<<<<<<<<<");
+             const auto force = static_cast<Force>(static_cast<int>(j));
+             bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
+                     (gauge, gAction, topology, lp, refValues_gradFlow, tolerance, flow_time_count);
+             failed = failed || tmpfailed;
          });
-         gaugeUpdate.set_gauge_to_reference();
-         gauge.updateAll();
      });
      return failed;
 }
@@ -142,14 +160,11 @@ int main(int argc, char *argv[]) {
 
     CommunicationBase commBase(&argc, &argv);
 
-    //how large can the difference to the reference values be?
-    const double double_acceptance = 1e-9;
-
-    //adaptive stepsize accuracy. just a parameter for reference values, do not change!
-    const double double_accuracy = 1e-9;
+    //! how large can the difference to the reference values be?
+    const double double_tolerance = 1e-9;
 
     stdLogger.info("TEST DOUBLE PRECISION");
-    bool passfail_double = run_test<double>(argc, argv, commBase, double_acceptance, double_accuracy);
+    bool passfail_double = run_test<double>(argc, argv, commBase, double_tolerance);
 
     rootLogger.info(CoutColors::green ,  "           ");
     if (passfail_double) { // || passfail_float

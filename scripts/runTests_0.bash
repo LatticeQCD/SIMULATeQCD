@@ -30,7 +30,7 @@ declare -A testRoutines
 testRoutines[_BulkIndexerTest]="4k"
 testRoutines[_ColorElectricCorrTest]="4s"
 testRoutines[_DslashMultiTest]="4k"
-testRoutines[_gradientFlowTest]="1"           # Apparently multi node doesn't work?
+testRoutines[_gradientFlowTest]="4k"           # Apparently multi node doesn't work?
 testRoutines[_HaloTest]="1"
 testRoutines[_MixedPrecInverterTest]="4k"
 
