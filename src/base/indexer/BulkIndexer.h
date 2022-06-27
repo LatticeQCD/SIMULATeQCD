@@ -312,6 +312,7 @@ class GIndexer {
 public:
     __device__ __host__ GIndexer() = default;
     __device__ __host__ inline static LatticeData getLatData() {
+
 #ifdef __GPU_ARCH__
         return globLatDataGPU[HaloDepth];
 #else

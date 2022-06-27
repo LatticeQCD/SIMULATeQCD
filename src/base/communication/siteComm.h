@@ -148,12 +148,13 @@ public:
             }
         }
         if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.syncAndInitP2PRanks();
-       	
+
+#ifndef CPUONLY
         gpuError_t gpuErr = gpuDeviceSynchronize();
         if (gpuErr != gpuSuccess) {
             GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
         }
-    
+#endif
         commB.globalBarrier();
     }
 
