@@ -48,7 +48,6 @@ struct sampleTopologyParameters : LatticeParameters {
 
     //! ---------------------------------which observables should be measured on the flowed configuration?--------------
     Parameter<bool> plaquette;
-    Parameter<bool> topCharge_imp;
     Parameter<bool> topChargeTimeSlices_imp;
 
       //! ---------------------------------advanced options---------------------------------------------------------------
@@ -97,7 +96,6 @@ struct sampleTopologyParameters : LatticeParameters {
         add(measurement_intervall, "measurement_intervall");
 
         addDefault(plaquette, "plaquette", true);
-        addDefault(topCharge_imp, "topCharge_imp", true);
         addDefault(topChargeTimeSlices_imp, "topChargeTimeSlices_imp", true);
         addDefault(prev_conf_has_nonzero_Q, "prev_conf_has_nonzero_Q", false);
         addDefault(print_all_flowtimes, "print_all_flowtimes", false);
@@ -149,7 +147,7 @@ void run_flow(gradFlowClass &gradFlow, Gaugefield<PREC, USE_GPU, HaloDepth> &gau
     LineFormatter header = file.header();
     header << "Flow time ";
     if (lp.plaquette()) header << "Plaquette ";
-    if (lp.topCharge_imp()) header << "Impr. top. Charge ";
+    header << "Impr. top. Charge ";
     header.endLine();
 
     FileWriter fileTopChSl_imp(gauge.getComm(), lp);
@@ -212,7 +210,7 @@ void run_flow(gradFlowClass &gradFlow, Gaugefield<PREC, USE_GPU, HaloDepth> &gau
             }
             topology.dontRecomputeField();
         }
-        if (lp.topCharge_imp() && (gradFlow.checkIfnecessaryTime() && writeFiles or gradFlow.checkIfEndTime()) ) {
+        if ((gradFlow.checkIfnecessaryTime() && writeFiles or gradFlow.checkIfEndTime()) ) {
             topChar = topology.template topCharge<true>();
             topchar_out = topChar;
             logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
@@ -234,9 +232,10 @@ void run_flow(gradFlowClass &gradFlow, Gaugefield<PREC, USE_GPU, HaloDepth> &gau
 }
 
 
-template<class floatT, bool onDevice, const size_t HaloDepth, RungeKuttaMethod input_RK_method, template<class, const size_t, RungeKuttaMethod> class gradFlowClass >
+template<class floatT, bool onDevice, const size_t HaloDepth, RungeKuttaMethod input_RK_method, Force force>
 void init(CommunicationBase &commBase,
                sampleTopologyParameters<floatT> &lp) {
+
 
     initIndexer(HaloDepth,lp,commBase);
     StopWatch<true> timer;
@@ -340,12 +339,12 @@ void init(CommunicationBase &commBase,
     rootLogger.info("Checking top. charge " ,  n_topo_meas_btwn_saved_confs ,  "times between saved confs.");
 
     {
-        gradFlowClass<floatT, HaloDepth, input_RK_method> gradFlow(gauge, lp.start_step_size(),
+        gradientFlow<floatT, HaloDepth, input_RK_method, force> gradFlow(gauge, lp.start_step_size(),
                                                                    lp.measurement_intervall()[0],
                                                                    lp.measurement_intervall()[1],
                                                                    lp.necessary_flow_times.get(), lp.accuracy());
         floatT topchar_tmp;
-        run_flow<floatT, HaloDepth, gradFlowClass<floatT, HaloDepth, input_RK_method>>(gradFlow, gauge, lp, topchar_tmp,
+        run_flow<floatT, HaloDepth, gradientFlow<floatT, HaloDepth, input_RK_method, force>>(gradFlow, gauge, lp, topchar_tmp,
                                                                                        (false));
         rootLogger.info("Top. charge of start conf: Q=" ,  topchar_tmp);
     }
@@ -372,12 +371,12 @@ void init(CommunicationBase &commBase,
             rootLogger.info("Accumulated sweeps = " ,  n_accumulated_sweeps);
             gauge_nonflowed = gauge;
             //! flow and measure topology
-            gradFlowClass<floatT, HaloDepth, input_RK_method> gradFlow(gauge, lp.start_step_size(),
+            gradientFlow<floatT, HaloDepth, input_RK_method, force> gradFlow(gauge, lp.start_step_size(),
                                                                        lp.measurement_intervall()[0],
                                                                        lp.measurement_intervall()[1],
                                                                        lp.necessary_flow_times.get(), lp.accuracy());
             floatT topchar;
-            run_flow<floatT, HaloDepth, gradFlowClass<floatT, HaloDepth, input_RK_method>>(gradFlow, gauge, lp, topchar, (k+1 == n_topo_meas_btwn_saved_confs)  );
+            run_flow<floatT, HaloDepth, gradientFlow<floatT, HaloDepth, input_RK_method, force>>(gradFlow, gauge, lp, topchar, (k+1 == n_topo_meas_btwn_saved_confs)  );
             rootLogger.info("Done top. charge meas. " ,  k+1 ,  "/" ,  n_topo_meas_btwn_saved_confs ,  " Q=" ,  topchar);
 
             if ( topchar >= 0.5 or topchar <= -0.5 ){
@@ -421,83 +420,52 @@ void init(CommunicationBase &commBase,
 
 
 int main(int argc, char* argv[]) {
+    try{
+        ///Initialize Base
+        stdLogger.setVerbosity(INFO);
 
-    ///Initialize Base
-    stdLogger.setVerbosity(INFO);
+        sampleTopologyParameters<PREC> lp;
+        CommunicationBase commBase(&argc, &argv);
+        lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
+        commBase.init(lp.nodeDim());
 
-    sampleTopologyParameters<PREC> lp;
-    CommunicationBase commBase(&argc, &argv);
-    lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
-    commBase.init(lp.nodeDim());
-
-    if (  lp.nsweeps_HBwithOR() % lp.nsweeps_btwn_topology_meas() != 0){
-        throw std::runtime_error(stdLogger.fatal("nsweeps_HBwithOR has to be a multiple of nsweeps_btwn_topology_meas"));
-    }
-
-    ///Convert input strings to enum for switching
-    Force input_force = Force_map[lp.force()];
-    RungeKuttaMethod input_RK_method = RK_map[lp.RK_method()];
-
-    if (input_RK_method == fixed_stepsize && lp.ignore_fixed_startstepsize() && lp.necessary_flow_times.isSet()) {
-        rootLogger.info("Ignoring fixed start_step_size. "
-                             "Stepsizes are dynamically deduced from necessary_flow_times.");
-        lp.start_step_size.set(lp.measurement_intervall()[1]);
-    }
-
-    ///Set HaloDepth. The ifdefs can reduce compile time (only define what you need in CMakeLists).
-    ///Wilson flow with topological charge (correlator) needs HaloDepth=2, without 1.
-    ///Zeuthen flow always needs 3.
-    switch (input_force) {
-#ifdef WILSON_FLOW
-        case wilson: {
-            const size_t HaloDepth = 2;
-            switch (input_RK_method) {
-#ifdef FIXED_STEPSIZE
-                case fixed_stepsize:
-                    init<PREC, USE_GPU, HaloDepth, fixed_stepsize, wilsonFlow>(commBase, lp);
-                    break;
-#endif
-#ifdef ADAPTIVE_STEPSIZE
-                case adaptive_stepsize:
-                    init<PREC, USE_GPU, HaloDepth, adaptive_stepsize, wilsonFlow>(commBase, lp);
-                    break;
-                case adaptive_stepsize_allgpu:
-                    init<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, wilsonFlow>(commBase, lp);
-                    break;
-#endif
-                default:
-                    throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
-            }
-            break;
+        if (lp.nsweeps_HBwithOR() % lp.nsweeps_btwn_topology_meas() != 0) {
+            throw std::runtime_error(
+                    stdLogger.fatal("nsweeps_HBwithOR has to be a multiple of nsweeps_btwn_topology_meas"));
         }
-#endif
-#ifdef ZEUTHEN_FLOW
-        case zeuthen: {
-                const size_t HaloDepth = 3;
-                switch (input_RK_method) {
-#ifdef FIXED_STEPSIZE
-                    case fixed_stepsize:
-                        init<PREC, USE_GPU, HaloDepth, fixed_stepsize, zeuthenFlow>(commBase, lp);
-                        break;
-#endif
-#ifdef ADAPTIVE_STEPSIZE
-                    case adaptive_stepsize:
-                        init<PREC, USE_GPU, HaloDepth, adaptive_stepsize, zeuthenFlow>(commBase, lp);
-                        break;
-                    case adaptive_stepsize_allgpu:
-                        init<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, zeuthenFlow>(commBase, lp);
-                        break;
-#endif
-                    default:
-                        throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
-                }
-                break;
-            }
-#endif
-        default:
-            throw std::runtime_error(stdLogger.fatal("Invalid force. Did you set the compile definitions accordingly?"));
-    }
 
+        ///Convert input strings to enum for switching
+        Force input_force = Force_map[lp.force()];
+        RungeKuttaMethod input_RK_method = RK_map[lp.RK_method()];
+
+        if (input_RK_method == fixed_stepsize && lp.ignore_fixed_startstepsize() && lp.necessary_flow_times.isSet()) {
+            rootLogger.info("Ignoring fixed start_step_size. "
+                            "Stepsizes are dynamically deduced from necessary_flow_times.");
+            lp.start_step_size.set(lp.measurement_intervall()[1]);
+        }
+
+        size_t input_HaloDepth = 2;
+        if (input_force == zeuthen) {
+            input_HaloDepth = 3;
+        }
+
+        //! loop over all templates and choose the one specified by the user
+        static_for<1, 4>::apply([&](auto i) {
+            const auto HaloDepth = static_cast<size_t>(i);
+            static_for<0, 3>::apply([&](auto i) {
+                const auto RKmethod = static_cast<RungeKuttaMethod>(static_cast<int>(i));
+                static_for<0, 2>::apply([&](auto j) {
+                    const auto myforce = static_cast<Force>(static_cast<int>(j));
+                    if (myforce == input_force && RKmethod == input_RK_method && HaloDepth == input_HaloDepth) {
+                        init<PREC, USE_GPU, HaloDepth, RKmethod, myforce>(commBase, lp);
+                    }
+                });
+            });
+        });
+    }
+    catch (std::runtime_error &error){
+            return 1;
+    }
     return 0;
 }
 
