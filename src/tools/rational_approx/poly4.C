@@ -208,8 +208,7 @@ for(iphi=0; iphi<n_pseudo; iphi++)
 
 }
 
- // printf("n_pseudo %d\n\n",n_pseudo);
- printf("#=====================================================#\n");
+printf("#=====================================================#\n");
 printf("# FILE:     rational.hzt                              #\n");
 printf("# COMMENTS: Contains the constants for all the        #\n");
 printf("#           rational approximations required for the  #\n");
@@ -339,7 +338,6 @@ int work(double y1, double z1, double m1,
   // The error from the approximation (the relative error is minimised
   // - if another error minimisation is requried, then line 398 in
   // alg_remez.C is where to change it)
-  //double error;
   
   double *res = new double[order];
   double *pole = new double[order];
@@ -347,8 +345,6 @@ int work(double y1, double z1, double m1,
   // The partial fraction expansion takes the form 
   // r(x) = norm + sum_{k=1}^{n} res[k] / (x + pole[k])
   double norm;
-
- // double bulk = exp(0.5*(log(lambda_low)+log(lambda_high)));
 
   // Instantiate the Remez class,
   AlgRemez remez(lambda_low,lambda_high,precision);

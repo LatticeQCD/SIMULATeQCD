@@ -1,9 +1,9 @@
 The program in this folder will generate you a rational approximation file
-for the use with the RHMC of the parallelgpucode
+for the use with the RHMC of SIMULATeQCD 
 
 call with
 
-rat_approx input.file > outfput.file
+rat_approx input.file > output.file
 
 The input file should be structured like:
 
