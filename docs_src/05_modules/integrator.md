@@ -1,6 +1,9 @@
 # Integrator
 
-This class takes care of the symplectic integration of the molecular dynamics trajectory. An object of this type is instantiated in the constructor of the rhmc class. And the MD evolution is done by the `integrate` function. There is the possibility of several different integration schemes. At the moment there are only two schemes: Purge gauge Leapfrog and a Sexton-Weingarten integrator with different time steps for gauge, heavy fermion and light fermion parts of the force. 
+This class takes care of the symplectic integration of the molecular dynamics trajectory. An object of this type is instantiated in the constructor of the rhmc class. And the MD evolution is done by the `integrate` function. There is the possibility of several different integration schemes. At the moment there are only two schemes: Purge gauge Leapfrog and a [Sexton-Weingarten](https://www.sciencedirect.com/science/article/pii/055032139290263B?via%3Dihub) integrator with different time steps for 
+gauge, heavy fermion and light fermion parts of the force. The Sexton-Weingarten integrator uses the [Hasenbusch](https://www.sciencedirect.com/science/article/pii/S0370269301011029?via%3Dihub) trick.
+
+
 The constructor has to be called with the usual template arguments and one has to pass several arguments:
 ```C++
 integrator(RhmcParameters rhmc_param, Gaugefield<floatT,onDevice,All,HaloDepth> &gaugeField, 

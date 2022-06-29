@@ -1,8 +1,7 @@
 # 
 # compute_memorySize.py                                                               
 # 
-# Short python script to figure out how much memory your parallelGPUCode executable will require.
-# 
+# Short python script to figure out how much memory your SIMULATeQCD executable will require.
 # 
 
 def STR(number):
