@@ -1,35 +1,36 @@
-The program in this folder will generate you a rational approximation file
-for the use with the RHMC of SIMULATeQCD 
+# Generating rational approximation input files
 
-call with
+The program in this folder will generate you a rational approximation file for use with the RHMC of SIMULATeQCD.
+You can call it with
 
+```shell
 rat_approx input.file > output.file
+```
 
-The input file should be structured like:
+The input file should be structured as
 
-npff <- the # of pseudo-fermion flavors for which one need rat. approx.'s
+```C
+npff        // Number of pseudo-fermion flavors
 
-#npff blocks like:
-
-y1
+y1  
 y2
-mprec
+mprec       // Pre-conditioner mass (reduces the condition number in CG)
 mq
 order1
 order2
 lambda_low
 lambda_high
 precision
+```
 
-one block will generate three rat. approx.'s according to
+One block will generate three rational approximations according to
 
-f(x) = x^(y1/8)  (x+mprec^2-mq^2)^(y2/8)
-g(x) = x^(-y1/8) (x+mprec^2-mq^2)^(-y2/8)
-h(x) = x^(-y1/4) (x+mprec^2-mq^2)^(-y2/4)
+f(x) = x^(`y1`/8)  (x+ `mprec`^2 -`mq`^2 )^(`y2`/8)
+g(x) = x^(-`y1`/8) (x+ `mprec`^2 -`mq`^2 )^(-`y2`/8)
+h(x) = x^(-`y1`/4) (x+ `mprec`^2 -`mq`^2 )^(-`y2`/4)
 
-with m^2 = mprec^2-mq^2
-
-Example:  2+1f of fermions with std. Hasenbusch preconditioning for the light flavors
+with m^2 = `mprec`^2 - `mq`^2. For example, consider 2+1 flavors of fermions with 
+standard Hasenbusch preconditioning for the light flavors. The input file will be
 
 2
 
@@ -53,18 +54,14 @@ ml^2
 5.0
 160
 
-this will generate in general 6 rat. approx.'s 3
+Two blocks generates six rational approximations. The light approximations are
 
-light:
+f(x) = x^(1/4)  (x + ms^2 - ml^2 )^(-1/4)
+g(x) = x^(-1/4) (x + ms^2 - ml^2 )^(1/4)
+h(x) = x^(-1/2) (x + ms^2 + ml^2 )^(-1/2)
 
-f(x) = x^(1/4)  (x+ms^2-ml^2)^(-1/4)
-g(x) = x^(-1/4) (x+ms^2-ml^2)^(1/4)
-h(x) = x^(-1/2) (x+ms^2+ml^2)^(-1/2)
-
-strange:
+while the strange are
 
 f(x) = x^(3/8)
 g(x) = x^(-3/8)
 h(x) = x^(-3/4)
-
-

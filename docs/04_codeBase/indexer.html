@@ -19,6 +19,8 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -88,12 +90,14 @@
   <section class="tex2jax_ignore mathjax_ignore" id="indexer">
 <h1>Indexer<a class="headerlink" href="#indexer" title="Permalink to this headline"></a></h1>
 <p><strong>This page is work in progress!</strong></p>
-<p>When working with 4d lattices, we need a way to map the lattices sites (given by spacetime coordinates x,y,z,t) to the computer memory, which is 1-dimensional. This gets more complicated when using multi-GPU, since we have to care about sub-lattices and halos. Additionally, we often want to split the lattice into the even or odd part. A site is even (odd) if the <strong><u>sum</u> of its coordinates</strong> is even (odd).</p>
+<p>When working with 4d lattices, we need a way to map the lattices sites (given by spacetime coordinates <span class="math notranslate nohighlight">\((x,y,z,t)\)</span> to the computer memory,
+which is 1-dimensional. This gets more complicated when using multi-GPU, since we have to care about sub-lattices and halos.
+For many algorithms it is convenient to characterize sites as even or odd. A site is even (odd) if <span class="math notranslate nohighlight">\(x+y+z+t\)</span> is even (odd).</p>
 <section id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline"></a></h2>
 <p>The 1d memory index (which is just an integer) is often called <code class="docutils literal notranslate"><span class="pre">isite</span></code> throughout the code.
-The four spacetime coordinates of a lattice site are stored in a struct named <code class="docutils literal notranslate"><span class="pre">sitexyzt</span></code>.</p>
-<p>When using multi-GPU we use the following terminology:</p>
+The four spacetime coordinates of a lattice site are stored in a <code class="docutils literal notranslate"><span class="pre">struct</span></code> named <code class="docutils literal notranslate"><span class="pre">sitexyzt</span></code>.
+When using multi-GPU we use the following terminology:</p>
 <ul class="simple">
 <li><p>original lattice (without any splitting or halos): <strong>global</strong> lattice</p></li>
 <li><p>sub-lattice with halos: <strong>full</strong> sub-lattice</p></li>
@@ -102,92 +106,43 @@ The four spacetime coordinates of a lattice site are stored in a struct named <c
 </section>
 <section id="memory-layout-and-basic-indexing">
 <h2>Memory layout and basic indexing<a class="headerlink" href="#memory-layout-and-basic-indexing" title="Permalink to this headline"></a></h2>
-<p>The simplest possibility (which we actually don’t use, this is just an example) to convert the coordinates <code class="docutils literal notranslate"><span class="pre">x,y,z,t</span></code> to the linear computer memory would be like this:</p>
-<script type="text/javascript">
-    function showhide(element){
-        if (!document.getElementById)
-            return
-
-        if (element.style.display == "block")
-            element.style.display = "none"
-        else
-            element.style.display = "block"
-    };
-</script>
-<a href="javascript:showhide(document.getElementById('hiddencodeblock1')); showhide(document.getElementById('hiddencodeblock1_whitespace'))">+ show/hide code</a><br /><div id="hiddencodeblock1" style="display: none"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">size_t</span><span class="w"> </span><span class="nf">siteLocal</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">sitexyzt</span><span class="w"> </span><span class="n">coord</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="n">coord</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">y</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">z</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">t</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol3</span><span class="p">);</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
-</pre></div>
-</div>
-</div><div id="hiddencodeblock1_whitespace" style="display: block"><br></div><p>In SIMULATeQCD we sometimes want to exploit  symmetries of the Dirac matrix, which requires an <strong>even-odd memory layout</strong> . In the linear memory we first continuously store the data for all of the even sites and then for all of the odd sites. <strong>This is how it is done for all of the base classes like <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, <code class="docutils literal notranslate"><span class="pre">Spinorfield</span></code>, <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>, etc…</strong>
+<p>In SIMULATeQCD we sometimes want to exploit symmetries of the Dirac matrix, which requires an even-odd memory layout. We first store the data for all
+of the even sites and then for all of the odd sites, contiguously. This is how it is done for all of the base classes like
+<code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, <code class="docutils literal notranslate"><span class="pre">Spinorfield</span></code>, <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>, etc.
 The conversion looks like this:</p>
-<script type="text/javascript">
-    function showhide(element){
-        if (!document.getElementById)
-            return
-
-        if (element.style.display == "block")
-            element.style.display = "none"
-        else
-            element.style.display = "block"
-    };
-</script>
-<a href="javascript:showhide(document.getElementById('hiddencodeblock2')); showhide(document.getElementById('hiddencodeblock2_whitespace'))">+ show/hide code</a><br /><div id="hiddencodeblock2" style="display: none"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">size_t</span><span class="w"> </span><span class="nf">siteLocal</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">sitexyzt</span><span class="w"> </span><span class="n">coord</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">size_t</span><span class="w"> </span><span class="nf">siteLocal</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">sitexyzt</span><span class="w"> </span><span class="n">coord</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">(((</span><span class="n">coord</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">y</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol1</span><span class="w"> </span>
-<span class="w">    </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">z</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol2</span><span class="w"> </span>
-<span class="w">    </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">t</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol3</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mh">0x1</span><span class="p">)</span><span class="w"> </span><span class="c1">// integer division by 2</span>
+<span class="w">                      </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">z</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol2</span><span class="w"> </span>
+<span class="w">                      </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">t</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol3</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mh">0x1</span><span class="p">)</span><span class="w"> </span><span class="c1">// integer division by 2</span>
 <span class="w">    </span><span class="o">+</span><span class="n">getLatData</span><span class="p">().</span><span class="n">sizeh</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">((</span><span class="n">coord</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">z</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="mh">0x1</span><span class="p">));</span><span class="w"> </span><span class="c1">// 0 if x+y+z+t is even, 1 if odd</span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div id="hiddencodeblock2_whitespace" style="display: block"><br></div><p><code class="docutils literal notranslate"><span class="pre">sizeh</span></code> here is the number of of lattice sites divided by 2.</p>
-<p>For objects that don’t store data on all lattice points, but only the odd part, one needs a mapping like this:</p>
-<script type="text/javascript">
-    function showhide(element){
-        if (!document.getElementById)
-            return
-
-        if (element.style.display == "block")
-            element.style.display = "none"
-        else
-            element.style.display = "block"
-    };
-</script>
-<a href="javascript:showhide(document.getElementById('hiddencodeblock3')); showhide(document.getElementById('hiddencodeblock3_whitespace'))">+ show/hide code</a><br /><div id="hiddencodeblock3" style="display: none"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">size_t</span><span class="w"> </span><span class="nf">siteLocal_eo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">sitexyzt</span><span class="w"> </span><span class="n">coord</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<p><code class="docutils literal notranslate"><span class="pre">sizeh</span></code> here is the number of of lattice sites divided by 2. (We use bit shifts to divide to improve performance.)
+For objects that don’t store data on all lattice points, but only the odd part, one needs a mapping like this:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">size_t</span><span class="w"> </span><span class="nf">siteLocal_eo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">sitexyzt</span><span class="w"> </span><span class="n">coord</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="p">((</span><span class="n">coord</span><span class="p">.</span><span class="n">x</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">y</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol1</span><span class="w"></span>
-<span class="w">             </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">z</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol2</span><span class="w"></span>
-<span class="w">             </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">t</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol3</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mh">0x1</span><span class="p">);</span><span class="w"></span>
+<span class="w">                     </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">z</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol2</span><span class="w"></span>
+<span class="w">                     </span><span class="o">+</span><span class="w"> </span><span class="n">coord</span><span class="p">.</span><span class="n">t</span><span class="o">*</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol3</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="mh">0x1</span><span class="p">);</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div id="hiddencodeblock3_whitespace" style="display: block"><br></div><p>This can of course also be used for objects that only store the even part, as adjacent odd and even sites are mapped to same index.</p>
-<p>Sometimes one wants to obtain the coordinates from the corresponding 1d memory index. That can be done like this:</p>
-<script type="text/javascript">
-    function showhide(element){
-        if (!document.getElementById)
-            return
-
-        if (element.style.display == "block")
-            element.style.display = "none"
-        else
-            element.style.display = "block"
-    };
-</script>
-<a href="javascript:showhide(document.getElementById('hiddencodeblock4')); showhide(document.getElementById('hiddencodeblock4_whitespace'))">+ show/hide code</a><br /><div id="hiddencodeblock4" style="display: none"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">sitexyzt</span><span class="w"> </span><span class="nf">de_site</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<p>This can of course also be used for objects that only store the even part, as adjacent odd and even sites are mapped to same index.
+Sometimes one wants to obtain the coordinates from the corresponding 1d memory index, i.e one wants to deindex.
+That can be done like this:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">sitexyzt</span><span class="w"> </span><span class="nf">de_site</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="n">normInd</span><span class="p">,</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1">//! figure out the parity:</span>
 <span class="w">    </span><span class="n">divmod</span><span class="p">(</span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="n">getLatData</span><span class="p">().</span><span class="n">sizeh</span><span class="p">,</span><span class="w"> </span><span class="n">par</span><span class="p">,</span><span class="w"> </span><span class="n">normInd</span><span class="p">);</span><span class="w"></span>
 <span class="w">    </span><span class="c1">//! par now contains site/sizeh (integer division), so it should be 0 (even) or 1 (odd).</span>
-<span class="w">    </span><span class="c1">//! normInd contains the remainder.</span>
-<span class="w">    </span><span class="c1">//! Adjacent odd and even sites will have the same remainder.</span>
+<span class="w">    </span><span class="c1">//! normInd contains the remainder. Adjacent odd and even sites will have the same remainder.</span>
 
 <span class="w">    </span><span class="c1">//! Now think of an interlaced list of all even and all odd sites, such that the entries alternate</span>
 <span class="w">    </span><span class="c1">//! between even and odd sites. Since adjacent sites have the same remainder, the remainder functions as</span>
-<span class="w">    </span><span class="c1">//! the index of the *pairs* of adjacent sites.</span>
-<span class="w">    </span><span class="c1">//! The next step is now to double this remainder so that we can work with it as an index for the single sites</span>
-<span class="w">    </span><span class="c1">//! and not the pairs.</span>
+<span class="w">    </span><span class="c1">//! the index of the *pairs* of adjacent sites. The next step is now to double this remainder so that </span>
+<span class="w">    </span><span class="c1">//! we can work with it as an index for the single sites and not the pairs.</span>
 <span class="w">    </span><span class="n">normInd</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">normInd</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="mh">0x1</span><span class="p">;</span><span class="w"> </span><span class="c1">//! multiply remainder by two</span>
 
 <span class="w">    </span><span class="c1">//! Now get the slower running coordinates y,z,t:</span>
@@ -198,11 +153,10 @@ The conversion looks like this:</p>
 <span class="w">    </span><span class="n">divmod</span><span class="p">(</span><span class="n">tmp</span><span class="p">,</span><span class="w">     </span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol1</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">x</span><span class="p">);</span><span class="w">   </span><span class="c1">//! x now contains tmp/vol1, x the remainder</span>
 
 <span class="w">    </span><span class="c1">//! One problem remains: since we doubled the remainder and since the lattice extents have to be even,</span>
-<span class="w">    </span><span class="c1">//! x is now also always even, which is of course not correct.</span>
-<span class="w">    </span><span class="c1">//! We may need to correct it to be odd, depending on the supposed parity we found in the beginning,</span>
-<span class="w">    </span><span class="c1">//! and depending on whether y+z+t is even or odd:</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isOdd</span><span class="p">(</span><span class="n">x</span><span class="p">)){</span><span class="w"> </span><span class="c1">//TODO isn&#39;t x always even? ...</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w">   </span><span class="p">(</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">isOdd</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">t</span><span class="p">))</span><span class="w">    </span><span class="c1">//!  odd parity but y+z+t is even, so x should be odd</span>
+<span class="w">    </span><span class="c1">//! x is now also always even, which is of course not correct. We may need to correct it to be odd, depending </span>
+<span class="w">    </span><span class="c1">//! on the supposed parity we found in the beginning, and depending on whether y+z+t is even or odd:</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">isOdd</span><span class="p">(</span><span class="n">x</span><span class="p">)){</span><span class="w"> </span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w">   </span><span class="p">(</span><span class="w"> </span><span class="n">par</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="n">isOdd</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">t</span><span class="p">))</span><span class="w">       </span><span class="c1">//! odd parity but y+z+t is even, so x should be odd</span>
 <span class="w">               </span><span class="n">or</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">par</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w">  </span><span class="n">isOdd</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">z</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">t</span><span class="p">)))</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">//! even parity but y+z+t is  odd, so x should be odd</span>
 <span class="w">            </span><span class="o">++</span><span class="n">x</span><span class="p">;</span><span class="w"></span>
 <span class="w">        </span><span class="p">}</span><span class="w"></span>
@@ -213,20 +167,9 @@ The conversion looks like this:</p>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div id="hiddencodeblock4_whitespace" style="display: block"><br></div><p>Obtaining only either even or odd sites from the 1d memory index is done in a very similar way, except we dictate the parity:</p>
-<script type="text/javascript">
-    function showhide(element){
-        if (!document.getElementById)
-            return
-
-        if (element.style.display == "block")
-            element.style.display = "none"
-        else
-            element.style.display = "block"
-    };
-</script>
-<a href="javascript:showhide(document.getElementById('hiddencodeblock5')); showhide(document.getElementById('hiddencodeblock5_whitespace'))">+ show/hide code</a><br /><div id="hiddencodeblock5" style="display: none"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">//! &quot;site&quot; should be smaller than sizeh!</span>
-<span class="n">sitexyzt</span><span class="w"> </span><span class="nf">de_site_eo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<p>Obtaining only either even or odd sites from the 1d memory index
+is done in a very similar way, except we dictate the parity:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">sitexyzt</span><span class="w"> </span><span class="nf">de_site_eo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">tmp</span><span class="p">;</span><span class="w"></span>
 <span class="w">    </span><span class="kt">size_t</span><span class="w"> </span><span class="n">sited</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">site</span><span class="o">&lt;&lt;</span><span class="mh">0x1</span><span class="p">;</span><span class="w"> </span><span class="c1">// multiply by two</span>
@@ -244,12 +187,12 @@ The conversion looks like this:</p>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-</div><div id="hiddencodeblock5_whitespace" style="display: block"><br></div></section>
+</section>
 <section id="custom-data-types-to-store-indices">
 <h2>Custom data types to store indices<a class="headerlink" href="#custom-data-types-to-store-indices" title="Permalink to this headline"></a></h2>
-<p>In SIMULATeQCD, there are four structs that can store the spacetime coordinates and the corresponding memory index of a given lattice site:</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD</span></code>, there are four <code class="docutils literal notranslate"><span class="pre">struct</span></code>s that can store the spacetime coordinates and the corresponding memory index of a given lattice site:</p>
 <p><code class="docutils literal notranslate"><span class="pre">gSite</span></code>:
-This struct stores the spacetime coordinates and memory index for one lattice site.
+This <code class="docutils literal notranslate"><span class="pre">struct</span></code> stores the spacetime coordinates and memory index for one lattice site.
 More specifically, it stores</p>
 <ul class="simple">
 <li><p>the 1d memory index of the bulk sub-lattice (<code class="docutils literal notranslate"><span class="pre">isite</span></code>)</p></li>
@@ -257,8 +200,10 @@ More specifically, it stores</p>
 <li><p>the spacetime coordinates of the lattice site on the bulk sublattice (<code class="docutils literal notranslate"><span class="pre">coords</span></code>)</p></li>
 <li><p>the spacetime coordinates fo the lattice site on the full sublattice (<code class="docutils literal notranslate"><span class="pre">coordsFull</span></code>)</p></li>
 </ul>
-<p>You can create gSite objects using the static class <code class="docutils literal notranslate"><span class="pre">GIndexer</span></code> (see below). You need to remember with which template parameters you create <code class="docutils literal notranslate"><span class="pre">gSite</span></code> objects, as they don’t store any information about that.
-If you read somewhere something like “This function takes an odd <code class="docutils literal notranslate"><span class="pre">gSite</span></code> as input”, then that means that the <code class="docutils literal notranslate"><span class="pre">gSite</span></code> should have been created using GIndexer&lt;Odd,myHaloDepth&gt;.</p>
+<p>You can create gSite objects using the static class <code class="docutils literal notranslate"><span class="pre">GIndexer</span></code> (see below). You need to remember with which template parameters
+you create <code class="docutils literal notranslate"><span class="pre">gSite</span></code> objects, as they don’t store any information about that.
+If you read somewhere something like “This function takes an odd <code class="docutils literal notranslate"><span class="pre">gSite</span></code> as input”, then that means that the <code class="docutils literal notranslate"><span class="pre">gSite</span></code>
+should have been created using <code class="docutils literal notranslate"><span class="pre">GIndexer&lt;Odd,myHaloDepth&gt;</span></code>.</p>
 <div class="toggle admonition">
 <p class="admonition-title">Temp</p>
 <p><strong>The static class <code class="docutils literal notranslate"><span class="pre">GIndexer</span></code></strong></p>
@@ -276,8 +221,7 @@ If you read somewhere something like “This function takes an odd <code class="
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-<p>A site is even (odd) if the <strong><u>sum</u> of its coordinates</strong> is even (odd).
-The <strong>first half of the sites (from <code class="docutils literal notranslate"><span class="pre">isite=0</span></code> to <code class="docutils literal notranslate"><span class="pre">isite=vol4/2-1</span></code>) are even</strong>, and the <strong>second half (from <code class="docutils literal notranslate"><span class="pre">isite=vol4/2</span></code> to <code class="docutils literal notranslate"><span class="pre">isite=vol4-1</span></code>) are odd</strong> , so you can adjust the start and end values of <code class="docutils literal notranslate"><span class="pre">isite</span></code> accordingly if you only want to loop over the even/odd part.</p>
+<p>The <strong>first half of the sites (from <code class="docutils literal notranslate"><span class="pre">isite=0</span></code> to <code class="docutils literal notranslate"><span class="pre">isite=vol4/2-1</span></code>) are even</strong>, and the <strong>second half (from <code class="docutils literal notranslate"><span class="pre">isite=vol4/2</span></code> to <code class="docutils literal notranslate"><span class="pre">isite=vol4-1</span></code>) are odd</strong> , so you can adjust the start and end values of <code class="docutils literal notranslate"><span class="pre">isite</span></code> accordingly if you only want to loop over the even/odd part.</p>
 <p>Examples for even sites:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span>
 <span class="mi">2</span> <span class="mi">0</span> <span class="mi">0</span> <span class="mi">0</span> 
