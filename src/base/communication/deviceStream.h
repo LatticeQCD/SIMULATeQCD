@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 13.05.19.
-//
+/* 
+ * deviceStream.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef DEVICESTREAM_H
 #define DEVICESTREAM_H
