@@ -1,6 +1,19 @@
-//
-// Created by Lukas Mazur on 19.06.18.
-//
+/* 
+ * LatticeContainer.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ * This class oversees LatticeContainer objects, which are essentially intermediate containers 
+ * used to store intermediate results that will be reduced later. For instance if one calculates 
+ * the action, one first finds each local contribution, sums these contributions over a sublattice, 
+ * then sums this result over all sublattices. This whole process is carried out with reduce call.
+ *
+ * The LatticeContainer can hold elements of arbitrary type, and it is spread over the processes 
+ * in a similar way as the Gaugefield or Spinorfield. The memory of the LatticeContainer is by 
+ * default shared with the memory of the halo buffer, because in general the intermediate results 
+ * have to be re-calculated after a halo update. 
+ * 
+ */
 
 #ifndef LATTICECONTAINER_H
 #define LATTICECONTAINER_H

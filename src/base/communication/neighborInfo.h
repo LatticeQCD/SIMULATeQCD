@@ -18,8 +18,6 @@
 #include "../LatticeDimension.h"
 #include "../wrapper/gpu_wrapper.h"
 
-//#define PEERACCESSINFO
-
 struct ProcessInfo {
     int world_rank;
     int node_rank;
@@ -247,7 +245,6 @@ inline void NeighborInfo::_fill2DNeighbors(ProcessInfo array[][2], int mu, int n
         c[mu] += right[0];
         c[nu] += right[1];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
-        // rootLogger.info("2D: (" , left[0] ,  " " ,  left[1] ,  ") (" ,  right[0] ,  " " ,  right[1]  ,  ") i=" , i , " i_opp=" ,  _opposite(i, 2), std::endl);
     }
 }
 
@@ -267,7 +264,6 @@ inline void NeighborInfo::_fill3DNeighbors(ProcessInfo array[][2], int mu, int n
         c[nu] += right[1];
         c[rho] += right[2];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
-        //rootLogger.info("3D: (" , left[0] ,  " " ,  left[1] ,  " " ,  left[2] ,  ") (" ,  right[0] ,  " " ,  right[1] ,  " " ,  right[2] ,  ") i=" , i , " i_opp=" ,  _opposite(i, 3), std::endl);
     }
 }
 
@@ -277,21 +273,11 @@ inline void NeighborInfo::_fill4DNeighbors(ProcessInfo array[][2]) {
         LatticeDimensions c = myInfo.coord;
         LatticeDimensions left = _shortToDim(i);
         c = c + left;
-        //c[0] += left[0];
-        //c[1] += left[1];
-        //c[2] += left[2];
-        //c[3] += left[3];
         MPI_Cart_rank(cart_comm, c, &array[i][0].world_rank);
 
         c = myInfo.coord;
         LatticeDimensions right = _shortToDim(_opposite(i, 4));
-        //if(IamRoot())std::cout <<"4D:" <<left << " " << right << " i=" <<i <<" i_opp=" << _opposite(i, 4)<<std::endl;
-        //  rootLogger.info("4D: (" , left[0] ,  " " ,  left[1] ,  " " ,  left[2] ,  " " , left[3] ,  ") (" ,  right[0] ,  " " ,  right[1] ,  " " ,  right[2], " ",  right[3] ,  ") i=" , i , " i_opp=" ,  _opposite(i, 4), std::endl);
         c = c + right;
-        //c[0] += right[0];
-        //c[1] += right[1];
-        //c[2] += right[2];
-        //c[3] += right[3];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
     }
 }

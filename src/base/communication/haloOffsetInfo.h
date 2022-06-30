@@ -498,9 +498,6 @@ public:
         _HalSegMapLeft[hseg][pos_l].setLength(length_l);
         _HalSegMapRight[hseg][pos_r].setLength(length_r);
 
-        //     rootLogger.info("INIT hseg: " ,  hseg ,  " dir: " ,  direction ,   " pos_l: " ,  pos_l ,  " off_l: " ,  off_l ,  " length: " ,  length_l);
-        //     rootLogger.info("INIT hseg: " ,  hseg ,  " dir: " ,  direction ,   " pos_r: " ,  pos_r ,  " off_r: " ,  off_r ,  " length: " ,  length_r);
-
         ProcessInfo &leftInfo = neighbor_info.getNeighborInfo(hseg, direction, 0);
         ProcessInfo &rightInfo = neighbor_info.getNeighborInfo(hseg, direction, 1);
 
@@ -523,16 +520,12 @@ public:
     deviceEventPair &getGpuEventPair(HaloSegment hseg, size_t direction, bool leftRight) {
         int oppositeIndex = haloSegmentCoordToIndex(hseg, direction, !leftRight);
         int rank = neighbor_info.getNeighborInfo(hseg, direction, leftRight).world_rank;
-        //   rootLogger.info("P2P target: HSeg " ,  hseg ,  " dir: " ,  direction ,  " leftRight: " ,  leftRight
-        //   ,  " index: " ,  index ,  " with rank: " ,  rank ,  " to rank " ,  rank);
         return _cIPCEvent.getOppositeEventPair(oppositeIndex, rank);
     }
 
     deviceEventPair &getMyGpuEventPair(HaloSegment hseg, size_t direction, bool leftRight) {
         int index = haloSegmentCoordToIndex(hseg, direction, leftRight);
         int rank = neighbor_info.getNeighborInfo(hseg, direction, leftRight).world_rank;
-        //   rootLogger.info("P2P source: HSeg " ,  hseg ,  " dir: " ,  direction ,  " leftRight: " ,  leftRight
-        //   ,  " index: " ,  index ,  " with rank: " ,  rank ,  " from rank " ,  _myRank);
         return _cIPCEvent.getMyEventPair(index, rank);
     }
 
