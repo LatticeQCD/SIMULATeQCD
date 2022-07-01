@@ -9,7 +9,7 @@ struct CheckParams : LatticeParameters {
 };
 
 template<typename floatT, size_t HaloDepth>
-void CheckConf(CommunicationBase &commBase, std::string format, std::string Gaugefile){
+void CheckConf(CommunicationBase &commBase, const std::string& format, std::string Gaugefile){
     Gaugefield<floatT, false, HaloDepth> gauge(commBase);
     /// Read in:
     if (format == "nersc") {
