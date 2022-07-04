@@ -22,7 +22,11 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
         throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
     }
     GaugeAction<floatT, false, HaloDepth> gaugeAction(gauge);
-    rootLogger.info("Plaquette = ", gaugeAction.plaquette());
+    floatT plaq = gaugeAction.plaquette();
+    rootLogger.info("Plaquette = ", plaq);
+    if ( (plaq > 1.0) || (plaq < 0.0) ) {
+        throw std::runtime_error(rootLogger.fatal("Plaquette should not be negative or larger than 1."));
+    }
 }
 
 
