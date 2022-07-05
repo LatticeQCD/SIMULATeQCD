@@ -46,11 +46,13 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(MPI 3.1 REQUIRED)
 
 
-set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH}")
+set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH};$ENV{CRAY_MPICH_DIR}/include")
 set(SIMULATEQCD_LIBRARIES "${MPI_LIBRARIES}")
 
 if (USE_CUDA OR USE_HIP_NVIDIA)
     find_package(CUDA 11.0 REQUIRED)
+    set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++17")
+    set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++17")
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${CUDA_INCLUDE_DIRS}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${CUDA_LIBRARIES}")
 endif()
@@ -116,7 +118,7 @@ endif()
 
 # Additional compiler flags
 if (USE_CUDA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -fPIC")
     set(CMAKE_CUDA_FLAGS
         "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
 

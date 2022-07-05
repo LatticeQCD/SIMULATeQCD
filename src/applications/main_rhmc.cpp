@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 
     StopWatch<true> timer, totaltime;
 
-    typedef float floatT; // Define the precision here
+    typedef double floatT; // Define the precision here
 
     rootLogger.info("STARTING RHMC Update:");
 
