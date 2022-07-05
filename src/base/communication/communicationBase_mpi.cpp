@@ -100,7 +100,7 @@ inline std::string CommunicationBase::gpuAwareMPICheck() {
 }
 
 /// Initialize MPI
-void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensions &Topo) {
+void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused)) const LatticeDimensions &Topo) {
 
     if (Dim.mult() != getNumberProcesses()) {
         throw std::runtime_error(stdLogger.fatal(
@@ -125,6 +125,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     _MPI_fail(ret, "MPI_Cart_get");  //now we have process coordinates
 
 
+#ifndef CPUONLY
     int num_devices = 0;
     gpuError_t gpuErr = gpuGetDeviceCount(&num_devices);
     if (gpuErr != gpuSuccess)
@@ -187,9 +188,9 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
 #else
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
+#endif
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
-
 }
 
 

@@ -18,8 +18,7 @@ CommunicationBase::CommunicationBase( int *argc, char ***argv) {
 void CommunicationBase::init(const LatticeParameters &lp ) {
     // check if more than one node is requested
     if (LatticeDimensions(lp.nodeDim) != nodes()) {
-        throw ParallelGPUCode_error("Running scalar code, but more than one node set "
-            "in config file. Exit.");
+        throw std::runtime_error(stdLogger.fatal("Running scalar code, but more than one node set."));
     }
 
 }; 

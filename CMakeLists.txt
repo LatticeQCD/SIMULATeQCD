@@ -477,8 +477,8 @@ set_SIMULATeQCD_property(gfixTestSingle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tes
 SIMULATeQCD_target_compile_definitions(gfixTestSingle PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests gfixTestSingle)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp)
-add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
 set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
@@ -738,11 +738,16 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 #SIMULATeQCD_target_compile_definitions(fluxtube PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 ##add_to_compound_SIMULATeQCD_target(applications fluxtube)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_configConverter.cpp) 
 add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cpp) 
 set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(applications configConverter)
+
+set_SIMULATeQCD_gpu_backend(src/applications/main_ConfCheck.cpp)
+add_SIMULATeQCD_executable(ConfCheck src/applications/main_ConfCheck.cpp)
+set_SIMULATeQCD_property(ConfCheck PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(ConfCheck PRIVATE HALODEPTH_0=1 COMP_R18=1 SINGLEPREC=1 DOUBLEPREC=1 CPUONLY=1)
+add_to_compound_SIMULATeQCD_target(applications ConfCheck)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_GenerateQuenched.cpp) 
 add_SIMULATeQCD_executable(GenerateQuenched src/applications/main_GenerateQuenched.cpp ${SOURCE_FILES_GENERATEQUENCHED})
@@ -761,12 +766,6 @@ add_SIMULATeQCD_executable(gradientFlow src/applications/main_gradientFlow.cpp $
 set_SIMULATeQCD_property(gradientFlow PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications") 
 SIMULATeQCD_target_compile_definitions(gradientFlow PRIVATE COMP_R18=1 HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 DOUBLEPREC=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications gradientFlow)
-
-set_SIMULATeQCD_gpu_backend(src/applications/main_gradientFlow.cpp)
-add_SIMULATeQCD_executable(gradientFlow_zeuthen src/applications/main_gradientFlow.cpp ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GFIX})
-set_SIMULATeQCD_property(gradientFlow_zeuthen PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(gradientFlow_zeuthen PRIVATE COMP_R18=1 DOUBLEPREC=1 HALODEPTH_3=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1 ZEUTHEN_FLOW=1)
-add_to_compound_SIMULATeQCD_target(applications gradientFlow_zeuthen)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_measureHadrons.cpp)
 add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})

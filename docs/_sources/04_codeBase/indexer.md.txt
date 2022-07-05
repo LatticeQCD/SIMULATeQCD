@@ -2,13 +2,14 @@
 
 **This page is work in progress!**
 
-When working with 4d lattices, we need a way to map the lattices sites (given by spacetime coordinates x,y,z,t) to the computer memory, which is 1-dimensional. This gets more complicated when using multi-GPU, since we have to care about sub-lattices and halos. Additionally, we often want to split the lattice into the even or odd part. A site is even (odd) if the **<u>sum</u> of its coordinates** is even (odd).
+When working with 4d lattices, we need a way to map the lattices sites (given by spacetime coordinates $(x,y,z,t)$ to the computer memory, 
+which is 1-dimensional. This gets more complicated when using multi-GPU, since we have to care about sub-lattices and halos.
+For many algorithms it is convenient to characterize sites as even or odd. A site is even (odd) if $x+y+z+t$ is even (odd).
 
 ## Terminology
 
 The 1d memory index (which is just an integer) is often called `isite` throughout the code. 
-The four spacetime coordinates of a lattice site are stored in a struct named `sitexyzt`.
-
+The four spacetime coordinates of a lattice site are stored in a `struct` named `sitexyzt`.
 When using multi-GPU we use the following terminology:
 
 * original lattice (without any splitting or halos): **global** lattice 
@@ -17,42 +18,37 @@ When using multi-GPU we use the following terminology:
 
 ## Memory layout and basic indexing
 
-The simplest possibility (which we actually don't use, this is just an example) to convert the coordinates `x,y,z,t` to the linear computer memory would be like this:
 
-```{hidden-code-block} C++
-size_t siteLocal(const sitexyzt coord) {
-    return (coord.x + coord.y*getLatData().vol1 + coord.z*getLatData().vol2 + coord.t*getLatData().vol3);
-}
-```
-In SIMULATeQCD we sometimes want to exploit  symmetries of the Dirac matrix, which requires an **even-odd memory layout** . In the linear memory we first continuously store the data for all of the even sites and then for all of the odd sites. **This is how it is done for all of the base classes like `Gaugefield`, `Spinorfield`, `LatticeContainer`, etc...**
+In SIMULATeQCD we sometimes want to exploit symmetries of the Dirac matrix, which requires an even-odd memory layout. We first store the data for all 
+of the even sites and then for all of the odd sites, contiguously. This is how it is done for all of the base classes like 
+`Gaugefield`, `Spinorfield`, `LatticeContainer`, etc.
 The conversion looks like this:
 
-```{hidden-code-block} C++
+```C++
 size_t siteLocal(const sitexyzt coord) {
     return (((coord.x + coord.y*getLatData().vol1 
-    + coord.z*getLatData().vol2 
-    + coord.t*getLatData().vol3) >> 0x1) // integer division by 2
+                      + coord.z*getLatData().vol2 
+                      + coord.t*getLatData().vol3) >> 0x1) // integer division by 2
     +getLatData().sizeh * ((coord.x + coord.y + coord.z + coord.t) & 0x1)); // 0 if x+y+z+t is even, 1 if odd
 }
 ```
 
-`sizeh` here is the number of of lattice sites divided by 2.
-
+`sizeh` here is the number of of lattice sites divided by 2. (We use bit shifts to divide to improve performance.)
 For objects that don't store data on all lattice points, but only the odd part, one needs a mapping like this:
 
-```{hidden-code-block} C++
+```C++
 size_t siteLocal_eo(const sitexyzt coord) {
     return ((coord.x + coord.y*getLatData().vol1
-             + coord.z*getLatData().vol2
-             + coord.t*getLatData().vol3) >> 0x1);
+                     + coord.z*getLatData().vol2
+                     + coord.t*getLatData().vol3) >> 0x1);
 }
 ```
 
 This can of course also be used for objects that only store the even part, as adjacent odd and even sites are mapped to same index.
+Sometimes one wants to obtain the coordinates from the corresponding 1d memory index, i.e one wants to deindex. 
+That can be done like this:
 
-Sometimes one wants to obtain the coordinates from the corresponding 1d memory index. That can be done like this:
-
-```{hidden-code-block} C++
+```C++
 sitexyzt de_site(const size_t site) {
     int x, y, z, t;
     int par, normInd, tmp;
@@ -60,14 +56,12 @@ sitexyzt de_site(const size_t site) {
     //! figure out the parity:
     divmod(site, getLatData().sizeh, par, normInd);
     //! par now contains site/sizeh (integer division), so it should be 0 (even) or 1 (odd).
-    //! normInd contains the remainder.
-    //! Adjacent odd and even sites will have the same remainder.
+    //! normInd contains the remainder. Adjacent odd and even sites will have the same remainder.
 
     //! Now think of an interlaced list of all even and all odd sites, such that the entries alternate
     //! between even and odd sites. Since adjacent sites have the same remainder, the remainder functions as
-    //! the index of the *pairs* of adjacent sites.
-    //! The next step is now to double this remainder so that we can work with it as an index for the single sites
-    //! and not the pairs.
+    //! the index of the *pairs* of adjacent sites. The next step is now to double this remainder so that 
+    //! we can work with it as an index for the single sites and not the pairs.
     normInd = normInd << 0x1; //! multiply remainder by two
 
     //! Now get the slower running coordinates y,z,t:
@@ -78,11 +72,10 @@ sitexyzt de_site(const size_t site) {
     divmod(tmp,     getLatData().vol1, y, x);   //! x now contains tmp/vol1, x the remainder
 
     //! One problem remains: since we doubled the remainder and since the lattice extents have to be even,
-    //! x is now also always even, which is of course not correct.
-    //! We may need to correct it to be odd, depending on the supposed parity we found in the beginning,
-    //! and depending on whether y+z+t is even or odd:
-    if (!isOdd(x)){ //TODO isn't x always even? ...
-        if (   ( par && !isOdd(y + z + t))    //!  odd parity but y+z+t is even, so x should be odd
+    //! x is now also always even, which is of course not correct. We may need to correct it to be odd, depending 
+    //! on the supposed parity we found in the beginning, and depending on whether y+z+t is even or odd:
+    if (!isOdd(x)){ 
+        if (   ( par && !isOdd(y + z + t))       //! odd parity but y+z+t is even, so x should be odd
                or (!par &&  isOdd(y + z + t))) { //! even parity but y+z+t is  odd, so x should be odd
             ++x;
         }
@@ -93,10 +86,10 @@ sitexyzt de_site(const size_t site) {
 }
 ```
 
-Obtaining only either even or odd sites from the 1d memory index is done in a very similar way, except we dictate the parity:
+Obtaining only either even or odd sites from the 1d memory index 
+is done in a very similar way, except we dictate the parity:
 
-```{hidden-code-block} C++
-//! "site" should be smaller than sizeh!
+```C++
 sitexyzt de_site_eo(const size_t site, int par) {
     int x, y, z, t;
     int tmp;
@@ -117,18 +110,20 @@ sitexyzt de_site_eo(const size_t site, int par) {
 
 ## Custom data types to store indices
 
-In SIMULATeQCD, there are four structs that can store the spacetime coordinates and the corresponding memory index of a given lattice site:
+In `SIMULATeQCD`, there are four `struct`s that can store the spacetime coordinates and the corresponding memory index of a given lattice site:
 
 `gSite`: 
-This struct stores the spacetime coordinates and memory index for one lattice site. 
+This `struct` stores the spacetime coordinates and memory index for one lattice site. 
 More specifically, it stores  
 * the 1d memory index of the bulk sub-lattice (`isite`)
 * the 1d memory index of the full sub-lattice (`isiteFull`)
 * the spacetime coordinates of the lattice site on the bulk sublattice (`coords`)
 * the spacetime coordinates fo the lattice site on the full sublattice (`coordsFull`)
 
-You can create gSite objects using the static class `GIndexer` (see below). You need to remember with which template parameters you create `gSite` objects, as they don't store any information about that.
-If you read somewhere something like "This function takes an odd `gSite` as input", then that means that the `gSite` should have been created using GIndexer<Odd,myHaloDepth>.
+You can create gSite objects using the static class `GIndexer` (see below). You need to remember with which template parameters 
+you create `gSite` objects, as they don't store any information about that.
+If you read somewhere something like "This function takes an odd `gSite` as input", then that means that the `gSite` 
+should have been created using `GIndexer<Odd,myHaloDepth>`.
 
 
 ````{admonition} Temp
@@ -159,7 +154,6 @@ gSite mysite = GIndexer<myLayout,HaloDepth>::getSite(isite);
 
 ```
 
-A site is even (odd) if the **<u>sum</u> of its coordinates** is even (odd).
 The **first half of the sites (from `isite=0` to `isite=vol4/2-1`) are even**, and the **second half (from `isite=vol4/2` to `isite=vol4-1`) are odd** , so you can adjust the start and end values of `isite` accordingly if you only want to loop over the even/odd part. 
 
 Examples for even sites:
