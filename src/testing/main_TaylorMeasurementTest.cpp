@@ -53,7 +53,7 @@ int main(int argc, char **argv) {
     d_rand.make_rng_state(1337);
 
     const int NStacks = 6;
-    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, param.valence_masses()[0], gauge, d_rand);
+    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, param.valence_masses[0], gauge, d_rand);
     taylor_measurement.insertOperator(1);
     taylor_measurement.insertOperator(3);
     taylor_measurement.insertOperator(10);
