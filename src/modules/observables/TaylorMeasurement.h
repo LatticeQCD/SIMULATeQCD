@@ -2,7 +2,7 @@
 #define TAYLORMEASUREMENT_H
 
 #include <string>
-#include "../../communication/communicationBase.h"
+#include "../../base/communication/communicationBase.h"
 #include "../../base/IO/parameterManagement.h"
 #include "../../base/LatticeDimension.h"
 #include "../../base/latticeParameters.h"
