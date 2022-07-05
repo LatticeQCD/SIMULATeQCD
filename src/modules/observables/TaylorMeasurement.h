@@ -2,10 +2,10 @@
 #define TAYLORMEASUREMENT_H
 
 #include <string>
-#include "../base/communication/communicationBase.h"
-#include "IO/parameterManagement.h"
-#include "LatticeDimension.h"
-#include "latticeParameters.h"
+#include "../../communication/communicationBase.h"
+#include "../../base/IO/parameterManagement.h"
+#include "../../base/LatticeDimension.h"
+#include "../../base/latticeParameters.h"
 // TODO remove unused imports
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
@@ -29,7 +29,7 @@
 #endif
 
 class TaylorMeasurementParameters : public LatticeParameters {
-    // TODO not sure yet what belongs here
+public:
     DynamicParameter<long> operator_ids;
     DynamicParameter<double> valence_masses;
 
