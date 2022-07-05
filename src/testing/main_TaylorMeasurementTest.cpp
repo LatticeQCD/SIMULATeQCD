@@ -7,6 +7,7 @@
  */
 
 #include "../SIMULATeQCD.h"
+#include "../modules/observables/TaylorMeasurement.h"
 //#include "testing.h" // for comparing stuff
 
 #define PREC double
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
 
-    LatticeParameters param;
+    TaylorMeasurementParameters param;
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/TaylorMeasurementTest.param", argc, argv);
 
@@ -40,14 +41,31 @@ int main(int argc, char **argv) {
     gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
     gauge.updateAll();
 
-    /// ----------------------------------------------------------------------------------------------------GAUGE FIXING
+#if 0
     rootLogger.info("Measure Plaquette");
     timer.start();
 
-    PREC plaq = gauge_action.plaquette()
+    PREC plaq = gauge_action.plaquette();
 
     rootLogger.info("Plaquette ", plaq);
+#else
+    grnd_state<false> d_rand;
+    d_rand.make_rng_state(1337);
 
+    const int NStacks = 6;
+    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, param.valence_masses()[0], gauge, d_rand);
+    taylor_measurement.insertOperator(1);
+    taylor_measurement.insertOperator(3);
+    taylor_measurement.insertOperator(10);
+
+    taylor_measurement.computeOperators();
+
+    std::vector<DerivativeOperatorMeasurement> results;
+    taylor_measurement.collectResults(results);
+    for (DerivativeOperatorMeasurement &meas : results) {
+        printf(("ID: %d, Measurement %." + std::to_string(param.prec_out()) + "e").c_str(), meas.operatorId, meas.measurement);
+    }
+#endif
     // output file name: "TaylorMeasurement_" + ensemble_id (like l328...) + "." + param.conf_nr
 
     return 0;
