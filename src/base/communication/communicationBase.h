@@ -122,6 +122,7 @@ private:
     MPI_Comm node_comm;
     MPI_Info mpi_info;
     ProcessInfo myInfo;
+    bool _initialized = false;
 
     NeighborInfo neighbor_info;
 
