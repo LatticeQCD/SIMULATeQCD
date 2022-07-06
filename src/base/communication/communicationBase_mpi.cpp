@@ -124,6 +124,7 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
     ret = MPI_Cart_get(cart_comm, 4, dims, periods, myInfo.coord);
     _MPI_fail(ret, "MPI_Cart_get");  //now we have process coordinates
 
+    _initialized = true;
 
 #ifndef CPUONLY
     int num_devices = 0;
@@ -195,15 +196,15 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
 
 
 CommunicationBase::~CommunicationBase() {
-    rootLogger.info("Finalize CommunicationBase");
+    rootLogger.info("Finalizing MPI");
     int ret;
-    ret = MPI_Comm_free(&cart_comm);
-    _MPI_fail(ret, "MPI_Comm_free");
+    if (_initialized) {
+        ret = MPI_Comm_free(&cart_comm);
+        _MPI_fail(ret, "MPI_Comm_free");
 
-    MPI_Comm_free(&node_comm);
-    MPI_Info_free(&mpi_info);
-
-    /// Finalize MPI
+        MPI_Comm_free(&node_comm);
+        MPI_Info_free(&mpi_info);
+    }
     ret = MPI_Finalize();
     _MPI_fail(ret, "MPI_Finalize");
 }

@@ -8,6 +8,39 @@ struct CheckParams : LatticeParameters {
     }
 };
 
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp=R18>
+struct do_check_unitarity
+{
+    explicit do_check_unitarity(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
+    gaugeAccessor<floatT, comp> gAcc;
+    __device__ __host__ floatT operator()(gSite site){
+        typedef GIndexer<All,HaloDepth> GInd;
+        floatT ret=0.0;
+        for (size_t mu = 0; mu < 4; ++mu)
+        {
+            gSiteMu siteM = GInd::getSiteMu(site, mu);
+            ret += tr_d(gAcc.getLinkDagger(siteM)*gAcc.getLink(siteM));
+        }
+        return ret/4.0;
+    }
+};
+
+template <class floatT, bool onDevice, size_t HaloDepth>
+void check_unitarity(Gaugefield<floatT,onDevice,HaloDepth> &gauge)
+{
+    LatticeContainer<onDevice,floatT> unitarity(gauge.getComm());
+    const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
+    unitarity.adjustSize(elems);
+    unitarity.template iterateOverBulk<All, HaloDepth>(do_check_unitarity<floatT, onDevice, HaloDepth>(gauge));
+    floatT unit_norm;
+    unitarity.reduce(unit_norm, elems);
+    unit_norm /= static_cast<floatT>(GIndexer<All,HaloDepth>::getLatData().globvol4);
+    rootLogger.info("Average unitarity norm <Tr(U^+U)>=" , std::fixed, std::setprecision(std::numeric_limits<floatT>::digits10 + 1),  unit_norm);
+    if (!isApproximatelyEqual(unit_norm, static_cast<floatT>(3.0))){
+        throw std::runtime_error(rootLogger.fatal("<Tr(U^+U)> != 3"));
+    }
+}
+
 template<typename floatT, size_t HaloDepth>
 void CheckConf(CommunicationBase &commBase, const std::string& format, std::string Gaugefile){
     Gaugefield<floatT, false, HaloDepth> gauge(commBase);
@@ -21,12 +54,16 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
     } else {
         throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
     }
+    check_unitarity<floatT,false,HaloDepth>(gauge);
+
     GaugeAction<floatT, false, HaloDepth> gaugeAction(gauge);
     floatT plaq = gaugeAction.plaquette();
     rootLogger.info("Plaquette = ", plaq);
     if ( (plaq > 1.0) || (plaq < 0.0) ) {
         throw std::runtime_error(rootLogger.fatal("Plaquette should not be negative or larger than 1."));
     }
+
+
 }
 
 
@@ -40,7 +77,7 @@ int main(int argc, char *argv[]) {
         param.nodeDim.set({1,1,1,1});
         CommunicationBase commBase(&argc, &argv);
 
-        param.readfile(commBase, "../parameter/applications/ConfCheck.param", argc, argv);
+        param.readfile(commBase, "../parameter/applications/CheckConf.param", argc, argv);
 
         commBase.init(param.nodeDim());
         initIndexer(HaloDepth, param, commBase);
@@ -57,5 +94,6 @@ int main(int argc, char *argv[]) {
     catch (const std::runtime_error &error) {
         return 1;
     }
+    rootLogger.info("Gaugefile seems to be fine.");
     return 0;
 }

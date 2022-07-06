@@ -761,11 +761,12 @@ int main(int argc, char *argv[]) {
         //! loop over all templates and choose the one specified by the user
         static_for<1, 4>::apply([&](auto i){
             const auto HaloDepth = static_cast<size_t>(i);
-            static_for<0, 3>::apply([&](auto i){
-                const auto RKmethod = static_cast<RungeKuttaMethod>(static_cast<int>(i));
-                static_for<0, 2>::apply([&](auto j){
-                    const auto myforce = static_cast<Force>(static_cast<int>(j));
+            static_for<0, 3>::apply([&](auto j){
+                const auto RKmethod = static_cast<RungeKuttaMethod>(static_cast<int>(j));
+                static_for<0, 2>::apply([&](auto k){
+                    const auto myforce = static_cast<Force>(static_cast<int>(k));
                     if ( myforce == input_force && RKmethod == input_RK_method && HaloDepth == input_HaloDepth ) {
+                        rootLogger.info("Initializing gradientFlow with RK_method=", RungeKuttaMethods[j], ", Force=", Forces[k]);
                         run<PREC, USE_GPU, HaloDepth, RKmethod, myforce>(commBase, lp);
                     }
                 });
