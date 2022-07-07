@@ -8,10 +8,10 @@ struct CheckParams : LatticeParameters {
     }
 };
 
-template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp=R18>
+template<class floatT, size_t HaloDepth, CompressionType comp=R18>
 struct do_check_unitarity
 {
-    explicit do_check_unitarity(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
+    explicit do_check_unitarity(Gaugefield<floatT,false,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
     gaugeAccessor<floatT, comp> gAcc;
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
@@ -25,13 +25,13 @@ struct do_check_unitarity
     }
 };
 
-template <class floatT, bool onDevice, size_t HaloDepth>
-void check_unitarity(Gaugefield<floatT,onDevice,HaloDepth> &gauge)
+template <class floatT, size_t HaloDepth>
+void check_unitarity(Gaugefield<floatT,false,HaloDepth> &gauge)
 {
-    LatticeContainer<onDevice,floatT> unitarity(gauge.getComm());
+    LatticeContainer<false,floatT> unitarity(gauge.getComm());
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
     unitarity.adjustSize(elems);
-    unitarity.template iterateOverBulk<All, HaloDepth>(do_check_unitarity<floatT, onDevice, HaloDepth>(gauge));
+    unitarity.template iterateOverBulk<All, HaloDepth>(do_check_unitarity<floatT, HaloDepth>(gauge));
     floatT unit_norm;
     unitarity.reduce(unit_norm, elems);
     unit_norm /= static_cast<floatT>(GIndexer<All,HaloDepth>::getLatData().globvol4);
@@ -54,7 +54,7 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
     } else {
         throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
     }
-    check_unitarity<floatT,false,HaloDepth>(gauge);
+    check_unitarity<floatT,HaloDepth>(gauge);
 
     GaugeAction<floatT, false, HaloDepth> gaugeAction(gauge);
     floatT plaq = gaugeAction.plaquette();
