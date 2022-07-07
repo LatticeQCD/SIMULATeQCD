@@ -114,6 +114,9 @@ if (USE_GPU_P2P)
     endif()
     add_definitions(-DUSE_GPU_P2P)
 endif()
+if (USE_GPU_P2P AND NOT USE_GPU_AWARE_MPI)
+    message(FATAL_ERROR "USE_GPU_P2P only works with USE_GPU_AWARE_MPI")
+endif()
 
 
 # Additional compiler flags
