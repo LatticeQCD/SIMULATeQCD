@@ -70,7 +70,8 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
 int main(int argc, char *argv[]) {
 
     try {
-        stdLogger.setVerbosity(INFO);
+        stdLogger.setVerbosity(RESULT);
+        rootLogger.setVerbosity(RESULT);
         const size_t HaloDepth = 0;
 
         CheckParams param;
@@ -81,6 +82,9 @@ int main(int argc, char *argv[]) {
 
         commBase.init(param.nodeDim());
         initIndexer(HaloDepth, param, commBase);
+        rootLogger.setVerbosity(INFO);
+        rootLogger.info("Checking Gaugefile ", param.GaugefileName());
+        rootLogger.setVerbosity(RESULT);
 
         if (param.prec() == "single"){
             CheckConf<float, HaloDepth>(commBase, param.format(), param.GaugefileName());
@@ -94,6 +98,6 @@ int main(int argc, char *argv[]) {
     catch (const std::runtime_error &error) {
         return 1;
     }
-    rootLogger.info("Gaugefile seems to be fine.");
+    rootLogger.result("Gaugefile OK! (readin, plaquette, unitarity)");
     return 0;
 }
