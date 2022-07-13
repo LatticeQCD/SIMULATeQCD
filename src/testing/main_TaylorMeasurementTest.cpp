@@ -49,24 +49,39 @@ int main(int argc, char **argv) {
 
     rootLogger.info("Plaquette ", plaq);
 #else
+    if (param.valence_masses.numberValues() == 0) {
+        rootLogger.error("No valence masses specified, aborting");
+        return 1;
+    }
+
+    grnd_state<false> h_rand;
     grnd_state<true> d_rand;
-    d_rand.make_rng_state(1337);
+    h_rand.make_rng_state(param.seed());
+    d_rand = h_rand;
+
+    PREC mass = (PREC)param.valence_masses[0];
+
+    rootLogger.info("Rng initialized");
 
     const int NStacks = 1;
-    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, (PREC)param.valence_masses[0], gauge, d_rand);
+    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, mass, gauge, d_rand);
+    rootLogger.info("Class initialized");
     taylor_measurement.insertOperator(1);
-    taylor_measurement.insertOperator(3);
-    taylor_measurement.insertOperator(10);
+    //taylor_measurement.insertOperator(3);
+    taylor_measurement.insertOperator(11);
+    //taylor_measurement.insertOperator(13);
+    //taylor_measurement.insertOperator(23);
+    rootLogger.info("Operators added");
 
     taylor_measurement.computeOperators();
+    rootLogger.info("Operators computed");
 
     std::vector<DerivativeOperatorMeasurement> results;
     taylor_measurement.collectResults(results);
+    rootLogger.info("Results collected");
     for (DerivativeOperatorMeasurement &meas : results) {
-        printf(("ID: %d, Measurement %." + std::to_string(param.prec_out()) + "e").c_str(), meas.operatorId, meas.measurement);
+        rootLogger.info("ID: ", meas.operatorId, ", Measurement: ", meas.measurement);
     }
 #endif
     // output file name: "TaylorMeasurement_" + ensemble_id (like l328...) + "." + param.conf_nr
-
-    return 0;
 }

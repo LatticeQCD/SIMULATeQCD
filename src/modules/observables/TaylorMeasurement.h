@@ -13,6 +13,7 @@
 #include "../inverter/inverter.h"
 #include "../HISQ/hisqSmearing.h"
 #include <string>
+#include <math.h>
 
 // This sets the maximal derivative order.
 // This is used for indexing of the operators using the operator ids.
@@ -118,9 +119,8 @@ public:
 // normal version
 
 struct DerivativeOperatorMeasurement {
-public:
-    int operatorId;
-    double measurement;
+    const int operatorId;
+    const double measurement;
 
     DerivativeOperatorMeasurement(int operatorId, double measurement) :
         operatorId(operatorId),
@@ -140,37 +140,43 @@ public:
             nodes[i] = nullptr;
     }
 
-    bool hasNext() {
+    bool hasNext() const {
         bool has_next = false;
         for (int i = 0; i <= MAX_DERIVATIVE; i++)
-            has_next |= nodes[i] != nullptr;
+            if (nodes[i])
+                has_next |= nodes[i] != nullptr;
         return has_next;
     }
 
-    int size() {
+    int size() const {
         int sum = 0;
         for (int i = 0; i <= MAX_DERIVATIVE; i++)
-            sum += nodes[i]->size();
+            if (nodes[i])
+                sum += nodes[i]->size();
         return sum;
     }
 
-    int depth() {
+    int depth() const {
         int max_depth = 0;
         for (int i = 0; i <= MAX_DERIVATIVE; i++) {
-            int d = nodes[i]->depth();
-            if (d > max_depth)
-                max_depth = d;
+            if (nodes[i]) {
+                int d = nodes[i]->depth() + 1;
+                if (d > max_depth)
+                    max_depth = d;
+            }
         }
         return max_depth;
     }
 
-    void collectMeasurements(std::vector<DerivativeOperatorMeasurement> &measurements, int divide_by_N, long id = 0) {
+    void collectMeasurements(std::vector<DerivativeOperatorMeasurement> &measurements, int divide_by_N, long id = 0) const {
         measurements.emplace_back(id, measurement_akkum / divide_by_N);
         for (int i = 0; i <= MAX_DERIVATIVE; i++) {
             // The new operator ids are in base 10 (decimal) to make them easy to read.
             // This limits us to a maximal order 8 derivative (which is a 9 in the id)
-            long next_id = id * 10 + (i + 1);
-            nodes[i]->collectMeasurements(measurements, divide_by_N, next_id);
+            if (nodes[i]) {
+                long next_id = id * 10 + (i + 1);
+                nodes[i]->collectMeasurements(measurements, divide_by_N, next_id);
+            }
         }
     }
 
@@ -240,39 +246,36 @@ class TaylorMeasurement
 {
 private:
     ConjugateGradient<floatT, NStacks> cg;
-    HisqDSlash<floatT, onDevice, LatLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash;
     std::vector<Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks>> spinors;
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> invert_spinor_field;
-    std::vector<double> results;
 
-    CommunicationBase* commBase;
+    CommunicationBase &commBase;
 
     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik;
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared;
 
-    Gaugefield<floatT, onDevice, HaloDepthGauge, R18>* gauge;
+    Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge;
     const TaylorMeasurementParameters param;
     floatT mass;
-    grnd_state<onDevice> d_rand;
+    grnd_state<onDevice> rand;
 
     DerivativeOperatorTreeNode tree;
 
 public:
     // TODO use some pointer construct to have the pointers to these big data thingies in this class for all methods
-    // TODO use weak pointers! I want to be able to access, but not hold.
+    // TODO use weak pointers or smart pointers! I want to be able to access, but not hold.
     // but for now... use normal pointers, as that is much simpler
-    TaylorMeasurement(CommunicationBase &commBase, const TaylorMeasurementParameters &param, floatT mass,
+    TaylorMeasurement(CommunicationBase &commBase, const TaylorMeasurementParameters &param, const floatT mass,
                       Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge,
-                      grnd_state<onDevice> &d_rand) :
-        commBase(&commBase),
-        gauge(&gauge),
+                      grnd_state<onDevice> &rand) :
         gauge_Naik(commBase, "SHARED_GAUGENAIK"),
         gauge_smeared(commBase, "SHARED_GAUGELVL2"),
-        dslash(gauge_smeared, gauge_Naik, mass),
+        mass(mass),
         invert_spinor_field(commBase),
-        d_rand(d_rand),
-        param(param) {
-
+        rand(rand),
+        param(param),
+        commBase(commBase),
+        gauge(gauge) {
     }
 
     void insertOperator(long operatorId) {
@@ -280,24 +283,26 @@ public:
     }
 
     void computeOperators() {
-        HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(*gauge, gauge_smeared, gauge_Naik);
+        HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
         smearing.SmearAll(param.mu_f());
 
         int max_depth = tree.depth();
+        rootLogger.info("Depth: ", max_depth);
 
         // array of Spinorfields
         // TODO why is there an NStacks in the spinor field??? is that already an array of spinorfields?
         spinors.clear();
         spinors.reserve(max_depth + 1);
         for (int i = 0; i <= max_depth; i++)
-            spinors.emplace_back(*commBase);
+            spinors.emplace_back(commBase);
 
         // now compute my operators
         const int num_random_vectors = param.num_random_vectors();
         for (int i = 0; i < num_random_vectors; i++) {
-            spinors[0].gauss(d_rand.state);
-            // TODO spinors[0] /= sqrt(spinors[0].dotProduct(spinors[0]));
+            spinors[0].gauss(rand.state);
+            spinors[0] = spinors[0] * (1/sqrt(real(spinors[0].dotProduct(spinors[0])))); // TODO no idea what this does exactly... does it reuse the memory?
             recursive_apply_operator_tree(tree, 0);
+            rootLogger.info(((i + 1) * 100) / num_random_vectors, "%");
         }
     }
 
@@ -313,7 +318,9 @@ private:
         if (!operatorNode.hasNext())
             return;
 
-        Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn = spinors[depth];
+        HisqDSlash<floatT, onDevice, LatLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, mass);
+
+        const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn = spinors[depth];
         Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorOut = spinors[depth + 1];
 
         // invert for each tree node that gets traversed
@@ -323,20 +330,25 @@ private:
         invert_spinor_field.updateAll();
 
         for (int i = 0; i <= MAX_DERIVATIVE; i++) {
-            if (!operatorNode.nodes[i])
+            if (operatorNode.nodes[i] == nullptr)
                 continue;
+            DerivativeOperatorTreeNode &node = *operatorNode.nodes[i];
 
             // now do the dDdmu
             const int order = i;
             if (order > 0) {
+                rootLogger.info("Do my new operator ", order);
                 spinorOut.template iterateOverBulk<BLOCKSIZE>(dDdmuFunctor<floatT, onDevice, LatLayout, HaloDepthGauge, HaloDepthSpin, NStacks>(invert_spinor_field, gauge_smeared, gauge_Naik, mass, order, C_3000));
                 spinorOut.updateAll();
             }
+            else {
+                spinorOut = invert_spinor_field;
+            }
 
             // output the current measurement data into the output akkumulation
-            operatorNode.nodes[i]->measurement_akkum += 0.5 * spinorIn.realdotProduct(spinorIn);
+            node.measurement_akkum += 0.5 * spinorOut.realdotProduct(spinorOut);
 
-            recursive_apply_operator_tree(*(operatorNode.nodes[i]), depth + 1);
+            recursive_apply_operator_tree(node, depth + 1);
         }
     }
 };
