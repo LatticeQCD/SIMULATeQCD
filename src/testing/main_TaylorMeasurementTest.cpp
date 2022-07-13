@@ -49,11 +49,11 @@ int main(int argc, char **argv) {
 
     rootLogger.info("Plaquette ", plaq);
 #else
-    grnd_state<false> d_rand;
+    grnd_state<true> d_rand;
     d_rand.make_rng_state(1337);
 
-    const int NStacks = 6;
-    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, param.valence_masses[0], gauge, d_rand);
+    const int NStacks = 1;
+    TaylorMeasurement<PREC, true, All, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(commBase, param, (PREC)param.valence_masses[0], gauge, d_rand);
     taylor_measurement.insertOperator(1);
     taylor_measurement.insertOperator(3);
     taylor_measurement.insertOperator(10);

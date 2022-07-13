@@ -1,19 +1,18 @@
-#ifndef TAYLORMEASUREMENT_H
-#define TAYLORMEASUREMENT_H
+#pragma once
 
-#include <string>
+// TODO remove unused imports
 #include "../../base/communication/communicationBase.h"
+#include "../../base/communication/siteComm.h"
 #include "../../base/IO/parameterManagement.h"
 #include "../../base/LatticeDimension.h"
 #include "../../base/latticeParameters.h"
-// TODO remove unused imports
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
-#include "../rhmc/rhmcParameters.h"
 #include "../../spinor/spinorfield.h"
 #include "../dslash/dslash.h" // has the C_1000
 #include "../inverter/inverter.h"
 #include "../HISQ/hisqSmearing.h"
+#include <string>
 
 // This sets the maximal derivative order.
 // This is used for indexing of the operators using the operator ids.
@@ -143,7 +142,6 @@ public:
 
     bool hasNext() {
         bool has_next = false;
-        #pragma unroll
         for (int i = 0; i <= MAX_DERIVATIVE; i++)
             has_next |= nodes[i] != nullptr;
         return has_next;
@@ -151,7 +149,6 @@ public:
 
     int size() {
         int sum = 0;
-        #pragma unroll
         for (int i = 0; i <= MAX_DERIVATIVE; i++)
             sum += nodes[i]->size();
         return sum;
@@ -204,7 +201,40 @@ public:
             delete nodes[i];
     }
 };
+/*
+template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
+struct dDdmuFunctor {
 
+    gVect3arrayAcc<floatT> _spinorIn;
+    gaugeAccessor<floatT, R18> _gAcc_smeared;
+    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    floatT _c_3000;
+    floatT _sign;
+    floatT _pow_3;
+    floatT _mass;
+    int _order;
+
+    template<bool onDevice, size_t NStacks>
+    dDdmuFunctor(
+            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
+            Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT mass, int order, floatT c_3000) :
+        _spinorIn(spinorIn.getAccessor()),
+        _gAcc_smeared(gauge_smeared.getAccessor()),
+        _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000), _mass(_mass)
+    {
+        _order = order;
+        _sign = floatT(pow(-1.0, order));
+        _pow_3 = floatT(pow(3.0, order));
+    }
+
+    auto getAccessor() const {
+        return *this;
+    }
+
+    __device__ __host__ gVect3<floatT> operator()(gSiteStack site) const;
+};
+*/
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class TaylorMeasurement
 {
@@ -215,11 +245,12 @@ private:
     Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> invert_spinor_field;
     std::vector<double> results;
 
+    CommunicationBase* commBase;
+
     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik;
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared;
 
-    const CommunicationBase commBase;
-    Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge;
+    Gaugefield<floatT, onDevice, HaloDepthGauge, R18>* gauge;
     const TaylorMeasurementParameters param;
     floatT mass;
     grnd_state<onDevice> d_rand;
@@ -227,11 +258,14 @@ private:
     DerivativeOperatorTreeNode tree;
 
 public:
+    // TODO use some pointer construct to have the pointers to these big data thingies in this class for all methods
+    // TODO use weak pointers! I want to be able to access, but not hold.
+    // but for now... use normal pointers, as that is much simpler
     TaylorMeasurement(CommunicationBase &commBase, const TaylorMeasurementParameters &param, floatT mass,
                       Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge,
                       grnd_state<onDevice> &d_rand) :
-        commBase(commBase),
-        gauge(gauge),
+        commBase(&commBase),
+        gauge(&gauge),
         gauge_Naik(commBase, "SHARED_GAUGENAIK"),
         gauge_smeared(commBase, "SHARED_GAUGELVL2"),
         dslash(gauge_smeared, gauge_Naik, mass),
@@ -246,7 +280,7 @@ public:
     }
 
     void computeOperators() {
-        HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+        HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(*gauge, gauge_smeared, gauge_Naik);
         smearing.SmearAll(param.mu_f());
 
         int max_depth = tree.depth();
@@ -256,7 +290,7 @@ public:
         spinors.clear();
         spinors.reserve(max_depth + 1);
         for (int i = 0; i <= max_depth; i++)
-            spinors.emplace_back(commBase);
+            spinors.emplace_back(*commBase);
 
         // now compute my operators
         const int num_random_vectors = param.num_random_vectors();
@@ -295,50 +329,14 @@ private:
             // now do the dDdmu
             const int order = i;
             if (order > 0) {
-                spinorOut.template iterateOverBulk<BLOCKSIZE>(dDdmuFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>(invert_spinor_field, gauge_smeared, gauge_Naik, mass, order, C_3000));
-                spinorOut.updateAll();
+                //spinorOut.template iterateOverBulk<BLOCKSIZE>(dDdmuFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>(invert_spinor_field, gauge_smeared, gauge_Naik, mass, order, C_3000));
+                //spinorOut.updateAll();
             }
 
             // output the current measurement data into the output akkumulation
             operatorNode.nodes[i]->measurement_akkum += 0.5 * spinorIn.realdotProduct(spinorIn);
 
-            recursive_apply_operator_tree(*operatorNode.nodes[i], depth + 1, spinors);
+            recursive_apply_operator_tree(*(operatorNode.nodes[i]), depth + 1);
         }
     }
 };
-
-
-template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
-struct dDdmuFunctor {
-
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
-    floatT _c_3000;
-    floatT _sign;
-    floatT _pow_3;
-    floatT _mass;
-    int _order;
-
-    template<bool onDevice, size_t NStacks>
-    dDdmuFunctor(
-            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
-            Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
-            Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT mass, int order, floatT c_3000) :
-        _spinorIn(spinorIn.getAccessor()),
-        _gAcc_smeared(gauge_smeared.getAccessor()),
-        _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000), _mass(_mass)
-    {
-        _order = order;
-        _sign = floatT(pow(-1.0, order));
-        _pow_3 = floatT(pow(3.0, order));
-    }
-
-    auto getAccessor() const {
-        return *this;
-    }
-
-    __host__ __device__ gVect3<floatT> operator()(gSiteStack site) const;
-};
-
-#endif // TAYLORMEASUREMENT_H

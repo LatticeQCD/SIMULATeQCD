@@ -26,11 +26,11 @@
 #   no_updates: number of updates
 #  write_every: write out configuration every
 #
-Lattice     = 20 20 20 20
-Nodes       = 2 1 1 1
+Lattice     = 32 32 32 8
+Nodes       = 1 1 1 1
 beta        = 3.85
-mass_s      = 0.0591
-mass_ud     = 0.00591
+#mass_s      = 0.0591
+#mass_ud     = 0.00591
 
 #step_size   = 0.02
 #no_md       = 10
