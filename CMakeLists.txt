@@ -615,7 +615,7 @@ add_to_compound_SIMULATeQCD_target(tests StackedSpinorTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_TaylorMeasurementTest.cpp src/modules/observables/TaylorMeasurement.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(TaylorMeasurementTest src/testing/main_TaylorMeasurementTest.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp 
-src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp)
+src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp src/modules/observables/TaylorMeasurement.cpp)
 set_SIMULATeQCD_property(TaylorMeasurementTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(TaylorMeasurementTest PRIVATE HALODEPTH_0=1 HALODEPTHSPIN_0=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests TaylorMeasurementTest)

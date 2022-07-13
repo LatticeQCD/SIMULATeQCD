@@ -1,7 +1,7 @@
-//#include "TaylorMeasurement.h"
-/*
-template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
-__device__ __host__ gVect3<floatT> dDdmuFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const {
+#include "TaylorMeasurement.h"
+
+template<class floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+__device__ __host__ gVect3<floatT> dDdmuFunctor<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSiteStack site) const {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
     gVect3<floatT> Stmp(0.0);
@@ -24,9 +24,9 @@ __device__ __host__ gVect3<floatT> dDdmuFunctor<floatT, LatLayoutRHS, HaloDepthG
     return Stmp;
 }
 
-#define SPINOR_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
-template class dDdmuFunctor<floatT,false,LO,HALOSPIN,STACKS>;\
-template class dDdmuFunctor<floatT,true,LO,HALOSPIN,STACKS>;\
+#define SPINOR_INIT_PLHHSN(floatT,LO,HALO,HALOSPIN,STACKS)\
+template class dDdmuFunctor<floatT,false,LO,HALO,HALOSPIN,STACKS>;\
+template class dDdmuFunctor<floatT,true,LO,HALO,HALOSPIN,STACKS>;\
 //template void dDdmuFunctor<floatT,false,LO,HALOSPIN,STACKS>::axpyThis(const GCOMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
 
-INIT_PLHSN(SPINOR_INIT_PLHSN)*/
+INIT_PLHHSN(SPINOR_INIT_PLHHSN)

@@ -201,8 +201,8 @@ public:
             delete nodes[i];
     }
 };
-/*
-template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
+
+template<class floatT,bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 struct dDdmuFunctor {
 
     gVect3arrayAcc<floatT> _spinorIn;
@@ -214,7 +214,7 @@ struct dDdmuFunctor {
     floatT _mass;
     int _order;
 
-    template<bool onDevice, size_t NStacks>
+    
     dDdmuFunctor(
             Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
@@ -234,7 +234,7 @@ struct dDdmuFunctor {
 
     __device__ __host__ gVect3<floatT> operator()(gSiteStack site) const;
 };
-*/
+
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class TaylorMeasurement
 {
@@ -329,8 +329,8 @@ private:
             // now do the dDdmu
             const int order = i;
             if (order > 0) {
-                //spinorOut.template iterateOverBulk<BLOCKSIZE>(dDdmuFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>(invert_spinor_field, gauge_smeared, gauge_Naik, mass, order, C_3000));
-                //spinorOut.updateAll();
+                spinorOut.template iterateOverBulk<BLOCKSIZE>(dDdmuFunctor<floatT, onDevice, LatLayout, HaloDepthGauge, HaloDepthSpin, NStacks>(invert_spinor_field, gauge_smeared, gauge_Naik, mass, order, C_3000));
+                spinorOut.updateAll();
             }
 
             // output the current measurement data into the output akkumulation
