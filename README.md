@@ -34,12 +34,12 @@ git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
-cmake ../simulateqcd/ \
+cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=ON \
 ``` 
-Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
+Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
 `-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
