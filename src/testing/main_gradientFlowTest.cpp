@@ -8,6 +8,7 @@
 #include "../modules/gradientFlow/gradientFlow.h"
 #include <cstdio>
 #include "refValues_gradFlow.h"
+#include "../modules/gauge_updates/PureGaugeUpdates.h"
 
 #define USE_GPU true
 
@@ -32,207 +33,126 @@ struct gradientFlowParam : LatticeParameters {
     }
 };
 
-template<class floatT, size_t HaloDepth, typename gradFlowClass>
-bool run(gradFlowClass &gradFlow,
-        Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
+template<typename floatT>
+bool compare(std::stringstream &logStream, std::stringstream &logStream_ref, floatT value, floatT reference, floatT tolerance){
+    logStream << value << "  " ;
+    bool success = isApproximatelyEqual(value, reference, tolerance);
+    if (!success) {
+        logStream_ref << CoutColors::red << reference << CoutColors::reset << "  ";
+    } else {
+        logStream_ref << CoutColors::green << reference << CoutColors::reset << "  ";
+    }
+    return !success;
+}
+
+template<class floatT, size_t HaloDepth, RungeKuttaMethod RKmethod, Force force>
+bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         GaugeAction<floatT, USE_GPU, HaloDepth> &gAction,
         Topology<floatT, USE_GPU, HaloDepth> &topology,
-        std::vector<std::vector<double>> &reference_values, const floatT acceptance){
+        gradientFlowParam<floatT> &lp,
+        std::vector<std::vector<double>> &reference_values,
+        const floatT acceptance,
+        unsigned int &flow_time_count){
 
-    // initialize some values for the measurement
+    gradientFlow<floatT, HaloDepth, RKmethod, force> gFlow(gauge, lp.start_step_size(), lp.measurement_intervall()[0],
+    lp.measurement_intervall()[1], lp.necessary_flow_times.get(), lp.accuracy());
+
+    //! initialize some values for the measurement
     floatT flow_time = 0;
-    unsigned int flow_time_count = 0;
     floatT plaq, clov, topChar;
-    std::stringstream logStream;
+    std::stringstream logStream, logStream_ref;
     logStream << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
+    logStream_ref << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
 
     bool failed = false;
     bool continueFlow = true;
 
-    // flow the field until max flow time
+    rootLogger.info("Flowtime            Plaquette           Clover              topCharge");
+
+    //! flow the field until max flow time
     while(continueFlow) {
 
         if (flow_time_count >= reference_values.size()) {
-            rootLogger.info("End of reference values reached!");
+            rootLogger.info("End of reference values reached! Is the lattice size correct?");
             failed = true;
             return failed;
         }
 
-        continueFlow = gradFlow.continueFlow();
-        logStream.str("");
-        logStream << "   t = " << flow_time << ": ";
+        continueFlow = gFlow.continueFlow();
+        logStream << "     ";
+        logStream_ref << "ref: ";
 
-        bool compareFlowTime = isApproximatelyEqual(flow_time, floatT(reference_values[flow_time_count][0]), floatT(acceptance));
-        if (!compareFlowTime) {
-            failed = true;
-            logStream << CoutColors::red << " != " << reference_values[flow_time_count][0] << CoutColors::reset <<  ":";
+        const size_t n_obs = 4;
+        floatT values[n_obs] = {flow_time, gAction.plaquette(), gAction.clover(), topology.topCharge()};
+
+        for (int i=0; i<n_obs; i++){
+            bool tmpfailed = compare<floatT>(logStream, logStream_ref, values[i], floatT(reference_values[flow_time_count][i]), floatT(acceptance));
+            failed = failed || tmpfailed;
         }
 
-        // compute the observables on the smeared field
-
-        plaq = gAction.plaquette();
-        logStream << "   Plaquette = " << plaq;
-        bool comparePlaquette = isApproximatelyEqual(plaq, floatT(reference_values[flow_time_count][1]), floatT(acceptance));
-        if (!comparePlaquette) {
-            failed = true;
-            logStream << CoutColors::red << " != " << reference_values[flow_time_count][1] << CoutColors::reset;
-        }
-
-        clov = gAction.clover();
-        logStream << "   Clover = " << clov;
-        bool compareClover = isApproximatelyEqual(clov, floatT(reference_values[flow_time_count][2]), floatT(acceptance));
-        if (!compareClover) {
-            failed = true;
-            logStream << CoutColors::red << " != " << reference_values[flow_time_count][2] << CoutColors::reset;
-        }
-
-        topChar = topology.topCharge();
-        logStream << "   topCharge = " << topChar;
-        bool compareTopCh = isApproximatelyEqual(topChar, floatT(reference_values[flow_time_count][3]), floatT(acceptance));
-        if (!compareTopCh) {
-            failed = true;
-            logStream << CoutColors::red << " != " << reference_values[flow_time_count][3] << CoutColors::reset;
-        }
         rootLogger.info(logStream.str());
+        rootLogger.info(logStream_ref.str());
+        logStream.str(std::string()); logStream.clear();
+        logStream_ref.str(std::string()); logStream_ref.clear();
 
-        flow_time += gradFlow.updateFlow();
+        flow_time += gFlow.updateFlow();
         flow_time_count++;
         gauge.updateAll();
     }
     return failed;
 }
 
-
-template<class floatT> bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT acceptance, const floatT accuracy) {
+template<class floatT>
+bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT tolerance) {
     stdLogger.setVerbosity(INFO);
     const size_t HaloDepth = 3;
 
-    StopWatch<true> timer;
     gradientFlowParam<floatT> lp;
 
-    //do not change these!
-    lp.accuracy.set(accuracy);
-    lp.latDim.set({8, 8, 8, 8});
-    lp.GaugefileName.set("../test_conf/oneInstantonConf_s8t8_nersc");
-    lp.beta.set(6.498);
-    lp.format.set("nersc");
-    lp.endianness.set("auto");
-    lp.start_step_size.set(0.01);
+    //! do not change these! they are hardcoded to match the reference values.
+    lp.accuracy.set(1e-5);
+    lp.latDim.set({32, 32, 32, 16});
+    lp.start_step_size.set(0.05);
     lp.measurements_dir.set("./");
     lp.measurement_intervall.set({0.0, 1.0});
-    lp.necessary_flow_times.set({0.5, 1.0});
+    lp.necessary_flow_times.set({0.0, 0.1, 0.5, 1.0});
 
-    //in case you want to change the nodeDim for multi-gpu testing (actually this is broken because the test lattice is too small...)
     lp.readfile(commBase, "../parameter/tests/gradientFlowTest.param", argc, argv);
 
     commBase.init(lp.nodeDim());
 
     initIndexer(HaloDepth, lp, commBase);
     Gaugefield<floatT, USE_GPU, HaloDepth> gauge(commBase);
-    Gaugefield<floatT, USE_GPU, HaloDepth> gauge_backup(commBase);
-    LatticeContainer<USE_GPU, floatT> redBase(commBase);
+    GaugeUpdate<floatT, USE_GPU, HaloDepth> gaugeUpdate(gauge);
 
+    LatticeContainer<USE_GPU, floatT> latticeContainer(commBase);
     GaugeAction<floatT, USE_GPU, HaloDepth> gAction(gauge);
+
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
 
-    rootLogger.info("Comparison-tolerance to reference is " ,  acceptance);
-    rootLogger.info("Read configuration");
-    gauge.readconf_nersc(lp.GaugefileName());
-    gauge_backup = gauge;
-    gauge.updateAll();
+    rootLogger.info("Comparison-tolerance to reference is ", tolerance);
 
-    bool zFlowAdFailed;
-    bool zFlowAdAllGPUFailed;
-    bool wFlowFailed;
-    bool zFlowFailed;
-    bool wFlowAdFailed;
-    bool wFlowAdAllGPUFailed;
+    bool failed = false;
+    unsigned int flow_time_count = 0;  // running index for the reference values
 
-    wilsonFlow<floatT, HaloDepth, fixed_stepsize> wFlow(gauge, lp.start_step_size(),
-                                                        lp.measurement_intervall()[0], lp.measurement_intervall()[1],
-                                                        lp.necessary_flow_times.get());
-    wilsonFlow<floatT, HaloDepth, adaptive_stepsize> wFlowAd(gauge, lp.start_step_size(),
-                                                             lp.measurement_intervall()[0],
-                                                             lp.measurement_intervall()[1],
-                                                             lp.necessary_flow_times.get(), lp.accuracy());
-    wilsonFlow<floatT, HaloDepth, adaptive_stepsize_allgpu> wFlowAdAllGPU(gauge, lp.start_step_size(),
-                                                                          lp.measurement_intervall()[0],
-                                                                          lp.measurement_intervall()[1],
-                                                                          lp.necessary_flow_times.get(),
-                                                                          lp.accuracy());
-    zeuthenFlow<floatT, HaloDepth, fixed_stepsize> zFlow(gauge, lp.start_step_size(),
-                                                         lp.measurement_intervall()[0], lp.measurement_intervall()[1],
-                                                         lp.necessary_flow_times.get());
-    zeuthenFlow<floatT, HaloDepth, adaptive_stepsize> zFlowAd(gauge, lp.start_step_size(),
-                                                              lp.measurement_intervall()[0],
-                                                              lp.measurement_intervall()[1],
-                                                              lp.necessary_flow_times.get(), lp.accuracy());
-    zeuthenFlow<floatT, HaloDepth, adaptive_stepsize_allgpu> zFlowAdAllGPU(gauge, lp.start_step_size(),
-                                                                           lp.measurement_intervall()[0],
-                                                                           lp.measurement_intervall()[1],
-                                                                           lp.necessary_flow_times.get(),
-                                                                           lp.accuracy());
+    //! loop over RK methods and forces.
+     static_for<0, 3>::apply([&](auto i){
+         const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
+         static_for<0, 2>::apply([&](auto j){
+             ///Reset Gaugefield to reference.
+             gaugeUpdate.set_gauge_to_reference();
+             gauge.updateAll();
+             rootLogger.info("Plaquette = ", gAction.plaquette());
 
-    timer.start();
-    wFlowFailed = run<floatT, HaloDepth, wilsonFlow<floatT, HaloDepth, fixed_stepsize>>(wFlow, gauge, gAction, topology,
-                                                                                         wilson_values, acceptance);
-    timer.stop();
-    rootLogger.info("complete time for standard Runge Kutta 3 and Wilson Force = " ,  timer);
-    timer.reset();
-    gauge = gauge_backup;
-    gauge.updateAll();
-
-    timer.start();
-    wFlowAdFailed = run<floatT, HaloDepth, wilsonFlow<floatT, HaloDepth, adaptive_stepsize>>(wFlowAd, gauge, gAction,
-                                                                                              topology,
-                                                                                              std::is_same<floatT, double>::value ? wilsonAd_values : wilson_ad_values_float,
-                                                                                              acceptance);
-    timer.stop();
-    rootLogger.info("complete time for adaptive Runge Kutta 3 and Wilson Force = " ,  timer);
-    timer.reset();
-    gauge = gauge_backup;
-    gauge.updateAll();
-
-    timer.start();
-    wFlowAdAllGPUFailed = run<floatT, HaloDepth, wilsonFlow<floatT, HaloDepth, adaptive_stepsize_allgpu>>(
-            wFlowAdAllGPU, gauge, gAction, topology,
-            std::is_same<floatT, double>::value ? wilsonAd_values : wilson_ad_values_float, acceptance);
-    timer.stop();
-    rootLogger.info("complete time for adaptive all GPU Runge Kutta 3 and Wilson Force = " ,  timer);
-    timer.reset();
-    gauge = gauge_backup;
-    gauge.updateAll();
-
-    timer.start();
-    zFlowFailed = run<floatT, HaloDepth, zeuthenFlow<floatT, HaloDepth, fixed_stepsize>>(zFlow, gauge, gAction, topology,
-                                                                                          zeuthen_values, acceptance);
-    timer.stop();
-    rootLogger.info("complete time for standard Runge Kutta 3 and Zeuthen Force = " ,  timer);
-    timer.reset();
-    gauge.updateAll();
-    gauge = gauge_backup;
-
-    timer.start();
-    zFlowAdFailed = run<floatT, HaloDepth, zeuthenFlow<floatT, HaloDepth, adaptive_stepsize>>(zFlowAd, gauge,
-                                                                                               gAction, topology,
-                                                                                               std::is_same<floatT, double>::value ? zeuthenAd_values : zeuthen_ad_values_float,
-                                                                                               acceptance);
-    timer.stop();
-    rootLogger.info("complete time for adaptive Runge Kutta 3 and Zeuthen Force = " ,  timer);
-    timer.reset();
-    gauge = gauge_backup;
-    gauge.updateAll();
-
-    timer.start();
-    zFlowAdAllGPUFailed = run<floatT, HaloDepth, zeuthenFlow<floatT, HaloDepth, adaptive_stepsize_allgpu>>(
-            zFlowAdAllGPU, gauge, gAction,
-            topology, std::is_same<floatT, double>::value ? zeuthenAd_values : zeuthen_ad_values_float, acceptance);
-    timer.stop();
-    rootLogger.info("complete time for adaptive all GPU Runge Kutta 3 and Zeuthen Force = " ,  timer);
-    timer.reset();
-
-    bool failed = (zFlowAdFailed || zFlowAdAllGPUFailed || wFlowFailed || zFlowFailed || wFlowAdFailed || wFlowAdAllGPUFailed);
-    return failed;
+             ///Run test
+             rootLogger.info(">>>>>>>>>>> RK_method=", RungeKuttaMethods[i], ", Force=", Forces[j], " <<<<<<<<<<<");
+             const auto force = static_cast<Force>(static_cast<int>(j));
+             bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
+                     (gauge, gAction, topology, lp, refValues_gradFlow, tolerance, flow_time_count);
+             failed = failed || tmpfailed;
+         });
+     });
+     return failed;
 }
 
 int main(int argc, char *argv[]) {
@@ -240,25 +160,19 @@ int main(int argc, char *argv[]) {
 
     CommunicationBase commBase(&argc, &argv);
 
-    //how large can the difference to the reference values be?
-    const double double_acceptance = 1e-9;
-
-    //adaptive stepsize accuracy. just a parameter for reference values, do not change!
-    const double double_accuracy = 1e-9;
+    //! how large can the difference to the reference values be?
+    const double double_tolerance = 1e-9;
 
     stdLogger.info("TEST DOUBLE PRECISION");
-    bool passfail_double = run_test<double>(argc, argv, commBase, double_acceptance, double_accuracy);
+    bool passfail_double = run_test<double>(argc, argv, commBase, double_tolerance);
 
     rootLogger.info(CoutColors::green ,  "           ");
     if (passfail_double) { // || passfail_float
         rootLogger.error("At least one test failed!");
-        return -1;
+        return 1;
     } else {
         rootLogger.info(CoutColors::green ,  "All Tests passed!" ,  CoutColors::reset);
     }
 
     return 0;
 }
-
-
-

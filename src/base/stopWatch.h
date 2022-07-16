@@ -80,7 +80,7 @@ class StopWatch {
         if(device){
             gpuError_t gpuErr = gpuEventRecord(_device_start_time, nullptr);
             if (gpuErr) {
-                GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed after  CommunicationBase!" , gpuErr);
+                GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed only after CommunicationBase::init has been called!" , gpuErr);
             }
 
         }

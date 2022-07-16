@@ -27,10 +27,11 @@ private:
     const size_t elems = GInd::getLatData().sizeh;
 
 public:
-    GaugeUpdate(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield) : _gauge(gaugefield) {}
+    explicit GaugeUpdate(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield) : _gauge(gaugefield) {}
 
     void updateOR();                                              /// OR update of entire lattice
     void updateHB(uint4 *state, floatT beta, bool ltest=false);   /// HB update of entire lattice
+    void set_gauge_to_reference();
 };
 
 /// Even/odd read index
