@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
+/* 
+ * communicationBase_mpi.cpp                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #include "../../define.h"
 

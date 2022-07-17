@@ -1,3 +1,9 @@
+/* 
+ * staticArray.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 #include <iostream>
 #ifndef STATIC_ARRAY_H
 #define STATIC_ARRAY_H
@@ -33,7 +39,6 @@ class StaticArray{
 };
 
 
-
 template<class T>
 class StaticArray<T, 1>{
     T my_object;
@@ -55,9 +60,6 @@ class StaticArray<T, 1>{
     StaticArray(Args&&... args): my_object(args...){
     }
 };
-
-
-
 
 
 template<class T>

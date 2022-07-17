@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 03.05.19.
-//
+/* 
+ * calcGSiteHalo.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef CALCGSITEHALO_H
 #define CALCGSITEHALO_H

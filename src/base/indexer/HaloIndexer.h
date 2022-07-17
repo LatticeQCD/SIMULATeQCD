@@ -1,6 +1,10 @@
-//
-// Created by Lukas Mazur on 30.09.17.
-//
+/* 
+ * HaloIndexer.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
+
 #ifndef HALOINDEXER_H
 #define HALOINDEXER_H
 
@@ -129,12 +133,6 @@ public:
         h_LY_mH2 = ly - h_HaloDepth[1];
         h_LZ_mH2 = lz - h_HaloDepth[2];
         h_LT_mH2 = lt - h_HaloDepth[3];
-/*
-        h_LX_2H = lx + h_2HaloDepth[0];
-        h_LY_2H = ly + h_2HaloDepth[1];
-        h_LZ_2H = lz + h_2HaloDepth[2];
-        h_LT_2H = lt + h_2HaloDepth[3];
-        */
 
         h_YZT = h_LYi * h_LZi * h_LTi;
         h_XZT = h_LXi * h_LZi * h_LTi;
@@ -206,10 +204,6 @@ public:
             h_offsets[i] = h_offsets[i - 1] + get_SubHaloSize(i - 1, All);
             h_offsetsHalf[i] = h_offsetsHalf[i - 1] + get_SubHaloSize(i - 1, Even);
         }
-
-
-        //  rootLogger.info("Bla: " ,  get_SubHaloSize(5,All) ,  " " ,  get_SubHaloSize(5,Even));
-
     }
 
 
@@ -217,7 +211,6 @@ public:
         if (LatLayout == All)return h_summed_buffer[15];
         else return h_summed_bufferHalf[15];
     }
-
 
 
     /// For each Halotype we have different sub-Halos with the same size.
@@ -415,14 +408,6 @@ public:
     __device__ __host__ inline static void getCoord(size_t &x, size_t &y, size_t &z, size_t &t,
                                                     const size_t index,
                                                     const size_t vol1, const size_t vol2, const size_t vol3) {
-        /*bool odd = index >= halfVol4;
-        int p = index - int(odd)*halfVol4; //index within corresponding e/o half
-        t = p / (vol3/2); p -= t*vol3/2; //now p is index withit t-block
-        z = p / (vol2/2); p -= z*vol2/2; //within z-block
-        y = p / (vol1/2); p -= y*vol1/2; //within y-block
-        bool xodd = odd ^ ((z+y+t)%2 == 1);
-        x = 2*p+int(xodd);
-        */
 
         if (LatLayout == All) {
             size_t tmp;
@@ -792,7 +777,7 @@ public:
 ///   |______________|
 ///
 ///  This is duplicate code and I don't like it... In principle one could reuse getOuterHaloCoord(...) for that.
-///  However if one does that by templating it, the compiler is not smart enough to optimise it away,
+///  However if one does that by templating it, the compiler is not smart enough to optimize it away,
 ///  so that this indexer become slower...
 
     __device__ __host__ inline static sitexyzt getInnerCoord(size_t HalIndex) {
@@ -961,7 +946,6 @@ public:
         if (lr & 2) y = (y + getHalData().h_LYi);
         else y = y + getHalData().h_HaloDepth[1];
 
-       // printf("(%i %i %i %i) Index: %i lr: %i\n", (int)x,(int)y,(int)z,(int)t, (int)LocHalIndex,(int)lr);
         return sitexyzt(x, y, z, t);
     }
 

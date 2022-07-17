@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 19.05.19.
-//
+/* 
+ * HaloLoop.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef HALOLOOP_H
 #define HALOLOOP_H
