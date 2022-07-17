@@ -114,6 +114,9 @@ if (USE_GPU_P2P)
     endif()
     add_definitions(-DUSE_GPU_P2P)
 endif()
+if (USE_GPU_P2P AND NOT USE_GPU_AWARE_MPI)
+    message(FATAL_ERROR "USE_GPU_P2P only works with USE_GPU_AWARE_MPI")
+endif()
 
 
 # Additional compiler flags
@@ -744,6 +747,7 @@ set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "ap
 SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(applications configConverter)
 
+set_SIMULATeQCD_gpu_backend(src/applications/main_CheckConf.cpp)
 add_SIMULATeQCD_executable(CheckConf src/applications/main_CheckConf.cpp)
 set_SIMULATeQCD_property(CheckConf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(CheckConf PRIVATE HALODEPTH_0=1 COMP_R18=1 SINGLEPREC=1 DOUBLEPREC=1 CPUONLY=1)

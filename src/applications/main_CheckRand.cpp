@@ -17,7 +17,9 @@ void CheckRand(CommunicationBase &commBase, const std::string& rand_file){
 int main(int argc, char *argv[]) {
 
     try {
-        stdLogger.setVerbosity(INFO);
+        rootLogger.info("Checking Randfile...");
+        stdLogger.setVerbosity(RESULT);
+        rootLogger.setVerbosity(RESULT);
         const size_t HaloDepth = 0;
 
         CheckParams param;
@@ -27,12 +29,14 @@ int main(int argc, char *argv[]) {
         param.readfile(commBase, "../parameter/applications/CheckRand.param", argc, argv);
         commBase.init(param.nodeDim());
         initIndexer(HaloDepth, param, commBase);
-
+        rootLogger.setVerbosity(INFO);
+        rootLogger.info("Checking Randfile ", param.Randfile());
+        rootLogger.setVerbosity(RESULT);
         CheckRand(commBase, param.Randfile());
     }
     catch (const std::runtime_error &error) {
         return 1;
     }
-    rootLogger.info("Random state seems to be fine.");
+    rootLogger.result("Randfile OK!");
     return 0;
 }
