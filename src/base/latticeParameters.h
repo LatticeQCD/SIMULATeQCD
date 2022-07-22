@@ -34,6 +34,13 @@ public:
     Parameter<int> prec_out;
     Parameter<bool> use_unit_conf;
 
+    /// ILDG-specific metadata.
+    Parameter<std::string> ILDGconfAuthor;
+    Parameter<std::string> ILDGauthorInstitute;
+    Parameter<std::string> ILDGmachineType;
+    Parameter<std::string> ILDGmachineName;
+    Parameter<std::string> ILDGmachineInstitute;
+
     LatticeParameters() {
         add(latDim, "Lattice");
         add(nodeDim, "Nodes");
@@ -48,6 +55,12 @@ public:
         addDefault(prec_out, "prec_out",0);
         addDefault(measurements_dir, "measurements_dir", std::string("./"));
         addDefault(use_unit_conf, "use_unit_conf", false);
+
+        addOptional(ILDGconfAuthor,      "ILDGconfAuthor");
+        addOptional(ILDGauthorInstitute, "ILDGauthorInstitute");
+        addOptional(ILDGmachineType,     "ILDGmachineType"); 
+        addOptional(ILDGmachineName,     "ILDGmachineName"); 
+        addOptional(ILDGmachineInstitute,"ILDGmachineInstitute"); 
     }
 
     //! Set by providing values, mainly used in test routines

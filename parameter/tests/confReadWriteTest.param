@@ -1,20 +1,37 @@
 # 
 # confReadWriteTest.param
-# 
-#     Lattice: 
-#       Nodes: 
-#   Gaugefile: 
-# 
-Lattice = 8 8 8 4
-Nodes = 1 1 1 1
-beta = 3.360
+#
+#          Lattice: Nx Ny Nz Nt
+#            Nodes: Number of nodes per direction
+#        Gaugefile: Path to input configuration
+#           format: Format of input configuration.
+#    use_unit_conf: Unit configuration
+#       endianness: Endianness of input configuration.
+#          conf_nr: Configuration number (optional).
+# measurements_dir: Measurement output directory
+#         prec_out: Precision of the output configuration, 1 for single and 2 for double
+#
+#       ILDGconfAuthor: Full name of the person who generated the configuration.
+#  ILDGauthorInstitute: Where does the author work?
+#      ILDGmachineType: On what kind of machine was this configuration generated?
+#      ILDGmachineName: What is the name of the machine on which this configuration was generated?
+# ILDGmachineInstitute: To which institute does this machine belong?
+#
 
-# Path to input configuration.
+Lattice   = 8 8 8 4
+Nodes     = 1 1 1 1
+beta      = 3.360
 Gaugefile = ../test_conf/nersc.l8t4b3360_bieHB
 
-format = nersc                 	# Format of input configuration.
-use_unit_conf = 0				# Unit configuration
-endianness = auto               # Endianness of input configuration.
-conf_nr = 1                     # Configuration number (optional).
-measurements_dir = ./           # Measurement output directory
-prec_out = 2                    # Precision of the output configuration, 1 for single and 2 for double
+format           = nersc
+use_unit_conf    = 0
+endianness       = auto
+conf_nr          = 1
+measurements_dir = ./
+prec_out         = 2
+
+ILDGconfAuthor       = jamesBaxter
+ILDGauthorInstitute  = bielefeldUniversity
+ILDGmachineType      = AMD
+ILDGmachineName      = Frontier
+ILDGmachineInstitute = ORNL 

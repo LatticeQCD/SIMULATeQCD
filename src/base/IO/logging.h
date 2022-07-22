@@ -1,6 +1,11 @@
-//
-// Created by Lukas Mazur on 04.12.21.
-//
+/* 
+ * logging.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ * The logger class, which is used to output information to screen. 
+ * 
+ */
 
 #ifndef LOGGER
 #define LOGGER
@@ -18,8 +23,7 @@
 
 
 enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
-static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO",
-    "WARN", "ERROR", "FATAL", "OFF"};
+static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OFF"};
 
 class Logger {
     private:
@@ -125,12 +129,11 @@ class Logger {
         };
 };
 
-/// This logger prints something on each node. It is created in
-/// base/communicationBase_*.cpp and its verbosity should be set at the
-/// beginning of main()
+/// This logger prints something on each node. It is created in base/communicationBase_*.cpp and its verbosity 
+/// should be set at the beginning of main()
 extern Logger stdLogger;
-/// This logger is only turned on on the root node (in the constructor of
-/// CommunicationBase)
+
+/// This logger is only turned on on the root node (in the constructor of CommunicationBase)
 extern Logger rootLogger;
 
 #endif
