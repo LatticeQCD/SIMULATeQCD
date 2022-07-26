@@ -170,7 +170,7 @@ private:
         add(checksumb, "CHECKSUMB");
         add(linktrace, "LINK_TRACE");
         add(plaq, "PLAQUETTE");
-        addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
+        addDefault(floatingpoint, "FLOATING_POINT", std::string("32"));
     }
 
     template <size_t HaloDepth>
@@ -334,10 +334,10 @@ public:
 
         // ILDG binaries are always saved in BIG endian
         Endianness disken = ENDIAN_BIG;
-        ///                          SIMULATeQCD                              QUDA
-        if (header.floatingpoint() == "IEEE32BIG" || header.floatingpoint() == "F") {
+        ///                          ILDG                              QUDA
+        if (header.floatingpoint() == "32" || header.floatingpoint() == "F") {
             float_size = 4;
-        } else if (header.floatingpoint() == "IEEE64BIG" || header.floatingpoint() == "D") {
+        } else if (header.floatingpoint() == "64" || header.floatingpoint() == "D") {
             float_size = 8;
         } else {
             rootLogger.error("Unrecognized FLOATING_POINT ", header.floatingpoint());
@@ -364,16 +364,24 @@ public:
 
     void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data) {
 
-        int32_t magic_number = 1164413355;
-        int16_t version_number = 1;
-        int8_t zero_8bit=0;
-        int8_t begin_end_reserved_8bit=0b10000000;
+        // The first 32+16=48 bits (0-47) of the header word are the magic number and the version number. 
+        const int32_t magic_number = 1164413355;
+        const int16_t version_number = 1;
+
+        // Bit 48 is the flag for whether the message is beginning. Bit 49 is the flag for whether the message is ending.
+        // Binary is stored from left to right, even though the least-significant digit is on the right. This storage
+        // convention, which puts the most significant digit at the smallest memory address, is big endian, which is
+        // the ILDG standard.
+        const int8_t begin_notEnd = 0b11000000;  // this is a temporary "fix" to trick a lime packer into thinking this is correct.
+//        const int8_t begin_notEnd = 0b10000000;
+//        const int8_t notBegin_end = 0b01000000;
+        const int8_t zero_8bit=0;
 
         int64_t data_length,data_length_swap;
         int data_mod, null_padding;
 
         if (data=="") {
-            data_length=GInd::getLatData().globvol4*bytes_per_site(); // lattice volume x #(links) x link_enteries(re+im) x precision
+            data_length=GInd::getLatData().globvol4*bytes_per_site(); // lattice volume x #(links) x link_entries(re+im) x precision
         } else {
             data_length=data.length();
         }
@@ -383,13 +391,13 @@ public:
             Byte_swap(magic_number);
             Byte_swap(version_number);
             Byte_swap(zero_8bit);
-            Byte_swap(begin_end_reserved_8bit);
+            Byte_swap(begin_notEnd);
             Byte_swap(data_length_swap);
         }
 
         out.write((char *) &magic_number, sizeof(magic_number));
         out.write((char *) &version_number, sizeof(version_number));
-        out.write((char *) &begin_end_reserved_8bit, sizeof(begin_end_reserved_8bit));
+        out.write((char *) &begin_notEnd, sizeof(begin_notEnd));
         out.write((char *) &zero_8bit, sizeof(zero_8bit));
         out.write((char *) &data_length_swap, sizeof(data_length_swap));
 
@@ -412,7 +420,8 @@ public:
     template<class floatT,bool onDevice, CompressionType comp>
     bool write_header(int diskprec, Checksum computed_checksum_crc32, std::ostream &out, bool head) {
 
-        std::string xmlProlog = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+        /// In general, we will add some newlines to make the header more readable to the eye.
+        std::string xmlProlog = "\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 
         if ( diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)) ) {
             float_size = 4;
@@ -443,9 +452,9 @@ public:
 
         std::string fp;
         if (float_size == 4) {
-            fp = "IEEE32BIG";
+            fp = "32";
         } else if (float_size == 8) {
-            fp = "IEEE64BIG";
+            fp = "64";
         } else {
             rootLogger.error("ILDG format must store single or double precision.");
             return false;
@@ -457,26 +466,30 @@ public:
 
             if (head) {
 
-                // lime record (header)
-                header_ildg = "scidac-private-file-xml";
-                data = xmlProlog + "<scidacFile><version>1.1</version><spacetime>4</spacetime>"
-                                 + "<dims>" + std::to_string(GInd::getLatData().globLX)
+                header_ildg = "ildg-format";
+                data = xmlProlog + "<ildgFormat xmlns=\"http://www.lqcd.org/ildg\"\n" 
+                                 + "            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" 
+                                 + "            xsi:schemaLocation=\"http://www.lqcd.org/ildg/filefmt.xsd\">\n"
+                                 + "  <version>1.0</version>\n"
+                                 + "  <field>su3gauge</field>\n"
+                                 + "  <precision>" + fp + "</precision>\n"
+                                 + "  <dims>" + std::to_string(GInd::getLatData().globLX)
                                       + " " + std::to_string(GInd::getLatData().globLY)
                                       + " " + std::to_string(GInd::getLatData().globLZ)
                                       + " " + std::to_string(GInd::getLatData().globLT)
-                                      + " </dims><volfmt>0</volfmt></scidacFile>";
+                                      + " </dims></ildgFormat>\n";
                 lime_record(out, switch_endian, header_ildg, data);
 
-                // lime record (header)
+                // lime record (header) MARKED FOR DESTRUCTION
                 header_ildg = "scidac-private-record-xml";
-                data = xmlProlog + "<scidacRecord><version>1.1</version>"
+                data = xmlProlog + "<scidacRecord><version>1.0</version>"
                                  + "<recordtype>0</recordtype><datatype>SIMULATeQCD_GAUGE_CONF</datatype>"
-                                 + "<precision>" + fp + "</precision><colors>3</colors>"
-                                 + "<typesize>" + header.dattype() + "</typesize><datacount>4</datacount></scidacRecord>";
+                                 + "<precision>" + fp + "</precision>"
+                                 + "<typesize>" + header.dattype() + "</typesize></scidacRecord>";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // lime record (binary data)
-                header_ildg = "scidac-binary-data";
+                header_ildg = "ildg-binary-data";
                 data = "";
                 lime_record(out, switch_endian, header_ildg, data);
 
@@ -571,7 +584,7 @@ public:
     void byte_swap_sitedata(char *sitedata, int n) {
         for (size_t bs = 0; bs < 72; bs++)
             Byte_swap(sitedata + bs * n, n);
-        }
+    }
 
     int precision_read() {
         int precision;
