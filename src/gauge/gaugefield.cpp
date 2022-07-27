@@ -7,6 +7,7 @@
 #include "../base/IO/nersc.h"
 #include "../base/IO/milc.h"
 #include "../base/IO/ildg.h"
+#include "../base/latticeParameters.h"
 #include <fstream>
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
@@ -63,21 +64,21 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_nersc_host(gaugeAcc
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::string &fname, int diskprec) {
+void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_ildg(const std::string &fname, LatticeParameters param) {
     if(onDevice) {
         rootLogger.info("writeconf_ildg: Writing ILDG configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
         lattice_host.copyFrom(_lattice);
-        writeconf_ildg_host(lattice_host.getAccessor(),fname,diskprec);
+        writeconf_ildg_host(lattice_host.getAccessor(),fname,param);
     } else {
-        writeconf_ildg_host(getAccessor(),fname,diskprec);
+        writeconf_ildg_host(getAccessor(),fname,param);
     }
 
 }
 
 template<class floatT,bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor,
-                                                                       const std::string &fname, int diskprec)
+                                                                       const std::string &fname, LatticeParameters param)
 {
     Checksum crc32;
     InitializeChecksum(&crc32);
@@ -96,7 +97,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
     std::ofstream out;
     if (this->getComm().IamRoot())
         out.open(fname.c_str(),std::ios::out | std::ios::binary);
-    if (!ildg.template write_header<floatT, onDevice, comp>(diskprec, crc32, out,true)) {
+    if (!ildg.template write_header<floatT, onDevice, comp>(param.prec_out(), crc32, out, true, param)) {
         rootLogger.error("Unable to write ILDG file: ", fname);
         return;
     }
@@ -114,7 +115,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
         LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
         size_t index = GInd::localCoordToGlobalIndex(localCoord);
 
-        if(diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float))) {
+        if(param.prec_out() == 1 || (param.prec_out() == 0 && sizeof(floatT) == sizeof(float))) {
             std::vector <GSU3<float>> sitedata;
             for (size_t mu = 0; mu < 4; mu++) {
                 GSU3 <float> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
@@ -123,7 +124,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
             }
             ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(float));
             crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
-        } else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double))) {
+        } else if (param.prec_out() == 2 || (param.prec_out() == 0 && sizeof(floatT) == sizeof(double))) {
             std::vector <GSU3<double>> sitedata;
             for (size_t mu = 0; mu < 4; mu++) {
                 GSU3 <double> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
@@ -133,7 +134,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
             ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(double));
             crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
         } else {
-            rootLogger.error("diskprec should be 0, 1 or 2.");
+            rootLogger.error("Disk precision should be 0, 1 or 2.");
         }
 
         if (ildg.end_of_buffer()) {
@@ -151,7 +152,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
 
     if (this->getComm().IamRoot())
         out.open(fname.c_str(),std::ios::app | std::ios::binary);
-    if (!ildg.template write_header<floatT, onDevice, comp>(diskprec, crc32, out,false)) {
+    if (!ildg.template write_header<floatT, onDevice, comp>(param.prec_out(), crc32, out, false, param)) {
         rootLogger.error("Unable to write ILDG file: ", fname);
         return;
     }
@@ -303,7 +304,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
             crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
                                                                   ildg.bytes_per_site());
         } else {
-            rootLogger.error("diskprec should be 0, 1 or 2.");
+            rootLogger.error("Disk precision should be 0, 1 or 2.");
         }
     }
 

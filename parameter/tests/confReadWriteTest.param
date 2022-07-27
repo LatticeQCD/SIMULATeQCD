@@ -14,8 +14,11 @@
 #       ILDGconfAuthor: Full name of the person who generated the configuration.
 #  ILDGauthorInstitute: Where does the author work?
 #      ILDGmachineType: On what kind of machine was this configuration generated?
-#      ILDGmachineName: What is the name of the machine on which this configuration was generated?
+#      ILDGmachineName: What is the name of the machine on which it was generated?
 # ILDGmachineInstitute: To which institute does this machine belong?
+#    ILDGcollaboration: Which collaboration generated the configuration?
+#      ILDGprojectName: What project does it belong to?
+#     ILDGensembleName: What ensemble does it belong to?
 #
 
 Lattice   = 8 8 8 4
@@ -34,4 +37,6 @@ ILDGconfAuthor       = jamesBaxter
 ILDGauthorInstitute  = bielefeldUniversity
 ILDGmachineType      = AMD
 ILDGmachineName      = Frontier
-ILDGmachineInstitute = ORNL 
+ILDGmachineInstitute = ORNL
+ILDGcollaboration    = HotQCD
+ILDGprojectName      = hotChiral
