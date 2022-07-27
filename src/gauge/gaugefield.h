@@ -75,9 +75,9 @@ public:
                               int diskprec = 1, Endianness e = ENDIAN_BIG);
 
     /// write gaugefield to ILDG file
-    void writeconf_ildg(const std::string &fname, int diskprec = 1);
+    void writeconf_ildg(const std::string &fname, LatticeParameters param);
 
-    void writeconf_ildg_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, int diskprec = 1);
+    void writeconf_ildg_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, LatticeParameters param);
 
     /// init lattice
     void one();                        /// set all links to one
