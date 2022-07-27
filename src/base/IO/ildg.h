@@ -2,12 +2,19 @@
  * ildg.h                                                               
  * 
  * R. Larsen, S. Ali, D. Clarke 
+ *
+ * This class is the reader class for ILDG configurations. ILDG configurations are packed as LIME files. The best
+ * way to write this class would be to only allow reading configurations that are exactly in ILDG format, as
+ * specified by their documentation. Unfortunately it seems that some codes, while correctly packing their
+ * configuration as a LIME file, did not adhere to the ILDG specification. This class can read such configurations
+ * anyway. Hence this class should rather be thought of as an "ILDG-type" configuration reader.
  * 
+ * On the bright side, we have written it so that the writing is done to correct ILDG specification.
+ *  
  */
 
-#ifndef SIMULATEQCD_ILDG_H
-#define SIMULATEQCD_ILDG_H
 
+#pragma once
 #include "parameterManagement.h"
 #include "misc.h"
 #include "../../gauge/gaugefield.h"
@@ -29,22 +36,42 @@ floatT returnEndian(floatT input,bool change) {
         }
     } 
     return input;
-    
 }
 
+/// INTENT: IN--infoStr, tag; OUT--value
+void extractFromTag(std::string infoStr, std::string tag, std::string &value) {
+    std::string xmlTagOpen  = "<"+tag+">";
+    std::string xmlTagClose = "</"+tag+">";
+    /// This if statement checks whether we are at the end of infoStr.
+    if(infoStr.find(xmlTagOpen) != std::string::npos) {
+        int pos    = infoStr.find(xmlTagOpen);
+        int posEnd = infoStr.find(xmlTagClose);
+        int strLen = xmlTagOpen.length();
+        value      = infoStr.substr(pos+strLen,posEnd-strLen-pos);
+    }
+}
+
+/// INTENT: IN--infoStr, tag; OUT--value
+void extractIntFromTag(std::string infoStr, std::string tag, int &value) {
+    std::string xmlTagOpen  = "<"+tag+">";
+    std::string xmlTagClose = "</"+tag+">";
+    /// This if statement checks whether we are at the end of infoStr.
+    if(infoStr.find(xmlTagOpen) != std::string::npos) {
+        int pos    = infoStr.find(xmlTagOpen);
+        int posEnd = infoStr.find(xmlTagClose);
+        int strLen = xmlTagOpen.length();
+        value      = stoi(infoStr.substr(pos+strLen,posEnd-strLen-pos));
+    }
+}
 
 class IldgHeader : virtual private ParameterList {
 private:
     const CommunicationBase &comm;
     int header_size;
 
-    Parameter<std::string> dattype;
-    Parameter<std::string> checksuma;
-    Parameter<std::string> checksumb;
-    Parameter<std::string> floatingpoint; // Precision conf is saved in
+    Parameter<std::string> dattype, checksuma, checksumb, floatingpoint; // Precision conf is saved in
     Parameter<int>         dim[4];
-    Parameter<double>      linktrace;
-    Parameter<double>      plaq;
+    Parameter<double>      linktrace, plaq;
 
     bool read_info(std::istream &in) {
         int32_t magic_number;
@@ -54,7 +81,7 @@ private:
         int dimz=-1; 
         int dimt=-1;
         int dataPos=-1;
-        std::string precision, dataType, suma, sumb, typesize, datacount;
+        std::string precision, suma, sumb, typesize, lstr;
         bool Endian=false;
 
         in.read(reinterpret_cast<char *>(&magic_number),sizeof(magic_number));
@@ -87,13 +114,25 @@ private:
                     in.ignore(8*16);
                     char info[bytes];
                     in.read(info,sizeof(info));
-                    std::string myString(info, bytes);
+                    std::string info_str(info, bytes);
 
-                    if(myString.find("<dims>") != std::string::npos) {
-                        int pos = myString.find("<dims>");
-                        int posEnd = myString.find("</dims>");
+                    extractFromTag(info_str,"precision",precision);
+
+                    extractIntFromTag(info_str,"lx",dimx);
+                    extractIntFromTag(info_str,"ly",dimy);
+                    extractIntFromTag(info_str,"lz",dimz);
+                    extractIntFromTag(info_str,"lt",dimt);
+
+                    extractFromTag(info_str,"suma",suma);
+                    extractFromTag(info_str,"sumb",sumb);
+                    extractFromTag(info_str,"typesize",typesize);
+
+                    /// This is how QUDA stores their dimension information
+                    if(info_str.find("<dims>") != std::string::npos) {
+                        int pos = info_str.find("<dims>");
+                        int posEnd = info_str.find("</dims>");
                         std::string part;
-                        std::stringstream content(myString.substr(pos+6,posEnd-pos-6));
+                        std::stringstream content(info_str.substr(pos+6,posEnd-pos-6));
                         std::getline(content,part,' ');
                         dimx = atoi(part.c_str());
                         std::getline(content,part,' ');
@@ -102,42 +141,6 @@ private:
                         dimz = atoi(part.c_str());
                         std::getline(content,part,' ');
                         dimt = atoi(part.c_str());
-                    }
-
-                    if(myString.find("<datatype>") != std::string::npos) {
-                        int pos = myString.find("<datatype>");
-                        int posEnd = myString.find("</datatype>");
-                        dataType = myString.substr(pos+10,posEnd-10-pos);
-                    }
-
-                    if(myString.find("<precision>") != std::string::npos) {
-                        int pos = myString.find("<precision>");
-                        int posEnd = myString.find("</precision>");
-                        precision = myString.substr(pos+11,posEnd-11-pos);
-                    }
-
-                    if(myString.find("<suma>") != std::string::npos) {
-                        int pos = myString.find("<suma>");
-                        int posEnd = myString.find("</suma>");
-                        suma = myString.substr(pos+6,posEnd-6-pos);
-                    }
-
-                    if(myString.find("<sumb>") != std::string::npos) {
-                        int pos = myString.find("<sumb>");
-                        int posEnd = myString.find("</sumb>");
-                        sumb = myString.substr(pos+6,posEnd-6-pos);
-                    }
-
-                    if(myString.find("<typesize>") != std::string::npos) {
-                        int pos = myString.find("<typesize>");
-                        int posEnd = myString.find("</typesize>");
-                        typesize = myString.substr(pos+10,posEnd-10-pos);
-                    }
-
-                    if(myString.find("<datacount>") != std::string::npos) {
-                        int pos = myString.find("<datacount>");
-                        int posEnd = myString.find("</datacount>");
-                        datacount = myString.substr(pos+11,posEnd-11-pos);
                     }
                 }
             }
@@ -371,10 +374,12 @@ public:
         // Bit 48 is the flag for whether the message is beginning. Bit 49 is the flag for whether the message is ending.
         // Binary is stored from left to right, even though the least-significant digit is on the right. This storage
         // convention, which puts the most significant digit at the smallest memory address, is big endian, which is
-        // the ILDG standard.
-        const int8_t begin_notEnd = 0b11000000;  // this is a temporary "fix" to trick a lime packer into thinking this is correct.
-//        const int8_t begin_notEnd = 0b10000000;
-//        const int8_t notBegin_end = 0b01000000;
+        // the ILDG standard. The remaining 6 bits are reserved bits.
+        const int8_t begin_end = 0b11000000;
+//      const int8_t begin_notEnd = 0b10000000;
+//      const int8_t notBegin_end = 0b01000000;
+//      const int8_t notBegin_notEnd = 0b00000000;
+
         const int8_t zero_8bit=0;
 
         int64_t data_length,data_length_swap;
@@ -391,13 +396,13 @@ public:
             Byte_swap(magic_number);
             Byte_swap(version_number);
             Byte_swap(zero_8bit);
-            Byte_swap(begin_notEnd);
+            Byte_swap(begin_end);
             Byte_swap(data_length_swap);
         }
 
         out.write((char *) &magic_number, sizeof(magic_number));
         out.write((char *) &version_number, sizeof(version_number));
-        out.write((char *) &begin_notEnd, sizeof(begin_notEnd));
+        out.write((char *) &begin_end, sizeof(begin_end));
         out.write((char *) &zero_8bit, sizeof(zero_8bit));
         out.write((char *) &data_length_swap, sizeof(data_length_swap));
 
@@ -472,20 +477,21 @@ public:
                                  + "            xsi:schemaLocation=\"http://www.lqcd.org/ildg/filefmt.xsd\">\n"
                                  + "  <version>1.0</version>\n"
                                  + "  <field>su3gauge</field>\n"
-                                 + "  <precision>" + fp + "</precision>\n"
-                                 + "  <dims>" + std::to_string(GInd::getLatData().globLX)
-                                      + " " + std::to_string(GInd::getLatData().globLY)
-                                      + " " + std::to_string(GInd::getLatData().globLZ)
-                                      + " " + std::to_string(GInd::getLatData().globLT)
-                                      + " </dims></ildgFormat>\n";
+                                 + "  <precision>"+fp+"</precision>\n"
+                                 + "  <lx>"+std::to_string(GInd::getLatData().globLX)+"</lx>"
+                                 + "  <ly>"+std::to_string(GInd::getLatData().globLY)+"</ly>"
+                                 + "  <lz>"+std::to_string(GInd::getLatData().globLZ)+"</lz>"
+                                 + "  <lt>"+std::to_string(GInd::getLatData().globLT)+"</lt>\n"
+//                                 + "  <dims>" + std::to_string(GInd::getLatData().globLX)
+//                                      + " " + std::to_string(GInd::getLatData().globLY)
+//                                      + " " + std::to_string(GInd::getLatData().globLZ)
+//                                      + " " + std::to_string(GInd::getLatData().globLT) + "</dims>\n"
+                                 + "</ildgFormat>\n";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // lime record (header) MARKED FOR DESTRUCTION
                 header_ildg = "scidac-private-record-xml";
-                data = xmlProlog + "<scidacRecord><version>1.0</version>"
-                                 + "<recordtype>0</recordtype><datatype>SIMULATeQCD_GAUGE_CONF</datatype>"
-                                 + "<precision>" + fp + "</precision>"
-                                 + "<typesize>" + header.dattype() + "</typesize></scidacRecord>";
+                data = xmlProlog + "<typesize>" + header.dattype() + "</typesize></scidacRecord>";
                 lime_record(out, switch_endian, header_ildg, data);
 
                 // lime record (binary data)
@@ -496,8 +502,8 @@ public:
             } else {
 
                 std::stringstream crc32a, crc32b;
-                crc32a<<std::hex<<computed_checksum_crc32.checksuma;
-                crc32b<<std::hex<<computed_checksum_crc32.checksumb;
+                crc32a << std::hex << computed_checksum_crc32.checksuma;
+                crc32b << std::hex << computed_checksum_crc32.checksumb;
                 rootLogger.info("checksuma (ildg): ", crc32a.str());
                 rootLogger.info("checksumb (ildg): ", crc32b.str());
 
@@ -569,8 +575,6 @@ public:
         suma<<std::hex<<sum.checksuma;
         sumb<<std::hex<<sum.checksumb;
         if (header.checksuma() == suma.str() && header.checksumb() == sumb.str()) {
-            rootLogger.info("Checksuma: ",std::hex, header.checksuma()," (Stored) = ", sum.checksuma," (Computed)");
-            rootLogger.info("Checksumb: ",std::hex, header.checksumb()," (Stored) = ", sum.checksumb," (Computed)");
             rootLogger.info(CoutColors::green, "Checksums match successfully!", CoutColors::reset);
             return true;
         } else {
@@ -598,5 +602,3 @@ public:
         return precision;
     }
 };
-
-#endif //SIMULATEQCD_ILDG_H

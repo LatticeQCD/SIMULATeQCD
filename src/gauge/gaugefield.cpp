@@ -46,19 +46,19 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_nersc_host(gaugeAcc
     this->getComm().initIOBinary(fname, filesize, nersc.bytes_per_site(), nersc.header_size(), global, local, WRITE);
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
-        for (size_t z = 0; z < GInd::getLatData().lz; z++)
-            for (size_t y = 0; y < GInd::getLatData().ly; y++)
-                for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-                    for (size_t mu = 0; mu < 4; mu++) {
-                        gSite site = GInd::getSite(x, y, z, t);
-                        GSU3<floatT> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
-                        nersc.put(tmp);
-                    }
-                    if (nersc.end_of_buffer()) {
-                        nersc.process_write_data();
-                        this->getComm().writeBinary(nersc.buf_ptr(), nersc.buf_size() / nersc.bytes_per_site());
-                    }
-                }
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        for (size_t mu = 0; mu < 4; mu++) {
+            gSite site = GInd::getSite(x, y, z, t);
+            GSU3<floatT> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+            nersc.put(tmp);
+        }
+        if (nersc.end_of_buffer()) {
+            nersc.process_write_data();
+            this->getComm().writeBinary(nersc.buf_ptr(), nersc.buf_size() / nersc.bytes_per_site());
+        }
+    }
     this->getComm().closeIOBinary();
 }
 
@@ -107,40 +107,40 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::writeconf_ildg_host(gaugeAcce
     this->getComm().initIOBinary(fname, filesize, ildg.bytes_per_site(), ildg.header_size(), global, local, WRITE);
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
-        for (size_t z = 0; z < GInd::getLatData().lz; z++)
-            for (size_t y = 0; y < GInd::getLatData().ly; y++)
-                for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-                    gSite site = GInd::getSite(x, y, z, t);
-                    LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
-                    size_t index = GInd::localCoordToGlobalIndex(localCoord);
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        gSite site = GInd::getSite(x, y, z, t);
+        LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
+        size_t index = GInd::localCoordToGlobalIndex(localCoord);
 
-                    if(diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float))) {
-                        std::vector <GSU3<float>> sitedata;
-                        for (size_t mu = 0; mu < 4; mu++) {
-                            GSU3 <float> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
-                            sitedata.push_back(tmp);
-                            ildg.put(tmp);
-                        }
-                        ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(float));
-                        crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
-                    } else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double))) {
-                        std::vector <GSU3<double>> sitedata;
-                        for (size_t mu = 0; mu < 4; mu++) {
-                            GSU3 <double> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
-                            sitedata.push_back(tmp);
-                            ildg.put(tmp);
-                        }
-                        ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(double));
-                        crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
-                    } else {
-                        rootLogger.error("diskprec should be 0, 1 or 2.");
-                    }
+        if(diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float))) {
+            std::vector <GSU3<float>> sitedata;
+            for (size_t mu = 0; mu < 4; mu++) {
+                GSU3 <float> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+                sitedata.push_back(tmp);
+                ildg.put(tmp);
+            }
+            ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(float));
+            crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
+        } else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double))) {
+            std::vector <GSU3<double>> sitedata;
+            for (size_t mu = 0; mu < 4; mu++) {
+                GSU3 <double> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+                sitedata.push_back(tmp);
+                ildg.put(tmp);
+            }
+            ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(double));
+            crc32_array_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]), ildg.bytes_per_site());
+        } else {
+            rootLogger.error("diskprec should be 0, 1 or 2.");
+        }
 
-                    if (ildg.end_of_buffer()) {
-                        ildg.process_write_data();
-                        this->getComm().writeBinary(ildg.buf_ptr(), ildg.buf_size() / ildg.bytes_per_site());
-                    }
-                }
+        if (ildg.end_of_buffer()) {
+            ildg.process_write_data();
+            this->getComm().writeBinary(ildg.buf_ptr(), ildg.buf_size() / ildg.bytes_per_site());
+        }
+    }
 
     this->getComm().reduce(crc32_array_ptr, GInd::getLatData().globvol4);
     if(this->getComm().IamRoot()) {
@@ -223,20 +223,19 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAcc
 
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
-        for (size_t z = 0; z < GInd::getLatData().lz; z++)
-            for (size_t y = 0; y < GInd::getLatData().ly; y++)
-                for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-                    if (nersc.end_of_buffer()) {
-                        this->getComm().readBinary(nersc.buf_ptr(), nersc.buf_size() / nersc.bytes_per_site());
-                        nersc.process_read_data();
-                    }
-                    for (int mu = 0; mu < 4; mu++) {
-                        GSU3<floatT> ret = nersc.template get<floatT>();
-                        gSite site = GInd::getSite(x, y, z, t);
-                        gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
-                    }
-                }
-
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        if (nersc.end_of_buffer()) {
+            this->getComm().readBinary(nersc.buf_ptr(), nersc.buf_size() / nersc.bytes_per_site());
+            nersc.process_read_data();
+        }
+        for (int mu = 0; mu < 4; mu++) {
+            GSU3<floatT> ret = nersc.template get<floatT>();
+            gSite site = GInd::getSite(x, y, z, t);
+            gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+        }
+    }
 
     this->getComm().closeIOBinary();
 
@@ -271,42 +270,43 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
     this->getComm().initIOBinary(fname, 0, ildg.bytes_per_site(), ildg.header_size(), global, local, READ);
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
-        for (size_t z = 0; z < GInd::getLatData().lz; z++)
-            for (size_t y = 0; y < GInd::getLatData().ly; y++)
-                for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-                    gSite site = GInd::getSite(x, y, z, t);
-                    LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
-                    size_t index = GInd::localCoordToGlobalIndex(localCoord);
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        gSite site = GInd::getSite(x, y, z, t);
+        LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
+        size_t index = GInd::localCoordToGlobalIndex(localCoord);
 
-                    if (ildg.end_of_buffer()) {
-                        this->getComm().readBinary(ildg.buf_ptr(), ildg.buf_size() / ildg.bytes_per_site());
-                        ildg.process_read_data();
-                    }
+        if (ildg.end_of_buffer()) {
+            this->getComm().readBinary(ildg.buf_ptr(), ildg.buf_size() / ildg.bytes_per_site());
+            ildg.process_read_data();
+        }
 
-                    if (ildg.precision_read() == 1 || (ildg.precision_read() == 0 && sizeof(floatT) == sizeof(float))) {
-                        std::vector <GSU3<float>> sitedata;
-                        for (int mu = 0; mu < 4; mu++) {
-                            GSU3<float> ret = ildg.template get<float>();
-                            sitedata.push_back(ret);
-                            gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
-                        }
-                        ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(float));
-                        crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
-                                                                              ildg.bytes_per_site());;
-                    } else if (ildg.precision_read() == 2 || (ildg.precision_read() == 0 && sizeof(floatT) == sizeof(double))) {
-                        std::vector <GSU3<double>> sitedata;
-                        for (int mu = 0; mu < 4; mu++) {
-                            GSU3<double> ret = ildg.template get<double>();
-                            sitedata.push_back(ret);
-                            gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
-                        }
-                        ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(double));
-                        crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
-                                                                              ildg.bytes_per_site());
-                    } else {
-                        rootLogger.error("diskprec should be 0, 1 or 2.");
-                    }
-                }
+        if (ildg.precision_read() == 1 || (ildg.precision_read() == 0 && sizeof(floatT) == sizeof(float))) {
+            std::vector <GSU3<float>> sitedata;
+            for (int mu = 0; mu < 4; mu++) {
+                GSU3<float> ret = ildg.template get<float>();
+                sitedata.push_back(ret);
+                gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+            }
+            ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(float));
+            crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
+                                                                  ildg.bytes_per_site());;
+        } else if (ildg.precision_read() == 2 || (ildg.precision_read() == 0 && sizeof(floatT) == sizeof(double))) {
+            std::vector <GSU3<double>> sitedata;
+            for (int mu = 0; mu < 4; mu++) {
+                GSU3<double> ret = ildg.template get<double>();
+                sitedata.push_back(ret);
+                gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+            }
+            ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(double));
+            crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
+                                                                  ildg.bytes_per_site());
+        } else {
+            rootLogger.error("diskprec should be 0, 1 or 2.");
+        }
+    }
+
     this->getComm().reduce(crc32_array_read_ptr, GInd::getLatData().globvol4);
     if(this->getComm().IamRoot()){
         checksum_crc32_combine(&read_crc32, GInd::getLatData().globvol4, crc32_array_read_ptr);
@@ -338,23 +338,22 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
 
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
-        for (size_t z = 0; z < GInd::getLatData().lz; z++)
-            for (size_t y = 0; y < GInd::getLatData().ly; y++)
-                for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-                    if (milc.end_of_buffer()) {
-                        this->getComm().readBinary(milc.buf_ptr(), milc.buf_size() / milc.bytes_per_site());
-                        milc.template get_endian<floatT>();
-                        milc.process_read_data();
-                    }
-                    for (int mu = 0; mu < 4; mu++) {
-                        GSU3<floatT> ret = milc.template get<floatT>();
-                        gSite site = GInd::getSite(x, y, z, t);
-                        gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
-         
-                        traceSum += tr_d(ret);
-                    }
-                }
-
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        if (milc.end_of_buffer()) {
+            this->getComm().readBinary(milc.buf_ptr(), milc.buf_size() / milc.bytes_per_site());
+            milc.template get_endian<floatT>();
+            milc.process_read_data();
+        }
+        for (int mu = 0; mu < 4; mu++) {
+            GSU3<floatT> ret = milc.template get<floatT>();
+            gSite site = GInd::getSite(x, y, z, t);
+            gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+    
+            traceSum += tr_d(ret);
+        }
+    }
 
     this->getComm().closeIOBinary();
 
@@ -365,9 +364,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     if (!milc.checksums_match()) {
         throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
-
 }
-
 
 
 #define _GLATTICE_CLASS_INIT(floatT, onDevice, HaloDepth,COMP) \
