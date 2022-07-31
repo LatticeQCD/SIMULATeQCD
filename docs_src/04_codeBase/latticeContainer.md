@@ -6,7 +6,7 @@ contribution, sums these contributions over a sublattice, then sums this result 
 This whole process is carried out with `reduce` call.
 
 The `LatticeContainer` can hold elements of arbitrary type, and it is spread over the processes in a similar 
-way as the [Gaugefield](gaugefield.md#gaugefield) or [Spinorfield](spinorfield.md#spinorfield). The memory of 
+way as the [Gaugefield](gaugefield.md#gaugefield) or Spinorfield. The memory of 
 the `LatticeContainer` is by default shared with the memory of the halo buffer, because in general the 
 intermediate results have to be re-calculated after a halo update. As of this writing, the available reduction methods are
 ```C++

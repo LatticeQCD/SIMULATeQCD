@@ -16,6 +16,7 @@ maxdepth: 1
 codeStyle.md
 git.md
 codeStructure.md
+templates.md
 terminalIO.md
 timer.md
 inputParameter.md

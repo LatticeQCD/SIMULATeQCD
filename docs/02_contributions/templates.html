@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How to do pull requests &mdash; SIMULATeQCD 0.7 documentation</title>
+  <title>Template instantiation &mdash; SIMULATeQCD 0.7 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
@@ -22,8 +22,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="General structure of the code" href="codeStructure.html" />
-    <link rel="prev" title="How to write clean and readable code" href="codeStyle.html" /> 
+    <link rel="next" title="Terminal output &amp; terminating the program" href="terminalIO.html" />
+    <link rel="prev" title="General structure of the code" href="codeStructure.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,9 +45,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="codeStyle.html">How to write clean and readable code</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">How to do pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="codeStructure.html">General structure of the code</a></li>
-<li class="toctree-l2"><a class="reference internal" href="templates.html">Template instantiation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Template instantiation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="terminalIO.html">Terminal output &amp; terminating the program</a></li>
 <li class="toctree-l2"><a class="reference internal" href="timer.html">Timing your code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="inputParameter.html">How to make an input parameter file</a></li>
@@ -77,9 +77,9 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>How to do pull requests</li>
+      <li>Template instantiation</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/02_contributions/git.md.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/02_contributions/templates.md.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -87,19 +87,27 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="how-to-do-pull-requests">
-<h1>How to do pull requests<a class="headerlink" href="#how-to-do-pull-requests" title="Permalink to this headline"></a></h1>
-<p>You just finished your feature branch and want to merge it with the main. Please follow this procedure to make sure
-that nothing has been broken:</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="template-instantiation">
+<h1>Template instantiation<a class="headerlink" href="#template-instantiation" title="Permalink to this headline"></a></h1>
+<p>In order to make our code as flexible as possible and to reduce code repetition, we make
+extensive use of C++ templates. At the same time, we would like to put kernel implementations
+into <code class="docutils literal notranslate"><span class="pre">cpp</span></code> files in order to reduce build times.
+This requires explicitly instantiating all possible template parameter combinations,
+which is itself repetitive, messy, and tedious.</p>
+<p>In order to help streamline this process we have introduced explicit instantiation macros,
+which help automate the instantiation of the most commonly used template parameters.
+These macros are kept in the header file <code class="docutils literal notranslate"><span class="pre">explicit\_instantiation\_macros.h</span></code>.
+For example one can
+instantiate a generic class <code class="docutils literal notranslate"><span class="pre">INIT\_CLASS</span></code> for all possible precisions,
+halo depths, and gauge field compression types using <code class="docutils literal notranslate"><span class="pre">INIT\_PHC(INIT\_CLASS)</span></code>.</p>
+<p>When you want to implement your own kernel in a <code class="docutils literal notranslate"><span class="pre">cpp</span></code> file. You will need therefore need
+to make sure that you all the following:</p>
 <ol class="simple">
-<li><p>Call <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge</span> <span class="pre">main</span> <span class="pre">feature</span></code>.</p></li>
-<li><p>Make sure that everything still compiles with <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">-j</span> <span class="pre">everything</span></code></p></li>
-<li><p>Run all the tests using <code class="docutils literal notranslate"><span class="pre">scripts/TEST_run.bash</span></code>. You will need 4 GPUs to run the tests. Please make sure that every single test passes.</p></li>
-<li><p>Once every single test passes, you can <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">main</span></code> and <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">merge</span> <span class="pre">feature</span> <span class="pre">main</span></code>.</p></li>
-<li><p>Finally you are ready to <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">push</span></code>. This will create a pull request.</p></li>
-<li><p>It is helpful if you say a few words about your feature branch in the pull request. Moreover you should emphasize that you followed the procedure listed here.</p></li>
-<li><p>One of us will then approve your request, assuming we don’t find anything strange.
-Congratulations! You are now a contributor!</p></li>
+<li><p>You have an appropriate forward declaration in your header file.</p></li>
+<li><p>You have instantiated all possible template parameter combinations at the bottom
+of your <code class="docutils literal notranslate"><span class="pre">cpp</span></code> file. Here the instantiation macros can assist you.</p></li>
+<li><p>You have included your <code class="docutils literal notranslate"><span class="pre">cpp</span></code> file in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> with all flags for your template
+parameters set as your desire. See also our <a class="reference internal" href="codeStructure.html"><span class="doc std std-doc">code structure</span></a> article.</p></li>
 </ol>
 </section>
 
