@@ -6,6 +6,16 @@
 #
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+        COMMAND git log -1 --format=%h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+message(STATUS "Using git version ${GIT_HASH}")
+
 set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
 
 if (BACKEND STREQUAL "cuda")
@@ -359,8 +369,8 @@ FUNCTION(set_SIMULATeQCD_property TARGET)
 ENDFUNCTION()
 
 FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
-    target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
-    target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE})
+    target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
+    target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
 ENDFUNCTION()
 
 FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
@@ -636,8 +646,8 @@ elseif (USE_HIP_NVIDIA)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
 endif()
-target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE})
-target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE})
+target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
+target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
 add_to_compound_SIMULATeQCD_target(tests SimpleFunctorTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_UtimesUdaggerTest.cpp)
