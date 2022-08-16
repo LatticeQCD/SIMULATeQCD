@@ -74,17 +74,17 @@ struct emTensorElementsE {
         floatT FtauSquare = 0;
         floatT FsigmaSquare = 0;
         FS01 = FT(site, 0, 1);
-        FtauSquare += tr_d(FS01 * FS01);
+        FsigmaSquare += tr_d(FS01 * FS01);
         FS02 = FT(site, 0, 2);
-        FtauSquare += tr_d(FS02 * FS02);
-        FS03 = FT(site, 0, 3);
-        FtauSquare += tr_d(FS03 * FS03);
+        FsigmaSquare += tr_d(FS02 * FS02);
         FS12 = FT(site, 1, 2);
         FsigmaSquare += tr_d(FS12 * FS12);
+        FS03 = FT(site, 0, 3);
+        FtauSquare += tr_d(FS03 * FS03);
         FS13 = FT(site, 1, 3);
-        FsigmaSquare += tr_d(FS13 * FS13);
+        FtauSquare += tr_d(FS13 * FS13);
         FS23 = FT(site, 2, 3);
-        FsigmaSquare += tr_d(FS23 * FS23);
+        FtauSquare += tr_d(FS23 * FS23);
 
         sub_E_gpu.setValue<floatT>(Id, FtauSquare+FsigmaSquare);
     }
