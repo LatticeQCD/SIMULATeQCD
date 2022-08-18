@@ -31,7 +31,6 @@
 #define AT __FILE__ ":" TOSTRING(__LINE__)
 
 
-
 enum Layout {
     All, Even, Odd
 };
