@@ -5,9 +5,7 @@
  * 
  */
 
-#ifndef _INC_LATTICE_PARAMETERS
-#define _INC_LATTICE_PARAMETERS
-
+#pragma once
 #include <string>
 #include "../base/communication/communicationBase.h"
 #include "IO/parameterManagement.h"
@@ -34,6 +32,15 @@ public:
     Parameter<int> prec_out;
     Parameter<bool> use_unit_conf;
 
+    /// ILDG-specific metadata.
+    Parameter<std::string> ILDGconfAuthor;
+    Parameter<std::string> ILDGauthorInstitute;
+    Parameter<std::string> ILDGmachineType;
+    Parameter<std::string> ILDGmachineName;
+    Parameter<std::string> ILDGmachineInstitute;
+    Parameter<std::string> ILDGcollaboration;
+    Parameter<std::string> ILDGprojectName;
+
     LatticeParameters() {
         add(latDim, "Lattice");
         add(nodeDim, "Nodes");
@@ -48,6 +55,14 @@ public:
         addDefault(prec_out, "prec_out",0);
         addDefault(measurements_dir, "measurements_dir", std::string("./"));
         addDefault(use_unit_conf, "use_unit_conf", false);
+
+        addOptional(ILDGconfAuthor,      "ILDGconfAuthor");
+        addOptional(ILDGauthorInstitute, "ILDGauthorInstitute");
+        addOptional(ILDGmachineType,     "ILDGmachineType"); 
+        addOptional(ILDGmachineName,     "ILDGmachineName"); 
+        addOptional(ILDGmachineInstitute,"ILDGmachineInstitute"); 
+        addOptional(ILDGcollaboration,   "ILDGcollaboration");
+        addOptional(ILDGprojectName,     "ILDGprojectName");
     }
 
     //! Set by providing values, mainly used in test routines
@@ -58,13 +73,21 @@ public:
         nodeDim.set(nodes);
     }
 
-    //! Return a file extension with beta and lattice size
-    virtual std::string fileExt() const {
+    //! Return a ensemble extension with beta and lattice size
+    virtual std::string ensembleExt() const {
         std::stringstream fext;
         fext.fill('0');
         fext << "_s" << std::setw(3) << latDim[0];
         fext << "t" << std::setw(2) << latDim[3];
         fext << "_b" << std::setw(7) << ((int) (beta() * 100000));
+        return fext.str();
+    }
+
+    //! Return a file extension with beta, lattice size, and configuration number
+    virtual std::string fileExt() const {
+        std::stringstream fext;
+        fext.fill('0');
+        fext << ensembleExt(); 
         if (streamName.isSet())
             fext << "_" << streamName();
         if (confnumber.isSet())
@@ -104,6 +127,3 @@ public:
             return time(NULL);
     }
 };
-
-
-#endif

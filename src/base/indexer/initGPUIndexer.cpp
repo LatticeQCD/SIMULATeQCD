@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 16.08.18.
-//
+/* 
+ * initGPUIndexer.cpp                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #include "../../define.h"
 #include "BulkIndexer.h"

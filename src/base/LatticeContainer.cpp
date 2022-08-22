@@ -1,3 +1,7 @@
+/* 
+ * LatticeContainer.cpp                                                               
+ * 
+ */
 #include "LatticeContainer.h"
 
 #ifdef USE_CUDA

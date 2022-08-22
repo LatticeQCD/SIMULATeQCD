@@ -1,4 +1,10 @@
-// scalar implementation, no communication
+/* 
+ * communicationBase_scalar.cpp                                                               
+ * 
+ * Scalar implementation with no communication. 
+ * 
+ */
+
 #include "../../define.h"
 #ifndef COMPILE_WITH_MPI
 

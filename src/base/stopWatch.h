@@ -1,3 +1,11 @@
+/* 
+ * stopWatch.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ * A class to time events/function calls
+ * 
+ */
 #ifndef _INC_TIMER
 #define _INC_TIMER
 
@@ -8,7 +16,6 @@
 #include <iostream>
 #include <cmath>
 
-//! A class to time events/function calls
 
 template<bool device>
 class StopWatch {
@@ -235,14 +242,9 @@ class StopWatch {
         return *this ;
     }   
 
-
-
     template<bool _device>
         inline friend std::ostream &operator<<(std::ostream &stream,
                 const StopWatch<_device> &rhs);
-
-
-
 
 };
 

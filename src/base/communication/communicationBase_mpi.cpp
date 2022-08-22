@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
+/* 
+ * communicationBase_mpi.cpp                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #include "../../define.h"
 
@@ -33,7 +36,9 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv) {
     if (IamRoot()){
         rootLogger.setVerbosity(stdLogger.getVerbosity());
     }
-
+    
+    rootLogger.info("Running SIMULATeQCD");
+    rootLogger.info("Git commit version: ", GIT_HASH);
     rootLogger.info("Initializing MPI with (", world_size, " proc)");
 
     /// Get the name of the processor
