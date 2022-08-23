@@ -30,7 +30,7 @@
 
 #ifdef USE_CPU_ONLY
 #define HOST_DEVICE
-#define HOST
+#define SQCD_HOST
 #define DEVICE
 #define CONSTANT const
 #define GPUERROR_T void*
@@ -56,7 +56,7 @@ struct dim3 {
 };
 #else
 #define HOST_DEVICE __host__ __device__
-#define HOST __host__
+#define SQCD_HOST __host__
 #define DEVICE __device__
 #define CONSTANT __constant__
 #define GPUERROR_T gpuError_t

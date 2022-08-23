@@ -24,10 +24,10 @@ template<class floatT>
 class GSU3;
 
 template<class floatT>
-HOST std::ostream &operator<<(std::ostream &, const GSU3<floatT> &);
+SQCD_HOST std::ostream &operator<<(std::ostream &, const GSU3<floatT> &);
 
 template<class floatT>
-HOST std::istream &operator>>(std::istream &, GSU3<floatT> &);
+SQCD_HOST std::istream &operator>>(std::istream &, GSU3<floatT> &);
 
 template<class floatT>
 HOST_DEVICE inline GSU3<floatT> operator+(const GSU3<floatT> &, const GSU3<floatT> &);
@@ -126,10 +126,10 @@ public:
 
 
 #if (!defined __GPUCC__)
-    HOST friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
+    SQCD_HOST friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
 #endif
 
-    HOST friend std::istream &operator>><>(std::istream &, GSU3<floatT> &);
+    SQCD_HOST friend std::istream &operator>><>(std::istream &, GSU3<floatT> &);
 
 
     // matrix operations
@@ -392,7 +392,7 @@ public:
         return _e00;
     }
 
-    HOST inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+    SQCD_HOST inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
         switch (i * 3 + j) {
             case 0:
                 return _e00;
@@ -792,7 +792,7 @@ HOST_DEVICE bool GSU3<floatT>::operator==(const GSU3<floatT> &y) {
 }
 
 template<class floatT>
-HOST inline std::ostream &operator<<(std::ostream &s, const GSU3<floatT> &x) {
+SQCD_HOST inline std::ostream &operator<<(std::ostream &s, const GSU3<floatT> &x) {
 return s << "\n" << x.getLink00() << x.getLink01() << x.getLink02() << "\n"
                  << x.getLink10() << x.getLink11() << x.getLink12() << "\n"
                  << x.getLink20() << x.getLink21() << x.getLink22() << "\n";
@@ -800,7 +800,7 @@ return s << "\n" << x.getLink00() << x.getLink01() << x.getLink02() << "\n"
 
 /// TODO: This presumably doesn't work
 template<class floatT>
-HOST inline std::istream &operator>>(std::istream &s, GSU3<floatT> &x) {
+SQCD_HOST inline std::istream &operator>>(std::istream &s, GSU3<floatT> &x) {
     return s >> x._e00.cREAL >> x._e00.cIMAG >> x._e01.cREAL >> x._e01.cIMAG >> x._e02.cREAL >> x._e02.cIMAG
              >> x._e10.cREAL >> x._e10.cIMAG >> x._e11.cREAL >> x._e11.cIMAG >> x._e12.cREAL >> x._e12.cIMAG
              >> x._e20.cREAL >> x._e20.cIMAG >> x._e21.cREAL >> x._e21.cIMAG >> x._e22.cREAL >> x._e22.cIMAG;

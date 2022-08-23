@@ -50,7 +50,7 @@ class SimpleArray{
     }
 
 
-    HOST void operator=(std::vector<T> vec){
+    SQCD_HOST void operator=(std::vector<T> vec){
         for(size_t i = 0; i < N; i++){
             values[i] = vec.at(i);
         }

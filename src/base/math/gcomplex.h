@@ -76,11 +76,11 @@ public:
     cIMAG = 0.0f;
   };
 
-  HOST GPUcomplex(const std::complex<float> &orig) {
+  SQCD_HOST GPUcomplex(const std::complex<float> &orig) {
     cREAL = std::real<floatT>(orig);
     cIMAG = std::imag<floatT>(orig);
   }
-  HOST GPUcomplex(const std::complex<double> &orig) {
+  SQCD_HOST GPUcomplex(const std::complex<double> &orig) {
     cREAL = std::real<floatT>(orig);
     cIMAG = std::imag<floatT>(orig);
   }
@@ -527,7 +527,7 @@ template <class floatT>
 const GPUcomplex<floatT> GPUcomplex_invalid(nanf(" "), nanf(" "));
 
 template <class floatT>
-HOST inline std::ostream &operator<<(std::ostream &s,
+SQCD_HOST inline std::ostream &operator<<(std::ostream &s,
                                          GPUcomplex<floatT> z) {
   return s << '(' << real(z) << ',' << imag(z) << ')';
 }

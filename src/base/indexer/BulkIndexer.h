@@ -64,14 +64,14 @@ struct gSite {
             isite(isite), isiteFull(isiteFull), coord(coord), coordFull(coordFull) {};
 
 
-    HOST friend inline std::ostream &operator << (std::ostream &s, const gSite &site) {
+    SQCD_HOST friend inline std::ostream &operator << (std::ostream &s, const gSite &site) {
         s << "gSite: coord: " << site.coord.x << " " << site.coord.y << " " << site.coord.z << " " << site.coord.t << " "
           << "coordFull: " << site.coordFull.x << " " << site.coordFull.y << " " << site.coordFull.z << " " << site.coordFull.t << " "
           << "isite: " << site.isite << " isiteFull: " << site.isiteFull;
         return s;
     
     }
-    HOST inline std::string getStr() {
+    SQCD_HOST inline std::string getStr() {
         std::ostringstream s;
         s << "gSite: coord: " << coord.x << " " << coord.y << " " << coord.z << " " << coord.t << " "
           << "coordFull: " << coordFull.x << " " << coordFull.y << " " << coordFull.z << " " << coordFull.t << " "
@@ -96,7 +96,7 @@ struct gSiteStack : public gSite {
 
     gSiteStack(const gSite) = delete;
 
-    HOST friend inline std::ostream &operator << (std::ostream &s, const gSiteStack &site) {
+    SQCD_HOST friend inline std::ostream &operator << (std::ostream &s, const gSiteStack &site) {
         s << "gSiteStack: coord: " << site.coord.x << " " << site.coord.y << " " << site.coord.z << " " << site.coord.t << " "
           << " coordFull: " << site.coordFull.x << " " << site.coordFull.y << " " << site.coordFull.z << " " << site.coordFull.t << " "
           << " isite: " << site.isite << " isiteFull: " << site.isiteFull << " stack: " << site.stack
@@ -122,7 +122,7 @@ struct gSiteMu : public gSite {
     gSiteMu(const gSite) = delete;
     gSiteMu(const gSiteStack) = delete;
 
-    HOST friend inline std::ostream &operator << (std::ostream &s, const gSiteMu &site) {
+    SQCD_HOST friend inline std::ostream &operator << (std::ostream &s, const gSiteMu &site) {
         s << "gSite: coord: " << site.coord.x     << " " << site.coord.y     << " " << site.coord.z     << " " << site.coord.t     << " "
           << "coordFull: "    << site.coordFull.x << " " << site.coordFull.y << " " << site.coordFull.z << " " << site.coordFull.t << " "
           << "isite: "        << site.isite
@@ -265,7 +265,7 @@ struct LatticeData {
         return false;
     }
 
-    HOST LatticeDimensions globalPos(LatticeDimensions n) {
+    SQCD_HOST LatticeDimensions globalPos(LatticeDimensions n) {
 
         LatticeDimensions coord = LatticeDimensions(gPosX,gPosY,gPosZ,gPosT) + n;
 
@@ -277,11 +277,11 @@ struct LatticeData {
         return coord;
     }
 
-    HOST LatticeDimensions globalLattice() {
+    SQCD_HOST LatticeDimensions globalLattice() {
         return LatticeDimensions(globLX,globLY,globLZ,globLT);
     }
 
-    HOST LatticeDimensions localLattice() {
+    SQCD_HOST LatticeDimensions localLattice() {
         return LatticeDimensions(lx,ly,lz,lt);
     }
 
@@ -704,7 +704,7 @@ public:
         return ((coordFull.x + coordFull.y*getLatData().vol1Full
                  + coordFull.z*getLatData().vol2Full) >> 0x1);
     }
-    HOST inline static size_t localCoordToGlobalIndex(LatticeDimensions coord) {
+    SQCD_HOST inline static size_t localCoordToGlobalIndex(LatticeDimensions coord) {
         LatticeData lat = GIndexer<LatLayout, HaloDepth>::getLatData();
         LatticeDimensions globCoord = lat.globalPos(coord);
         return (globCoord[0] + globCoord[1] * lat.globLX + globCoord[2] * lat.globLX * lat.globLY +

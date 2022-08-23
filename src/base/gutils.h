@@ -27,7 +27,7 @@ HOST_DEVICE void inline divmod(size_t nominator, size_t denominator,
     remainder = nominator - (quotient * denominator);
 }
 
-HOST void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
+SQCD_HOST void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
         const size_t elems, const size_t blockSize) {
     blockDim = blockSize;
     gridDim  = static_cast<int>(ceilf(static_cast<float>(elems) / static_cast<float>(blockDim.x)));

@@ -19,8 +19,8 @@ template <class floatT> class GSU3;
 template <class floatT> class gVect3;
 template <class floatT> class cVect3;
 template <class floatT, bool onDevice> class gVect3array;
-template <class floatT> HOST std::ostream & operator<<(std::ostream &, const gVect3<floatT> &);
-template <class floatT> HOST std::istream & operator>>(std::istream &, gVect3<floatT> &);
+template <class floatT> SQCD_HOST std::ostream & operator<<(std::ostream &, const gVect3<floatT> &);
+template <class floatT> SQCD_HOST std::istream & operator>>(std::istream &, gVect3<floatT> &);
 template <class floatT>  HOST_DEVICE GCOMPLEX(floatT) operator*(const gVect3<floatT> &,const gVect3<floatT> &);
 template <class floatT>  HOST_DEVICE GCOMPLEX(floatT) complex_product(const gVect3<floatT> &,const gVect3<floatT> &);
 template <class floatT>  HOST_DEVICE GCOMPLEX(floatT) complex_product_add(const gVect3<floatT> &,const gVect3<floatT> &, const GCOMPLEX(floatT) &);
@@ -58,9 +58,9 @@ public:
     HOST_DEVICE gVect3(GCOMPLEX(floatT) v0, GCOMPLEX(floatT) v1, GCOMPLEX(floatT) v2) : _v0(v0), _v1(v1), _v2(v2) {};
 
 #if (!defined __GPUCC__)
-    HOST friend std::ostream &operator << <> (std::ostream &, const gVect3<floatT> &);
+    SQCD_HOST friend std::ostream &operator << <> (std::ostream &, const gVect3<floatT> &);
 #endif
-    HOST friend std::istream &operator >> <> (std::istream &, gVect3<floatT> &);
+    SQCD_HOST friend std::istream &operator >> <> (std::istream &, gVect3<floatT> &);
 
     friend class gVect3array<floatT,true>;
     friend class gVect3array<floatT,false>;
@@ -459,13 +459,13 @@ HOST_DEVICE gVect3<floatT> conj(const gVect3<floatT> &x)
 #ifdef __GPUCC__
 
 template <class floatT>
-HOST std::ostream &operator << (std::ostream &s, const gVect3<floatT> &x)
+SQCD_HOST std::ostream &operator << (std::ostream &s, const gVect3<floatT> &x)
 {
     return s << x.getElement0() << x.getElement1() << x.getElement2();
 }
 
 template <class floatT>
-HOST std::istream &operator >> (std::istream &s, gVect3<floatT> &x)
+SQCD_HOST std::istream &operator >> (std::istream &s, gVect3<floatT> &x)
 {
     return s >> x._v0.cREAL >> x._v0.cIMAG >> x._v1.cREAL >> x._v1.cIMAG >> x._v2.cREAL >> x._v2.cIMAG;
 }

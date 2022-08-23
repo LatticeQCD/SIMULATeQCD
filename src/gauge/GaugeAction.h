@@ -24,12 +24,12 @@ private:
     template<bool onDeviceRet>
     MemoryAccessor getField();
 
-    HOST floatT barePlaquette();
-    HOST floatT bareUtauMinusUsigma();
-    HOST floatT bareClover();
-    HOST floatT bareRectangle();
+    SQCD_HOST floatT barePlaquette();
+    SQCD_HOST floatT bareUtauMinusUsigma();
+    SQCD_HOST floatT bareClover();
+    SQCD_HOST floatT bareRectangle();
 
-    HOST floatT barePlaquetteSS();
+    SQCD_HOST floatT barePlaquetteSS();
 
 
 public:

@@ -65,7 +65,7 @@ MemoryAccessor GaugeAction<floatT, onDevice, HaloDepth,comp>::getRectangleField(
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquette() {
+SQCD_HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquette() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -77,7 +77,7 @@ HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquette() {
 }
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquetteSS() {
+SQCD_HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquetteSS() {
 
 //    if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -90,7 +90,7 @@ HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquetteSS() {
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareUtauMinusUsigma() {
+SQCD_HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareUtauMinusUsigma() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -103,7 +103,7 @@ HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareUtauMinusUsigma()
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareClover() {
+SQCD_HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareClover() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -115,7 +115,7 @@ HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareClover() {
 }
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareRectangle() {
+SQCD_HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareRectangle() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(

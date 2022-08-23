@@ -30,8 +30,8 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
 
     param.readfile(commBase, "../parameter/applications/configConverter.param", argc, argv);
-    if( param.compress_out()==true && param.format_out()=="ildg" ) {
-        throw(rootLogger.fatal("ILDG format does not support compression."));
+    if( param.compress_out() && param.format_out()=="ildg" ) {
+        throw std::runtime_error(rootLogger.fatal("ILDG format does not support compression."));
     }
 
     commBase.init(param.nodeDim());
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     } else if(param.format()=="milc"){
         gauge.readconf_milc(param.GaugefileName());
     } else {
-        throw(rootLogger.fatal("Invalid specification for format ",param.format()));
+        throw std::runtime_error(rootLogger.fatal("Invalid specification for format ",param.format()));
     }
 
     /// Print out:
@@ -58,9 +58,9 @@ int main(int argc, char *argv[]) {
             gauge.writeconf_nersc(param.GaugefileName_out(), 3, param.prec_out());
         }
     } else if(param.format_out()=="ildg") {
-        gauge.writeconf_ildg(param.GaugefileName_out(), param.prec_out());
+        gauge.writeconf_ildg(param.GaugefileName_out(), param);
     } else {
-        throw(rootLogger.fatal("Invalid specification for format_out ",param.format_out()));
+        throw std::runtime_error(rootLogger.fatal("Invalid specification for format_out ",param.format_out()));
     }
 
     return 0;
