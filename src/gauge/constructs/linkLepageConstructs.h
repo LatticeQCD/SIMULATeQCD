@@ -14,7 +14,7 @@
 
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-  __device__ GSU3<floatT> inline linkLpUp(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+  DEVICE GSU3<floatT> inline linkLpUp(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
   typedef GIndexer<All,HaloDepth> GInd;
   
     gSite origin = site;
@@ -54,7 +54,7 @@ template<class floatT,size_t HaloDepth,CompressionType comp>
 
 }
 template<class floatT,size_t HaloDepth,CompressionType comp>
-  __device__ GSU3<floatT> inline linkLpDn(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+  DEVICE GSU3<floatT> inline linkLpDn(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
     gSite dn = GInd::site_dn(site, nu);
     gSite twoDn = GInd::site_dn(dn, nu);

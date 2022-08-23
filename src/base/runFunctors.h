@@ -18,6 +18,12 @@
 #define DEFAULT_NBLOCKS_LOOP  128
 #define DEFAULT_NBLOCKS_CONST  256
 
+#ifndef USE_CPU_ONLY
+#define GPUSTREAM_T_ gpuStream_t
+#else
+#define GPUSTREAM_T_ void*
+#endif
+
 template<bool onDevice, class Accessor>
 class RunFunctors {
 public:
@@ -25,30 +31,30 @@ public:
 
     template<unsigned BlockSize = DEFAULT_NBLOCKS_CONST, typename CalcReadInd, typename CalcWriteInd, typename Object>
     void iterateWithConstObject(Object ob, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd,
-            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr);
+            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,GPUSTREAM_T_ stream = (GPUSTREAM_T_)nullptr);
 
 
     template<unsigned BlockSize = DEFAULT_NBLOCKS, typename CalcReadInd, typename CalcWriteInd, typename Functor>
     void iterateFunctor(Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd,
-            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr);
+            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,GPUSTREAM_T_ stream = (GPUSTREAM_T_)nullptr);
 
 
     template<size_t Nloops, unsigned BlockSize = DEFAULT_NBLOCKS_LOOP, typename CalcReadInd, typename CalcWriteInd, typename Functor>
     void iterateFunctorLoop(Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd,
-            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr, size_t Nmax=Nloops);
+            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,GPUSTREAM_T_ stream = (GPUSTREAM_T_)nullptr, size_t Nmax=Nloops);
 };
 
 #ifdef __GPUCC__
 
 #ifdef USE_HIP_AMD
 
-__host__ __device__ static inline HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
+HOST_DEVICE static inline HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
 
         return HIP_vector_type<unsigned int, 3>(Idx.x, Idx.y, Idx.z);
 
 };
 #elif defined USE_HIP_NVIDIA
-__host__ __device__ static dim3 GetUint3(dim3 Idx){
+HOST_DEVICE static dim3 GetUint3(dim3 Idx){
 
         return Idx;
 
@@ -121,7 +127,6 @@ __global__ void performCopyConstObject(Accessor res, Object ob, CalcReadInd calc
 }
 #endif
 
-
 template<bool onDevice, class Accessor>
 template<unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd calcReadInd,
@@ -129,7 +134,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
                                                                                    const size_t elems_x,
                                                                                    const size_t elems_y,
                                                                                    const size_t elems_z,
-                                                                                   __attribute__((unused)) gpuStream_t stream){
+                                                                                   __attribute__((unused)) GPUSTREAM_T_ stream){
 
     dim3 blockDim;
 
@@ -141,6 +146,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+#ifndef USE_CPU_ONLY
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -155,7 +161,9 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 #else 
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif
+    {
         auto resAcc = getAccessor();
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -193,7 +201,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 template<bool onDevice, class Accessor>
 template<size_t Nloops, unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
-    CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t elems_x, const size_t elems_y, const size_t elems_z,__attribute__((unused)) gpuStream_t stream, size_t Nmax) {
+    CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t elems_x, const size_t elems_y, const size_t elems_z,__attribute__((unused)) GPUSTREAM_T_ stream, size_t Nmax) {
 
     dim3 blockDim;
 
@@ -211,6 +219,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+#ifndef USE_CPU_ONLY
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -226,7 +235,9 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif
+    {
         auto resAcc = getAccessor();
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -272,7 +283,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
         const size_t elems_x,
         const size_t elems_y,
         const size_t elems_z,
-        __attribute__((unused)) gpuStream_t stream ){
+        __attribute__((unused)) GPUSTREAM_T_ stream ){
 
     dim3 blockDim;
 
@@ -283,7 +294,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
     //Grid only in x direction!
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
-
+#ifndef USE_CPU_ONLY
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -300,7 +311,9 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif
+    {
         auto resAcc = getAccessor();
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -360,7 +373,7 @@ template<bool onDevice, size_t BlockSize = DEFAULT_NBLOCKS, typename CalcReadInd
 void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t elems_x,
         const size_t elems_y = 1,
         const size_t elems_z = 1,
-        __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
+        __attribute__((unused)) GPUSTREAM_T_ stream = (GPUSTREAM_T_)nullptr){
 
     dim3 blockDim;
 
@@ -372,6 +385,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+#ifndef USE_CPU_ONLY
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -388,7 +402,9 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif
+    {
         uint3 blockIdx;
         blockIdx.y = 0;
         blockIdx.z = 0;
@@ -444,7 +460,7 @@ template<bool onDevice, size_t BlockSize = DEFAULT_NBLOCKS, typename CalcReadWri
 void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWriteInd, const size_t subHaloSize, const size_t elems_x,
                                    const size_t elems_y = 1,
                                    const size_t elems_z = 1,
-                                   __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
+                                   __attribute__((unused)) GPUSTREAM_T_ stream = (GPUSTREAM_T_)nullptr){
 
     dim3 blockDim;
 
@@ -513,7 +529,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteFull {
 
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteFull(args...);
         return site;
     }
@@ -522,7 +538,7 @@ struct CalcGSiteFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSite {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
         return site;
     }
@@ -531,7 +547,7 @@ struct CalcGSite {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteSpatialFull {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteSpatialFull(args...);
         return site;
     }
@@ -540,7 +556,7 @@ struct CalcGSiteSpatialFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteSpatial {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteSpatial(args...);
         return site;
     }
@@ -549,7 +565,7 @@ struct CalcGSiteSpatial {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteStack {
     template<typename... Args>
-    inline __host__ __device__ gSiteStack operator()(Args... args) {
+    inline HOST_DEVICE gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStack(args...);
         return site;
     }
@@ -558,7 +574,7 @@ struct CalcGSiteStack {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteStackFull {
     template<typename... Args>
-    inline __host__ __device__ gSiteStack operator()(Args... args) {
+    inline HOST_DEVICE gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStackFull(args...);
         return site;
     }
@@ -567,7 +583,7 @@ struct CalcGSiteStackFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAllMu {
     template<typename... Args>
-    inline __host__ __device__ gSiteMu operator()(Args... args) {
+    inline HOST_DEVICE gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMu(args...);
         return site;
     }
@@ -576,7 +592,7 @@ struct CalcGSiteAllMu {
 template<uint8_t mu, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtMu {
     template<typename... Args>
-    inline __host__ __device__ gSiteMu operator()(Args... args) {
+    inline HOST_DEVICE gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMu(args..., mu);
         return site;
     }
@@ -586,7 +602,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAllMuFull {
 
     template<typename... Args>
-    inline __host__ __device__ gSiteMu operator()(Args... args) {
+    inline HOST_DEVICE gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMuFull(args...);
         return site;
     }
@@ -595,7 +611,7 @@ struct CalcGSiteAllMuFull {
 template<uint8_t mu, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtMuFull {
     template<typename... Args>
-    inline __host__ __device__ gSiteMu operator()(Args... args) {
+    inline HOST_DEVICE gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMuFull(args..., mu);
         return site;
     }
@@ -604,7 +620,7 @@ struct CalcGSiteAtMuFull {
 template<size_t stack, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtStackFull {
     template<typename... Args>
-    inline __host__ __device__ gSiteStack operator()(Args... args) {
+    inline HOST_DEVICE gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStackFull(args..., stack);
         return site;
     }
@@ -613,7 +629,7 @@ struct CalcGSiteAtStackFull {
 template<size_t stack, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtStack {
     template<typename... Args>
-    inline __host__ __device__ gSiteStack operator()(Args... args) {
+    inline HOST_DEVICE gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStack(args..., stack);
         return site;
     }
@@ -623,7 +639,7 @@ struct CalcGSiteAtStack {
 template<size_t stack, Layout LatticeLayout, size_t HaloDepth>
 struct CalcOddGSiteAtStack {
     template<typename... Args>
-    inline __host__ __device__ gSiteStack operator()(Args... args) {
+    inline HOST_DEVICE gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStackOdd(args..., stack);
         return site;
     }
@@ -633,7 +649,7 @@ struct CalcOddGSiteAtStack {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopMu {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
         return site;
     }
@@ -642,7 +658,7 @@ struct CalcGSiteLoopMu {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopStack {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
         return site;
     }
@@ -651,7 +667,7 @@ struct CalcGSiteLoopStack {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopMuFull {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteFull(args...);
         return site;
     }
@@ -660,7 +676,7 @@ struct CalcGSiteLoopMuFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopStackFull {
     template<typename... Args>
-    inline __host__ __device__ gSite operator()(Args... args) {
+    inline HOST_DEVICE gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteFull(args...);
         return site;
     }
@@ -669,39 +685,39 @@ struct CalcGSiteLoopStackFull {
 //! use this if you don't actually need to read in from any site, for example when initializing point sources
 template<Layout LatticeLayout, size_t HaloDepth>
 struct ReadDummy {
-    template<typename... Args> inline __host__ __device__ gSite operator()(__attribute__((unused)) Args... args) {
+    template<typename... Args> inline HOST_DEVICE gSite operator()(__attribute__((unused)) Args... args) {
         return GIndexer<LatticeLayout, HaloDepth>::getSite(99999,99999,99999,99999);
     }
 };
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtLoopMu {
-    inline __host__ __device__ gSiteMu operator()(const gSite &site, size_t mu) {
+    inline HOST_DEVICE gSiteMu operator()(const gSite &site, size_t mu) {
         return GIndexer<LatticeLayout, HaloDepth>::getSiteMu(site, mu);
     }
 };
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtLoopStack {
-    inline __host__ __device__ gSiteStack operator()(const gSite &site, size_t stack) {
+    inline HOST_DEVICE gSiteStack operator()(const gSite &site, size_t stack) {
         return GIndexer<LatticeLayout, HaloDepth>::getSiteStack(site, stack);
     }
 };
 
 struct WriteAtRead {
-    inline __host__ __device__ gSite operator()(const gSite &site) {
+    inline HOST_DEVICE gSite operator()(const gSite &site) {
         return site;
     }
 };
 
 struct WriteAtReadStack {
-    inline __host__ __device__ gSiteStack operator()(const gSiteStack &site) {
+    inline HOST_DEVICE gSiteStack operator()(const gSiteStack &site) {
         return site;
     }
 };
 
 struct WriteAtReadMu {
-    inline __host__ __device__ gSiteMu operator()(const gSiteMu &siteMu) {
+    inline HOST_DEVICE gSiteMu operator()(const gSiteMu &siteMu) {
         return siteMu;
     }
 };
@@ -712,7 +728,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtFixedSite {
     const gSite _fixed_site;
     explicit WriteAtFixedSite(const gSite mysite) : _fixed_site(mysite) {}
-    inline __host__ __device__ gSite operator()(__attribute__((unused)) const gSite dummy) {
+    inline HOST_DEVICE gSite operator()(__attribute__((unused)) const gSite dummy) {
         return _fixed_site;
     }
 };

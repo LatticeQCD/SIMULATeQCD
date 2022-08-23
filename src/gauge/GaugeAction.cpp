@@ -65,7 +65,7 @@ MemoryAccessor GaugeAction<floatT, onDevice, HaloDepth,comp>::getRectangleField(
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-__host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquette() {
+HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquette() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -77,7 +77,7 @@ __host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquette() {
 }
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-__host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquetteSS() {
+HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquetteSS() {
 
 //    if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -90,7 +90,7 @@ __host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::barePlaquetteSS()
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-__host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareUtauMinusUsigma() {
+HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareUtauMinusUsigma() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -103,7 +103,7 @@ __host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareUtauMinusUsig
 
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-__host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareClover() {
+HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareClover() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
@@ -115,7 +115,7 @@ __host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareClover() {
 }
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
-__host__ floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareRectangle() {
+HOST floatT GaugeAction<floatT, onDevice, HaloDepth,comp>::bareRectangle() {
 
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(

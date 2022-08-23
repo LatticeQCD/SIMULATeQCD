@@ -12,7 +12,7 @@
 #include "../gaugefield.h"
 #include "gsvd.h"
 template<class floatT,size_t HaloDepth>
-__host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+HOST_DEVICE GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
     GSU3<double> V;

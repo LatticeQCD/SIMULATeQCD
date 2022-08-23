@@ -13,7 +13,7 @@
 #include "../gaugefield.h"
 
 template<class floatT,size_t HaloDepth>
-__device__ GSU3<floatT> inline naik3LinkUp(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+DEVICE GSU3<floatT> inline naik3LinkUp(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
     GSU3<floatT> temp;
@@ -33,7 +33,7 @@ __device__ GSU3<floatT> inline naik3LinkUp(gaugeAccessor<floatT> gAcc, gSite sit
 }
 /*
 template<class floatT,size_t HaloDepth>
-__device__ GSU3<floatT> inline naik3LinkDn(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+DEVICE GSU3<floatT> inline naik3LinkDn(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
     GSU3<floatT> temp;

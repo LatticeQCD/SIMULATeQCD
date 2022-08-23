@@ -7,7 +7,7 @@
 #include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-__host__ __device__ GSU3<floatT> linkDerivative5(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+HOST_DEVICE GSU3<floatT> linkDerivative5(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
 
     typedef GIndexer<All,HaloDepth> GInd;
     GSU3<floatT> temp;
@@ -161,7 +161,7 @@ __host__ __device__ GSU3<floatT> linkDerivative5(gaugeAccessor<floatT,compIn> gA
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_1(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_1(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                 *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho), nu))
@@ -171,7 +171,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_3(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_3(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn_dn(site,mu,nu,rho), nu))
@@ -181,7 +181,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
     
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_5(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_5(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu), nu))
@@ -191,7 +191,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_7(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_7(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), rho))
                 *gAcc.getLink(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), nu))
@@ -201,7 +201,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_9(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_9(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                 *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho), rho))
@@ -211,7 +211,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_11(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_11(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                 *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), rho))
@@ -221,7 +221,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_13(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_13(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                 *finAccessor.getLink(GInd::getSiteMu( GInd::site_up_dn_dn(site,mu,nu,rho),rho))
@@ -231,7 +231,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_15(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_15(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                 *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu), rho))
@@ -241,7 +241,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_17(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_17(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu), mu))
@@ -251,7 +251,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_19(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_19(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu), mu))
@@ -262,7 +262,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_21(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_21(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu), mu))
@@ -272,7 +272,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_23(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_23(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu), mu))
@@ -282,7 +282,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_25(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_25(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho), mu))
@@ -292,7 +292,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_27(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_27(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho), mu))
@@ -302,7 +302,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_29(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_29(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho), mu))
@@ -312,7 +312,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_31(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_31(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho), mu))
@@ -322,7 +322,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_33(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_33(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu), nu))
@@ -332,7 +332,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_35(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_35(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), rho))
                 *gAcc.getLink(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), nu))
@@ -342,7 +342,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_37(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_37(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), rho))
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,nu), nu))
@@ -352,7 +352,7 @@ template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionTy
 };
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-    __host__ __device__ GSU3<floatT> linkDerivative5_39(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
+    HOST_DEVICE GSU3<floatT> linkDerivative5_39(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;
     return gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                 *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho), nu))

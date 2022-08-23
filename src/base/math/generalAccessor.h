@@ -30,12 +30,12 @@ protected:
 public:
 
     template<int elem>
-    __host__ __device__ inline object_memory getElementEntry(const size_t idx) const {
+    HOST_DEVICE inline object_memory getElementEntry(const size_t idx) const {
         return (_elements[elem][idx]);
     }
 
     template<int elem>
-    __host__ __device__ inline void setElementEntry(const size_t idx, object_memory entry) {
+    HOST_DEVICE inline void setElementEntry(const size_t idx, object_memory entry) {
         _elements[elem][idx] = static_cast<object_memory>(entry);
     }
 
@@ -46,7 +46,7 @@ public:
     }
 
     /// Constructor for one memory chunk, where all entries are separated by object_count
-   __host__ __device__ explicit GeneralAccessor(object_memory *elementsBase, size_t object_count) {
+   HOST_DEVICE explicit GeneralAccessor(object_memory *elementsBase, size_t object_count) {
         for (size_t i = 0; i < Nentries; i++) {
             _elements[i] = elementsBase + i * object_count;
         }

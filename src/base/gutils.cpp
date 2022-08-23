@@ -5,6 +5,7 @@
 
 #include "gutils.h"
 
+#ifndef USE_CPU_ONLY
 GpuError::GpuError(gpuError_t err) : gpuErr(err) {
   throw std::runtime_error(stdLogger.fatal("A GPU error occured: ", getErrorMessage()));
 }
@@ -21,3 +22,4 @@ const std::string GpuError::getErrorMessage() {
     std::string err = err_msg + " ( " + err_name + " )";
     return err;
 }
+#endif

@@ -102,8 +102,11 @@ public:
     template<unsigned BlockSize = 64, typename Functor>
     void iterateOverFullAllMu(Functor op);
 
+//TODO fix this for backend=cpu
+#ifndef USE_CPU_ONLY
     template<unsigned BlockSize = 64, typename Functor>
     deviceStream<onDevice> iterateOverBulkAllMu(Functor op, bool useStream = false);
+#endif
 
     template<unsigned BlockSize = 64, typename Functor>
     void iterateOverFullLoopMu(Functor op);
@@ -136,7 +139,7 @@ struct convert_prec {
 
     convert_prec(Gaugefield<floatT_source, onDevice, HaloDepth, comp> &gaugeIn) : gAcc_source(gaugeIn.getAccessor()) {}
 
-    __device__ __host__ GSU3<floatT_target> operator()(gSiteMu site) {
+    HOST_DEVICE GSU3<floatT_target> operator()(gSiteMu site) {
         return gAcc_source.template getLink<floatT_target>(site);
     }
 };
@@ -162,6 +165,8 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::iterateOverFullAllMu(Functor 
     this->template iterateFunctor<BlockSize>(op, calcGSiteAllMuFull, writeAtReadMu, GInd::getLatData().vol4Full, 4);
 }
 
+//TODO fix this for backend=cpu
+#ifndef USE_CPU_ONLY
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 template<unsigned BlockSize, typename Functor>
 deviceStream<onDevice> Gaugefield<floatT, onDevice, HaloDepth, comp>::iterateOverBulkAllMu(Functor op, bool useStream) {
@@ -171,6 +176,7 @@ deviceStream<onDevice> Gaugefield<floatT, onDevice, HaloDepth, comp>::iterateOve
     this->template iterateFunctor<BlockSize>(op, calcGSiteAllMu, writeAtReadMu, GInd::getLatData().vol4, 4, 1, stream._stream);
     return stream;
 }
+#endif
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 template<unsigned BlockSize, typename Functor>

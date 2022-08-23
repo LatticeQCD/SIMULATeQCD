@@ -25,13 +25,13 @@
 #include "math/operators.h"
 
 template<class floatT>
-gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size);
+GPUERROR_T CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size);
 
 template<class floatT>
-gpuError_t CubReduceMax(void *helpArr, size_t *temp_storage_bytes, void *Arr, floatT *out, size_t size);
+GPUERROR_T CubReduceMax(void *helpArr, size_t *temp_storage_bytes, void *Arr, floatT *out, size_t size);
 
 template<class floatT>
-gpuError_t CubReduceStacked(void *helpArr, size_t *temp_storage_bytes,
+GPUERROR_T CubReduceStacked(void *helpArr, size_t *temp_storage_bytes,
         void *Arr, void *out, int Nt, void *TimeSliceOffsets);
 
 
@@ -47,30 +47,30 @@ public:
 
     /// Set values.
     template<class floatT>
-    __device__  __host__ inline void setElement(const size_t isite, const floatT value) {
+    HOST_DEVICE inline void setElement(const size_t isite, const floatT value) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         arr[isite] = value;
     }
     template<class floatT>
-    __device__  __host__ inline void setElement(const gSite& site, const floatT value) {
+    HOST_DEVICE inline void setElement(const gSite& site, const floatT value) {
         setValue(site.isite, value);
     }
     template<class floatT>
-    __device__  __host__ inline void setElement(const gSiteStack& site, const floatT value) {
+    HOST_DEVICE inline void setElement(const gSiteStack& site, const floatT value) {
         setValue(site.isiteStack, value);
     }
 
     /// Get values.
     template<class floatT>
-    __device__  __host__ floatT getElement(const gSite& site) {
+    HOST_DEVICE floatT getElement(const gSite& site) {
         return getElement<floatT>(site.isite);
     }
     template<class floatT>
-    __device__  __host__ floatT getElement(const gSiteStack& site) {
+    HOST_DEVICE floatT getElement(const gSiteStack& site) {
         return getElement<floatT>(site.isiteStack);
     }
     template<class floatT>
-    __device__  __host__ inline floatT getElement(const size_t isite) {
+    HOST_DEVICE inline floatT getElement(const size_t isite) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         return arr[isite];
     }
@@ -169,6 +169,7 @@ public:
             values.resize(NStacks);
         }
 
+#ifndef USE_CPU_ONLY
         if (onDevice) {
             ReductionResult->template adjustSize<elemType>(NStacks);
             ReductionResultHost->template adjustSize<elemType>(NStacks);
@@ -178,7 +179,7 @@ public:
                 for (size_t i = 0; i < NStacks; i++) {
                     /// Determine temporary device storage requirements
                     size_t temp_storage_bytes = 0;
-                    gpuError_t gpuErr = CubReduce<elemType>(NULL, &temp_storage_bytes,
+                    GPUERROR_T gpuErr = CubReduce<elemType>(NULL, &temp_storage_bytes,
                                                             ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
                     
                     if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (1)", gpuErr);
@@ -205,7 +206,7 @@ public:
                 StackOffsetsTemp->copyFrom(StackOffsetsHostTemp, sizeof(size_t)*(NStacks+1));
                 /// Determine temporary device storage requirements
                 size_t temp_storage_bytes = 0;
-                gpuError_t gpuErr = CubReduceStacked<elemType>(NULL, &temp_storage_bytes,
+                GPUERROR_T gpuErr = CubReduceStacked<elemType>(NULL, &temp_storage_bytes,
                                                                ContainerArray->getPointer(), ReductionResult->getPointer(), NStacks,
                                                                StackOffsetsTemp->getPointer());
                 
@@ -229,7 +230,9 @@ public:
                 values[i] = tmp;
             }
 
-        } else {
+        } else
+#endif
+        {
             LatticeContainerAccessor acc = getAccessor();
             for (size_t stack = 0; stack < NStacks; stack++) {
                 values[stack] = 0;
@@ -250,12 +253,12 @@ public:
 
     void reduce(elemType &value, size_t size, bool rootToAll = false) {
         elemType result = 0;
-
+#ifndef USE_CPU_ONLY
         if (onDevice) {
             // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
 
-            gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
+            GPUERROR_T gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                                     d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
 
@@ -269,7 +272,9 @@ public:
             if (gpuErr)
                 GpuError("Reductionbase.h: Failed to copy data", gpuErr);
 
-        } else{
+        } else
+#endif
+        {
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
                 result += acc.getElement<elemType>(i);
@@ -281,14 +286,14 @@ public:
 
     void reduceMax(elemType &value, size_t size, bool rootToAll = false) {
         elemType result = 0;
-
+#ifndef USE_CPU_ONLY
         if (onDevice) {
             // elemType *d_out = NULL;
             // gpuMalloc((void **) &d_out, sizeof(elemType));
             // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
 
-            gpuError_t gpuErr = CubReduceMax(NULL, &temp_storage_bytes, ContainerArray->getPointer(),
+            GPUERROR_T gpuErr = CubReduceMax(NULL, &temp_storage_bytes, ContainerArray->getPointer(),
                                     d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduceMax: gpucub::DeviceReduce::Max (1)", gpuErr);
 
@@ -301,7 +306,9 @@ public:
             if (gpuErr)
                 GpuError("Reductionbase.h: Failed to copy data", gpuErr);
             // gpuFree(d_out);
-        } else {
+        } else
+#endif
+        {
             rootLogger.warn("Max Host reduction has not been properly tested. Check the results and remove this warning");
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
@@ -387,7 +394,7 @@ void LatticeContainer<onDevice, elemType>::iterateOverBulkStacked(Functor op) {
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtTimeSlices {
-    inline __host__ __device__ size_t operator()(const gSite &site) {
+    inline HOST_DEVICE size_t operator()(const gSite &site) {
         return GIndexer<LatticeLayout, HaloDepth>::siteTimeOrdered(site);
     }
 };

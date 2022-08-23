@@ -551,8 +551,10 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
     int rank = info.world_rank;
 
 
-    gpuError_t gpuErr;
+
     if (seg.getLength() != 0) {
+#ifndef USE_CPU_ONLY
+        gpuError_t gpuErr;
         if (onDevice && info.p2p && useGpuP2P()) {
             // communicate via GPUDirect
             uint8_t *sendBase = seg.getMyDeviceSourcePtr();
@@ -590,7 +592,9 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
 
                 MPI_Isend(sendBase, 1, seg.getMpiType(), rank, indexDest, cart_comm, &seg.getRequestSend());
             MPI_Irecv(recvBase, 1, seg.getMpiType(), rank, index, cart_comm, &seg.getRequestRecv());
-        } else {
+        } else
+#endif
+        {
 
             uint8_t *sendBase = seg.getHostSendPtr();
             uint8_t *recvBase = seg.getHostRecvPtr();

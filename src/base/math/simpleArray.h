@@ -12,18 +12,18 @@ class SimpleArray{
 
     public:
 
-    __device__ __host__ T& operator[](size_t i){
+    HOST_DEVICE T& operator[](size_t i){
         return values[i];
     }
 
 
-    __device__ __host__ inline auto operator()(gSiteStack site) const
+    HOST_DEVICE inline auto operator()(gSiteStack site) const
     {
         return values[site.stack];
     }
 
 
-    __device__ __host__ inline auto operator()(gSiteMu site) const
+    HOST_DEVICE inline auto operator()(gSiteMu site) const
     {
         return values[site.mu];
     }
@@ -31,32 +31,32 @@ class SimpleArray{
 
     SimpleArray() = default;
 
-    __device__ __host__ SimpleArray(const T& init){
+    HOST_DEVICE SimpleArray(const T& init){
         for(size_t i = 0; i < N; i++){
             values[i] = init;
         }
     }
     template<class floatT>
-        __device__ __host__ SimpleArray(SimpleArray<floatT, N> s_array) {
+        HOST_DEVICE SimpleArray(SimpleArray<floatT, N> s_array) {
         for(size_t i = 0; i < N; i++) {
             values[i] = s_array[i];
         }
     }
 
-    __device__ __host__ void operator=(SimpleArray<T,N> vec){
+    HOST_DEVICE void operator=(SimpleArray<T,N> vec){
         for(size_t i = 0; i < N; i++){
             values[i] = vec[i];
         }
     }
 
 
-    __host__ void operator=(std::vector<T> vec){
+    HOST void operator=(std::vector<T> vec){
         for(size_t i = 0; i < N; i++){
             values[i] = vec.at(i);
         }
     }
 
-    __device__ __host__ SimpleArray getAccessor() const {
+    HOST_DEVICE SimpleArray getAccessor() const {
         return *this;
     }
 
@@ -65,7 +65,7 @@ class SimpleArray{
 
 
 template<typename floatT, size_t N>
-__host__ __device__ SimpleArray<floatT, N> operator/(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
+HOST_DEVICE SimpleArray<floatT, N> operator/(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
     SimpleArray<floatT, N> ret;
     for(size_t i = 0; i < N; i++){
         ret[i] = a[i] / b[i];
@@ -74,7 +74,7 @@ __host__ __device__ SimpleArray<floatT, N> operator/(SimpleArray<floatT, N> a, S
 }
 
 template<typename floatT, size_t N>
-__host__ __device__ SimpleArray<floatT, N> operator*(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
+HOST_DEVICE SimpleArray<floatT, N> operator*(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
     SimpleArray<floatT, N> ret;
     for(size_t i = 0; i < N; i++){
         ret[i] = a * b;
@@ -83,7 +83,7 @@ __host__ __device__ SimpleArray<floatT, N> operator*(SimpleArray<floatT, N> a, S
 }
 
 template<typename floatT, size_t N>
-__host__ __device__ SimpleArray<floatT, N> operator-(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
+HOST_DEVICE SimpleArray<floatT, N> operator-(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
     SimpleArray<floatT, N> ret;
     for(size_t i = 0; i < N; i++){
         ret[i] = a[i] - b[i];
@@ -92,7 +92,7 @@ __host__ __device__ SimpleArray<floatT, N> operator-(SimpleArray<floatT, N> a, S
 }
 
 template<typename floatT, size_t N>
-__host__ __device__ SimpleArray<floatT, N> operator+(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
+HOST_DEVICE SimpleArray<floatT, N> operator+(SimpleArray<floatT, N> a, SimpleArray<floatT, N> b){
     SimpleArray<floatT, N> ret;
     for(size_t i = 0; i < N; i++){
         ret[i] = a[i] + b[i];
@@ -101,7 +101,7 @@ __host__ __device__ SimpleArray<floatT, N> operator+(SimpleArray<floatT, N> a, S
 }
 
 template<typename floatT, size_t N>
-__host__ __device__ SimpleArray<floatT, N> operator*(floatT a, SimpleArray<floatT, N> b){
+HOST_DEVICE SimpleArray<floatT, N> operator*(floatT a, SimpleArray<floatT, N> b){
     SimpleArray<floatT, N> ret;
     for(size_t i = 0; i < N; i++){
         ret[i] = a * b[i];
@@ -110,7 +110,7 @@ __host__ __device__ SimpleArray<floatT, N> operator*(floatT a, SimpleArray<float
 }
 
 template<typename floatT, size_t N>
-    __host__ __device__ SimpleArray<floatT, N> operator/(SimpleArray<floatT, N> a, floatT b){
+    HOST_DEVICE SimpleArray<floatT, N> operator/(SimpleArray<floatT, N> a, floatT b){
     SimpleArray<floatT, N> ret;
     for (size_t i = 0; i < N; i++) {
         ret[i] = a[i]/b;
@@ -119,7 +119,7 @@ template<typename floatT, size_t N>
 }
 
 template<typename floatT, size_t N>
-__host__ __device__ floatT max(SimpleArray<floatT, N> a){
+HOST_DEVICE floatT max(SimpleArray<floatT, N> a){
     floatT ret = a[0];
     for(size_t i = 1; i < N; i++){
         if (a[i] > ret){
@@ -130,7 +130,7 @@ __host__ __device__ floatT max(SimpleArray<floatT, N> a){
 }
 
 template<typename floatTret, typename floatT, size_t N>
-__host__ __device__ SimpleArray<floatTret, N> real(SimpleArray<floatT, N> c){
+HOST_DEVICE SimpleArray<floatTret, N> real(SimpleArray<floatT, N> c){
     SimpleArray<floatTret, N> ret;
     for(size_t i = 0; i < N; i++){
         ret[i] = c[i].cREAL;

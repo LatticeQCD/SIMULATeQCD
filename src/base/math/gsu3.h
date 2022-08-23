@@ -8,6 +8,7 @@
 #ifndef _gsu3_h_
 #define _gsu3_h_
 
+
 #include "../../define.h"
 #include "gcomplex.h"
 #include "gvect3.h"
@@ -23,73 +24,73 @@ template<class floatT>
 class GSU3;
 
 template<class floatT>
-__host__ std::ostream &operator<<(std::ostream &, const GSU3<floatT> &);
+HOST std::ostream &operator<<(std::ostream &, const GSU3<floatT> &);
 
 template<class floatT>
-__host__ std::istream &operator>>(std::istream &, GSU3<floatT> &);
+HOST std::istream &operator>>(std::istream &, GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator+(const GSU3<floatT> &, const GSU3<floatT> &);
+HOST_DEVICE inline GSU3<floatT> operator+(const GSU3<floatT> &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator-(const GSU3<floatT> &, const GSU3<floatT> &);
+HOST_DEVICE inline GSU3<floatT> operator-(const GSU3<floatT> &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator*(const GCOMPLEX(floatT) &, const GSU3<floatT> &);
+HOST_DEVICE inline GSU3<floatT> operator*(const GCOMPLEX(floatT) &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator*(const GSU3<floatT> &, const GCOMPLEX(floatT) &);
+HOST_DEVICE inline GSU3<floatT> operator*(const GSU3<floatT> &, const GCOMPLEX(floatT) &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator*(const floatT &, const GSU3<floatT> &);
+HOST_DEVICE inline GSU3<floatT> operator*(const floatT &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator*(const GSU3<floatT> &, const floatT &);
+HOST_DEVICE inline GSU3<floatT> operator*(const GSU3<floatT> &, const floatT &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator*(const GSU3<floatT> &, const GSU3<floatT> &);
+HOST_DEVICE inline GSU3<floatT> operator*(const GSU3<floatT> &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> operator/(const GSU3<floatT> &, const floatT &);
+HOST_DEVICE inline GSU3<floatT> operator/(const GSU3<floatT> &, const floatT &);
 
 template<class floatT>
-__device__ __host__ floatT tr_d(const GSU3<floatT> &);
+HOST_DEVICE floatT tr_d(const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ floatT tr_i(const GSU3<floatT> &);
+HOST_DEVICE floatT tr_i(const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ floatT tr_d(const GSU3<floatT> &, const GSU3<floatT> &);
+HOST_DEVICE floatT tr_d(const GSU3<floatT> &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ GCOMPLEX(floatT) tr_c(const GSU3<floatT> &);
+HOST_DEVICE GCOMPLEX(floatT) tr_c(const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ GCOMPLEX(floatT) tr_c(const GSU3<floatT> &, const GSU3<floatT> &);
+HOST_DEVICE GCOMPLEX(floatT) tr_c(const GSU3<floatT> &, const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> dagger(const GSU3<floatT> &);
+HOST_DEVICE GSU3<floatT> dagger(const GSU3<floatT> &);
 
 template<class floatT>
-__device__ __host__ GCOMPLEX(floatT) det(const GSU3<floatT> &X);
+HOST_DEVICE GCOMPLEX(floatT) det(const GSU3<floatT> &X);
 
 template<class floatT>
-__device__ __host__ floatT realdet(const GSU3<floatT> &X);
+HOST_DEVICE floatT realdet(const GSU3<floatT> &X);
 
 template<class floatT>
-__device__ __host__ floatT infnorm(const GSU3<floatT> &X);
+HOST_DEVICE floatT infnorm(const GSU3<floatT> &X);
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> su3_exp(GSU3<floatT>);
+HOST_DEVICE GSU3<floatT> su3_exp(GSU3<floatT>);
 
 template<class floatT>
-__device__ __host__ gVect3<floatT> operator*(const GSU3<floatT> &, const gVect3<floatT> &);
+HOST_DEVICE gVect3<floatT> operator*(const GSU3<floatT> &, const gVect3<floatT> &);
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> tensor_prod(const gVect3<floatT> &, const gVect3<floatT> &);
+HOST_DEVICE GSU3<floatT> tensor_prod(const gVect3<floatT> &, const gVect3<floatT> &);
 
 template<class floatT>
-__device__ __host__ inline bool compareGSU3(GSU3<floatT> a, GSU3<floatT> b, floatT tol=1e-13);
+HOST_DEVICE inline bool compareGSU3(GSU3<floatT> a, GSU3<floatT> b, floatT tol=1e-13);
 
 template<class floatT>
 class GSU3 {
@@ -101,9 +102,9 @@ private:
 public:
 
     constexpr GSU3(const GSU3<floatT>&) = default;
-    __host__ __device__ GSU3() {};
+    HOST_DEVICE GSU3() {};
 
-    __host__ __device__ GSU3(const floatT x) {
+    HOST_DEVICE GSU3(const floatT x) {
         _e00 = x;
         _e01 = x;
         _e02 = x;
@@ -115,7 +116,7 @@ public:
         _e22 = x;
     };
 
-    __host__ __device__ GSU3(GCOMPLEX(floatT) e00, GCOMPLEX(floatT) e01, GCOMPLEX(floatT) e02,
+    HOST_DEVICE GSU3(GCOMPLEX(floatT) e00, GCOMPLEX(floatT) e01, GCOMPLEX(floatT) e02,
                              GCOMPLEX(floatT) e10, GCOMPLEX(floatT) e11, GCOMPLEX(floatT) e12,
                              GCOMPLEX(floatT) e20, GCOMPLEX(floatT) e21, GCOMPLEX(floatT) e22) :
                                  _e00(e00), _e01(e01), _e02(e02),
@@ -125,48 +126,48 @@ public:
 
 
 #if (!defined __GPUCC__)
-    __host__ friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
+    HOST friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
 #endif
 
-    __host__ friend std::istream &operator>><>(std::istream &, GSU3<floatT> &);
+    HOST friend std::istream &operator>><>(std::istream &, GSU3<floatT> &);
 
 
     // matrix operations
-    __device__ __host__ friend GSU3<floatT> operator+<>(const GSU3<floatT> &, const GSU3<floatT> &);
+    HOST_DEVICE friend GSU3<floatT> operator+<>(const GSU3<floatT> &, const GSU3<floatT> &);
 
-    __device__ __host__ friend GSU3<floatT> operator-<>(const GSU3<floatT> &, const GSU3<floatT> &);
+    HOST_DEVICE friend GSU3<floatT> operator-<>(const GSU3<floatT> &, const GSU3<floatT> &);
 
-    __device__ __host__ friend GSU3<floatT> operator*<>(const GCOMPLEX(floatT) &x, const GSU3<floatT> &y);
+    HOST_DEVICE friend GSU3<floatT> operator*<>(const GCOMPLEX(floatT) &x, const GSU3<floatT> &y);
 
-    __device__ __host__ friend GSU3<floatT> operator*<>(const GSU3<floatT> &x, const GCOMPLEX(floatT) &y);
+    HOST_DEVICE friend GSU3<floatT> operator*<>(const GSU3<floatT> &x, const GCOMPLEX(floatT) &y);
 
-    __device__ __host__ friend GSU3<floatT> operator*<>(const floatT &x, const GSU3<floatT> &y);
+    HOST_DEVICE friend GSU3<floatT> operator*<>(const floatT &x, const GSU3<floatT> &y);
 
-    __device__ __host__ friend GSU3<floatT> operator*<>(const GSU3<floatT> &x, const floatT &y);
+    HOST_DEVICE friend GSU3<floatT> operator*<>(const GSU3<floatT> &x, const floatT &y);
 
-    __device__ __host__ friend GSU3<floatT> operator*<>(const GSU3<floatT> &, const GSU3<floatT> &);
+    HOST_DEVICE friend GSU3<floatT> operator*<>(const GSU3<floatT> &, const GSU3<floatT> &);
 
-    __device__ __host__ friend GSU3<floatT> operator/<>(const GSU3<floatT> &x, const floatT &y);
+    HOST_DEVICE friend GSU3<floatT> operator/<>(const GSU3<floatT> &x, const floatT &y);
 
-    __device__ __host__ bool operator==(const GSU3<floatT> &);
+    HOST_DEVICE bool operator==(const GSU3<floatT> &);
 
-    __device__ __host__ GSU3<floatT> &operator=(const GSU3<floatT> &);
+    HOST_DEVICE GSU3<floatT> &operator=(const GSU3<floatT> &);
 
-    __device__ __host__ GSU3<floatT> &operator+=(const GSU3<floatT> &);
+    HOST_DEVICE GSU3<floatT> &operator+=(const GSU3<floatT> &);
 
-    __device__ __host__ GSU3<floatT> &operator-=(const GSU3<floatT> &);
+    HOST_DEVICE GSU3<floatT> &operator-=(const GSU3<floatT> &);
 
-    __device__ __host__ GSU3<floatT> &operator*=(const floatT &);
+    HOST_DEVICE GSU3<floatT> &operator*=(const floatT &);
 
-    __device__ __host__ GSU3<floatT> &operator*=(const GCOMPLEX(floatT) &);
+    HOST_DEVICE GSU3<floatT> &operator*=(const GCOMPLEX(floatT) &);
 
-    __device__ __host__ GSU3<floatT> &operator*=(const GSU3<floatT> &);
+    HOST_DEVICE GSU3<floatT> &operator*=(const GSU3<floatT> &);
 
-    __device__ __host__ GSU3<floatT> &operator/=(const floatT &);
+    HOST_DEVICE GSU3<floatT> &operator/=(const floatT &);
 
     // cast operations single <-> double precision
     template<class T>
-    __device__ __host__ inline operator GSU3<T>() const {
+    HOST_DEVICE inline operator GSU3<T>() const {
         return GSU3<T>(GCOMPLEX(T)(_e00.cREAL, _e00.cIMAG), GCOMPLEX(T)(_e01.cREAL, _e01.cIMAG),
                        GCOMPLEX(T)(_e02.cREAL, _e02.cIMAG),
                        GCOMPLEX(T)(_e10.cREAL, _e10.cIMAG), GCOMPLEX(T)(_e11.cREAL, _e11.cIMAG),
@@ -176,18 +177,18 @@ public:
     }
 
 
-    __device__ __host__ friend gVect3<floatT>
+    HOST_DEVICE friend gVect3<floatT>
     operator*<>(const GSU3<floatT> &, const gVect3<floatT> &);     // GSU3 * cvect3 multiplication
-    __device__ __host__ friend GSU3<floatT>
+    HOST_DEVICE friend GSU3<floatT>
     tensor_prod<>(const gVect3<floatT> &, const gVect3<floatT> &); // tensor product of two cvect3
 
-    __device__ __host__ friend bool
+    HOST_DEVICE friend bool
     compareGSU3<>(GSU3<floatT> a, GSU3<floatT> b, floatT tol);
 
-    __device__ __host__ void random(uint4 *state);                 // set links randomly
-    __device__ __host__ void gauss(uint4 *state);                  // set links gauss
-    __device__ __host__ void su3unitarize();                       // project to su3 using first two rows of link
-    __device__ __host__ void su3reconstruct12()                    // project to su3 using first two rows of link
+    HOST_DEVICE void random(uint4 *state);                 // set links randomly
+    HOST_DEVICE void gauss(uint4 *state);                  // set links gauss
+    HOST_DEVICE void su3unitarize();                       // project to su3 using first two rows of link
+    HOST_DEVICE void su3reconstruct12()                    // project to su3 using first two rows of link
     {
         _e20 = GCOMPLEX(floatT)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
                                  - (_e02.cREAL * _e11.cREAL - _e02.cIMAG * _e11.cIMAG)),
@@ -205,7 +206,7 @@ public:
                                  + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
     }
 
-    __device__ __host__ void su3reconstruct12Dagger()   // project to su3 using first two rows of link
+    HOST_DEVICE void su3reconstruct12Dagger()   // project to su3 using first two rows of link
     {
         _e02 = GCOMPLEX(floatT)((_e10.cREAL * _e21.cREAL - _e10.cIMAG * _e21.cIMAG
                                  - (_e20.cREAL * _e11.cREAL - _e20.cIMAG * _e11.cIMAG)),
@@ -223,7 +224,7 @@ public:
                                  + (_e10.cIMAG * _e01.cREAL + _e10.cREAL * _e01.cIMAG)));
     }
 
-    __device__ __host__ void u3reconstruct(const GCOMPLEX(floatT) phase)   // project to u3 using first two rows of link
+    HOST_DEVICE void u3reconstruct(const GCOMPLEX(floatT) phase)   // project to u3 using first two rows of link
     {
         
         _e20 = GCOMPLEX(floatT)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
@@ -253,7 +254,7 @@ public:
         _e22 *= phase;
     }
 
-    __device__ __host__ void u3reconstructDagger(const GCOMPLEX(floatT) phase)   // project to u3 using first two rows of link
+    HOST_DEVICE void u3reconstructDagger(const GCOMPLEX(floatT) phase)   // project to u3 using first two rows of link
     {
         
         _e02 = GCOMPLEX(floatT)((_e10.cREAL * _e21.cREAL - _e10.cIMAG * _e21.cIMAG
@@ -281,7 +282,7 @@ public:
         _e22 *= phase;
     }
 
-    __device__ __host__ void reconstruct14(const GCOMPLEX(floatT) det)
+    HOST_DEVICE void reconstruct14(const GCOMPLEX(floatT) det)
     {
         floatT amp = pow(abs(det), 1.0/3.0);
         GCOMPLEX(floatT) phase = det / abs(det);
@@ -306,7 +307,7 @@ public:
         _e22 *= phase/amp;
     }
 
-    __device__ __host__ void reconstruct14Dagger(const GCOMPLEX(floatT) det)
+    HOST_DEVICE void reconstruct14Dagger(const GCOMPLEX(floatT) det)
     {
 
         floatT amp = pow(abs(det), 1.0/3.0);
@@ -330,43 +331,43 @@ public:
         _e12 *= phase/amp;
         _e22 *= phase/amp;
     }
-    __device__ __host__ void TA();                                               // traceless anti-hermitian of link
-    __device__ __host__ friend floatT tr_d<>(const GSU3<floatT> &);              // real part of trace of link
-    __device__ __host__ friend floatT tr_i<>(const GSU3<floatT> &);              // imaginary part of trace of link
-    __device__ __host__ friend floatT
+    HOST_DEVICE void TA();                                               // traceless anti-hermitian of link
+    HOST_DEVICE friend floatT tr_d<>(const GSU3<floatT> &);              // real part of trace of link
+    HOST_DEVICE friend floatT tr_i<>(const GSU3<floatT> &);              // imaginary part of trace of link
+    HOST_DEVICE friend floatT
     tr_d<>(const GSU3<floatT> &, const GSU3<floatT> &);                          // real part of trace of link*link
-    __device__ __host__ friend GCOMPLEX(floatT) tr_c<>(const GSU3<floatT> &);    // trace of link
-    __device__ __host__ friend GCOMPLEX(floatT) tr_c<>(const GSU3<floatT> &,
+    HOST_DEVICE friend GCOMPLEX(floatT) tr_c<>(const GSU3<floatT> &);    // trace of link
+    HOST_DEVICE friend GCOMPLEX(floatT) tr_c<>(const GSU3<floatT> &,
                                                        const GSU3<floatT> &);    // trace of link*link
-    __device__ __host__ friend GSU3<floatT>
+    HOST_DEVICE friend GSU3<floatT>
     dagger<>(const GSU3<floatT> &);                                              // hermitian conjugate
-    __device__ __host__ friend GSU3<floatT> su3_exp<>(GSU3<floatT>);             // exp( link )
-    __device__ __host__ friend GCOMPLEX(floatT) det<>(const GSU3<floatT> &);
-    __device__ __host__ friend floatT infnorm<>(const GSU3<floatT> &);
+    HOST_DEVICE friend GSU3<floatT> su3_exp<>(GSU3<floatT>);             // exp( link )
+    HOST_DEVICE friend GCOMPLEX(floatT) det<>(const GSU3<floatT> &);
+    HOST_DEVICE friend floatT infnorm<>(const GSU3<floatT> &);
 
     // accessors
-    __host__ __device__ inline GCOMPLEX(floatT) getLink00() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink01() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink02() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink10() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink11() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink12() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink20() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink21() const;
-    __host__ __device__ inline GCOMPLEX(floatT) getLink22() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink00() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink01() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink02() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink10() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink11() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink12() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink20() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink21() const;
+    HOST_DEVICE inline GCOMPLEX(floatT) getLink22() const;
 
     // setters
-    __host__ __device__ inline void setLink00(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink01(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink02(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink10(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink11(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink12(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink20(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink21(GCOMPLEX(floatT) x);
-    __host__ __device__ inline void setLink22(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink00(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink01(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink02(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink10(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink11(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink12(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink20(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink21(GCOMPLEX(floatT) x);
+    HOST_DEVICE inline void setLink22(GCOMPLEX(floatT) x);
 
-    __host__ __device__ inline GCOMPLEX(floatT) &operator()(int i, int j) {
+    HOST_DEVICE inline GCOMPLEX(floatT) &operator()(int i, int j) {
         switch (i * 3 + j) {
             case 0:
                 return _e00;
@@ -391,7 +392,7 @@ public:
         return _e00;
     }
 
-    __host__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+    HOST inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
         switch (i * 3 + j) {
             case 0:
                 return _e00;
@@ -415,119 +416,120 @@ public:
         throw std::runtime_error(stdLogger.fatal("GSU3 access to element (", i, ",", j, ") not possible!"));
     }
 
-    __host__ __device__ GSU3<floatT> getAccessor() const {
+    HOST_DEVICE GSU3<floatT> getAccessor() const {
         return *this;
     }
 
     template<typename Index>
-    __host__ __device__ GSU3<floatT> operator()(const Index) const {
+    HOST_DEVICE GSU3<floatT> operator()(const Index) const {
         return *this;
     }
 };
 
 // accessors
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink00() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink00() const {
     return _e00;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink01() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink01() const {
     return _e01;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink02() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink02() const {
     return _e02;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink10() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink10() const {
     return _e10;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink11() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink11() const {
     return _e11;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink12() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink12() const {
     return _e12;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink20() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink20() const {
     return _e20;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink21() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink21() const {
     return _e21;
 }
 
 template<class floatT>
-__host__ __device__ inline GCOMPLEX(floatT) GSU3<floatT>::getLink22() const {
+HOST_DEVICE inline GCOMPLEX(floatT) GSU3<floatT>::getLink22() const {
     return _e22;
 }
 
 
 // setters
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink00(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink00(GCOMPLEX(floatT) x) {
     _e00 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink01(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink01(GCOMPLEX(floatT) x) {
     _e01 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink02(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink02(GCOMPLEX(floatT) x) {
     _e02 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink10(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink10(GCOMPLEX(floatT) x) {
     _e10 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink11(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink11(GCOMPLEX(floatT) x) {
     _e11 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink12(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink12(GCOMPLEX(floatT) x) {
     _e12 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink20(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink20(GCOMPLEX(floatT) x) {
     _e20 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink21(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink21(GCOMPLEX(floatT) x) {
     _e21 = x;
 }
 
 template<class floatT>
-__host__ __device__ inline void GSU3<floatT>::setLink22(GCOMPLEX(floatT) x) {
+HOST_DEVICE inline void GSU3<floatT>::setLink22(GCOMPLEX(floatT) x) {
     _e22 = x;
 }
 
 // some constant su3 matrices
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> gsu3_one() {
+HOST_DEVICE inline GSU3<floatT> gsu3_one() {
     return GSU3<floatT>(1, 0, 0,
                         0, 1, 0,
                         0, 0, 1);
 }
 
+#if ! defined(USE_HIP_AMD) && ! defined(USE_CPU_ONLY)
 template <>
-__device__ __host__ inline GSU3<__half> gsu3_one() {
+HOST_DEVICE inline GSU3<__half> gsu3_one() {
     GPUcomplex<__half> g_one(__float2half(1.0));
     GPUcomplex<__half> g_zero(__float2half(0.0));
     
@@ -535,66 +537,66 @@ __device__ __host__ inline GSU3<__half> gsu3_one() {
                          g_zero, g_one, g_zero,
                          g_zero, g_zero, g_one);
 }
-
+#endif
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> gsu3_zero() {
+HOST_DEVICE inline GSU3<floatT> gsu3_zero() {
     return GSU3<floatT>(0, 0, 0,
                         0, 0, 0,
                         0, 0, 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_1() {
+HOST_DEVICE inline GSU3<floatT> glambda_1() {
     return GSU3<floatT>(0, 1, 0,
                         1, 0, 0,
                         0, 0, 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_2() {
+HOST_DEVICE inline GSU3<floatT> glambda_2() {
     return GSU3<floatT>(0                     , -GCOMPLEX(floatT)(0, 1), 0,
                         GCOMPLEX(floatT)(0, 1), 0                      , 0,
                         0                     , 0                      , 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_3() {
+HOST_DEVICE inline GSU3<floatT> glambda_3() {
     return GSU3<floatT>(1, 0 , 0,
                         0, -1, 0,
                         0, 0 , 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_4() {
+HOST_DEVICE inline GSU3<floatT> glambda_4() {
     return GSU3<floatT>(0, 0, 1,
                         0, 0, 0,
                         1, 0, 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_5() {
+HOST_DEVICE inline GSU3<floatT> glambda_5() {
     return GSU3<floatT>(0                     , 0, -GCOMPLEX(floatT)(0, 1),
                         0                     , 0, 0,
                         GCOMPLEX(floatT)(0, 1), 0, 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_6() {
+HOST_DEVICE inline GSU3<floatT> glambda_6() {
     return GSU3<floatT>(0, 0, 0,
                         0, 0, 1,
                         0, 1, 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_7() {
+HOST_DEVICE inline GSU3<floatT> glambda_7() {
     return GSU3<floatT>(0, 0                     , 0,
                         0, 0                     , -GCOMPLEX(floatT)(0, 1),
                         0, GCOMPLEX(floatT)(0, 1), 0);
 }
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> glambda_8() {
+HOST_DEVICE inline GSU3<floatT> glambda_8() {
     return GSU3<floatT>(1 / sqrt(3), 0          , 0,
                         0          , 1 / sqrt(3), 0,
                         0          , 0          , -2 / sqrt(3));
@@ -605,7 +607,7 @@ __device__ __host__ inline GSU3<floatT> glambda_8() {
 
 // matrix operations
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator+(const GSU3<floatT> &x, const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> operator+(const GSU3<floatT> &x, const GSU3<floatT> &y) {
     return GSU3<floatT>(
             x._e00 + y._e00, x._e01 + y._e01, x._e02 + y._e02,
             x._e10 + y._e10, x._e11 + y._e11, x._e12 + y._e12,
@@ -613,7 +615,7 @@ __device__ __host__ GSU3<floatT> operator+(const GSU3<floatT> &x, const GSU3<flo
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator-(const GSU3<floatT> &x, const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> operator-(const GSU3<floatT> &x, const GSU3<floatT> &y) {
     return GSU3<floatT>(
             x._e00 - y._e00, x._e01 - y._e01, x._e02 - y._e02,
             x._e10 - y._e10, x._e11 - y._e11, x._e12 - y._e12,
@@ -622,7 +624,7 @@ __device__ __host__ GSU3<floatT> operator-(const GSU3<floatT> &x, const GSU3<flo
 
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator*(const GCOMPLEX(floatT) &x, const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> operator*(const GCOMPLEX(floatT) &x, const GSU3<floatT> &y) {
     return GSU3<floatT>(
             x * y._e00, x * y._e01, x * y._e02,
             x * y._e10, x * y._e11, x * y._e12,
@@ -630,7 +632,7 @@ __device__ __host__ GSU3<floatT> operator*(const GCOMPLEX(floatT) &x, const GSU3
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const GCOMPLEX(floatT) &y) {
+HOST_DEVICE GSU3<floatT> operator*(const GSU3<floatT> &x, const GCOMPLEX(floatT) &y) {
     return GSU3<floatT>(
             x._e00 * y, x._e01 * y, x._e02 * y,
             x._e10 * y, x._e11 * y, x._e12 * y,
@@ -638,7 +640,7 @@ __device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const GCOMPLEX
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator*(const floatT &x, const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> operator*(const floatT &x, const GSU3<floatT> &y) {
     return GSU3<floatT>(
             x * y._e00, x * y._e01, x * y._e02,
             x * y._e10, x * y._e11, x * y._e12,
@@ -646,7 +648,7 @@ __device__ __host__ GSU3<floatT> operator*(const floatT &x, const GSU3<floatT> &
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const floatT &y) {
+HOST_DEVICE GSU3<floatT> operator*(const GSU3<floatT> &x, const floatT &y) {
     return GSU3<floatT>(
             x._e00 * y, x._e01 * y, x._e02 * y,
             x._e10 * y, x._e11 * y, x._e12 * y,
@@ -654,7 +656,7 @@ __device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const floatT &
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator/(const GSU3<floatT> &x, const floatT &y) {
+HOST_DEVICE GSU3<floatT> operator/(const GSU3<floatT> &x, const floatT &y) {
     return GSU3<floatT>(
             x._e00 / y, x._e01 / y, x._e02 / y,
             x._e10 / y, x._e11 / y, x._e12 / y,
@@ -663,7 +665,7 @@ __device__ __host__ GSU3<floatT> operator/(const GSU3<floatT> &x, const floatT &
 
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> operator*(const GSU3<floatT> &x, const GSU3<floatT> &y) {
     GCOMPLEX(floatT) tmp00, tmp01, tmp02,
             tmp10, tmp11, tmp12,
             tmp20, tmp21, tmp22;
@@ -686,7 +688,7 @@ __device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const GSU3<flo
 
 // su3 * cvect3 multiplication
 template<class floatT>
-__device__ __host__ gVect3<floatT> operator*(const GSU3<floatT> &x, const gVect3<floatT> &y) {
+HOST_DEVICE gVect3<floatT> operator*(const GSU3<floatT> &x, const gVect3<floatT> &y) {
     GCOMPLEX(floatT) tmp0, tmp1, tmp2;
 
     tmp0 = x._e00 * y._v0 + x._e01 * y._v1 + x._e02 * y._v2;
@@ -698,7 +700,7 @@ __device__ __host__ gVect3<floatT> operator*(const GSU3<floatT> &x, const gVect3
 
 
 template<class floatT>
-__device__ __host__ inline GSU3<floatT> &GSU3<floatT>::operator=(const GSU3<floatT> &y) {
+HOST_DEVICE inline GSU3<floatT> &GSU3<floatT>::operator=(const GSU3<floatT> &y) {
     _e00 = y._e00;
     _e01 = y._e01;
     _e02 = y._e02;
@@ -712,7 +714,7 @@ __device__ __host__ inline GSU3<floatT> &GSU3<floatT>::operator=(const GSU3<floa
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator+=(const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> &GSU3<floatT>::operator+=(const GSU3<floatT> &y) {
     _e00 += y._e00;
     _e01 += y._e01;
     _e02 += y._e02;
@@ -726,7 +728,7 @@ __device__ __host__ GSU3<floatT> &GSU3<floatT>::operator+=(const GSU3<floatT> &y
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator-=(const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> &GSU3<floatT>::operator-=(const GSU3<floatT> &y) {
     _e00 -= y._e00;
     _e01 -= y._e01;
     _e02 -= y._e02;
@@ -740,13 +742,13 @@ __device__ __host__ GSU3<floatT> &GSU3<floatT>::operator-=(const GSU3<floatT> &y
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator*=(const floatT &y) {
+HOST_DEVICE GSU3<floatT> &GSU3<floatT>::operator*=(const floatT &y) {
     *this = *this * y;
     return *this;
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator*=(const GCOMPLEX(floatT) &y) {
+HOST_DEVICE GSU3<floatT> &GSU3<floatT>::operator*=(const GCOMPLEX(floatT) &y) {
     _e00 *= y;
     _e01 *= y;
     _e02 *= y;
@@ -760,13 +762,13 @@ __device__ __host__ GSU3<floatT> &GSU3<floatT>::operator*=(const GCOMPLEX(floatT
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator*=(const GSU3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> &GSU3<floatT>::operator*=(const GSU3<floatT> &y) {
     *this = *this * y;
     return *this;
 }
 
 template<class floatT>
-__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator/=(const floatT &y) {
+HOST_DEVICE GSU3<floatT> &GSU3<floatT>::operator/=(const floatT &y) {
     *this = *this / y;
     return *this;
 }
@@ -775,7 +777,7 @@ __device__ __host__ GSU3<floatT> &GSU3<floatT>::operator/=(const floatT &y) {
 /// tolerance for comparison. In that case please look to the compareGSU3 method. In case you are comparing with the
 /// zero matrix, you should use compareGSU3, as the present method seems not to work for that case.
 template<class floatT>
-__device__ __host__ bool GSU3<floatT>::operator==(const GSU3<floatT> &y) {
+HOST_DEVICE bool GSU3<floatT>::operator==(const GSU3<floatT> &y) {
     if (_e00 == y._e00 &&
         _e01 == y._e01 &&
         _e02 == y._e02 &&
@@ -790,7 +792,7 @@ __device__ __host__ bool GSU3<floatT>::operator==(const GSU3<floatT> &y) {
 }
 
 template<class floatT>
-__host__ inline std::ostream &operator<<(std::ostream &s, const GSU3<floatT> &x) {
+HOST inline std::ostream &operator<<(std::ostream &s, const GSU3<floatT> &x) {
 return s << "\n" << x.getLink00() << x.getLink01() << x.getLink02() << "\n"
                  << x.getLink10() << x.getLink11() << x.getLink12() << "\n"
                  << x.getLink20() << x.getLink21() << x.getLink22() << "\n";
@@ -798,7 +800,7 @@ return s << "\n" << x.getLink00() << x.getLink01() << x.getLink02() << "\n"
 
 /// TODO: This presumably doesn't work
 template<class floatT>
-__host__ inline std::istream &operator>>(std::istream &s, GSU3<floatT> &x) {
+HOST inline std::istream &operator>>(std::istream &s, GSU3<floatT> &x) {
     return s >> x._e00.cREAL >> x._e00.cIMAG >> x._e01.cREAL >> x._e01.cIMAG >> x._e02.cREAL >> x._e02.cIMAG
              >> x._e10.cREAL >> x._e10.cIMAG >> x._e11.cREAL >> x._e11.cIMAG >> x._e12.cREAL >> x._e12.cIMAG
              >> x._e20.cREAL >> x._e20.cIMAG >> x._e21.cREAL >> x._e21.cIMAG >> x._e22.cREAL >> x._e22.cIMAG;
@@ -806,7 +808,7 @@ __host__ inline std::istream &operator>>(std::istream &s, GSU3<floatT> &x) {
 
 
 template<class floatT>
-__device__ __host__ void GSU3<floatT>::random(uint4 *state) {
+HOST_DEVICE void GSU3<floatT>::random(uint4 *state) {
 
     GCOMPLEX(floatT)
             rnd;
@@ -835,8 +837,10 @@ __device__ __host__ void GSU3<floatT>::random(uint4 *state) {
 
 
 template<class floatT>
-__device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
+HOST_DEVICE void GSU3<floatT>::gauss(uint4 *state) {
+#ifndef USE_CPU_ONLY
     if constexpr (!std::is_same<floatT,__half>::value) {
+#endif
             floatT rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
             
             for (int i = 0; i < 4; ++i) {
@@ -862,9 +866,12 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
             _e20 = GCOMPLEX(floatT)(temp1[3], temp2[0]);
             _e21 = GCOMPLEX(floatT)(temp2[1], temp2[2]);
             _e22 = GCOMPLEX(floatT)(-2. / sqrt(3.0) * temp2[3], 0.0);
+#ifndef USE_CPU_ONLY
         }
-    else {
+#endif
 #ifdef __GPU_ARCH__
+    else {
+
         float rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
 
     for (int i = 0; i < 4; ++i) {
@@ -890,14 +897,16 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
     _e20 = GCOMPLEX(__half)(__float2half(temp1[3]), __float2half( temp2[0]));
     _e21 = GCOMPLEX(__half)(__float2half(temp2[1]), __float2half( temp2[2]));
     _e22 = GCOMPLEX(__half)(__float2half(-2. / sqrt(3.0) * temp2[3]), __float2half( 0.0));
-#endif
     }
+#endif
 }
 
 // project to su3 using first two rows of link
 template<class floatT>
-__device__ __host__ void GSU3<floatT>::su3unitarize() {
+HOST_DEVICE void GSU3<floatT>::su3unitarize() {
+#ifndef USE_CPU_ONLY
     if constexpr (!std::is_same<floatT,__half>::value) {
+#endif
     double quadnorm, invnorm;
     double Cre, Cim;
 
@@ -956,9 +965,12 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                              - (_e01.cREAL * _e10.cREAL - _e01.cIMAG * _e10.cIMAG)),
                             (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
+#ifndef USE_CPU_ONLY
         }
+#endif
+#ifdef __GPU_ARCH__
     else {
- #ifdef __GPU_ARCH__
+
     double quadnorm, invnorm;
     double Cre, Cim;
 
@@ -1017,13 +1029,12 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                              - (_e01.cREAL * _e10.cREAL - _e01.cIMAG * _e10.cIMAG)),
                             (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
-    #endif
     }
-    
+#endif
 }
 
 template<class floatT>
-__device__ __host__ GCOMPLEX(floatT) det(const GSU3<floatT> &x) {
+HOST_DEVICE GCOMPLEX(floatT) det(const GSU3<floatT> &x) {
     GCOMPLEX(floatT)
             res;
 
@@ -1035,12 +1046,12 @@ __device__ __host__ GCOMPLEX(floatT) det(const GSU3<floatT> &x) {
 }
 
 template<class floatT>
-__device__ __host__ floatT realdet(const GSU3<floatT> &x) {
+HOST_DEVICE floatT realdet(const GSU3<floatT> &x) {
     return det(x).cREAL;
 }
 
 template<class floatT>
-__device__ __host__ floatT infnorm(const GSU3<floatT> &x) {
+HOST_DEVICE floatT infnorm(const GSU3<floatT> &x) {
     floatT res = x._e00.cREAL * x._e00.cREAL;
     res = x._e00.cIMAG * x._e00.cIMAG + res;
     res = x._e01.cREAL * x._e01.cREAL + res;
@@ -1073,7 +1084,7 @@ __device__ __host__ floatT infnorm(const GSU3<floatT> &x) {
 
 // traceless anti-hermitian of link
 template<class floatT>
-__device__ __host__ void GSU3<floatT>::TA() {
+HOST_DEVICE void GSU3<floatT>::TA() {
     GSU3 <floatT> tmp;
 
     tmp._e00 = GCOMPLEX(floatT)(0, 0.6666666666666666 * _e00.cIMAG - 0.3333333333333333 * (_e11.cIMAG + _e22.cIMAG));
@@ -1091,19 +1102,19 @@ __device__ __host__ void GSU3<floatT>::TA() {
 
 // real part of trace of link
 template<class floatT>
-__device__ __host__ floatT tr_d(const GSU3<floatT> &x) {
+HOST_DEVICE floatT tr_d(const GSU3<floatT> &x) {
     return floatT(x._e00.cREAL + x._e11.cREAL + x._e22.cREAL);
 }
 
 // imaginary part of trace of link
 template<class floatT>
-__device__ __host__ floatT tr_i(const GSU3<floatT> &x) {
+HOST_DEVICE floatT tr_i(const GSU3<floatT> &x) {
     return floatT(x._e00.cIMAG + x._e11.cIMAG + x._e22.cIMAG);
 }
 
 // real part of trace of link*link
 template<class floatT>
-__device__ __host__ floatT tr_d(const GSU3<floatT> &x, const GSU3<floatT> &y) {
+HOST_DEVICE floatT tr_d(const GSU3<floatT> &x, const GSU3<floatT> &y) {
     floatT res;
     res = (x._e00 * y._e00).cREAL + (x._e01 * y._e10).cREAL + (x._e02 * y._e20).cREAL
           + (x._e10 * y._e01).cREAL + (x._e11 * y._e11).cREAL + (x._e12 * y._e21).cREAL
@@ -1114,13 +1125,13 @@ __device__ __host__ floatT tr_d(const GSU3<floatT> &x, const GSU3<floatT> &y) {
 
 // trace of link
 template<class floatT>
-__device__ __host__ GCOMPLEX(floatT) tr_c(const GSU3<floatT> &x) {
+HOST_DEVICE GCOMPLEX(floatT) tr_c(const GSU3<floatT> &x) {
     return GCOMPLEX(floatT)(x._e00 + x._e11 + x._e22);
 }
 
 // trace of link*link
 template<class floatT>
-__device__ __host__ GCOMPLEX(floatT) tr_c(const GSU3<floatT> &x, const GSU3<floatT> &y) {
+HOST_DEVICE GCOMPLEX(floatT) tr_c(const GSU3<floatT> &x, const GSU3<floatT> &y) {
     GCOMPLEX(floatT)
             res;
 
@@ -1133,7 +1144,7 @@ __device__ __host__ GCOMPLEX(floatT) tr_c(const GSU3<floatT> &x, const GSU3<floa
 
 // hermitian conjugate
 template<class floatT>
-__device__ __host__ GSU3<floatT> dagger(const GSU3<floatT> &x) {
+HOST_DEVICE GSU3<floatT> dagger(const GSU3<floatT> &x) {
     GSU3 <floatT> tmp;
 
     tmp._e00 = conj(x._e00);
@@ -1151,7 +1162,7 @@ __device__ __host__ GSU3<floatT> dagger(const GSU3<floatT> &x) {
 
 // exp( link )
 template<class floatT>
-__device__ __host__ GSU3<floatT> su3_exp(GSU3<floatT> u) {
+HOST_DEVICE GSU3<floatT> su3_exp(GSU3<floatT> u) {
     GSU3 <floatT> res;
 
     res = gsu3_one<floatT>()
@@ -1166,7 +1177,7 @@ __device__ __host__ GSU3<floatT> su3_exp(GSU3<floatT> u) {
 
 // tensor product of two cvect3
 template<class floatT>
-__device__ __host__ GSU3<floatT> tensor_prod(const gVect3<floatT> &x, const gVect3<floatT> &y) {
+HOST_DEVICE GSU3<floatT> tensor_prod(const gVect3<floatT> &x, const gVect3<floatT> &y) {
     GSU3 <floatT> res;
 
     res._e00 = x._v0 * y._v0;
@@ -1183,7 +1194,7 @@ __device__ __host__ GSU3<floatT> tensor_prod(const gVect3<floatT> &x, const gVec
 }
 
 template<class floatT>
-__device__ __host__ inline bool compareGSU3(GSU3<floatT> a, GSU3<floatT> b, floatT tol) {
+HOST_DEVICE inline bool compareGSU3(GSU3<floatT> a, GSU3<floatT> b, floatT tol) {
 
     for (int i = 0; i < 3; i++)
     for (int j = 0; j < 3; j++) {

@@ -7,6 +7,7 @@
 #include "gvect3.h"
 #include "../indexer/BulkIndexer.h"
 
+
 /*! Using the syntax below stuff like this is possible:
  *   Spinor a, b, c, d
  *   Spinor a = b*c + d;
@@ -22,13 +23,16 @@ enum Operation {
 
 template<typename T>
 class custom_is_scalar{ public: static constexpr bool value = std::is_scalar<T>::value; };
+#ifndef USE_CPU_ONLY
 template <>
 class custom_is_scalar<__half> {public: static constexpr bool value = true; };
-
+#endif
 template<typename T>
 class custom_is_class{ public: static constexpr bool value = std::is_class<T>::value; };
+#ifndef USE_CPU_ONLY
 template <>
 class custom_is_class<__half>{ public: static constexpr bool value = false; };
+#endif
 
 template<typename typeLHS,
         typename typeRHS,
@@ -102,9 +106,9 @@ struct GeneralOperator<
     //Call the operator: Do the operation element wise.
     //This is what is called in another operator or in a Kernel which runs the operation
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
-        //inline __host__ __device__ auto operator()(const Index i) const {
+        //inline HOST_DEVICE auto operator()(const Index i) const {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
         return lhs + rhs;
@@ -138,7 +142,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs + _rhs;
@@ -170,7 +174,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs + rhs;
@@ -202,7 +206,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
@@ -235,7 +239,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs - _rhs;
@@ -267,7 +271,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs - rhs;
@@ -299,7 +303,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
@@ -332,7 +336,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs * _rhs;
@@ -366,7 +370,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs * rhs;
@@ -398,7 +402,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
@@ -430,7 +434,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs / _rhs;
@@ -462,7 +466,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline __host__ __device__ auto operator()(const Index i) const
+    inline HOST_DEVICE auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs / rhs;
@@ -516,13 +520,15 @@ auto operator/(const GeneralOperator<typeLHS1, typeRHS1, op1> &lhs,
 
 template<typename inputType>
 using isAllowedType = typename std::enable_if<custom_is_scalar<inputType>::value
+                                              #ifndef USE_CPU_ONLY
                                               || std::is_same<inputType, GCOMPLEX(__half)>::value
+                                              || std::is_same<inputType, GSU3<__half> >::value
+                                              || std::is_same<inputType, gVect3<__half> >::value
+                                              #endif
                                               || std::is_same<inputType, GCOMPLEX(float)>::value
                                               || std::is_same<inputType, GCOMPLEX(double)>::value
-                                              || std::is_same<inputType, GSU3<__half> >::value
                                               || std::is_same<inputType, GSU3<float> >::value
                                               || std::is_same<inputType, GSU3<double> >::value
-                                              || std::is_same<inputType, gVect3<__half> >::value
                                               || std::is_same<inputType, gVect3<float> >::value
                                               || std::is_same<inputType, gVect3<double> >::value, inputType>::type;
 

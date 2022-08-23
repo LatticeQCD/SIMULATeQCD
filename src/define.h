@@ -24,11 +24,43 @@
 #define RETa_IF_SCALAR { return a; }
 #endif
 
-
-
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
 #define AT __FILE__ ":" TOSTRING(__LINE__)
+
+#ifdef USE_CPU_ONLY
+#define HOST_DEVICE
+#define HOST
+#define DEVICE
+#define CONSTANT const
+#define GPUERROR_T void*
+
+struct float2 {
+    float x; float y;
+};
+struct double2 {
+    double x; double y;
+};
+struct uint3 {
+    unsigned int x, y, z;
+};
+struct uint4 {
+    unsigned int x, y, z, w;
+
+};
+struct dim3 {
+    unsigned int x, y, z;
+    constexpr dim3(unsigned int vx = 1, unsigned int vy = 1, unsigned int vz = 1) : x(vx), y(vy), z(vz) {}
+    constexpr dim3(uint3 v) : x(v.x), y(v.y), z(v.z) {}
+    constexpr operator uint3(void) const { return uint3{x, y, z}; }
+};
+#else
+#define HOST_DEVICE __host__ __device__
+#define HOST __host__
+#define DEVICE __device__
+#define CONSTANT __constant__
+#define GPUERROR_T gpuError_t
+#endif
 
 
 enum Layout {

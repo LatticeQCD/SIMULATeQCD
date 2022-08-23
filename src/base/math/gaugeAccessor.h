@@ -9,7 +9,7 @@
 
 #define BACKWARD_CONST 16
 
-__host__ __device__ inline int Back(const int i) {
+HOST_DEVICE inline int Back(const int i) {
     return i + BACKWARD_CONST;
 }
 
@@ -23,62 +23,62 @@ public:
             : GaugeConstructor<floatT_memory, comp>(elements) {}
 
     /// Constructor for one memory chunk, where all entries are separated by object_count
-    __host__ __device__ explicit gaugeAccessor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    HOST_DEVICE explicit gaugeAccessor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GaugeConstructor<floatT_memory, comp>(elementsBase, object_count) {}
 
     explicit gaugeAccessor() : GaugeConstructor<floatT_memory, comp>() {}
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline GSU3<floatT_compute> getElement(const gSiteMu &siteMu) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getElement(const gSiteMu &siteMu) const {
         return static_cast<GSU3<floatT_compute>>(this->reconstruct(siteMu));
     }
 
     template<Layout LatLayout, size_t HaloDepth>
-    __host__ __device__ inline size_t getIndexComm(size_t isiteFull, size_t mu) const {
+    HOST_DEVICE inline size_t getIndexComm(size_t isiteFull, size_t mu) const {
         gSiteMu siteMu = GIndexer<LatLayout, HaloDepth>::getSiteMuFull(isiteFull, mu);
         return siteMu.indexMuFull;
     }
 
     template<Layout LatLayout, size_t HaloDepth, class floatT_compute=floatT_memory>
-    __host__ __device__ inline GSU3<floatT_compute> getElementComm(size_t isiteFull, size_t mu) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getElementComm(size_t isiteFull, size_t mu) const {
         gSiteMu siteMu = GIndexer<LatLayout, HaloDepth>::getSiteMuFull(isiteFull, mu);
         return getElement<floatT_compute>(siteMu);
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline void setElementComm(size_t isiteFull, const GSU3<floatT_compute>& mat) {
+    HOST_DEVICE inline void setElementComm(size_t isiteFull, const GSU3<floatT_compute>& mat) {
         gSiteMu siteMu;
         siteMu.indexMuFull = isiteFull;
         setElement<floatT_compute>(siteMu, mat);
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline void setElement(const gSiteMu &siteMu, const GSU3<floatT_compute> &mat) {
+    HOST_DEVICE inline void setElement(const gSiteMu &siteMu, const GSU3<floatT_compute> &mat) {
         this->construct(siteMu, static_cast<GSU3<floatT_memory>>(mat));
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline GSU3<floatT_compute> getLink(const gSiteMu &siteMu) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getLink(const gSiteMu &siteMu) const {
         return static_cast<GSU3<floatT_compute>>(this->reconstruct(siteMu));
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline GSU3<floatT_compute> getLinkDagger(const gSiteMu &siteMu) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getLinkDagger(const gSiteMu &siteMu) const {
         return static_cast<GSU3<floatT_compute>>(this->reconstructDagger(siteMu));
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline void setLink(const gSiteMu &siteMu, GSU3<floatT_compute> mat) {
+    HOST_DEVICE inline void setLink(const gSiteMu &siteMu, GSU3<floatT_compute> mat) {
         this->construct(siteMu, static_cast<GSU3<floatT_memory>>(mat));
     }
 
     template<class floatT_compute=floatT_memory>
-    __host__ __device__ inline GSU3<floatT_compute> operator()(const gSiteMu &siteMu) const {
+    HOST_DEVICE inline GSU3<floatT_compute> operator()(const gSiteMu &siteMu) const {
         return static_cast<GSU3<floatT_compute>>(this->reconstruct(siteMu));
     }
 
     template<Layout LatLayout, size_t HaloDepth, class floatT_compute=floatT_memory>
-    __host__ __device__ inline GSU3<floatT_compute> getLinkPath(gSite &site, int dir) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getLinkPath(gSite &site, int dir) const {
 
         typedef GIndexer<LatLayout, HaloDepth> GInd;
 
@@ -103,7 +103,7 @@ public:
 
 
     template<Layout LatLayout, size_t HaloDepth, class floatT_compute=floatT_memory, typename... Args>
-    __host__ __device__ inline GSU3<floatT_compute> getLinkPath(gSite &site, int dir, Args... args) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getLinkPath(gSite &site, int dir, Args... args) const {
 
         typedef GIndexer<LatLayout, HaloDepth> GInd;
 
@@ -128,7 +128,7 @@ public:
     }
 
     template<Layout LatLayout, size_t HaloDepth, class floatT_compute=floatT_memory, typename... Args>
-    __host__ __device__ inline GSU3<floatT_compute> getLinkPath(gSiteMu &siteMu, int dir, Args... args) const {
+    HOST_DEVICE inline GSU3<floatT_compute> getLinkPath(gSiteMu &siteMu, int dir, Args... args) const {
         typedef GIndexer<LatLayout, HaloDepth> GInd;
 
         gSite site = siteMu;

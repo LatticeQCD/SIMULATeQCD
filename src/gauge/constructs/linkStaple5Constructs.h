@@ -14,7 +14,7 @@
 #include "linkStaple3Constructs.h"
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-  __device__ GSU3<floatT> inline linkStaple5Up(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu, int rho,
+  DEVICE GSU3<floatT> inline linkStaple5Up(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu, int rho,
                                              int gamma) {
     typedef GIndexer<All,HaloDepth> GInd;
 

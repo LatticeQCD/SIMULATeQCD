@@ -74,7 +74,9 @@ private:
         /// a pointer as an argument; hence the strange syntax.
         void alloc(size_t size) {
             if (size > 0) {
+#ifndef USE_CPU_ONLY
                 if (onDevice) {
+
                     gpuError_t gpuErr = gpuMalloc((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
                         MemoryManagement::memorySummary(false, false, true, true,false);
@@ -82,22 +84,24 @@ private:
                         err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on device";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
-                } else {
-#ifndef CPUONLY
-                    gpuError_t gpuErr = gpuMallocHost((void **) &_rawPointer, size);
-                    if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(true,true,false, false,false);
-                        std::stringstream err_msg;
-                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
-                        GpuError(err_msg.str().c_str(), gpuErr);
-                    }
-#else
+                } else
+#endif
+                {
+#if defined(CPUONLY) || defined(USE_CPU_ONLY)
                     _rawPointer = std::malloc(size);
                     if (_rawPointer == nullptr){
                         MemoryManagement::memorySummary(true,true,false, false,false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
                         throw std::runtime_error(stdLogger.fatal(err_msg.str()));
+                    }
+#else
+                    gpuError_t gpuErr = gpuMallocHost((void **) &_rawPointer, size);
+                    if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(true,true,false, false,false);
+                        std::stringstream err_msg;
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
+                        GpuError(err_msg.str().c_str(), gpuErr);
                     }
 #endif
                 }
@@ -112,6 +116,7 @@ private:
         /// pointer as the argument. No idea why, but I guess it doesn't matter.
         void free() {
             if (_current_size > 0) {
+#ifndef USE_CPU_ONLY
                 if (onDevice) {
                     if (P2Ppaired) {
                         _cIpc.destroy();
@@ -125,9 +130,12 @@ private:
                                 "GB at " << static_cast<void*>(_rawPointer) << " on device";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
-
-                } else {
-#ifndef CPUONLY
+                } else
+#endif
+                {
+#if defined(CPUONLY) || defined(USE_CPU_ONLY)
+                    std::free(_rawPointer);
+#else
                     gpuError_t gpuErr = gpuFreeHost(_rawPointer);
                     if (gpuErr != gpuSuccess) {
                         MemoryManagement::memorySummary(true,true,false, false, false);
@@ -136,8 +144,6 @@ private:
                                 "GB at " << static_cast<void*>(_rawPointer) << " on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
-#else
-                    std::free(_rawPointer);
 #endif
                 }
                 rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " , 
@@ -182,8 +188,12 @@ private:
         {
             if (_current_size > 0) {
                 if (onDevice) {
+#ifndef USE_CPU_ONLY
                     gpuError_t gpuErr = gpuMemset(_rawPointer, value, _current_size);
                     if (gpuErr != gpuSuccess) GpuError("_rawPointer: Failed to set memory on device", gpuErr);
+#else
+                    throw std::runtime_error(stdLogger.fatal("CPU backend does not support onDevice=True."));
+#endif
                 } else {
                     std::memset(_rawPointer, value, _current_size);
                 }
@@ -215,7 +225,9 @@ private:
                 }
                 free();
                 alloc(sizeBytes);
+#ifndef USE_CPU_ONLY
                 if (P2Ppaired && onDevice) _cIpc.updateAllHandles(getPointer<uint8_t>());
+#endif
             }
             return resize;
         }
@@ -229,7 +241,9 @@ private:
                 }
                 free();
                 alloc(sizeBytes);
+#ifndef USE_CPU_ONLY
                 if (P2Ppaired && onDevice) _cIpc.updateAllHandles(getPointer<uint8_t>());
+#endif
 
             }
             return resize;
@@ -269,9 +283,14 @@ private:
 
     /// THIS IS ALL CUDA IPC/P2P related stuff
     private:
+#ifndef USE_CPU_ONLY
         gpuIPC _cIpc;
+#else
+        void* _cIpc = nullptr;
+#endif
         bool P2Ppaired;
 
+#ifndef USE_CPU_ONLY
     public:
         void initP2P(MPI_Comm comm, int myRank) {
             if (onDevice && _current_size != 0) {
@@ -306,6 +325,7 @@ private:
             }
             return nullptr;
         }
+#endif
     };
 
 
@@ -553,7 +573,7 @@ public:
     ~MemoryAccessor() = default;
 
     template<class floatT>
-    __device__  __host__ inline void setValue(const size_t isite, const floatT value) {
+    HOST_DEVICE inline void setValue(const size_t isite, const floatT value) {
         /// reinterpret_cast is a compile time directive telling the compiler to treat _Array as a floatT*. This is
         /// needed because _Array is treated as void* right now.
         auto *arr = reinterpret_cast<floatT *>(Array);
@@ -561,7 +581,7 @@ public:
     }
 
     template<class floatT>
-    __device__  __host__ inline void getValue(const size_t isite, floatT &value) {
+    HOST_DEVICE inline void getValue(const size_t isite, floatT &value) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         value = arr[isite];
     }

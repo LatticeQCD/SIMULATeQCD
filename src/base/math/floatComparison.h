@@ -15,7 +15,7 @@
 
 /// This can be used on the GPU.
 template<class T>
-__host__ __device__ bool cmp_rel(const T a, const T b, const double rel, const double prec) {
+HOST_DEVICE bool cmp_rel(const T a, const T b, const double rel, const double prec) {
     if (abs(a-b) / abs(a+b) < rel && abs(a-b) < prec) {
         return true;
     }
@@ -25,7 +25,7 @@ __host__ __device__ bool cmp_rel(const T a, const T b, const double rel, const d
 /// Implements relative method - do not use for comparing with zero. Use this most of the time, tolerance needs to
 /// be meaningful in your context.
 template<typename TReal>
-__host__ __device__ static bool isApproximatelyEqual(const TReal a, const TReal b, const TReal tolerance = std::numeric_limits<TReal>::epsilon())
+HOST_DEVICE static bool isApproximatelyEqual(const TReal a, const TReal b, const TReal tolerance = std::numeric_limits<TReal>::epsilon())
 {
     TReal diff = std::fabs(a - b);
     if (diff <= tolerance)

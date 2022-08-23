@@ -35,37 +35,37 @@
 
 /// Initialize the correlator to zero, regardless of type. ---------------------------------- FUNCTIONS FOR CORRELATIONS
 template<class floatT>
-__host__ __device__ void inline initCorrToZero(int &corr) {
+HOST_DEVICE void inline initCorrToZero(int &corr) {
     corr = 0;
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToZero(floatT &corr) {
+HOST_DEVICE void inline initCorrToZero(floatT &corr) {
     corr = 0.;
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToZero(GSU3<floatT> &corr) {
+HOST_DEVICE void inline initCorrToZero(GSU3<floatT> &corr) {
     corr = gsu3_zero<floatT>();
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToZero(GCOMPLEX(floatT) &corr) {
+HOST_DEVICE void inline initCorrToZero(GCOMPLEX(floatT) &corr) {
     corr = GPUcomplex<floatT>(0., 0.);
 }
 
 /// Initialize the correlator to one, regardless of type.
 template<class floatT>
-__host__ __device__ void inline initCorrToOne(int &corr) {
+HOST_DEVICE void inline initCorrToOne(int &corr) {
     corr = 1;
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToOne(floatT &corr) {
+HOST_DEVICE void inline initCorrToOne(floatT &corr) {
     corr = 1.;
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToOne(GSU3<floatT> &corr) {
+HOST_DEVICE void inline initCorrToOne(GSU3<floatT> &corr) {
     corr = gsu3_one<floatT>();
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToOne(GCOMPLEX(floatT) &corr) {
+HOST_DEVICE void inline initCorrToOne(GCOMPLEX(floatT) &corr) {
     corr = GPUcomplex<floatT>(1., 0.);
 }
 
@@ -229,14 +229,14 @@ public:
     void readNorm(std::string domain, Correlator<false,floatT> &normalization, std::string normFileDir);
 
     /// Displacement vector de-indexing.
-    inline __host__ __device__ void indexToSpaceTimeDisplacement(size_t dindex, int &dx, int &dy, int &dz, int &dt) {
+    inline HOST_DEVICE void indexToSpaceTimeDisplacement(size_t dindex, int &dx, int &dy, int &dz, int &dt) {
         int rem2, rem1;
         divmod(dindex,svol3,dt,rem2);
         divmod(rem2  ,svol2,dz,rem1);
         divmod(rem1  ,svol1,dy,dx);
     }
 
-    inline __host__ __device__ void indexToSpatialDisplacement(size_t dindex, int &dx, int &dy, int &dz) {
+    inline HOST_DEVICE void indexToSpatialDisplacement(size_t dindex, int &dx, int &dy, int &dz) {
         int rem;
         divmod(dindex,svol2,dz,rem);
         divmod(rem   ,svol1,dy,dx);
@@ -375,7 +375,7 @@ public:
 
 /// Trivial read index, in case you need/want to do indexing inside the Kernel. TODO: Probably should be in indexer?
 struct PassIndex {
-    inline __host__ __device__ size_t operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
+    inline HOST_DEVICE size_t operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
         return blockDim.x * blockIdx.x + threadIdx.x;
     }
 };
@@ -383,7 +383,7 @@ struct PassIndex {
 /// For fields that depend on x.
 template<size_t HaloDepth>
 struct ReadIndexSpacetime {
-    inline __host__ __device__ gSite operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
+    inline HOST_DEVICE gSite operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
         size_t i = blockDim.x * blockIdx.x + threadIdx.x;
         typedef GIndexer<All, HaloDepth> GInd;
         gSite site = GInd::getSite(i);
@@ -394,7 +394,7 @@ struct ReadIndexSpacetime {
 /// For fields that depend on spatial x.
 template<size_t HaloDepth>
 struct ReadIndexSpatial {
-    inline __host__ __device__ gSite operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
+    inline HOST_DEVICE gSite operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
         size_t i = blockDim.x * blockIdx.x + threadIdx.x;
         typedef GIndexer<All, HaloDepth> GInd;
         gSite site = GInd::getSiteSpatial(i);
@@ -416,13 +416,13 @@ struct ReadIndexSpatial {
 template<class floatT>
 class AxB {
 public:
-    __host__ __device__ floatT inline orrelate(floatT A, floatT B) {
+    HOST_DEVICE floatT inline orrelate(floatT A, floatT B) {
         return A*B;
     }
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GCOMPLEX(floatT) A, GCOMPLEX(floatT) B) {
+    HOST_DEVICE GCOMPLEX(floatT) inline orrelate(GCOMPLEX(floatT) A, GCOMPLEX(floatT) B) {
         return A*B;
     }
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return tr_c(A*B);
     }
 };
@@ -430,7 +430,7 @@ public:
 template<class floatT>
 class trAxtrBt {
 public:
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return tr_c(A)*tr_c(dagger(B));
     }
 };
@@ -438,7 +438,7 @@ public:
 template<class floatT>
 class trReAxtrReB {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return tr_d(A)*tr_d(B);
     }
 };
@@ -446,7 +446,7 @@ public:
 template<class floatT>
 class trImAxtrImB {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return tr_i(A)*tr_i(B);
     }
 };
@@ -454,7 +454,7 @@ public:
 template<class floatT>
 class trAxBt {
 public:
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return tr_c(A*dagger(B));
     }
 };
@@ -462,21 +462,21 @@ public:
 template<class floatT>
 class polCorrAVG {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return real(tr_c(A)*tr_c(dagger(B)))/9.;
     }
 };
 template<class floatT>
 class polCorrSIN {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         return tr_d(A,dagger(B))/3.;
     }
 };
 template<class floatT>
 class polCorrOCT {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    HOST_DEVICE floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
         floatT avg  = real(tr_c(A)*tr_c(dagger(B)));
         floatT sin  = tr_d(A,dagger(B));
         return (0.125*avg - 0.04166666666*sin);
@@ -499,7 +499,7 @@ struct SpacetimePairKernelSymm : CorrelatorTools<floatT, true, HaloDepth> {
     SpacetimePairKernelSymm(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
     : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __device__ __host__ void operator()(gSite site) {
+    HOST_DEVICE void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -568,7 +568,7 @@ struct SpacetimePairKernel : CorrelatorTools<floatT, true, HaloDepth> {
     SpacetimePairKernel(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
             : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __device__ __host__ void operator()(gSite site) {
+    HOST_DEVICE void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -670,7 +670,7 @@ struct SpatialPairKernelSymm : CorrelatorTools<floatT, true, HaloDepth> {
     SpatialPairKernelSymm(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
             : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __device__ __host__ void operator()(gSite site) {
+    HOST_DEVICE void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -722,7 +722,7 @@ struct SpatialPairKernel : CorrelatorTools<floatT, true, HaloDepth> {
     SpatialPairKernel(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
             : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __device__ __host__ void operator()(gSite site) {
+    HOST_DEVICE void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -797,7 +797,7 @@ struct RestrictedOffAxisKernel : CorrelatorTools<floatT, true, HaloDepth> {
     /// direction. (Backward correlations will be counted from the forward correlation of some other m.) A possible
     /// displacement is (1,0,0); therefore some on-axis correlations are computed already in the off-axis kernel. This
     /// is taken into account in the on-axis kernel.
-    __device__ __host__ void operator()(size_t dindex) { /// dindex indexes displacement vector
+    HOST_DEVICE void operator()(size_t dindex) { /// dindex indexes displacement vector
 
         typedef GIndexer<All,HaloDepth> GInd;
         size_t       m,n1,n2,n3,n4;
@@ -855,7 +855,7 @@ struct RestrictedOnAxisKernel : CorrelatorTools<floatT, true, HaloDepth> {
             : _field1(field1), _field2(field2), _field1Xfield2off(field1Xfield2off), _field1Xfield2on(field1Xfield2on),
               CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __device__ __host__ void operator()(size_t dx){ /// Now dx corresponds to a separation, rather than a displacement
+    HOST_DEVICE void operator()(size_t dx){ /// Now dx corresponds to a separation, rather than a displacement
 
         typedef GIndexer<All,HaloDepth> GInd;
         size_t       m,n1,n2,n3;

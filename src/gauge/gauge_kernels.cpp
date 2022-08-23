@@ -5,7 +5,7 @@ struct plaquetteKernel{
 
     plaquetteKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ floatT operator()(gSite site) {
+    HOST_DEVICE floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -29,7 +29,7 @@ struct plaquetteKernelSS{
 
     plaquetteKernelSS(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ floatT operator()(gSite site) {
+    HOST_DEVICE floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -53,7 +53,7 @@ struct plaquetteKernel_double{
 
     plaquetteKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ double operator()(gSite site) {
+    HOST_DEVICE double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         double result = 0;
@@ -77,7 +77,7 @@ struct UtauMinusUsigmaKernel{
 
     UtauMinusUsigmaKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ floatT operator()(gSite site) {
+    HOST_DEVICE floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -106,7 +106,7 @@ struct cloverKernel{
 
     cloverKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()), FT(gAcc){ }
 
-    __device__ __host__ floatT operator()(gSite site) {
+    HOST_DEVICE floatT operator()(gSite site) {
 
         GSU3<floatT> Fmunu;
 
@@ -130,7 +130,7 @@ struct rectangleKernel{
 
     rectangleKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ floatT operator()(gSite site) {
+    HOST_DEVICE floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -164,7 +164,7 @@ struct rectangleKernel_double{
 
     rectangleKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ double operator()(gSite site) {
+    HOST_DEVICE double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<double> temp;
@@ -204,7 +204,7 @@ struct gaugeActKernel_double{
 
     gaugeActKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __device__ __host__ double operator()(gSite site) {
+    HOST_DEVICE double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<double> m_0;
@@ -279,7 +279,7 @@ struct count_faulty_links {
     floatT tol;
     count_faulty_links(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR, floatT tolerance=1e-6) : gL(GaugeL.getAccessor()), gR(GaugeR.getAccessor()), tol(tolerance) {}
 
-    __host__ __device__ int operator() (gSite site) {
+    HOST_DEVICE int operator() (gSite site) {
         int sum = 0;
         for (int mu = 0; mu < 4; mu++) {
             gSiteMu siteMu = GIndexer<All,HaloDepth>::getSiteMu(site,mu);

@@ -17,18 +17,18 @@
 #include <memory>
 
 template <Layout parity>
-__host__ __device__ constexpr inline Layout LayoutSwitcher();
+HOST_DEVICE constexpr inline Layout LayoutSwitcher();
 
 template <>
-__host__ __device__ constexpr inline Layout LayoutSwitcher<All>() {
+HOST_DEVICE constexpr inline Layout LayoutSwitcher<All>() {
     return All;
 }
 template <>
-__host__ __device__ constexpr inline Layout LayoutSwitcher<Odd>() {
+HOST_DEVICE constexpr inline Layout LayoutSwitcher<Odd>() {
     return Even;
 }
 template <>
-__host__ __device__ constexpr inline Layout LayoutSwitcher<Even>() {
+HOST_DEVICE constexpr inline Layout LayoutSwitcher<Even>() {
     return Odd;
 }
 
@@ -364,7 +364,7 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     WriteAtLoopStack<LatticeLayout, HaloDepth> writeAtRead;
     size_t elems = getNumberLatticePoints();
 
-    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSite, writeAtRead, elems, 1 ,1 , (gpuStream_t)nullptr, Nmax);
+    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSite, writeAtRead, elems, 1 ,1 , (GPUSTREAM_T_)nullptr, Nmax);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -443,14 +443,14 @@ auto operator / (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks
 template<class floatT_source, class floatT_target, bool onDevice, Layout LatLayout, size_t HaloDepthSpin, size_t NStacks>
 struct convert_spinor_precision {
 
-    __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
+    HOST_DEVICE void initialize(__attribute__((unused)) gSite& site){
         //We do not initialize anything
     }
     gVect3arrayAcc<floatT_source> spinor_source;
 
     convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
 
-    __device__ __host__ auto operator()(gSiteStack site) {
+    HOST_DEVICE auto operator()(gSiteStack site) {
         
         return spinor_source.template getElement<floatT_target>(site);
     }

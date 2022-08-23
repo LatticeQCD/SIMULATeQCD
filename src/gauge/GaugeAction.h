@@ -24,12 +24,12 @@ private:
     template<bool onDeviceRet>
     MemoryAccessor getField();
 
-    __host__ floatT barePlaquette();
-    __host__ floatT bareUtauMinusUsigma();
-    __host__ floatT bareClover();
-    __host__ floatT bareRectangle();
+    HOST floatT barePlaquette();
+    HOST floatT bareUtauMinusUsigma();
+    HOST floatT bareClover();
+    HOST floatT bareRectangle();
 
-    __host__ floatT barePlaquetteSS();
+    HOST floatT barePlaquetteSS();
 
 
 public:
