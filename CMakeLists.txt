@@ -313,6 +313,7 @@ if (USE_CUDA)
     add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
     target_compile_definitions(CodeBase PRIVATE
         ARCHITECTURE=${ARCHITECTURE}
+        GIT_HASH="${GIT_HASH}"
         SINGLEPREC=1 DOUBLEPREC=1
         COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
         ${ALL_HALODEPTHS}
