@@ -93,8 +93,8 @@ In order to accomplish this for the general case, we have implemented a system w
 iterate an arbitrary operation that depends on arbitrary arguments over an arbitrary set.
 For example a common task needed in lattice calculations is to iterate a plaquette
 calculation, which depends on the <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, over all space-time points.
-We call the operation a <em>functor</em> and the iterating method an _iterator,
-which together comprise our <em>functor syntax</em>.</p>
+This operation is a <em>functor</em> and the iterating method is an <em>iterator</em>,
+which together comprise <em>functor syntax</em>.</p>
 <p>Each functor is implemented as a <code class="docutils literal notranslate"><span class="pre">struct</span></code>. One passes the arguments of the functor
 when initializing the <code class="docutils literal notranslate"><span class="pre">struct</span></code>. The argument over which the functor should
 be iterated is implemented by the syntax <code class="docutils literal notranslate"><span class="pre">operator()</span></code>.
