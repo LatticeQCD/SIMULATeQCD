@@ -139,7 +139,7 @@ struct convert_prec {
 
     convert_prec(Gaugefield<floatT_source, onDevice, HaloDepth, comp> &gaugeIn) : gAcc_source(gaugeIn.getAccessor()) {}
 
-    HOST_DEVICE GSU3<floatT_target> operator()(gSiteMu site) {
+    __host__ __device__ GSU3<floatT_target> operator()(gSiteMu site) {
         return gAcc_source.template getLink<floatT_target>(site);
     }
 };

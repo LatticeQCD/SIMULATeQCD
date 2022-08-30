@@ -47,30 +47,30 @@ public:
 
     /// Set values.
     template<class floatT>
-    HOST_DEVICE inline void setElement(const size_t isite, const floatT value) {
+    __host__ __device__ inline void setElement(const size_t isite, const floatT value) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         arr[isite] = value;
     }
     template<class floatT>
-    HOST_DEVICE inline void setElement(const gSite& site, const floatT value) {
+    __host__ __device__ inline void setElement(const gSite& site, const floatT value) {
         setValue(site.isite, value);
     }
     template<class floatT>
-    HOST_DEVICE inline void setElement(const gSiteStack& site, const floatT value) {
+    __host__ __device__ inline void setElement(const gSiteStack& site, const floatT value) {
         setValue(site.isiteStack, value);
     }
 
     /// Get values.
     template<class floatT>
-    HOST_DEVICE floatT getElement(const gSite& site) {
+    __host__ __device__ floatT getElement(const gSite& site) {
         return getElement<floatT>(site.isite);
     }
     template<class floatT>
-    HOST_DEVICE floatT getElement(const gSiteStack& site) {
+    __host__ __device__ floatT getElement(const gSiteStack& site) {
         return getElement<floatT>(site.isiteStack);
     }
     template<class floatT>
-    HOST_DEVICE inline floatT getElement(const size_t isite) {
+    __host__ __device__ inline floatT getElement(const size_t isite) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         return arr[isite];
     }
@@ -394,7 +394,7 @@ void LatticeContainer<onDevice, elemType>::iterateOverBulkStacked(Functor op) {
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtTimeSlices {
-    inline HOST_DEVICE size_t operator()(const gSite &site) {
+    inline __host__ __device__ size_t operator()(const gSite &site) {
         return GIndexer<LatticeLayout, HaloDepth>::siteTimeOrdered(site);
     }
 };

@@ -32,7 +32,7 @@ struct ExtractInnerHaloSeg {
     ExtractInnerHaloSeg(Accessor acc, Accessor hal_acc) :
             _acc(acc), _hal_acc(hal_acc) {}
 
-    inline HOST_DEVICE void operator()(HaloSite site) {
+    inline __host__ __device__ void operator()(HaloSite site) {
 
         for (size_t mu = 0; mu < ElemCount; mu++) {
             size_t index = _acc.template getIndexComm<LatLayout, HaloDepth>(site.LatticeIndex, mu);
@@ -148,7 +148,7 @@ struct InjectOuterHaloSeg {
             _acc(acc), _hal_acc(hal_acc) {
     }
 
-    inline HOST_DEVICE void operator()(HaloSite site) {
+    inline __host__ __device__ void operator()(HaloSite site) {
 
         for (size_t mu = 0; mu < ElemCount; mu++) {
             size_t index = _acc.template getIndexComm<LatLayout, HaloDepth>(site.LatticeIndex, mu);

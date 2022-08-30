@@ -27,7 +27,7 @@ struct CalcOuterHaloIndexComm {
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    inline HOST_DEVICE HaloSite
+    inline __host__ __device__ HaloSite
     operator()(const dim3 &blockDim, const uint3 &blockIdx, const uint3 &threadIdx) {
 
         HaloSite site;
@@ -46,7 +46,7 @@ struct CalcInnerHaloIndexComm {
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    inline HOST_DEVICE HaloSite
+    inline __host__ __device__ HaloSite
     operator()(const dim3 &blockDim, const uint3 &blockIdx, const uint3 &threadIdx) {
 
         HaloSite site;
@@ -69,7 +69,7 @@ struct CalcOuterHaloSegCoord{
 
     CalcOuterHaloSegCoord(HaloSegment hseg, short leftRight) : hseg(hseg), leftRight(leftRight){}
 
-    inline HOST_DEVICE sitexyzt
+    inline __host__ __device__ sitexyzt
     operator()(size_t LocHalIndex) {
 
         sitexyzt coord(0, 0, 0, 0);
@@ -102,7 +102,7 @@ struct CalcOuterHaloSegIndexComm{
 
     CalcOuterHaloSegIndexComm(HaloSegment hseg, short leftRight) : calcSegCoord(hseg,leftRight){}
 
-    inline HOST_DEVICE HaloSite
+    inline __host__ __device__ HaloSite
     operator()(const dim3 &blockDim, const uint3 &blockIdx, const uint3 &threadIdx) {
 
         HaloSite site;
@@ -125,7 +125,7 @@ struct CalcInnerSegCoord{
 
     CalcInnerSegCoord(HaloSegment hseg, short leftRight) : hseg(hseg), leftRight(leftRight){}
 
-    inline HOST_DEVICE sitexyzt
+    inline __host__ __device__ sitexyzt
     operator()(size_t LocHalIndex) {
 
         sitexyzt coord(0, 0, 0, 0);
@@ -160,7 +160,7 @@ struct CalcInnerHaloSegCoord{
 
     CalcInnerHaloSegCoord(HaloSegment hseg, short leftRight) : hseg(hseg), leftRight(leftRight){}
 
-    inline HOST_DEVICE sitexyzt
+    inline __host__ __device__ sitexyzt
     operator()(size_t LocHalIndex) {
 
         sitexyzt coord(0, 0, 0, 0);
@@ -192,7 +192,7 @@ struct CalcInnerHaloSegIndexComm{
 
     CalcInnerHaloSegIndexComm(HaloSegment hseg, short leftRight) : calcSegCoord(hseg,leftRight){}
 
-    inline HOST_DEVICE HaloSite
+    inline __host__ __device__ HaloSite
     operator()(const dim3 &blockDim, const uint3 &blockIdx, const uint3 &threadIdx) {
 
         HaloSite site;
@@ -214,7 +214,7 @@ struct CalcGSiteHaloSeg {
     CalcGSiteHaloSeg(CalcIndexOp calcIndexOp, HaloSegment hseg, short leftRight) : calcIndexOp(calcIndexOp), calcSegCoord(hseg,leftRight) {
     }
 
-    inline HOST_DEVICE auto
+    inline __host__ __device__ auto
     operator()(size_t HaloIndex, size_t mu) {
 
         sitexyzt coord = calcSegCoord(HaloIndex);
@@ -234,7 +234,7 @@ struct CalcGSiteInnerHalo {
     CalcGSiteInnerHalo(CalcIndexOp calcIndexOp) : calcIndexOp(calcIndexOp) {
     }
 
-    inline HOST_DEVICE auto
+    inline __host__ __device__ auto
     operator()(size_t HaloIndex, size_t mu) {
         sitexyzt coord = HInd::getInnerCoord(HaloIndex);
         auto site = calcIndexOp(GInd::getSite(coord.x, coord.y, coord.z, coord.t), mu);
@@ -252,7 +252,7 @@ struct CalcGSiteCenter {
     CalcGSiteCenter(CalcIndexOp calcIndexOp) : calcIndexOp(calcIndexOp) {
     }
 
-    inline HOST_DEVICE auto
+    inline __host__ __device__ auto
     operator()(size_t HaloIndex, size_t mu) {
         sitexyzt coord = HInd::getCenterCoord(HaloIndex);
         auto site = calcIndexOp(GInd::getSite(coord.x, coord.y, coord.z, coord.t), mu);

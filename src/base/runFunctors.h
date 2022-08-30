@@ -48,13 +48,13 @@ public:
 
 #ifdef USE_HIP_AMD
 
-HOST_DEVICE static inline HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
+__host__ __device__ static inline HIP_vector_type<unsigned int, 3> GetUint3(dim3 Idx){
 
         return HIP_vector_type<unsigned int, 3>(Idx.x, Idx.y, Idx.z);
 
 };
 #elif defined USE_HIP_NVIDIA
-HOST_DEVICE static dim3 GetUint3(dim3 Idx){
+__host__ __device__ static dim3 GetUint3(dim3 Idx){
 
         return Idx;
 
@@ -529,7 +529,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteFull {
 
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteFull(args...);
         return site;
     }
@@ -538,7 +538,7 @@ struct CalcGSiteFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSite {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
         return site;
     }
@@ -547,7 +547,7 @@ struct CalcGSite {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteSpatialFull {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteSpatialFull(args...);
         return site;
     }
@@ -556,7 +556,7 @@ struct CalcGSiteSpatialFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteSpatial {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteSpatial(args...);
         return site;
     }
@@ -565,7 +565,7 @@ struct CalcGSiteSpatial {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteStack {
     template<typename... Args>
-    inline HOST_DEVICE gSiteStack operator()(Args... args) {
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStack(args...);
         return site;
     }
@@ -574,7 +574,7 @@ struct CalcGSiteStack {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteStackFull {
     template<typename... Args>
-    inline HOST_DEVICE gSiteStack operator()(Args... args) {
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStackFull(args...);
         return site;
     }
@@ -583,7 +583,7 @@ struct CalcGSiteStackFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAllMu {
     template<typename... Args>
-    inline HOST_DEVICE gSiteMu operator()(Args... args) {
+    inline __host__ __device__ gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMu(args...);
         return site;
     }
@@ -592,7 +592,7 @@ struct CalcGSiteAllMu {
 template<uint8_t mu, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtMu {
     template<typename... Args>
-    inline HOST_DEVICE gSiteMu operator()(Args... args) {
+    inline __host__ __device__ gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMu(args..., mu);
         return site;
     }
@@ -602,7 +602,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAllMuFull {
 
     template<typename... Args>
-    inline HOST_DEVICE gSiteMu operator()(Args... args) {
+    inline __host__ __device__ gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMuFull(args...);
         return site;
     }
@@ -611,7 +611,7 @@ struct CalcGSiteAllMuFull {
 template<uint8_t mu, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtMuFull {
     template<typename... Args>
-    inline HOST_DEVICE gSiteMu operator()(Args... args) {
+    inline __host__ __device__ gSiteMu operator()(Args... args) {
         gSiteMu site = GIndexer<LatticeLayout, HaloDepth>::getSiteMuFull(args..., mu);
         return site;
     }
@@ -620,7 +620,7 @@ struct CalcGSiteAtMuFull {
 template<size_t stack, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtStackFull {
     template<typename... Args>
-    inline HOST_DEVICE gSiteStack operator()(Args... args) {
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStackFull(args..., stack);
         return site;
     }
@@ -629,7 +629,7 @@ struct CalcGSiteAtStackFull {
 template<size_t stack, Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteAtStack {
     template<typename... Args>
-    inline HOST_DEVICE gSiteStack operator()(Args... args) {
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStack(args..., stack);
         return site;
     }
@@ -639,7 +639,7 @@ struct CalcGSiteAtStack {
 template<size_t stack, Layout LatticeLayout, size_t HaloDepth>
 struct CalcOddGSiteAtStack {
     template<typename... Args>
-    inline HOST_DEVICE gSiteStack operator()(Args... args) {
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
         gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStackOdd(args..., stack);
         return site;
     }
@@ -649,7 +649,7 @@ struct CalcOddGSiteAtStack {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopMu {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
         return site;
     }
@@ -658,7 +658,7 @@ struct CalcGSiteLoopMu {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopStack {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
         return site;
     }
@@ -667,7 +667,7 @@ struct CalcGSiteLoopStack {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopMuFull {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteFull(args...);
         return site;
     }
@@ -676,7 +676,7 @@ struct CalcGSiteLoopMuFull {
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteLoopStackFull {
     template<typename... Args>
-    inline HOST_DEVICE gSite operator()(Args... args) {
+    inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSiteFull(args...);
         return site;
     }
@@ -685,39 +685,39 @@ struct CalcGSiteLoopStackFull {
 //! use this if you don't actually need to read in from any site, for example when initializing point sources
 template<Layout LatticeLayout, size_t HaloDepth>
 struct ReadDummy {
-    template<typename... Args> inline HOST_DEVICE gSite operator()(__attribute__((unused)) Args... args) {
+    template<typename... Args> inline __host__ __device__ gSite operator()(__attribute__((unused)) Args... args) {
         return GIndexer<LatticeLayout, HaloDepth>::getSite(99999,99999,99999,99999);
     }
 };
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtLoopMu {
-    inline HOST_DEVICE gSiteMu operator()(const gSite &site, size_t mu) {
+    inline __host__ __device__ gSiteMu operator()(const gSite &site, size_t mu) {
         return GIndexer<LatticeLayout, HaloDepth>::getSiteMu(site, mu);
     }
 };
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtLoopStack {
-    inline HOST_DEVICE gSiteStack operator()(const gSite &site, size_t stack) {
+    inline __host__ __device__ gSiteStack operator()(const gSite &site, size_t stack) {
         return GIndexer<LatticeLayout, HaloDepth>::getSiteStack(site, stack);
     }
 };
 
 struct WriteAtRead {
-    inline HOST_DEVICE gSite operator()(const gSite &site) {
+    inline __host__ __device__ gSite operator()(const gSite &site) {
         return site;
     }
 };
 
 struct WriteAtReadStack {
-    inline HOST_DEVICE gSiteStack operator()(const gSiteStack &site) {
+    inline __host__ __device__ gSiteStack operator()(const gSiteStack &site) {
         return site;
     }
 };
 
 struct WriteAtReadMu {
-    inline HOST_DEVICE gSiteMu operator()(const gSiteMu &siteMu) {
+    inline __host__ __device__ gSiteMu operator()(const gSiteMu &siteMu) {
         return siteMu;
     }
 };
@@ -728,7 +728,7 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct WriteAtFixedSite {
     const gSite _fixed_site;
     explicit WriteAtFixedSite(const gSite mysite) : _fixed_site(mysite) {}
-    inline HOST_DEVICE gSite operator()(__attribute__((unused)) const gSite dummy) {
+    inline __host__ __device__ gSite operator()(__attribute__((unused)) const gSite dummy) {
         return _fixed_site;
     }
 };

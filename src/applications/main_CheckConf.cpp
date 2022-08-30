@@ -13,7 +13,7 @@ struct do_check_unitarity
 {
     explicit do_check_unitarity(Gaugefield<floatT,false,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
     gaugeAccessor<floatT, comp> gAcc;
-    HOST_DEVICE floatT operator()(gSite site){
+    __host__ __device__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
         floatT ret=0.0;
         for (size_t mu = 0; mu < 4; ++mu)

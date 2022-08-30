@@ -34,7 +34,7 @@ N = 25 by default due to an estimated error of order 10^(-26)
 */
 
 template<class floatT>
-HOST_DEVICE constexpr unsigned int countOfApproxInverseFak(){
+__host__ __device__ constexpr unsigned int countOfApproxInverseFak(){
     unsigned int N = 1;
     floatT nominator = 1.0;
 
@@ -48,7 +48,7 @@ HOST_DEVICE constexpr unsigned int countOfApproxInverseFak(){
 
 // Algorithm from https://luscher.web.cern.ch/luscher/notes/su3fcts.pdf
 template<class floatT>
-HOST_DEVICE inline void SU3Exp(const GSU3<floatT> inGSU3, GSU3<floatT> &outGSU3){
+__host__ __device__ inline void SU3Exp(const GSU3<floatT> inGSU3, GSU3<floatT> &outGSU3){
 
       constexpr unsigned int N = countOfApproxInverseFak<floatT>();
      floatT c_i[N+1];

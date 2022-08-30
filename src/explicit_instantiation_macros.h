@@ -228,7 +228,7 @@ enum CompressionType {
     IF(BOOL(NO_GPU))      (FLOAT_LOOP_ALL(INIT_TEMPLATES, false))
 
 #define INIT_ALL(INIT_TEMPLATES) \
-    DEVICE_LOOP_ALL(INIT_TEMPLATES)
+    __device___LOOP_ALL(INIT_TEMPLATES)
 
 
 /// =================== Initialize Precision and Halos ==========================================

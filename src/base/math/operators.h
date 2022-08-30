@@ -106,9 +106,9 @@ struct GeneralOperator<
     //Call the operator: Do the operation element wise.
     //This is what is called in another operator or in a Kernel which runs the operation
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
-        //inline HOST_DEVICE auto operator()(const Index i) const {
+        //inline __host__ __device__ auto operator()(const Index i) const {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
         return lhs + rhs;
@@ -142,7 +142,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs + _rhs;
@@ -174,7 +174,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs + rhs;
@@ -206,7 +206,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
@@ -239,7 +239,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs - _rhs;
@@ -271,7 +271,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs - rhs;
@@ -303,7 +303,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
@@ -336,7 +336,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs * _rhs;
@@ -370,7 +370,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs * rhs;
@@ -402,7 +402,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         auto lhs = _lhs(i);
@@ -434,7 +434,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto lhs = _lhs(i);
         return lhs / _rhs;
@@ -466,7 +466,7 @@ struct GeneralOperator<typeLHS,
     }
 
     template<typename Index>
-    inline HOST_DEVICE auto operator()(const Index i) const
+    inline __host__ __device__ auto operator()(const Index i) const
     {
         auto rhs = _rhs(i);
         return _lhs / rhs;

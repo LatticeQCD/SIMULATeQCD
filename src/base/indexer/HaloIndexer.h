@@ -99,9 +99,9 @@ public:
     size_t h_offsetsHalf[80];
 
 
-    HOST_DEVICE HaloData() {}
+    __host__ __device__ HaloData() {}
 
-    HOST_DEVICE HaloData(size_t lx, size_t ly, size_t lz, size_t lt, size_t halo_depth, unsigned int Nodes[4]) {
+    __host__ __device__ HaloData(size_t lx, size_t ly, size_t lz, size_t lt, size_t halo_depth, unsigned int Nodes[4]) {
 
 
         h_HaloDepth[0] = Nodes[0] != 1 ? halo_depth : 0;
@@ -208,7 +208,7 @@ public:
     }
 
 
-    HOST_DEVICE size_t getBufferSize(Layout LatLayout) {
+    __host__ __device__ size_t getBufferSize(Layout LatLayout) {
         if (LatLayout == All)return h_summed_buffer[15];
         else return h_summed_bufferHalf[15];
     }
@@ -218,7 +218,7 @@ public:
     /// This function returns the size of these sub_Halos.
 
     /// The argument is the number of the Sub-Halo!
-    HOST_DEVICE inline size_t get_SubHaloSize(const short number, Layout LatLayout) const {
+    __host__ __device__ inline size_t get_SubHaloSize(const short number, Layout LatLayout) const {
 
         size_t EvenFactor = 1;
         if (LatLayout != All) EvenFactor = 2;
@@ -245,7 +245,7 @@ public:
 
 private:
     /// The argument is the number of the Halo Type! It returns the size of an All Halo Type!
-    HOST_DEVICE inline size_t get_SubHaloSizeFromType(const short number) const {
+    __host__ __device__ inline size_t get_SubHaloSizeFromType(const short number) const {
         if (number == 0) return h_YZTH;
         if (number == 1) return h_XZTH;
         if (number == 2) return h_XYTH;
@@ -286,7 +286,7 @@ class HaloIndexer {
 
 private:
 
-    HOST_DEVICE inline static size_t _getHaloNumber(size_t index, size_t *LocHalIndex) {
+    __host__ __device__ inline static size_t _getHaloNumber(size_t index, size_t *LocHalIndex) {
         if (LatLayout == All) {
             for (int i = 1; i < 80; i++) {
                 if (getHalData().h_offsets[i] > index) {
@@ -314,7 +314,7 @@ private:
         return 0;
     };
 
-    HOST_DEVICE inline static size_t _getHaloNumberReduced(size_t index, size_t *LocHalIndex) {
+    __host__ __device__ inline static size_t _getHaloNumberReduced(size_t index, size_t *LocHalIndex) {
         if (LatLayout == All) {
             for (int i = 1; i < 80; i++) {
                 if (getHalDataReduced().h_offsets[i] > index) {
@@ -343,11 +343,11 @@ private:
     };
 
 public:
-    HOST_DEVICE HaloIndexer();
+    __host__ __device__ HaloIndexer();
 
-    HOST_DEVICE ~HaloIndexer() {};
+    __host__ __device__ ~HaloIndexer() {};
 
-    HOST_DEVICE inline static HaloData getHalData() {
+    __host__ __device__ inline static HaloData getHalData() {
 #if defined(__GPU_ARCH__)
         return globHalDataGPU[HaloDepth];
 #else
@@ -355,7 +355,7 @@ public:
 #endif
     }
 
-    HOST_DEVICE inline static HaloData getHalDataReduced() {
+    __host__ __device__ inline static HaloData getHalDataReduced() {
 #if defined(__GPU_ARCH__)
         return globHalDataGPUReduced[HaloDepth];
 #else
@@ -363,31 +363,31 @@ public:
 #endif
     }
 
-    HOST_DEVICE inline static size_t getBufferSize() {
+    __host__ __device__ inline static size_t getBufferSize() {
         if (LatLayout == All)return getHalData().h_summed_buffer[15];
         else return getHalData().h_summed_bufferHalf[15];
 
     }
 
 
-    HOST_DEVICE inline static size_t get_SubHaloOffset(const short number) {
+    __host__ __device__ inline static size_t get_SubHaloOffset(const short number) {
 
         if (LatLayout == All)return getHalData().h_offsets[number];
         else return getHalData().h_offsetsHalf[number];
 
     }
 
-    HOST_DEVICE inline static size_t get_SubHaloSize(const short number) {
+    __host__ __device__ inline static size_t get_SubHaloSize(const short number) {
         return getHalData().get_SubHaloSize(number, LatLayout);
 
     }
 
-    HOST_DEVICE inline static size_t get_ReducedSubHaloSize(const short number) {
+    __host__ __device__ inline static size_t get_ReducedSubHaloSize(const short number) {
         return getHalDataReduced().get_SubHaloSize(number, LatLayout);
 
     }
 
-    HOST_DEVICE inline static void getCoord_eo(size_t &x, size_t &y, size_t &z, size_t &t,
+    __host__ __device__ inline static void getCoord_eo(size_t &x, size_t &y, size_t &z, size_t &t,
                                                        const size_t index,
                                                        const size_t vol1, const size_t vol2, const size_t vol3,
                                                        const bool par) {
@@ -407,7 +407,7 @@ public:
             ++x;
     }
 
-    HOST_DEVICE inline static void getCoord(size_t &x, size_t &y, size_t &z, size_t &t,
+    __host__ __device__ inline static void getCoord(size_t &x, size_t &y, size_t &z, size_t &t,
                                                     const size_t index,
                                                     const size_t vol1, const size_t vol2, const size_t vol3) {
 
@@ -426,20 +426,20 @@ public:
     }
 
 
-    HOST_DEVICE inline static void
+    __host__ __device__ inline static void
     getHypPlanePos(size_t number, size_t &pos_a, size_t &pos_b) {
         pos_a = number * 2;
         pos_b = number * 2 + 1;
     }
 
-    HOST_DEVICE inline static void
+    __host__ __device__ inline static void
     getPlanePos(size_t number, size_t dir, size_t &pos_a, size_t &pos_b) {
         number -= 4;
         pos_a = 8 + number * 4 + dir;
         pos_b = 8 + number * 4 + dir + (3 - 2 * dir);
     }
 
-    HOST_DEVICE inline static void
+    __host__ __device__ inline static void
     getStripePos(size_t number, size_t dir, size_t &pos_a, size_t &pos_b) {
 
         number -= 10;
@@ -447,7 +447,7 @@ public:
         pos_b = 32 + number * 8 + dir + (7 - 2 * dir);
     }
 
-    HOST_DEVICE inline static void
+    __host__ __device__ inline static void
     getCornerPos(size_t number, size_t dir, size_t &pos_a, size_t &pos_b) {
 
         number -= 14;
@@ -456,7 +456,7 @@ public:
     }
 
 
-    HOST_DEVICE inline static HaloSegment mapIntToHSeg(int bits) {
+    __host__ __device__ inline static HaloSegment mapIntToHSeg(int bits) {
         if (bits == 1) return X;
         if (bits == 2) return Y;
         if (bits == 4) return Z;
@@ -480,7 +480,7 @@ public:
         return X;
     }
 
-    HOST_DEVICE inline static HaloSegment getHSeg(sitexyzt coord) {
+    __host__ __device__ inline static HaloSegment getHSeg(sitexyzt coord) {
 
         int bits = 0;
 
@@ -499,7 +499,7 @@ public:
         return mapIntToHSeg(bits);
     }
 
-    HOST_DEVICE inline static short getlr(sitexyzt coord) {
+    __host__ __device__ inline static short getlr(sitexyzt coord) {
         short lr = 0;
         HaloSegment hseg = getHSeg(coord);
 
@@ -560,15 +560,15 @@ public:
     }
 
 
-    HOST_DEVICE inline static size_t getOuterHaloSize() {
+    __host__ __device__ inline static size_t getOuterHaloSize() {
         return getHalData().getBufferSize(LatLayout);
     }
 
-    HOST_DEVICE inline static size_t getInnerHaloSize() {
+    __host__ __device__ inline static size_t getInnerHaloSize() {
         return getHalDataReduced().getBufferSize(LatLayout);
     }
 
-    HOST_DEVICE inline static size_t getCenterSize() {
+    __host__ __device__ inline static size_t getCenterSize() {
         return GIndexer<LatLayout, HaloDepth>::getLatData().vol4 - getInnerHaloSize();
     }
 
@@ -590,7 +590,7 @@ public:
 ///   |______________|
 ///
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord(size_t HalIndex, size_t &HalNumber, size_t &LocHalIndex) {
 
 
@@ -685,7 +685,7 @@ public:
 ///   |______________|
 ///
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord(size_t HalIndex, size_t &HalNumber, size_t &LocHalIndex) {
 
         HalNumber = _getHaloNumber(HalIndex, &LocHalIndex);
@@ -782,7 +782,7 @@ public:
 ///  However if one does that by templating it, the compiler is not smart enough to optimize it away,
 ///  so that this indexer become slower...
 
-    HOST_DEVICE inline static sitexyzt getInnerCoord(size_t HalIndex) {
+    __host__ __device__ inline static sitexyzt getInnerCoord(size_t HalIndex) {
 
         size_t HalNumber = 0, LocHalIndex = 0;
         HalNumber = _getHaloNumberReduced(HalIndex, &LocHalIndex);
@@ -878,7 +878,7 @@ public:
 
     /// +++++++++++++++++++++++++++ 8 HYPERPLANES +++++++++++++++++++++++++++++++
     /// lr = 0,1
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Hyperplane_X(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -892,7 +892,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Hyperplane_Y(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -906,7 +906,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Hyperplane_Z(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -920,7 +920,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Hyperplane_T(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -936,7 +936,7 @@ public:
 
     /// +++++++++++++++++++++++++++++ 24 PLANES +++++++++++++++++++++++++++++++++
     /// lr = 0-3
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Plane_XY(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(z, t, x, y, LocHalIndex, getHalData().h_LZi, getHalData().h_ZT, getHalData().h_ZTH);
@@ -951,7 +951,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Plane_XZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, t, x, z, LocHalIndex, getHalData().h_LYi, getHalData().h_YT, getHalData().h_YTH);
@@ -965,7 +965,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Plane_XT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, z, x, t, LocHalIndex, getHalData().h_LYi, getHalData().h_YZ, getHalData().h_YZH);
@@ -979,7 +979,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Plane_YZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, t, y, z, LocHalIndex, getHalData().h_LXi, getHalData().h_XT, getHalData().h_XTH);
@@ -993,7 +993,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Plane_YT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, z, y, t, LocHalIndex, getHalData().h_LXi, getHalData().h_XZ, getHalData().h_XZH);
@@ -1007,7 +1007,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Plane_ZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, y, z, t, LocHalIndex, getHalData().h_LXi, getHalData().h_XY, getHalData().h_XYH);
@@ -1023,7 +1023,7 @@ public:
 
     /// ++++++++++++++++++++++++++++ 32 STRIPES +++++++++++++++++++++++++++++++++
     /// lr = 0-7
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Stripe_XYZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(t, x, y, z, LocHalIndex, getHalData().h_LTi, getHalData().h_TH, getHalData().h_THH);
@@ -1038,7 +1038,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Stripe_XYT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(z, x, y, t, LocHalIndex, getHalData().h_LZi, getHalData().h_ZH, getHalData().h_ZHH);
@@ -1053,7 +1053,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Stripe_XZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, x, z, t, LocHalIndex, getHalData().h_LYi, getHalData().h_YH, getHalData().h_YHH);
@@ -1068,7 +1068,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Stripe_YZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, y, z, t, LocHalIndex, getHalData().h_LXi, getHalData().h_XH, getHalData().h_XHH);
@@ -1085,7 +1085,7 @@ public:
 
     /// ++++++++++++++++++++++++++++ 16 CORNERS +++++++++++++++++++++++++++++++++
     /// lr = 0-15
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerHaloCoord_Corner(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1124,7 +1124,7 @@ public:
 
     /// +++++++++++++++++++++++++++ 8 HYPERPLANES +++++++++++++++++++++++++++++++
     /// lr = 0,1
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Hyperplane_X(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1137,7 +1137,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Hyperplane_Y(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1150,7 +1150,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Hyperplane_Z(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1163,7 +1163,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Hyperplane_T(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1178,7 +1178,7 @@ public:
 
     /// +++++++++++++++++++++++++++++ 24 PLANES +++++++++++++++++++++++++++++++++
     /// lr = 0-3
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Plane_XY(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(z, t, x, y, LocHalIndex, getHalData().h_LZi, getHalData().h_ZT, getHalData().h_ZTH);
@@ -1191,7 +1191,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Plane_XZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, t, x, z, LocHalIndex, getHalData().h_LYi, getHalData().h_YT, getHalData().h_YTH);
@@ -1203,7 +1203,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Plane_XT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, z, x, t, LocHalIndex, getHalData().h_LYi, getHalData().h_YZ, getHalData().h_YZH);
@@ -1215,7 +1215,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Plane_YZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, t, y, z, LocHalIndex, getHalData().h_LXi, getHalData().h_XT, getHalData().h_XTH);
@@ -1227,7 +1227,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Plane_YT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, z, y, t, LocHalIndex, getHalData().h_LXi, getHalData().h_XZ, getHalData().h_XZH);
@@ -1239,7 +1239,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Plane_ZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, y, z, t, LocHalIndex, getHalData().h_LXi, getHalData().h_XY, getHalData().h_XYH);
@@ -1253,7 +1253,7 @@ public:
 
     /// ++++++++++++++++++++++++++++ 32 STRIPES +++++++++++++++++++++++++++++++++
     /// lr = 0-7
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Stripe_XYZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(t, x, y, z, LocHalIndex, getHalData().h_LTi, getHalData().h_TH, getHalData().h_THH);
@@ -1265,7 +1265,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Stripe_XYT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(z, x, y, t, LocHalIndex, getHalData().h_LZi, getHalData().h_ZH, getHalData().h_ZHH);
@@ -1277,7 +1277,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Stripe_XZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, x, z, t, LocHalIndex, getHalData().h_LYi, getHalData().h_YH, getHalData().h_YHH);
@@ -1289,7 +1289,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Stripe_YZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, y, z, t, LocHalIndex, getHalData().h_LXi, getHalData().h_XH, getHalData().h_XHH);
@@ -1303,7 +1303,7 @@ public:
 
     /// ++++++++++++++++++++++++++++ 16 CORNERS +++++++++++++++++++++++++++++++++
     /// lr = 0-15
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getOuterHaloCoord_Corner(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1340,7 +1340,7 @@ public:
 
     /// +++++++++++++++++++++++++++ 8 HYPERPLANES +++++++++++++++++++++++++++++++
     /// lr = 0,1
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Hyperplane_X(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1354,7 +1354,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Hyperplane_Y(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1368,7 +1368,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Hyperplane_Z(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1382,7 +1382,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Hyperplane_T(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1398,7 +1398,7 @@ public:
 
     /// +++++++++++++++++++++++++++++ 24 PLANES +++++++++++++++++++++++++++++++++
     /// lr = 0-3
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Plane_XY(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(z, t, x, y, LocHalIndex, getHalDataReduced().h_LZi, getHalDataReduced().h_ZT,
@@ -1411,7 +1411,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Plane_XZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, t, x, z, LocHalIndex, getHalDataReduced().h_LYi, getHalDataReduced().h_YT,
@@ -1424,7 +1424,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Plane_XT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, z, x, t, LocHalIndex, getHalDataReduced().h_LYi, getHalDataReduced().h_YZ,
@@ -1437,7 +1437,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Plane_YZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, t, y, z, LocHalIndex, getHalDataReduced().h_LXi, getHalDataReduced().h_XT,
@@ -1450,7 +1450,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Plane_YT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, z, y, t, LocHalIndex, getHalDataReduced().h_LXi, getHalDataReduced().h_XZ,
@@ -1463,7 +1463,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Plane_ZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, y, z, t, LocHalIndex, getHalDataReduced().h_LXi, getHalDataReduced().h_XY,
@@ -1478,7 +1478,7 @@ public:
 
     /// ++++++++++++++++++++++++++++ 32 STRIPES +++++++++++++++++++++++++++++++++
     /// lr = 0-7
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Stripe_XYZ(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(t, x, y, z, LocHalIndex, getHalDataReduced().h_LTi, getHalDataReduced().h_TH,
@@ -1491,7 +1491,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Stripe_XYT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(z, x, y, t, LocHalIndex, getHalDataReduced().h_LZi, getHalDataReduced().h_ZH,
@@ -1504,7 +1504,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Stripe_XZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(y, x, z, t, LocHalIndex, getHalDataReduced().h_LYi, getHalDataReduced().h_YH,
@@ -1517,7 +1517,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
 
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Stripe_YZT(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
         getCoord(x, y, z, t, LocHalIndex, getHalDataReduced().h_LXi, getHalDataReduced().h_XH,
@@ -1532,7 +1532,7 @@ public:
 
     /// ++++++++++++++++++++++++++++ 16 CORNERS +++++++++++++++++++++++++++++++++
     /// lr = 0-15
-    HOST_DEVICE inline static sitexyzt
+    __host__ __device__ inline static sitexyzt
     getInnerCoord_Corner(size_t LocHalIndex, short lr) {
         size_t x, y, z, t;
 
@@ -1566,7 +1566,7 @@ public:
 ///
 
 
-    HOST_DEVICE inline static sitexyzt getCenterCoord(size_t CenterIndex) {
+    __host__ __device__ inline static sitexyzt getCenterCoord(size_t CenterIndex) {
 
 
         size_t x = 0, y = 0, z = 0, t = 0;

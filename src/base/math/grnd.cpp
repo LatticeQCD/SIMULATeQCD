@@ -151,7 +151,7 @@ void grnd_state<onDevice>::make_rng_state(unsigned int seed){
 
 
 template<bool onDevice>
-HOST_DEVICE  uint4* grnd_state<onDevice>::getElement(gSite site){
+__host__ __device__  uint4* grnd_state<onDevice>::getElement(gSite site){
     return &state[site.isite];
 }
 

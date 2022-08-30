@@ -8,7 +8,7 @@
 
 
 struct calcStaggeredPhase {
-    inline HOST_DEVICE int operator()(const gSiteMu &siteMu) const {
+    inline __host__ __device__ int operator()(const gSiteMu &siteMu) const {
 
         typedef GIndexer<All> GInd;
 
@@ -36,7 +36,7 @@ struct calcStaggeredPhase {
  *
  */
 struct calcStaggeredBoundary {
-    inline HOST_DEVICE int operator()(const gSiteMu &siteMu) const {
+    inline __host__ __device__ int operator()(const gSiteMu &siteMu) const {
 
         typedef GIndexer<All> GInd;
 
@@ -51,7 +51,7 @@ struct calcStaggeredBoundary {
 
 template <class floatT>
 struct imagMuphase {
-    inline HOST_DEVICE GPUcomplex<floatT> operator()(const gSiteMu &siteMu, double chmp) const {
+    inline __host__ __device__ GPUcomplex<floatT> operator()(const gSiteMu &siteMu, double chmp) const {
 
         GPUcomplex<floatT> img_chmp;
 

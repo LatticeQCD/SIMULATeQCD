@@ -16,18 +16,18 @@
  * Utility function to calculate quotient and remainder of
  * nominator / denominator.
  */
-HOST_DEVICE void inline divmod(int nominator, int denominator,
+__host__ __device__ void inline divmod(int nominator, int denominator,
         int &quotient, int &remainder) {
     quotient  = nominator / denominator;
     remainder = nominator - (quotient * denominator);
 }
-HOST_DEVICE void inline divmod(size_t nominator, size_t denominator,
+__host__ __device__ void inline divmod(size_t nominator, size_t denominator,
         size_t &quotient, size_t &remainder) {
     quotient  = nominator / denominator;
     remainder = nominator - (quotient * denominator);
 }
 
-SQCD_HOST void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
+__host__ void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
         const size_t elems, const size_t blockSize) {
     blockDim = blockSize;
     gridDim  = static_cast<int>(ceilf(static_cast<float>(elems) / static_cast<float>(blockDim.x)));
@@ -54,7 +54,7 @@ private:
 /**
  * Utility method for speedy testing of whether a number is odd
  */
-HOST_DEVICE inline bool isOdd(int cand) { return (cand & 0x1); }
+__host__ __device__ inline bool isOdd(int cand) { return (cand & 0x1); }
 
 
 #endif /* UTIL_H */

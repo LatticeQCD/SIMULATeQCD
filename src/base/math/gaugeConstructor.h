@@ -31,7 +31,7 @@ struct GaugeConstructor : public GeneralAccessor<GCOMPLEX(floatT_memory), EntryC
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<comp>::count >(elements) {
     }
     /// Constructor for one memory chunk, where all entries are separated by object_count
-    HOST_DEVICE explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<comp>::count >(elementsBase, object_count){
     }
     explicit GaugeConstructor() : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<comp>::count >(){ }
@@ -44,12 +44,12 @@ struct GaugeConstructor<floatT_memory, R18> : public GeneralAccessor<GCOMPLEX(
     explicit GaugeConstructor(GCOMPLEX(floatT_memory) *const elements[EntryCount<R18>::count])
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R18>::count>(elements) {}
 
-    HOST_DEVICE explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R18>::count >(elementsBase, object_count) {}
 
     explicit GaugeConstructor() : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R18>::count>() {}
 
-    HOST_DEVICE inline void setEntriesComm(GaugeConstructor<floatT_memory,R18> &src_acc,
+    __host__ __device__ inline void setEntriesComm(GaugeConstructor<floatT_memory,R18> &src_acc,
                                                    size_t setIndex, size_t getIndex) {
         this->template setElementEntry<e00>(setIndex, src_acc.template getElementEntry<e00>(getIndex));
         this->template setElementEntry<e01>(setIndex, src_acc.template getElementEntry<e01>(getIndex));
@@ -62,7 +62,7 @@ struct GaugeConstructor<floatT_memory, R18> : public GeneralAccessor<GCOMPLEX(
         this->template setElementEntry<e22>(setIndex, src_acc.template getElementEntry<e22>(getIndex));
     }
 
-    HOST_DEVICE inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
+    __host__ __device__ inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
         this->template setElementEntry<e00>(idx.indexMuFull, mat.getLink00());
         this->template setElementEntry<e01>(idx.indexMuFull, mat.getLink01());
         this->template setElementEntry<e02>(idx.indexMuFull, mat.getLink02());
@@ -74,7 +74,7 @@ struct GaugeConstructor<floatT_memory, R18> : public GeneralAccessor<GCOMPLEX(
         this->template setElementEntry<e22>(idx.indexMuFull, mat.getLink22());
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
         GSU3<floatT_memory> ret(
                 this->template getElementEntry<e00>(idx.indexMuFull),
                 this->template getElementEntry<e01>(idx.indexMuFull),
@@ -88,7 +88,7 @@ struct GaugeConstructor<floatT_memory, R18> : public GeneralAccessor<GCOMPLEX(
         return ret;
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
         return GSU3<floatT_memory>(conj(this->template getElementEntry<e00>(idx.indexMuFull)),
                                    conj(this->template getElementEntry<e10>(idx.indexMuFull)),
                                    conj(this->template getElementEntry<e20>(idx.indexMuFull)),
@@ -108,13 +108,13 @@ struct GaugeConstructor<floatT_memory, U3R14> : public GeneralAccessor<GCOMPLEX(
     explicit GaugeConstructor(GCOMPLEX(floatT_memory) *const elements[EntryCount<U3R14>::count])
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<U3R14>::count >(elements) {
     }
-    HOST_DEVICE explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<U3R14>::count >(elementsBase, object_count){
     }
     explicit GaugeConstructor() : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<U3R14>::count >(){ }
 
 
-    HOST_DEVICE inline void setEntriesComm(GaugeConstructor<floatT_memory,U3R14> &src_acc,
+    __host__ __device__ inline void setEntriesComm(GaugeConstructor<floatT_memory,U3R14> &src_acc,
                                                    size_t setIndex, size_t getIndex) {
         this->template setElementEntry<e00>(setIndex, src_acc.template getElementEntry<e00>(getIndex));
         this->template setElementEntry<e01>(setIndex, src_acc.template getElementEntry<e01>(getIndex));
@@ -125,7 +125,7 @@ struct GaugeConstructor<floatT_memory, U3R14> : public GeneralAccessor<GCOMPLEX(
         this->template setElementEntry<e20>(setIndex, src_acc.template getElementEntry<e20>(getIndex));
     }
 
-    HOST_DEVICE inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
+    __host__ __device__ inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
         this->template setElementEntry<e00>(idx.indexMuFull, mat.getLink00());
         this->template setElementEntry<e01>(idx.indexMuFull, mat.getLink01());
         this->template setElementEntry<e02>(idx.indexMuFull, mat.getLink02());
@@ -135,7 +135,7 @@ struct GaugeConstructor<floatT_memory, U3R14> : public GeneralAccessor<GCOMPLEX(
         this->template setElementEntry<e20>(idx.indexMuFull, det(mat));
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
         GSU3<floatT_memory> ret(
                 this->template getElementEntry<e00>(idx.indexMuFull),
                 this->template getElementEntry<e01>(idx.indexMuFull),
@@ -150,7 +150,7 @@ struct GaugeConstructor<floatT_memory, U3R14> : public GeneralAccessor<GCOMPLEX(
         return ret;
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
         GSU3<floatT_memory> tmp = GSU3<floatT_memory>(
                 conj(this->template getElementEntry<e00>(idx.indexMuFull)),
                 conj(this->template getElementEntry<e10>(idx.indexMuFull)),
@@ -175,12 +175,12 @@ struct GaugeConstructor<floatT_memory, R14> : public GeneralAccessor<GCOMPLEX(
     explicit GaugeConstructor(GCOMPLEX(floatT_memory) *const elements[EntryCount<R14>::count])
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R14>::count >(elements) {
     }
-    HOST_DEVICE explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R14>::count >(elementsBase, object_count) {
     }
     explicit GaugeConstructor() : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R14>::count>() { }
 
-    HOST_DEVICE inline void setEntriesComm(GaugeConstructor<floatT_memory,R14> &src_acc,
+    __host__ __device__ inline void setEntriesComm(GaugeConstructor<floatT_memory,R14> &src_acc,
                                                    size_t setIndex, size_t getIndex) {
         this->template setElementEntry<e00>(setIndex, src_acc.template getElementEntry<e00>(getIndex));
         this->template setElementEntry<e01>(setIndex, src_acc.template getElementEntry<e01>(getIndex));
@@ -191,7 +191,7 @@ struct GaugeConstructor<floatT_memory, R14> : public GeneralAccessor<GCOMPLEX(
         this->template setElementEntry<e20>(setIndex, src_acc.template getElementEntry<e20>(getIndex));
     }
 
-    HOST_DEVICE inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
+    __host__ __device__ inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
         this->template setElementEntry<e00>(idx.indexMuFull, mat.getLink00());
         this->template setElementEntry<e01>(idx.indexMuFull, mat.getLink01());
         this->template setElementEntry<e02>(idx.indexMuFull, mat.getLink02());
@@ -201,7 +201,7 @@ struct GaugeConstructor<floatT_memory, R14> : public GeneralAccessor<GCOMPLEX(
         this->template setElementEntry<e20>(idx.indexMuFull, det(mat));
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
         GSU3<floatT_memory> ret(
                 this->template getElementEntry<e00>(idx.indexMuFull),
                 this->template getElementEntry<e01>(idx.indexMuFull),
@@ -216,7 +216,7 @@ struct GaugeConstructor<floatT_memory, R14> : public GeneralAccessor<GCOMPLEX(
         return ret;
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
         GSU3<floatT_memory> tmp = GSU3<floatT_memory>(
                 conj(this->template getElementEntry<e00>(idx.indexMuFull)),
                 conj(this->template getElementEntry<e10>(idx.indexMuFull)),
@@ -240,12 +240,12 @@ struct GaugeConstructor<floatT_memory, R12> : public GeneralAccessor<GCOMPLEX(fl
     explicit GaugeConstructor(GCOMPLEX(floatT_memory) *const elements[EntryCount<R12>::count])
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R12>::count >(elements) {
     }
-    HOST_DEVICE explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R12>::count>(elementsBase, object_count) {
     }
     explicit GaugeConstructor() : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<R12>::count>() { }
 
-    HOST_DEVICE inline void setEntriesComm(GaugeConstructor<floatT_memory, R12> &src_acc,
+    __host__ __device__ inline void setEntriesComm(GaugeConstructor<floatT_memory, R12> &src_acc,
                                                    size_t setIndex, size_t getIndex) {
         this->template setElementEntry<e00>(setIndex, src_acc.template getElementEntry<e00>(getIndex));
         this->template setElementEntry<e01>(setIndex, src_acc.template getElementEntry<e01>(getIndex));
@@ -255,7 +255,7 @@ struct GaugeConstructor<floatT_memory, R12> : public GeneralAccessor<GCOMPLEX(fl
         this->template setElementEntry<e12>(setIndex, src_acc.template getElementEntry<e12>(getIndex));
     }
 
-    HOST_DEVICE inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
+    __host__ __device__ inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
         this->template setElementEntry<e00>(idx.indexMuFull, mat.getLink00());
         this->template setElementEntry<e01>(idx.indexMuFull, mat.getLink01());
         this->template setElementEntry<e02>(idx.indexMuFull, mat.getLink02());
@@ -264,7 +264,7 @@ struct GaugeConstructor<floatT_memory, R12> : public GeneralAccessor<GCOMPLEX(fl
         this->template setElementEntry<e12>(idx.indexMuFull, mat.getLink12());
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
         GSU3<floatT_memory> ret(
                 this->template getElementEntry<e00>(idx.indexMuFull),
                 this->template getElementEntry<e01>(idx.indexMuFull),
@@ -278,7 +278,7 @@ struct GaugeConstructor<floatT_memory, R12> : public GeneralAccessor<GCOMPLEX(fl
         return ret;
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
         GSU3<floatT_memory> tmp = GSU3<floatT_memory>(
                 conj(this->template getElementEntry<e00>(idx.indexMuFull)),
                 conj(this->template getElementEntry<e10>(idx.indexMuFull)),
@@ -309,12 +309,12 @@ public:
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<STAGG_R12>::count>(elements) {
         throw std::runtime_error(stdLogger.fatal("STAGG_R12 should not be used at the moment"));
     }
-    HOST_DEVICE explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
+    __host__ __device__ explicit GaugeConstructor(GCOMPLEX(floatT_memory) *elementsBase, size_t object_count)
             : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<STAGG_R12>::count >(elementsBase, object_count) {
     }
     explicit GaugeConstructor() : GeneralAccessor<GCOMPLEX(floatT_memory), EntryCount<STAGG_R12>::count>() { }
 
-    HOST_DEVICE inline void setEntriesComm(GaugeConstructor<floatT_memory,STAGG_R12> &src_acc,
+    __host__ __device__ inline void setEntriesComm(GaugeConstructor<floatT_memory,STAGG_R12> &src_acc,
                                                    size_t setIndex, size_t getIndex) {
         this->template setElementEntry<e00>(setIndex, src_acc.template getElementEntry<e00>(getIndex));
         this->template setElementEntry<e01>(setIndex, src_acc.template getElementEntry<e01>(getIndex));
@@ -324,7 +324,7 @@ public:
         this->template setElementEntry<e12>(setIndex, src_acc.template getElementEntry<e12>(getIndex));
     }
 
-    HOST_DEVICE inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
+    __host__ __device__ inline void construct(const gSiteMu& idx, const GSU3<floatT_memory> &mat) {
         this->template setElementEntry<e00>(idx.indexMuFull, mat.getLink00());
         this->template setElementEntry<e01>(idx.indexMuFull, mat.getLink01());
         this->template setElementEntry<e02>(idx.indexMuFull, mat.getLink02());
@@ -333,7 +333,7 @@ public:
         this->template setElementEntry<e12>(idx.indexMuFull, mat.getLink12());
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstruct(const gSiteMu& idx) const {
         GSU3<floatT_memory> ret(
                 this->template getElementEntry<e00>(idx.indexMuFull),
                 this->template getElementEntry<e01>(idx.indexMuFull),
@@ -348,7 +348,7 @@ public:
         return ret;
     }
 
-    HOST_DEVICE inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
+    __host__ __device__ inline GSU3<floatT_memory> reconstructDagger(const gSiteMu& idx) const {
         GSU3<floatT_memory> tmp = GSU3<floatT_memory>(
                 conj(this->template getElementEntry<e00>(idx.indexMuFull)),
                 conj(this->template getElementEntry<e10>(idx.indexMuFull)),

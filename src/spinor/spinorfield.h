@@ -17,18 +17,18 @@
 #include <memory>
 
 template <Layout parity>
-HOST_DEVICE constexpr inline Layout LayoutSwitcher();
+__host__ __device__ constexpr inline Layout LayoutSwitcher();
 
 template <>
-HOST_DEVICE constexpr inline Layout LayoutSwitcher<All>() {
+__host__ __device__ constexpr inline Layout LayoutSwitcher<All>() {
     return All;
 }
 template <>
-HOST_DEVICE constexpr inline Layout LayoutSwitcher<Odd>() {
+__host__ __device__ constexpr inline Layout LayoutSwitcher<Odd>() {
     return Even;
 }
 template <>
-HOST_DEVICE constexpr inline Layout LayoutSwitcher<Even>() {
+__host__ __device__ constexpr inline Layout LayoutSwitcher<Even>() {
     return Odd;
 }
 
@@ -443,14 +443,14 @@ auto operator / (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks
 template<class floatT_source, class floatT_target, bool onDevice, Layout LatLayout, size_t HaloDepthSpin, size_t NStacks>
 struct convert_spinor_precision {
 
-    HOST_DEVICE void initialize(__attribute__((unused)) gSite& site){
+    __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
         //We do not initialize anything
     }
     gVect3arrayAcc<floatT_source> spinor_source;
 
     convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
 
-    HOST_DEVICE auto operator()(gSiteStack site) {
+    __host__ __device__ auto operator()(gSiteStack site) {
         
         return spinor_source.template getElement<floatT_target>(site);
     }

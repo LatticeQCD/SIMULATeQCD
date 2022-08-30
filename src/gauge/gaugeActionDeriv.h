@@ -16,7 +16,7 @@
 
 
 template<class floatT,size_t HaloDepth>
-HOST_DEVICE GSU3<floatT> inline gaugeActionDerivPlaq(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+__host__ __device__ GSU3<floatT> inline gaugeActionDerivPlaq(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
     GSU3<floatT> result = gsu3_zero<floatT>();
     GSU3<floatT> tmp = gsu3_zero<floatT>();
 
@@ -32,7 +32,7 @@ HOST_DEVICE GSU3<floatT> inline gaugeActionDerivPlaq(gaugeAccessor<floatT> gAcc,
 }
 
 template<class floatT,size_t HaloDepth>
-HOST_DEVICE GSU3<floatT> inline gaugeActionDerivRect(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+__host__ __device__ GSU3<floatT> inline gaugeActionDerivRect(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All,HaloDepth> GInd;
     GSU3<floatT> result = gsu3_zero<floatT>();
     GSU3<floatT> tmp = gsu3_zero<floatT>();
@@ -79,7 +79,7 @@ HOST_DEVICE GSU3<floatT> inline gaugeActionDerivRect(gaugeAccessor<floatT> gAcc,
 }
 
 template<class floatT,size_t HaloDepth>
-HOST_DEVICE GSU3<floatT> inline symanzikGaugeActionDeriv(gaugeAccessor<floatT> latacc, gSite s, int mu) {
+__host__ __device__ GSU3<floatT> inline symanzikGaugeActionDeriv(gaugeAccessor<floatT> latacc, gSite s, int mu) {
     typedef GIndexer<All,HaloDepth> GInd;
    // GSU3<floatT> tmp = (5. / 3.) * gaugeActionDerivPlaq<floatT,HaloDepth>(gAcc, site, mu) -
      //                  (1. / 12.) * gaugeActionDerivRect<floatT,HaloDepth>(gAcc, site, mu);
@@ -167,7 +167,7 @@ HOST_DEVICE GSU3<floatT> inline symanzikGaugeActionDeriv(gaugeAccessor<floatT> l
 
 //up to an additional factor of -beta/3 identical to symanikGaugeActionDeriv but faster
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
-HOST_DEVICE GSU3<floatT> inline gauge_force(gaugeAccessor<floatT,comp> latacc, gSiteMu site, floatT beta){
+__host__ __device__ GSU3<floatT> inline gauge_force(gaugeAccessor<floatT,comp> latacc, gSiteMu site, floatT beta){
     
     typedef GIndexer<All,HaloDepth> GInd;
 

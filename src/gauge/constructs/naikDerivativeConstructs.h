@@ -14,7 +14,7 @@ __device__ inline floatT sgn_naik(gSiteMu siteMu) {
   }*/
 
 template<class floatT,size_t HaloDepth>
-HOST_DEVICE GSU3<floatT> inline naikLinkDerivative(gaugeAccessor<floatT> gAcc,
+__host__ __device__ GSU3<floatT> inline naikLinkDerivative(gaugeAccessor<floatT> gAcc,
                  gaugeAccessor<floatT> finAccessor, gSite site, int mu) {
 typedef GIndexer<All, HaloDepth> GInd;
 

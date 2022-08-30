@@ -11,7 +11,7 @@
 #include "gsvd.h"
 
 template<class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18>
-HOST_DEVICE GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> fAcc, gSite site, int mu) {
+__host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> fAcc, gSite site, int mu) {
 
     typedef GIndexer<All, HaloDepth> GInd;
 

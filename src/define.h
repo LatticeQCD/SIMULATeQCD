@@ -29,10 +29,9 @@
 #define AT __FILE__ ":" TOSTRING(__LINE__)
 
 #ifdef USE_CPU_ONLY
-#define HOST_DEVICE
-#define SQCD_HOST
-#define DEVICE
-#define CONSTANT const
+#define __host__
+#define __device__
+#define __constant__
 #define GPUERROR_T void*
 
 struct float2 {
@@ -55,10 +54,6 @@ struct dim3 {
     constexpr operator uint3(void) const { return uint3{x, y, z}; }
 };
 #else
-#define HOST_DEVICE __host__ __device__
-#define SQCD_HOST __host__
-#define DEVICE __device__
-#define CONSTANT __constant__
 #define GPUERROR_T gpuError_t
 #endif
 

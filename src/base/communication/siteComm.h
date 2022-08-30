@@ -310,7 +310,7 @@ struct ExtractInnerHalo {
         }
     }
 
-    inline HOST_DEVICE void operator()(HaloSite site) {
+    inline __host__ __device__ void operator()(HaloSite site) {
 
         Accessor _hal_acc(pointer[site.HalNumber], size[site.HalNumber]);
 
@@ -354,7 +354,7 @@ struct InjectOuterHalo {
         }
     }
 
-    inline HOST_DEVICE void operator()(HaloSite site) {
+    inline __host__ __device__ void operator()(HaloSite site) {
 
         Accessor _hal_acc(pointer[site.HalNumber], size[site.HalNumber]);
         for (size_t mu = 0; mu < ElemCount; mu++) {

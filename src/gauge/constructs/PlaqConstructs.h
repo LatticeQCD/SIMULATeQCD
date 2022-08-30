@@ -15,7 +15,7 @@
 
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-HOST_DEVICE GSU3<floatT> inline Plaq_P(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+__host__ __device__ GSU3<floatT> inline Plaq_P(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> temp;
@@ -38,7 +38,7 @@ HOST_DEVICE GSU3<floatT> inline Plaq_P(gaugeAccessor<floatT,comp> gAcc, gSite si
     return temp;
 }
 template<class floatT,size_t HaloDepth,CompressionType comp>
-HOST_DEVICE GSU3<floatT> inline Plaq_Q(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+__host__ __device__ GSU3<floatT> inline Plaq_Q(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> temp;
@@ -62,7 +62,7 @@ HOST_DEVICE GSU3<floatT> inline Plaq_Q(gaugeAccessor<floatT,comp> gAcc, gSite si
 }
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-HOST_DEVICE GSU3<floatT> inline Plaq_R(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+__host__ __device__ GSU3<floatT> inline Plaq_R(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> temp;
@@ -85,7 +85,7 @@ HOST_DEVICE GSU3<floatT> inline Plaq_R(gaugeAccessor<floatT,comp> gAcc, gSite si
     return temp;
 }
 template<class floatT,size_t HaloDepth,CompressionType comp>
-HOST_DEVICE GSU3<floatT> inline Plaq_S(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+__host__ __device__ GSU3<floatT> inline Plaq_S(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> temp;

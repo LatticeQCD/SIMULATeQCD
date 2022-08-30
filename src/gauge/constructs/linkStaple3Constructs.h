@@ -16,7 +16,7 @@
 
 
 template<class floatT,size_t HaloDepth, CompressionType comp>
-  DEVICE GSU3<floatT> inline linkStaple3Up(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+  __device__ GSU3<floatT> inline linkStaple3Up(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> temp;
@@ -48,7 +48,7 @@ template<class floatT,size_t HaloDepth, CompressionType comp>
 }
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-  DEVICE GSU3<floatT> inline linkStaple3Dn(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
+  __device__ GSU3<floatT> inline linkStaple3Dn(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> temp;
