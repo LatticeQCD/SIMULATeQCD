@@ -25,9 +25,11 @@ lattice community. More information about the ILDG effort can be found
 A file saved in ILDG format format consists of several parts packaged using the 
 Lattice QCD Interchange Message
 Encapsulation (LIME) format. (You can learn more about LIME below.)
-LIME files are organized as follows:
+LIME files are generally organized as follows:
 - One encapsulates ASCII or binary data into _records_.
 - The records are packaged into _messages_. 
+In SIMULATeQCD, we do not really take advantage of this hierarchy, and organize our output
+LIME files as four records, each containing a single message.
 
 The `ildg-format` record is an XML document with some set of non-mutable parameters needed to 
 read the binary. Here is an example:
@@ -55,9 +57,20 @@ In this format a `Gaugefield` is stored as an 8 (or 7) dimensional array of floa
 7. color index $b$
 8. index indicating real (0) or imaginary (1) part 
 
-The last entry is the `checksum`, which is a number characteristic of some binary data.
-Two checksums are calculated for ILDG, both of which are extremely sensitive to changes
-in the binary file; indeed if even a single bit is changed, the `checksum` changes.
+The next record is a `ildg-data-lfn` record. When the configuration is uploaded somewhere,
+the Logical File Name (LFN) is the string used to identify it. The ILDG standard for
+constructing LFNs is
+```C++  
+LFN = "mc://ldg/"+collaborationName+"/"+projectName+"/"+ensembleName+"/"+fileName;
+```
+Therefore this is how we construct it automatically in SIMULATeQCD.
+
+The last record is the `checksum`, which is a number characteristic of some binary data.
+This checksum is technically not required by the ILDG format, so we refer to it
+as a `scidac-checksum`.
+Two checksums are calculated for SIMULATeQCD's ILDG configurations, both of which 
+are extremely sensitive to changes
+in the binary file; indeed if even a single bit is changed, the checksum changes.
 By comparing the expected `checksum` saved in the header of an ILDG file with the
 calculated `checksum` upon read in, one can tell whether the file has been corrupted.
  
@@ -89,12 +102,13 @@ Data Grid, which is not known at the time of generation. Therefore there must
 always be some post processing to get an ILDG configuration ready for storage.
 
 With this in mind, what is implemented at the time of writing is this: Each
-configuration made by SIMULATeQCD is a LIME file with the minimal amount
+ILDG configuration made by SIMULATeQCD is a LIME file with the minimal amount
 of information required for convenient reading by SIMULATeQCD, whose gauge
 field is stored in binary according to the convention above. Since we can
-read LIME format already, we are able to read arbitrary ILDG configurations.
+read LIME format already, we are able to read ILDG configurations.
 However we cannot control how ILDG readers are implemented in other codes,
-e.g. QUDA, so a configuration made by SIMULATeQCD will in general require
+e.g. [QUDA](https://github.com/lattice/quda), so a configuration made 
+by SIMULATeQCD will in general require
 further processing to be readable by other codes.
 
 ### More about LIME
