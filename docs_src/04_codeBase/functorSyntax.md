@@ -12,10 +12,10 @@ which together comprise _functor syntax_.
 
 Each functor is implemented as a `struct`. One passes the arguments of the functor
 when initializing the `struct`. The argument over which the functor should
-be iterated is implemented by the syntax `operator()`.
+be iterated is implemented by overloading the syntax `operator()` of the `struct`.
 The `RunFunctors` class contains all methods that iterate functors over
 the desired target set. We choose to associate
-`gSite` and `gSiteMu` objects to sites and links, respectively;
+`gSite` and `gSiteMu` objects to the coordinates of sites and links, respectively;
 hence one usually passes a `gSite` or `gSiteMu` object
 to the `operator()`. The class also contains several
 `CalcGSite` methods that tell the iterator how to translate from

@@ -244,8 +244,8 @@ Some example of how to construct an input parameter class can be found in <code 
 the <code class="docutils literal notranslate"><span class="pre">gradientFlowParam</span></code> class.</p>
 <p>In your executable file define something like that, for each parameter that you need (see the example above). Notice that the
 capital words are the one that you have to change:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
-<span class="k">struct</span> <span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">YOUROWNCLASS</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">LatticeParameters</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
 <span class="w">  </span><span class="n">Parameter</span><span class="o">&lt;</span><span class="n">TYPE</span><span class="p">,</span><span class="w"> </span><span class="n">DIMENSION</span><span class="o">&gt;</span><span class="w"> </span><span class="n">NAME_OF_THE_PARAMETER</span><span class="p">;</span><span class="w"></span>
 
