@@ -47,30 +47,30 @@ public:
 
     /// Set values.
     template<class floatT>
-    __host__ __device__ inline void setElement(const size_t isite, const floatT value) {
+    __device__  __host__ inline void setElement(const size_t isite, const floatT value) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         arr[isite] = value;
     }
     template<class floatT>
-    __host__ __device__ inline void setElement(const gSite& site, const floatT value) {
+    __device__  __host__ inline void setElement(const gSite& site, const floatT value) {
         setValue(site.isite, value);
     }
     template<class floatT>
-    __host__ __device__ inline void setElement(const gSiteStack& site, const floatT value) {
+    __device__  __host__ inline void setElement(const gSiteStack& site, const floatT value) {
         setValue(site.isiteStack, value);
     }
 
     /// Get values.
     template<class floatT>
-    __host__ __device__ floatT getElement(const gSite& site) {
+    __device__  __host__ floatT getElement(const gSite& site) {
         return getElement<floatT>(site.isite);
     }
     template<class floatT>
-    __host__ __device__ floatT getElement(const gSiteStack& site) {
+    __device__  __host__ floatT getElement(const gSiteStack& site) {
         return getElement<floatT>(site.isiteStack);
     }
     template<class floatT>
-    __host__ __device__ inline floatT getElement(const size_t isite) {
+    __device__  __host__ inline floatT getElement(const size_t isite) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         return arr[isite];
     }

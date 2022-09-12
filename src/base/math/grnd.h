@@ -9,7 +9,6 @@
 #include <curand_kernel.h>
 #endif
 
-
 #include "../../define.h"
 #include "../gutils.h"
 #include "../IO/misc.h"
@@ -39,14 +38,14 @@ template<> __host__ __device__ inline double minVal<double>(){ return DBL_MIN; }
 /**
 * internal functions, should only be called from get_rand!
 */
-__host__ __device__ inline unsigned taus_step( unsigned &z, int S1, int S2, int S3, unsigned M)
+__device__ __host__ inline unsigned taus_step( unsigned &z, int S1, int S2, int S3, unsigned M)
 {
     unsigned b=((((z<<S1) &0xffffffffUL)^z)>>S2);
     return z=((((z &M)<<S3) &0xffffffffUL)^b);
 }
 
 
-__host__ __device__ inline unsigned LCG_step( unsigned &z, unsigned A, unsigned C)
+__device__ __host__ inline unsigned LCG_step( unsigned &z, unsigned A, unsigned C)
 {
     return z=(((A*z) & 0xffffffffUL) +C);
 }
@@ -54,7 +53,7 @@ __host__ __device__ inline unsigned LCG_step( unsigned &z, unsigned A, unsigned 
 
 /// A random variable in [0,1].
 template<class floatT>
-__host__ __device__ inline floatT get_rand(uint4* state)
+__device__ __host__ inline floatT get_rand(uint4* state)
 {
     return 2.3283064365386963e-10*( taus_step( state->x, 13, 19, 12, 4294967294ul)^
                                     taus_step( state->y, 2, 25, 4,   4294967288ul)^
@@ -64,7 +63,7 @@ __host__ __device__ inline floatT get_rand(uint4* state)
 
 /// A random variable in (0,1].
 template<class floatT>
-__host__ __device__ inline floatT get_rand_excl0(uint4* state)
+__device__ __host__ inline floatT get_rand_excl0(uint4* state)
 {
     floatT xR = get_rand<floatT>(state);
     return xR + (1.0-xR)*minVal<floatT>();

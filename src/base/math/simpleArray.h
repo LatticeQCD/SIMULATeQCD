@@ -12,18 +12,18 @@ class SimpleArray{
 
     public:
 
-    __host__ __device__ T& operator[](size_t i){
+    __device__ __host__ T& operator[](size_t i){
         return values[i];
     }
 
 
-    __host__ __device__ inline auto operator()(gSiteStack site) const
+    __device__ __host__ inline auto operator()(gSiteStack site) const
     {
         return values[site.stack];
     }
 
 
-    __host__ __device__ inline auto operator()(gSiteMu site) const
+    __device__ __host__ inline auto operator()(gSiteMu site) const
     {
         return values[site.mu];
     }
@@ -31,19 +31,19 @@ class SimpleArray{
 
     SimpleArray() = default;
 
-    __host__ __device__ SimpleArray(const T& init){
+    __device__ __host__ SimpleArray(const T& init){
         for(size_t i = 0; i < N; i++){
             values[i] = init;
         }
     }
     template<class floatT>
-        __host__ __device__ SimpleArray(SimpleArray<floatT, N> s_array) {
+        __device__ __host__ SimpleArray(SimpleArray<floatT, N> s_array) {
         for(size_t i = 0; i < N; i++) {
             values[i] = s_array[i];
         }
     }
 
-    __host__ __device__ void operator=(SimpleArray<T,N> vec){
+    __device__ __host__ void operator=(SimpleArray<T,N> vec){
         for(size_t i = 0; i < N; i++){
             values[i] = vec[i];
         }
@@ -56,7 +56,7 @@ class SimpleArray{
         }
     }
 
-    __host__ __device__ SimpleArray getAccessor() const {
+    __device__ __host__ SimpleArray getAccessor() const {
         return *this;
     }
 

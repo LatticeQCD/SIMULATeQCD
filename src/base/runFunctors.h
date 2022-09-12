@@ -127,6 +127,7 @@ __global__ void performCopyConstObject(Accessor res, Object ob, CalcReadInd calc
 }
 #endif
 
+
 template<bool onDevice, class Accessor>
 template<unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd calcReadInd,

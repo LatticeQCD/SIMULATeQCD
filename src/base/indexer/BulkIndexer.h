@@ -30,8 +30,8 @@ struct sitexyzt {
     int y;
     int z;
     int t;
-    __host__ __device__ sitexyzt(int x, int y, int z, int t) : x(x), y(y), z(z), t(t) {};
-    __host__ __device__ inline int& operator[](const int i) {
+    __device__ __host__ sitexyzt(int x, int y, int z, int t) : x(x), y(y), z(z), t(t) {};
+    __device__ __host__ inline int& operator[](const int i) {
         if(i == 0) return x;
         if(i == 1) return y;
         if(i == 2) return z;
@@ -58,9 +58,9 @@ struct gSite {
     sitexyzt coord, coordFull;
 
     // These constructors should only be called from GIndexer.
-    __host__ __device__ inline gSite() : isite(0), isiteFull(0), coord(0, 0, 0, 0), coordFull(0, 0, 0, 0) {}
+    __device__  __host__ inline gSite() : isite(0), isiteFull(0), coord(0, 0, 0, 0), coordFull(0, 0, 0, 0) {}
 
-    __host__ __device__ inline gSite(size_t isite, size_t isiteFull, sitexyzt coord, sitexyzt coordFull) :
+    __device__  __host__ inline gSite(size_t isite, size_t isiteFull, sitexyzt coord, sitexyzt coordFull) :
             isite(isite), isiteFull(isiteFull), coord(coord), coordFull(coordFull) {};
 
 
@@ -85,13 +85,13 @@ struct gSiteStack : public gSite {
     size_t isiteStackFull;
     size_t stack;
 
-    __host__ __device__ gSiteStack() : gSite(), isiteStack(0), isiteStackFull(0), stack(0){}
+    __device__ __host__ gSiteStack() : gSite(), isiteStack(0), isiteStackFull(0), stack(0){}
 
-    __host__ __device__ gSiteStack(size_t isite, size_t isiteFull, sitexyzt coord,
+    __device__ __host__ gSiteStack(size_t isite, size_t isiteFull, sitexyzt coord,
                                    sitexyzt coordFull, size_t isiteStack, size_t isiteStackFull, size_t stack) :
             gSite(isite, isiteFull, coord, coordFull), isiteStack(isiteStack), isiteStackFull(isiteStackFull), stack(stack){}
 
-    __host__ __device__ gSiteStack(gSite site, size_t isiteStack, size_t isiteStackFull, size_t stack) :
+    __device__ __host__ gSiteStack(gSite site, size_t isiteStack, size_t isiteStackFull, size_t stack) :
             gSite(site), isiteStack(isiteStack), isiteStackFull(isiteStackFull), stack(stack){}
 
     gSiteStack(const gSite) = delete;
@@ -110,13 +110,13 @@ struct gSiteMu : public gSite {
     // Link direction.
     uint8_t mu;
 
-    __host__ __device__ gSiteMu() : gSite(), indexMuFull(0), mu(0){}
+    __device__ __host__ gSiteMu() : gSite(), indexMuFull(0), mu(0){}
 
-    __host__ __device__ gSiteMu(size_t isite, size_t isiteFull, sitexyzt coord,
+    __device__ __host__ gSiteMu(size_t isite, size_t isiteFull, sitexyzt coord,
                                 sitexyzt coordFull, size_t indexMuFull, uint8_t mu) :
             gSite(isite, isiteFull, coord, coordFull), indexMuFull(indexMuFull), mu(mu){}
 
-    __host__ __device__ gSiteMu(gSite site, size_t indexMuFull, uint8_t mu)
+    __device__ __host__ gSiteMu(gSite site, size_t indexMuFull, uint8_t mu)
             : gSite(site), indexMuFull(indexMuFull), mu(mu) {}
 
     gSiteMu(const gSite) = delete;
@@ -225,7 +225,7 @@ struct LatticeData {
             gPosZ(_gPosZ),
             gPosT(_gPosT) {}
 
-    __host__ __device__ sitexyzt globalPos(sitexyzt n) {
+    __device__ __host__ sitexyzt globalPos(sitexyzt n) {
 
         sitexyzt coord = sitexyzt(gPosX + n.x,gPosY + n.y,gPosZ + n.z,gPosT + n.t);
 
@@ -237,7 +237,7 @@ struct LatticeData {
         return coord;
     }
 
-    __host__ __device__ bool isLocal(sitexyzt globalsite){
+    __device__ __host__ bool isLocal(sitexyzt globalsite){
         //! make sure globalsite is valid, i.e. not negative or greater than lattice extents!
 
         // consider lattice 20 20 20 20 with split 2 2 1 1
@@ -285,7 +285,7 @@ struct LatticeData {
         return LatticeDimensions(lx,ly,lz,lt);
     }
 
-    __host__ __device__ sitexyzt globalLatticeXYZT() {
+    __device__ __host__ sitexyzt globalLatticeXYZT() {
         return sitexyzt(globLX,globLY,globLZ,globLT);
     }
 
@@ -313,8 +313,8 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
 template<Layout LatLayout, size_t HaloDepth=MAXUSEDHALO>
 class GIndexer {
 public:
-    __host__ __device__ GIndexer() = default;
-    __host__ __device__ inline static LatticeData getLatData() {
+    __device__ __host__ GIndexer() = default;
+    __device__ __host__ inline static LatticeData getLatData() {
 
 #ifdef __GPU_ARCH__
         return globLatDataGPU[HaloDepth];
@@ -325,7 +325,7 @@ public:
 
     /// ---------------------------------------------------------------------------------------------------- getSite*
     /// BULK (NO HALOS)
-    __host__ __device__ inline static gSite getSite(size_t isite) {
+    __device__ __host__ inline static gSite getSite(size_t isite) {
         sitexyzt coord(0, 0, 0, 0);
         sitexyzt coordFull(0, 0, 0, 0);
         size_t isiteFull = 0;
@@ -344,10 +344,10 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
-    __host__ __device__ inline static gSite getSite(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
+    __device__ __host__ inline static gSite getSite(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSite(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
-    __host__ __device__ inline static gSite getSite(int x, int y, int z, int t) {
+    __device__ __host__ inline static gSite getSite(int x, int y, int z, int t) {
         sitexyzt coord = sitexyzt(x, y, z, t);
         sitexyzt coordFull = coordToFullCoord(coord);
         size_t isite = 0;
@@ -362,7 +362,7 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
-    __host__ __device__ inline static gSite getSite(sitexyzt coord) {
+    __device__ __host__ inline static gSite getSite(sitexyzt coord) {
         return getSite(coord.x,coord.y,coord.z,coord.t);
     }
 
@@ -370,7 +370,7 @@ public:
  happen whenever you call a kernel running over spacelike indices only. All coordinates will be of
  the form (x, y, z, 0). The indices isite and isiteFull will by bounded by their respective 3-volumes.
  The indexing needs to change, because there are fewer sites than with the full bulk.*/
-    __host__ __device__ inline static gSite getSiteSpatial(size_t isite) {
+    __device__ __host__ inline static gSite getSiteSpatial(size_t isite) {
         sitexyzt coord(0, 0, 0, 0);
         sitexyzt coordFull(0, 0, 0, 0);
         size_t isiteFull = 0;
@@ -389,11 +389,10 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
-
-    __host__ __device__ inline static gSite getSiteSpatial(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
+    __device__ __host__ inline static gSite getSiteSpatial(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSiteSpatial(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
-    __host__ __device__ inline static gSite getSiteSpatial(int x, int y, int z, int t) {
+    __device__ __host__ inline static gSite getSiteSpatial(int x, int y, int z, int t) {
         // There is probably a way to allow t>0. My worry right now is that there is that if you allow
         // t>0, there is no longer a one-to-one correspondence between isite and coord.
         sitexyzt coord = sitexyzt(x, y, z, t);
@@ -411,7 +410,7 @@ public:
     }
 
     /// FULL (WITH HALOS)
-    __host__ __device__ inline static gSite getSiteFull(size_t isiteFull) {
+    __device__ __host__ inline static gSite getSiteFull(size_t isiteFull) {
         sitexyzt coord(0, 0, 0, 0);
         sitexyzt coordFull(0, 0, 0, 0);
         size_t isite = 0;
@@ -430,12 +429,10 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
-
-    __host__ __device__ inline static gSite getSiteFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
+    __device__ __host__ inline static gSite getSiteFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSiteFull(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
-
-    __host__ __device__ inline static gSite getSiteFull(int x, int y, int z, int t) {
+    __device__ __host__ inline static gSite getSiteFull(int x, int y, int z, int t) {
         sitexyzt coordFull = sitexyzt(x, y, z, t);
         sitexyzt coord = fullCoordToCoord(coordFull);
         size_t isite = 0;
@@ -449,11 +446,11 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
-    __host__ __device__ inline static gSite getSiteFull(sitexyzt coordfull) {
+    __device__ __host__ inline static gSite getSiteFull(sitexyzt coordfull) {
         return getSiteFull(coordfull.x,coordfull.y,coordfull.z,coordfull.t);
     }
 
-    __host__ __device__ inline static gSite getSiteSpatialFull(size_t isiteFull) {
+    __device__ __host__ inline static gSite getSiteSpatialFull(size_t isiteFull) {
         sitexyzt coord(0, 0, 0, 0);
         sitexyzt coordFull(0, 0, 0, 0);
         size_t isite = 0;
@@ -472,11 +469,10 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
-
-    __host__ __device__ inline static gSite getSiteSpatialFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
+    __device__ __host__ inline static gSite getSiteSpatialFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSiteSpatialFull(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
-    __host__ __device__ inline static gSite getSiteSpatialFull(int x, int y, int z, int t) {
+    __device__ __host__ inline static gSite getSiteSpatialFull(int x, int y, int z, int t) {
         sitexyzt coordFull = sitexyzt(x, y, z, t);
         sitexyzt coord = fullCoordToCoord(coordFull);
         size_t isite = 0;
@@ -495,62 +491,62 @@ public:
     /// BULK (NO HALOS)
 
     //! two helper functions for getSiteMu*
-    __host__ __device__ inline static size_t coordMuToIndexMu_Full(const int x, const int y, const int z, const int t, const int mu) {
+    __device__ __host__ inline static size_t coordMuToIndexMu_Full(const int x, const int y, const int z, const int t, const int mu) {
         return (((x + y*getLatData().vol1Full
                   + z*getLatData().vol2Full
                   + t*getLatData().vol3Full) >> 0x1) // integer division by two
                 +getLatData().sizehFull*((x + y + z + t) & 0x1) // 0 if x+y+z+t is even, 1 if it is odd
                 + mu*getLatData().vol4Full);
     }
-    __host__ __device__ inline static size_t indexMu_Full(const gSite site, const int mu) {
+    __device__ __host__ inline static size_t indexMu_Full(const gSite site, const int mu) {
         return coordMuToIndexMu_Full(site.coordFull.x, site.coordFull.y, site.coordFull.z, site.coordFull.t, mu);
     }
 
-    __host__ __device__ inline static gSiteMu getSiteMu(size_t isite, size_t mu) {
+    __device__ __host__ inline static gSiteMu getSiteMu(size_t isite, size_t mu) {
         gSite site(getSite(isite));
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
     }
-    __host__ __device__ inline static gSiteMu getSiteMu(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, size_t mu){
+    __device__ __host__ inline static gSiteMu getSiteMu(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, size_t mu){
         return getSiteMu(_blockDim.x * _blockIdx.x + _threadIdx.x, mu);
     }
-    __host__ __device__ inline static gSiteMu getSiteMu(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
+    __device__ __host__ inline static gSiteMu getSiteMu(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         //! It gets the mu index from the y direction of the block.
         return getSiteMu(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
-    __host__ __device__ inline static gSiteMu getSiteMu(gSite site, size_t mu) {
+    __device__ __host__ inline static gSiteMu getSiteMu(gSite site, size_t mu) {
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
     }
-    __host__ __device__ inline static gSiteMu getSiteMu(int x, int y, int z, int t, size_t mu){
+    __device__ __host__ inline static gSiteMu getSiteMu(int x, int y, int z, int t, size_t mu){
         return getSiteMu(getSite(x, y, z, t), mu);
     }
 
-    __host__ __device__ inline static gSiteMu getSiteSpatialMu(size_t isite, size_t mu) {
+    __device__ __host__ inline static gSiteMu getSiteSpatialMu(size_t isite, size_t mu) {
         gSite site(getSiteSpatial(isite));
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
     }
     /// FULL (WITH HALOS)
-    __host__ __device__ inline static gSiteMu getSiteMuFull(size_t isiteFull, size_t mu) {
+    __device__ __host__ inline static gSiteMu getSiteMuFull(size_t isiteFull, size_t mu) {
         gSite site(getSiteFull(isiteFull));
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
     }
-    __host__ __device__ inline static gSiteMu getSiteMuFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, size_t mu){
+    __device__ __host__ inline static gSiteMu getSiteMuFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, size_t mu){
         return getSiteMuFull(_blockDim.x * _blockIdx.x + _threadIdx.x, mu);
     }
-    __host__ __device__ inline static gSiteMu getSiteMuFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
+    __device__ __host__ inline static gSiteMu getSiteMuFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         //!get the mu index from the y direction of the block.
         return getSiteMuFull(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
-    __host__ __device__ inline static gSiteMu getSiteMuFull(int x, int y, int z, int t, size_t mu){
+    __device__ __host__ inline static gSiteMu getSiteMuFull(int x, int y, int z, int t, size_t mu){
         return getSiteMu(getSiteFull(x, y, z, t), mu);
     }
 
     /// --------------------------------------------------------------------------------------------------- getSiteStack
     /// BULK (NO HALOS)
-    __host__ __device__ inline static gSiteStack getSiteStack(const gSite& site, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStack(const gSite& site, const size_t stack){
         size_t isiteStack;
         size_t isiteStackFull;
         if (LatLayout == All) {
@@ -563,24 +559,23 @@ public:
         gSiteStack ret(site, isiteStack, isiteStackFull, stack);
         return ret;
     }
-    __host__ __device__ inline static gSiteStack getSiteStack(const size_t isite, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStack(const size_t isite, const size_t stack){
         return getSiteStack(getSite(isite), stack);
     }
-
-    __host__ __device__ inline static gSiteStack getSiteStack(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
+    __device__ __host__ inline static gSiteStack getSiteStack(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         return getSiteStack(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
-    __host__ __device__ inline static gSiteStack getSiteStack(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStack(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
         return getSiteStack(_blockDim.x * _blockIdx.x + _threadIdx.x, stack);
     }
-    __host__ __device__ inline static gSiteStack getSiteStack(int x, int y, int z, int t, int stack) {
+    __device__ __host__ inline static gSiteStack getSiteStack(int x, int y, int z, int t, int stack) {
         return getSiteStack(getSite(x, y, z, t), stack);
     }
-    __host__ __device__ inline static gSiteStack getSiteStack(sitexyzt coord, int stack) {
+    __device__ __host__ inline static gSiteStack getSiteStack(sitexyzt coord, int stack) {
         return getSiteStack(getSite(coord.x, coord.y, coord.z, coord.t), stack);
     }
 
-    __host__ __device__ inline static gSiteStack getSiteStackOdd(const gSite& site, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStackOdd(const gSite& site, const size_t stack){
         size_t isiteStack;
         size_t isiteStackFull;
         if (LatLayout == All) {
@@ -593,60 +588,59 @@ public:
         gSiteStack ret(site, isiteStack, isiteStackFull, stack);
         return ret;
     }
-    __host__ __device__ inline static gSiteStack getSiteStackOdd(const size_t isite, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStackOdd(const size_t isite, const size_t stack){
         return getSiteStackOdd(getSite(isite), stack);
     }
-
-    __host__ __device__ inline static gSiteStack getSiteStackOdd(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
+    __device__ __host__ inline static gSiteStack getSiteStackOdd(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         return getSiteStackOdd(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
-    __host__ __device__ inline static gSiteStack getSiteStackOdd(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStackOdd(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
         return getSiteStackOdd(_blockDim.x * _blockIdx.x + _threadIdx.x, stack);
     }
 
     /// FULL (WITH HALOS)
-    __host__ __device__ inline static gSiteStack getSiteStackFull(const size_t isiteFull, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStackFull(const size_t isiteFull, const size_t stack){
         return getSiteStack(getSiteFull(isiteFull), stack);
     }
-    __host__ __device__ inline static gSiteStack getSiteStackFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
+    __device__ __host__ inline static gSiteStack getSiteStackFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         gSiteStack ret = getSiteStackFull(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
         return ret;
     }
-    __host__ __device__ inline static gSiteStack getSiteStackFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
+    __device__ __host__ inline static gSiteStack getSiteStackFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
         gSiteStack ret = getSiteStackFull(_blockDim.x * _blockIdx.x + _threadIdx.x, stack);
         return ret;
     }
-    __host__ __device__ inline static gSiteStack getSiteStackFull(int x, int y, int z, int t, int stack) {
+    __device__ __host__ inline static gSiteStack getSiteStackFull(int x, int y, int z, int t, int stack) {
         return getSiteStack(getSiteFull(x, y, z, t), stack);
     }
 
     /// ----------------------------------------------------------------------------------- CONVERT BETWEEN EVEN AND ODD
 
-    template<Layout LatLayout2, size_t HaloDepth2> __host__ __device__ inline static gSite convertSite(const gSite& site){
+    template<Layout LatLayout2, size_t HaloDepth2> __device__ __host__ inline static gSite convertSite(const gSite& site){
         return GIndexer<LatLayout2, HaloDepth2>::getSite(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
     }
-    template<Layout LatLayout2, size_t HaloDepth2> __host__ __device__ inline static gSiteMu convertSite(const gSiteMu& site){
+    template<Layout LatLayout2, size_t HaloDepth2> __device__ __host__ inline static gSiteMu convertSite(const gSiteMu& site){
         return GIndexer<LatLayout2, HaloDepth2>::getSiteMu(site.coord.x, site.coord.y, site.coord.z, site.coord.t, site.mu);
     }
-    template<Layout LatLayout2, size_t HaloDepth2> __host__ __device__ inline static gSiteStack convertSite(const gSiteStack& site){
+    template<Layout LatLayout2, size_t HaloDepth2> __device__ __host__ inline static gSiteStack convertSite(const gSiteStack& site){
         return GIndexer<LatLayout2, HaloDepth2>::getSiteStack(site.coord.x, site.coord.y, site.coord.z, site.coord.t, site.stack);
     }
     //! Given an Even/Odd gSite object, this returns an All gSite object.
-    __host__ __device__ inline static gSite convertToAll(gSite& site) {
+    __device__ __host__ inline static gSite convertToAll(gSite& site) {
         size_t isite = site.isite + (LatLayout == Odd)*getLatData().sizeh;
         size_t isiteFull = site.isiteFull + (LatLayout == Odd)*getLatData().sizehFull;
         return gSite(isite, isiteFull, site.coord, site.coordFull);
     }
 
     /// ------------------------------------------------ CONVERT BETWEEN BULK SPACETIME COORDINATES AND FULL COORDINATES
-    __host__ __device__ inline static sitexyzt coordToFullCoord(sitexyzt coord) {
+    __device__ __host__ inline static sitexyzt coordToFullCoord(sitexyzt coord) {
         coord.x += getLatData().HaloDepth[0];
         coord.y += getLatData().HaloDepth[1];
         coord.z += getLatData().HaloDepth[2];
         coord.t += getLatData().HaloDepth[3];
         return coord;
     }
-    __host__ __device__ inline static sitexyzt fullCoordToCoord(sitexyzt fullCoord) {
+    __device__ __host__ inline static sitexyzt fullCoordToCoord(sitexyzt fullCoord) {
         fullCoord.x -= getLatData().HaloDepth[0];
         fullCoord.y -= getLatData().HaloDepth[1];
         fullCoord.z -= getLatData().HaloDepth[2];
@@ -654,7 +648,7 @@ public:
         return fullCoord;
     }
 
-    __host__ __device__ inline static sitexyzt globalCoordToLocalCoord(sitexyzt coord) {
+    __device__ __host__ inline static sitexyzt globalCoordToLocalCoord(sitexyzt coord) {
         coord.x -= getLatData().gPosX;
         coord.y -= getLatData().gPosY;
         coord.z -= getLatData().gPosZ;
@@ -664,43 +658,43 @@ public:
 
     /// -------------------------------------------------------------------- CONVERT SPACETIME COORDINATES TO DATA INDEX
     /// BULK (NO HALOS)
-    __host__ __device__ inline static size_t coordToIndex_Bulk(const sitexyzt coord) {
+    __device__ __host__ inline static size_t coordToIndex_Bulk(const sitexyzt coord) {
         return (((coord.x + coord.y*getLatData().vol1
                   + coord.z*getLatData().vol2
                   + coord.t*getLatData().vol3) >> 0x1) // integer division by two
                 +getLatData().sizeh * ((coord.x + coord.y + coord.z + coord.t) & 0x1)); // 0 if x+y+z+t is even, 1 if it is odd
     }
-    __host__ __device__ inline static size_t coordToIndex_Bulk_eo(const sitexyzt coord) {
+    __device__ __host__ inline static size_t coordToIndex_Bulk_eo(const sitexyzt coord) {
         return ((coord.x + coord.y*getLatData().vol1
                  + coord.z*getLatData().vol2
                  + coord.t*getLatData().vol3) >> 0x1);
     }
-    __host__ __device__ inline static size_t coordToIndex_SpatialBulk(const sitexyzt coord) {
+    __device__ __host__ inline static size_t coordToIndex_SpatialBulk(const sitexyzt coord) {
         return (((coord.x + coord.y*getLatData().vol1
                   + coord.z*getLatData().vol2) >> 0x1)
                 + getLatData().vol3h*((coord.x + coord.y + coord.z) & 0x1));
     }
-    __host__ __device__ inline static size_t coordToIndex_SpatialBulk_eo(const sitexyzt coord) {
+    __device__ __host__ inline static size_t coordToIndex_SpatialBulk_eo(const sitexyzt coord) {
         return ((coord.x + coord.y*getLatData().vol1
                  + coord.z*getLatData().vol2) >> 0x1);
     }
     /// FULL (WITH HALOS)
-    __host__ __device__ inline static size_t coordToIndex_Full(const sitexyzt coordFull) {
+    __device__ __host__ inline static size_t coordToIndex_Full(const sitexyzt coordFull) {
         return (((coordFull.x + coordFull.y*getLatData().vol1Full
                   + coordFull.z*getLatData().vol2Full
                   + coordFull.t*getLatData().vol3Full) >> 0x1)
                 + getLatData().sizehFull*((coordFull.x + coordFull.y + coordFull.z + coordFull.t) & 0x1));
     }
-    __host__ __device__ inline static size_t coordToIndex_Full_eo(const sitexyzt coordFull) {
+    __device__ __host__ inline static size_t coordToIndex_Full_eo(const sitexyzt coordFull) {
         return ((coordFull.x + coordFull.y * getLatData().vol1Full + coordFull.z * getLatData().vol2Full +
                  coordFull.t * getLatData().vol3Full) >> 0x1);
     }
-    __host__ __device__ inline static size_t coordToIndex_SpatialFull(const sitexyzt coordFull) {
+    __device__ __host__ inline static size_t coordToIndex_SpatialFull(const sitexyzt coordFull) {
         return (((coordFull.x + coordFull.y*getLatData().vol1Full
                   + coordFull.z*getLatData().vol2Full) >> 0x1)
                 + getLatData().vol3hFull*((coordFull.x + coordFull.y + coordFull.z) & 0x1));
     }
-    __host__ __device__ inline static size_t coordToIndex_SpatialFull_eo(const sitexyzt coordFull) {
+    __device__ __host__ inline static size_t coordToIndex_SpatialFull_eo(const sitexyzt coordFull) {
         return ((coordFull.x + coordFull.y*getLatData().vol1Full
                  + coordFull.z*getLatData().vol2Full) >> 0x1);
     }
@@ -713,7 +707,7 @@ public:
 
     /// -------------------------------------------------------------------- CONVERT DATA INDEX TO SPACETIME COORDINATES
     /// BULK (NO HALOS)
-    __host__ __device__ inline static sitexyzt indexToCoord(const size_t site) {
+    __device__ __host__ inline static sitexyzt indexToCoord(const size_t site) {
         int x, y, z, t;
         int par, normInd, tmp;
 
@@ -751,7 +745,7 @@ public:
 
         return sitexyzt(x, y, z, t);
     }
-    __host__ __device__ inline static sitexyzt indexToCoord_eo(const size_t site, int par) {
+    __device__ __host__ inline static sitexyzt indexToCoord_eo(const size_t site, int par) {
         int x, y, z, t;
         int tmp;
         // double site
@@ -769,7 +763,7 @@ public:
 
         return sitexyzt(x, y, z, t);
     }
-    __host__ __device__ inline static sitexyzt indexToCoord_Spatial(const size_t site) {
+    __device__ __host__ inline static sitexyzt indexToCoord_Spatial(const size_t site) {
         int x, y, z, t;
         int par, normInd, tmp;
 
@@ -788,7 +782,7 @@ public:
 
         return sitexyzt(x,y,z,t);
     }
-    __host__ __device__ inline static sitexyzt indexToCoord_Spatial_eo(const size_t site, int par) {
+    __device__ __host__ inline static sitexyzt indexToCoord_Spatial_eo(const size_t site, int par) {
         int x, y, z, t;
         int tmp;
         size_t sited = site << 0x1;
@@ -806,7 +800,7 @@ public:
         return sitexyzt(x, y, z, t);
     }
     /// FULL (WITH HALOS)
-    __host__ __device__ inline static sitexyzt indexToCoord_Full(const size_t siteFull) {
+    __device__ __host__ inline static sitexyzt indexToCoord_Full(const size_t siteFull) {
         int x, y, z, t;
         int par, normInd, tmp;
 
@@ -826,7 +820,7 @@ public:
 
         return sitexyzt(x, y, z, t);
     }
-    __host__ __device__ inline static sitexyzt indexToCoord_SpatialFull(const size_t siteFull) {
+    __device__ __host__ inline static sitexyzt indexToCoord_SpatialFull(const size_t siteFull) {
         int x, y, z, t;
         int par, normInd, tmp;
 
@@ -846,7 +840,7 @@ public:
 
         return sitexyzt(x, y, z, t);
     }
-    __host__ __device__ inline static sitexyzt indexToCoord_Full_eo(const size_t siteFull, int par) {
+    __device__ __host__ inline static sitexyzt indexToCoord_Full_eo(const size_t siteFull, int par) {
         int x, y, z, t;
         int tmp;
 
@@ -863,7 +857,7 @@ public:
 
         return sitexyzt(x, y, z, t);
     }
-    __host__ __device__ inline static sitexyzt indexToCoord_SpatialFull_eo(const size_t siteFull, int par) {
+    __device__ __host__ inline static sitexyzt indexToCoord_SpatialFull_eo(const size_t siteFull, int par) {
         int x, y, z, t;
         int tmp;
 
@@ -884,7 +878,7 @@ public:
 
     //! This function is needed when one wants to have the sites time ordered. For example if one wants to reduce only
     //! values on each timeslice.
-    __host__ __device__ inline static size_t siteTimeOrdered(const gSite &site) {
+    __device__ __host__ inline static size_t siteTimeOrdered(const gSite &site) {
         sitexyzt c = site.coord;
         return c.x + c.y*getLatData().vol1 + c.z*getLatData().vol2 + c.t*getLatData().vol3;
     }
@@ -896,19 +890,19 @@ public:
     //! time, this means you cannot pass these functions a dynamic argument.
 
     /// --------------------------------------------------------------------------------------- site_move: ONE DIRECTION
-    template<int mu_steps> __host__ __device__ inline static gSite site_move(const gSite &s, const int mu) {
+    template<int mu_steps> __device__ __host__ inline static gSite site_move(const gSite &s, const int mu) {
         sitexyzt tmp = site_move<mu_steps>(s.coordFull, mu);
         return getSiteFull(tmp.x, tmp.y, tmp.z, tmp.t);
     }
-    template<int mu_steps> __host__ __device__ inline static gSiteMu site_move(const gSiteMu &s, const int mu) {
+    template<int mu_steps> __device__ __host__ inline static gSiteMu site_move(const gSiteMu &s, const int mu) {
         sitexyzt tmp = site_move<mu_steps>(s.coordFull, mu);
         return getSiteMuFull(tmp.x, tmp.y, tmp.z, tmp.t, s.mu);
     }
-    template<int mu_steps> __host__ __device__ inline static gSiteStack site_move(const gSiteStack &s, const int mu) {
+    template<int mu_steps> __device__ __host__ inline static gSiteStack site_move(const gSiteStack &s, const int mu) {
         sitexyzt tmp = site_move<mu_steps>(s.coordFull, mu);
         return getSiteStackFull(tmp.x, tmp.y, tmp.z, tmp.t, s.stack);
     }
-    template<int mu_steps> __host__ __device__ inline static sitexyzt site_move(sitexyzt s, const int mu) {
+    template<int mu_steps> __device__ __host__ inline static sitexyzt site_move(sitexyzt s, const int mu) {
 
         int x = s.x;
         int y = s.y;
@@ -975,19 +969,19 @@ public:
     }
 
     /// -------------------------------------------------------------------------------------- site_move: TWO DIRECTIONS
-    template<int mu_steps, int nu_steps> __host__ __device__ inline static gSite site_move(const gSite &s, const int mu, const int nu) {
+    template<int mu_steps, int nu_steps> __device__ __host__ inline static gSite site_move(const gSite &s, const int mu, const int nu) {
         sitexyzt tmp = site_move<mu_steps, nu_steps>(s.coordFull, mu, nu);
         return getSiteFull(tmp.x, tmp.y, tmp.z, tmp.t);
     }
-    template<int mu_steps, int nu_steps> __host__ __device__ inline static gSiteMu site_move(const gSiteMu &s, const int mu, const int nu) {
+    template<int mu_steps, int nu_steps> __device__ __host__ inline static gSiteMu site_move(const gSiteMu &s, const int mu, const int nu) {
         sitexyzt tmp = site_move<mu_steps, nu_steps>(s.coordFull, mu, nu);
         return getSiteMuFull(tmp.x, tmp.y, tmp.z, tmp.t, s.mu);
     }
-    template<int mu_steps, int nu_steps> __host__ __device__ inline static gSiteStack site_move(const gSiteStack &s, const int mu, const int nu) {
+    template<int mu_steps, int nu_steps> __device__ __host__ inline static gSiteStack site_move(const gSiteStack &s, const int mu, const int nu) {
         sitexyzt tmp = site_move<mu_steps, nu_steps>(s.coordFull, mu, nu);
         return getSiteStackFull(tmp.x, tmp.y, tmp.z, tmp.t, s.stack);
     }
-    template<int mu_steps, int nu_steps> __host__ __device__ inline static sitexyzt site_move(const sitexyzt &s, const int mu, const int nu) {
+    template<int mu_steps, int nu_steps> __device__ __host__ inline static sitexyzt site_move(const sitexyzt &s, const int mu, const int nu) {
         int x = s.x;
         int y = s.y;
         int z = s.z;
@@ -1110,22 +1104,22 @@ public:
 
     /// ------------------------------------------------------------------------------------ site_move: THREE DIRECTIONS
     template<int mu_steps, int nu_steps, int rho_steps>
-    __host__ __device__ inline static gSite site_move(const gSite &s, const int mu, const int nu, const int rho) {
+    __device__ __host__ inline static gSite site_move(const gSite &s, const int mu, const int nu, const int rho) {
         sitexyzt tmp = site_move<mu_steps, nu_steps, rho_steps>(s.coordFull, mu, nu, rho);
         return getSiteFull(tmp.x, tmp.y, tmp.z, tmp.t);
     }
     template<int mu_steps, int nu_steps, int rho_steps>
-    __host__ __device__ inline static gSiteMu site_move(const gSiteMu &s, const int mu, const int nu, const int rho) {
+    __device__ __host__ inline static gSiteMu site_move(const gSiteMu &s, const int mu, const int nu, const int rho) {
         sitexyzt tmp = site_move<mu_steps, nu_steps, rho_steps>(s.coordFull, mu, nu, rho);
         return getSiteMuFull(tmp.x, tmp.y, tmp.z, tmp.t, s.mu);
     }
     template<int mu_steps, int nu_steps, int rho_steps>
-    __host__ __device__ inline static gSiteStack site_move(const gSiteStack &s, const int mu, const int nu, const int rho) {
+    __device__ __host__ inline static gSiteStack site_move(const gSiteStack &s, const int mu, const int nu, const int rho) {
         sitexyzt tmp = site_move<mu_steps, nu_steps, rho_steps>(s.coordFull, mu, nu, rho);
         return getSiteStackFull(tmp.x, tmp.y, tmp.z, tmp.t, s.stack);
     }
     template<int mu_steps, int nu_steps, int rho_steps>
-    __host__ __device__ inline static sitexyzt site_move(const sitexyzt &s, const int mu, const int nu, const int rho) {
+    __device__ __host__ inline static sitexyzt site_move(const sitexyzt &s, const int mu, const int nu, const int rho) {
         int x = s.x;
         int y = s.y;
         int z = s.z;
@@ -1304,22 +1298,22 @@ public:
 
     /// ------------------------------------------------------------------------------------- site_move: FOUR DIRECTIONS
     template<int mu_steps, int nu_steps, int rho_steps, int sig_steps>
-    __host__ __device__ inline static gSite site_move(const gSite &s, const int mu, const int nu, const int rho, const int sig) {
+    __device__ __host__ inline static gSite site_move(const gSite &s, const int mu, const int nu, const int rho, const int sig) {
         sitexyzt tmp = site_move<mu_steps, nu_steps, rho_steps, sig_steps>(s.coordFull, mu, nu, rho, sig);
         return getSiteFull(tmp.x, tmp.y, tmp.z, tmp.t);
     }
     template<int mu_steps, int nu_steps, int rho_steps, int sig_steps>
-    __host__ __device__ inline static gSiteMu site_move(const gSiteMu &s, const int mu, const int nu, const int rho, const int sig) {
+    __device__ __host__ inline static gSiteMu site_move(const gSiteMu &s, const int mu, const int nu, const int rho, const int sig) {
         sitexyzt tmp = site_move<mu_steps, nu_steps, rho_steps, sig_steps>(s.coordFull, mu, nu, rho, sig);
         return getSiteMuFull(tmp.x, tmp.y, tmp.z, tmp.t, s.mu);
     }
     template<int mu_steps, int nu_steps, int rho_steps, int sig_steps>
-    __host__ __device__ inline static gSiteStack site_move(const gSiteStack &s, const int mu, const int nu, const int rho, const int sig) {
+    __device__ __host__ inline static gSiteStack site_move(const gSiteStack &s, const int mu, const int nu, const int rho, const int sig) {
         sitexyzt tmp = site_move<mu_steps, nu_steps, rho_steps, sig_steps>(s.coordFull, mu, nu, rho, sig);
         return getSiteStackFull(tmp.x, tmp.y, tmp.z, tmp.t, s.stack);
     }
     template<int mu_steps, int nu_steps, int rho_steps, int sig_steps>
-    __host__ __device__ inline static sitexyzt site_move(const sitexyzt &s, const int mu, const int nu, const int rho, const int sig) {
+    __device__ __host__ inline static sitexyzt site_move(const sitexyzt &s, const int mu, const int nu, const int rho, const int sig) {
         int x = s.x;
         int y = s.y;
         int z = s.z;
@@ -1553,55 +1547,55 @@ public:
     }
 
 /// ------------------------------------------------------------------------------------------------ site_up and site_dn
-    template<class T> __host__ __device__ inline static T site_up(const T &s, const int mu) {
+    template<class T> __device__ __host__ inline static T site_up(const T &s, const int mu) {
         return site_move<1>(s, mu);
     }
-    template<class T> __host__ __device__ inline static T site_dn(const T &s, const int mu) {
+    template<class T> __device__ __host__ inline static T site_dn(const T &s, const int mu) {
         return site_move<-1>(s, mu);
     }
-    template<class T> __host__ __device__ inline static T site_up_up(const T &s, const int mu, const int nu) {
+    template<class T> __device__ __host__ inline static T site_up_up(const T &s, const int mu, const int nu) {
 #ifdef __GPU_ARCH__
         return site_move<1, 1>(s, mu, nu);
 #else
         return site_up(site_up(s, mu), nu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_dn(const T &s, const int mu, const int nu) {
+    template<class T> __device__ __host__ inline static T site_up_dn(const T &s, const int mu, const int nu) {
 #ifdef __GPU_ARCH__
         return site_move<1, -1>(s, mu, nu);
 #else
         return site_dn(site_up(s, mu), nu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_dn_dn(const T &s, const int mu, const int nu) {
+    template<class T> __device__ __host__ inline static T site_dn_dn(const T &s, const int mu, const int nu) {
 #ifdef __GPU_ARCH__
         return site_move<-1, -1>(s, mu, nu);
 #else
         return site_dn(site_dn(s, mu), nu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_up_up(const T &s, const int mu, const int nu, const int rho) {
+    template<class T> __device__ __host__ inline static T site_up_up_up(const T &s, const int mu, const int nu, const int rho) {
 #ifdef __GPU_ARCH__
         return site_move<1, 1, 1>(s, mu, nu, rho);
 #else
         return site_up(site_up_up(s, mu, nu), rho);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_up_dn(const T &s, const int mu, const int nu, const int rho) {
+    template<class T> __device__ __host__ inline static T site_up_up_dn(const T &s, const int mu, const int nu, const int rho) {
 #ifdef __GPU_ARCH__
         return site_move<1, 1, -1>(s, mu, nu, rho);
 #else
         return site_dn(site_up_up(s, mu, nu), rho);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_dn_dn(const T &s, const int mu, const int nu, const int rho) {
+    template<class T> __device__ __host__ inline static T site_up_dn_dn(const T &s, const int mu, const int nu, const int rho) {
 #ifdef __GPU_ARCH__
         return site_move<1, -1, -1>(s, mu, nu, rho);
 #else
         return site_dn(site_up_dn(s, mu, nu), rho);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_dn_dn_dn(const T &s, const int mu, const int nu, const int rho) {
+    template<class T> __device__ __host__ inline static T site_dn_dn_dn(const T &s, const int mu, const int nu, const int rho) {
 #ifdef __GPU_ARCH__
         return site_move<-1, -1, -1>(s, mu, nu, rho);
 #else
@@ -1609,70 +1603,70 @@ public:
 #endif
     }
     //! The following are currently unused but can be commented in if needed:
-    template<class T> __host__ __device__ inline static T site_up_up_up_up(const T &s, const int mu, const int nu, const int rho, const int sig) {
+    template<class T> __device__ __host__ inline static T site_up_up_up_up(const T &s, const int mu, const int nu, const int rho, const int sig) {
 #ifdef __GPU_ARCH__
         return site_move<1, 1, 1, 1>(s, mu, nu, rho, sig);
 #else
         return site_up(site_up_up_up(s, mu, nu, rho), sig);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_up_up_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
+    template<class T> __device__ __host__ inline static T site_up_up_up_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
 #ifdef __GPU_ARCH__
         return site_move<1, 1, 1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_up_up_up(s, mu, nu, rho), sig);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_up_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
+    template<class T> __device__ __host__ inline static T site_up_up_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
 #ifdef __GPU_ARCH__
         return site_move<1, 1, -1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_up_up_dn(s, mu, nu, rho), sig);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_dn_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
+    template<class T> __device__ __host__ inline static T site_up_dn_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
 #ifdef __GPU_ARCH__
         return site_move<1, -1, -1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_up_dn_dn(s, mu, nu, rho), sig);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_dn_dn_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
+    template<class T> __device__ __host__ inline static T site_dn_dn_dn_dn(const T &s, const int mu, const int nu, const int rho, const int sig) {
 #ifdef __GPU_ARCH__
         return site_move<-1, -1, -1, -1>(s, mu, nu, rho, sig);
 #else
         return site_dn(site_dn_dn_dn(s, mu, nu, rho), sig);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_2up_up(const T &s, const int mu, const int nu) {
+    template<class T> __device__ __host__ inline static T site_2up_up(const T &s, const int mu, const int nu) {
 #ifdef __GPU_ARCH__
         return site_move<2, 1>(s, mu, nu);
 #else
         return site_up_up_up(s, mu, mu, nu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_2up_dn(const T &s, const int mu, const int nu) {
+    template<class T> __device__ __host__ inline static T site_2up_dn(const T &s, const int mu, const int nu) {
 #ifdef __GPU_ARCH__
         return site_move<2, -1>(s, mu, nu);
 #else
         return site_up_up_dn(s, mu, mu, nu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_up_2dn(const T &s, const int mu, const int nu) {
+    template<class T> __device__ __host__ inline static T site_up_2dn(const T &s, const int mu, const int nu) {
 #ifdef __GPU_ARCH__
         return site_move<1, -2>(s, mu, nu);
 #else
         return site_up_dn_dn(s, mu, mu, nu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_2up(const T &s, const int mu) {
+    template<class T> __device__ __host__ inline static T site_2up(const T &s, const int mu) {
 #ifdef __GPU_ARCH__
         return site_move<2>(s, mu);
 #else
         return site_up_up(s, mu, mu);
 #endif
     }
-    template<class T> __host__ __device__ inline static T site_2dn(const T &s, const int mu) {
+    template<class T> __device__ __host__ inline static T site_2dn(const T &s, const int mu) {
 #ifdef __GPU_ARCH__
         return site_move<-2>(s, mu);
 #else
@@ -1684,7 +1678,7 @@ public:
     //! Unlike the above implementation of site_move, this can be used in a for loop. Presumably it is slower?
     //! Currently unused but can be commented in if needed:
 
-    __host__ __device__ inline static sitexyzt dynamic_move(sitexyzt s, const int mu, int mu_steps) {
+    __device__ __host__ inline static sitexyzt dynamic_move(sitexyzt s, const int mu, int mu_steps) {
         int x = s.x;
         int y = s.y;
         int z = s.z;
@@ -1747,7 +1741,7 @@ public:
         }
         return sitexyzt(x, y, z, t);
     }
-    __attribute__((unused)) __host__ __device__ inline static gSite dynamic_move(const gSite &s, const int mu, int mu_steps) {
+    __attribute__((unused)) __device__ __host__ inline static gSite dynamic_move(const gSite &s, const int mu, int mu_steps) {
         sitexyzt tmp = dynamic_move(s.coordFull, mu, mu_steps);
         return getSiteFull(tmp.x, tmp.y, tmp.z, tmp.t);
     }

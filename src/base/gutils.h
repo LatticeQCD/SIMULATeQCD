@@ -54,7 +54,9 @@ private:
 /**
  * Utility method for speedy testing of whether a number is odd
  */
-__host__ __device__ inline bool isOdd(int cand) { return (cand & 0x1); }
+__device__ __host__ inline bool isOdd(int cand) { return (cand & 0x1); }
+
+
 
 
 #endif /* UTIL_H */

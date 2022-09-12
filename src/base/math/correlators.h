@@ -499,7 +499,7 @@ struct SpacetimePairKernelSymm : CorrelatorTools<floatT, true, HaloDepth> {
     SpacetimePairKernelSymm(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
     : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __host__ __device__ void operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -568,7 +568,7 @@ struct SpacetimePairKernel : CorrelatorTools<floatT, true, HaloDepth> {
     SpacetimePairKernel(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
             : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __host__ __device__ void operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -670,7 +670,7 @@ struct SpatialPairKernelSymm : CorrelatorTools<floatT, true, HaloDepth> {
     SpatialPairKernelSymm(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
             : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __host__ __device__ void operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -722,7 +722,7 @@ struct SpatialPairKernel : CorrelatorTools<floatT, true, HaloDepth> {
     SpatialPairKernel(LatticeContainerAccessor field1, LatticeContainerAccessor field2, LatticeContainerAccessor field1Xfield2, size_t dindex)
             : _field1(field1), _field2(field2), _field1Xfield2(field1Xfield2), _dindex(dindex), CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __host__ __device__ void operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         size_t     m, n;
         fieldType  field1m, field2n;
@@ -797,7 +797,7 @@ struct RestrictedOffAxisKernel : CorrelatorTools<floatT, true, HaloDepth> {
     /// direction. (Backward correlations will be counted from the forward correlation of some other m.) A possible
     /// displacement is (1,0,0); therefore some on-axis correlations are computed already in the off-axis kernel. This
     /// is taken into account in the on-axis kernel.
-    __host__ __device__ void operator()(size_t dindex) { /// dindex indexes displacement vector
+    __device__ __host__ void operator()(size_t dindex) { /// dindex indexes displacement vector
 
         typedef GIndexer<All,HaloDepth> GInd;
         size_t       m,n1,n2,n3,n4;
@@ -855,7 +855,7 @@ struct RestrictedOnAxisKernel : CorrelatorTools<floatT, true, HaloDepth> {
             : _field1(field1), _field2(field2), _field1Xfield2off(field1Xfield2off), _field1Xfield2on(field1Xfield2on),
               CorrelatorTools<floatT, true, HaloDepth>() {}
 
-    __host__ __device__ void operator()(size_t dx){ /// Now dx corresponds to a separation, rather than a displacement
+    __device__ __host__ void operator()(size_t dx){ /// Now dx corresponds to a separation, rather than a displacement
 
         typedef GIndexer<All,HaloDepth> GInd;
         size_t       m,n1,n2,n3;

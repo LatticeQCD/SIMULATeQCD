@@ -89,7 +89,7 @@
  * This routine eliminates off-diagonal element, handling special cases *
  ************************************************************************/
 template<class svdfloatT>
-__host__ __device__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdfloatT *a11, svdfloatT U2[2][2], svdfloatT V2[2][2])
+__device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdfloatT *a11, svdfloatT U2[2][2], svdfloatT V2[2][2])
 {
   register svdfloatT sinphi, cosphi, tanphi, cotphi;
   register svdfloatT a, b, min, max, abs00, abs01, abs11;
@@ -289,7 +289,7 @@ __host__ __device__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
 
 
 template<class floatT, class svdfloatT>
-__host__ __device__ GSU3<floatT> svd3x3core(const GSU3<floatT>& AA, floatT* sv){
+__device__ __host__ GSU3<floatT> svd3x3core(const GSU3<floatT>& AA, floatT* sv){
 
   /******************************************
    *  sigma[3] -- singular values,          *

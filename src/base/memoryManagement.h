@@ -573,7 +573,7 @@ public:
     ~MemoryAccessor() = default;
 
     template<class floatT>
-    __host__ __device__ inline void setValue(const size_t isite, const floatT value) {
+    __device__  __host__ inline void setValue(const size_t isite, const floatT value) {
         /// reinterpret_cast is a compile time directive telling the compiler to treat _Array as a floatT*. This is
         /// needed because _Array is treated as void* right now.
         auto *arr = reinterpret_cast<floatT *>(Array);
@@ -581,7 +581,7 @@ public:
     }
 
     template<class floatT>
-    __host__ __device__ inline void getValue(const size_t isite, floatT &value) {
+    __device__  __host__ inline void getValue(const size_t isite, floatT &value) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         value = arr[isite];
     }

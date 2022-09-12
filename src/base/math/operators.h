@@ -7,7 +7,6 @@
 #include "gvect3.h"
 #include "../indexer/BulkIndexer.h"
 
-
 /*! Using the syntax below stuff like this is possible:
  *   Spinor a, b, c, d
  *   Spinor a = b*c + d;

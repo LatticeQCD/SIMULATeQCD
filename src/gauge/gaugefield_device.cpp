@@ -19,7 +19,7 @@ struct fill_with_rand
     __host__ __device__ void initialize(__attribute__((unused)) gSite site){
     }
 
-    __host__ __device__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){
+    __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){
         my_mat.random(&_rand_state[site.isite]);
         return my_mat;
     }
@@ -35,7 +35,7 @@ struct fill_with_gauss {
     __host__ __device__ void initialize(__attribute__((unused)) gSite site) {
     }
 
-    __host__ __device__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu) {
+    __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu) {
         my_mat.gauss(&_rand_state[site.isite]);
         return my_mat;
     }
@@ -47,7 +47,7 @@ struct UnitKernel{
 
     gaugeAccessor<floatT,comp> gaugeAcc;
     explicit UnitKernel(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : gaugeAcc(gauge.getAccessor()){}
-    __host__ __device__ GSU3<floatT> operator()(gSiteMu siteMu){
+    __device__ __host__ GSU3<floatT> operator()(gSiteMu siteMu){
         typedef GIndexer<All,HaloDepth> GInd;
         GSU3<double> temp;
         temp=gaugeAcc.template getLink<double>(siteMu);

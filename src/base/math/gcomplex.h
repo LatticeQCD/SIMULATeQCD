@@ -52,7 +52,6 @@ public:
     floatT2 c;
 #define cREAL c.x
 #define cIMAG c.y
-
   /**
    * Default constructor, leave values uninitialized.
    */
@@ -539,7 +538,7 @@ GPUcomplex<floatT, floatT2>::invalid() {
 }
 
 template <class floatT>
-__host__ __device__ inline bool
+__device__ __host__ inline bool
 compareGCOMPLEX(GPUcomplex<floatT> a, GPUcomplex<floatT> b, floatT tol) {
   floatT diffRe = abs(real(a) - real(b));
   floatT diffIm = abs(imag(a) - imag(b));

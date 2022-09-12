@@ -26,7 +26,7 @@ struct plaqClover {
 
     plaqClover(gaugeAccessor<floatT,comp> acc) : acc(acc) {}
 
-    __host__ __device__  inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__  inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
 
         return Plaq_P<floatT, HaloDepth>(acc, site, mu, nu)
                + Plaq_Q<floatT, HaloDepth>(acc, site, mu, nu)
@@ -43,7 +43,7 @@ struct rectClover {
 
     rectClover(gaugeAccessor<floatT,comp> acc) : acc(acc) {}
 
-    __host__ __device__ inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
         gSite origin = site;
         gSite up = GInd::site_up(site, nu);
         gSite twoUp = GInd::site_up(up, nu);
@@ -154,7 +154,7 @@ struct FieldStrengthTensor {
     FieldStrengthTensor(gaugeAccessor<floatT,comp> acc) : acc(acc),
     plClov(acc) {}
 
-    __host__ __device__ inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
         //define a unitary matrix for the addition in the end
         GSU3<floatT> unityGSU3 = gsu3_one<floatT>();
 
@@ -186,7 +186,7 @@ struct FieldStrengthTensor_imp {
     FieldStrengthTensor_imp(gaugeAccessor<floatT,comp> acc) : acc(acc),
     plClov(acc), rcClov(acc) {}
 
-    __host__ __device__ inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline GSU3<floatT> operator()(gSite site, int mu, int nu) {
         //define a unitary matrix for the addition in the end
         GSU3<floatT> unityGSU3 = gsu3_one<floatT>();
 

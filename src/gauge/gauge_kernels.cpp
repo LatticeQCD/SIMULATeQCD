@@ -5,7 +5,7 @@ struct plaquetteKernel{
 
     plaquetteKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ floatT operator()(gSite site) {
+    __device__ __host__ floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -29,7 +29,7 @@ struct plaquetteKernelSS{
 
     plaquetteKernelSS(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ floatT operator()(gSite site) {
+    __device__ __host__ floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -53,7 +53,7 @@ struct plaquetteKernel_double{
 
     plaquetteKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ double operator()(gSite site) {
+    __device__ __host__ double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         double result = 0;
@@ -77,7 +77,7 @@ struct UtauMinusUsigmaKernel{
 
     UtauMinusUsigmaKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ floatT operator()(gSite site) {
+    __device__ __host__ floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -106,7 +106,7 @@ struct cloverKernel{
 
     cloverKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()), FT(gAcc){ }
 
-    __host__ __device__ floatT operator()(gSite site) {
+    __device__ __host__ floatT operator()(gSite site) {
 
         GSU3<floatT> Fmunu;
 
@@ -130,7 +130,7 @@ struct rectangleKernel{
 
     rectangleKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ floatT operator()(gSite site) {
+    __device__ __host__ floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<floatT> temp;
@@ -164,7 +164,7 @@ struct rectangleKernel_double{
 
     rectangleKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ double operator()(gSite site) {
+    __device__ __host__ double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<double> temp;
@@ -204,7 +204,7 @@ struct gaugeActKernel_double{
 
     gaugeActKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
-    __host__ __device__ double operator()(gSite site) {
+    __device__ __host__ double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
         GSU3<double> m_0;
@@ -216,55 +216,53 @@ struct gaugeActKernel_double{
         double result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    m_0 = g1_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site, mu),nu ) ) *    // m1
-                            dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) ); // m2
+                m_0 = g1_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site, mu),nu ) ) *    // m1
+                        dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) ); // m2
 
-                    //
-                    //      m2
-                    //    +----+
-                    //    |    |
-                    //  m3|    |
-                    //    V    |m1
-                    //         |
-                    //         |
-                    //    e    |
-                    //
+                //
+                //      m2
+                //    +----+
+                //    |    |
+                //  m3|    |
+                //    V    |m1
+                //         |
+                //         |
+                //    e    |
+                //
 
-                    m_0 += g2_r *  gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),nu ) ) *    // m1
-                           gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),nu ) ) *         // m1
-                           dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),nu ) ) *   // m3
-                                    gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , nu),mu ) )    // m2
-                                  );
+                m_0 += g2_r *  gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),nu ) ) *    // m1
+                       gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),nu ) ) *         // m1
+                       dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),nu ) ) *   // m3
+                                gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , nu),mu ) )    // m2
+                              );
 
-                    //
-                    //         m3
-                    //    <---------+
-                    //              |
-                    //              |m2
-                    //    e    -----+
-                    //           m1
-                    //
+                //
+                //         m3
+                //    <---------+
+                //              |
+                //              |m2
+                //    e    -----+
+                //           m1
+                //
 
-                    m_0 += g2_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),mu ) ) *    // m1
-                           gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , mu),nu ) ) *          // m2
-                           dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) *  // m3
-                                    gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),mu ) ) // m3
-                                  );
+                m_0 += g2_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),mu ) ) *    // m1
+                       gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , mu),nu ) ) *          // m2
+                       dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) *  // m3
+                                gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),mu ) ) // m3
+                              );
 
-                    //
-                    //    |
-                    //  m1|
-                    //    |
-                    //    e---->
-                    //      m2
-                    //
+                //
+                //    |
+                //  m1|
+                //    |
+                //    e---->
+                //      m2
+                //
 
-                    m_3 = dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( site,nu ) ) ) *  // m1
-                          gAcc.template getLink<double>( GInd::getSiteMu  ( site,mu ) );              // m2
+                m_3 = dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( site,nu ) ) ) *  // m1
+                      gAcc.template getLink<double>( GInd::getSiteMu  ( site,mu ) );              // m2
 
-                    result += tr_d ( m_3, m_0 );
-                }
+                result += tr_d ( m_3, m_0 );
             }
         }
         return result;

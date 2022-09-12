@@ -21,27 +21,27 @@ template <class floatT> class cVect3;
 template <class floatT, bool onDevice> class gVect3array;
 template <class floatT> __host__ std::ostream & operator<<(std::ostream &, const gVect3<floatT> &);
 template <class floatT> __host__ std::istream & operator>>(std::istream &, gVect3<floatT> &);
-template <class floatT>  __host__ __device__ GCOMPLEX(floatT) operator*(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT>  __host__ __device__ GCOMPLEX(floatT) complex_product(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT>  __host__ __device__ GCOMPLEX(floatT) complex_product_add(const gVect3<floatT> &,const gVect3<floatT> &, const GCOMPLEX(floatT) &);
+template <class floatT>  __device__ __host__ GCOMPLEX(floatT) operator*(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT>  __device__ __host__ GCOMPLEX(floatT) complex_product(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT>  __device__ __host__ GCOMPLEX(floatT) complex_product_add(const gVect3<floatT> &,const gVect3<floatT> &, const GCOMPLEX(floatT) &);
 
 
-template <class floatT>  __host__ __device__ gVect3<floatT> operator+(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT>  __host__ __device__ gVect3<floatT> operator-(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT>  __host__ __device__ gVect3<floatT> operator*(const floatT &,const gVect3<floatT> &);
-template <class floatT>  __host__ __device__ gVect3<floatT> operator*(const GCOMPLEX(floatT) &,const gVect3<floatT> &);
-template <class floatT>  __host__ __device__ gVect3<floatT> operator*(const gVect3<floatT> &,const floatT &);
-template <class floatT>  __host__ __device__ gVect3<floatT> operator*(const gVect3<floatT> &,const GCOMPLEX(floatT) &);
-template <class floatT> __host__ __device__ gVect3<floatT> conj(const gVect3<floatT> &);
-template <class floatT> __host__ __device__ floatT norm2(const gVect3<floatT> &);
-template <class floatT> __host__ __device__ GCOMPLEX(floatT) dot_prod(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT> __host__ __device__ floatT re_dot_prod(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT> __host__ __device__ gVect3<floatT> operator*(const GSU3<floatT> &,const gVect3<floatT> &);
-template <class floatT> __host__ __device__ GSU3<floatT> tensor_prod(const gVect3<floatT> &,const gVect3<floatT> &);
-template <class floatT> __host__ __device__ inline floatT minVal();
+template <class floatT>  __device__ __host__ gVect3<floatT> operator+(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT>  __device__ __host__ gVect3<floatT> operator-(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT>  __device__ __host__ gVect3<floatT> operator*(const floatT &,const gVect3<floatT> &);
+template <class floatT>  __device__ __host__ gVect3<floatT> operator*(const GCOMPLEX(floatT) &,const gVect3<floatT> &);
+template <class floatT>  __device__ __host__ gVect3<floatT> operator*(const gVect3<floatT> &,const floatT &);
+template <class floatT>  __device__ __host__ gVect3<floatT> operator*(const gVect3<floatT> &,const GCOMPLEX(floatT) &);
+template <class floatT> __device__ __host__ gVect3<floatT> conj(const gVect3<floatT> &);
+template <class floatT> __device__ __host__ floatT norm2(const gVect3<floatT> &);
+template <class floatT> __device__ __host__ GCOMPLEX(floatT) dot_prod(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT> __device__ __host__ floatT re_dot_prod(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT> __device__ __host__ gVect3<floatT> operator*(const GSU3<floatT> &,const gVect3<floatT> &);
+template <class floatT> __device__ __host__ GSU3<floatT> tensor_prod(const gVect3<floatT> &,const gVect3<floatT> &);
+template <class floatT> __device__ __host__ inline floatT minVal();
 
 template<class floatT>
-__host__ __device__ inline floatT get_rand(uint4* state);
+__device__ __host__ inline floatT get_rand(uint4* state);
 
 template <class floatT>
 class gVect3
@@ -67,28 +67,28 @@ public:
 
 
     // vector operations
-    __host__ __device__ gVect3<floatT> &operator =(const gVect3<floatT> &);
-    __host__ __device__ gVect3<floatT> &operator-=(const gVect3<floatT> &);
-    __host__ __device__ gVect3<floatT> &operator+=(const gVect3<floatT> &);
-    __host__ __device__ gVect3<floatT> &operator*=(const floatT &);
-    __host__ __device__ gVect3<floatT> &operator*=(const GCOMPLEX(floatT) &);
-    __host__ __device__ friend GCOMPLEX(floatT) operator* <> (const gVect3<floatT> &,const gVect3<floatT> &);
-    __host__ __device__ friend GCOMPLEX(floatT) complex_product <> (const gVect3<floatT> &,const gVect3<floatT> &);
-    __host__ __device__ friend GCOMPLEX(floatT) complex_product_add <> (const gVect3<floatT> &,const gVect3<floatT> &, const GCOMPLEX(floatT) & );
-    __host__ __device__ friend gVect3<floatT> operator+  <> (const gVect3<floatT> &,const gVect3<floatT> &);
-    __host__ __device__ friend gVect3<floatT> operator-  <> (const gVect3<floatT> &,const gVect3<floatT> &);
-    __host__ __device__ friend gVect3<floatT> operator*  <> (const floatT &,const gVect3<floatT> &);
-    __host__ __device__ friend gVect3<floatT> operator*  <> (const GCOMPLEX(floatT) &,const gVect3<floatT> &);
-    __host__ __device__ friend gVect3<floatT> operator*  <> (const gVect3<floatT> &,const floatT &);
-    __host__ __device__ friend gVect3<floatT> operator*  <> (const gVect3<floatT> &,const GCOMPLEX(floatT) &);
+    __device__ __host__ gVect3<floatT> &operator =(const gVect3<floatT> &);
+    __device__ __host__ gVect3<floatT> &operator-=(const gVect3<floatT> &);
+    __device__ __host__ gVect3<floatT> &operator+=(const gVect3<floatT> &);
+    __device__ __host__ gVect3<floatT> &operator*=(const floatT &);
+    __device__ __host__ gVect3<floatT> &operator*=(const GCOMPLEX(floatT) &);
+    __device__ __host__ friend GCOMPLEX(floatT) operator* <> (const gVect3<floatT> &,const gVect3<floatT> &);
+    __device__ __host__ friend GCOMPLEX(floatT) complex_product <> (const gVect3<floatT> &,const gVect3<floatT> &);
+    __device__ __host__ friend GCOMPLEX(floatT) complex_product_add <> (const gVect3<floatT> &,const gVect3<floatT> &, const GCOMPLEX(floatT) & );
+    __device__ __host__ friend gVect3<floatT> operator+  <> (const gVect3<floatT> &,const gVect3<floatT> &);
+    __device__ __host__ friend gVect3<floatT> operator-  <> (const gVect3<floatT> &,const gVect3<floatT> &);
+    __device__ __host__ friend gVect3<floatT> operator*  <> (const floatT &,const gVect3<floatT> &);
+    __device__ __host__ friend gVect3<floatT> operator*  <> (const GCOMPLEX(floatT) &,const gVect3<floatT> &);
+    __device__ __host__ friend gVect3<floatT> operator*  <> (const gVect3<floatT> &,const floatT &);
+    __device__ __host__ friend gVect3<floatT> operator*  <> (const gVect3<floatT> &,const GCOMPLEX(floatT) &);
 
-    __host__ __device__ friend gVect3<floatT> conj <> (const gVect3<floatT> &);  // complex conjugate
-    __host__ __device__ friend floatT norm2 <> (const gVect3<floatT> &);  // norm2
-    __host__ __device__ friend GCOMPLEX(floatT) dot_prod <> (const gVect3<floatT>&, const gVect3<floatT>&); // true complex dot product
-    __host__ __device__ friend floatT re_dot_prod <> (const gVect3<floatT> &,const gVect3<floatT> &);  // real part of dot product
+    __device__ __host__ friend gVect3<floatT> conj <> (const gVect3<floatT> &);  // complex conjugate
+    __device__ __host__ friend floatT norm2 <> (const gVect3<floatT> &);  // norm2
+    __device__ __host__ friend GCOMPLEX(floatT) dot_prod <> (const gVect3<floatT>&, const gVect3<floatT>&); // true complex dot product
+    __device__ __host__ friend floatT re_dot_prod <> (const gVect3<floatT> &,const gVect3<floatT> &);  // real part of dot product
     template<class rndstateT>
-    __host__ __device__ void random( rndstateT * const);   // set gvect3 randomly
-    __host__ __device__ void gauss( uint4 * state )
+    __device__ __host__ void random( rndstateT * const);   // set gvect3 randomly
+    __device__ __host__ void gauss( uint4 * state )
     {
 #if ! defined(USE_HIP_AMD) && ! defined(USE_CPU_ONLY)
    	if constexpr (!std::is_same<floatT,__half>::value) {
@@ -142,58 +142,58 @@ public:
 
     // cast operations single <-> double precision
     template <class T>
-    __host__ __device__ operator gVect3<T> () const {
+    __device__ __host__ operator gVect3<T> () const {
         return gVect3<T>( GCOMPLEX(T)(_v0.cREAL, _v0.cIMAG), GCOMPLEX(T)(_v1.cREAL, _v1.cIMAG), GCOMPLEX(T)(_v2.cREAL, _v2.cIMAG) );
     }
 
 
-    __host__ __device__ friend gVect3<floatT> operator* <> (const GSU3<floatT> &,const gVect3<floatT> &);   // gsu3 * gvect3 multiplication
-    __host__ __device__ friend GSU3<floatT> tensor_prod <> (const gVect3<floatT> &,const gVect3<floatT> &); // tensor product of two gvect3
+    __device__ __host__ friend gVect3<floatT> operator* <> (const GSU3<floatT> &,const gVect3<floatT> &);   // gsu3 * gvect3 multiplication
+    __device__ __host__ friend GSU3<floatT> tensor_prod <> (const gVect3<floatT> &,const gVect3<floatT> &); // tensor product of two gvect3
 
 
-    __host__ __device__ inline GCOMPLEX(floatT) getElement0() const  {
+    __device__ __host__ inline GCOMPLEX(floatT) getElement0() const  {
         return _v0;
     };
 
-    __host__ __device__ inline GCOMPLEX(floatT) getElement1()const  {
+    __device__ __host__ inline GCOMPLEX(floatT) getElement1()const  {
         return _v1;
     };
 
-    __host__ __device__  inline GCOMPLEX(floatT) getElement2() const {
+    __device__ __host__  inline GCOMPLEX(floatT) getElement2() const {
         return _v2;
     };
 
-    __host__ __device__ inline void addtoElement0(const GCOMPLEX(floatT) a){
+    __device__ __host__ inline void addtoElement0(const GCOMPLEX(floatT) a){
         _v0 += a;
     }
-    __host__ __device__ inline void addtoElement1(const GCOMPLEX(floatT) a){
+    __device__ __host__ inline void addtoElement1(const GCOMPLEX(floatT) a){
         _v1 += a;
     }
-    __host__ __device__ inline void addtoElement2(const GCOMPLEX(floatT) a){
+    __device__ __host__ inline void addtoElement2(const GCOMPLEX(floatT) a){
         _v2 += a;
     }
 
-    __host__ __device__ inline void setElement0(const GCOMPLEX(floatT)& a){
+    __device__ __host__ inline void setElement0(const GCOMPLEX(floatT)& a){
         _v0 = a;
     }
-    __host__ __device__ inline void setElement1(const GCOMPLEX(floatT)& a){
+    __device__ __host__ inline void setElement1(const GCOMPLEX(floatT)& a){
         _v1 = a;
     }
-    __host__ __device__ inline void setElement2(const GCOMPLEX(floatT)& a){
+    __device__ __host__ inline void setElement2(const GCOMPLEX(floatT)& a){
         _v2 = a;
     }
 
-    __host__ __device__ inline void subfromElement0(const GCOMPLEX(floatT) a){
+    __device__ __host__ inline void subfromElement0(const GCOMPLEX(floatT) a){
         _v0 -= a;
     }
-    __host__ __device__ inline void subfromElement1(const GCOMPLEX(floatT) a){
+    __device__ __host__ inline void subfromElement1(const GCOMPLEX(floatT) a){
         _v1 -= a;
     }
-    __host__ __device__ inline void subfromElement2(const GCOMPLEX(floatT) a){
+    __device__ __host__ inline void subfromElement2(const GCOMPLEX(floatT) a){
         _v2 -= a;
     }
 
-    __host__ __device__ inline GCOMPLEX(floatT)& operator() (int i) {
+    __device__ __host__ inline GCOMPLEX(floatT)& operator() (int i) {
         switch (i) {
             case 0:
                 return _v0;
@@ -220,7 +220,7 @@ public:
 
 // gvect3 = (1,0,0)  or (0,1,0)  or  (0,0,1)
 template <class floatT>
-__host__ __device__ inline gVect3<floatT> gvect3_unity(const int& i)
+__device__ __host__ inline gVect3<floatT> gvect3_unity(const int& i)
 {
     switch ( i )
     {
@@ -251,7 +251,7 @@ return gVect3<__half> (__float2half(1), __float2half(0), __float2half(0));
 #endif
 // cvect3 = (1,1,1)
 template <class floatT>
-__host__ __device__ inline gVect3<floatT> gvect3_one()
+__device__ __host__ inline gVect3<floatT> gvect3_one()
 {
     return gVect3<floatT> (1, 1, 1);
 }
@@ -260,7 +260,7 @@ __host__ __device__ inline gVect3<floatT> gvect3_one()
 
 // cvect3 = (0,0,0)
 template <class floatT>
-__host__ __device__ inline gVect3<floatT> gvect3_zero()
+__device__ __host__ inline gVect3<floatT> gvect3_zero()
 {
     return gVect3<floatT> (0, 0, 0);
 }
@@ -272,7 +272,7 @@ __device__ inline gVect3<__half> gvect3_zero()
 }
 #endif
 template <class floatT>
-__host__ __device__ gVect3<floatT> &gVect3<floatT>::operator=(const gVect3<floatT> &y)
+__device__ __host__ gVect3<floatT> &gVect3<floatT>::operator=(const gVect3<floatT> &y)
 {
     _v0 = y._v0;
     _v1 = y._v1;
@@ -281,7 +281,7 @@ __host__ __device__ gVect3<floatT> &gVect3<floatT>::operator=(const gVect3<float
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> &gVect3<floatT>::operator-=(const gVect3<floatT> &y)
+__device__ __host__ gVect3<floatT> &gVect3<floatT>::operator-=(const gVect3<floatT> &y)
 {
     _v0-= y._v0;
     _v1-= y._v1;
@@ -290,7 +290,7 @@ __host__ __device__ gVect3<floatT> &gVect3<floatT>::operator-=(const gVect3<floa
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> &gVect3<floatT>::operator+=(const gVect3<floatT> &y)
+__device__ __host__ gVect3<floatT> &gVect3<floatT>::operator+=(const gVect3<floatT> &y)
 {
     _v0+= y._v0;
     _v1+= y._v1;
@@ -299,7 +299,7 @@ __host__ __device__ gVect3<floatT> &gVect3<floatT>::operator+=(const gVect3<floa
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> &gVect3<floatT>::operator*=(const floatT &y)
+__device__ __host__ gVect3<floatT> &gVect3<floatT>::operator*=(const floatT &y)
 {
     _v0*= y;
     _v1*= y;
@@ -308,7 +308,7 @@ __host__ __device__ gVect3<floatT> &gVect3<floatT>::operator*=(const floatT &y)
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> &gVect3<floatT>::operator*=(const GCOMPLEX(floatT) &y)
+__device__ __host__ gVect3<floatT> &gVect3<floatT>::operator*=(const GCOMPLEX(floatT) &y)
 {
     _v0*= y;
     _v1*= y;
@@ -317,7 +317,7 @@ __host__ __device__ gVect3<floatT> &gVect3<floatT>::operator*=(const GCOMPLEX(fl
 }
 
 template <class floatT>
-__host__ __device__ GCOMPLEX(floatT) operator*(const gVect3<floatT> &x,const gVect3<floatT> &y)
+__device__ __host__ GCOMPLEX(floatT) operator*(const gVect3<floatT> &x,const gVect3<floatT> &y)
 {
     GCOMPLEX(floatT) res = conj(x._v0) * y._v0;
     res += conj(x._v1) * y._v1;
@@ -326,7 +326,7 @@ __host__ __device__ GCOMPLEX(floatT) operator*(const gVect3<floatT> &x,const gVe
 }
 
 template <class floatT>
-__host__ __device__ GCOMPLEX(floatT) complex_product(const gVect3<floatT> &x,const gVect3<floatT> &y)
+__device__ __host__ GCOMPLEX(floatT) complex_product(const gVect3<floatT> &x,const gVect3<floatT> &y)
 {
 //  GCOMPLEX(floatT) res = x._v0 *(y._v0);
 //  res += x._v1 * (y._v1);
@@ -340,7 +340,7 @@ __host__ __device__ GCOMPLEX(floatT) complex_product(const gVect3<floatT> &x,con
 }
 
 template <class floatT>
-__host__ __device__ GCOMPLEX(floatT) complex_product_add(const gVect3<floatT> &x,const gVect3<floatT> &y, const GCOMPLEX(floatT) &d)
+__device__ __host__ GCOMPLEX(floatT) complex_product_add(const gVect3<floatT> &x,const gVect3<floatT> &y, const GCOMPLEX(floatT) &d)
 {
     //GCOMPLEX(floatT) res = x._v0 *(y._v0);
     //res += x._v1 * (y._v1);
@@ -352,7 +352,7 @@ __host__ __device__ GCOMPLEX(floatT) complex_product_add(const gVect3<floatT> &x
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> operator+(const gVect3<floatT> &x,const gVect3<floatT> &y)
+__device__ __host__ gVect3<floatT> operator+(const gVect3<floatT> &x,const gVect3<floatT> &y)
 {
     gVect3<floatT> z;
     z._v0 = x._v0 + y._v0;
@@ -362,7 +362,7 @@ __host__ __device__ gVect3<floatT> operator+(const gVect3<floatT> &x,const gVect
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> operator-(const gVect3<floatT> &x,const gVect3<floatT> &y)
+__device__ __host__ gVect3<floatT> operator-(const gVect3<floatT> &x,const gVect3<floatT> &y)
 {
     gVect3<floatT> z;
     z._v0 = x._v0 - y._v0;
@@ -372,7 +372,7 @@ __host__ __device__ gVect3<floatT> operator-(const gVect3<floatT> &x,const gVect
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> operator*(const GCOMPLEX(floatT)& x,const gVect3<floatT>& y)
+__device__ __host__ gVect3<floatT> operator*(const GCOMPLEX(floatT)& x,const gVect3<floatT>& y)
 {
     gVect3<floatT> z;
     z._v0 = x * y._v0;
@@ -382,7 +382,7 @@ __host__ __device__ gVect3<floatT> operator*(const GCOMPLEX(floatT)& x,const gVe
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> operator*(const floatT & x,const gVect3<floatT>& y)
+__device__ __host__ gVect3<floatT> operator*(const floatT & x,const gVect3<floatT>& y)
 {
     gVect3<floatT> z;
     z._v0 = x * y._v0;
@@ -392,7 +392,7 @@ __host__ __device__ gVect3<floatT> operator*(const floatT & x,const gVect3<float
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> operator*(const gVect3<floatT>& x,const GCOMPLEX(floatT)& y)
+__device__ __host__ gVect3<floatT> operator*(const gVect3<floatT>& x,const GCOMPLEX(floatT)& y)
 {
     gVect3<floatT> z;
     z._v0 = x._v0 * y;
@@ -402,7 +402,7 @@ __host__ __device__ gVect3<floatT> operator*(const gVect3<floatT>& x,const GCOMP
 }
 
 template <class floatT>
-__host__ __device__ gVect3<floatT> operator*(const gVect3<floatT>& x,const floatT & y)
+__device__ __host__ gVect3<floatT> operator*(const gVect3<floatT>& x,const floatT & y)
 {
     gVect3<floatT> z;
     z._v0 = x._v0 * y;
@@ -413,7 +413,7 @@ __host__ __device__ gVect3<floatT> operator*(const gVect3<floatT>& x,const float
 
 //! complex dot product x*y = sum_i(v_i conj(w_i))
 template <class floatT>
-__host__ __device__ GCOMPLEX(floatT) dot_prod(const gVect3<floatT> &x,const gVect3<floatT> &y)
+__device__ __host__ GCOMPLEX(floatT) dot_prod(const gVect3<floatT> &x,const gVect3<floatT> &y)
 {
     floatT real = x._v0.cREAL*y._v0.cREAL + x._v0.cIMAG*y._v0.cIMAG;
     real       += x._v1.cREAL*y._v1.cREAL + x._v1.cIMAG*y._v1.cIMAG;
@@ -426,7 +426,7 @@ __host__ __device__ GCOMPLEX(floatT) dot_prod(const gVect3<floatT> &x,const gVec
 
 //! real part of dot product (no conjugation for y)
 template <class floatT>
-__host__ __device__ floatT re_dot_prod(const gVect3<floatT> &x,const gVect3<floatT> &y)
+__device__ __host__ floatT re_dot_prod(const gVect3<floatT> &x,const gVect3<floatT> &y)
 {
   floatT res = x._v0.cREAL*y._v0.cREAL + x._v0.cIMAG*y._v0.cIMAG;
   res       += x._v1.cREAL*y._v1.cREAL + x._v1.cIMAG*y._v1.cIMAG;
@@ -436,7 +436,7 @@ __host__ __device__ floatT re_dot_prod(const gVect3<floatT> &x,const gVect3<floa
 
 // norm2 of vector
 template <class floatT>
-__host__ __device__ floatT norm2(const gVect3<floatT> &x)
+__device__ __host__ floatT norm2(const gVect3<floatT> &x)
 {
   floatT res = x._v0.cREAL*x._v0.cREAL + x._v0.cIMAG*x._v0.cIMAG;
   res       += x._v1.cREAL*x._v1.cREAL + x._v1.cIMAG*x._v1.cIMAG;
@@ -446,7 +446,7 @@ __host__ __device__ floatT norm2(const gVect3<floatT> &x)
 
 // complex conjugate
 template <class floatT>
-__host__ __device__ gVect3<floatT> conj(const gVect3<floatT> &x)
+__device__ __host__ gVect3<floatT> conj(const gVect3<floatT> &x)
 {
     gVect3<floatT> z;
     z._v0 = conj(x._v0);

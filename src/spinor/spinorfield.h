@@ -450,7 +450,7 @@ struct convert_spinor_precision {
 
     convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
 
-    __host__ __device__ auto operator()(gSiteStack site) {
+    __device__ __host__ auto operator()(gSiteStack site) {
         
         return spinor_source.template getElement<floatT_target>(site);
     }
