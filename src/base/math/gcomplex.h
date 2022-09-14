@@ -141,24 +141,10 @@ public:
 
   /// Note: You should not use this operator to compare with zero, because
   /// cmp_rel breaks down in that case.
-  /// ^ perhaps ok now; I added an explicit check for zero ~dsh
   __host__ __device__ bool operator==(const GPUcomplex &op) {
     ////TODO:: THAT PRECISION HAS TO BE CHANGED!!
-    bool test1, test2;
-
-    if(this->c.x==0.0 || op.c.x==0.0){
-       test1=(this->c.x==0.0 && op.c.x==0.0);
-    }else{
-       test1=cmp_rel<floatT>(this->c.x, op.c.x, 1.e-6, 1.e-6);
-    }
-    if(this->c.y==0.0 || op.c.y==0.0){
-	test2=(this->c.y==0.0 && op.c.y==0.0);
-    }else{
-	test2=cmp_rel<floatT>(this->c.y, op.c.y, 1.e-6, 1.e-6);
-    }
-
-    return test1 && test2;
-            
+    return (cmp_rel<floatT>(this->c.x, op.c.x, 1.e-6, 1.e-6) &&
+            cmp_rel<floatT>(this->c.y, op.c.y, 1.e-6, 1.e-6));  
     //	return (isApproximatelyEqual<floatT>(this->c.x, op.c.x, 1.e-14) &&
     //isApproximatelyEqual<floatT>(this->c.y, op.c.y, 1.e-14));
   }
@@ -284,6 +270,7 @@ public:
 };
 
 #ifdef __CUDA_ARCH__
+#ifndef USE_HIP
 template <> class GPUcomplex<__half> {
 public:
   __half2 c;
@@ -487,6 +474,7 @@ public:
     return *this;
   }
 };
+#endif
 #endif
 
 template <class floatT>

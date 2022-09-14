@@ -25,7 +25,25 @@ __host__ __device__ GSU3<floatT> inline naikLinkStaple(gaugeAccessor<floatT,comp
 }
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ GSU3<floatT> inline threeLinkStaple(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu, int excluded_dir1 = -1, int excluded_dir2 = -1) {
+ __host__ __device__ GSU3<floatT> inline threeLinkStaple(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu) {
+    typedef GIndexer<All,HaloDepth> GInd;
+    GSU3<floatT> temp = gsu3_zero<floatT>();
+    gSite site = GInd::getSite(siteMu.isite);
+    gSite site_save = site;
+    int mu = siteMu.mu;
+
+    for (int nu_h = 1; nu_h < 4; nu_h++) {
+        int nu = (mu+nu_h)%4;
+        temp += gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+        site = site_save;
+        temp += gAcc.template getLinkPath<All, HaloDepth>(site, Back(nu), mu, nu);
+        site = site_save;
+    }
+    return temp;
+}
+
+template<class floatT,size_t HaloDepth,CompressionType comp>
+__host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_first_level(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu, int excluded_dir1, int excluded_dir2) {
   typedef GIndexer<All,HaloDepth> GInd;
   GSU3<floatT> temp = gsu3_zero<floatT>();
   gSite site = GInd::getSite(siteMu.isite);

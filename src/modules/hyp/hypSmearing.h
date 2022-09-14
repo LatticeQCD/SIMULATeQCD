@@ -34,7 +34,7 @@ public:
     case 2:
       return hypThreeLinkStaple_second_level<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, _gAcc_2, site, _excluded_dir1, _gAcc_temp1, _gAcc_temp2);
     case 3:
-      return threeLinkStaple<floatT, HaloDepth, comp>(_gAcc_0, site, _excluded_dir1, _excluded_dir2);
+      return hypThreeLinkStaple_first_level<floatT, HaloDepth, comp>(_gAcc_0, site, _excluded_dir1, _excluded_dir2);
     case 4:
       return su3unitarize<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, site);
     default:
