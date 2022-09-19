@@ -43,8 +43,16 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Time for initializing HypSmearing: ", timer);
     timer.reset();
 
-    rootLogger.info("Read configuration");
-    gauge_in.readconf_nersc("../test_conf/lat.sample.l6666_nersc");
+//  rootLogger.info("Read configuration");
+//    gauge_in.readconf_nersc("../test_conf/lat.sample.l6666_nersc");
+//    gauge_in.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
+
+   grnd_state<false> h_rand;
+   grnd_state<true> d_rand;
+   h_rand.make_rng_state(12345);
+   d_rand = h_rand;
+   gauge_in.random(d_rand.state);
+
 
     //gauge_smeared_bielefeldgpu.readconf_nersc("../test_conf/smearing_link_lv2_110_nersc");
 
@@ -122,9 +130,12 @@ int main(int argc, char *argv[]) {
         rootLogger.info("plaquette: " ,  plaq);
 
     int faults = 0;
-    if(std::abs(plaq - 0.9753800616)>1E-7)faults+=1; //depending on the compilation, we have seen (empirically) differences on the order of 6E-8, so the difference we look for is 1E-7.
+    if(std::abs(plaq - 0.58906274413)>1E-7)faults+=1; //depending on the compilation, we have seen (empirically) differences on the order of 6E-8, so the difference we look for is 1E-7.
+//    if(std::abs(plaq - 0.9753800616)>1E-7)faults+=1;
 
-    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.9753800616));
+
+    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.58906274413));
+//    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.9753800616));    
 
     if (faults == 0) {
         rootLogger.info(CoutColors::green, "Hyp test passed!", CoutColors::reset);
