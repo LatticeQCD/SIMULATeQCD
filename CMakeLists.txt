@@ -303,7 +303,7 @@ if (USE_CUDA)
         COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
         ${ALL_HALODEPTHS}
         HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
-        ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
+        ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS} GIT_HASH="${GIT_HASH}"
         )
 # This might work in the future
 #elseif (USE_HIP)
