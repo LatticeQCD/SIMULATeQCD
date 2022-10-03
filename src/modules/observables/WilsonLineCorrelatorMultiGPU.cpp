@@ -290,7 +290,7 @@ template class WilsonLineCorrelatorMultiGPU<floatT,HALO,96>; \
 template class WilsonLineCorrelatorMultiGPU<floatT,HALO,20>; \
 template class WilsonLineCorrelatorMultiGPU<floatT,HALO,32>; \
 template class WilsonLineCorrelatorMultiGPU<floatT,HALO,48>; \
-
+template class WilsonLineCorrelatorMultiGPU<floatT,HALO,64>; \
 
 INIT_PH(CLASS_INIT2)
 

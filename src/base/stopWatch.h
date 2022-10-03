@@ -1,3 +1,11 @@
+/* 
+ * stopWatch.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ * A class to time events/function calls
+ * 
+ */
 #ifndef _INC_TIMER
 #define _INC_TIMER
 
@@ -8,7 +16,6 @@
 #include <iostream>
 #include <cmath>
 
-//! A class to time events/function calls
 
 template<bool device>
 class StopWatch {
@@ -73,7 +80,7 @@ class StopWatch {
         if(device){
             gpuError_t gpuErr = gpuEventRecord(_device_start_time, nullptr);
             if (gpuErr) {
-                GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed after  CommunicationBase!" , gpuErr);
+                GpuError("Error in gpuEventRecord (start). Make sure that StopWatch is constructed only after CommunicationBase::init has been called!" , gpuErr);
             }
 
         }
@@ -235,14 +242,9 @@ class StopWatch {
         return *this ;
     }   
 
-
-
     template<bool _device>
         inline friend std::ostream &operator<<(std::ostream &stream,
                 const StopWatch<_device> &rhs);
-
-
-
 
 };
 

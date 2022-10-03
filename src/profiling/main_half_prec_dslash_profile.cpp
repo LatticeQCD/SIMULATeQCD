@@ -124,7 +124,8 @@ int main(int argc, char **argv) {
     CommunicationBase commBase(&argc, &argv);
 
     LatticeParameters param;
-    param.readfile(commBase, "../parameter/tests/InverterTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/profiling/MrhsDSlashProf.param", argc, argv);
+
     const int LatDim[] = {param.latDim[0],param.latDim[1],param.latDim[2],param.latDim[3]};
 
     

@@ -42,6 +42,7 @@
 #include "./communication/gpuIPC.h"
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 #define DISALLOW_SHARED_MEM 0     /// True: Enforce that all memory channels are unique
 
@@ -82,6 +83,7 @@ private:
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
                 } else {
+#ifndef CPUONLY
                     gpuError_t gpuErr = gpuMallocHost((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
                         MemoryManagement::memorySummary(true,true,false, false,false);
@@ -89,6 +91,15 @@ private:
                         err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
+#else
+                    _rawPointer = std::malloc(size);
+                    if (_rawPointer == nullptr){
+                        MemoryManagement::memorySummary(true,true,false, false,false);
+                        std::stringstream err_msg;
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
+                        throw std::runtime_error(stdLogger.fatal(err_msg.str()));
+                    }
+#endif
                 }
                 rootLogger.alloc("> Allocated mem at " ,  static_cast<void*>(_rawPointer)
                                    ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): "
@@ -108,7 +119,7 @@ private:
                     gpuError_t gpuErr = gpuFree(_rawPointer);
 
                     if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(false, false, true, true);
+                        MemoryManagement::memorySummary(false, false, true, true, false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on device";
@@ -116,14 +127,18 @@ private:
                     }
 
                 } else {
+#ifndef CPUONLY
                     gpuError_t gpuErr = gpuFreeHost(_rawPointer);
                     if (gpuErr != gpuSuccess) {
-                        MemoryManagement::memorySummary(true,true,false, false);
+                        MemoryManagement::memorySummary(true,true,false, false, false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
+#else
+                    std::free(_rawPointer);
+#endif
                 }
                 rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " , 
                                    _current_size/1000000000. ,  " GB");

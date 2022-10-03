@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# VSCode
+.vscode
+
 # Distribution / packaging
 .Python
 develop-eggs/
@@ -139,3 +142,6 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+
+# CLion default build folder
+cmake-build-debug/

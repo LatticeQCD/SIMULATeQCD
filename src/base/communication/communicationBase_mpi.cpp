@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
+/* 
+ * communicationBase_mpi.cpp                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #include "../../define.h"
 
@@ -33,7 +36,9 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv) {
     if (IamRoot()){
         rootLogger.setVerbosity(stdLogger.getVerbosity());
     }
-
+    
+    rootLogger.info("Running SIMULATeQCD");
+//    rootLogger.info("Git commit version: ", GIT_HASH);
     rootLogger.info("Initializing MPI with (", world_size, " proc)");
 
     /// Get the name of the processor
@@ -100,7 +105,7 @@ inline std::string CommunicationBase::gpuAwareMPICheck() {
 }
 
 /// Initialize MPI
-void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensions &Topo) {
+void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused)) const LatticeDimensions &Topo) {
 
     if (Dim.mult() != getNumberProcesses()) {
         throw std::runtime_error(stdLogger.fatal(
@@ -124,7 +129,9 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     ret = MPI_Cart_get(cart_comm, 4, dims, periods, myInfo.coord);
     _MPI_fail(ret, "MPI_Cart_get");  //now we have process coordinates
 
+    _initialized = true;
 
+#ifndef CPUONLY
     int num_devices = 0;
     gpuError_t gpuErr = gpuGetDeviceCount(&num_devices);
     if (gpuErr != gpuSuccess)
@@ -177,30 +184,32 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     const int gpu_arch = tmpProp.major * static_cast<int>(10) + tmpProp.minor;
     rootLogger.info("> GPU compute capability: ", gpu_arch);
 
-#ifdef ARCHITECTURE
-    if (static_cast<int>(ARCHITECTURE) != gpu_arch) {
+// Fix that for hip backend!
+#if defined(ARCHITECTURE) && defined(USE_CUDA)
+    std::string compiled_arch = TOSTRING(ARCHITECTURE);
+    if (std::stoi(compiled_arch) != gpu_arch) {
         throw std::runtime_error(stdLogger.fatal("You compiled for ARCHITECTURE=", ARCHITECTURE,
                     " but the GPUs here are ", gpu_arch));
     }
 #else
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
+#endif
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
-
 }
 
 
 CommunicationBase::~CommunicationBase() {
-    rootLogger.info("Finalize CommunicationBase");
+    rootLogger.info("Finalizing MPI");
     int ret;
-    ret = MPI_Comm_free(&cart_comm);
-    _MPI_fail(ret, "MPI_Comm_free");
+    if (_initialized) {
+        ret = MPI_Comm_free(&cart_comm);
+        _MPI_fail(ret, "MPI_Comm_free");
 
-    MPI_Comm_free(&node_comm);
-    MPI_Info_free(&mpi_info);
-
-    /// Finalize MPI
+        MPI_Comm_free(&node_comm);
+        MPI_Info_free(&mpi_info);
+    }
     ret = MPI_Finalize();
     _MPI_fail(ret, "MPI_Finalize");
 }

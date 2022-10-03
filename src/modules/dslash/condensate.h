@@ -20,7 +20,7 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
         mass = param.m_s();
     }
 
-    Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase, "SHARED_GAUGENAIK");
+    Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase, "SHARED_GAUGELVL2");
     
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> smearing(gauge, smeared_W, smeared_X);

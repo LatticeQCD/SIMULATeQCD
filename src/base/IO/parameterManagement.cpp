@@ -6,10 +6,14 @@ bool ParameterList::readfile(const CommunicationBase& comm, const std::string& f
     std::string filecontent;
     if (comm.IamRoot()) {
         std::string fname = (argc<2)?filename:argv[1];
-        rootLogger.info("Reading parameters from file :: ", fname);
         std::ifstream in(fname.c_str(), std::ios::in);
-        if (in.fail()) {
-            throw std::runtime_error(stdLogger.fatal("Unable to open parameter file ", fname));
+        if (fname == "EMPTY_FILE"){
+            rootLogger.info("Reading parameters only from command line.");
+        } else {
+            rootLogger.info("Reading parameters from file :: ", fname);
+            if (in.fail()) {
+                throw std::runtime_error(stdLogger.fatal("Unable to open parameter file ", fname));
+            }
         }
         if (comm.single())
             return readstream(in,argc-2,argv+2);

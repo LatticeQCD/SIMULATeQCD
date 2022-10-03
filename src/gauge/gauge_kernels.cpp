@@ -216,55 +216,53 @@ struct gaugeActKernel_double{
         double result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                {
-                    m_0 = g1_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site, mu),nu ) ) *    // m1
-                            dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) ); // m2
+                m_0 = g1_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site, mu),nu ) ) *    // m1
+                        dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) ); // m2
 
-                    //
-                    //      m2
-                    //    +----+
-                    //    |    |
-                    //  m3|    |
-                    //    V    |m1
-                    //         |
-                    //         |
-                    //    e    |
-                    //
+                //
+                //      m2
+                //    +----+
+                //    |    |
+                //  m3|    |
+                //    V    |m1
+                //         |
+                //         |
+                //    e    |
+                //
 
-                    m_0 += g2_r *  gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),nu ) ) *    // m1
-                           gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),nu ) ) *         // m1
-                           dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),nu ) ) *   // m3
-                                    gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , nu),mu ) )    // m2
-                                  );
+                m_0 += g2_r *  gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),nu ) ) *    // m1
+                       gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),nu ) ) *         // m1
+                       dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),nu ) ) *   // m3
+                                gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , nu),mu ) )    // m2
+                              );
 
-                    //
-                    //         m3
-                    //    <---------+
-                    //              |
-                    //              |m2
-                    //    e    -----+
-                    //           m1
-                    //
+                //
+                //         m3
+                //    <---------+
+                //              |
+                //              |m2
+                //    e    -----+
+                //           m1
+                //
 
-                    m_0 += g2_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),mu ) ) *    // m1
-                           gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , mu),nu ) ) *          // m2
-                           dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) *  // m3
-                                    gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),mu ) ) // m3
-                                  );
+                m_0 += g2_r * gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , mu),mu ) ) *    // m1
+                       gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_2up(site , mu),nu ) ) *          // m2
+                       dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up(site , nu),mu ) ) *  // m3
+                                gAcc.template getLink<double>( GInd::getSiteMu  ( GInd::site_up_up(site , mu, nu),mu ) ) // m3
+                              );
 
-                    //
-                    //    |
-                    //  m1|
-                    //    |
-                    //    e---->
-                    //      m2
-                    //
+                //
+                //    |
+                //  m1|
+                //    |
+                //    e---->
+                //      m2
+                //
 
-                    m_3 = dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( site,nu ) ) ) *  // m1
-                          gAcc.template getLink<double>( GInd::getSiteMu  ( site,mu ) );              // m2
+                m_3 = dagger ( gAcc.template getLink<double>( GInd::getSiteMu  ( site,nu ) ) ) *  // m1
+                      gAcc.template getLink<double>( GInd::getSiteMu  ( site,mu ) );              // m2
 
-                    result += tr_d ( m_3, m_0 );
-                }
+                result += tr_d ( m_3, m_0 );
             }
         }
         return result;

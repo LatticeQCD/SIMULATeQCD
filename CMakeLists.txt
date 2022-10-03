@@ -6,6 +6,16 @@
 #
 cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+        COMMAND git log -1 --format=%h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+message(STATUS "Using git version ${GIT_HASH}")
+
 set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
 
 if (BACKEND STREQUAL "cuda")
@@ -51,6 +61,8 @@ set(SIMULATEQCD_LIBRARIES "${MPI_LIBRARIES}")
 
 if (USE_CUDA OR USE_HIP_NVIDIA)
     find_package(CUDA 11.0 REQUIRED)
+    set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++17")
+    set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++17")
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${CUDA_INCLUDE_DIRS}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${CUDA_LIBRARIES}")
 endif()
@@ -286,6 +298,7 @@ endif()
 if (USE_CUDA)
     add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
     target_compile_definitions(CodeBase PRIVATE
+        ARCHITECTURE=${ARCHITECTURE}
         SINGLEPREC=1 DOUBLEPREC=1
         COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
         ${ALL_HALODEPTHS}
@@ -356,8 +369,8 @@ FUNCTION(set_SIMULATeQCD_property TARGET)
 ENDFUNCTION()
 
 FUNCTION(SIMULATeQCD_target_compile_definitions TARGET)
-    target_compile_definitions(${TARGET} ${ARGN})
-    target_compile_definitions(_${TARGET} ${ARGN})
+    target_compile_definitions(${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
+    target_compile_definitions(_${TARGET} ${ARGN} ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
 ENDFUNCTION()
 
 FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
@@ -474,8 +487,8 @@ set_SIMULATeQCD_property(gfixTestSingle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tes
 SIMULATeQCD_target_compile_definitions(gfixTestSingle PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests gfixTestSingle)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp)
-add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
 set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
@@ -633,8 +646,8 @@ elseif (USE_HIP_NVIDIA)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
 endif()
-target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1)
-target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1)
+target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
+target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
 add_to_compound_SIMULATeQCD_target(tests SimpleFunctorTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_UtimesUdaggerTest.cpp)
@@ -654,13 +667,13 @@ add_to_compound_SIMULATeQCD_target(tests wilsonLinesCorrelatorTest)
 
 set_SIMULATeQCD_gpu_backend(src/profiling/main_ColorElectricMagneticCloverBenchmark.cpp ${SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST})
 add_SIMULATeQCD_executable(ColorElectricMagneticCloverBenchmark src/profiling/main_ColorElectricMagneticCloverBenchmark.cpp ${SOURCE_FILES_COLORELECTRICMAGNETICCLOVERTEST})
-set_SIMULATeQCD_property(ColorElectricMagneticCloverBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+set_SIMULATeQCD_property(ColorElectricMagneticCloverBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
 SIMULATeQCD_target_compile_definitions(ColorElectricMagneticCloverBenchmark PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(profilers ColorElectricMagneticCloverBenchmark)
 
 set_SIMULATeQCD_gpu_backend(src/profiling/main_FieldStrengthTensorBenchmark.cpp)
 add_SIMULATeQCD_executable(FieldStrengthTensorBenchmark src/profiling/main_FieldStrengthTensorBenchmark.cpp)
-set_SIMULATeQCD_property(FieldStrengthTensorBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+set_SIMULATeQCD_property(FieldStrengthTensorBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
 SIMULATeQCD_target_compile_definitions(FieldStrengthTensorBenchmark PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(profilers FieldStrengthTensorBenchmark)
 
@@ -740,11 +753,21 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 #SIMULATeQCD_target_compile_definitions(fluxtube PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 ##add_to_compound_SIMULATeQCD_target(applications fluxtube)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_configConverter.cpp) 
+set_SIMULATeQCD_gpu_backend(src/applications/main_configConverter.cpp)
 add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cpp) 
 set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(applications configConverter)
+
+add_SIMULATeQCD_executable(CheckConf src/applications/main_CheckConf.cpp)
+set_SIMULATeQCD_property(CheckConf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(CheckConf PRIVATE HALODEPTH_0=1 COMP_R18=1 SINGLEPREC=1 DOUBLEPREC=1 CPUONLY=1)
+add_to_compound_SIMULATeQCD_target(applications CheckConf)
+
+add_SIMULATeQCD_executable(CheckRand src/applications/main_CheckRand.cpp)
+set_SIMULATeQCD_property(CheckRand PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(CheckRand PRIVATE HALODEPTH_0=1 CPUONLY=1)
+add_to_compound_SIMULATeQCD_target(applications CheckRand)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_GenerateQuenched.cpp) 
 add_SIMULATeQCD_executable(GenerateQuenched src/applications/main_GenerateQuenched.cpp ${SOURCE_FILES_GENERATEQUENCHED})
@@ -763,12 +786,6 @@ add_SIMULATeQCD_executable(gradientFlow src/applications/main_gradientFlow.cpp $
 set_SIMULATeQCD_property(gradientFlow PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications") 
 SIMULATeQCD_target_compile_definitions(gradientFlow PRIVATE COMP_R18=1 HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 DOUBLEPREC=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications gradientFlow)
-
-set_SIMULATeQCD_gpu_backend(src/applications/main_gradientFlow.cpp)
-add_SIMULATeQCD_executable(gradientFlow_zeuthen src/applications/main_gradientFlow.cpp ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GFIX})
-set_SIMULATeQCD_property(gradientFlow_zeuthen PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(gradientFlow_zeuthen PRIVATE COMP_R18=1 DOUBLEPREC=1 HALODEPTH_3=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1 ZEUTHEN_FLOW=1)
-add_to_compound_SIMULATeQCD_target(applications gradientFlow_zeuthen)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_measureHadrons.cpp)
 add_SIMULATeQCD_executable(measureHadrons src/applications/main_measureHadrons.cpp ${SOURCE_FILES_MEASUREHADRONS})

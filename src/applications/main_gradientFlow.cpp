@@ -93,7 +93,7 @@ struct gradientFlowParam : LatticeParameters {
         addOptional(necessary_flow_times, "necessary_flow_times");
         addDefault(ignore_fixed_startstepsize, "ignore_start_step_size", false);
 
-        addDefault(save_conf, "save_configurations", false);
+        addDefault(save_conf, "save_configurations", false);  //! write gauge conf to disk at each flow time
 
         addDefault(use_unit_conf, "use_unit_conf", false);
 
@@ -125,9 +125,15 @@ struct gradientFlowParam : LatticeParameters {
     }
 };
 
+template<typename floatT, bool onDevice, size_t HaloDepth, RungeKuttaMethod RK_method, Force force>
+void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
-template<class floatT, size_t HaloDepth, typename gradFlowClass>
-void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge, gradientFlowParam<floatT> &lp) {
+    initIndexer(HaloDepth, lp, commBase);
+    Gaugefield<floatT, onDevice, HaloDepth> gauge(commBase);
+    gradientFlow<floatT, HaloDepth, RK_method, force> gradFlow(gauge, lp.start_step_size(),
+                                                                     lp.measurement_intervall()[0],
+                                                                     lp.measurement_intervall()[1],
+                                                                     lp.necessary_flow_times.get(), lp.accuracy());
 
     //! check for blocking method 
     size_t numBlocks=lp.latDim()[0]/size_t(lp.binsize());
@@ -422,8 +428,6 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     while (continueFlow) {
 
-        continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
-
         //! -------------------------------prepare log output-----------------------------------------------------------
 
         logStream.str("");
@@ -712,28 +716,21 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         }
 
         rootLogger.info(logStream.str());
-        flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
-        gauge.updateAll();
 
-        gAction.recomputeField();
-        topology.recomputeField();
+        continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
+        if (continueFlow){
+            flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
+            gauge.updateAll();
+
+            gAction.recomputeField();
+            topology.recomputeField();
+        }
+
     }
     timer.stop();
     rootLogger.info("complete time = " ,  timer.minutes() ,  " min");
 }
 
-
-template<class floatT, bool onDevice, const size_t HaloDepth, RungeKuttaMethod input_RK_method, template<class, const size_t, RungeKuttaMethod> class gradFlowClass >
-void init_flow(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
-
-    initIndexer(HaloDepth, lp, commBase);
-    Gaugefield<floatT, onDevice, HaloDepth> gauge(commBase);
-    gradFlowClass<floatT, HaloDepth, input_RK_method> gradFlow(gauge, lp.start_step_size(),
-                                                                 lp.measurement_intervall()[0],
-                                                                 lp.measurement_intervall()[1],
-                                                                 lp.necessary_flow_times.get(), lp.accuracy());
-    run<floatT, HaloDepth, gradFlowClass<floatT, HaloDepth, input_RK_method>>(gradFlow, gauge, lp);
-}
 
 int main(int argc, char *argv[]) {
 
@@ -754,83 +751,30 @@ int main(int argc, char *argv[]) {
             lp.start_step_size.set(lp.measurement_intervall()[1]);
         }
 
-        /// Set HaloDepth. The ifdefs can reduce compile time (only define what you need in CMakeLists).
-        /// Wilson flow with topological charge (correlator) needs HaloDepth=2, without 1.
-        /// Zeuthen flow always needs 3.
-        switch (input_force) {
-#ifdef WILSON_FLOW
-            case wilson: {
-                if (lp.topCharge_imp() || lp.topChargeTimeSlices_imp()) {
-                    const size_t HaloDepth = 2;
-                    switch (input_RK_method) {
-#ifdef FIXED_STEPSIZE
-                        case fixed_stepsize:
-                            init_flow<PREC, USE_GPU, HaloDepth, fixed_stepsize, wilsonFlow>(commBase, lp);
-                            break;
-#endif
-#ifdef ADAPTIVE_STEPSIZE
-                        case adaptive_stepsize:
-                            init_flow<PREC, USE_GPU, HaloDepth, adaptive_stepsize, wilsonFlow>(commBase, lp);
-                            break;
-                        case adaptive_stepsize_allgpu:
-                            init_flow<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, wilsonFlow>(commBase, lp);
-                            break;
-#endif
-                        default:
-                            throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
-                    }
-                } else {
-                    const size_t HaloDepth = 1;
-                    switch (input_RK_method) {
-#ifdef FIXED_STEPSIZE
-                        case fixed_stepsize:
-                            init_flow<PREC, USE_GPU, HaloDepth, fixed_stepsize, wilsonFlow>(commBase, lp);
-                            break;
-#endif
-#ifdef ADAPTIVE_STEPSIZE
-                        case adaptive_stepsize:
-                            init_flow<PREC, USE_GPU, HaloDepth, adaptive_stepsize, wilsonFlow>(commBase, lp);
-                            break;
-                        case adaptive_stepsize_allgpu:
-                            init_flow<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, wilsonFlow>(commBase, lp);
-                            break;
-#endif
-                        default:
-                            throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
-                    }
-                }
-                break;
-            }
-#endif
-#ifdef ZEUTHEN_FLOW
-            case zeuthen: {
-                const size_t HaloDepth = 3;
-                switch (input_RK_method) {
-#ifdef FIXED_STEPSIZE
-                    case fixed_stepsize:
-                        init_flow<PREC, USE_GPU, HaloDepth, fixed_stepsize, zeuthenFlow>(commBase, lp);
-                        break;
-#endif
-#ifdef ADAPTIVE_STEPSIZE
-                    case adaptive_stepsize:
-                        init_flow<PREC, USE_GPU, HaloDepth, adaptive_stepsize, zeuthenFlow>(commBase, lp);
-                        break;
-                    case adaptive_stepsize_allgpu:
-                        init_flow<PREC, USE_GPU, HaloDepth, adaptive_stepsize_allgpu, zeuthenFlow>(commBase, lp);
-                        break;
-#endif
-                    default:
-                        throw std::runtime_error(stdLogger.fatal("Invalid RK_method. Did you set the compile definitions accordingly?"));
-                }
-                break;
-            }
-#endif
-            default:
-                throw std::runtime_error(stdLogger.fatal("Invalid force. Did you set the compile definitions accordingly?"));
+        size_t input_HaloDepth = 1;
+        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp())) {
+            input_HaloDepth = 2;
+        } else if (input_force == zeuthen ) {
+            input_HaloDepth = 3;
         }
+
+        //! loop over all templates and choose the one specified by the user
+        static_for<1, 4>::apply([&](auto i){
+            const auto HaloDepth = static_cast<size_t>(i);
+            static_for<0, 3>::apply([&](auto j){
+                const auto RKmethod = static_cast<RungeKuttaMethod>(static_cast<int>(j));
+                static_for<0, 2>::apply([&](auto k){
+                    const auto myforce = static_cast<Force>(static_cast<int>(k));
+                    if ( myforce == input_force && RKmethod == input_RK_method && HaloDepth == input_HaloDepth ) {
+                        rootLogger.info("Initializing gradientFlow with RK_method=", RungeKuttaMethods[j], ", Force=", Forces[k]);
+                        run<PREC, USE_GPU, HaloDepth, RKmethod, myforce>(commBase, lp);
+                    }
+                });
+            });
+        });
     }
-    catch (const std::runtime_error &error) {
-        return -1;
+    catch(const std::runtime_error &error) {
+        return 1;
     }
     return 0;
 }

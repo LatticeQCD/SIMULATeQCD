@@ -16,9 +16,9 @@ SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it simple and easy f
 The following software is required to compile SIMULATeQCD:
 
 * `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
-* `C++` compiler with `C++17` support  (e.g. `g++-9`).
+* `C++` compiler with `C++17` support.
 * `MPI` (e.g. `openmpi-4.0.4`).
-* `CUDA Toolkit` version 11.0 (NOT 11.1 or 11.2. CUDA 11.4 has a fast compilation time, but we have not yet checked the performance.)
+* `CUDA Toolkit` version 11+. 
 * `pip install -r requirements.txt` to build the documentation.
 
 ## Downloading the code
@@ -34,12 +34,12 @@ git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
-cmake ../simulateqcd/ \
+cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=ON \
 ``` 
-Here, it is assumed that your source code folder is called `simulateqcd`. **Do NOT compile your code in the source code folder!**
+Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
 `-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
@@ -113,7 +113,9 @@ If you are using this code in your research please cite:
 
 ## Acknowledgment
 
-- We acknowledge support by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the CRC-TR 211 'Strong-interaction matter under extreme conditions'– project number 315477589 – TRR 211.
+- We acknowledge support by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the CRC-TR 211 
+'Strong-interaction matter under extreme conditions'– project number 315477589 – TRR 211.
 - This work was partly performed in the framework of the PUNCH4NFDI consortium supported by DFG fund "NFDI 39/1", Germany.
-- This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance Computing (SciDAC) award 
-Computing the Properties of Matter with Leadership Computing Resources. 
+- This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance 
+Computing (SciDAC) award Computing the Properties of Matter with Leadership Computing Resources.
+- We would also like to acknowedge enlightening technical discussions with the ILDG team, in particular H. Simma. 

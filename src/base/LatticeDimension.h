@@ -1,6 +1,9 @@
-//
-// Created by lukas on 22.09.17.
-//
+/* 
+ * LatticeDimension.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef JUST_INDEXER_LATTICEDIMENSION_H
 #define JUST_INDEXER_LATTICEDIMENSION_H
@@ -22,10 +25,6 @@ public :
 
     LatticeDimensions& operator=(const LatticeDimensions& a) = default;
 
-    /*   __host__ constexpr LatticeDimensions& operator=(const LatticeDimensions& a){
-           for (int i = 0; i < 4; i++) c[i] = a.c[i];
-           return *this;
-   }*/
     //! Default constructor, initializes to (0,0,0,0)
      __host__ LatticeDimensions() {
         c[0] = 0;

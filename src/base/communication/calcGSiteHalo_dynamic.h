@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 03.05.19.
-//
+/* 
+ * calcGSiteHalo_dynamic.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #ifndef CALCGSITEHALO_DYNAMIC_H
 #define CALCGSITEHALO_DYNAMIC_H

@@ -28,10 +28,10 @@ AlgRemez::AlgRemez(double lower, double upper, long precision)
   apend = upper;
   apwidt = apend - apstrt;
 
- printf("\n\n\n# New rational function\n");
- printf("# Approximation bounds are [%e,%e]\n", 
-	 (double)apstrt,(double)apend);
- printf("# Precision of arithmetic is %ld\n", precision);
+  printf("\n\n\n# New rational function\n");
+  printf("# Approximation bounds are [%e,%e]\n", 
+	(double)apstrt,(double)apend);
+  printf("# Precision of arithmetic is %ld\n", precision);
 
   alloc = 0;
   n = 0;
@@ -41,7 +41,6 @@ AlgRemez::AlgRemez(double lower, double upper, long precision)
 
   // Only require the approximation spread to be less than 1 ulp
   tolerance = 1e-15;
-
 }
 
 // Destructor
@@ -136,7 +135,6 @@ double AlgRemez::generateApprox(int num_degree, int den_degree,
     exit( 1 );
   }
 
-//  char *fname = "generateApprox(int, unsigned long, unsigned long)";
 
   printf("# Degree of the approximation is (%d,%d)\n", num_degree, den_degree);
   printf("# Approximating the function (x+4*%f^2)^(%f/%f) (x+4*%f^2)^(%f/%f) (x+4*%f^2)^(%f/%f) (x+4*%f^2)^(%f/%f)\n", m1, pnum1, pden1, m2, pnum2, pden2, m3, pnum3, pden3, m4, pnum4, pden4);
@@ -183,8 +181,7 @@ double AlgRemez::generateApprox(int num_degree, int den_degree,
   while (spread > tolerance) { //iterate until convergance
 
     if (iter++%1000==0) {
-      fprintf(stderr,"Iteration %d, spread %e delta %e\n", 
-	     iter-1,(double)spread,(double)delta);
+      fprintf(stderr,"Iteration %d, spread %e delta %e\n", iter-1,(double)spread,(double)delta);
     }
 
     equations();
@@ -201,7 +198,7 @@ double AlgRemez::generateApprox(int num_degree, int den_degree,
   double error = (double)getErr(mm[0],&sign);
   printf("# Converged at %d iterations, error = %e\n",iter,error);
   fprintf(stderr,"Converged at %d iterations, error = %.16e\n",iter,error);
-//yuanqing error = %.10e\n
+
   // Once the approximation has been generated, calculate the roots
   if(!root()) {
     fprintf(stderr,"Root finding failed\n");
@@ -311,7 +308,6 @@ void AlgRemez::initialGuess() {
   mm[0] = apstrt;
   for (long i = 1; i < ncheb; i++) {
     r = 0.5 * (1 - cos((M_PI * i)/(double) a));
-    //r *= sqrt_bf(r);
     r = (exp((double)r)-1.0)/(exp(1.0)-1.0);
     mm[i] = apstrt + r * apwidt;
   }
@@ -320,7 +316,6 @@ void AlgRemez::initialGuess() {
   a = 2.0 * ncheb;
   for (long i = 0; i <= ncheb; i++) {
     r = 0.5 * (1 - cos(M_PI * (2*i+1)/(double) a));
-    //r *= sqrt_bf(r); // Squeeze to low end of interval
     r = (exp((double)r)-1.0)/(exp(1.0)-1.0);
     xx[i] = apstrt + r * apwidt;
   }
@@ -507,17 +502,12 @@ bigfloat AlgRemez::func(const bigfloat x) {
   if( power_num_flav_4 >= 0) z_flav_4 = (bigfloat)power_num_flav_4 / (bigfloat)power_den_flav_4;
   else z_flav_4 = -((bigfloat)(-power_num_flav_4) / (bigfloat)power_den_flav_4);
 
-  //bigfloat z_flav_2 = (bigfloat)power_num_flav_2 / (bigfloat)power_den_flav_2;
-  //bigfloat z_flav_3 = (bigfloat)power_num_flav_3 / (bigfloat)power_den_flav_3;
-  //bigfloat z_flav_4 = (bigfloat)power_num_flav_4 / (bigfloat)power_den_flav_4;
   bigfloat y_flav_1;
   bigfloat y_flav_2;
   bigfloat y_flav_3;
   bigfloat y_flav_4;
   bigfloat y;
 
-  //if (x == (bigfloat)1.0) y = (bigfloat)1.0;
-  //else y = pow_bf(x,z);
 
   // flavor 1
   if( power_num_flav_1 == (bigfloat) 0.0 )
@@ -734,11 +724,9 @@ int AlgRemez::root() {
 
   // First find the numerator roots
   for (i=0; i<=n; i++) poly[i] = param[i];
-  //for (i=0; i<=n; i++) fprintf(stderr,"%d %e\n", i, (double)poly[i]);
 
   for (i=n-1; i>=0; i--) {
     roots[i] = rtnewt(poly,i+1,lower,upper,tol);
-    //fprintf(stderr,"root[%d] = %e\n", i, (double)roots[i]);
     if (roots[i] == 0.0) {
       fprintf(stderr,"Failure to converge on root %ld/%d\n", i+1, n);
       return 0;
@@ -750,11 +738,9 @@ int AlgRemez::root() {
  // Now find the denominator roots
   poly[d] = 1l;
   for (i=0; i<d; i++) poly[i] = param[n+1+i];
-  //for (i=0; i<=d; i++) fprintf(stderr,"%d %e\n", i, (double)poly[i]);
 
   for (i=d-1; i>=0; i--) {
     poles[i]=rtnewt(poly,i+1,lower,upper,tol);
-    //fprintf(stderr,"pole[%d] = %e\n", i, (double)poles[i]);
     if (poles[i] == 0.0) {
       fprintf(stderr,"Failure to converge on pole %ld/%d\n", i+1, d);
       return 0;
@@ -764,9 +750,6 @@ int AlgRemez::root() {
   }
 
   norm = param[n];
-  //fprintf(stderr,"Normalisation constant is %e\n",(double)norm);
-  //for (i=0; i<n; i++) fprintf(stderr,"%ld root = %e\n",i,(double)roots[i]);
-  //for (i=0; i<d; i++) fprintf(stderr,"%ld pole = %e\n",i,(double)poles[i]);
 
   delete [] poly;
 
@@ -780,14 +763,6 @@ bigfloat AlgRemez::polyEval(bigfloat x, bigfloat *poly, long size) {
   return f;
 }
 
-/*
-// Evaluate the polynomial using complex numbers
-complex_bf AlgRemez::polyEval(complex_bf x,complex_bf *poly, long size) {
-  complex_bf f = poly[size];
-  for (long i=size-1; i>=0; i--) f = f*x + poly[i];
-  return f;
-}
-*/
 // Evaluate the differential of the polynomial
 bigfloat AlgRemez::polyDiff(bigfloat x, bigfloat *poly, long size) {
   bigfloat df = (bigfloat)size*poly[size];
@@ -808,8 +783,6 @@ bigfloat AlgRemez::rtnewt(bigfloat *poly, long i, bigfloat x1,
     df = polyDiff(rtn, poly, i);
     dx = f/df;
     rtn -= dx;
-    //if ((x1-rtn)*(rtn-x2) < (bigfloat)0.0)
-    //fprintf(stderr,"Jumped out of brackets in rtnewt\n");
     if (abs_bf(dx) < xacc) return rtn;
   }
   fprintf(stderr,"Maximum number of iterations exceeded in rtnewt\n");
@@ -879,7 +852,6 @@ void AlgRemez::pfe(bigfloat *res, bigfloat *poles, bigfloat norm) {
       res[small] = res[j];
       res[j] = temp;
     }
-    //fprintf(stderr,"Residue = %e, Pole = %e\n", (double)res[j], (double)poles[j]);
   }
 
   delete [] numerator;

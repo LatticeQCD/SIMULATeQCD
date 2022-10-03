@@ -38,13 +38,13 @@ int main(int argc, char *argv[]) {
 	gauge.writeconf_nersc("nersc.l8t4b3360_bieHB_test");
 
     rootLogger.info("Try ILDG write...");
-    gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",param.prec_out());
+    gauge.writeconf_ildg("nersc_ildg.l8t4b3360_bieHB_test",param);
 
     rootLogger.info("Try ILDG read...");
 	gauge_test.readconf_ildg("nersc_ildg.l8t4b3360_bieHB_test");
 
     rootLogger.info("One last ILDG write to verify the checksum worked...");
-    gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",param.prec_out());
+    gauge_test.writeconf_ildg("ildg_ildg.l8t4b3360_bieHB_test",param);
 
     rootLogger.info("Link-by-link comparison of NERSC config with written ILDG config...");
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge,gauge_test,1e-15);

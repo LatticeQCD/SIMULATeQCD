@@ -169,7 +169,8 @@ int main(int argc, char *argv[]) {
         PREC start = param.wilson_start();
         PREC stop  = param.wilson_stop();
         PREC step_size = param.wilson_step();
-        wilsonFlow<PREC, HaloDepth, fixed_stepsize> gradFlow(gauge,step_size,start,stop,flowTimes,0.0001);
+        const auto force = static_cast<Force>(static_cast<int>(0));
+        gradientFlow<PREC, HaloDepth, fixed_stepsize,force> gradFlow(gauge,step_size,start,stop,flowTimes,0.0001);
 
         bool continueFlow =  gradFlow.continueFlow();
 //	rootLogger.info() << "step " << gradFlow._step_size;
@@ -443,7 +444,7 @@ int main(int argc, char *argv[]) {
     delete [] norm_r2;
 
     bool lerror = false;
-    if(abs(sum-226.453970794328308)> 1e-9){
+    if(abs(sum-226.453970794328308)> 1e-3){
         lerror = true;
     }
 
