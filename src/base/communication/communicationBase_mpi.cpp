@@ -1,6 +1,9 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
+/* 
+ * communicationBase_mpi.cpp                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
 #include "../../define.h"
 
@@ -33,7 +36,9 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv) {
     if (IamRoot()){
         rootLogger.setVerbosity(stdLogger.getVerbosity());
     }
-
+    
+    rootLogger.info("Running SIMULATeQCD");
+    rootLogger.info("Git commit version: ", GIT_HASH);
     rootLogger.info("Initializing MPI with (", world_size, " proc)");
 
     /// Get the name of the processor
@@ -100,7 +105,7 @@ inline std::string CommunicationBase::gpuAwareMPICheck() {
 }
 
 /// Initialize MPI
-void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensions &Topo) {
+void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused)) const LatticeDimensions &Topo) {
 
     if (Dim.mult() != getNumberProcesses()) {
         throw std::runtime_error(stdLogger.fatal(
@@ -124,9 +129,13 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     ret = MPI_Cart_get(cart_comm, 4, dims, periods, myInfo.coord);
     _MPI_fail(ret, "MPI_Cart_get");  //now we have process coordinates
 
+    _initialized = true;
 
+#ifndef CPUONLY
     int num_devices = 0;
-    gpuGetDeviceCount(&num_devices);
+    gpuError_t gpuErr = gpuGetDeviceCount(&num_devices);
+    if (gpuErr != gpuSuccess)
+            GpuError("communicationBase_mpi.cpp: Failed to count devices (gpuGetDeviceCount)", gpuErr);
     if (num_devices == 0) {
         throw std::runtime_error(stdLogger.fatal(myInfo.nodeName, " CPU_", sched_getcpu(),
                     " MPI world_rank=", myInfo.world_rank,
@@ -152,10 +161,14 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     int name_len;
     MPI_Get_processor_name(processor_name, &name_len);
 
-    gpuSetDevice(myInfo.deviceRank);
+    gpuErr = gpuSetDevice(myInfo.deviceRank);
+    if (gpuErr != gpuSuccess)
+            GpuError("communicationBase_mpi.cpp: Failed to set device (gpuSetDevice)", gpuErr);
 
     gpuDeviceProp tmpProp;
-    gpuGetDeviceProperties(&tmpProp, myInfo.deviceRank);
+    gpuErr = gpuGetDeviceProperties(&tmpProp, myInfo.deviceRank);
+    if (gpuErr != gpuSuccess)
+            GpuError("communicationBase_mpi.cpp: Failed to get device properties (gpuGetDeviceProperties)", gpuErr);
 
     globalBarrier();
     rootLogger.info("> Running on:");
@@ -171,30 +184,32 @@ void CommunicationBase::init(const LatticeDimensions &Dim, const LatticeDimensio
     const int gpu_arch = tmpProp.major * static_cast<int>(10) + tmpProp.minor;
     rootLogger.info("> GPU compute capability: ", gpu_arch);
 
-#ifdef ARCHITECTURE
-    if (static_cast<int>(ARCHITECTURE) != gpu_arch) {
+// Fix that for hip backend!
+#if defined(ARCHITECTURE) && defined(USE_CUDA)
+    std::string compiled_arch = TOSTRING(ARCHITECTURE);
+    if (std::stoi(compiled_arch) != gpu_arch) {
         throw std::runtime_error(stdLogger.fatal("You compiled for ARCHITECTURE=", ARCHITECTURE,
                     " but the GPUs here are ", gpu_arch));
     }
 #else
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
+#endif
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
-
 }
 
 
 CommunicationBase::~CommunicationBase() {
-    rootLogger.info("Finalize CommunicationBase");
+    rootLogger.info("Finalizing MPI");
     int ret;
-    ret = MPI_Comm_free(&cart_comm);
-    _MPI_fail(ret, "MPI_Comm_free");
+    if (_initialized) {
+        ret = MPI_Comm_free(&cart_comm);
+        _MPI_fail(ret, "MPI_Comm_free");
 
-    MPI_Comm_free(&node_comm);
-    MPI_Info_free(&mpi_info);
-
-    /// Finalize MPI
+        MPI_Comm_free(&node_comm);
+        MPI_Info_free(&mpi_info);
+    }
     ret = MPI_Finalize();
     _MPI_fail(ret, "MPI_Finalize");
 }
@@ -222,6 +237,10 @@ void CommunicationBase::root2all(int &value) const {
 
 void CommunicationBase::root2all(int64_t &value) const {
     MPI_Bcast(&value, 1, MPI_INT64_T, 0, MPI_COMM_WORLD);
+}
+
+void CommunicationBase::root2all(size_t &value) const {
+    MPI_Bcast(&value, 1, MPI_INT32_T, 0, MPI_COMM_WORLD);
 }
 
 void CommunicationBase::root2all(bool &value) const {
@@ -382,6 +401,13 @@ GSU3<double> CommunicationBase::reduce(GSU3<double> in) const {
     GSU3<double> recv;
     MPI_Allreduce(&in, &recv, 9, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
     return recv;
+}
+
+void CommunicationBase::reduce(uint32_t *in, int nr) const {
+    uint32_t *buf = new uint32_t[nr];
+    MPI_Allreduce(in, buf, nr, MPI_UINT32_T, MPI_SUM, cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
 }
 
 void CommunicationBase::reduce(float *in, int nr) const {

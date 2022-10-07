@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to write clean and readable code &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How to do pull requests" href="git.html" />
+    <link rel="prev" title="Contributions" href="contributions.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">How to write clean and readable code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeStructure.html">General structure of the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Template instantiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminalIO.html">Terminal output &amp; terminating the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html">Timing your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inputParameter.html">How to make an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html">Documenting your code</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>How to write clean and readable code</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/02_contributions/codeStyle.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="how-to-write-clean-and-readable-code">
+<h1>How to write clean and readable code<a class="headerlink" href="#how-to-write-clean-and-readable-code" title="Permalink to this headline"></a></h1>
+<ul>
+<li><p><strong>Warnings</strong><br />
+Switch on compiler warnings with -Wall -Wextra. Do care about these warnings. A code should compile without any warning. If a warning is unavoidable use pragmas to suppress them.</p></li>
+<li><p><strong>Do not repeat yourself</strong><br />
+Do not copy code or use similar code all the time. This makes it harder to maintain the code, for example by requiring the developer to make the same change in multiple places.</p></li>
+<li><p><strong>Do not use the new and delete operators</strong><br />
+The <code class="docutils literal notranslate"><span class="pre">new</span></code> and the <code class="docutils literal notranslate"><span class="pre">delete</span></code> operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the <a class="reference internal" href="memoryAllocation.html"><span class="doc std std-doc">Memory Manager</span></a>. There is absolutely no reason to use <code class="docutils literal notranslate"><span class="pre">new</span></code> for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.</p></li>
+<li><p><strong>Avoid pointers</strong><br />
+Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type safe. This causes a lot of errors. There are cases where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.</p></li>
+<li><p><strong>Delete the copy constructor for classes which manage large amounts of memory</strong><br />
+Delete the copy constructor using
+<code class="docutils literal notranslate"><span class="pre">myClass(myClass&amp;</span> <span class="pre">)</span> <span class="pre">=</span> <span class="pre">delete</span></code>.
+The default copy constructor does not copy memory that is not part of the class. However, it calls the destructor. This deletes the memory that the class points to. This can lead to bad memory accesses. Implement a move constructor instead.</p></li>
+<li><p><strong>Only functions should be public</strong><br />
+Do not use public member variables in classes.</p></li>
+<li><p><strong>Use const whenever possible</strong><br />
+The usage of <code class="docutils literal notranslate"><span class="pre">const</span></code> can help avoid undesired modification of objects.</p></li>
+<li><p><strong>Proper naming</strong><br />
+Use proper and consistent naming for everything. Use the same name for file names as for the classes they contain. Use long names which describe what is done. Do not use different names between different function calls. Follow the following naming scheme:
+Classes:
+<code class="docutils literal notranslate"><span class="pre">ThisIsMyClass</span></code>
+Private class members:
+<code class="docutils literal notranslate"><span class="pre">_my_member</span></code>
+Member function:
+<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">thisIsMyFunction()</span></code>
+Function parameter:
+<code class="docutils literal notranslate"><span class="pre">this_is_my_parameter</span></code>
+For example: <code class="docutils literal notranslate"><span class="pre">thisIsMyFunction(double</span> <span class="pre">this_is_my_parameter);</span></code></p></li>
+<li><p><strong>Formatting</strong><br />
+These are the conventions we have chosen for SIMULATeQCD. Please stick to them. Besides making the code a bit more readable, it will look more professional if we all follow the same conventions.</p>
+<ul>
+<li><p>DO NOT USE TABS. Instead, please indent using 4 spaces.</p></li>
+<li><p>Try for a maximum line length of 120 characters.</p></li>
+<li><p>Try for a maximum function length of 80 lines.</p></li>
+<li><p>Use braces:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>instead of</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">10</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+<li><p>Do not put multiple statements in one line:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+<p>instead of</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">...</span><span class="w"> </span><span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+<li><p>Please format your if-else statements like so:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="p">...</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p><strong>Write helpful comments</strong></p>
+<ul class="simple">
+<li><p>Give comments about complex sections, tricks that you used, relevant visualizations, DOIs for papers, your design philosophy (when relevant), etc. DO NOT comment trivial code. Remove commented-out code. (It is anyway in the git history if we need it later.)</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/scripts/comments.bash</span></code> to put some leading comments at the top of your code. This helps ensure that we all include the same information in the same way at the beginning of our code.</p></li>
+</ul>
+</li>
+<li><p><strong>Remove old features</strong><br />
+If features are not needed any more, remove them.</p></li>
+<li><p><strong>Use <code class="docutils literal notranslate"><span class="pre">C++11/14/17/20</span></code> features</strong> (lambda expressions, move constructor, initializer_list,…)<br />
+Read about them. They are nice!</p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

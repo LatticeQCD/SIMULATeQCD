@@ -23,7 +23,7 @@
  * When you wish to allocate dynamic memory, use MemoryManagement::getMemAt(name). If name begins with "SHARED_" it
  * will behave as channels did before. Otherwise, the MemoryManager enforces that if getMemAt(name) is called again
  * later, it will get its own memory, separate from the first time getMemAt(name) was called. For some very basic
- * examples how this works, please read through main_memManTest.cu.
+ * examples how this works, please read through main_memManTest.cpp.
  *
  */
 
@@ -42,6 +42,7 @@
 #include "./communication/gpuIPC.h"
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 #define DISALLOW_SHARED_MEM 0     /// True: Enforce that all memory channels are unique
 
@@ -76,17 +77,29 @@ private:
                 if (onDevice) {
                     gpuError_t gpuErr = gpuMalloc((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(false, false, true, true,false);
                         std::stringstream err_msg;
-                        err_msg << "_rawPointer: Failed to allocate " << size/1000000000. << " GB of memory on device";
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on device";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
                 } else {
+#ifndef CPUONLY
                     gpuError_t gpuErr = gpuMallocHost((void **) &_rawPointer, size);
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(true,true,false, false,false);
                         std::stringstream err_msg;
-                        err_msg << "_rawPointer: Failed to allocate " << size/1000000000. << " GB of memory on host";
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
+#else
+                    _rawPointer = std::malloc(size);
+                    if (_rawPointer == nullptr){
+                        MemoryManagement::memorySummary(true,true,false, false,false);
+                        std::stringstream err_msg;
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
+                        throw std::runtime_error(stdLogger.fatal(err_msg.str()));
+                    }
+#endif
                 }
                 rootLogger.alloc("> Allocated mem at " ,  static_cast<void*>(_rawPointer)
                                    ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): "
@@ -106,6 +119,7 @@ private:
                     gpuError_t gpuErr = gpuFree(_rawPointer);
 
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(false, false, true, true, false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on device";
@@ -113,13 +127,18 @@ private:
                     }
 
                 } else {
+#ifndef CPUONLY
                     gpuError_t gpuErr = gpuFreeHost(_rawPointer);
                     if (gpuErr != gpuSuccess) {
+                        MemoryManagement::memorySummary(true,true,false, false, false);
                         std::stringstream err_msg;
                         err_msg << "_rawPointer: Failed to free memory of size " << _current_size/1000000000. <<
                                 "GB at " << static_cast<void*>(_rawPointer) << " on host";
                         GpuError(err_msg.str().c_str(), gpuErr);
                     }
+#else
+                    std::free(_rawPointer);
+#endif
                 }
                 rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " , 
                                    _current_size/1000000000. ,  " GB");
@@ -428,7 +447,7 @@ public:
     template<bool onDevice>
     static gMemoryPtr<onDevice> getMemAt(const std::string& name, size_t size = 0);
     static void memorySummary(bool show_counts_host=true, bool show_size_host=true,
-                              bool show_counts_device=true, bool show_size_device=true);
+                              bool show_counts_device=true, bool show_size_device=true, bool rootOnly=true);
 
 };
 

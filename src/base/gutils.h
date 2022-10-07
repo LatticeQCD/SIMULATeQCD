@@ -1,3 +1,9 @@
+/* 
+ * gutils.h                                                               
+ * 
+ * Utility functions usable in GPUs. 
+ * 
+ */
 #ifndef UTIL_H
 #define UTIL_H
 
@@ -12,37 +18,36 @@
  */
 __host__ __device__ void inline divmod(int nominator, int denominator,
         int &quotient, int &remainder) {
-    quotient = nominator / denominator;
+    quotient  = nominator / denominator;
     remainder = nominator - (quotient * denominator);
 }
 __host__ __device__ void inline divmod(size_t nominator, size_t denominator,
         size_t &quotient, size_t &remainder) {
-    quotient = nominator / denominator;
+    quotient  = nominator / denominator;
     remainder = nominator - (quotient * denominator);
 }
 
 __host__ void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
         const size_t elems, const size_t blockSize) {
     blockDim = blockSize;
-    gridDim = static_cast<int>(
-            ceilf(static_cast<float>(elems) / static_cast<float>(blockDim.x)));
+    gridDim  = static_cast<int>(ceilf(static_cast<float>(elems) / static_cast<float>(blockDim.x)));
 }
 
 /**
- * Utility class to report errors in CUDA code.
+ * Utility class to report errors in GPU code.
  */
 class GpuError {
-    public:
-        explicit GpuError(gpuError_t err);
+public:
+    explicit GpuError(gpuError_t err);
+  
+    GpuError(const char *warn, gpuError_t err);
+  
+    gpuError_t getError();
+  
+    const std::string getErrorMessage();
 
-        GpuError(const char *warn, gpuError_t err);
-
-        gpuError_t getError();
-
-        const std::string getErrorMessage();
-
-    private:
-        gpuError_t gpuErr;
+private:
+    gpuError_t gpuErr;
 };
 
 /**

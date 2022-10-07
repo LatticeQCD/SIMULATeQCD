@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Functor syntax &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Gaugefield" href="gaugefield.html" />
+    <link rel="prev" title="Communication" href="communicationBase.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="codeBase.html">Code base</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="indexer.html">Indexer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fileWriter.html">File Writer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="latticeContainer.html">Lattice Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="communicationBase.html">Communication</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Functor syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugefield.html">Gaugefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topology.html">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurationIO.html">Input and output formats for gauge configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
+      <li>Functor syntax</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/04_codeBase/functorSyntax.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="functor-syntax">
+<h1>Functor syntax<a class="headerlink" href="#functor-syntax" title="Permalink to this headline"></a></h1>
+<p>In SIMULATeQCD we try to abstract away highly complex parallelization, which
+depends on the API, whether GPUs or CPUs are used, the number of processes,
+the node layout being used, and so on.
+In order to accomplish this for the general case, we have implemented a system where one can
+iterate an arbitrary operation that depends on arbitrary arguments over an arbitrary set.
+For example a common task needed in lattice calculations is to iterate a plaquette
+calculation, which depends on the <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code>, over all space-time points.
+This operation is a <em>functor</em> and the iterating method is an <em>iterator</em>,
+which together comprise <em>functor syntax</em>.</p>
+<p>Each functor is implemented as a <code class="docutils literal notranslate"><span class="pre">struct</span></code>. One passes the arguments of the functor
+when initializing the <code class="docutils literal notranslate"><span class="pre">struct</span></code>. The argument over which the functor should
+be iterated is implemented by overloading the syntax <code class="docutils literal notranslate"><span class="pre">operator()</span></code> of the <code class="docutils literal notranslate"><span class="pre">struct</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">RunFunctors</span></code> class contains all methods that iterate functors over
+the desired target set. We choose to associate
+<code class="docutils literal notranslate"><span class="pre">gSite</span></code> and <code class="docutils literal notranslate"><span class="pre">gSiteMu</span></code> objects to the coordinates of sites and links, respectively;
+hence one usually passes a <code class="docutils literal notranslate"><span class="pre">gSite</span></code> or <code class="docutils literal notranslate"><span class="pre">gSiteMu</span></code> object
+to the <code class="docutils literal notranslate"><span class="pre">operator()</span></code>. The class also contains several
+<code class="docutils literal notranslate"><span class="pre">CalcGSite</span></code> methods that tell the iterator how to translate from
+these objects to GPU thread indices.</p>
+<p>There are many thorough examples on how to use functor syntax in
+<code class="docutils literal notranslate"><span class="pre">src/testing/main_GeneralFunctorTest.cpp</span></code>. One example functor implementation
+for the plaquette is shown below:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">//! Functor to compute the plaquette given a gSite. It is called in a Kernel that is already defined by templates.</span>
+<span class="c1">//! You do not need to write a custom Kernel. See below.</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">SimplePlaq</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//! Functors can have member variables. Here we just need the accessor from the gaugefield reference.</span>
+<span class="w">    </span><span class="n">gaugeAccessor</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">gAcc</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="c1">//! Constructor that initializes those members:</span>
+<span class="w">    </span><span class="k">explicit</span><span class="w"> </span><span class="n">SimplePlaq</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeIn</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">gAcc</span><span class="p">(</span><span class="n">gaugeIn</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">())</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+
+<span class="w">    </span><span class="cm">/* This is the operator() overload that is called to perform the local plaquette computation. This function has to</span>
+<span class="cm">     * have the following design: It takes a gSite, and it returns the computed object corresponding to that site.</span>
+<span class="cm">     * In this case, we want to return a float and store it in a LatticeContainer object. */</span><span class="w"></span>
+<span class="w">    </span><span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="n">floatT</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">gSite</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="n">GSU3</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">floatT</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nu</span><span class="p">;</span><span class="w"> </span><span class="n">mu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">                </span><span class="c1">//! Notice here that site is changed implicitly by this; that is, it ends up at the last point of the</span>
+<span class="w">                </span><span class="c1">//! path (in this case, it is the origin again)</span>
+<span class="w">                </span><span class="n">result</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">tr_d</span><span class="p">(</span><span class="n">gAcc</span><span class="p">.</span><span class="k">template</span><span class="w"> </span><span class="n">getLinkPath</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="n">nu</span><span class="p">,</span><span class="w"> </span><span class="n">Back</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span><span class="w"> </span><span class="n">Back</span><span class="p">(</span><span class="n">nu</span><span class="p">)));</span><span class="w"></span>
+<span class="w">            </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">};</span><span class="w"></span>
+
+
+<span class="c1">//! Wrapper to compute the plaquette using the functor &quot;SimplePlaq&quot;</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
+<span class="n">floatT</span><span class="w"> </span><span class="n">compute_plaquette</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gauge</span><span class="p">,</span><span class="w"> </span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">latContainer</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+
+<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">elems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GInd</span><span class="o">::</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol4</span><span class="p">;</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="n">adjustSize</span><span class="p">(</span><span class="n">elems</span><span class="p">);</span><span class="w"> </span><span class="c1">//! Make sure container is large enough to hold one float for each site</span>
+
+<span class="w">    </span><span class="c1">//! Perform the Plaquette computation. This is done by passing an instance of the functor &quot;SimplePlaq&quot; to the</span>
+<span class="w">    </span><span class="c1">//! iterateOverBulk method of the LatticeContainer object. The functor &quot;SimplePlaq&quot; is called on each lattice site,</span>
+<span class="w">    </span><span class="c1">//! which calculates the local contribution of each site to the plaquette. The &quot;iterateOver...&quot; member function of</span>
+<span class="w">    </span><span class="c1">//! the LatticeContainer (and not gaugefield) is used here, since we want to store the results from the computation</span>
+<span class="w">    </span><span class="c1">//! inside of this LatticeContainer and not inside of the gaugefield (the result at each site is simply a float and</span>
+<span class="w">    </span><span class="c1">//! not an SU3 matrix). The Gaugefield is passed to the functor by reference.</span>
+<span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="k">template</span><span class="w"> </span><span class="n">iterateOverBulk</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">SimplePlaq</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">gauge</span><span class="p">));</span><span class="w"></span>
+
+<span class="w">    </span><span class="n">floatT</span><span class="w"> </span><span class="n">plaq</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">plaq</span><span class="p">,</span><span class="w"> </span><span class="n">elems</span><span class="p">);</span><span class="w">                         </span><span class="c1">//! Sum up all contributions</span>
+<span class="w">    </span><span class="n">plaq</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="p">(</span><span class="n">GInd</span><span class="o">::</span><span class="n">getLatData</span><span class="p">().</span><span class="n">globalLattice</span><span class="p">().</span><span class="n">mult</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">18</span><span class="p">);</span><span class="w"> </span><span class="c1">//! Normalize</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">plaq</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

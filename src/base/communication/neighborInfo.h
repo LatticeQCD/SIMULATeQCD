@@ -1,6 +1,12 @@
-//
-// Created by Lukas Mazur on 18.01.19.
-//
+/* 
+ * neighborInfo.h                                                               
+ * 
+ * L. Mazur 
+ *
+ * In order to communicate, each sublattice needs to know something about his neighbors,
+ * for example their rank or whether they are on the same node. (See ProcessInfo struct.)
+ *
+ */
 
 #ifndef NEIGHBORINFO_H
 #define NEIGHBORINFO_H
@@ -11,8 +17,6 @@
 #include <utility>
 #include "../LatticeDimension.h"
 #include "../wrapper/gpu_wrapper.h"
-
-//#define PEERACCESSINFO
 
 struct ProcessInfo {
     int world_rank;
@@ -125,11 +129,16 @@ public:
         fail.coord = LatticeDimensions(-99, -99, -99, -99);
         fail.onNode = false;
 
-        gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
+#ifndef CPUONLY
+        gpuError_t gpuErr = gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
+        if (gpuErr != gpuSuccess) {
+            GpuError("neighborInfo.h: gpuGetDeviceProperties failed:", gpuErr);
+        }
 
         rootLogger.info("> Checking support for P2P (Peer-to-Peer) and UVA (Unified Virtual Addressing):");
         MPI_Barrier(cart_comm);
         checkP2P();
+#endif
         MPI_Barrier(cart_comm);
     }
 
@@ -236,7 +245,6 @@ inline void NeighborInfo::_fill2DNeighbors(ProcessInfo array[][2], int mu, int n
         c[mu] += right[0];
         c[nu] += right[1];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
-        // rootLogger.info("2D: (" , left[0] ,  " " ,  left[1] ,  ") (" ,  right[0] ,  " " ,  right[1]  ,  ") i=" , i , " i_opp=" ,  _opposite(i, 2), std::endl);
     }
 }
 
@@ -256,7 +264,6 @@ inline void NeighborInfo::_fill3DNeighbors(ProcessInfo array[][2], int mu, int n
         c[nu] += right[1];
         c[rho] += right[2];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
-        //rootLogger.info("3D: (" , left[0] ,  " " ,  left[1] ,  " " ,  left[2] ,  ") (" ,  right[0] ,  " " ,  right[1] ,  " " ,  right[2] ,  ") i=" , i , " i_opp=" ,  _opposite(i, 3), std::endl);
     }
 }
 
@@ -266,21 +273,11 @@ inline void NeighborInfo::_fill4DNeighbors(ProcessInfo array[][2]) {
         LatticeDimensions c = myInfo.coord;
         LatticeDimensions left = _shortToDim(i);
         c = c + left;
-        //c[0] += left[0];
-        //c[1] += left[1];
-        //c[2] += left[2];
-        //c[3] += left[3];
         MPI_Cart_rank(cart_comm, c, &array[i][0].world_rank);
 
         c = myInfo.coord;
         LatticeDimensions right = _shortToDim(_opposite(i, 4));
-        //if(IamRoot())std::cout <<"4D:" <<left << " " << right << " i=" <<i <<" i_opp=" << _opposite(i, 4)<<std::endl;
-        //  rootLogger.info("4D: (" , left[0] ,  " " ,  left[1] ,  " " ,  left[2] ,  " " , left[3] ,  ") (" ,  right[0] ,  " " ,  right[1] ,  " " ,  right[2], " ",  right[3] ,  ") i=" , i , " i_opp=" ,  _opposite(i, 4), std::endl);
         c = c + right;
-        //c[0] += right[0];
-        //c[1] += right[1];
-        //c[2] += right[2];
-        //c[3] += right[3];
         MPI_Cart_rank(cart_comm, c, &array[i][1].world_rank);
     }
 }
@@ -450,7 +447,10 @@ inline void NeighborInfo::checkP2P() {
                 ProcessInfo &nInfo = getNeighborInfo(hseg, dir, leftRight);
                 if (nInfo.onNode) {
                     int can_access_peer;
-                    gpuDeviceCanAccessPeer(&can_access_peer, myInfo.deviceRank, nInfo.deviceRank);
+                    gpuError_t gpuErr = gpuDeviceCanAccessPeer(&can_access_peer, myInfo.deviceRank, nInfo.deviceRank);
+                    if (gpuErr != gpuSuccess) {
+                        GpuError("neighborInfo.h: gpuDeviceCanAccessPeer failed:", gpuErr);
+                    }
                     nInfo.p2p = (bool) can_access_peer;
 #ifdef PEERACCESSINFO
                     if (!nInfo.sameRank)
@@ -465,12 +465,16 @@ inline void NeighborInfo::checkP2P() {
     }
 
     stdLogger.info("> " ,  myInfo.nodeName ,  " GPU_" ,  std::uppercase ,  std::hex ,  myProp.pciBusID ,  "(" ,  myProp.name ,  "): "
-#if USE_CUDA_P2P
+#if USE_GPU_P2P
      ,  "P2P " ,  (IsGPUCapableP2P() ? "YES" : "NO") ,  "; "
 #else
      , "P2P NO ; "
 #endif
-    , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+#ifdef USE_CUDA
+      , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
+#elif defined USE_HIP
+      , "UVA ", "Unknown (HIP does not support this!)");
+#endif
 }
 
 #endif //NEIGHBORINFO_H

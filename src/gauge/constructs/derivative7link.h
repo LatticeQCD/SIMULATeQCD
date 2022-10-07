@@ -5,7 +5,7 @@
 #include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-__device__ GSU3<floatT> linkDerivative7(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site,
+__host__ __device__ GSU3<floatT> linkDerivative7(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site,
                                         int mu, int nu, int rho, int sigma, int TermCheck = -1, int SubTermCheck = -1) {
     typedef GIndexer<All,HaloDepth> GInd;
     GSU3<floatT> temp = gsu3_zero<floatT>();

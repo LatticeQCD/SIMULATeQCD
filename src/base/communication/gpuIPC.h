@@ -1,9 +1,12 @@
-//
-// Created by Lukas Mazur on 28.04.19.
-//
+/* 
+ * gpuIPC.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ */
 
-#ifndef CUDAIPC_H
-#define CUDAIPC_H
+#ifndef GPUIPC_H
+#define GPUIPC_H
 
 #include <mpi.h>
 #include "../../define.h"
@@ -44,7 +47,7 @@ private:
             gpuErr = gpuIpcGetMemHandle((gpuIpcMemHandle_t *) &_myHandle.handle, _myMemory);
             if (gpuErr != gpuSuccess) GpuError("gpuIPC.h: exchangeHandle: gpuIpcGetMemHandle", gpuErr);
 
-            gpuErr = gpuEventCreate(&_myEvent, gpuEventDisableTiming | gpuEventInterprocess);
+            gpuErr = gpuEventCreateWithFlags(&_myEvent, gpuEventDisableTiming | gpuEventInterprocess);
             if (gpuErr != gpuSuccess) GpuError("gpuIPC.h: exchangeHandle: gpuEventCreate", gpuErr);
 
             gpuErr = gpuIpcGetEventHandle((gpuIpcEventHandle_t *) &_myHandle.eventHandle, _myEvent);
@@ -180,10 +183,6 @@ public:
         for (unsigned int i = 0; i < _oppositeInfo.size(); i++) {
             if (_oppositeInfo[i].oppositeRank == oppositeRank) {
 
-                /* gpuError_t gpuErr;
-                 gpuErr = gpuEventSynchronize(_oppositeEvent[i]);
-                 if (gpuErr != gpuSuccess)
-                     GpuError("gpuIPC.h: getPointer: gpuEventSynchronize(_oppositeEvent)", gpuErr);*/
                 return _oppositeMemoryPtr[i];
             }
         }
@@ -254,10 +253,8 @@ private:
     std::vector<p2pNeighborEvent> _oppositeInfo;
     std::vector<deviceEventPair> _oppositeEvents;
     std::vector<deviceEventPair> _myEvents;
-    //deviceEventPair _oppositeEvent[80];
 
     std::vector<deviceEventHandlePair> _myHandles;
-   // deviceEventPair _myEvent;
 
 
     void addMyEvent() {
@@ -282,13 +279,14 @@ private:
     }
 
 public:
-    //! constructor
+
     gpuIPCEvent() : initialized(false) {}
-    //! construcotr
+
     gpuIPCEvent(const gpuIPCEvent &obj) : _cart_comm(obj._cart_comm), initialized(obj.initialized),
                                             _myRank(obj._myRank) {}
-    //! constructor
+
     gpuIPCEvent(MPI_Comm cart_comm, int myRank) : _cart_comm(cart_comm), initialized(true), _myRank(myRank){}
+
     //! copy assignment
     gpuIPCEvent& operator=(const gpuIPCEvent &obj) {
         _cart_comm = obj._cart_comm;
@@ -296,16 +294,21 @@ public:
         _myRank = obj._myRank;
         return *this;
     }
+
     //! copy constructor
     gpuIPCEvent(gpuIPCEvent&) = delete;
+
     //! move assignment
     gpuIPCEvent& operator=(gpuIPCEvent&&) = delete;
+
     //! move constructor
     gpuIPCEvent(gpuIPCEvent&& source) noexcept :
+
     //! simple types
     _cart_comm(source._cart_comm),
     initialized(source.initialized),
     _myRank(source._myRank),
+
     //! these are all vectors
     _oppositeInfo(std::move(source._oppositeInfo)), //! vector of simple structs
     _oppositeEvents(std::move(source._oppositeEvents)),
@@ -317,7 +320,6 @@ public:
         source._myRank = -1;
     }
 
-    //! destructor
     ~gpuIPCEvent() {
         initialized = false;
     }
@@ -326,7 +328,6 @@ public:
     void addP2PRank(int index, int oppositeIndex, int oppositeRank) {
         if (!initialized) rootLogger.error("gpuIPC.h: gpuIPCEvent.addP2PRank: Event not initialized");
 
-    //    rootLogger.info("Set index: " ,  index ,  " with rank: " ,  oppositeRank);
         _oppositeInfo.emplace_back();
         int lastIndex = _oppositeInfo.size() - 1;
         _oppositeInfo[lastIndex].oppositeRank = oppositeRank;
@@ -351,8 +352,6 @@ public:
         }
         for (unsigned int i = 0; i < _oppositeInfo.size(); i++) {
             if (!_oppositeInfo[i].RanksExchanged) {
-             //   int index = _oppositeInfo[i].index;
-            //    int oppositeIndex = _oppositeInfo[i].oppositeIndex;
 
                 MPI_Isend((uint8_t *) &_myHandles[i], sizeof(deviceEventHandlePair), MPI_UINT8_T,
                           _oppositeInfo[i].oppositeRank, _oppositeInfo[i].oppositeIndex, _cart_comm, &sendReq[i]);
@@ -382,8 +381,6 @@ public:
 
                 _oppositeEvents.emplace_back(deviceEvent(3), deviceEvent(3));
 
-                //deviceEvent start(3);
-                //deviceEvent stop(3);
                 gpuErr = gpuIpcOpenEventHandle(&(_oppositeEvents[i].start._event),
                                                  *(gpuIpcEventHandle_t *) &oppositeHandles[i].start);
                 if (gpuErr != gpuSuccess)
@@ -396,7 +393,6 @@ public:
                 if (gpuErr != gpuSuccess)
                     GpuError("gpuIPC.h: gpuIPCEvent.exchangeHandle: gpuIpcOpenEventHandle 2", gpuErr);
 
-               // _oppositeEvent[i] = deviceEventPair(std::move(start),std::move(stop));
 
                 _oppositeEvents[i].start._mode =2;
                 _oppositeEvents[i].start.synchronize();
@@ -438,4 +434,4 @@ public:
 
 };
 
-#endif //CUDAIPC_H
+#endif //GPUIPC_H

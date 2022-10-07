@@ -1,6 +1,19 @@
-//
-// Created by Lukas Mazur on 14.11.17.
-//
+/* 
+ * siteComm.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ * This class glues together all other classes needed to exchange halos. Again loosely speaking,
+ * to exchange some information for my stencil calculation between a sublattice and his neighbor,
+ * I need to
+ *
+ *     1. allocate some dynamic memory for the buffer (MemoryManagement);
+ *     2. translate the local halo coordinates to buffer coordinates to be able to copy
+ *        sites into the buffer (haloOffsetInfo); and
+ *     3. communicate these buffers to my neighbors (I know who they are because of neighborInfo)
+ *        using the wrappers in the CommunicationBase.
+ *
+ */
 
 #ifndef GPU_LATTICE_GAUGECOMM_H
 #define GPU_LATTICE_GAUGECOMM_H
@@ -13,7 +26,9 @@
 #include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
-#include "nvToolsExt.h"
+#ifndef USE_HIP_AMD
+    #include "nvToolsExt.h"
+#endif
 #include "deviceEvent.h"
 #include "HaloLoop.h"
 #include "deviceStream.h"
@@ -74,6 +89,7 @@ public:
             }
         }
 
+        /// Set the base pointer of our buffer.
         HaloInfo.setSendBase(_haloBuffer_Host);
         HaloInfo.setRecvBase(_haloBuffer_Host_recv);
 
@@ -146,7 +162,13 @@ public:
             }
         }
         if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.syncAndInitP2PRanks();
-       	gpuDeviceSynchronize();
+
+#ifndef CPUONLY
+        gpuError_t gpuErr = gpuDeviceSynchronize();
+        if (gpuErr != gpuSuccess) {
+            GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
+        }
+#endif
         commB.globalBarrier();
     }
 
@@ -168,11 +190,13 @@ public:
     _halElementSize(source._halElementSize),
     _bufferLength(source._bufferLength),
     _bufferSize(source._bufferSize),
+
     //! move the gMemoryPtr's
     _haloBuffer_Host(std::move(source._haloBuffer_Host)),
     _haloBuffer_Host_recv(std::move(source._haloBuffer_Host_recv)),
     _haloBuffer_Device(std::move(source._haloBuffer_Device)),
     _haloBuffer_Device_recv(std::move(source._haloBuffer_Device_recv)),
+
     //! move the HaloInfo
     HaloInfo(std::move(source.HaloInfo))
     {
@@ -182,7 +206,6 @@ public:
         source._bufferSize = 0;
     }
 
-    //! destructor
     virtual ~siteComm() {
     }
 
@@ -355,7 +378,11 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         GCOMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
 
-    gpuDeviceSynchronize();
+    gpuError_t gpuErr = gpuDeviceSynchronize();
+    if (gpuErr != gpuSuccess) {
+        GpuError("siteComm.h: _extractHalosSeg gpuDeviceSynchronize failed:", gpuErr);
+    }
+
     _commBase.globalBarrier();
     extractLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(acc, _commBase, HaloInfo,
                                                                                               HaloBuffer, param);
@@ -369,10 +396,13 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
     injectLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(_commBase, HaloInfo,
-                                                                                             acc,
-                                                                                             HaloBuffer,
-                                                                                             param);
-    gpuDeviceSynchronize();
+                                                                                         acc,
+                                                                                         HaloBuffer,
+                                                                                         param);
+    gpuError_t gpuErr = gpuDeviceSynchronize();
+    if (gpuErr != gpuSuccess) {
+        GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
+    }
     _commBase.globalBarrier();
 
 }

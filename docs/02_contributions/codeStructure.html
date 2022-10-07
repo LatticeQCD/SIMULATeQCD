@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>General structure of the code &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Template instantiation" href="templates.html" />
+    <link rel="prev" title="How to do pull requests" href="git.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="codeStyle.html">How to write clean and readable code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">General structure of the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="templates.html">Template instantiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminalIO.html">Terminal output &amp; terminating the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html">Timing your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inputParameter.html">How to make an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html">Documenting your code</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>General structure of the code</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/02_contributions/codeStructure.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="general-structure-of-the-code">
+<h1>General structure of the code<a class="headerlink" href="#general-structure-of-the-code" title="Permalink to this headline"></a></h1>
+<p>A schematic overview of the code structure for SIMULATeQCD is shown in the image below:</p>
+<p><img alt="alt" src="../_images/codeLayout.png" /></p>
+<p>Splitting the lattice into sublattices, indexing, and communication procedures make up the foundation
+of our code, together with classes that manage the allocation of dynamic memory, file input/output,
+logging, and common math operations. Physics and
+mathematics objects inherit from this backend and heavily utilize the functor
+syntax. At the highest organizational level are the modules, which are
+constructed from these physics and mathematics objects. At this highest level,
+we try to write code that closely and obviously mimics mathematical formulas or
+short, descriptive sentences.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">base</span></code> folder includes everything at the lowest level of the hierarchy, along with the
+basic math objects. Gauge field and spinor field classes get their own folders,
+<code class="docutils literal notranslate"><span class="pre">gauge</span></code> and <code class="docutils literal notranslate"><span class="pre">spinor</span></code>, respectively. Any new object that should be built out of these basic
+objects, for example a new observable, should be placed in the <code class="docutils literal notranslate"><span class="pre">modules</span></code> folder.
+Whatever you write should have a corresponding <a class="reference internal" href="testing.html"><span class="doc std std-doc">test</span></a> in the <code class="docutils literal notranslate"><span class="pre">testing</span></code> folder.
+Main applications go in the <code class="docutils literal notranslate"><span class="pre">applications</span></code> folder.
+The <code class="docutils literal notranslate"><span class="pre">tools</span></code> folder is for any auxiliary programs needed to run one of the applications.
+In our <code class="docutils literal notranslate"><span class="pre">examples</span></code> folder we have short programs to demonstrate how to write code
+in our style and according to our paradigm.</p>
+<section id="how-to-organize-new-files">
+<h2>How to organize new files<a class="headerlink" href="#how-to-organize-new-files" title="Permalink to this headline"></a></h2>
+<p>All source and header files are stored in <code class="docutils literal notranslate"><span class="pre">src/&lt;MeaningfulName&gt;/...</span></code>. For example, <code class="docutils literal notranslate"><span class="pre">src/base/*</span></code> holds
+source files of all base classes which are needed by most programs, e.g. the <code class="docutils literal notranslate"><span class="pre">Lattice</span></code> class or
+the <code class="docutils literal notranslate"><span class="pre">CommunicationBase</span></code> class.</p>
+<p>If you want to add a new executable, be it an application, a test, a profiler, etc., you should
+save it as <code class="docutils literal notranslate"><span class="pre">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cpp</span></code>.
+If you have added additional <code class="docutils literal notranslate"><span class="pre">*.cpp</span></code> or header files which are needed by your main, you should save
+them in a new module folder, e.g. <code class="docutils literal notranslate"><span class="pre">src/modules/&lt;exec_name&gt;/&lt;meaningfulName&gt;.cpp</span></code> and add them to the source files
+list in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> (root folder):</p>
+<div class="highlight-Cmake notranslate"><div class="highlight"><pre><span></span><span class="c"># If your `*cpp` files contain device code, you need to specify them with this call</span>
+<span class="nb">set_SIMULATeQCD_gpu_backend</span><span class="p">(</span><span class="s">&lt;path/to/file1.cpp&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span><span class="w"> </span>
+
+<span class="c"># With this call you define the name of your executable. </span>
+<span class="c"># You also need to specify all your `*cpp` files</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_FILES_&lt;exec_name&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file1.cpp&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
+<span class="nb">add_SIMULATeQCD_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cpp</span>
+<span class="w">                           </span><span class="o">${</span><span class="nv">SOURCE_FILES_&lt;exec_name&gt;</span><span class="o">}</span><span class="p">)</span>
+
+<span class="c"># Here you specify the type of application. Available types are:</span>
+<span class="c"># &quot;testing&quot;, &quot;profiling&quot;, &quot;examples&quot;, &quot;applications&quot;, &quot;tools&quot;</span>
+<span class="nb">set_SIMULATeQCD_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">PROPERTIES</span><span class="w"> </span><span class="s">RUNTIME_OUTPUT_DIRECTORY</span><span class="w"> </span><span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
+
+<span class="c"># Add the `HaloDepth` and precision which you want to use in you application. </span>
+<span class="c"># Available definitions are written in `define.h`.</span>
+<span class="nb">SIMULATeQCD_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
+
+<span class="c"># Add your executable to the correct compound. Available types are (similar as before):</span>
+<span class="c"># tests, profilers, examples, applications, tools.</span>
+<span class="nb">add_to_compound_SIMULATeQCD_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span><span class="w"> </span><span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Header files should NOT be listed there!</p>
+<ul class="simple">
+<li><p>Example programs are stored in <code class="docutils literal notranslate"><span class="pre">src/examples/*</span></code>. Ideally, these programs should be as short as possible and strongly commented.</p></li>
+<li><p>Testing programs are stored in <code class="docutils literal notranslate"><span class="pre">src/testing/*</span></code>. These programs should check if everything works properly. Please make sure that your tests return a clear pass/fail message.</p></li>
+</ul>
+<p>An example configuration is stored in <code class="docutils literal notranslate"><span class="pre">test_conf/l20t20b06498a_nersc.302500</span></code>. It is a <span class="math notranslate nohighlight">\(20^4\)</span> lattice with a <span class="math notranslate nohighlight">\(\beta=0.638\)</span> and it is written in the NERSC format.</p>
+<p>Nice examples on how to write SIMULATeQCD code may be found in
+<code class="docutils literal notranslate"><span class="pre">src/examples/main_plaquette.cpp</span></code>
+or
+<code class="docutils literal notranslate"><span class="pre">src/testing/main_GeneralOperatorTest.cpp</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

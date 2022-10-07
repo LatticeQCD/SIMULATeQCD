@@ -1,3 +1,10 @@
+/* 
+ * milc.h                                                               
+ * 
+ * R. Larsen 
+ * 
+ */
+
 #ifndef INC_MILC_H
 #define INC_MILC_H
 
@@ -8,27 +15,12 @@
 #include "../LatticeContainer.h"
 #include <iostream>
 
-/*
-template<class floatT>
-struct milcInfo : ParameterList {
-    Parameter<floatT>  ssplaq;
-    Parameter<floatT>  stplaq;
-    Parameter<floatT>  linktr;
-
-    milcInfo() {
-        add(ssplaq, "gauge.ssplaq");
-        add(stplaq, "gauge.stplaq");
-        add(linktr, "gauge.nersc_linktr");
-    }
-};
-*/
 
 class MilcHeader : virtual private ParameterList {
 public:
     int header_size;
 private:
     const CommunicationBase &comm;
-//    int header_size;
 
     Parameter<std::string> dattype;
     Parameter<int> dim[4];
@@ -39,18 +31,19 @@ private:
 
 
     bool read(std::istream &in, std::string &content) {
+
         if (in.fail()) {
             rootLogger.error("Could not open file.");
             return false;
         }
-        std::string line;
 
+        std::string line;
         getline(in, line);
-        if (line != "BEGIN_HEADER") {
+//        if (line != "BEGIN_HEADER") {
 //            rootLogger.error("BEGIN_HEADER not found!");
 //            return false;
-        }
-        /////
+//        }
+
         rootLogger.info(line);
 
         while (!in.fail()) {
@@ -58,9 +51,7 @@ private:
             if (line == "END_HEADER")
                 break;
             content.append(line + '\n');
-        /////
             rootLogger.info(line);
-                       
         }
         if (in.fail()) {
             rootLogger.error("END_HEADER not found!");
@@ -144,13 +135,10 @@ private:
     uint32_t stored_checksum, computed_checksum;
     int su3_size;
     size_t index; //position in buffer
-    static const bool sep_lines = false; // make the buffer smaller and
-    // read each xline separately
-    // (slow on large lattices, but
-    // needs less memory)
+    static const bool sep_lines = false; // make the buffer smaller and read each xline separately
+                                         // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
-    //void from_buf(f1 *buf, GSU3<f2> &U) const {
     template<class f1, class f2>
     GSU3<f2> from_buf(f1 *buf) const {
         int i = 0;
@@ -159,7 +147,6 @@ private:
             for (int k = 0; k < 3; k++) {
                 f2 re = buf[i++];
                 f2 im = buf[i++];
-                //U.set(j, k, complex<f2>(re, im));
                 U(j, k) = GCOMPLEX(f2)(re, im);
 
             }
@@ -221,60 +208,7 @@ public:
         rows = 3;
         switch_endian = false;
         float_size = 4;
-/*
-        rootLogger.info("This is Rasmus Surrender now");
-//	rootLogger.push_verbosity(OFF);
-        rootLogger.info("This is Rasmus Surrender now");
-        if (!header.read(in)){
-            rootLogger.error("header.read() failed!");
-            return false;
-        }
-        rootLogger.pop_verbosity(;
 
-        bool error = false;
-        for (int i = 0; i < 4; i++)
-            if (header.dim[i]() != GInd::getLatData().globalLattice()[i]) {
-                rootLogger.error("Stored dimension " ,  i ,  " not equal to current lattice size.");
-                error = true;
-            }
-
-        if (header.dattype() == "4D_SU3_GAUGE")
-            rows = 2;
-        else if (header.dattype() == "4D_SU3_GAUGE_3x3")
-            rows = 3;
-        else {
-            rootLogger.error("DATATYPE = " ,  header.dattype() ,  "not recognized.");
-            error = true;
-        }
-
-        Endianness disken = ENDIAN_AUTO;
-        if (header.floatingpoint() == "IEEE32BIG" || header.floatingpoint() == "IEEE32") {
-            float_size = 4;
-            disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "IEEE64BIG") {
-            float_size = 8;
-            disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "IEEE32LITTLE") {
-            float_size = 4;
-            disken = ENDIAN_LITTLE;
-        } else if (header.floatingpoint() == "IEEE64LITTLE") {
-            float_size = 8;
-            disken = ENDIAN_LITTLE;
-        } else {
-            rootLogger.error("Unrecognized FLOATING_POINT " ,  header.floatingpoint());
-            error = true;
-        }
-        switch_endian = switch_endianness(disken);
-
-        std::stringstream s(header.checksum());
-        s >> std::hex >> stored_checksum;
-        if (s.fail()) {
-            rootLogger.error("Could not interpret checksum " , 
-                               header.checksum() ,  "as hexadecimal number.");
-            error = true;
-        }
-*/
-//        su3_size = 2 * 3 * rows * float_size;
         su3_size = 2 * 3 * rows * float_size;
         buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
         index = buf.size();
@@ -285,6 +219,7 @@ public:
     template<class floatT,bool onDevice, CompressionType comp>
     bool write_header(Gaugefield<floatT, onDevice, HaloDepth,comp> &gf, gaugeAccessor<floatT,comp> gaugeAccessor, int _rows,
                       int diskprec, Endianness en, std::ostream &out) {
+
         rows = _rows;
         if (diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)))
             float_size = 4;
@@ -404,7 +339,6 @@ public:
         index = 0;
     }
 
-    //void get(GSU3<floatT> &U) {
     template<class floatT>
     GSU3<floatT> get() {
         char *start = &buf[index];

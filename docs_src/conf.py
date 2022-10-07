@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'SIMULATeQCD'
-copyright = '2021, Lukas Mazur'
-author = 'Lukas Mazur'
+copyright = '2021, LatticeQCD'
+author = 'LatticeQCD'
 
 # The full version, including alpha/beta/rc tags
 release = '0.7'

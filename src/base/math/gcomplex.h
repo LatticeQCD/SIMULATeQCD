@@ -20,7 +20,6 @@
 #include "../wrapper/gpu_wrapper.h"
 #include "floatComparison.h"
 #include <complex>
-#include <cuda_fp16.h>
 #include <iostream>
 #include <type_traits>
 
@@ -269,7 +268,7 @@ public:
   }
 };
 
-#ifdef __CUDA_ARCH__
+#ifdef __GPU_ARCH__
 #ifndef USE_HIP
 template <> class GPUcomplex<__half> {
 public:
@@ -304,20 +303,17 @@ public:
     this->c = static_cast<__half2>(orig.c);
     return *this;
   }
-
   __host__ __device__ GPUcomplex &operator=(const __half &orig) {
     this->c.x = orig;
     this->c.y = 0.0f;
     return *this;
   }
-
-  __host__ __device__ GPUcomplex &operator+=(const GPUcomplex &op) {
-    this->c += op.c;
-    return *this;
-  }
-
   __host__ __device__ GPUcomplex &operator+=(const __half &op) {
     this->c.x += op;
+    return *this;
+  }
+  __host__ __device__ GPUcomplex &operator+=(const GPUcomplex &op) {
+    this->c += op.c;
     return *this;
   }
 

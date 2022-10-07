@@ -31,7 +31,7 @@ public:
     Parameter <double> m_ud;
     Parameter <double> m_s;
     Parameter <std::string> rand_file;
-    Parameter <std::string> gauge_file;
+    Parameter <std::string> gauge_file; // This is just the prefix for the gauge file name
     Parameter <int> seed;
     Parameter <bool> load_rand;
     Parameter <int> load_conf;

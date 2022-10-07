@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lattice Container &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Communication" href="communicationBase.html" />
+    <link rel="prev" title="File Writer" href="fileWriter.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="codeBase.html">Code base</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="indexer.html">Indexer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fileWriter.html">File Writer</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Lattice Container</a></li>
+<li class="toctree-l2"><a class="reference internal" href="communicationBase.html">Communication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functorSyntax.html">Functor syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugefield.html">Gaugefield</a></li>
+<li class="toctree-l2"><a class="reference internal" href="topology.html">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configurationIO.html">Input and output formats for gauge configurations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
+      <li>Lattice Container</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/04_codeBase/latticeContainer.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="lattice-container">
+<h1>Lattice Container<a class="headerlink" href="#lattice-container" title="Permalink to this headline"></a></h1>
+<p>This class oversees <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> objects, which are essentially intermediate containers used to store intermediate
+results that will be reduced later. For instance if one calculates the action, one first finds each local
+contribution, sums these contributions over a sublattice, then sums this result over all sublattices.
+This whole process is carried out with <code class="docutils literal notranslate"><span class="pre">reduce</span></code> call.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> can hold elements of arbitrary type, and it is spread over the processes in a similar
+way as the <a class="reference internal" href="gaugefield.html#gaugefield"><span class="std std-doc">Gaugefield</span></a> or Spinorfield. The memory of
+the <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> is by default shared with the memory of the halo buffer, because in general the
+intermediate results have to be re-calculated after a halo update. As of this writing, the available reduction methods are</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">/// Reduce only timeslices. The result is a vector of length N_tau</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceTimeSlices</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">)</span><span class="w"></span>
+<span class="c1">/// Methods to reduce intermediate results of a stacked spinor. Currently no support for halo exchange.</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceStackedLocal</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stackSize</span><span class="p">)</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceStacked</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stackSize</span><span class="p">)</span><span class="w"></span>
+<span class="c1">/// Reduce full lattice. Supports halo exchange.</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduce</span><span class="p">(</span><span class="n">elemType</span><span class="w"> </span><span class="o">&amp;</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rootToAll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceMax</span><span class="p">(</span><span class="n">elemType</span><span class="w"> </span><span class="o">&amp;</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rootToAll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>At some point you may need to write into or extract from your <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>. This can be accomplished
+with <code class="docutils literal notranslate"><span class="pre">LatticeContainerAccessor</span></code> objects. Once you have created your accessor object corresponding to
+your <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>, the methods <code class="docutils literal notranslate"><span class="pre">getElement</span></code> and <code class="docutils literal notranslate"><span class="pre">setElement</span></code> allow you to interact with it.</p>
+<p>A basic implementation of a 100-element <code class="docutils literal notranslate"><span class="pre">GSU3&lt;PREC&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> on the GPU could be</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">GSU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">latty</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span><span class="w"></span>
+<span class="n">latty</span><span class="p">.</span><span class="n">adjustSize</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Then you can set element 3 of <code class="docutils literal notranslate"><span class="pre">latty</span></code> to <code class="docutils literal notranslate"><span class="pre">test</span></code>, or store the contents of element 3 in <code class="docutils literal notranslate"><span class="pre">test</span></code>, using respectively</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeContainerAccessor</span><span class="w"> </span><span class="nf">_latty</span><span class="p">(</span><span class="n">latty</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">());</span><span class="w"></span>
+<span class="n">_latty</span><span class="p">.</span><span class="n">setElement</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">test</span><span class="p">);</span><span class="w"></span>
+<span class="n">_latty</span><span class="p">.</span><span class="n">getElement</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">test</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>In general if you need to create some general array-like class, it is recommended that you inherit
+from the <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>. Besides giving you the convenience of not having to rewrite reduction code,
+it also already has multi-processor functionality built in.
+The <a class="reference internal" href="../05_modules/correlator.html#correlator-class"><span class="std std-doc">Correlator Class</span></a>, for example,
+is implemented by inheriting from the <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>.</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

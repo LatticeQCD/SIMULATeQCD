@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gauge Updates (HB and OR) &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dslash" href="dslash.html" />
+    <link rel="prev" title="Correlator Class" href="correlator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="inverter.html">Inverter (Conjugate Gradient)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correlator.html">Correlator Class</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Gauge Updates (HB and OR)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dslash.html">Dslash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrator.html">Integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="randomNumbers.html">Random Number Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugeSmearing.html">HISQ smearing</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">Modules</a> &raquo;</li>
+      <li>Gauge Updates (HB and OR)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/05_modules/gaugeUpdates.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="gauge-updates-hb-and-or">
+<h1>Gauge Updates (HB and OR)<a class="headerlink" href="#gauge-updates-hb-and-or" title="Permalink to this headline"></a></h1>
+<p>The pure gauge update class contains both heat bath (HB) and over-relaxation (OR) updating for pure gauge fields. The heat bath is implemented using the <a class="reference external" href="https://doi.org/10.1016/0370-2693(85)91632-6">Kennedy-Pendleton</a> algorithm, which is extended from SU2 to SU3 via the method of <a class="reference external" href="https://doi.org/10.1016/0370-2693(82)90696-7">Cabbibo and Marinari</a>.</p>
+<p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gauge/PureGaugeUpdates.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gauge/PureGaugeUpdates.cpp</span></code> as a source file for your program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The pure gauge update class is initialized with, for example,</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeUpdate</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">gUpdate</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"> </span>
+</pre></div>
+</div>
+<p>and one OR sweep of the entire lattice can be performed with</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gUpdate</span><span class="p">.</span><span class="n">updateOR</span><span class="p">();</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The HB update requires you to initialize a random number generator on the host, then pass the state to the device. This can be done by</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="n">grnd_state</span><span class="o">&lt;</span><span class="nb">false</span><span class="o">&gt;</span><span class="w"> </span><span class="n">host_state</span><span class="p">;</span><span class="w"></span>
+<span class="n">grnd_state</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="w">  </span><span class="n">dev_state</span><span class="p">;</span><span class="w"></span>
+<span class="n">host_state</span><span class="p">.</span><span class="n">make_rng_state</span><span class="p">(</span><span class="n">seed</span><span class="p">);</span><span class="w"></span>
+<span class="n">dev_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">host_state</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>More information about the random number generator can be found in <a class="reference internal" href="randomNumbers.html#random-number-generator"><span class="std std-doc">Random Number Generator</span></a>. The state is then passed as an argument to the HB function as</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gUpdate</span><span class="p">.</span><span class="n">updateHB</span><span class="p">(</span><span class="n">dev_state</span><span class="p">.</span><span class="n">state</span><span class="p">,</span><span class="n">beta</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<section id="some-benchmarks">
+<h2>Some benchmarks<a class="headerlink" href="#some-benchmarks" title="Permalink to this headline"></a></h2>
+<p>The following use <code class="docutils literal notranslate"><span class="pre">HaloDepth=1</span></code>. Each sweep consists of 1 HB with 4 OR updates. Times are measured in [ms]. Error bars are in the last digits in parentheses. Each timing uses 50 sweeps. Each number given is an average time from between 3 and 4 test runs. Timing was done with the SIMULATeQCD code’s built-in timer. Only hyperplanes and planes are communicated. Originally the tests were carried out on NVIDIA Pascal GPU, but more tests were carried out later on NVIDIA VolNVIDIA Volta GPU. Both results are included because maybe it’s interesting to see the improvement from the old hardware to the new hardware. Attached are plots of improvement <span class="math notranslate nohighlight">\(I\)</span> versus number of GPUs for both machines, where I define improvement as <span class="math notranslate nohighlight">\(I=\frac{\text{number of GPUs}}{\text{time}/\text{1 GPU time}}\)</span></p>
+</section>
+<section id="pascal-cpu-16-gb">
+<h2>Pascal CPU 16 GB<a class="headerlink" href="#pascal-cpu-16-gb" title="Permalink to this headline"></a></h2>
+<p>1 processor: <span class="math notranslate nohighlight">\(68^4\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:center head"><p>no split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:center"><p>106 855(3)</p></td>
+</tr>
+</tbody>
+</table>
+<p>2 processor: <span class="math notranslate nohighlight">\(136\times68^3\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:left head"><p>x split</p></th>
+<th class="head"><p>y split</p></th>
+<th class="head"><p>z split</p></th>
+<th class="text-align:right head"><p>t split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:left"><p>171 726(8)</p></td>
+<td><p>154 139(8)</p></td>
+<td><p>152 932(3)</p></td>
+<td class="text-align:right"><p>152 064(5)</p></td>
+</tr>
+</tbody>
+</table>
+<p>4 processor: <span class="math notranslate nohighlight">\(136^2\times68^2\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:left head"><p>xy split</p></th>
+<th class="head"><p>xz split</p></th>
+<th class="head"><p>xt split</p></th>
+<th class="head"><p>yz split</p></th>
+<th class="head"><p>yt split</p></th>
+<th class="text-align:right head"><p>zt split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:left"><p>179 900(4)</p></td>
+<td><p>179 590(370)</p></td>
+<td><p>178 833(7)</p></td>
+<td><p>163 206(2)</p></td>
+<td><p>163 480(220)</p></td>
+<td class="text-align:right"><p>162 950(500)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="volta-gpu-32gb">
+<h2>Volta GPU 32GB<a class="headerlink" href="#volta-gpu-32gb" title="Permalink to this headline"></a></h2>
+<p>1 processor: <span class="math notranslate nohighlight">\(68^4\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:center head"><p>no split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:center"><p>71 603(40)</p></td>
+</tr>
+</tbody>
+</table>
+<p>2 processor: <span class="math notranslate nohighlight">\(136\times68^3\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:left head"><p>x split</p></th>
+<th class="head"><p>y split</p></th>
+<th class="head"><p>z split</p></th>
+<th class="text-align:right head"><p>t split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:left"><p>135 389(12)</p></td>
+<td><p>110 609(13)</p></td>
+<td><p>109 598(16)</p></td>
+<td class="text-align:right"><p>109 018(29)</p></td>
+</tr>
+</tbody>
+</table>
+<p>4 processor: <span class="math notranslate nohighlight">\(136^2\times68^2\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:left head"><p>xy split</p></th>
+<th class="head"><p>xz split</p></th>
+<th class="head"><p>xt split</p></th>
+<th class="head"><p>yz split</p></th>
+<th class="head"><p>yt split</p></th>
+<th class="text-align:right head"><p>zt split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:left"><p>143 664(16)</p></td>
+<td><p>143 432(16)</p></td>
+<td><p>143 138(11)</p></td>
+<td><p>120 595(34)</p></td>
+<td><p>120 581(12)</p></td>
+<td class="text-align:right"><p>120 180(15)</p></td>
+</tr>
+</tbody>
+</table>
+<p>4 processor: <span class="math notranslate nohighlight">\(272\times68^3\)</span>:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="text-align:left head"><p>x split</p></th>
+<th class="head"><p>y split</p></th>
+<th class="head"><p>z split</p></th>
+<th class="text-align:right head"><p>t split</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-align:left"><p>134 423(17)</p></td>
+<td><p>99 072(30)</p></td>
+<td><p>98 397(22)</p></td>
+<td class="text-align:right"><p>97 810(29)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -130,11 +130,11 @@ int main(int argc, char *argv[]) {
         rootLogger.info("plaquette: " ,  plaq);
 
     int faults = 0;
-    if(std::abs(plaq - 0.58906274413)>1E-7)faults+=1; //depending on the compilation, we have seen (empirically) differences on the order of 6E-8, so the difference we look for is 1E-7.
+    if(std::abs(plaq - 0.592294660376)>1E-7)faults+=1; //depending on the compilation, we have seen (empirically) differences on the order of 6E-8, so the difference we look for is 1E-7.
 //    if(std::abs(plaq - 0.9753800616)>1E-7)faults+=1;
 
 
-    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.58906274413));
+    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.592294660376));
 //    rootLogger.info("abs(plaquette-plaquette_expected): ", std::abs(plaq-0.9753800616));    
 
     if (faults == 0) {

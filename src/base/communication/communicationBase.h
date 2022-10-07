@@ -1,6 +1,13 @@
-//
-// Created by Lukas Mazur on 11.10.17.
-//
+/* 
+ * communicationBase.h                                                               
+ * 
+ * L. Mazur 
+ * 
+ * Wrappers for methods used in these various communication libraries are collected here. 
+ * The CommunicationBase will also detect whether CUDA-aware MPI or GPUDirect P2P are available, 
+ * and if they are, use them automatically.
+ *
+ */
 
 #ifndef COMMUNICATOR_COMMUNICATIONBASE_H
 #define COMMUNICATOR_COMMUNICATIONBASE_H
@@ -122,6 +129,7 @@ private:
     MPI_Comm node_comm;
     MPI_Info mpi_info;
     ProcessInfo myInfo;
+    bool _initialized = false;
 
     NeighborInfo neighbor_info;
 
@@ -143,7 +151,7 @@ public:
 
 
     bool gpuAwareMPIAvail() const {
-#ifdef USE_CUDA_AWARE_MPI
+#ifdef USE_GPU_AWARE_MPI
         return true;
 #else
         return false;
@@ -151,7 +159,7 @@ public:
     }
 
     bool useGpuP2P() {
-#ifdef USE_CUDA_P2P
+#ifdef USE_GPU_P2P
         return true;
 #else
         return false;
@@ -161,8 +169,8 @@ public:
     NeighborInfo &getNeighborInfo() { return neighbor_info; }
 
     const LatticeDimensions &mycoords() { return myInfo.coord; } /// Cartesian coordinates of this process
-    const LatticeDimensions &nodes();// { return dims; }            /// Number of nodes in Cartesian grid
-    bool IamRoot() const RET0_IF_SCALAR;// { return (myInfo.world_rank == 0); }
+    const LatticeDimensions &nodes();                            /// Number of nodes in Cartesian grid
+    bool IamRoot() const RET0_IF_SCALAR;
 
     int MyRank() { return myInfo.world_rank; }
 
@@ -180,6 +188,8 @@ public:
     void root2all(int &) const EMPTY_IF_SCALAR;
 
     void root2all(int64_t &) const EMPTY_IF_SCALAR;
+
+    void root2all(size_t &) const EMPTY_IF_SCALAR;
 
     void root2all(bool &) const EMPTY_IF_SCALAR;
 
@@ -236,6 +246,8 @@ public:
 
     /// Reduce (summing up) an array of double values, replacing values
     void reduce(float *, int) const EMPTY_IF_SCALAR;
+
+    void reduce(uint32_t *, int) const EMPTY_IF_SCALAR;
 
     void reduce(double *, int) const EMPTY_IF_SCALAR;
 

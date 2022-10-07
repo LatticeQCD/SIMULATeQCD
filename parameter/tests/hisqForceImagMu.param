@@ -5,7 +5,7 @@
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass
-#         mu_f: Imaginary chemical potential
+#          mu0: Imaginary chemical potential
 #
 #    step_size: step size of trajectory
 #        no_md: number of steps of trajectory
@@ -14,7 +14,7 @@
 #      residue: residue for inversions
 #        cgMax: max cg steps for multi mass solver
 #   always_acc: always accept configuration in Metropolis
-#     rat_file:
+#     rat_file: rational approximation input file
 #
 #    rand_flag: new random numbers(0)/read in random numbers(1)
 #    rand_file: file name for random numbers and infos
@@ -45,7 +45,7 @@ rand_flag   = 0
 rand_file   = rand
 seed        = 0
 load_conf   = 1
-Gaugefile   = l328f21b6260m00405m0810a_4000.
-conf_nr   = 0
+Gaugefile   = ../test_conf/force_imagmu_reference
+conf_nr     = 0
 no_updates  = 100
 write_every = 10

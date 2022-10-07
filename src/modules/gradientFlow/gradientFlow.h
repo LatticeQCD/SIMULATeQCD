@@ -13,17 +13,22 @@
 #include "su3rungeKutta3.h"
 #include "../../gauge/gaugeActionDeriv.h"
 
-enum RungeKuttaMethod { fixed_stepsize, adaptive_stepsize, adaptive_stepsize_allgpu };
+
+///Map user input strings to enums. The order of entries is important for loops; it has to be reversed
+///compared to the enum!
 enum Force { wilson, zeuthen };
-///convert string to enum for switch()
- std::map<std::string, Force> Force_map = {
-        {std::string("wilson"), wilson},
-        {std::string("zeuthen"), zeuthen}
+const std::vector<std::string> Forces = {"wilson", "zeuthen"};
+std::map<std::string, Force> Force_map = {
+         {Forces[0], wilson},
+         {Forces[1], zeuthen}
 };
+
+enum RungeKuttaMethod { fixed_stepsize, adaptive_stepsize, adaptive_stepsize_allgpu };
+const std::vector<std::string> RungeKuttaMethods = {"fixed_stepsize", "adaptive_stepsize", "adaptive_stepsize_allgpu"};
 std::map<std::string, RungeKuttaMethod > RK_map = {
-        {std::string("fixed_stepsize"), fixed_stepsize},
-        {std::string("adaptive_stepsize"), adaptive_stepsize},
-        {std::string("adaptive_stepsize_allgpu"), adaptive_stepsize_allgpu}
+        {RungeKuttaMethods[0], fixed_stepsize},
+        {RungeKuttaMethods[1], adaptive_stepsize},
+        {RungeKuttaMethods[2], adaptive_stepsize_allgpu}
 };
 
 /*Z_i( GSU3<floatT> &, GSU3<floatT> &,  GSU3<floatT> &, floatT )
@@ -40,6 +45,9 @@ W^+(x,rho) denotes the staple matrix. Then a runge kutta step is given by
 
 	Z(V_mu(x,t)) = d/dt S_W(V_mu(x,t)) * V_mu(x,t)
 */
+
+template<class floatT, const size_t HaloDepth, RungeKuttaMethod RK_method, Force force>
+class gradientFlow{};
 
 #if WILSON_FLOW
 template<class floatT, const size_t HaloDepth, bool onDevice>
@@ -59,19 +67,14 @@ struct Z_i_wilson {
     }
 };
 
-
-template<class floatT, const size_t HaloDepth, RungeKuttaMethod _RK_method>
-class wilsonFlow {
-};
-
 #if FIXED_STEPSIZE
 template<class floatT, const size_t HaloDepth>
-class wilsonFlow<floatT, HaloDepth, fixed_stepsize>
+class gradientFlow<floatT, HaloDepth, fixed_stepsize, wilson>
         : public su3rungeKutta3<floatT, HaloDepth, Z_i_wilson<floatT, HaloDepth, true> > {
 
     using Z_i = Z_i_wilson<floatT, HaloDepth, true>;
 public:
-    wilsonFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
+    gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
                    std::vector<floatT> necessaryFlowTime, floatT dummy_accuracy = 0)
             : su3rungeKutta3<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop, necessaryFlowTime) {}
 
@@ -80,32 +83,29 @@ public:
 
 #if ADAPTIVE_STEPSIZE
 template<class floatT, const size_t HaloDepth>
-class wilsonFlow<floatT, HaloDepth, adaptive_stepsize>
+class gradientFlow<floatT, HaloDepth, adaptive_stepsize, wilson>
         : public su3rungeKutta3AdStepSize<floatT, HaloDepth, Z_i_wilson<floatT, HaloDepth, true> > {
 
     using Z_i = Z_i_wilson<floatT, HaloDepth, true>;
 public:
-    wilsonFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
+    gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                 floatT stepSize, floatT start, floatT stop,
                              std::vector<floatT> necessaryFlowTime, floatT accuracy)
             : su3rungeKutta3AdStepSize<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
                              necessaryFlowTime, accuracy) {}
-
 };
 
-
 template<class floatT, const size_t HaloDepth>
-class wilsonFlow<floatT, HaloDepth, adaptive_stepsize_allgpu>
+class gradientFlow<floatT, HaloDepth, adaptive_stepsize_allgpu, wilson>
         : public su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Z_i_wilson<floatT, HaloDepth, true> > {
 
     using Z_i = Z_i_wilson<floatT, HaloDepth, true>;
 public:
-    wilsonFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
+    gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                floatT stepSize, floatT start, floatT stop,
                std::vector<floatT> necessaryFlowTime, floatT accuracy)
             : su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
                                                                necessaryFlowTime, accuracy) {}
-
 };
 #endif
 #endif
@@ -142,19 +142,14 @@ struct Z_i_zeuthen {
     }
 };
 
-
-template<class floatT, const size_t HaloDepth, RungeKuttaMethod _RK_method>
-class zeuthenFlow {
-};
-
 #if FIXED_STEPSIZE
 template<class floatT, const size_t HaloDepth>
-class zeuthenFlow<floatT, HaloDepth, fixed_stepsize>
+class gradientFlow<floatT, HaloDepth, fixed_stepsize, zeuthen>
         : public su3rungeKutta3<floatT, HaloDepth, Z_i_zeuthen<floatT, HaloDepth, true> > {
 
     using Z_i = Z_i_zeuthen<floatT, HaloDepth, true>;
 public:
-    zeuthenFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
+    gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
                    std::vector<floatT> necessaryFlowTime, floatT dummy_accuracy = 0)
             : su3rungeKutta3<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop, necessaryFlowTime) {}
 
@@ -163,12 +158,12 @@ public:
 
 #if ADAPTIVE_STEPSIZE
 template<class floatT, const size_t HaloDepth>
-class zeuthenFlow<floatT, HaloDepth, adaptive_stepsize>
+class gradientFlow<floatT, HaloDepth, adaptive_stepsize, zeuthen>
         : public su3rungeKutta3AdStepSize<floatT, HaloDepth, Z_i_zeuthen<floatT, HaloDepth, true> > {
 
     using Z_i = Z_i_zeuthen<floatT, HaloDepth, true>;
 public:
-    zeuthenFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
+    gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                  floatT stepSize, floatT start, floatT stop,
                              std::vector<floatT> necessaryFlowTime, floatT accuracy)
             : su3rungeKutta3AdStepSize<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
@@ -177,12 +172,12 @@ public:
 };
 
 template<class floatT, const size_t HaloDepth>
-class zeuthenFlow<floatT, HaloDepth, adaptive_stepsize_allgpu>
+class gradientFlow<floatT, HaloDepth, adaptive_stepsize_allgpu, zeuthen>
         : public su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Z_i_zeuthen<floatT, HaloDepth, true> > {
 
     using Z_i = Z_i_zeuthen<floatT, HaloDepth, true>;
 public:
-    zeuthenFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
+    gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                 floatT stepSize, floatT start, floatT stop,
                 std::vector<floatT> necessaryFlowTime, floatT accuracy)
             : su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,

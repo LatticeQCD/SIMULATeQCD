@@ -16,7 +16,10 @@
 #include "grnd.h"
 #include <float.h>
 #include <type_traits>
+//<<<<<<< HEAD
 #include "gsu2.h"
+//=======
+//>>>>>>> main
 
 
 
@@ -128,7 +131,7 @@ public:
 
 
 
-#if (!defined __CUDACC__)
+#if (!defined __GPUCC__)
     __host__ friend std::ostream& operator<< <> (std::ostream&, const GSU3<floatT> &);
 #endif
 
@@ -394,10 +397,10 @@ public:
                 return _e22;
         }
         _e00 = GCOMPLEX(floatT)(nan(""), nan(""));
-
         return _e00;
     }
 
+//<<<<<<< HEAD
     //ported from Milc ~dsh
     __device__ __host__ void dumpmat(){
     int i,j;
@@ -409,7 +412,10 @@ public:
     	printf("\n");
     }
 
-    __host__ __device__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+//    __host__ __device__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+//=======
+    __host__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
+//>>>>>>> main
         switch (i * 3 + j) {
             case 0:
                 return _e00;
@@ -882,7 +888,7 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
             _e22 = GCOMPLEX(floatT)(-2. / sqrt(3.0) * temp2[3], 0.0);
         }
     else {
-#ifdef __CUDA_ARCH__
+#ifdef __GPU_ARCH__
         float rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
 
     for (int i = 0; i < 4; ++i) {
@@ -1113,7 +1119,7 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
         }
     else {
- #ifdef __CUDA_ARCH__
+ #ifdef __GPU_ARCH__
     double quadnorm, invnorm;
     double Cre, Cim;
 
