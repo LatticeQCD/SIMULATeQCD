@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
             gauge.writeconf_nersc(param.GaugefileName_out(), 3, param.prec_out());
         }
     } else if(param.format_out()=="ildg") {
-        gauge.writeconf_ildg(param.GaugefileName_out(), param.prec_out());
+        gauge.writeconf_ildg(param.GaugefileName_out(), param);
     } else {
         throw(rootLogger.fatal("Invalid specification for format_out ",param.format_out()));
     }
