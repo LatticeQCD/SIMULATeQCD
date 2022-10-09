@@ -7,6 +7,7 @@
 
 #include "../SIMULATeQCD.h"
 #include "../modules/gauge_updates/PureGaugeUpdates.h"
+#include "../modules/observables/PolyakovLoop.h"
 
 #include <chrono>
 
@@ -66,6 +67,8 @@ int main(int argc, char* argv[]) {
     Gaugefield<PREC,ONDEVICE,HaloDepth>     gauge(commBase);
     GaugeAction<PREC,ONDEVICE,HaloDepth>    gaugeAction(gauge);
     GaugeUpdate<PREC,ONDEVICE,HaloDepth>    gaugeUpdate(gauge);
+    PolyakovLoop<PREC,true,HaloDepth>       pLoop(gauge);
+
 
     grnd_state<false> host_state;
     grnd_state<true> dev_state;
@@ -166,6 +169,7 @@ int main(int argc, char* argv[]) {
         timer.reset();
 
         rootLogger.info("Plaquette = " ,  gaugeAction.plaquette());
+        rootLogger.info("Polyakov loop = " ,  pLoop.getPolyakovLoop());
 
         std::string conf_path = lp.output_dir()+"/conf"+lp.fileExt();
         std::string rand_path = lp.output_dir()+"/rand"+lp.fileExt();
