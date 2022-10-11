@@ -16,10 +16,7 @@
 #include "grnd.h"
 #include <float.h>
 #include <type_traits>
-//<<<<<<< HEAD
 #include "gsu2.h"
-//=======
-//>>>>>>> main
 
 
 
@@ -400,7 +397,6 @@ public:
         return _e00;
     }
 
-//<<<<<<< HEAD
     //ported from Milc ~dsh
     __device__ __host__ void dumpmat(){
     int i,j;
@@ -412,10 +408,7 @@ public:
     	printf("\n");
     }
 
-//    __host__ __device__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
-//=======
     __host__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
-//>>>>>>> main
         switch (i * 3 + j) {
             case 0:
                 return _e00;
