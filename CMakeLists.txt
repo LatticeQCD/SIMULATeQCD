@@ -544,8 +544,8 @@ SIMULATeQCD_target_compile_definitions(hisqSmearingTest PRIVATE HALODEPTH_0=1 HA
 add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
 
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_HypSmearingTest.cu src/modules/hyp/hypSmearing.cu)
-add_SIMULATeQCD_executable(hypSmearingTest src/testing/main_HypSmearingTest.cu src/modules/hyp/hypSmearing.cu)
+set_SIMULATeQCD_gpu_backend(src/testing/main_HypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
+add_SIMULATeQCD_executable(hypSmearingTest src/testing/main_HypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
 set_SIMULATeQCD_property(hypSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(hypSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hypSmearingTest)
