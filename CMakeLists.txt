@@ -831,6 +831,19 @@ SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorMultiGPUStacked PRIV
 add_to_compound_SIMULATeQCD_target(applications wilsonLinesCorrelatorMultiGPUStacked)
 
 
+set_SIMULATeQCD_gpu_backend(src/applications/main_RFixing.cpp)
+add_SIMULATeQCD_executable(RFixing src/applications/main_RFixing.cpp ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(RFixing PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(RFixing PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(applications RFixing)
+
+set_SIMULATeQCD_gpu_backend(src/applications/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp)
+add_SIMULATeQCD_executable(wilsonloop src/applications/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp )
+set_SIMULATeQCD_property(wilsonloop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(wilsonloop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(applications wilsonloop)
+
+
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS
 
 

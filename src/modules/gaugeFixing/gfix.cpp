@@ -195,6 +195,384 @@ void GaugeFixing<floatT,onDevice,HaloDepth>::gaugefixOR() {
 }
 
 
+////////////////////////
+// Rasmus Larsen 10 2020
+//Maximal center group gauge implemented using 
+//https://arxiv.org/pdf/hep-lat/9906010v1.pdf
+///////
+
+/// Kernel to compute local contribution to GF R.
+template<class floatT,size_t HaloDepth>
+struct GFRKernel{
+    gaugeAccessor<floatT> gaugeAccessor;
+    GFRKernel(Gaugefield<floatT,true,HaloDepth>&gauge):gaugeAccessor(gauge.getAccessor()){
+    }
+    __device__ __host__ floatT operator()(gSite site){
+        typedef GIndexer<All,HaloDepth> GInd;
+        floatT RVal=0.0;
+        GSU3<floatT> temp;
+        for(int mu=0;mu<4;mu++){
+            temp=gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+            floatT val = abs(tr_c(temp));
+            RVal=RVal+val*val;
+        }
+        return RVal;
+    }
+};
+
+// Project to center
+template<class floatT,Layout LatLayout,size_t HaloDepth>
+struct ProjectZ{
+
+   gaugeAccessor<floatT> gAcc;
+   gaugeAccessor<floatT> gAcc2;
+
+   ProjectZ(Gaugefield<floatT,true,HaloDepth> &gauge,Gaugefield<floatT,true,HaloDepth> &gauge2) : gAcc(gauge.getAccessor()), gAcc2(gauge2.getAccessor()){}
+
+   __device__ __host__ void operator()(gSite site) {
+      typedef GIndexer<LatLayout,HaloDepth> GInd;
+
+
+      GSU3<floatT> link = gsu3_one<floatT>();
+
+
+      for( int mu=0; mu<4; mu++){
+         GCOMPLEX(floatT) val = tr_c(gAcc.getLink(GInd::getSiteMu(site, mu)))/3.0;
+         floatT angle = asin(val.cIMAG/sqrt(val.cIMAG*val.cIMAG+val.cREAL*val.cREAL));
+         //printf("%f \n", angle);
+         if(val.cREAL < 0.0 && val.cIMAG > 0.0){
+             angle = 3.14159-angle;
+         }
+         else if(val.cREAL < 0.0 && val.cIMAG < 0.0){
+             angle = -3.14159-angle;
+         }
+         //printf("2 %f \n", angle);
+
+         if(angle < - 1.0472){
+            val = GCOMPLEX(floatT)(-0.5, -0.866025);
+         }
+         else if(angle >  1.0472){
+            val = GCOMPLEX(floatT)(-0.5, 0.866025);
+         }
+         else{
+            val = GCOMPLEX(floatT)(1.0, 0.0);
+         }
+
+         gAcc2.setLink(GInd::getSiteMu(site, mu), val*link);
+         gAcc.setLink(GInd::getSiteMu(site, mu), gAcc.getLink(GInd::getSiteMu(site, mu))*dagger(gAcc2.getLink(GInd::getSiteMu(site, mu))));
+      }
+
+   }
+};
+
+
+template<class floatT, bool onDevice, size_t HaloDepth>
+void GaugeFixing<floatT,onDevice,HaloDepth>::projectZ(Gaugefield<floatT,onDevice,HaloDepth> &gauge2) {
+    gfixReadIndexEvenOddFull<All,HaloDepth> calcReadIndex;
+
+    iterateFunctorNoReturn<onDevice>(ProjectZ<floatT,All,HaloDepth>(_gauge, gauge2),calcReadIndex,elems);
+    _gauge.updateAll();
+    gauge2.updateAll();
+};
+
+
+/// Kernel to gauge fix R
+template<class floatT,Layout LatLayout,size_t HaloDepth, size_t nu>
+struct GFRORKernel{
+    gaugeAccessor<floatT> gaugeAccessor;
+    GFRORKernel(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
+
+    __device__ __host__ void operator()(gSite site) {
+
+        typedef GIndexer<LatLayout,HaloDepth> GInd;
+        GSU3<floatT> v,g, g0,g1,g2,g3;
+        GSU2<floatT> z1,z2,z3, z0;
+        GCOMPLEX(floatT) d0[4*8], e0[8];
+        GCOMPLEX(floatT) x00,x01;
+        GCOMPLEX(floatT) im1(0.0,1.0);
+
+        x00=GCOMPLEX(floatT)(1.0,-0.0);
+        x01=GCOMPLEX(floatT)(-0.0,-0.0);
+        z0 =GSU2<floatT>(x00,x01);
+        x00=GCOMPLEX(floatT)(0.0,-0.0);
+        x01=GCOMPLEX(floatT)(-0.0,-1.0);
+        z1 =GSU2<floatT>(x00,x01);
+        x00=GCOMPLEX(floatT)(0.0,-0.0);
+        x01=GCOMPLEX(floatT)(-1.0,-0.0);
+        z2 =GSU2<floatT>(x00,x01);
+        x00=GCOMPLEX(floatT)(0.0,-1.0);
+        x01=GCOMPLEX(floatT)(-0.0,-0.0);
+        z3 =GSU2<floatT>(x00,x01);
+
+
+
+        g=gsu3_one<floatT>();
+
+        if(nu==0){
+            g.setLink22(0.0);
+            g0=sub12(z0,g);
+            g1=sub12(z1,g);
+            g2=sub12(z2,g);
+            g3=sub12(z3,g);
+
+        }
+        if(nu==1){
+            g.setLink11(0.0);
+            g0=sub13(z0,g);
+            g1=sub13(z1,g);
+            g2=sub13(z2,g);
+            g3=sub13(z3,g);
+        }
+        if(nu==2){
+            g.setLink00(0.0);
+            g0=sub23(z0,g);
+            g1=sub23(z1,g);
+            g2=sub23(z2,g);
+            g3=sub23(z3,g);
+        }
+
+
+
+    if(nu==0){
+        for( int mu = 0; mu < 4; mu++){
+            v=gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+/*
+            d0[mu+8*0] = (v.getLink00() + v.getLink11())/2.0;
+            d0[mu+8*1] = -im1*(v.getLink10() + v.getLink01())/2.0;
+            d0[mu+8*2] = (-v.getLink10() + v.getLink01())/2.0;
+            d0[mu+8*3] = -im1*(v.getLink00() - v.getLink11())/2.0;
+*/
+
+            d0[mu+8*0] = tr_c(g0*v)/2.0;
+            d0[mu+8*1] = tr_c(g1*v)/2.0;
+            d0[mu+8*2] = tr_c(g2*v)/2.0;
+            d0[mu+8*3] = tr_c(g3*v)/2.0;
+
+            e0[mu] =  v.getLink22();
+        }
+/*
+        for( int mu = 0; mu < 4; mu++){
+            v=gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu));
+            d0[mu+8*0+4] = (v.getLink00() + v.getLink11())/2.0;
+            d0[mu+8*1+4] = -im1*(-v.getLink10() - v.getLink01())/2.0;
+            d0[mu+8*2+4] = (v.getLink10() - v.getLink01())/2.0;
+            d0[mu+8*3+4] = -im1*(-v.getLink00() + v.getLink11())/2.0;
+
+            e0[mu+4] =  v.getLink22();
+        }
+*/
+
+        for( int mu = 0; mu < 4; mu++){
+            v=dagger(gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu)));
+/*
+            d0[mu+8*0+4] = (v.getLink00() + v.getLink11())/2.0;
+            d0[mu+8*1+4] = -im1*(v.getLink10() + v.getLink01())/2.0;
+            d0[mu+8*2+4] = (-v.getLink10() + v.getLink01())/2.0;
+            d0[mu+8*3+4] = -im1*(v.getLink00() - v.getLink11())/2.0;
+*/
+
+            d0[mu+8*0+4] = tr_c(g0*v)/2.0;
+            d0[mu+8*1+4] = tr_c(g1*v)/2.0;
+            d0[mu+8*2+4] = tr_c(g2*v)/2.0;
+            d0[mu+8*3+4] = tr_c(g3*v)/2.0;
+
+
+            e0[mu+4] =  v.getLink22();
+        }
+
+    }
+
+
+    if(nu==1){
+        for( int mu = 0; mu < 4; mu++){
+            v=gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+/*            d0[mu+8*0] = (v.getLink00() + v.getLink22())/2.0;
+            d0[mu+8*1] = -im1*(v.getLink20() + v.getLink02())/2.0;
+            d0[mu+8*2] = (-v.getLink20() + v.getLink02())/2.0;
+            d0[mu+8*3] = -im1*(v.getLink00() - v.getLink22())/2.0;
+*/
+            d0[mu+8*0] = tr_c(g0*v)/2.0;
+            d0[mu+8*1] = tr_c(g1*v)/2.0;
+            d0[mu+8*2] = tr_c(g2*v)/2.0;
+            d0[mu+8*3] = tr_c(g3*v)/2.0;
+
+            e0[mu] =  v.getLink11();
+        }
+
+/*
+        for( int mu = 0; mu < 4; mu++){
+            v=gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu));
+            d0[mu+8*0+4] = (v.getLink00() + v.getLink22())/2.0;
+            d0[mu+8*1+4] = -im1*(-v.getLink20() - v.getLink02())/2.0;
+            d0[mu+8*2+4] = (v.getLink20() - v.getLink02())/2.0;
+            d0[mu+8*3+4] = -im1*(-v.getLink00() + v.getLink22())/2.0;
+
+            e0[mu+4] =  v.getLink11();
+        }
+*/
+        for( int mu = 0; mu < 4; mu++){
+            v=dagger(gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu)));
+/*            d0[mu+8*0+4] = (v.getLink00() + v.getLink22())/2.0;
+            d0[mu+8*1+4] = -im1*(v.getLink20() + v.getLink02())/2.0;
+            d0[mu+8*2+4] = (-v.getLink20() + v.getLink02())/2.0;
+            d0[mu+8*3+4] = -im1*(v.getLink00() - v.getLink22())/2.0;
+*/
+            d0[mu+8*0+4] = tr_c(g0*v)/2.0;
+            d0[mu+8*1+4] = tr_c(g1*v)/2.0;
+            d0[mu+8*2+4] = tr_c(g2*v)/2.0;
+            d0[mu+8*3+4] = tr_c(g3*v)/2.0;
+
+            e0[mu+4] =  v.getLink11();
+        }
+
+
+    }
+
+
+
+    if(nu==2){
+        for( int mu = 0; mu < 4; mu++){
+            v=gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+/*            d0[mu+8*0] = (v.getLink11() + v.getLink22())/2.0;
+            d0[mu+8*1] = -im1*(v.getLink21() + v.getLink12())/2.0;
+            d0[mu+8*2] = (-v.getLink21() + v.getLink12())/2.0;
+            d0[mu+8*3] = -im1*(v.getLink11() - v.getLink22())/2.0;
+*/
+            d0[mu+8*0] = tr_c(g0*v)/2.0;
+            d0[mu+8*1] = tr_c(g1*v)/2.0;
+            d0[mu+8*2] = tr_c(g2*v)/2.0;
+            d0[mu+8*3] = tr_c(g3*v)/2.0;
+
+            e0[mu] =  v.getLink00();
+        }
+/*
+        for( int mu = 0; mu < 4; mu++){
+            v=gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu));
+            d0[mu+8*0+4] = (v.getLink11() + v.getLink22())/2.0;
+            d0[mu+8*1+4] = -im1*(-v.getLink21() - v.getLink12())/2.0;
+            d0[mu+8*2+4] = (v.getLink21() - v.getLink12())/2.0;
+            d0[mu+8*3+4] = -im1*(-v.getLink11() + v.getLink22())/2.0;
+
+            e0[mu+4] =  v.getLink00();
+        }
+*/
+
+        for( int mu = 0; mu < 4; mu++){
+            v=dagger(gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu)));
+/*            d0[mu+8*0+4] = (v.getLink11() + v.getLink22())/2.0;
+            d0[mu+8*1+4] = -im1*(v.getLink21() + v.getLink12())/2.0;
+            d0[mu+8*2+4] = (-v.getLink21() + v.getLink12())/2.0;
+            d0[mu+8*3+4] = -im1*(v.getLink11() - v.getLink22())/2.0;
+*/
+            d0[mu+8*0+4] = tr_c(g0*v)/2.0;
+            d0[mu+8*1+4] = tr_c(g1*v)/2.0;
+            d0[mu+8*2+4] = tr_c(g2*v)/2.0;
+            d0[mu+8*3+4] = tr_c(g3*v)/2.0;
+
+            e0[mu+4] =  v.getLink00();
+        }
+
+
+    }
+
+
+//////////////////
+
+        floatT  bV[4], cS, eigenVal[4];
+        Matrix4x4<floatT> aM, eigenVec;
+        for( int i = 0; i < 4; i++){
+           for( int j = 0; j < 4; j++){
+              for( int l = 0; l < 8; l++){
+                  aM.a[i+4*j] = aM.a[i+4*j] + real(d0[l+8*i]*conj(d0[l+8*j])+ d0[l+8*j]*conj(d0[l+8*i]));
+              }
+           }
+           bV[i]=0.0;
+           for( int l = 0; l < 8; l++){
+                  bV[i] = bV[i] - 0.5*real(e0[l]*conj(d0[l+8*i])+ conj(e0[l])*d0[l+8*i]);
+           }
+        }
+        cS= 0.0;
+        for( int l = 0; l < 8; l++){
+            cS = cS + 0.25*real(e0[l]*conj(e0[l]));
+        }
+
+        QR(eigenVec,eigenVal,aM);
+
+  //      floatT vecb[4];
+        floatT vecg[4];
+        getSU2Rotation(vecg,eigenVal, bV, eigenVec);
+
+
+        /// Eventually we will recover an SU(3) matrix via left-multiplication of SU(2) matrices embedded in SU(3).
+        /// Let us write our SU(2) matrix as
+        ///     a   b
+        ///     c   d,
+        /// with a,b,c,d complex. In the fundamental representation, d=conj(a) and c=-conj(b); therefore an SU(2) matrix
+        /// can be specified by 2 complex numbers.
+        //printf("vecg %lu  %f %f %f %f \n",site.isiteFull ,vecg[0], vecg[1], vecg[2], vecg[3]);
+
+
+        x00=GCOMPLEX(floatT)(vecg[0],-vecg[3]);
+        x01=GCOMPLEX(floatT)(-vecg[2],-vecg[1]);
+        z1 =GSU2<floatT>(x00,x01);
+
+        /// Recover the OR SU(3) matrix
+        g=gsu3_one<floatT>();
+        if(nu==0){
+            g=sub12(z1,g);
+        }
+        if(nu==1){
+            g=sub13(z1,g);
+        }
+        if(nu==2){
+            g=sub23(z1,g);
+        }
+        /// OR update: Apply g to U_{mu}(site) and U_{mu}(site-hat{mu})
+        for( int mu=0; mu<4; mu++){
+            gaugeAccessor.setLink(GInd::getSiteMu(site, mu),
+                                  g*gaugeAccessor.getLink(GInd::getSiteMu(site, mu)));
+            gaugeAccessor.setLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu),
+                                gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))*dagger(g));
+        }
+
+  }
+
+};
+
+
+template<class floatT, bool onDevice, size_t HaloDepth>
+floatT GaugeFixing<floatT,onDevice,HaloDepth>::getR() {
+    _redBase.template iterateOverBulk<All,HaloDepth>(GFRKernel<floatT,HaloDepth>(_gauge));
+    floatT gft;
+    _redBase.reduce(gft, elems);
+    floatT vol=GInd::getLatData().globvol4;
+    gft /= (4.0*9.*vol);
+    return gft;
+}
+
+
+template<class floatT, bool onDevice, size_t HaloDepth>
+void GaugeFixing<floatT,onDevice,HaloDepth>::gaugefixR() {
+    gfixReadIndexEvenOddFull<Even,HaloDepth> calcReadIndexEven;
+    gfixReadIndexEvenOddFull<Odd, HaloDepth> calcReadIndexOdd;
+    /// OR update red sites.
+    iterateFunctorNoReturn<onDevice>(GFRORKernel<floatT,Even,HaloDepth,0>(_gauge),calcReadIndexEven,ORelems);
+    _gauge.updateAll();
+    iterateFunctorNoReturn<onDevice>(GFRORKernel<floatT,Even,HaloDepth,1>(_gauge),calcReadIndexEven,ORelems);
+    _gauge.updateAll();
+    iterateFunctorNoReturn<onDevice>(GFRORKernel<floatT,Even,HaloDepth,2>(_gauge),calcReadIndexEven,ORelems);
+    _gauge.updateAll();
+    /// OR update black sites.
+    iterateFunctorNoReturn<onDevice>(GFRORKernel<floatT,Odd, HaloDepth,0>(_gauge),calcReadIndexOdd, ORelems);
+    _gauge.updateAll();
+    iterateFunctorNoReturn<onDevice>(GFRORKernel<floatT,Odd, HaloDepth,1>(_gauge),calcReadIndexOdd, ORelems);
+    _gauge.updateAll();
+    iterateFunctorNoReturn<onDevice>(GFRORKernel<floatT,Odd, HaloDepth,2>(_gauge),calcReadIndexOdd, ORelems);
+    _gauge.updateAll();
+}
+
+
+
 
 /// Initialize various possibilities of template parameter combinations for the class GaugeFixing, as well as for most
 /// of the above kernels. It is crucial that you do this for templated objects inside of *.cpp files.

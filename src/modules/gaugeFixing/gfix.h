@@ -17,7 +17,7 @@
 #include "../../gauge/gaugefield.h"
 #include "../../base/LatticeContainer.h"
 #include "../../base/math/gsu2.h"
-
+#include "../../base/math/matrix4x4_notSym.h"
 
 /// Class for gauge fixing functions. For now this only includes simple functions that calculate the gauge fixing
 /// action and theta, but will include everything else at some later point. Specify whether it is Coulomb or
@@ -42,6 +42,12 @@ public:
     floatT getAction();       /// Calculate gauge fixing functional
     floatT getTheta();        /// Calculate gauge fixing theta
     void   gaugefixOR();      /// One gauge fixing step for the lattice. Make sure you unitarize every so often...
+
+    ///// R fixing
+    floatT getR();        /// Calculate gauge fixing R
+    void   gaugefixR();      /// One gauge fixing step for the lattice. Make sure you unitarize every so often...
+    void projectZ(Gaugefield<floatT,onDevice,HaloDepth> &gauge2);
+
 };
 
 /// Even/odd read index
