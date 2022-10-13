@@ -13,7 +13,6 @@ latticeContainer.md
 communicationBase.md
 functorSyntax.md
 gaugefield.md
-spinorfield.md
 topology.md
 configurationIO.md
 ```

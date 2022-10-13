@@ -52,9 +52,8 @@
 <li class="toctree-l2"><a class="reference internal" href="fileWriter.html">File Writer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="latticeContainer.html">Lattice Container</a></li>
 <li class="toctree-l2"><a class="reference internal" href="communicationBase.html">Communication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="functorSyntax.html">Functor/operator() syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functorSyntax.html">Functor syntax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gaugefield.html">Gaugefield</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spinorfield.html">Spinorfield</a></li>
 <li class="toctree-l2"><a class="reference internal" href="topology.html">Topology</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Input and output formats for gauge configurations</a></li>
 </ul>
@@ -113,10 +112,12 @@ lattice community. More information about the ILDG effort can be found
 <p>A file saved in ILDG format format consists of several parts packaged using the
 Lattice QCD Interchange Message
 Encapsulation (LIME) format. (You can learn more about LIME below.)
-LIME files are organized as follows:</p>
+LIME files are generally organized as follows:</p>
 <ul class="simple">
 <li><p>One encapsulates ASCII or binary data into <em>records</em>.</p></li>
-<li><p>The records are packaged into <em>messages</em>.</p></li>
+<li><p>The records are packaged into <em>messages</em>.
+In SIMULATeQCD, we do not really take advantage of this hierarchy, and organize our output
+LIME files as four records, each containing a single message.</p></li>
 </ul>
 <p>The <code class="docutils literal notranslate"><span class="pre">ildg-format</span></code> record is an XML document with some set of non-mutable parameters needed to
 read the binary. Here is an example:</p>
@@ -145,9 +146,19 @@ In this format a <code class="docutils literal notranslate"><span class="pre">Ga
 <li><p>color index <span class="math notranslate nohighlight">\(b\)</span></p></li>
 <li><p>index indicating real (0) or imaginary (1) part</p></li>
 </ol>
-<p>The last entry is the <code class="docutils literal notranslate"><span class="pre">checksum</span></code>, which is a number characteristic of some binary data.
-Two checksums are calculated for ILDG, both of which are extremely sensitive to changes
-in the binary file; indeed if even a single bit is changed, the <code class="docutils literal notranslate"><span class="pre">checksum</span></code> changes.
+<p>The next record is a <code class="docutils literal notranslate"><span class="pre">ildg-data-lfn</span></code> record. When the configuration is uploaded somewhere,
+the Logical File Name (LFN) is the string used to identify it. The ILDG standard for
+constructing LFNs is</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LFN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mc://ldg/&quot;</span><span class="o">+</span><span class="n">collaborationName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">projectName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">ensembleName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">fileName</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Therefore this is how we construct it automatically in SIMULATeQCD.</p>
+<p>The last record is the <code class="docutils literal notranslate"><span class="pre">checksum</span></code>, which is a number characteristic of some binary data.
+This checksum is technically not required by the ILDG format, so we refer to it
+as a <code class="docutils literal notranslate"><span class="pre">scidac-checksum</span></code>.
+Two checksums are calculated for SIMULATeQCD’s ILDG configurations, both of which
+are extremely sensitive to changes
+in the binary file; indeed if even a single bit is changed, the checksum changes.
 By comparing the expected <code class="docutils literal notranslate"><span class="pre">checksum</span></code> saved in the header of an ILDG file with the
 calculated <code class="docutils literal notranslate"><span class="pre">checksum</span></code> upon read in, one can tell whether the file has been corrupted.</p>
 </section>
@@ -176,12 +187,13 @@ interact with the File Catalogue.</p>
 Data Grid, which is not known at the time of generation. Therefore there must
 always be some post processing to get an ILDG configuration ready for storage.</p>
 <p>With this in mind, what is implemented at the time of writing is this: Each
-configuration made by SIMULATeQCD is a LIME file with the minimal amount
+ILDG configuration made by SIMULATeQCD is a LIME file with the minimal amount
 of information required for convenient reading by SIMULATeQCD, whose gauge
 field is stored in binary according to the convention above. Since we can
-read LIME format already, we are able to read arbitrary ILDG configurations.
+read LIME format already, we are able to read ILDG configurations.
 However we cannot control how ILDG readers are implemented in other codes,
-e.g. QUDA, so a configuration made by SIMULATeQCD will in general require
+e.g. <a class="reference external" href="https://github.com/lattice/quda">QUDA</a>, so a configuration made
+by SIMULATeQCD will in general require
 further processing to be readable by other codes.</p>
 </section>
 <section id="more-about-lime">
