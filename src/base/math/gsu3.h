@@ -84,9 +84,6 @@ template<class floatT>
 __device__ __host__ GSU3<floatT> su3_exp(GSU3<floatT>);
 
 template<class floatT>
-__device__ __host__ void dumpmat();
-
-template<class floatT>
 __device__ __host__ gVect3<floatT> operator*(const GSU3<floatT> &, const gVect3<floatT> &);
 
 template<class floatT>
@@ -371,7 +368,6 @@ public:
     __host__ __device__ inline void setLink21(GCOMPLEX(floatT) x);
     __host__ __device__ inline void setLink22(GCOMPLEX(floatT) x);
 
-
     __host__ __device__ inline GCOMPLEX(floatT) &operator()(int i, int j) {
         switch (i * 3 + j) {
             case 0:
@@ -395,17 +391,6 @@ public:
         }
         _e00 = GCOMPLEX(floatT)(nan(""), nan(""));
         return _e00;
-    }
-
-    //ported from Milc ~dsh
-    __device__ __host__ void dumpmat(){
-    int i,j;
-    for(i=0;i<3;i++){
-        for(j=0;j<3;j++)printf("(%.2e,%.2e)\t",
-            real((*this)(i,j)),imag((*this)(i,j)));
-        printf("\n");
-    }
-    	printf("\n");
     }
 
     __host__ inline const GCOMPLEX(floatT) &operator()(int i, int j) const {
@@ -911,20 +896,6 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
     }
 }
 
-/******************  realtr.c  (in su3.a) *******************************
-*									*
-* Real realtrace_su3( su3_matrix *a,*b)				*
-* return Re( Tr( A_adjoint*B )  					*
-*/
-// ported from Milc by Dan Hoying, 2022
-template<class floatT>
-__device__ __host__ floatT realtrace_su3( GSU3<floatT> a, GSU3<floatT> b ){
-int i,j;
-floatT sum;
-    for(sum=0.0,i=0;i<3;i++)for(j=0;j<3;j++)
-	sum+= real(a(i,j))*real(b(i,j)) + imag(a(i,j))*imag(b(i,j));
-    return(sum);
-}
 
 // ported from Milc by Dan Hoying, 2022
 template<class floatT>
@@ -988,7 +959,7 @@ __device__ __host__ int su3unitarize_hits(
    double conver, old_tr = 0, new_tr;
 
    if(tol > 0)
-     old_tr = realtrace_su3(*w,*q)/3.0;
+     old_tr = realtrace_su3(*w,*q)/3.0; // use tr_d(a,b) !!
    conver = 1.0;
    assert(!std::isnan(old_tr));
 
@@ -1032,7 +1003,7 @@ __device__ __host__ int su3unitarize_hits(
 
       /* convergence measure every third hit */
       if(tol>0 && (index1 % 3) == 2){
-	new_tr = realtrace_su3(*w,*q)/3.;
+	new_tr = realtrace_su3(*w,*q)/3.; // use tr_d(a,b) !!
 	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
 	old_tr = new_tr;
       }
