@@ -133,23 +133,6 @@ public:
 	    +   imag(_e11)*imag(_e11) + imag(_e12)*imag(_e12));
   }
 
-
-    __device__ __host__  GCOMPLEX(floatT) &operator()(int i, int j) {
-        switch (i * 2 + j) {
-            case 0:
-                return _e11;
-            case 1:
-                return _e12;
-            case 2:
-                return -conj(_e12)
-            case 3:
-                return conj(_e11)
-        }
-        err = GCOMPLEX(floatT)(nan(""), nan(""));
-
-        return err;
-    }
-
 private:
 
   friend std::ostream &operator << (std::ostream &s, const GSU2 &x) {
@@ -254,74 +237,4 @@ __device__ __host__  inline floatT realtrace(const GSU3<floatT> &x) {
 }
 
 
-//template<typename floatT>
-//__device__ __host__  inline floatT realtrace(const GSU2<floatT> &x) {
-//  return ( real(x.getLink00() + x.getLink11()) );
-//}
-//
-////SU(2) matrix class, stub for now
-//template<class floatT>
-//class GSU2_mat;
-//
-//template<class floatT>
-//class GSU2_mat {
-//private:
-//    GCOMPLEX(floatT) _e00, _e01,
-//                     _e10, _e11;
-//
-//public:
-//
-//    constexpr GSU2_mat(const GSU2_mat<floatT>&) = default;
-//    __host__ __device__ GSU2_mat() {};
-//
-//    __host__ __device__ GSU2_mat(const floatT x) {
-//        _e00 = x;
-//        _e01 = x;
-//        _e10 = x;
-//        _e11 = x;
-//    };
-//
-//    __device__ __host__ bool operator==(const GSU2_mat<floatT> &);
-//
-//    __host__ __device__ GSU2_mat(GCOMPLEX(floatT) e00, GCOMPLEX(floatT) e01, 
-//                                 GCOMPLEX(floatT) e10, GCOMPLEX(floatT) e11) :
-//                                 _e00(e00), _e01(e01), 
-//                                 _e10(e10), _e11(e11) {};
-//
-//    /*
-//    __host__ __device__ void isid() {
-//    	    GCOMPLEX(floatT) _id(1.0,0.0); //for debug
-//	    assert(_e00==_id);
-//    };
-//    */
-//
-//
-//
-//    __host__ __device__ GCOMPLEX(floatT) &operator()(int i, int j) {
-//        switch (i * 2 + j) {
-//            case 0:
-//                return _e00;
-//            case 1:
-//                return _e01;
-//            case 2:
-//                return _e10;
-//            case 3:
-//                return _e11;
-//        }
-//        _e00 = GCOMPLEX(floatT)(nan(""), nan(""));
-//
-//        return _e00;
-//    }
-//};
-//
-//
-//template<class floatT>
-//__device__ __host__ bool GSU2_mat<floatT>::operator==(const GSU2_mat<floatT> &y) {
-//    if (_e00 == y._e00 &&
-//        _e01 == y._e01 &&
-//        _e10 == y._e10 &&
-//        _e11 == y._e11) {
-//        return true;
-//    } else return false;
-//}
 #endif

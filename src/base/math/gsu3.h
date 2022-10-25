@@ -897,45 +897,6 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
 }
 
 
-// ported from Milc by Dan Hoying, 2022
-template<class floatT>
-__device__ __host__ void left_su2_hit_n(GSU2_mat<floatT> *u, int p, int q, GSU3<floatT> *link)
-{
-  /* link <- u * link */
-  /* The 0 row of the SU(2) matrix u matches row p of the SU(3) matrix */
-  /* The 1 row of the SU(2) matrix u matches row q of the SU(3) matrix */
-  /* C. DeTar 18 Oct 1990 */
-
-  int m;
-
-  for (m = 0; m < 3; m++)
-    mult_su2_mat_vec_elem_n(u, &((*link)(p,m)), &((*link)(q,m)));
-
-} /* l_su2_hit_n.c */
-
-// ported from Milc by Dan Hoying, 2022
-template<class floatT>
-__device__ __host__ void mult_su2_mat_vec_elem_n(GSU2_mat<floatT> *u, GCOMPLEX(floatT) *x0,GCOMPLEX(floatT) *x1)
-{
-  /* Multiplies the complex column spinor (x0, x1) by the SU(2) matrix u */
-  /* and puts the result in (x0,x1).  */
-  /* Thus x <- u * x          */
-  /* C. DeTar 3 Oct 1990 */
-  
-  GCOMPLEX(floatT) z0, z1, t0, t1;
-
-  t0 = *x0; t1 = *x1;
-
-  z0 = u->operator()(0,0) * t0;
-  z1 = u->operator()(0,1) * t1;
-  *x0 = z0 + z1;
-  z0 = u->operator()(1,0) * t0;
-  z1 = u->operator()(1,1) * t1;
-  *x1 = z0 + z1;
-
-} /* m_su2_mat_vec_elem_n.c */
-
-
 
 // project to su3 by maximizing Re(Tr(guess*(toproj)))
 // ported from Milc by Dan Hoying, 2022
@@ -954,12 +915,12 @@ __device__ __host__ int su3unitarize_hits(
    floatT v0,v1,v2,v3, vsq;
    floatT z;
    GSU3<floatT> action(0);
-   GSU2_mat<floatT> h;
+//   GSU2_mat<floatT> h;
    const int Nc = 3;
    double conver, old_tr = 0, new_tr;
 
    if(tol > 0)
-     old_tr = realtrace_su3(*w,*q)/3.0; // use tr_d(a,b) !!
+     old_tr = tr_d(*w,*q)/3.0;
    conver = 1.0;
    assert(!std::isnan(old_tr));
 
@@ -991,19 +952,26 @@ __device__ __host__ int su3unitarize_hits(
       if(z == 0.){z = 1.;v0 = 1.;}
       else {v0 = v0/z; v1 = v1/z; v2 = v2/z; v3 = v3/z;}
 
-      /* Elements of SU(2) matrix */
+      GCOMPLEX(floatT) x00, x01;
+      GSU2<floatT> zz;
+      x00=GCOMPLEX(floatT)(v0,-v3);
+      x01=GCOMPLEX(floatT)(-v2,-v1);
+      zz=GSU2<floatT>(x00,x01);
+      if( ina==0 && inb ==1){
+          *w=sub12(zz,*w);
+      }
+      else if( ina==0 && inb ==2){
+          *w=sub13(zz,*w);
+      }
+      else if( ina==1 && inb ==2){
+          *w=sub23(zz,*w);
+      }
 
-      h(0,0) = GCOMPLEX(floatT)( v0,-v3);
-      h(0,1) = GCOMPLEX(floatT)(-v2,-v1);
-      h(1,0) = GCOMPLEX(floatT)( v2,-v1);
-      h(1,1) = GCOMPLEX(floatT)( v0, v3);
 
-      /* update the link */
-      left_su2_hit_n(&h,ina,inb,w);
 
       /* convergence measure every third hit */
       if(tol>0 && (index1 % 3) == 2){
-	new_tr = realtrace_su3(*w,*q)/3.; // use tr_d(a,b) !!
+        new_tr = tr_d(*w,*q)/3.0;
 	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
 	old_tr = new_tr;
       }
