@@ -18,6 +18,8 @@
 #define DEFAULT_NBLOCKS_LOOP  128
 #define DEFAULT_NBLOCKS_CONST  256
 
+#define MAX_THREADS_PER_BLOCK  256
+
 template<bool onDevice, class Accessor>
 class RunFunctors {
 public:
@@ -133,7 +135,9 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    if (elems_y * elems_z > MAX_THREADS_PER_BLOCK)
+        throw new std::runtime_error(stdLogger.fatal("Minimum number of threads per block ", elems_y * elems_z, " is higher than maximum number of threads per block ", MAX_THREADS_PER_BLOCK));
+    blockDim.x = BlockSize / (elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -197,7 +201,9 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    if (elems_y * elems_z > MAX_THREADS_PER_BLOCK)
+        throw new std::runtime_error(stdLogger.fatal("Minimum number of threads per block ", elems_y * elems_z, " is higher than maximum number of threads per block ", MAX_THREADS_PER_BLOCK));
+    blockDim.x = BlockSize / (elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -276,7 +282,9 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    if (elems_y * elems_z > MAX_THREADS_PER_BLOCK)
+        throw new std::runtime_error(stdLogger.fatal("Minimum number of threads per block ", elems_y * elems_z, " is higher than maximum number of threads per block ", MAX_THREADS_PER_BLOCK));
+    blockDim.x = BlockSize / (elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -364,7 +372,9 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    if (elems_y * elems_z > MAX_THREADS_PER_BLOCK)
+        throw new std::runtime_error(stdLogger.fatal("Minimum number of threads per block ", elems_y * elems_z, " is higher than maximum number of threads per block ", MAX_THREADS_PER_BLOCK));
+    blockDim.x = BlockSize / (elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -448,7 +458,9 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    if (elems_y * elems_z > MAX_THREADS_PER_BLOCK)
+        throw new std::runtime_error(stdLogger.fatal("Minimum number of threads per block ", elems_y * elems_z, " is higher than maximum number of threads per block ", MAX_THREADS_PER_BLOCK));
+    blockDim.x = BlockSize / (elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
