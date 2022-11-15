@@ -1,5 +1,5 @@
 /*
- * main_GeneralFunctorTest.cpp
+ * main_TaylorMeasurementTest.cpp
  *
  * This file is a test for the measurement of the
  * taylor coefficients of Z(mu)
