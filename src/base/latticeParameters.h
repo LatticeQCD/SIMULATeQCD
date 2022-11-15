@@ -23,11 +23,11 @@ public:
     Parameter<std::string> GaugefileName;
     Parameter<std::string> format;
     Parameter<std::string> endianness;  //!< one of "little", "big", "auto"
+    Parameter<std::string> measurements_dir;
+    Parameter<bool> use_unit_conf;
     //my parameters
     Parameter<std::string> format_out;
     Parameter<int> prec_out;
-    Parameter<std::string> measurements_dir;
-    Parameter<bool> use_unit_conf;
     LatticeParameters() {
         add(latDim, "Lattice");
         add(nodeDim, "Nodes");
@@ -38,11 +38,11 @@ public:
         addDefault(endianness, "endianness", std::string("auto"));
         addOptional(confnumber, "conf_nr");
         addOptional(streamName, "stream");
+        add(measurements_dir, "measurements_dir");
+        addDefault(use_unit_conf, "use_unit_conf", false);
         //my parameters
         addDefault(format_out, "format_out",std::string("nersc"));
         addDefault(prec_out, "prec_out",0);
-        add(measurements_dir, "measurements_dir");
-        addDefault(use_unit_conf, "use_unit_conf", false);
     }
 
     //! Set by providing values, mainly used in test routines
@@ -58,12 +58,13 @@ public:
         std::stringstream fext;
         fext.fill('0');
         fext << "_s" << std::setw(3) << latDim[0];
-        fext << "t" << std::setw(2) << latDim[3];
-        fext << "_b" << std::setw(7) << ((int) (beta() * 100000));
+        fext << "t"  << std::setw(2) << latDim[3];
+        fext << "_b" << std::setw(5) << ((int) (beta() * 1000));
+        //fext << "_b" << std::setw(57) << ((int) (beta() * 100000));
         if (streamName.isSet())
             fext << "_" << streamName();
-        if (confnumber.isSet())
-            fext << "_U" << std::setw(9) << (confnumber());
+        //if (confnumber.isSet())
+        //    fext << "_U" << std::setw(9) << (confnumber());
         return fext.str();
     }
 };

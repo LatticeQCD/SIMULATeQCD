@@ -22,7 +22,6 @@
 #include <cstdio>
 
 #define USE_GPU true
-//define precision
 #if SINGLEPREC
 #define PREC float
 #else
@@ -152,8 +151,10 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     datName.fill('0');
     // get the data file name
     if ( lp.RK_method() == "adaptive_stepsize" || lp.RK_method() == "adaptive_stepsize_allgpu" )
-        prefix << lp.force() << "Flow_acc" << std::fixed << std::setprecision(6)
-               << lp.accuracy() << "_sts" << std::fixed << std::setprecision(6) << lp.start_step_size();
+        prefix << lp.force() << "Flow_acc" << std::fixed << std::setprecision(3)
+               << lp.accuracy() << "_sts" << std::fixed << std::setprecision(3) << lp.start_step_size();
+        //prefix << lp.force() << "Flow_acc" << std::fixed << std::setprecision(6)
+        //       << lp.accuracy() << "_sts" << std::fixed << std::setprecision(6) << lp.start_step_size();
     else {
         prefix << lp.force() << "Flow";
         if (not lp.ignore_fixed_startstepsize()) {
@@ -354,6 +355,12 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     if (lp.use_unit_conf()){
         rootLogger.info("Using unit configuration for tests/benchmarks");
         gauge.one();
+    } else if(lp.format()=="milc"){
+        rootLogger.info("Read configuration");
+        gauge.readconf_milc(lp.GaugefileName());
+    } else if(lp.format()=="ildg"){
+        rootLogger.info("Read configuration");
+        gauge.readconf_ildg(lp.GaugefileName());
     } else {
         rootLogger.info("Read configuration");
         gauge.readconf_nersc(lp.GaugefileName());
@@ -434,7 +441,12 @@ void run(gradFlowClass &gradFlow, Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         //! -------------------------------calculate observables on flowed field----------------------------------------
 
         if (lp.save_conf() && gradFlow.checkIfnecessaryTime()){
-            gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time));
+            if(lp.format_out()=="nersc")
+                gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time)+"_nersc_cn."+std::to_string(lp.confnumber()));
+            else if(lp.format_out()=="ildg")
+                gauge.writeconf_ildg( datNameConf.str() + "_FT" + std::to_string(flow_time)+"_ildg_cn."+std::to_string(lp.confnumber()),3,lp.prec_out());
+            else
+                rootLogger.error("output format should nersc or ildg");
         }
 
         if (lp.plaquette()) {

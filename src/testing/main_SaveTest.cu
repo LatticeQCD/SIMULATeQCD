@@ -83,32 +83,42 @@ int main(int argc, char *argv[]){
 	const size_t HaloDepth = 1;
 	typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
+    rootLogger.info("output precision = ", param.prec_out());
 
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge( commBase);
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test( commBase);
 	Gaugefield<PREC, USE_GPU,HaloDepth> gauge_test1(commBase);
 
-    rootLogger.info("Read configuration");
-
+    rootLogger.info("Read ildg sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
 	gauge.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB");
 	//gauge.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB");
-
-	rootLogger.info("Store Lattice");
-
 	gauge.updateAll();
-    //gauge_in_ildg.updateAll();
-	gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
-    gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
-	rootLogger.info("Read test configuration");
+    //rootLogger.info("Write ildg sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
+	//gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
+    //gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg.l8t4b3360_bieHB_test",3,param.prec_out());
 
-	//gauge_test.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
-	gauge_test.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test");
-	gauge_test.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_ildg.l8t4b3360_bieHB_test",3,param.prec_out());
-	gauge_test1.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_ildg.l8t4b3360_bieHB_test");
+    //rootLogger.info("Read ildg sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
+	//gauge.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
+	//gauge.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test");
+    //gauge.updateAll();
 
-	gauge_test.updateAll();
-	rootLogger.info("Testing the configuration");
+    rootLogger.info("Write ildg sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
+	gauge.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test",2,2);
+	/*gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test",3,param.prec_out());
+    gauge.readconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test");
+    gauge.updateAll();
+    gauge.writeconf_nersc("/home/sali/measurements/measurePlaquette/readWriteConf/nersc.l8t4b3360_bieHB_test_",3,param.prec_out());*/
+    rootLogger.info("Read ildg sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
+    gauge_test.readconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/nersc_ildg.l8t4b3360_bieHB_test");
+    gauge_test.updateAll();
+    rootLogger.info("Write ildg sssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssss");
+	gauge_test.writeconf_ildg("/home/sali/measurements/measurePlaquette/readWriteConf/ildg_nersc_ildg.l8t4b3360_bieHB_test",3,2);
+	//gauge_test.updateAll();
+
+
+
+    rootLogger.info("Testing the configuration");
 
     GaugeAction<PREC, USE_GPU,HaloDepth,R18> gAction(gauge);
 
@@ -144,7 +154,7 @@ int main(int argc, char *argv[]){
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
     }
 
-    pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge_test,gauge_test1);
+    /*pass = compare_fields<PREC,HaloDepth,USE_GPU,R18>(gauge_test,gauge_test1);
 
     if(!pass){
 		rootLogger.info(CoutColors::red ,  "writeconf failed: Binaries are not equal.", CoutColors::reset);
@@ -152,7 +162,7 @@ int main(int argc, char *argv[]){
 	} else {
 		rootLogger.info(CoutColors::green , "Congratulations, writeconf worked!", CoutColors::reset);
 		remove("../test_conf/test_l20t20b06498a_nersc.302500");
-    }
+    }*/
    
     return 0;
 }

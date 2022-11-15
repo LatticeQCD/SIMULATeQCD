@@ -26,7 +26,7 @@ uint32_t checksum_crc32_sitedata(const char *ptr_buffer, size_t bytes){
             uint32_t cbORcrc= (char_buffer ^ checksum_crc32) & 1;
             checksum_crc32>>=1;
             if(cbORcrc)
-                checksum_crc32= checksum_crc32 ^ 0xEDB88320;
+                checksum_crc32= checksum_crc32 ^ 0xEDB88320; //0xEDB88320 is the so-called reversed representation of the CRC32 generator polynomial
             char_buffer>>=1;
         }
     }
