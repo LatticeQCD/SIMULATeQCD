@@ -188,7 +188,7 @@ public:
     __device__ __host__ void random(uint4 *state);                 // set links randomly
     __device__ __host__ void gauss(uint4 *state);                  // set links gauss
     __device__ __host__ void su3unitarize();                       // project to su3 using first two rows of link
-    __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol); // project to su3 using first two rows of link
+    __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol); // project to su3 by maximizing Re(Tr(guess*(toproj)))
     __device__ __host__ void su3reconstruct12()                    // project to su3 using first two rows of link
     {
         _e20 = GCOMPLEX(floatT)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
@@ -915,7 +915,6 @@ __device__ __host__ int su3unitarize_hits(
    floatT v0,v1,v2,v3, vsq;
    floatT z;
    GSU3<floatT> action(0);
-//   GSU2_mat<floatT> h;
    const int Nc = 3;
    double conver, old_tr = 0, new_tr;
 
@@ -984,7 +983,6 @@ __device__ __host__ int su3unitarize_hits(
    return status;
 
 }
-
 
 
 // project to su3 using first two rows of link

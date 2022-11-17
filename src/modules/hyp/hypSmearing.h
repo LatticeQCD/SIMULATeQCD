@@ -5,6 +5,7 @@
 #include "../../gauge/gaugefield.h"
 #include "../../gauge/constructs/fat7LinkConstructs.h"
 #include "hypParameters.h"
+#include "../../gauge/gaugefield_device.cpp"
 
 template<class floatT, size_t HaloDepth, CompressionType comp, int linkNumber>
 class HypStaple {
@@ -36,7 +37,7 @@ public:
     case 3:
       return hypThreeLinkStaple_first_level<floatT, HaloDepth, comp>(_gAcc_0, site, _excluded_dir1, _excluded_dir2);
     case 4:
-      return su3unitarize<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, site);
+      return su3unitarize_project<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, site);
     default:
       return gsu3_zero<floatT>();
     }
