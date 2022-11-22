@@ -288,7 +288,7 @@ public:
         if (param.collected_output_file.isSet()) {
             // write these collected measurements into a file
             FileWriter collected_output_file(gauge.getComm(), param);
-            collected_output_file.createFile(param.collected_output_file());
+            collected_output_file.createFile(std::to_string(mass) + "_" + param.collected_output_file());
             LineFormatter header = collected_output_file.header();
             header << "ID   ";
             header << "N Random Vectors   ";
@@ -313,7 +313,7 @@ public:
         use_output = param.output_file.isSet();
         if (!use_output)
             return;
-        output_file.createFile(param.output_file());
+        output_file.createFile(std::to_string(mass) + "_" + param.output_file());
         LineFormatter header = output_file.header();
         header << "Mass ";
         header << "Random Vector ";

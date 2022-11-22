@@ -9,22 +9,25 @@
 #      residue: residue for inversions
 #        cgMax: max cg steps for multi mass solver
 #
-#    rand_flag: new random numbers(0)/read in random numbers(1)
-#    rand_file: file name for random numbers and infos
+#            output_file: The file to put the individual randomvector results into. Each mass gets its own file with the respective mass prefix.
+#  collected_output_file: The file to put the accumulated end results into. Each mass gets its own file with the respective mass prefix.
+#
 #         seed: myseed
-#    load_conf: flag_load (0=identity, 1=random, 2=getconf)
 #    Gaugefile: Configuration to be read in
-#    conf_nr: configuration number
+#
+# num_random_vectors: The number of random vectors in the trace estimation for the operators
+#     valence_masses: The masses at which to measure all operators
+#       operator_ids: The operator ids to measure.
+#                     The ids represent the measured operator directly in the decimal representation.
+#                     Each digit represents a term with a derivative of order digit-1.
+#                     ID 1 is tr(D^-1), ID 11 is tr((D^-1) (D^-1)), ID 12 is tr((D^-1) (D^-1 dDdmu))
 #
 Lattice     = 32 32 32 8
-Nodes       = 1 2 1 1
+Nodes       = 1 1 4 1
 beta        = 6.285
 
 use_naik_epsilon = 1
 mu0          = 0.0
-
-output_file = charm_out1.txt
-collected_output_file = charm_collected1.txt
 
 residue    = 1e-12
 cgMax       = 20000
@@ -33,7 +36,5 @@ seed        = 185727
 Gaugefile   = ../test_conf/l328f21b6285m0009875m0790a_019.995
 
 num_random_vectors = 32
-valence_masses = 0.0009875 0.079
-#operator_ids = 1 2 3 4 5 12 21 13 31 23 32
-#operator_ids = 1 2 3 4 5 11 21 22 23 24 31 32 33 221 223 2221 2222
-operator_ids = 1 2 11
+valence_masses = 0.079
+operator_ids = 1 2 3 4 5 11 12 13 14 15 21 22 23 24 25
