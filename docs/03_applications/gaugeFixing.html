@@ -165,6 +165,29 @@ given under <code class="docutils literal notranslate"><span class="pre">paramet
 <p>If you would like to implement your own observable in this application, please follow the examples of the Wilson line
 and Polyakov loop correlators.</p>
 </section>
+<section id="polyakov-loop-correlators">
+<h2>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Permalink to this headline"></a></h2>
+<p>The Polyakov loop is gauge-invarant, but several correlators related to the Polyakov loop are not, and are of
+interest to renormalize the Polyakov loop or extract the Debye mass.
+The gauge invariant color-averaged Polyakov loop correlator can be decomposed
+into color singlet <span class="math notranslate nohighlight">\(F_1\)</span> and color octet <span class="math notranslate nohighlight">\(F_8\)</span>
+contributions. In particular</p>
+<p><span class="math notranslate nohighlight">\(
+  \exp\left[-\frac{F_{q\bar{q}}(r,T)}{T}\right]
+  =\frac{1}{9}\exp\left[-\frac{F_1(r,T)}{T}\right]
+   +\frac{8}{9}\exp\left[-\frac{F_8(r,T)}{T}\right],
+\)</span></p>
+<p>where</p>
+<p><span class="math notranslate nohighlight">\(
+ \exp\left[-F_1(r,T)/T\right]
+   =\frac{1}{3}\left&lt;\text{tr}\; L_{\vec{x}}L^\dagger_{\vec{y}}\right&gt;
+  \exp\left[-F_8(r,T)/T\right]
+    =\frac{9}{8}\left&lt; P_{\vec{x}}P^\dagger_{\vec{y}}\right&gt;
+     -\frac{1}{24}\left&lt; \text{tr}\; L_{\vec{x}}L^\dagger_{\vec{y}}\right&gt;,
+\)</span></p>
+<p>which clearly depends on the gauge. More information about the implementation of these
+observables can be found <a class="reference internal" href="../05_modules/correlator.html"><span class="doc std std-doc">here</span></a>.</p>
+</section>
 </section>
 
 
