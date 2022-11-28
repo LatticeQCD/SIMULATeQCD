@@ -75,6 +75,41 @@ By comparing the expected `checksum` saved in the header of an ILDG file with th
 calculated `checksum` upon read in, one can tell whether the file has been corrupted.
  
 
+### The checksum
+
+What is `crc32`?
+CRC is the abbreviation for Cyclic Redundancy Code, which generates the checksum from
+binary data. If the width of the checksum is a `32-bit` it is renamed as `crc32`. The aim of the 
+checksum is to enable the receiver of gauge configurations to determine whether the binary 
+has been corrupted or not. To do this, the configuration generator constructs a value (called a checksum)
+that is a function of the binary data, and appends it to the header. The receiver can then use
+the same function to calculate the checksum of the received configuration data and compare it 
+with the appended checksum to see if the binary data was correctly received. A checksum could 
+range from an `8-bit` to `32-bit` number. At least two aspects are necessary to generate a good 
+checksum: First the register width should be wide enough to keep the probability of failure low
+(e.g. a probability of failure for `32-bits` is `1/2^32`). Secondly, the formula which gives the 
+checksum should be very sensitive to the input data. To compute checksum one takes a CRC 
+polynomial and erforms some bit-wise operations on the binary data w.r.t. the polynomial. This 
+checksum is computed on each site. All the checksums from sites are combined to one by 
+performing again some bit-wise operations. To make it stronger one takes a lexicographic rotation 
+of the checksum coming from each site. As a result one gets two checksums. The 
+function 
+```C++
+uint32_t checksum_crc32_sitedata(const char *ptr_buffer, size_t bytes)
+```
+computes the checksum `crc32` from the site data (4 links, each link is 3x3 matrix of complex numbers).
+The function 
+```C++
+void checksum_crc32_combine(Checksum  *checksum_crc32,size_t global_vol, uint32_t cs_crc32_sd[])
+```
+combines all checksums from sites and performs the lexicographic rotation.
+The function 
+```C++
+void checksum_crc32_accumulator(Checksum *checksum_crc32, size_t site_index, char *ptr_buffer, size_t sitedata_bytes)
+``` 
+does the same job as the two above. But it should only be used on single GPU.
+
+
 ### How a configuration is saved on the Lattice Data Grid
 
 Once the ILDG configuration is packaged as a LIME file in the way specified above,

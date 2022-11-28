@@ -82,3 +82,30 @@ SaveConfig       = 0     # don't saved the gauge-fixed configuration
 ```
 If you would like to implement your own observable in this application, please follow the examples of the Wilson line
 and Polyakov loop correlators.
+
+## Polyakov loop correlators
+
+The Polyakov loop is gauge-invarant, but several correlators related to the Polyakov loop are not, and are of
+interest to renormalize the Polyakov loop or extract the Debye mass.
+The gauge invariant color-averaged Polyakov loop correlator can be decomposed
+into color singlet $F_1$ and color octet $F_8$
+contributions. In particular
+
+$
+  \exp\left[-\frac{F_{q\bar{q}}(r,T)}{T}\right]
+  =\frac{1}{9}\exp\left[-\frac{F_1(r,T)}{T}\right]
+   +\frac{8}{9}\exp\left[-\frac{F_8(r,T)}{T}\right],
+$
+
+where
+
+$
+ \exp\left[-F_1(r,T)/T\right]
+   =\frac{1}{3}\left<\text{tr}\; L_{\vec{x}}L^\dagger_{\vec{y}}\right>
+  \exp\left[-F_8(r,T)/T\right]
+    =\frac{9}{8}\left< P_{\vec{x}}P^\dagger_{\vec{y}}\right>
+     -\frac{1}{24}\left< \text{tr}\; L_{\vec{x}}L^\dagger_{\vec{y}}\right>,
+$
+
+which clearly depends on the gauge. More information about the implementation of these
+observables can be found [here](../05_modules/correlator.md).

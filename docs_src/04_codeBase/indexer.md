@@ -1,14 +1,12 @@
 # Indexer
 
-**This page is work in progress!**
-
-When working with 4d lattices, we need a way to map the lattices sites (given by spacetime coordinates $(x,y,z,t)$ to the computer memory, 
+When working with 4-$d$ lattices, we need a way to map the lattices sites (given by spacetime coordinates $(x,y,z,t)$ to the computer memory, 
 which is 1-dimensional. This gets more complicated when using multi-GPU, since we have to care about sub-lattices and halos.
 For many algorithms it is convenient to characterize sites as even or odd. A site is even (odd) if $x+y+z+t$ is even (odd).
 
 ## Terminology
 
-The 1d memory index (which is just an integer) is often called `isite` throughout the code. 
+The 1-$d$ memory index (which is just an integer) is often called `isite` throughout the code. 
 The four spacetime coordinates of a lattice site are stored in a `struct` named `sitexyzt`.
 When using multi-GPU we use the following terminology:
 
@@ -45,7 +43,7 @@ size_t siteLocal_eo(const sitexyzt coord) {
 ```
 
 This can of course also be used for objects that only store the even part, as adjacent odd and even sites are mapped to same index.
-Sometimes one wants to obtain the coordinates from the corresponding 1d memory index, i.e one wants to deindex. 
+Sometimes one wants to obtain the coordinates from the corresponding 1-$d$ memory index, i.e one wants to deindex. 
 That can be done like this:
 
 ```C++
@@ -86,7 +84,7 @@ sitexyzt de_site(const size_t site) {
 }
 ```
 
-Obtaining only either even or odd sites from the 1d memory index 
+Obtaining only either even or odd sites from the 1-$d$ memory index 
 is done in a very similar way, except we dictate the parity:
 
 ```C++
@@ -115,12 +113,12 @@ In `SIMULATeQCD`, there are four `struct`s that can store the spacetime coordina
 `gSite`: 
 This `struct` stores the spacetime coordinates and memory index for one lattice site. 
 More specifically, it stores  
-* the 1d memory index of the bulk sub-lattice (`isite`)
-* the 1d memory index of the full sub-lattice (`isiteFull`)
+* the 1-$d$ memory index of the bulk sub-lattice (`isite`)
+* the 1-$d$ memory index of the full sub-lattice (`isiteFull`)
 * the spacetime coordinates of the lattice site on the bulk sublattice (`coords`)
 * the spacetime coordinates fo the lattice site on the full sublattice (`coordsFull`)
 
-You can create gSite objects using the static class `GIndexer` (see below). You need to remember with which template parameters 
+You can create `gSite` objects using the static class `GIndexer` (see below). You need to remember with which template parameters 
 you create `gSite` objects, as they don't store any information about that.
 If you read somewhere something like "This function takes an odd `gSite` as input", then that means that the `gSite` 
 should have been created using `GIndexer<Odd,myHaloDepth>`.

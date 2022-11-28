@@ -1,6 +1,5 @@
 # Dslash
 
-**This page is work in progress!**
 
 This module implements the Dslash operator for staggered and highly improved staggered quark (HISQ) fermions. It is a sparse matrix-vector product that is implemented as a 4 dimensional stencil kernel with nearest and third-nearest neighbor terms. For HISQ fermions, the matrix-vector product takes the form
 $
@@ -47,4 +46,4 @@ A HisqDSlash object is constructed with:
 HisqDSlash(Gauge_t<R18> &gaugefield_smeared, Gauge_t<U3R14> &gaugefield_Naik, const double mass, floatT naik_epsilon = 0.0,
                std::string spinorName = "SHARED_HisqDSlashSpinor")
 ```
-Here `gaugefield_smeared` refers to $V_{x,\mu}$ and `gaugefield_Naik` to $W_{x,\mu}$. Note the different compression types for the gauge fields: the field entering the third-nearest neighbor hopping term uses `CompressionType comp=U3R14` in order to save memory bandwidth. `const double mass` specifies the quark mass that enters `void MdaggM` and `floatT naik_epsilon` specifies the coefficient $\epsilon$ that can be included in the Naik term. The last parameter that can be given to the constructor is a string identifiying the memory allocated for a temporary spinor that is used internally. By default multiple instances of HisqDslash will share the same memory for this temporary spinor. See the documentation on `MemoryManagement` for further informations.
+Here `gaugefield_smeared` refers to $V_{x,\mu}$ and `gaugefield_Naik` to $W_{x,\mu}$. Note the different compression types for the gauge fields: the field entering the third-nearest neighbor hopping term uses `CompressionType comp=U3R14` in order to save memory bandwidth. `const double mass` specifies the quark mass that enters `void MdaggM` and `floatT naik_epsilon` specifies the coefficient $\epsilon$ that can be included in the Naik term. The last parameter that can be given to the constructor is a string identifiying the memory allocated for a temporary spinor that is used internally. By default multiple instances of HisqDslash will share the same memory for this temporary spinor. See the documentation on `MemoryManagement` for further information.

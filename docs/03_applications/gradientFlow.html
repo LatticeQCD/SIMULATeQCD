@@ -85,12 +85,12 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="gradient-flow">
 <h1>Gradient Flow<a class="headerlink" href="#gradient-flow" title="Permalink to this headline"></a></h1>
-<p>Currently there are two different Implementations of the Gradient Flow:
-The Wilson flow and the Zeuthen flow (= Symanzik improved flow. See
-<a class="reference external" href="https://arxiv.org/abs/1508.05552">arxiv:1508.05552</a>).<br />
+<p>Currently there are two different implementations of the gradient flow,
+the Wilson flow and the Zeuthen flow (Symanzik improved flow. See
+<a class="reference external" href="https://arxiv.org/abs/1508.05552">arxiv:1508.05552</a>).
 The flow can be integrated using a standard Runge Kutta 3 or an adaptive
 step size Runge Kutta 3.</p>
-<p>To compile the gradientFlow executable run:</p>
+<p>To compile the <code class="docutils literal notranslate"><span class="pre">gradientFlow</span></code> executable run:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">gradientFlow</span> <span class="o">-</span><span class="n">j</span><span class="o">&lt;</span><span class="n">NumberOfCores</span><span class="o">&gt;</span>
 </pre></div>
 </div>
@@ -306,6 +306,24 @@ integration will become unstable quickly and fail!</p></li>
 </section>
 <section id="observables">
 <h2>Observables<a class="headerlink" href="#observables" title="Permalink to this headline"></a></h2>
+<p>In the following, we list some details about some of the observables that can be calculated
+using the gradient flow application.</p>
+<section id="topological-charge">
+<h3>Topological charge<a class="headerlink" href="#topological-charge" title="Permalink to this headline"></a></h3>
+<p>We use the field theory motivated definition,</p>
+<p><span class="math notranslate nohighlight">\(
+  Q_L=a^4\sum_x q_L(x),
+\)</span></p>
+<p>where the sum is over all lattice sites and</p>
+<p><span class="math notranslate nohighlight">\(
+  q_L(x) = -\frac{1}{2^9\pi^2}\sum\limits_{\mu\nu\rho\sigma=\pm 1}^{\pm 4}
+         \tilde{\epsilon}_{\mu\nu\rho\sigma}
+         \;\text{tr}\;U^\Box_{\mu\nu}(x)U^\Box_{\rho\sigma}(x).
+\)</span></p>
+<p>This definition is plagued by UV fluctations, which makes it not generally non-integer before
+any gradient flow. Moreover it is a global quantity, so a reasonably chosen amount of
+gradient flow, which affects short-distance physics most strongly, is not expected to damage it.</p>
+</section>
 <section id="energy-momentum-tensor">
 <h3>Energy-Momentum Tensor<a class="headerlink" href="#energy-momentum-tensor" title="Permalink to this headline"></a></h3>
 <p>The energy-mementum tensor is calculated using blocking method, that is,
@@ -320,6 +338,12 @@ in the field strength tensor:</p>
 <span class="n">F_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">Plaq</span><span class="o">-</span><span class="n">Clover</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">Rect</span><span class="o">-</span><span class="n">Clover</span><span class="p">,</span>
 </pre></div>
 </div>
+</section>
+<section id="polyakov-loop-correlators">
+<h3>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Permalink to this headline"></a></h3>
+<p>These correlators related to Polyakov loops generally require
+<a class="reference internal" href="gaugeFixing.html"><span class="doc std std-doc">gauge fixing</span></a>. You can also learn more in the
+<a class="reference internal" href="../05_modules/correlator.html"><span class="doc std std-doc">correlator</span></a> article.</p>
 </section>
 </section>
 </section>
