@@ -9,7 +9,7 @@
 template <typename Vector>
 class LinearOperator{
 public:
-    virtual void applyMdaggM(Vector&, Vector&, bool update = true) = 0;
+    virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
 };
 
 

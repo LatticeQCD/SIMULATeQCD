@@ -1,9 +1,10 @@
 # Inverter (Conjugate Gradient)
 
 
-**This page is work in progress!** 
-
-The Conjugate Gradient (CG) inverter solves the equation $Ax=b$, where $A$ is a symmetric and positive definite matrix, $b$ an input vector and $x$ the solution vector. Different versions of the CG inverter are implemented in our code in the two classes ConjugateGradient and AdvancedMultiShiftCG. The matrix $A$ in our case is, up to now, always $M^{\dagger}M$, with $M$ being the fermion matrix.
+The Conjugate Gradient (CG) inverter solves the equation $Ax=b$, where $A$ is a symmetric and positive definite matrix, 
+$b$ an input vector and $x$ the solution vector. Different versions of the CG inverter are implemented in our code 
+in the two classes `ConjugateGradient` and `AdvancedMultiShiftCG`. The matrix $A$ in our case is, up to now, always $M^{\dagger}M$, 
+with $M$ being the fermion matrix.
 
 ## The Basic Algorithm 
 

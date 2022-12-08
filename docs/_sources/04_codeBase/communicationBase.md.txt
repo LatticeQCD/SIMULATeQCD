@@ -46,6 +46,15 @@ Halo communication proceeds by first copying halo information contiguously into 
 This requires translating from the sublattice's indexing scheme to the buffer's indexing
 scheme; the difference between these schemes is called the halo offset, 
 computed by `haloOffsetInfo` class.
+This class provides offsets for different halo segments 
+(stripe halo, corner halo, etc). These offsets and the buffer 
+base pointer are used to place the halo data at the correct position in the buffer. 
+An example for the corner halo would be:
+
+$
+\text{corner buffer pointer} = \text{buffer base pointer} +
+                                   \text{corner halo offset}.
+$
 
 In order to communicate, each sublattice needs to know something about his neighbors,
 for example their rank or whether they are on the same node. This information is

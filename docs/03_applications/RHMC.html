@@ -87,11 +87,19 @@
 <h1>Rational Hybrid Monte Carlo<a class="headerlink" href="#rational-hybrid-monte-carlo" title="Permalink to this headline"></a></h1>
 <p><a class="reference external" href="https://doi.org/10.1016/S0920-5632(99)85217-7">The rational hybrid Monte Carlo (RHMC)</a>
 algorithm is a way of updating gauge fields when simulating dynamical fermions.
-It uses a <a class="reference external" href="https://doi.org/10.1016/0550-3213(92)90263-B">three-step-size integrator</a>
-that profits from the <a class="reference external" href="https://doi.org/10.1016/S0370-2693(01)01102-9">Hasenbusch trick</a>.
-By default integration uses a leapfrog, but it is possible to use an Omelyan
-integrator on the largest scale, if you choose.
-The inverter is a <a class="reference internal" href="../05_modules/inverter.html"><span class="doc std std-doc">multi-shift conjugate gradient</span></a>.</p>
+The inverter is a <a class="reference internal" href="../05_modules/inverter.html"><span class="doc std std-doc">conjugate gradient</span></a>, with possibilities
+for multiple RHS and multiple shifts to boost performance.
+The <a class="reference internal" href="../05_modules/integrator.html"><span class="doc std std-doc">integrator</span></a> uses a leapfrog by default, but it
+can use an Omelyan on the largest scale.
+We use the HISQ/tree action, which is a tree-level improved
+Lüscher-Weisz action in the gauge sector. The relative
+weights of the plaquette and rectangle terms are</p>
+<p><span class="math notranslate nohighlight">\(
+    c_\text{plaq} = 5/4, 
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+    c_\text{rect} = -1/6.
+\)</span></p>
 <p>To use the RHMC class, the user will only have to call the constructor and two functions</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rhmc</span><span class="p">(</span><span class="n">RhmcParameters</span><span class="w"> </span><span class="n">rhmc_param</span><span class="p">,</span><span class="w"> </span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="n">onDevice</span><span class="p">,</span><span class="n">All</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeField</span><span class="p">,</span><span class="w"> </span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">rand_state</span><span class="p">)</span><span class="w"></span>
 <span class="kt">void</span><span class="w"> </span><span class="n">init_ratapprox</span><span class="p">(</span><span class="n">RationalCoeff</span><span class="w"> </span><span class="n">rat</span><span class="p">)</span><span class="w"></span>
@@ -117,15 +125,16 @@ momenta and calculates the Hamiltonian.
 Then it starts the MD evolution by calling <code class="docutils literal notranslate"><span class="pre">integrate()</span></code> from the integrator
 class (the integrator object is instantiated by the RHMC constructor). After
 the MD trajectory the new Hamiltonian is calculated and - depending on the
-arguments - the Metropolis step is done.</p>
+arguments - the Metropolis step is done.
+You can learn more about the smearing <a class="reference internal" href="../05_modules/gaugeSmearing.html"><span class="doc std std-doc">here</span></a>.</p>
 </section>
 <section id="multiple-pseudo-fermions">
 <h2>Multiple pseudo-fermions<a class="headerlink" href="#multiple-pseudo-fermions" title="Permalink to this headline"></a></h2>
 <p>When you want to use multiple pseudo-fermion fields, set <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> in the RHMC
 input file to the respective number. Be aware that this changes the way you
 have to construct your ratapprox: In the remez <code class="docutils literal notranslate"><span class="pre">in.file</span></code>, if you want to
-generate Nf flavors using Npf pseudo-fermion fields, you have to use Nf/Npf
-as an input (which is then used Npf times). Note that Nf/Npf must be &lt; 4.
+generate <span class="math notranslate nohighlight">\(N_f\)</span> flavors using <span class="math notranslate nohighlight">\(N_pf\)</span> pseudo-fermion fields, you have to use <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span>
+as an input (which is then used <span class="math notranslate nohighlight">\(N_{pf}\)</span> times). Note that <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span> must be &lt; 4.
 <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> is 1 per default.</p>
 </section>
 <section id="imaginary-chemical-potential">

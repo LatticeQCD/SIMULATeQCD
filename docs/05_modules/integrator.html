@@ -19,6 +19,8 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -104,12 +106,13 @@ gauge, heavy fermion and light fermion parts of the force. The Sexton-Weingarten
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">integrator.integrate</span></code> requires two <code class="docutils literal notranslate"><span class="pre">Spinorfield_container</span></code>s, a class that deals with <code class="docutils literal notranslate"><span class="pre">std::vector&lt;Spinorfield&gt;</span></code>.</p>
 </section>
-<section id="todo">
-<h2>TODO<a class="headerlink" href="#todo" title="Permalink to this headline"></a></h2>
-<ul class="simple">
-<li><p>Include the fermion force</p></li>
-<li><p>HISQ smearing after gauge field update</p></li>
-</ul>
+<section id="force-filters">
+<h2>Force filters<a class="headerlink" href="#force-filters" title="Permalink to this headline"></a></h2>
+<p>Sometimes during the force calculation, you have on some links gauge fields
+with near zero eigenvalues, and you get gigantic force term, because this turns out
+to be proportional to the inverse eigenvalue. To prevent local force spikes, this code
+demands an eigenvalue cutoff less than <span class="math notranslate nohighlight">\(\delta=5\times10^{-5}\)</span>. If the force filter is
+applied too much, this can lower the acceptance rate.</p>
 </section>
 </section>
 

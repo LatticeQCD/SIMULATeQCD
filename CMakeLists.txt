@@ -631,6 +631,13 @@ set_SIMULATeQCD_property(StackedSpinorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(StackedSpinorTest PRIVATE HALODEPTH_4=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests StackedSpinorTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_TaylorMeasurementTest.cpp src/modules/observables/DslashDerivative.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(TaylorMeasurementTest src/testing/main_TaylorMeasurementTest.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp 
+src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp src/modules/observables/DslashDerivative.cpp)
+set_SIMULATeQCD_property(TaylorMeasurementTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(TaylorMeasurementTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_NSTACK} NSTACKS_32=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests TaylorMeasurementTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_cudaAwareMPITest.cpp)
 add_SIMULATeQCD_executable(cudaAwareMPITest src/testing/main_cudaAwareMPITest.cpp)
 set_SIMULATeQCD_property(cudaAwareMPITest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

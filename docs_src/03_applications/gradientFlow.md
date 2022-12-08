@@ -1,12 +1,12 @@
 # Gradient Flow
 
-Currently there are two different Implementations of the Gradient Flow:
-The Wilson flow and the Zeuthen flow (= Symanzik improved flow. See
-[arxiv:1508.05552](https://arxiv.org/abs/1508.05552)).\
+Currently there are two different implementations of the gradient flow,
+the Wilson flow and the Zeuthen flow (Symanzik improved flow. See
+[arxiv:1508.05552](https://arxiv.org/abs/1508.05552)).
 The flow can be integrated using a standard Runge Kutta 3 or an adaptive
 step size Runge Kutta 3.
 
-To compile the gradientFlow executable run:
+To compile the `gradientFlow` executable run:
 ```
 make gradientFlow -j<NumberOfCores>
 ```
@@ -226,6 +226,30 @@ algorithm while using the fixed stepsize one!
 
 ## Observables
 
+In the following, we list some details about some of the observables that can be calculated
+using the gradient flow application.
+
+
+### Topological charge
+
+We use the field theory motivated definition,
+
+$
+  Q_L=a^4\sum_x q_L(x),
+$
+
+where the sum is over all lattice sites and
+
+$
+  q_L(x) = -\frac{1}{2^9\pi^2}\sum\limits_{\mu\nu\rho\sigma=\pm 1}^{\pm 4}
+         \tilde{\epsilon}_{\mu\nu\rho\sigma}
+         \;\text{tr}\;U^\Box_{\mu\nu}(x)U^\Box_{\rho\sigma}(x).
+$
+
+This definition is plagued by UV fluctations, which makes it not generally non-integer before
+any gradient flow. Moreover it is a global quantity, so a reasonably chosen amount of
+gradient flow, which affects short-distance physics most strongly, is not expected to damage it.
+
 ### Energy-Momentum Tensor
 
 The energy-mementum tensor is calculated using blocking method, that is,
@@ -242,3 +266,9 @@ Plaq-Clover = (1/8)*[Q_{mu,nu}(x) - Q_{mu,nu}^dagger(x)]
 Rect-Clover = (1/16)*[R_{mu,nu}(x) - R_{mu,nu}^dagger(x)]
 F_{mu,nu}(x) = 5/3 * Plaq-Clover - 1/3 * Rect-Clover,
 ```
+
+### Polyakov loop correlators
+
+These correlators related to Polyakov loops generally require
+[gauge fixing](gaugeFixing.md). You can also learn more in the
+[correlator](../05_modules/correlator.md) article.

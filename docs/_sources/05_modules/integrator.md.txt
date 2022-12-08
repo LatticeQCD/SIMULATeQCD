@@ -23,9 +23,11 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::inte
 
 `integrator.integrate` requires two `Spinorfield_container`s, a class that deals with `std::vector<Spinorfield>`.
 
-## TODO
+## Force filters
 
-- Include the fermion force 
-- HISQ smearing after gauge field update
-
+ Sometimes during the force calculation, you have on some links gauge fields
+ with near zero eigenvalues, and you get gigantic force term, because this turns out 
+ to be proportional to the inverse eigenvalue. To prevent local force spikes, this code
+ demands an eigenvalue cutoff less than $\delta=5\times10^{-5}$. If the force filter is
+ applied too much, this can lower the acceptance rate.
 

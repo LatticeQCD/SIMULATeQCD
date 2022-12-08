@@ -110,8 +110,8 @@ these objects to GPU thread indices.</p>
 for the plaquette is shown below:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">//! Functor to compute the plaquette given a gSite. It is called in a Kernel that is already defined by templates.</span>
 <span class="c1">//! You do not need to write a custom Kernel. See below.</span>
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
-<span class="k">struct</span><span class="w"> </span><span class="nc">SimplePlaq</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">struct</span> <span class="nc">SimplePlaq</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
 <span class="w">    </span><span class="c1">//! Functors can have member variables. Here we just need the accessor from the gaugefield reference.</span>
 <span class="w">    </span><span class="n">gaugeAccessor</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">gAcc</span><span class="p">;</span><span class="w"></span>
@@ -141,7 +141,7 @@ for the plaquette is shown below:</p>
 
 
 <span class="c1">//! Wrapper to compute the plaquette using the functor &quot;SimplePlaq&quot;</span>
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
 <span class="n">floatT</span><span class="w"> </span><span class="n">compute_plaquette</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gauge</span><span class="p">,</span><span class="w"> </span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">latContainer</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 
 <span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span><span class="w"></span>

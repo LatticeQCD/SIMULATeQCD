@@ -162,6 +162,40 @@ in the binary file; indeed if even a single bit is changed, the checksum changes
 By comparing the expected <code class="docutils literal notranslate"><span class="pre">checksum</span></code> saved in the header of an ILDG file with the
 calculated <code class="docutils literal notranslate"><span class="pre">checksum</span></code> upon read in, one can tell whether the file has been corrupted.</p>
 </section>
+<section id="the-checksum">
+<h3>The checksum<a class="headerlink" href="#the-checksum" title="Permalink to this headline"></a></h3>
+<p>What is <code class="docutils literal notranslate"><span class="pre">crc32</span></code>?
+CRC is the abbreviation for Cyclic Redundancy Code, which generates the checksum from
+binary data. If the width of the checksum is a <code class="docutils literal notranslate"><span class="pre">32-bit</span></code> it is renamed as <code class="docutils literal notranslate"><span class="pre">crc32</span></code>. The aim of the
+checksum is to enable the receiver of gauge configurations to determine whether the binary
+has been corrupted or not. To do this, the configuration generator constructs a value (called a checksum)
+that is a function of the binary data, and appends it to the header. The receiver can then use
+the same function to calculate the checksum of the received configuration data and compare it
+with the appended checksum to see if the binary data was correctly received. A checksum could
+range from an <code class="docutils literal notranslate"><span class="pre">8-bit</span></code> to <code class="docutils literal notranslate"><span class="pre">32-bit</span></code> number. At least two aspects are necessary to generate a good
+checksum: First the register width should be wide enough to keep the probability of failure low
+(e.g. a probability of failure for <code class="docutils literal notranslate"><span class="pre">32-bits</span></code> is <code class="docutils literal notranslate"><span class="pre">1/2^32</span></code>). Secondly, the formula which gives the
+checksum should be very sensitive to the input data. To compute checksum one takes a CRC
+polynomial and erforms some bit-wise operations on the binary data w.r.t. the polynomial. This
+checksum is computed on each site. All the checksums from sites are combined to one by
+performing again some bit-wise operations. To make it stronger one takes a lexicographic rotation
+of the checksum coming from each site. As a result one gets two checksums. The
+function</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">checksum_crc32_sitedata</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>computes the checksum <code class="docutils literal notranslate"><span class="pre">crc32</span></code> from the site data (4 links, each link is 3x3 matrix of complex numbers).
+The function</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_combine</span><span class="p">(</span><span class="n">Checksum</span><span class="w">  </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="kt">size_t</span><span class="w"> </span><span class="n">global_vol</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cs_crc32_sd</span><span class="p">[])</span><span class="w"></span>
+</pre></div>
+</div>
+<p>combines all checksums from sites and performs the lexicographic rotation.
+The function</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_accumulator</span><span class="p">(</span><span class="n">Checksum</span><span class="w"> </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site_index</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">sitedata_bytes</span><span class="p">)</span><span class="w"></span>
+</pre></div>
+</div>
+<p>does the same job as the two above. But it should only be used on single GPU.</p>
+</section>
 <section id="how-a-configuration-is-saved-on-the-lattice-data-grid">
 <h3>How a configuration is saved on the Lattice Data Grid<a class="headerlink" href="#how-a-configuration-is-saved-on-the-lattice-data-grid" title="Permalink to this headline"></a></h3>
 <p>Once the ILDG configuration is packaged as a LIME file in the way specified above,
