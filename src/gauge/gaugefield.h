@@ -66,6 +66,10 @@ public:
 
     void readconf_milc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
+    /// read in a OPENQCD file
+    void readconf_openqcd(const std::string &fname);
+
+    void readconf_openqcd_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
     /// write gaugefield to NERSC file
     void writeconf_nersc(const std::string &fname, int rows = 2,

@@ -361,8 +361,17 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         rootLogger.info("Using unit configuration for tests/benchmarks");
         gauge.one();
     } else {
-        rootLogger.info("Read configuration");
-        gauge.readconf_nersc(lp.GaugefileName());
+        if (lp.format() == "nersc") {
+            gauge.readconf_nersc(lp.GaugefileName());
+        } else if (lp.format() == "ildg") {
+            gauge.readconf_ildg(lp.GaugefileName());
+        } else if (lp.format() == "milc") {
+            gauge.readconf_milc(lp.GaugefileName()); 
+        } else if (lp.format() == "openqcd") {
+            gauge.readconf_openqcd(lp.GaugefileName());
+        } else {
+            throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", lp.format())));
+        }
     }
     gauge.updateAll();
 

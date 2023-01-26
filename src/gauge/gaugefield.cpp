@@ -201,6 +201,20 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_milc(const std::stri
     this->su3latunitarize();
 }
 
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
+void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_openqcd(const std::string &fname) {
+
+    if(onDevice) {
+        rootLogger.info("readconf_openqcd: Reading OPENQCD configuration ",fname);
+        GSU3array<floatT, false, comp>  lattice_host(GInd::getLatData().vol4Full*4);
+        readconf_openqcd_host(lattice_host.getAccessor(),fname);
+        _lattice.copyFrom(lattice_host);
+    } else {
+        readconf_openqcd_host(getAccessor(),fname);
+    }
+//    this->su3latunitarize();
+}
+
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_nersc_host(gaugeAccessor<floatT,comp> gaugeAccessor,
@@ -365,6 +379,96 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
     if (!milc.checksums_match()) {
         throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
+}
+
+
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
+void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_openqcd_host(gaugeAccessor<floatT,comp> gaugeAccessor,
+                                                                       const std::string &fname)
+{
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    std::ifstream in;
+    if (this->getComm().IamRoot())
+        in.open(fname.c_str(), std::ios::in | std::ios::binary);
+
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+
+    const int bytes_per_site = 9 * 2 * 4 * 8;
+    const int bytes_per_su3 = 9 * 2 * 8;
+
+    
+
+    this->getComm().initIOBinary(fname, 0, bytes_per_site, 24, global, local, READ);
+
+    std::vector<char> buf(bytes_per_site*2);
+    
+    typedef GIndexer<All, HaloDepth> GInd;
+    for (size_t t = 0; t < GInd::getLatData().lt; t++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) 
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t z = 0; z < GInd::getLatData().lz; z++) {
+
+        if((t+z+y+x) % 2 == 0) continue;
+
+        this->getComm().readBinary(&buf[0], 2);
+        int pos = 0;
+
+        for (int mu = 0; mu < 4; mu++) {
+            floatT *start = (floatT *) &buf[pos];
+            GSU3<floatT> ret;
+            int i = 0;
+            for (int j = 0; j < 3; j++)
+            for (int k = 0; k < 3; k++) {
+                floatT re = start[i++];
+                floatT im = start[i++];
+                ret(j, k) = GCOMPLEX(floatT)(re, im);
+            }
+            gSite site = GInd::getSite(x, y, z, t);
+            int mmu;
+            if(mu == 0){
+                mmu = 3;
+            } else if(mu == 1){
+                mmu = 0;
+            } else if(mu == 2){
+                mmu = 1;
+            }if(mu == 3){
+                mmu = 2;
+            }
+            gaugeAccessor.setLink(GInd::getSiteMu(site, mmu), ret);
+            pos += bytes_per_su3;
+
+
+            start = (floatT *) &buf[pos];
+            i = 0;
+            for (int j = 0; j < 3; j++)
+            for (int k = 0; k < 3; k++) {
+                floatT re = start[i++];
+                floatT im = start[i++];
+                ret(j, k) = GCOMPLEX(floatT)(re, im);
+            }
+            // std::cout << ret(0, 0) << std::endl;
+            // std::exit(0);
+            if(mu == 0){
+                site = GInd::getSite(x, y, z, (t+GInd::getLatData().lt-1) % GInd::getLatData().lt);
+                mmu = 3;
+            } else if(mu == 1){
+                site = GInd::getSite((x+GInd::getLatData().lx-1) % GInd::getLatData().lx, y, z, t);
+                mmu = 0;
+            } else if(mu == 2){
+                site = GInd::getSite(x, (y+GInd::getLatData().ly-1) % GInd::getLatData().ly, z, t);
+                mmu = 1;
+            }else if(mu == 3){
+                site = GInd::getSite(x, y, (z+GInd::getLatData().lz-1) % GInd::getLatData().lz, t);
+                mmu = 2;
+            }
+            gaugeAccessor.setLink(GInd::getSiteMu(site, mmu), ret);
+            pos += bytes_per_su3;
+        }
+    }
+
+    this->getComm().closeIOBinary();
 }
 
 
