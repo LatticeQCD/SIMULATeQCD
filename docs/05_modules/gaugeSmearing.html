@@ -19,6 +19,8 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -84,9 +86,30 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="hisq-smearing">
 <h1>HISQ smearing<a class="headerlink" href="#hisq-smearing" title="Permalink to this headline"></a></h1>
-<p>For HISQ(Highly Improved Staggered Quarks) like action we need two stage of Asqtad like smearing and a unitarization in between them. i.e.</p>
-<p>Lets say the original gaugefields are U.</p>
-<p>i) We smeared U links with various 3link, 5link and 7 link paths, In references it is called V</p>
+<p>Much of the RHMC in SIMULATeQCD follows the MILC code. For a thorough discussion of this
+implementation, look <a class="reference external" href="https://journals.aps.org/prd/abstract/10.1103/PhysRevD.82.074501">here</a>.
+Here we just list a few important details.</p>
+<p>HISQ fermions utilize two levels of asqtad-like smearing, with a unitarization between them.
+The first-level link treatment is</p>
+<p><span class="math notranslate nohighlight">\(  c_1 = 1/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_3 = 1/16\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_5 = 1/64\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_7 = 1/384,\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(c_1\)</span> is the coefficient for the 1-link, and <span class="math notranslate nohighlight">\(c_3\)</span>, <span class="math notranslate nohighlight">\(c_5\)</span>, and <span class="math notranslate nohighlight">\(c_7\)</span>
+are for the 3-link staple, 5-link staple, and 7-link staples, respectively.
+The first-level smeared link is then projected
+back to U<span class="math notranslate nohighlight">\((3)\)</span> before the application of the second-level smearing.
+The second level uses</p>
+<p><span class="math notranslate nohighlight">\(  c_1 = 1\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_3 = 1/16\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_5 = 1/64\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_7 = 1/384\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_\text{Lepage} = -1/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_\text{Naik} = -1/24+\epsilon/8,\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(c_\text{Naik}\)</span> and <span class="math notranslate nohighlight">\(c_\text{Lepage}\)</span> are the coefficients for the
+Naik and Lepage terms.</p>
+<p>Let’s see how this is carried out in the code. Let the original gaugefields be <span class="math notranslate nohighlight">\(U\)</span>.
+For the first level, we smear <span class="math notranslate nohighlight">\(U\)</span> links with various 3-link, 5-link and 7-link paths. MILC calls it <span class="math notranslate nohighlight">\(V\)</span></p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
@@ -94,7 +117,7 @@
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">V</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel1params</span><span class="p">())</span><span class="w"></span>
 </pre></div>
 </div>
-<p>II) We project back to U(3) the level 1 smeared links i.e the V links, In references it is called W</p>
+<p>Next we project the level 1 smeared links back to U(3). MILC calls it <span class="math notranslate nohighlight">\(W\)</span></p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">W</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
@@ -102,7 +125,7 @@
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">.</span><span class="n">u3Project</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
-<p>III) We smeared  again the W links with 3link, 5link and 7 links paths, In references it is called X</p>
+<p>Finally we smear again the <span class="math notranslate nohighlight">\(W\)</span> links with 3-link, 5-link and 7-link paths. MILC calls it <span class="math notranslate nohighlight">\(X\)</span></p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
@@ -110,21 +133,22 @@
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel2params</span><span class="p">())</span><span class="w"></span>
 </pre></div>
 </div>
-<p>To do the tadpole improvement we use naik term in the dirac operator, for HISQ dslash the naik links are construct from the unitarize links i.e using the W links.  In reference this is called N
-To use this we have to use,</p>
+<p>To do the tadpole improvement we use the Naik term in the Dirac operator. For HISQ dslash,
+the Naik links are constructed from the unitarized links, i.e. using the <span class="math notranslate nohighlight">\(W\)</span> links.<br />
+MILC calls it <span class="math notranslate nohighlight">\(N\)</span>.
+To use this we have to call</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w">   </span>
 <span class="w"> </span><span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
-<p>The smearing classes is implemented in</p>
+<p>The smearing classes are implemented in</p>
 <blockquote>
-<div><p>hisqSmearing.cpp.</p>
+<div><p>hisqSmearing.cpp.
+How to construct the smeared links are defined in</p>
 </div></blockquote>
-<p>How to constructs the smeared links are defined in</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>main_HisqSmearing.cpp. 
 </pre></div>
 </div>
-<p>Ref. <a class="reference external" href="https://doi.org/10.1103/PhysRevD.82.074501">hep-lat</a></p>
 </section>
 
 

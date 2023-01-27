@@ -83,8 +83,11 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="generate-quenched-gauge-configurations">
 <h1>Generate quenched gauge configurations<a class="headerlink" href="#generate-quenched-gauge-configurations" title="Permalink to this headline"></a></h1>
-<p>To learn more about the specifics of the gauge updates, take a look at [Gauge Updates (HB and OR)].
-To generate quenched gauge configurations, <code class="docutils literal notranslate"><span class="pre">make</span></code> the executable <code class="docutils literal notranslate"><span class="pre">GenerateQuenched</span></code>. You can then find it under <code class="docutils literal notranslate"><span class="pre">applications/GenerateQuenched</span></code>. The example parameter file is found under <code class="docutils literal notranslate"><span class="pre">parameter/GenerateQuenched.param</span></code> and looks like this:</p>
+<p>To learn more about the specifics of the gauge updates, take a look at
+<a class="reference internal" href="../05_modules/gaugeUpdates.html"><span class="doc std std-doc">Gauge Updates (HB and OR)</span></a>.
+To generate quenched gauge configurations, <code class="docutils literal notranslate"><span class="pre">make</span></code> the executable <code class="docutils literal notranslate"><span class="pre">GenerateQuenched</span></code>.
+You can then find it under <code class="docutils literal notranslate"><span class="pre">applications/GenerateQuenched</span></code>. The example parameter file is
+found under <code class="docutils literal notranslate"><span class="pre">parameter/GenerateQuenched.param</span></code> and looks like this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#parameter file for GenerateQuenched</span>
 <span class="nv">Lattice</span> <span class="o">=</span> <span class="m">64</span> <span class="m">64</span> <span class="m">64</span> <span class="m">16</span>
 <span class="nv">Nodes</span> <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
@@ -116,17 +119,24 @@ rand_s064t16_b0687361_a_U001000
 </div>
 <p>The configuration number is inferred from <code class="docutils literal notranslate"><span class="pre">nsweeps_HBwithOR</span></code>, i.e. the first configuration is labeled with the suffix “<code class="docutils literal notranslate"><span class="pre">_U&lt;nsweeps_HBwithOR&gt;</span></code>” and the following configuration numbers increase in steps of <code class="docutils literal notranslate"><span class="pre">nsweeps_HBwithOR</span></code>. You should always specify the stream name by setting the parameter <code class="docutils literal notranslate"><span class="pre">stream</span></code>.</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">nconfs</span></code> you can specify how many configurations should be generated before the program stops.
-With <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> you can specify how many OverRelaxation updates should be done for each HeatBath update.
+With <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> you can specify how many OR updates should be done for each HeatBath update.
 With <code class="docutils literal notranslate"><span class="pre">nsweeps_HBwithOR</span></code> you can specify how many HB updates (with <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> OR updates per HB) should be done between each saved configuration.</p>
-<p><strong>Thermalization parameters</strong> (required when starting a new stream):
-With <code class="docutils literal notranslate"><span class="pre">start</span></code> you can specify with which kind of configuration the thermalization should start. The options are <code class="docutils literal notranslate"><span class="pre">one</span></code> (all links = unity matrix), <code class="docutils literal notranslate"><span class="pre">fixed_random</span></code> (all links = same random SU3 matrix) and <code class="docutils literal notranslate"><span class="pre">all_random</span></code> (a random configuration of SU3 matrices).
+<section id="thermalization-parameters">
+<h2>Thermalization parameters<a class="headerlink" href="#thermalization-parameters" title="Permalink to this headline"></a></h2>
+<p>These are required when starting a new stream.
+With <code class="docutils literal notranslate"><span class="pre">start</span></code> you can specify with which kind of configuration the thermalization should start.
+The options are <code class="docutils literal notranslate"><span class="pre">one</span></code> (all links = unity matrix), <code class="docutils literal notranslate"><span class="pre">fixed_random</span></code> (all links = same random SU3 matrix) and <code class="docutils literal notranslate"><span class="pre">all_random</span></code>
+(a random configuration of SU3 matrices).
 With  <code class="docutils literal notranslate"><span class="pre">nsweeps_thermal_HB_only</span></code> you can specify how many pure HB updates should be done after the cold start.
 With <code class="docutils literal notranslate"><span class="pre">nsweeps_thermal_HBwithOR</span></code> you can specify how many HBOR updates should be done after the pure HB updates.
 The seed for the random number generator is the time since Unix epoch in milliseconds and is output to stdout.</p>
-<p><strong>Parameters for resuming a previous run</strong> :
-With <code class="docutils literal notranslate"><span class="pre">prev_conf</span></code> you can specify the path of the last configuration you generated.
+</section>
+<section id="parameters-for-resuming-a-previous-run">
+<h2>Parameters for resuming a previous run<a class="headerlink" href="#parameters-for-resuming-a-previous-run" title="Permalink to this headline"></a></h2>
+<p>With <code class="docutils literal notranslate"><span class="pre">prev_conf</span></code> you can specify the path of the last configuration you generated.
 With <code class="docutils literal notranslate"><span class="pre">conf_nr</span></code> you can specify the number of this last configuration, so that the next configuration’s number will be ( previous_number + <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> ). Don’t forget to set <code class="docutils literal notranslate"><span class="pre">stream</span></code> to the correct value.
 With <code class="docutils literal notranslate"><span class="pre">prev_rand</span></code> you can specify the path of the according random number state of that configuration. If you don’t specify this then a new random number state will be generated (The seed for this is also time since Unix epoch in milliseconds and is output to stdout.)</p>
+</section>
 </section>
 
 

@@ -303,7 +303,7 @@ if (USE_CUDA)
         COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
         ${ALL_HALODEPTHS}
         HALODEPTHSPIN_0=1 HALODEPTHSPIN_4=1
-        ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS}
+        ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS} GIT_HASH="${GIT_HASH}"
         )
 # This might work in the future
 #elseif (USE_HIP)
@@ -543,6 +543,14 @@ set_SIMULATeQCD_property(hisqSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(hisqSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
 
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_HypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
+add_SIMULATeQCD_executable(hypSmearingTest src/testing/main_HypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
+set_SIMULATeQCD_property(hypSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hypSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(tests hypSmearingTest)
+
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_HisqSmearingImagmuTest.cpp src/modules/HISQ/hisqSmearing.cpp)
 add_SIMULATeQCD_executable(hisqSmearingImagmuTest src/testing/main_HisqSmearingImagmuTest.cpp src/modules/HISQ/hisqSmearing.cpp)
 set_SIMULATeQCD_property(hisqSmearingImagmuTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -622,6 +630,13 @@ add_SIMULATeQCD_executable(StackedSpinorTest src/testing/main_StackedSpinorTest.
 set_SIMULATeQCD_property(StackedSpinorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(StackedSpinorTest PRIVATE HALODEPTH_4=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests StackedSpinorTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_TaylorMeasurementTest.cpp src/modules/observables/DslashDerivative.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(TaylorMeasurementTest src/testing/main_TaylorMeasurementTest.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp 
+src/modules/HISQ/hisqSmearing.cpp src/spinor/spinorfield.cpp src/modules/observables/DslashDerivative.cpp)
+set_SIMULATeQCD_property(TaylorMeasurementTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(TaylorMeasurementTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_NSTACK} NSTACKS_32=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests TaylorMeasurementTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_cudaAwareMPITest.cpp)
 add_SIMULATeQCD_executable(cudaAwareMPITest src/testing/main_cudaAwareMPITest.cpp)
@@ -731,8 +746,8 @@ set_SIMULATeQCD_property(PolyakovLoop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examp
 SIMULATeQCD_target_compile_definitions(PolyakovLoop PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(examples PolyakovLoop)
 
-set_SIMULATeQCD_gpu_backend(src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp)
-add_SIMULATeQCD_executable(WilsonLinesFields src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp)
+set_SIMULATeQCD_gpu_backend(src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp )
+add_SIMULATeQCD_executable(WilsonLinesFields src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp )
 set_SIMULATeQCD_property(WilsonLinesFields PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples")
 SIMULATeQCD_target_compile_definitions(WilsonLinesFields PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(examples WilsonLinesFields)
@@ -824,8 +839,8 @@ set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp)
-add_SIMULATeQCD_executable(wilsonLinesCorrelatorMultiGPUStacked src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp )
+set_SIMULATeQCD_gpu_backend(src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp src/modules/hyp/hypSmearing.cpp)
+add_SIMULATeQCD_executable(wilsonLinesCorrelatorMultiGPUStacked src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/WilsonLineCorrelatorMultiGPU.cpp src/modules/hyp/hypSmearing.cpp)
 set_SIMULATeQCD_property(wilsonLinesCorrelatorMultiGPUStacked PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorMultiGPUStacked PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications wilsonLinesCorrelatorMultiGPUStacked)

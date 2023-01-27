@@ -31,11 +31,6 @@ inline SmearingParameters<floatT> getLevel2Params(floatT naik_epsilon = 0.0){
     SmearingParameters<floatT> params_L2(1.0*(1+naik_epsilon/8),1/8./2.,1/8./8.,1/48./8.,-1/8.0);
     return params_L2;
 }
-template<class floatT>
-floatT get_naik_epsilon_from_amc(floatT amc) {
-    floatT amc_sqr = amc * amc;
-    return amc_sqr * (-27./40. + amc_sqr * (327./1120. + amc_sqr * (-15607./268800. - amc_sqr * 73697./3942400.)));
-}
 
 #endif
 

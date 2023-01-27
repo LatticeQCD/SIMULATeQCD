@@ -16,6 +16,7 @@
 #include "grnd.h"
 #include <float.h>
 #include <type_traits>
+#include "gsu2.h"
 
 
 
@@ -187,6 +188,7 @@ public:
     __device__ __host__ void random(uint4 *state);                 // set links randomly
     __device__ __host__ void gauss(uint4 *state);                  // set links gauss
     __device__ __host__ void su3unitarize();                       // project to su3 using first two rows of link
+    __device__ __host__ int su3unitarize_hits(const int Nhit, floatT tol); // project to su3 by maximizing Re(Tr(guess*(toproj)))
     __device__ __host__ void su3reconstruct12()                    // project to su3 using first two rows of link
     {
         _e20 = GCOMPLEX(floatT)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
@@ -893,6 +895,95 @@ __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
 #endif
     }
 }
+
+
+
+// project to su3 by maximizing Re(Tr(guess*(toproj)))
+// ported from Milc by Dan Hoying, 2022
+template<class floatT>
+__device__ __host__ int su3unitarize_hits(
+	GSU3<floatT> *w,         /* input initial guess. output resulting SU(3) matrix */
+	GSU3<floatT> *q,         /* 3 x 3 complex matrix to be projected */
+   	int Nhit,              /* number of SU(2) hits. 0 for no projection */
+   	floatT tol              /* tolerance for SU(3) projection.
+			     If nonzero, treat Nhit as a maximum
+			     number of hits.  If zero, treat Nhit
+			     as a prescribed number of hits. */ 
+		) {
+
+   int index1, ina, inb,ii;
+   floatT v0,v1,v2,v3, vsq;
+   floatT z;
+   GSU3<floatT> action(0);
+   const int Nc = 3;
+   double conver, old_tr = 0, new_tr;
+
+   if(tol > 0)
+     old_tr = tr_d(*w,*q)/3.0;
+   conver = 1.0;
+   assert(!std::isnan(old_tr));
+
+   /* Do SU(2) hits */
+   for(index1=0;index1<Nhit && conver > tol; index1++)
+   {
+      /*  pick out an SU(2) subgroup */
+      ina =  index1    % Nc;
+      inb = (index1+1) % Nc;
+      if(ina > inb){ ii=ina; ina=inb; inb=ii; }
+
+      //mult_su3_na( w, q, &action );
+      assert(!std::isnan(real(q->operator()(ina,ina))));
+      action = (*w) * dagger(*q);
+
+      /* decompose the action into SU(2) subgroups using
+         Pauli matrix expansion */
+      /* The SU(2) hit matrix is represented as v0 + i *
+         Sum j (sigma j * vj)*/
+      v0 =  real(action(ina,ina)) + real(action(inb,inb));
+      assert(!std::isnan(v0));
+      v3 =  imag(action(ina,ina)) - imag(action(inb,inb));
+      v1 =  imag(action(ina,inb)) + imag(action(inb,ina));
+      v2 =  real(action(ina,inb)) - real(action(inb,ina));
+
+      /* Normalize v */
+      vsq = v0*v0 + v1*v1 + v2*v2 + v3*v3;
+      z = sqrt((double)vsq );
+      if(z == 0.){z = 1.;v0 = 1.;}
+      else {v0 = v0/z; v1 = v1/z; v2 = v2/z; v3 = v3/z;}
+
+      GCOMPLEX(floatT) x00, x01;
+      GSU2<floatT> zz;
+      x00=GCOMPLEX(floatT)(v0,-v3);
+      x01=GCOMPLEX(floatT)(-v2,-v1);
+      zz=GSU2<floatT>(x00,x01);
+      if( ina==0 && inb ==1){
+          *w=sub12(zz,*w);
+      }
+      else if( ina==0 && inb ==2){
+          *w=sub13(zz,*w);
+      }
+      else if( ina==1 && inb ==2){
+          *w=sub23(zz,*w);
+      }
+
+
+
+      /* convergence measure every third hit */
+      if(tol>0 && (index1 % 3) == 2){
+        new_tr = tr_d(*w,*q)/3.0;
+	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
+	old_tr = new_tr;
+      }
+      
+   } /* hits */
+
+   int status = 0;
+   if( Nhit > 0 && tol > 0 && conver > tol )
+     status = 1;
+   return status;
+
+}
+
 
 // project to su3 using first two rows of link
 template<class floatT>

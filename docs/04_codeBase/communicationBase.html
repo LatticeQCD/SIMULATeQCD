@@ -19,6 +19,8 @@
         <script src="../_static/doctools.js"></script>
         <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -126,7 +128,15 @@ and are hence much faster.</p>
 <p>Halo communication proceeds by first copying halo information contiguously into a buffer.
 This requires translating from the sublattice’s indexing scheme to the buffer’s indexing
 scheme; the difference between these schemes is called the halo offset,
-computed by <code class="docutils literal notranslate"><span class="pre">haloOffsetInfo</span></code> class.</p>
+computed by <code class="docutils literal notranslate"><span class="pre">haloOffsetInfo</span></code> class.
+This class provides offsets for different halo segments
+(stripe halo, corner halo, etc). These offsets and the buffer
+base pointer are used to place the halo data at the correct position in the buffer.
+An example for the corner halo would be:</p>
+<p><span class="math notranslate nohighlight">\(
+\text{corner buffer pointer} = \text{buffer base pointer} +
+                                   \text{corner halo offset}.
+\)</span></p>
 <p>In order to communicate, each sublattice needs to know something about his neighbors,
 for example their rank or whether they are on the same node. This information is
 kept in the <code class="docutils literal notranslate"><span class="pre">neighborInfo</span></code> class.</p>

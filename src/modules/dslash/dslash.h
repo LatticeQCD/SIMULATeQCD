@@ -11,10 +11,10 @@ class DSlash : public LinearOperator<SpinorRHS_t> {
 public:
 
     //! This shall be a simple call of the DSlash without involving a constant
-    virtual void Dslash(SpinorLHS_t &lhs, SpinorRHS_t &rhs, bool update = true);
+    virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = true);
 
     //! This shall be a call of the M^\dagger M where M = m + D or similar
-    virtual void applyMdaggM(SpinorRHS_t &, SpinorRHS_t &, bool update = true) = 0;
+    virtual void applyMdaggM(SpinorRHS_t &, const SpinorRHS_t &, bool update = true) = 0;
 };
 
 //! HisqDslash
@@ -29,7 +29,7 @@ struct HisqDslashFunctor {
 
     template<bool onDevice, size_t NStacks>
     HisqDslashFunctor(
-            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
             _spinorIn(spinorIn.getAccessor()),
@@ -55,7 +55,7 @@ struct HisqMdaggMFunctor {
 
     template<bool onDevice, size_t NStacks>
     HisqMdaggMFunctor(
-            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
             Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorTmp,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik,
@@ -98,15 +98,53 @@ public:
     _tmpSpin(_gauge_smeared.getComm(), spinorName), _mass(mass), _mass2(mass * mass), _c_3000((-1./48.0)*(1.0+(double)naik_epsilon)) {}
 
     //! Does not use the mass
-    virtual void Dslash(SpinorLHS_t &lhs, SpinorRHS_t &rhs, bool update = false);
+    virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
     //! Includes the mass term
-    virtual void applyMdaggM(SpinorRHS_t &spinorOut, SpinorRHS_t &spinorIn, bool update = false);
+    virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
 
     template<Layout LatLayout>
     HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
-    getFunctor(Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
+    getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
 
+};
+
+//! Dslash inverse
+
+template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+class HisqDSlashInverse {
+private:
+    // operators
+    ConjugateGradient<floatT, NStacks> cg;
+    HisqDSlash<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> dslash_oe;
+    HisqDSlash<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> dslash_oe_inv;
+    HisqDSlash<floatT, onDevice, Odd, HaloDepthGauge, HaloDepthSpin, NStacks> dslash_eo;
+    floatT mass;
+
+public:
+    HisqDSlashInverse(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
+                      Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik,
+                      const double mass, const floatT naik_epsilon = 0.0) :
+                      dslash_oe(gauge_smeared, gauge_Naik, 0.0, naik_epsilon),
+                      dslash_oe_inv(gauge_smeared, gauge_Naik, mass, naik_epsilon),
+                      dslash_eo(gauge_smeared, gauge_Naik, 0.0, naik_epsilon),
+                      mass(mass) {}
+
+    void apply_Dslash_inverse(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut,
+                const SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn,
+                int cgMax, double residue) {
+        // compute the inverse using
+        // \chi_e = (1m^2 - D_{eo}D_{oe})^{-1} (m \eta_e - D_{eo} \eta_o)
+        // \chi_o = \frac 1m (\eta_o - D_{oe}\chi_e)
+        dslash_eo.Dslash(spinorOut.even, spinorIn.odd, true);
+        spinorOut.even = spinorIn.even * mass - spinorOut.even;
+        // invert in place is possible since the CG copies the input early on
+        cg.invert_new(dslash_oe_inv, spinorOut.even, spinorOut.even, cgMax, residue); //! this takes up most of the computation time
+
+        dslash_oe.Dslash(spinorOut.odd, spinorOut.even, false);
+        spinorOut.odd = (static_cast<floatT>(1.) / mass)*(spinorIn.odd - spinorOut.odd);
+        spinorOut.odd.updateAll();
+    }
 };
 
 
@@ -120,7 +158,7 @@ struct stdStagDslashFunctor {
 
     template<bool onDevice, size_t NStacks>
     stdStagDslashFunctor(
-            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R14> &gauge) :
             _spinorIn(spinorIn.getAccessor()),
             _gAcc(gauge.getAccessor()) {}
@@ -161,14 +199,14 @@ public:
     }
 
     //! Does not use the mass
-    virtual void Dslash(SpinorLHS_t &lhs, SpinorRHS_t &rhs, bool update = true);
+    virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = true);
 
     //! Includes the mass term
-    virtual void applyMdaggM(SpinorRHS_t &spinorOut, SpinorRHS_t &spinorIn, bool update = true);
+    virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = true);
 
     template<Layout LatLayout>
     stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
-    getFunctor(Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
+    getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
 
 };
 

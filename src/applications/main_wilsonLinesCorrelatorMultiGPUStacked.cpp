@@ -8,6 +8,8 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
 #include "../modules/gradientFlow/gradientFlow.h"
+#include "../modules/hyp/hypSmearing.h"
+
 
 #include <iostream>
 using namespace std;
@@ -30,6 +32,7 @@ struct WLParam : LatticeParameters {
     Parameter<floatT> wilson_start;
     Parameter<floatT> wilson_stop;
     Parameter<int,1> use_wilson;
+    Parameter<int,1> use_hyp;
 
     Parameter<int,1>       cutRadius;
     Parameter<int,1>       useInfoFile;
@@ -50,6 +53,8 @@ struct WLParam : LatticeParameters {
 	addDefault (wilson_stop,"wilson_stop",0.0);
         addDefault(cutRadius, "cutRadius", 100000);
         addDefault(useInfoFile, "useInfoFile", 1);
+
+	addDefault (use_hyp,"use_hyp",0);
     }
 };
 
@@ -215,6 +220,18 @@ int main(int argc, char *argv[]) {
         gauge.updateAll();
 
         rootLogger.info( "End Wilson Flow"  );
+    }
+
+////////////   hyp smearing
+
+    if(param.use_hyp()){
+        rootLogger.info( "Start hyp smearing"  );
+        Gaugefield<PREC, true, HaloDepth> gauge_out(commBase);
+        HypSmearing<PREC, true, HaloDepth ,R18> smearing(gauge);
+        smearing.SmearAll(gauge_out);
+        gauge = gauge_out;
+    
+        rootLogger.info( "end hyp smearing"  );
     }
 
 ///////////// gauge fixing

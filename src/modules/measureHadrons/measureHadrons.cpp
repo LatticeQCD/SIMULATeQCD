@@ -4,22 +4,6 @@
 
 #include "measureHadrons.h"
 
-//! Simple functor to return an element
-template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
-struct returnSpinor {
-
-    gVect3arrayAcc<floatT> _gAcc;
-
-    explicit returnSpinor(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
-            _gAcc(spinorIn.getAccessor()) {
-    }
-    __host__ __device__ gVect3<floatT> operator()(gSiteStack site) {
-        //! Deduce gSiteStacked object for the source from the gSite object of the destination
-        gSite temp = GIndexer<LatLayout,HaloDepth>::getSite(site.coord);
-        return _gAcc.template getElement<floatT>(temp);
-    }
-};
-
 //! Functor to compute contractions for stacked spinor with nstacks=3
 template<class floatT, size_t HaloDepth>
 struct contractPropagators {

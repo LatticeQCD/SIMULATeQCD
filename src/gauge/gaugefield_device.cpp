@@ -82,6 +82,30 @@ void Gaugefield<floatT,onDevice,HaloDepth,comp>::su3latunitarize() {
     iterateOverFullAllMu(UnitKernel<floatT,onDevice,HaloDepth,comp>(*this));
 }
 
+//project to su3 using su3unitarize_hits
+////warning on usage, convergence to su3 matrix can fail in edge cases, when input far away from proper su3 matrix
+//such that convergence never happens, and algorithm gives up
+template<class floatT,size_t HaloDepth,CompressionType comp>
+__host__ __device__ GSU3<floatT> inline su3unitarize_project(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT,comp> gAcc_base, gSiteMu siteMu) {
+
+  typedef GIndexer<All,HaloDepth> GInd;
+
+  GSU3<floatT> temp = gsu3_zero<floatT>();
+  GSU3<floatT> temp_guess = gsu3_zero<floatT>();
+
+  int mu = siteMu.mu;
+  gSite origin = GInd::getSite(siteMu.isite);
+  temp += gAcc.getLink(GInd::getSiteMu(origin,mu));
+  temp_guess += gAcc_base.getLink(GInd::getSiteMu(origin,mu));
+
+  if(std::isnan(real(temp(0,0)))) return temp;
+  int status = su3unitarize_hits(&temp_guess, &temp, 9, 0.);
+  assert(!status);
+
+  return temp_guess;
+}
+
+
 /// Explicit instantiation double and float
 #define _GLATTICE_CLASS_INIT(floatT, onDevice, HaloDepth,COMP) \
 template class Gaugefield<floatT,onDevice,HaloDepth, COMP>; \

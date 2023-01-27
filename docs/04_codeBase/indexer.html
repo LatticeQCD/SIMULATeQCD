@@ -88,13 +88,12 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="indexer">
 <h1>Indexer<a class="headerlink" href="#indexer" title="Permalink to this headline"></a></h1>
-<p><strong>This page is work in progress!</strong></p>
-<p>When working with 4d lattices, we need a way to map the lattices sites (given by spacetime coordinates <span class="math notranslate nohighlight">\((x,y,z,t)\)</span> to the computer memory,
+<p>When working with 4-<span class="math notranslate nohighlight">\(d\)</span> lattices, we need a way to map the lattices sites (given by spacetime coordinates <span class="math notranslate nohighlight">\((x,y,z,t)\)</span> to the computer memory,
 which is 1-dimensional. This gets more complicated when using multi-GPU, since we have to care about sub-lattices and halos.
 For many algorithms it is convenient to characterize sites as even or odd. A site is even (odd) if <span class="math notranslate nohighlight">\(x+y+z+t\)</span> is even (odd).</p>
 <section id="terminology">
 <h2>Terminology<a class="headerlink" href="#terminology" title="Permalink to this headline"></a></h2>
-<p>The 1d memory index (which is just an integer) is often called <code class="docutils literal notranslate"><span class="pre">isite</span></code> throughout the code.
+<p>The 1-<span class="math notranslate nohighlight">\(d\)</span> memory index (which is just an integer) is often called <code class="docutils literal notranslate"><span class="pre">isite</span></code> throughout the code.
 The four spacetime coordinates of a lattice site are stored in a <code class="docutils literal notranslate"><span class="pre">struct</span></code> named <code class="docutils literal notranslate"><span class="pre">sitexyzt</span></code>.
 When using multi-GPU we use the following terminology:</p>
 <ul class="simple">
@@ -127,7 +126,7 @@ For objects that don’t store data on all lattice points, but only the odd part
 </pre></div>
 </div>
 <p>This can of course also be used for objects that only store the even part, as adjacent odd and even sites are mapped to same index.
-Sometimes one wants to obtain the coordinates from the corresponding 1d memory index, i.e one wants to deindex.
+Sometimes one wants to obtain the coordinates from the corresponding 1-<span class="math notranslate nohighlight">\(d\)</span> memory index, i.e one wants to deindex.
 That can be done like this:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">sitexyzt</span><span class="w"> </span><span class="nf">de_site</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"></span>
@@ -166,7 +165,7 @@ That can be done like this:</p>
 <span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Obtaining only either even or odd sites from the 1d memory index
+<p>Obtaining only either even or odd sites from the 1-<span class="math notranslate nohighlight">\(d\)</span> memory index
 is done in a very similar way, except we dictate the parity:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">sitexyzt</span><span class="w"> </span><span class="nf">de_site_eo</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">par</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">x</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w"> </span><span class="n">z</span><span class="p">,</span><span class="w"> </span><span class="n">t</span><span class="p">;</span><span class="w"></span>
@@ -194,12 +193,12 @@ is done in a very similar way, except we dictate the parity:</p>
 This <code class="docutils literal notranslate"><span class="pre">struct</span></code> stores the spacetime coordinates and memory index for one lattice site.
 More specifically, it stores</p>
 <ul class="simple">
-<li><p>the 1d memory index of the bulk sub-lattice (<code class="docutils literal notranslate"><span class="pre">isite</span></code>)</p></li>
-<li><p>the 1d memory index of the full sub-lattice (<code class="docutils literal notranslate"><span class="pre">isiteFull</span></code>)</p></li>
+<li><p>the 1-<span class="math notranslate nohighlight">\(d\)</span> memory index of the bulk sub-lattice (<code class="docutils literal notranslate"><span class="pre">isite</span></code>)</p></li>
+<li><p>the 1-<span class="math notranslate nohighlight">\(d\)</span> memory index of the full sub-lattice (<code class="docutils literal notranslate"><span class="pre">isiteFull</span></code>)</p></li>
 <li><p>the spacetime coordinates of the lattice site on the bulk sublattice (<code class="docutils literal notranslate"><span class="pre">coords</span></code>)</p></li>
 <li><p>the spacetime coordinates fo the lattice site on the full sublattice (<code class="docutils literal notranslate"><span class="pre">coordsFull</span></code>)</p></li>
 </ul>
-<p>You can create gSite objects using the static class <code class="docutils literal notranslate"><span class="pre">GIndexer</span></code> (see below). You need to remember with which template parameters
+<p>You can create <code class="docutils literal notranslate"><span class="pre">gSite</span></code> objects using the static class <code class="docutils literal notranslate"><span class="pre">GIndexer</span></code> (see below). You need to remember with which template parameters
 you create <code class="docutils literal notranslate"><span class="pre">gSite</span></code> objects, as they don’t store any information about that.
 If you read somewhere something like “This function takes an odd <code class="docutils literal notranslate"><span class="pre">gSite</span></code> as input”, then that means that the <code class="docutils literal notranslate"><span class="pre">gSite</span></code>
 should have been created using <code class="docutils literal notranslate"><span class="pre">GIndexer&lt;Odd,myHaloDepth&gt;</span></code>.</p>

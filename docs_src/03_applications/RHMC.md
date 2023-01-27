@@ -2,11 +2,21 @@
 
 [The rational hybrid Monte Carlo (RHMC)](https://doi.org/10.1016/S0920-5632(99)85217-7) 
 algorithm is a way of updating gauge fields when simulating dynamical fermions. 
-It uses a [three-step-size integrator](https://doi.org/10.1016/0550-3213(92)90263-B)
-that profits from the [Hasenbusch trick](https://doi.org/10.1016/S0370-2693(01)01102-9).
-By default integration uses a leapfrog, but it is possible to use an Omelyan
-integrator on the largest scale, if you choose.
-The inverter is a [multi-shift conjugate gradient](../05_modules/inverter.md).
+The inverter is a [conjugate gradient](../05_modules/inverter.md), with possibilities
+for multiple RHS and multiple shifts to boost performance.
+The [integrator](../05_modules/integrator.md) uses a leapfrog by default, but it
+can use an Omelyan on the largest scale.
+We use the HISQ/tree action, which is a tree-level improved 
+Lüscher-Weisz action in the gauge sector. The relative
+weights of the plaquette and rectangle terms are
+
+$
+    c_\text{plaq} = 5/4, 
+$
+
+$
+    c_\text{rect} = -1/6.
+$
 
 To use the RHMC class, the user will only have to call the constructor and two functions 
 ```C++
@@ -35,14 +45,15 @@ Then it starts the MD evolution by calling `integrate()` from the integrator
 class (the integrator object is instantiated by the RHMC constructor). After 
 the MD trajectory the new Hamiltonian is calculated and - depending on the 
 arguments - the Metropolis step is done.
+You can learn more about the smearing [here](../05_modules/gaugeSmearing.md).
 
 ## Multiple pseudo-fermions
 
 When you want to use multiple pseudo-fermion fields, set `no_pf` in the RHMC 
 input file to the respective number. Be aware that this changes the way you 
 have to construct your ratapprox: In the remez `in.file`, if you want to 
-generate Nf flavors using Npf pseudo-fermion fields, you have to use Nf/Npf 
-as an input (which is then used Npf times). Note that Nf/Npf must be < 4.
+generate $N_f$ flavors using $N_pf$ pseudo-fermion fields, you have to use $N_f/N_{pf}$ 
+as an input (which is then used $N_{pf}$ times). Note that $N_f/N_{pf}$ must be < 4.
 `no_pf` is 1 per default.
 
 ## Imaginary chemical potential

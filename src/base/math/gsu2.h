@@ -3,6 +3,15 @@
  *
  * Header file for algebra involving SU(2) subgoups embedded in SU(3).
  *
+ *  
+ *
+ *  Representation:
+ *
+ *
+ *
+ *  SU(2) =  ( _e11              _e12   )
+ *           ( -conj(_e12)   conj(_e11) )
+ *
  */
 
 #ifndef _gsu2_h_
@@ -226,5 +235,6 @@ template<typename floatT>
 __device__ __host__  inline floatT realtrace(const GSU3<floatT> &x) {
   return ( real(x.getLink00() + x.getLink11() +  x.getLink22()) );
 }
+
 
 #endif
