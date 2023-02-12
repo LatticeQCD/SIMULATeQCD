@@ -1,5 +1,5 @@
 /* 
- * main_InverterProfiling.cu                                                               
+ * main_InverterProfiling.cpp
  * 
  */
 

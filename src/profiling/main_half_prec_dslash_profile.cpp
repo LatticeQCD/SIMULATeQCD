@@ -1,5 +1,5 @@
 /* 
- * main_half_prec_dslash_profile.cu                                                               
+ * main_half_prec_dslash_profile.cpp
  * 
  * Dennis Bollweg
  * 

@@ -86,12 +86,9 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::check_unitarity()
     unitarity.template iterateOverBulk<All, HaloDepth>(do_check_unitarity<floatT, onDevice, HaloDepth>(_gaugeField));
 
     floatT unit_norm;
-
     unitarity.reduce(unit_norm, elems_full);
 
-
     rootLogger.info(std::setprecision(10) ,  "Unitarity norm <Tr(U^+U)> = " ,  unit_norm/floatT(GInd::getLatData().globvol4));
-
 }
 
 
@@ -162,11 +159,9 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     _savedField = _gaugeField;
 
     rootLogger.info("Smearing gauge fields");
-    
     _smearing.SmearAll(_rhmc_param.mu_f());
 
     rootLogger.info("generating momenta");
-    
     generate_momenta();
     
     rootLogger.info("Constructing peudo-fermion fields");
@@ -174,13 +169,11 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     for(size_t i = 0; i < _no_pf; i++) {
         make_phi(phi_sf_container.phi_container[i], rat_inv_sf);
     }
-
     rootLogger.info("phi_sf: done");
 
     for(size_t i = 0; i < _no_pf; i++) {
         make_phi(phi_lf_container.phi_container[i], rat_inv_lf);
     }
-
     rootLogger.info("phi_lf: done");
     
     //get oldaction
@@ -205,20 +198,20 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
         gauge_h = _gaugeField;
 
         for (int x = 0; x < (int) GInd::getLatData().lx; x++)
-            for (int y = 0; y < (int) GInd::getLatData().ly; y++)
-                for (int z = 0; z < (int) GInd::getLatData().lz; z++)
-                    for (int t = 0; t < (int) GInd::getLatData().lt; t++)
-                        for (int mu = 0; mu < 4; mu++) {
-                            gSite site = GInd::getSite(x, y, z, t);
+        for (int y = 0; y < (int) GInd::getLatData().ly; y++)
+        for (int z = 0; z < (int) GInd::getLatData().lz; z++)
+        for (int t = 0; t < (int) GInd::getLatData().lt; t++)
+            for (int mu = 0; mu < 4; mu++) {
+                gSite site = GInd::getSite(x, y, z, t);
 
-                            GSU3<double> tmpA = saved_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
-                            
-                            GSU3<double> tmpB = gauge_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
+                GSU3<double> tmpA = saved_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
+                
+                GSU3<double> tmpB = gauge_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
 
-                                if (!compareGSU3(tmpA, tmpB, 1e-4)) {
-                                    rootLogger.error("Difference in saved and evolved Gaugefields at " ,  LatticeDimensions(x, y, z, t) , ", mu = " ,  mu);
-                                    rootLogger.error("|| S - G ||_inf = " ,  infnorm(tmpA-tmpB));
-                                }
+                    if (!compareGSU3(tmpA, tmpB, 1e-4)) {
+                        rootLogger.error("Difference in saved and evolved Gaugefields at " ,  LatticeDimensions(x, y, z, t) , ", mu = " ,  mu);
+                        rootLogger.error("|| S - G ||_inf = " ,  infnorm(tmpA-tmpB));
+                    }
         }
     }
 
@@ -444,8 +437,6 @@ double rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::get_Hamiltonian(Lattice
     //      This is inherited from MILC!
 
     energy_dens.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<onDevice, double>(redBase3, redBase2, 1.0, -beta/3.0)); 
-
-
 
     double hamiltonian = 0.5 *momenta;
 

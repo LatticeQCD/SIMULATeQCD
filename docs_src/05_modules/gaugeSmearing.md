@@ -4,8 +4,35 @@ Much of the RHMC in SIMULATeQCD follows the MILC code. For a thorough discussion
 implementation, look [here](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.82.074501).
 Here we just list a few important details.
 
-HISQ fermions utilize two levels of asqtad-like smearing, with a unitarization between them.
-The first-level link treatment is
+## General idea behind smearing
+
+Typically the gauge connection between two neighboring sites $x$ and $y$
+on the lattice is just a single link $U(x,y)$, which is in some sense the
+most local connection imaginable. One can also relax this locality, so that
+the gauge connection contains information from a larger region around
+$x$ and $y$; for example the connection could depend on a general sum,
+including many paths connecting $x$ and $y$. Let's call
+this sum $\Sigma(x,y)$. Then the gauge connection could be $V(x,y)$,
+where $V$ is chosen by extremizing $\mathrm{tr} V\Sigma^\dagger$. These gauge
+connections are called [fat links](https://link.aps.org/doi/10.1103/PhysRevD.55.R1133).
+Fat links modify particle spectra, since they amount to a change of the lattice
+propagator.
+
+## HISQ smearing
+
+Taste breaking can be thought of through _taste exchange_, where
+one quark changes its taste by exchanging a virtual gluon with momentum
+$p=\pi/a$; a quark with low enough momentum can thereby be pushed into
+another corner of the Brillouin zone. This is an effect of our discretization,
+so taste breaking vanishes in the continuum limit. A strategy at finite spacing
+to reduce this discretization effect is to
+modify gluon spectra to suppress these taste-exchange processes. This is the
+idea behind HISQ smearing.
+
+HISQ fermions utilize two levels of ASQTAD-like smearing, with a unitarization between them.
+You can find information about ASQTAD [here](https://link.aps.org/doi/10.1103/PhysRevD.60.054503)
+and [here](https://link.aps.org/doi/10.1103/PhysRevD.59.074502).
+The first-level HISQ link treatment is
 
 $  c_1 = 1/8$
 

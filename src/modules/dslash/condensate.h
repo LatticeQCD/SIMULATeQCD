@@ -1,3 +1,8 @@
+/* 
+ * condensate.h                                                               
+ * 
+ */
+
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
 #include "../rhmc/rhmcParameters.h"
