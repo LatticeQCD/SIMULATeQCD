@@ -51,6 +51,8 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> topChargeTimeSlices;
     Parameter<bool> topCharge_imp;
     Parameter<bool> topChargeTimeSlices_imp;
+    Parameter<bool> topCharge_imp_imp;
+    Parameter<bool> topChargeTimeSlices_imp_imp;
     Parameter<bool> ColorElectricCorrTimeSlices_naive;
     Parameter<bool> ColorElectricCorrTimeSlices_clover;
     Parameter<bool> ColorMagneticCorrTimeSlices_naive;
@@ -58,6 +60,7 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> RenormPolyakovSusc;
 
     Parameter<bool> topCharge_imp_block;
+    Parameter<bool> topCharge_imp_imp_block;
     Parameter<bool> shear_bulk_corr_block;
     Parameter<bool> energyMomentumTensorTracelessTimeSlices;
     Parameter<bool> energyMomentumTensorTracefullTimeSlices;
@@ -106,7 +109,10 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(topChargeTimeSlices, "topChargeTimeSlices", false);
         addDefault(topCharge_imp, "topCharge_imp", false);
         addDefault(topChargeTimeSlices_imp, "topChargeTimeSlices_imp", false);
+        addDefault(topCharge_imp_imp, "topCharge_imp_imp", false);
+        addDefault(topChargeTimeSlices_imp_imp, "topChargeTimeSlices_imp_imp", false);
         addDefault(topCharge_imp_block, "topCharge_imp_block", false);
+        addDefault(topCharge_imp_imp_block, "topCharge_imp_imp_block", false);
         addDefault(shear_bulk_corr_block, "shear_bulk_corr_block", false);
         addDefault(energyMomentumTensorTracelessTimeSlices, "energyMomentumTensorTracelessTimeSlices", false);
         addDefault(energyMomentumTensorTracefullTimeSlices, "energyMomentumTensorTracefullTimeSlices", false);
@@ -149,7 +155,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     //! -------------------------------prepare file output--------------------------------------------------------------
 
-    std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp,
+    std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
             datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
             datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTUTimeSlices, datNameEMTETimeSlices,
@@ -171,6 +177,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datNameCloverSlices << lp.measurements_dir() << prefix.str() << "_CloverTimeSlices" << lp.fileExt();
     datNameTopChSlices << lp.measurements_dir() << prefix.str() << "_TopChTimeSlices" << lp.fileExt();
     datNameTopChSlices_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImp" << lp.fileExt();
+    datNameTopChSlices_imp_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImpImp" << lp.fileExt();
     datNameColElecCorrSlices_naive << lp.measurements_dir() << prefix.str() << "_ColElecCorrTimeSlices_naive" << lp.fileExt();
     datNameColMagnCorrSlices_naive << lp.measurements_dir() << prefix.str() << "_ColMagnCorrTimeSlices_naive" << lp.fileExt();
     datNamePolyCorrSinglet << lp.measurements_dir() << prefix.str() << "_PolyakovCorrSinglet" << lp.fileExt();
@@ -196,6 +203,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     if (lp.clover()) header << "Clover ";
     if (lp.topCharge()) header << "Top. Charge ";
     if (lp.topCharge_imp() || lp.topCharge_imp_block()) header << "Impr. top. Charge ";
+    if (lp.topCharge_imp_imp() || lp.topCharge_imp_imp_block()) header << "O(a^6) Impr. top. Charge ";
     header.endLine();
 
     FileWriter file_BlockTopCharge(gauge.getComm(), lp);
@@ -291,6 +299,16 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         headerThSl_imp.endLine();
     }
 
+    FileWriter fileTopChSl_imp_imp(gauge.getComm(), lp);
+    if (lp.topChargeTimeSlices_imp_imp()) {
+        fileTopChSl_imp_imp.createFile(datNameTopChSlices_imp_imp.str());
+        LineFormatter headerThSl_imp_imp = fileTopChSl_imp_imp.header();
+        headerThSl_imp_imp << "Flow time ";
+        for (int nt = 0; nt < lp.latDim[3]; nt++) {
+            headerThSl_imp_imp << "Nt=" + std::to_string(nt) + " ";
+        }
+        headerThSl_imp_imp.endLine();
+    }
     FileWriter fileColElecCorrSl_naive(gauge.getComm(), lp);
     if (lp.ColorElectricCorrTimeSlices_naive()) {
         fileColElecCorrSl_naive.createFile(datNameColElecCorrSlices_naive.str());
@@ -395,7 +413,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     //! -------------------------------variables for the observables----------------------------------------------------
 
     floatT plaq, clov, topChar;
-    std::vector<floatT> resultClSl, resultThSl, resultThSl_imp, resultEMTETimeSlices;
+    std::vector<floatT> resultClSl, resultThSl, resultThSl_imp, resultThSl_imp_imp, resultEMTETimeSlices;
     std::vector<Matrix4x4Sym<floatT>> resultEMTUTimeSlices;
     std::vector<GCOMPLEX(floatT)> resultColElecCorSl_naive, resultColMagnCorSl_naive, resultColElecCorSl_clover,
                                   resultColMagnCorSl_clover;
@@ -492,7 +510,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         if (lp.topChargeTimeSlices_imp()) {
             LineFormatter newLineTh = fileTopChSl_imp.tag("");
-            topology.template topChargeTimeSlices<true>(resultThSl_imp);
+            topology.template topChargeTimeSlices<true,false>(resultThSl_imp);
             newLineTh << flow_time;
             for (auto &elem : resultThSl_imp) {
                 newLineTh << elem;
@@ -501,8 +519,25 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         }
 
         if (lp.topCharge_imp() && !lp.topCharge_imp_block()) {
-            topChar = topology.template topCharge<true>();
+            topChar = topology.template topCharge<true,false>();
             logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
+            newLine << topChar;
+            topology.recomputeField();
+        }
+
+        if (lp.topChargeTimeSlices_imp_imp()) {
+            LineFormatter newLineTh = fileTopChSl_imp_imp.tag("");
+            topology.template topChargeTimeSlices<false,true>(resultThSl_imp_imp);
+            newLineTh << flow_time;
+            for (auto &elem : resultThSl_imp_imp) {
+                newLineTh << elem;
+            }
+            topology.dontRecomputeField();
+        }
+
+        if (lp.topCharge_imp_imp()) {
+            topChar = topology.template topCharge<false,true>();
+            logStream << std::scientific << std::setprecision(14) << "   topCharge_imp_imp = " << topChar;
             newLine << topChar;
             topology.recomputeField();
         }
@@ -761,7 +796,7 @@ int main(int argc, char *argv[]) {
         }
 
         size_t input_HaloDepth = 1;
-        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp())) {
+        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp() || lp.topCharge_imp_imp() || lp.topChargeTimeSlices_imp_imp())) {
             input_HaloDepth = 2;
         } else if (input_force == zeuthen ) {
             input_HaloDepth = 3;
