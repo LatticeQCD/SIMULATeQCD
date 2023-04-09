@@ -1,5 +1,5 @@
 /* 
- * main_ForceProfiling.cu                                                               
+ * main_ForceProfiling.cpp
  * 
  */
 

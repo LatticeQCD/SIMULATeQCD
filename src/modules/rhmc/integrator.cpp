@@ -6,7 +6,6 @@ struct do_evolve_Q
 {
     do_evolve_Q(gaugeAccessor<floatT, comp> gAcc,gaugeAccessor<floatT> pAccessor,floatT stepsize) : _stepsize(stepsize),
     _pAccessor(pAccessor), _gAcc(gAcc){}
-
     
     double _stepsize;
     gaugeAccessor<floatT> _pAccessor;
@@ -55,7 +54,6 @@ struct get_gauge_Force
     floatT _beta;
 
     get_gauge_Force(gaugeAccessor<floatT, comp> gAcc, floatT beta) : _gAcc(gAcc), _beta(beta){}
-
     __device__ __host__ GSU3<floatT> operator()(gSiteMu siteM){
         typedef GIndexer<All,HaloDepth> GInd;
         gSite site(GInd::getSite(siteM.isite));
@@ -74,7 +72,6 @@ struct get_mom_tr
 {
     gaugeAccessor<floatT> _pAccessor;
     get_mom_tr(gaugeAccessor<floatT> pAccessor): _pAccessor(pAccessor){}
-
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
 
@@ -89,9 +86,8 @@ struct get_mom_tr
 
 // this is called from outside, append switch cases if other integration schemes are added
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::integrate(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
+        Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf) {
 
     switch(_rhmc_param.integrator()) {
         case 0:
@@ -110,9 +106,8 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::inte
 
 // Sexton-Weingarten integration scheme
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf, 
+        Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf) {
 
     floatT ieps, iepsh, steph_sf, step_sf, sw_step, sw_steph;
 
@@ -198,9 +193,8 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
 
 // 2MN PQPQP Omelyan integrator on all scales 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
-void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::PQPQP2MN(
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf){
+void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::PQPQP2MN(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf,
+        Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf) {
 
     double ieps, ieps3, ieps6, ieps23;
     double step_sf, step3_sf, step6_sf, step23_sf;
@@ -259,7 +253,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::PQPQ
         for (int step=1; step <= _rhmc_param.no_step_sf(); step++) { // start loop over steps of sf
 
             for (int sw=1; sw <= _rhmc_param.no_sw(); sw++)  {    // start loop over steps of gauge part
-                  evolveQ( sw_steph );             tauQ += sw_steph;
+                  evolveQ( sw_steph );              tauQ += sw_steph;
                    updateP_gaugeforce( sw_step23 ); tauG += sw_step23;
                    evolveQ( sw_steph );             tauQ += sw_steph;
                    updateP_gaugeforce( sw_step3 );  tauG += sw_step3;
@@ -458,7 +452,7 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 //update P with the fermion force
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_fermforce(floatT stepsize, 
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi, bool light/* std::vector<floatT> rat_coeff*/){
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi, bool light){
     
     for(int i = 0; i < _no_pf; i++) {
         ip_dot_f2_hisq.updateForce(_phi.phi_container.at(i),ipdot,light);
@@ -470,11 +464,8 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 template<class floatT, size_t HaloDepth>
 struct trace {
 
-    trace(gaugeAccessor<floatT> ipdotAccessor) : _ipdotAccessor(ipdotAccessor){}
-
     gaugeAccessor<floatT> _ipdotAccessor;
-    
-
+    trace(gaugeAccessor<floatT> ipdotAccessor) : _ipdotAccessor(ipdotAccessor){}
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
 

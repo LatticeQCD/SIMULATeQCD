@@ -1,5 +1,5 @@
 /*
- * gsvd.hcu
+ * gsvd.h
  *
  *  Created on: May 31, 2011
  *      Author: mathias-wagner
@@ -9,7 +9,6 @@
 #define GSVD_HCU_
 #include "../../base/math/gsu3.h"
 #include "../../base/math/gsu3array.h"
-//#include "gsvd.hcu"
 
 /* define precision for chopping small values */
 #define SVD3x3_PREC 5e-16
@@ -91,196 +90,180 @@
 template<class svdfloatT>
 __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdfloatT *a11, svdfloatT U2[2][2], svdfloatT V2[2][2])
 {
-  register svdfloatT sinphi, cosphi, tanphi, cotphi;
-  register svdfloatT a, b, min, max, abs00, abs01, abs11;
-  register svdfloatT lna01a11, lna00, ln_num, tau, t;
-  register svdfloatT P00, P01, P10, P11;
-  register int isign;
+    register svdfloatT sinphi, cosphi, tanphi, cotphi;
+    register svdfloatT a, b, min, max, abs00, abs01, abs11;
+    register svdfloatT lna01a11, lna00, ln_num, tau, t;
+    register svdfloatT P00, P01, P10, P11;
+    register int isign;
+  
+    U2[0][0]=1.0f; U2[0][1]=0.0f;
+    U2[1][0]=0.0f; U2[1][1]=1.0f;
+    V2[0][0]=1.0f; V2[0][1]=0.0f;
+    V2[1][0]=0.0f; V2[1][1]=1.0f;
+  
+    if( *a00==0 ) {
+        if( *a11==0 ) {
+            cosphi=1.0f;
+            sinphi=0.0f;
+        } else {
+            if( fabs(*a11)>fabs(*a01) ) {
+                cotphi=-(*a01)/(*a11);
+                sinphi=1/sqrt(1+cotphi*cotphi);
+                cosphi=cotphi*sinphi;
+            } else {
+                tanphi=-(*a11)/(*a01);
+                cosphi=1/sqrt(1+tanphi*tanphi);
+                sinphi=tanphi*cosphi;
+            }
+        }
+        /* multiply matrix A */
+        (*a00)=cosphi*(*a01)-sinphi*(*a11);
+        (*a01)=0.0f; (*a11)=0.0f;
+        /* exchange columns in matrix V */
+        V2[0][0]=0.0f; V2[0][1]=1.0f;
+        V2[1][0]=1.0f; V2[1][1]=0.0f;
+        /* U is just Givens rotation */
+        U2[0][0]= cosphi; U2[0][1]= sinphi;
+        U2[1][0]=-sinphi; U2[1][1]= cosphi;
 
-  U2[0][0]=1.0f; U2[0][1]=0.0f;
-  U2[1][0]=0.0f; U2[1][1]=1.0f;
-  V2[0][0]=1.0f; V2[0][1]=0.0f;
-  V2[1][0]=0.0f; V2[1][1]=1.0f;
+    } else if( *a11==0 ) {
+        if( *a01==0 ) {
+            cosphi=1.0f;
+            sinphi=0.0f;
+        } else {
+            if( fabs(*a01)>fabs(*a00) ) {
+                cotphi=-(*a00)/(*a01);
+                sinphi=1/sqrt(1+cotphi*cotphi);
+                cosphi=cotphi*sinphi;
+            }
+            else {
+                tanphi=-(*a01)/(*a00);
+                cosphi=1/sqrt(1+tanphi*tanphi);
+                sinphi=tanphi*cosphi;
+            }
+        }
+        /* multiply matrix A */
+        (*a00)=cosphi*(*a00)-sinphi*(*a01);
+        (*a01)=0.0f; (*a11)=0.0f;
+        /* V is just Givens rotation */
+        V2[0][0]= cosphi; V2[0][1]= sinphi;
+        V2[1][0]=-sinphi; V2[1][1]= cosphi;
 
-  if( *a00==0 ) {
-    if( *a11==0 ) {
-      cosphi=1.0f;
-      sinphi=0.0f;
+    } else if( *a01==0 ) { /* nothing to be done */
+      ;
+    } else {
+        /* need to calculate ( a11^2+a01^2-a00^2 )/( 2*a00*a01 )
+           avoiding overflow/underflow,
+           use logarithmic coding */
+        abs01=fabs(*a01); abs11=fabs(*a11);
+        if(abs01>abs11) {
+            min=abs11; max=abs01;
+        } else {
+            min=abs01; max=abs11;
+        }
+        a=min/max;
+        lna01a11=2*log(max)+log(1+a*a);
+    
+        abs00=fabs(*a00);
+        lna00=2*log(abs00);
+        if( lna01a11>lna00 ) {
+            /* subtract smaller from larger, overall "+" */
+            isign=1;
+            ln_num=lna01a11+log(1.-exp(lna00-lna01a11));
+        } else {
+            /* subtract larger from smaller, need to change order, overall "-" */
+            isign=-1;
+            ln_num=lna00+log(1.-exp(lna01a11-lna00));
+        }
+        a=ln_num-log(2.0f)-log(abs00)-log(abs01);
+        tau=exp(a);
+        tau*=isign;
+        if(*a00<0.) {
+            tau*=-1;
+          }
+        if(*a01<0.) {
+            tau*=-1;
+          }
+    
+        /* calculate b=sqrt(1+tau^2) */
+        a=fabs(tau);
+        if( a>1. ) {
+            max=a; min=1.0f;
+        } else {
+            max=1.0f; min=a;
+        }
+        if( min==0 ) {
+            b = max;
+        } else {
+            a = min/max;
+            b = max*sqrt(1+a*a);
+        }
+        if(tau>=0.) {
+            t = 1.0/(tau + b);
+        } else {
+            t = 1.0/(tau - b);
+        }
+    
+        /* calculate b=sqrt(1+t^2) */
+        a=fabs(t);
+        if( a>1. ) {
+            max=a; min=1.0f;
+        } else {
+            max=1.0f; min=a;
+        }
+        if( min==0 ) {
+            b = max;
+        } else {
+            a = min/max;
+            b = max*sqrt(1+a*a);
+        }
+        cosphi=1./b;
+        sinphi=t*cosphi;
+    
+        /* transform matrix A so it has othogonal columns */
+        P00= cosphi*(*a00)-sinphi*(*a01);
+        P10=-sinphi*(*a11);
+        P01= sinphi*(*a00)+cosphi*(*a01);
+        P11= cosphi*(*a11);
+    
+        /* prepare V  */
+        V2[0][0]= cosphi; V2[0][1]= sinphi;
+        V2[1][0]=-sinphi; V2[1][1]= cosphi;
+    
+        /* make column with the largest norm first column */
+        if( sqrt(P00*P00+P10*P10)<sqrt(P01*P01+P11*P11) ) {
+            a=P00; P00=P01; P01=a;
+            a=P10; P10=P11; P11=a;
+            /* exchange columns in matrix V2 */
+            a=V2[0][0]; V2[0][0]=V2[0][1]; V2[0][1]=a;
+            a=V2[1][0]; V2[1][0]=V2[1][1]; V2[1][1]=a;
+        }
+    
+        /* calculate left Givens rotation and diagonalize */
+        if( P10==0 ) {
+            cosphi=1.0f;
+            sinphi=0.0f;
+        } else {
+            if( fabs(P10)>fabs(P00) ) {
+              cotphi=-P00/P10;
+              sinphi=1/sqrt(1+cotphi*cotphi);
+              cosphi=cotphi*sinphi;
+            } else {
+              tanphi=-P10/P00;
+              cosphi=1/sqrt(1+tanphi*tanphi);
+              sinphi=tanphi*cosphi;
+            }
+        }
+        *a00=P00*cosphi-P10*sinphi;
+        *a01=0.0f;
+        *a11=P01*sinphi+P11*cosphi;
+    
+        /* U is just Givens rotation */
+        U2[0][0]= cosphi; U2[0][1]= sinphi;
+        U2[1][0]=-sinphi; U2[1][1]= cosphi;
     }
-    else {
-      if( fabs(*a11)>fabs(*a01) ) {
-        cotphi=-(*a01)/(*a11);
-        sinphi=1/sqrt(1+cotphi*cotphi);
-        cosphi=cotphi*sinphi;
-      }
-      else {
-        tanphi=-(*a11)/(*a01);
-        cosphi=1/sqrt(1+tanphi*tanphi);
-        sinphi=tanphi*cosphi;
-      }
-    }
-    /* multiply matrix A */
-    (*a00)=cosphi*(*a01)-sinphi*(*a11);
-    (*a01)=0.0f; (*a11)=0.0f;
-    /* exchange columns in matrix V */
-    V2[0][0]=0.0f; V2[0][1]=1.0f;
-    V2[1][0]=1.0f; V2[1][1]=0.0f;
-    /* U is just Givens rotation */
-    U2[0][0]= cosphi; U2[0][1]= sinphi;
-    U2[1][0]=-sinphi; U2[1][1]= cosphi;
-  }
-  else if( *a11==0 ) {
-    if( *a01==0 ) {
-      cosphi=1.0f;
-      sinphi=0.0f;
-    }
-    else {
-      if( fabs(*a01)>fabs(*a00) ) {
-        cotphi=-(*a00)/(*a01);
-        sinphi=1/sqrt(1+cotphi*cotphi);
-        cosphi=cotphi*sinphi;
-      }
-      else {
-        tanphi=-(*a01)/(*a00);
-        cosphi=1/sqrt(1+tanphi*tanphi);
-        sinphi=tanphi*cosphi;
-      }
-    }
-    /* multiply matrix A */
-    (*a00)=cosphi*(*a00)-sinphi*(*a01);
-    (*a01)=0.0f; (*a11)=0.0f;
-    /* V is just Givens rotation */
-    V2[0][0]= cosphi; V2[0][1]= sinphi;
-    V2[1][0]=-sinphi; V2[1][1]= cosphi;
-  }
-  else if( *a01==0 ){ /* nothing to be done */
-    ;
-  }
-  else {
-    /* need to calculate ( a11^2+a01^2-a00^2 )/( 2*a00*a01 )
-       avoiding overflow/underflow,
-       use logarithmic coding */
-    abs01=fabs(*a01); abs11=fabs(*a11);
-    if(abs01>abs11) {
-      min=abs11; max=abs01;
-    }
-    else {
-      min=abs01; max=abs11;
-    }
-    a=min/max;
-    lna01a11=2*log(max)+log(1+a*a);
-
-    abs00=fabs(*a00);
-    lna00=2*log(abs00);
-    if( lna01a11>lna00 ) {
-      /* subtract smaller from larger, overall "+" */
-      isign=1;
-      ln_num=lna01a11+log(1.-exp(lna00-lna01a11));
-    }
-    else {
-      /* subtract larger from smaller, need to change order, overall "-" */
-      isign=-1;
-      ln_num=lna00+log(1.-exp(lna01a11-lna00));
-    }
-    a=ln_num-log(2.0f)-log(abs00)-log(abs01);
-    tau=exp(a);
-    tau*=isign;
-    if(*a00<0.)
-      {
-        tau*=-1;
-      }
-    if(*a01<0.)
-      {
-        tau*=-1;
-      }
-
-    /* calculate b=sqrt(1+tau^2) */
-    a=fabs(tau);
-    if( a>1. ) {
-      max=a; min=1.0f;
-    }
-    else {
-      max=1.0f; min=a;
-    }
-    if( min==0 ) {
-      b = max;
-    }
-    else {
-      a = min/max;
-      b = max*sqrt(1+a*a);
-    }
-    if(tau>=0.) {
-      t = 1.0/(tau + b);
-    }
-    else {
-      t = 1.0/(tau - b);
-    }
-
-    /* calculate b=sqrt(1+t^2) */
-    a=fabs(t);
-    if( a>1. ) {
-      max=a; min=1.0f;
-    }
-    else {
-      max=1.0f; min=a;
-    }
-    if( min==0 ) {
-      b = max;
-    }
-    else {
-      a = min/max;
-      b = max*sqrt(1+a*a);
-    }
-    cosphi=1./b;
-    sinphi=t*cosphi;
-
-    /* transform matrix A so it has othogonal columns */
-    P00= cosphi*(*a00)-sinphi*(*a01);
-    P10=-sinphi*(*a11);
-    P01= sinphi*(*a00)+cosphi*(*a01);
-    P11= cosphi*(*a11);
-
-    /* prepare V  */
-    V2[0][0]= cosphi; V2[0][1]= sinphi;
-    V2[1][0]=-sinphi; V2[1][1]= cosphi;
-
-    /* make column with the largest norm first column */
-    if( sqrt(P00*P00+P10*P10)<sqrt(P01*P01+P11*P11) ) {
-      a=P00; P00=P01; P01=a;
-      a=P10; P10=P11; P11=a;
-      /* exchange columns in matrix V2 */
-      a=V2[0][0]; V2[0][0]=V2[0][1]; V2[0][1]=a;
-      a=V2[1][0]; V2[1][0]=V2[1][1]; V2[1][1]=a;
-    }
-
-    /* calculate left Givens rotation and diagonalize */
-    if( P10==0 ) {
-      cosphi=1.0f;
-      sinphi=0.0f;
-    }
-    else {
-      if( fabs(P10)>fabs(P00) ) {
-        cotphi=-P00/P10;
-        sinphi=1/sqrt(1+cotphi*cotphi);
-        cosphi=cotphi*sinphi;
-      }
-      else {
-        tanphi=-P10/P00;
-        cosphi=1/sqrt(1+tanphi*tanphi);
-        sinphi=tanphi*cosphi;
-      }
-    }
-    *a00=P00*cosphi-P10*sinphi;
-    *a01=0.0f;
-    *a11=P01*sinphi+P11*cosphi;
-
-    /* U is just Givens rotation */
-    U2[0][0]= cosphi; U2[0][1]= sinphi;
-    U2[1][0]=-sinphi; U2[1][1]= cosphi;
-
-  }
-
-  return 0;
+  
+    return 0;
 }
 
 /* Input:  A -- 3x3 complex matrix,   */
@@ -310,7 +293,6 @@ __device__ __host__ GSU3<floatT> svd3x3core(const GSU3<floatT>& AA, floatT* sv){
      therefore this routine uses defines (above) to access them
      and never reads A, U and V directly */
 
-  //TODO we should try to avoid casting
   /* original matrix can be in single precision,
      so copy it into double */
   Ad[0][0][0]=(svdfloatT)A00re; Ad[0][0][1]=(svdfloatT)A00im;
@@ -1698,8 +1680,8 @@ printf( "%+20.16e %+20.16e %+20.16e\n", b20, b21, b22 );
                   GCOMPLEX(floatT)((floatT)Ad[1][1][0],(floatT)Ad[1][1][1]),
                   GCOMPLEX(floatT)((floatT)Ad[1][2][0],(floatT)Ad[1][2][1]),
                   GCOMPLEX(floatT)((floatT)Ad[2][0][0],(floatT)Ad[2][0][1]),
-          GCOMPLEX(floatT)((floatT)Ad[2][1][0],(floatT)Ad[2][1][1]),
-          GCOMPLEX(floatT)((floatT)Ad[2][2][0],(floatT)Ad[2][2][1])
+                  GCOMPLEX(floatT)((floatT)Ad[2][1][0],(floatT)Ad[2][1][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[2][2][0],(floatT)Ad[2][2][1])
                      );
 
   // inner part of SVD routine ends here
