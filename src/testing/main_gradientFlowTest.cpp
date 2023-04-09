@@ -59,7 +59,6 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     //! initialize some values for the measurement
     floatT flow_time = 0;
-    floatT plaq, clov, topChar;
     std::stringstream logStream, logStream_ref;
     logStream << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
     logStream_ref << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);

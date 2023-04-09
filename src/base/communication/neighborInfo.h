@@ -62,8 +62,11 @@ private:
     ProcessInfo _XYZT[8][2];
 
     ProcessInfo fail;
-
+#ifndef USE_CPU_ONLY
     gpuDeviceProp myProp;
+#else
+    void* myProp;
+#endif
 
     inline void _fill2DNeighbors(ProcessInfo array[][2], int mu, int nu);
 
@@ -427,6 +430,7 @@ inline void NeighborInfo::exchangeProcessInfo() {
     rootLogger.debug("> Neighbor information collected!");
 }
 
+#ifndef USE_CPU_ONLY
 inline bool NeighborInfo::IsGPUCapableP2P() const {
     // This requires two processes accessing each device, so we need
     // to ensure exclusive or prohibited mode is not set
@@ -437,9 +441,7 @@ inline bool NeighborInfo::IsGPUCapableP2P() const {
 
 }
 
-
 inline void NeighborInfo::checkP2P() {
-
 //! This checks
     for (const HaloSegment &hseg : AllHaloSegments) {
         for (int dir = 0; dir < HaloSegmentDirections(hseg); dir++) {
@@ -476,5 +478,7 @@ inline void NeighborInfo::checkP2P() {
       , "UVA ", "Unknown (HIP does not support this!)");
 #endif
 }
+#endif
+
 
 #endif //NEIGHBORINFO_H

@@ -99,7 +99,7 @@ void grnd_state<onDevice>::make_rng_state(unsigned int seed){
         while ( ( aux_z = lrand48() ) <= 128 ) {};
         aux_w = lrand48();
 
-        uint4 dummy=make_uint4(aux_x, aux_y, aux_z, aux_w);
+        uint4 dummy = {static_cast<unsigned int>(aux_x), static_cast<unsigned int>(aux_y), static_cast<unsigned int>(aux_z), static_cast<unsigned int>(aux_w)};
 
         //This has to be here, because we need global coordinates!
         int x, y, z, t;

@@ -16,6 +16,7 @@
 #ifndef INDEXERDEVICE
 #define INDEXERDEVICE
 
+
 #include  "../../define.h"
 #include "../gutils.h"
 #include <vector>
@@ -290,10 +291,12 @@ struct LatticeData {
 
 
 };
+
 extern __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO + 1];
 extern struct LatticeData globLatDataCPU[MAXHALO + 1];
 
 /// --------------------------------------------------------------------------------------------- INDEXER INITIALIZATION
+
 
 void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]);
 void initCPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]);

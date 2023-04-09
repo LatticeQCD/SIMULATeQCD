@@ -1,10 +1,10 @@
-/* 
- * logging.h                                                               
- * 
- * L. Mazur 
- * 
- * The logger class, which is used to output information to screen. 
- * 
+/*
+ * logging.h
+ *
+ * L. Mazur
+ *
+ * The logger class, which is used to output information to screen.
+ *
  */
 
 #ifndef LOGGER
@@ -22,8 +22,9 @@
 #include "stringFunctions.h"
 
 
-enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
-static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OFF"};
+enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, RESULT, WARN, ERROR, FATAL, OFF };
+static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO", "RESULT",
+    "WARN", "ERROR", "FATAL", "OFF"};
 
 class Logger {
     private:
@@ -110,8 +111,15 @@ class Logger {
         template <typename... Args> inline std::string debug(Args&&... args) {
             return message<DEBUG>(std::forward<Args>(args)...);
         };
+
+        /// Something seems odd but the program will continue running fine nevertheless.
         template <typename... Args> inline std::string warn(Args&&... args) {
             return message<WARN>(std::forward<Args>(args)...);
+        };
+
+        /// Use this for test results
+        template <typename... Args> inline std::string result(Args&&... args) {
+            return message<RESULT>(std::forward<Args>(args)...);
         };
 
         /*! Use this when something goes wrong but the program can still continue
@@ -129,7 +137,7 @@ class Logger {
         };
 };
 
-/// This logger prints something on each node. It is created in base/communicationBase_*.cpp and its verbosity 
+/// This logger prints something on each node. It is created in base/communicationBase_*.cpp and its verbosity
 /// should be set at the beginning of main()
 extern Logger stdLogger;
 

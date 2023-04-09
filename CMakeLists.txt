@@ -34,6 +34,10 @@ elseif (BACKEND STREQUAL "hip_amd")
     set(USE_HIP ON)
     set(USE_HIP_AMD ON)
     message(STATUS "Using HIP backend for AMD GPUs. (Experimental!)")
+elseif (BACKEND STREQUAL "cpu")
+    message(STATUS "Using CPU only (no GPU backend). Experimental!")
+    add_definitions(-DUSE_CPU_ONLY)
+    #set(USE_CPU_ONLY ON)
 else()
     message(STATUS "Backend ${BACKEND} is not known!")
 endif()
@@ -49,6 +53,8 @@ elseif (USE_HIP_NVIDIA)
     # This will hopefully work in the future
     # project(SIMULATeQCD LANGUAGES CXX HIP)
     project(SIMULATeQCD LANGUAGES CXX CUDA)
+else()
+    project(SIMULATeQCD LANGUAGES CXX)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -109,39 +115,42 @@ elseif (USE_HIP_AMD)
     set(CMAKE_HIP_ARCHITECTURES "${ARCHITECTURE}")
 endif()
 
-if(NOT ARCHITECTURE)
+if(NOT ARCHITECTURE AND NOT BACKEND MATCHES "cpu")
     message(FATAL_ERROR "No GPU architecture set!")
 endif()
 
 set(USE_GPU_AWARE_MPI OFF CACHE BOOL "Set to ON to build gpu-aware MPI code (default = OFF)")
-if (USE_GPU_AWARE_MPI)
-    add_definitions(-DUSE_GPU_AWARE_MPI)
-endif()
 set(USE_GPU_P2P ON CACHE BOOL "Set to ON to build with GPU Direct P2P (default = ON)")
-if (USE_GPU_P2P)
-    if(USE_HIP)
-        message(FATAL_ERROR "GPU_P2P is not supported by HIP!")
+if(NOT BACKEND MATCHES "cpu")
+    if (USE_GPU_AWARE_MPI)
+        add_definitions(-DUSE_GPU_AWARE_MPI)
     endif()
-    add_definitions(-DUSE_GPU_P2P)
+    if (USE_GPU_P2P)
+        if(USE_HIP)
+            message(FATAL_ERROR "GPU_P2P is not supported by HIP!")
+        endif()
+        add_definitions(-DUSE_GPU_P2P)
+    endif()
+    if (USE_GPU_P2P AND NOT USE_GPU_AWARE_MPI)
+        message(FATAL_ERROR "USE_GPU_P2P only works with USE_GPU_AWARE_MPI")
+    endif()
+else()
+    set(USE_GPU_AWARE_MPI OFF)
+    set(USE_GPU_P2P OFF)
 endif()
 
 
 # Additional compiler flags
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
 if (USE_CUDA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
     set(CMAKE_CUDA_FLAGS
         "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
-
 elseif (USE_HIP_AMD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc")
-
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fgpu-rdc")
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --amdgpu-target=${ARCHITECTURE} -fgpu-rdc")
     set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
-
 elseif (USE_HIP_NVIDIA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
-
     add_definitions(-D__HIP_PLATFORM_NVIDIA__ -D__HIP_PLATFORM_NVCC__)
     set(HIP_NVCC_FLAGS "${HIP_NVCC_FLAGS} -O3 -std=c++17 -D__HIP_PLATFORM_NVCC__ -D__HIP_PLATFORM_NVIDIA__ --generate-code arch=compute_${ARCHITECTURE},code=sm_${ARCHITECTURE} --generate-code arch=compute_${ARCHITECTURE},code=compute_${ARCHITECTURE} -rdc=true")
     set(NVCC_LINK_FLAGS "${NVCC_LINK_FLAGS} -rdc=true")
@@ -299,6 +308,7 @@ if (USE_CUDA)
     add_library(CodeBase OBJECT ${SOURCE_FILES_BASE})
     target_compile_definitions(CodeBase PRIVATE
         ARCHITECTURE=${ARCHITECTURE}
+        GIT_HASH="${GIT_HASH}"
         SINGLEPREC=1 DOUBLEPREC=1
         COMP_R18=1 COMP_U3R14=1 COMP_R14=1 COMP_R12=1 COMP_STAGGR12=1
         ${ALL_HALODEPTHS}
@@ -361,6 +371,14 @@ FUNCTION(add_SIMULATeQCD_executable TARGET)
         set_target_properties(${TARGET} _${TARGET}
             PROPERTIES
             COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+    else()
+        add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+
+        target_link_libraries("_${TARGET}" CodeBase)
+        set_target_properties(${TARGET} _${TARGET}
+                PROPERTIES
+                COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}")
     endif()
 ENDFUNCTION()
 
@@ -660,6 +678,10 @@ elseif (USE_HIP_NVIDIA)
     hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
+else()
+    add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" RUNTIME_OUTPUT_DIRECTORY "testing")
 endif()
 target_compile_definitions(SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
 target_compile_definitions(_SimpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
@@ -769,6 +791,7 @@ set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "ap
 SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(applications configConverter)
 
+set_SIMULATeQCD_gpu_backend(src/applications/main_CheckConf.cpp)
 add_SIMULATeQCD_executable(CheckConf src/applications/main_CheckConf.cpp)
 set_SIMULATeQCD_property(CheckConf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(CheckConf PRIVATE HALODEPTH_0=1 COMP_R18=1 SINGLEPREC=1 DOUBLEPREC=1 CPUONLY=1)

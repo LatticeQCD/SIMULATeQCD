@@ -90,7 +90,7 @@ public:
     __device__ __host__ void random( rndstateT * const);   // set gvect3 randomly
     __device__ __host__ void gauss( uint4 * state )
     {
-#ifndef USE_HIP_AMD 
+#if ! defined(USE_HIP_AMD) && ! defined(USE_CPU_ONLY)
    	if constexpr (!std::is_same<floatT,__half>::value) {
 #endif
         floatT radius0,radius1,radius2,phi0,phi1,phi2;
@@ -112,10 +112,11 @@ public:
         _v0 = GCOMPLEX(floatT)(radius0 * cos(phi0), radius0 * sin(phi0));
         _v1 = GCOMPLEX(floatT)(radius1 * cos(phi1), radius1 * sin(phi1));
         _v2 = GCOMPLEX(floatT)(radius2 * cos(phi2), radius2 * sin(phi2));
-#ifndef USE_HIP_AMD
+#if ! defined(USE_HIP_AMD) && ! defined(USE_CPU_ONLY)
 	    }
+#ifdef __GPU_ARCH__
         else {
-            #ifdef __GPU_ARCH__
+
             float radius0,radius1,radius2,phi0,phi1,phi2;
             phi0 = 2.0*M_PI * get_rand<float>(state);
         phi1 = 2.0*M_PI * get_rand<float>(state);
@@ -134,8 +135,8 @@ public:
         _v0 = GCOMPLEX(__half)(__float2half(radius0 * cos(phi0)), __float2half(radius0 * sin(phi0)));
         _v1 = GCOMPLEX(__half)(__float2half(radius1 * cos(phi1)), __float2half(radius1 * sin(phi1)));
         _v2 = GCOMPLEX(__half)(__float2half(radius2 * cos(phi2)), __float2half(radius2 * sin(phi2)));
-        #endif
         }
+#endif
 #endif
     };
 
@@ -231,7 +232,7 @@ __device__ __host__ inline gVect3<floatT> gvect3_unity(const int& i)
 // default value
     return gVect3<floatT> (1, 0, 0);
 }
-#ifndef USE_HIP_AMD
+#if ! defined(USE_HIP_AMD) && ! defined(USE_CPU_ONLY)
 template <>
 __device__ inline gVect3<__half> gvect3_unity(const int& i)
 {
@@ -263,7 +264,7 @@ __device__ __host__ inline gVect3<floatT> gvect3_zero()
 {
     return gVect3<floatT> (0, 0, 0);
 }
-#ifndef USE_HIP_AMD
+#if ! defined(USE_HIP_AMD) && ! defined(USE_CPU_ONLY)
 template<>
 __device__ inline gVect3<__half> gvect3_zero()
 {

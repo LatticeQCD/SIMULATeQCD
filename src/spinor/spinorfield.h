@@ -370,7 +370,7 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     WriteAtLoopStack<LatticeLayout, HaloDepth> writeAtRead;
     size_t elems = getNumberLatticePoints();
 
-    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSite, writeAtRead, elems, 1 ,1 , (gpuStream_t)nullptr, Nmax);
+    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSite, writeAtRead, elems, 1 ,1 , (GPUSTREAM_T_)nullptr, Nmax);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>

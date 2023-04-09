@@ -45,12 +45,12 @@ struct fill_with_gauss {
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct UnitKernel{
 
-    gaugeAccessor<floatT,comp> gaugeAccessor;
-    explicit UnitKernel(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : gaugeAccessor(gauge.getAccessor()){}
+    gaugeAccessor<floatT,comp> gaugeAcc;
+    explicit UnitKernel(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : gaugeAcc(gauge.getAccessor()){}
     __device__ __host__ GSU3<floatT> operator()(gSiteMu siteMu){
         typedef GIndexer<All,HaloDepth> GInd;
         GSU3<double> temp;
-        temp=gaugeAccessor.template getLink<double>(siteMu);
+        temp=gaugeAcc.template getLink<double>(siteMu);
         temp.su3unitarize();
         return temp;
     }

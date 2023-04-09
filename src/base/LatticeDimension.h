@@ -8,6 +8,7 @@
 #ifndef JUST_INDEXER_LATTICEDIMENSION_H
 #define JUST_INDEXER_LATTICEDIMENSION_H
 
+
 #include <iostream>
 #include <stdexcept>
 #include "wrapper/gpu_wrapper.h"

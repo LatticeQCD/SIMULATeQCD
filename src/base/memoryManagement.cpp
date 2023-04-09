@@ -101,6 +101,7 @@ void MemoryManagement::gMemory<onDevice>::copyFrom(const gMemoryPtr<onDeviceSrc>
                                  const size_t offsetSelf , const size_t offsetSrc)
 {
     adjustSize(sizeInBytes);
+#ifndef USE_CPU_ONLY
     gpuError_t gpuErr;
     if (onDevice) {
         /// Device to device
@@ -132,6 +133,9 @@ void MemoryManagement::gMemory<onDevice>::copyFrom(const gMemoryPtr<onDeviceSrc>
                 GpuError("memoryManagement.h: Failed to copy data (HostToHost)", gpuErr);
         }
     }
+#else
+    memcpy(static_cast<char*>(_rawPointer) + offsetSelf, src->getPointer(offsetSrc), sizeInBytes);
+#endif
 }
 
 

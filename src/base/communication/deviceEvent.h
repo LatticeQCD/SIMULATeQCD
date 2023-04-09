@@ -8,6 +8,8 @@
 #ifndef DEVICEEVENT_H
 #define DEVICEEVENT_H
 
+#ifndef USE_CPU_ONLY
+
 #include "../../define.h"
 #include "../gutils.h"
 #include "../wrapper/gpu_wrapper.h"
@@ -103,4 +105,5 @@ public:
     }
 };
 
+#endif
 #endif //DEVICEEVENT_H

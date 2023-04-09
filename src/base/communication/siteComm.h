@@ -26,7 +26,7 @@
 #include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
-#ifndef USE_HIP_AMD
+#if defined(USE_CUDA) || defined(USE_HIP_NVIDIA)
     #include "nvToolsExt.h"
 #endif
 #include "deviceEvent.h"
@@ -93,16 +93,20 @@ public:
         HaloInfo.setSendBase(_haloBuffer_Host);
         HaloInfo.setRecvBase(_haloBuffer_Host_recv);
 
+#ifndef USE_CPU_ONLY
         if (onDevice) {
             HaloInfo.setSendBaseP2P(_haloBuffer_Device);
             if (commB.gpuAwareMPIAvail() || commB.useGpuP2P()) {
                 HaloInfo.setRecvBaseP2P(_haloBuffer_Device_recv);
             }
         }
+#endif
 
         HaloData haldat = HInd::getHalData();
 
+#ifndef USE_CPU_ONLY
         if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.initP2P();
+#endif
 
         for (const auto &hypPlane : HaloHypPlanes) {
             size_t pos_l = 0, pos_r = 0;
@@ -161,9 +165,10 @@ public:
                                 off_r, haldat.get_SubHaloSize(pos_r, LatLayout) * _halElementSize);
             }
         }
-        if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.syncAndInitP2PRanks();
 
 #ifndef CPUONLY
+        if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.syncAndInitP2PRanks();
+
         gpuError_t gpuErr = gpuDeviceSynchronize();
         if (gpuErr != gpuSuccess) {
             GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
@@ -215,8 +220,10 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
-        gpuError_t gpuErr;
 
+#ifndef USE_CPU_ONLY
+        gpuError_t gpuErr;
+#endif
         /// A check that we don't have multiGPU and halosize=0:
         if (_commBase.getNumberProcesses() != 1 && HaloDepth == 0) {
             throw std::runtime_error(stdLogger.fatal("Useless call of CommunicationBase.updateAll() with multiGPU and HaloDepth=0!"));
@@ -234,7 +241,7 @@ public:
         }
 
         if (commtype & COMM_START) {
-
+#ifndef USE_CPU_ONLY
             if (onDevice) {
                 if (!(_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P())) {
                     _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
@@ -249,7 +256,9 @@ public:
                     _extractHalosSeg(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
                                      param);
                 }
-            } else {
+            } else
+#endif
+            {
                 _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >());
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
             }
@@ -257,7 +266,7 @@ public:
 
         if (commtype & COMM_FINISH) {
 
-
+#ifndef USE_CPU_ONLY
             if (onDevice) {
                 if (_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P()) {
                     _injectHalosSeg(getAccessor(), _haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >(),
@@ -271,7 +280,9 @@ public:
                         GpuError("_haloBuffer_Device: Failed to copy to device", gpuErr);
                     _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
                 }
-            } else {
+            } else
+#endif
+            {
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | haltype);
                 _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
             }
@@ -377,12 +388,12 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         Accessor acc,
         GCOMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
-
+#ifndef USE_CPU_ONLY
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
         GpuError("siteComm.h: _extractHalosSeg gpuDeviceSynchronize failed:", gpuErr);
     }
-
+#endif
     _commBase.globalBarrier();
     extractLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(acc, _commBase, HaloInfo,
                                                                                               HaloBuffer, param);
@@ -399,10 +410,12 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                                                                                          acc,
                                                                                          HaloBuffer,
                                                                                          param);
+#ifndef USE_CPU_ONLY
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
         GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
     }
+#endif
     _commBase.globalBarrier();
 
 }

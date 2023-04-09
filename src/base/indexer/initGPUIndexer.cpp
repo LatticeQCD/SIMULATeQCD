@@ -9,6 +9,7 @@
 #include "BulkIndexer.h"
 #include "../indexer/HaloIndexer.h"
 
+#ifndef USE_CPU_ONLY
 
 __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO+1];
 
@@ -62,3 +63,5 @@ void initGPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int
     if (gpuErr)
         GpuError("initGPUHaloIndexer: gpuDeviceSynchronize failed (2)", gpuErr);
 }
+
+#endif

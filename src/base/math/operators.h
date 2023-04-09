@@ -22,13 +22,16 @@ enum Operation {
 
 template<typename T>
 class custom_is_scalar{ public: static constexpr bool value = std::is_scalar<T>::value; };
+#ifndef USE_CPU_ONLY
 template <>
 class custom_is_scalar<__half> {public: static constexpr bool value = true; };
-
+#endif
 template<typename T>
 class custom_is_class{ public: static constexpr bool value = std::is_class<T>::value; };
+#ifndef USE_CPU_ONLY
 template <>
 class custom_is_class<__half>{ public: static constexpr bool value = false; };
+#endif
 
 template<typename typeLHS,
         typename typeRHS,
@@ -516,13 +519,15 @@ auto operator/(const GeneralOperator<typeLHS1, typeRHS1, op1> &lhs,
 
 template<typename inputType>
 using isAllowedType = typename std::enable_if<custom_is_scalar<inputType>::value
+                                              #ifndef USE_CPU_ONLY
                                               || std::is_same<inputType, GCOMPLEX(__half)>::value
+                                              || std::is_same<inputType, GSU3<__half> >::value
+                                              || std::is_same<inputType, gVect3<__half> >::value
+                                              #endif
                                               || std::is_same<inputType, GCOMPLEX(float)>::value
                                               || std::is_same<inputType, GCOMPLEX(double)>::value
-                                              || std::is_same<inputType, GSU3<__half> >::value
                                               || std::is_same<inputType, GSU3<float> >::value
                                               || std::is_same<inputType, GSU3<double> >::value
-                                              || std::is_same<inputType, gVect3<__half> >::value
                                               || std::is_same<inputType, gVect3<float> >::value
                                               || std::is_same<inputType, gVect3<double> >::value, inputType>::type;
 

@@ -17,6 +17,7 @@
 #ifndef SP_COMPLEX_HCU
 #define SP_COMPLEX_HCU
 
+
 #include "../wrapper/gpu_wrapper.h"
 #include "floatComparison.h"
 #include <complex>
@@ -34,10 +35,12 @@ template <> class Selector<double> {
 public:
   using Type = double2;
 };
+#ifndef USE_CPU_ONLY
 template <> class Selector<__half> {
 public:
   using Type = __half2;
 };
+#endif
 
 /**
  * A utility class to provide complex numbers for operation
@@ -46,7 +49,7 @@ public:
 template <class floatT, typename floatT2 = typename Selector<floatT>::Type>
 class GPUcomplex {
 public:
-  floatT2 c;
+    floatT2 c;
 #define cREAL c.x
 #define cIMAG c.y
   /**
@@ -59,8 +62,8 @@ public:
    * Utility constructor, creates class from given real and imaginary value
    */
   __host__ __device__ GPUcomplex(const floatT &real, const floatT &imag) {
-    c.x = real;
-    c.y = imag;
+    cREAL = real;
+    cIMAG = imag;
   };
 
   /**
@@ -68,17 +71,17 @@ public:
    * to be zero.
    */
   __host__ __device__ GPUcomplex(const floatT &real) {
-    c.x = real;
-    c.y = 0.0f;
+    cREAL = real;
+    cIMAG = 0.0f;
   };
 
   __host__ GPUcomplex(const std::complex<float> &orig) {
-    c.x = std::real<floatT>(orig);
-    c.y = std::imag<floatT>(orig);
+    cREAL = std::real<floatT>(orig);
+    cIMAG = std::imag<floatT>(orig);
   }
   __host__ GPUcomplex(const std::complex<double> &orig) {
-    c.x = std::real<floatT>(orig);
-    c.y = std::imag<floatT>(orig);
+    cREAL = std::real<floatT>(orig);
+    cIMAG = std::imag<floatT>(orig);
   }
 
   __host__ __device__ GPUcomplex &operator=(const GPUcomplex<float> &orig) {
@@ -92,49 +95,49 @@ public:
   }
 
   __host__ __device__ GPUcomplex &operator=(const floatT &orig) {
-    this->c.x = orig;
-    this->c.y = 0.0f;
+    this->cREAL = orig;
+    this->cIMAG = 0.0f;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator+=(const GPUcomplex &op) {
-    this->c.x += op.c.x;
-    this->c.y += op.c.y;
+    this->cREAL += op.cREAL;
+    this->cIMAG += op.cIMAG;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator+=(const floatT &op) {
-    this->c.x += op;
+    this->cREAL += op;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator-=(const GPUcomplex &op) {
-    this->c.x -= op.c.x;
-    this->c.y -= op.c.y;
+    this->cREAL -= op.cREAL;
+    this->cIMAG -= op.cIMAG;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator-=(const floatT &op) {
-    this->c.x -= op;
+    this->cREAL -= op;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator*=(const GPUcomplex &op) {
-    floatT newReal = this->c.x * op.c.x - this->c.y * op.c.y;
-    this->c.y = this->c.x * op.c.y + this->c.y * op.c.x;
-    this->c.x = newReal;
+    floatT newReal = this->cREAL * op.cREAL - this->cIMAG * op.cIMAG;
+    this->cIMAG = this->cREAL * op.cIMAG + this->cIMAG * op.cREAL;
+    this->cREAL = newReal;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator*=(const floatT &op) {
-    this->c.x *= op;
-    this->c.y *= op;
+    this->cREAL *= op;
+    this->cIMAG *= op;
     return *this;
   }
 
   __host__ __device__ GPUcomplex &operator/=(const floatT &op) {
-    this->c.x /= op;
-    this->c.y /= op;
+    this->cREAL /= op;
+    this->cIMAG /= op;
     return *this;
   }
 
@@ -142,61 +145,61 @@ public:
   /// cmp_rel breaks down in that case.
   __host__ __device__ bool operator==(const GPUcomplex &op) {
     ////TODO:: THAT PRECISION HAS TO BE CHANGED!!
-    return (cmp_rel<floatT>(this->c.x, op.c.x, 1.e-6, 1.e-6) &&
-            cmp_rel<floatT>(this->c.y, op.c.y, 1.e-6, 1.e-6));
-    //	return (isApproximatelyEqual<floatT>(this->c.x, op.c.x, 1.e-14) &&
-    //isApproximatelyEqual<floatT>(this->c.y, op.c.y, 1.e-14));
+    return (cmp_rel<floatT>(this->cREAL, op.cREAL, 1.e-6, 1.e-6) &&
+            cmp_rel<floatT>(this->cIMAG, op.cIMAG, 1.e-6, 1.e-6));
+    //	return (isApproximatelyEqual<floatT>(this->cREAL, op.cREAL, 1.e-14) &&
+    //isApproximatelyEqual<floatT>(this->cIMAG, op.cIMAG, 1.e-14));
   }
 
   __host__ __device__ friend GPUcomplex operator+(const GPUcomplex &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left.c.x + right.c.x, left.c.y + right.c.y);
+    return GPUcomplex(left.cREAL + right.cREAL, left.cIMAG + right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator+(const GPUcomplex &left,
                                                   const floatT &right) {
-    return GPUcomplex(left.c.x + right, left.c.y);
+    return GPUcomplex(left.cREAL + right, left.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator+(const floatT &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left + right.c.x, right.c.y);
+    return GPUcomplex(left + right.cREAL, right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator-(const GPUcomplex &op) {
-    return GPUcomplex(-op.c.x, -op.c.y);
+    return GPUcomplex(-op.cREAL, -op.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator-(const GPUcomplex &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left.c.x - right.c.x, left.c.y - right.c.y);
+    return GPUcomplex(left.cREAL - right.cREAL, left.cIMAG - right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator-(const GPUcomplex &left,
                                                   const floatT &right) {
-    return GPUcomplex(left.c.x - right, left.c.y);
+    return GPUcomplex(left.cREAL - right, left.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator-(const floatT &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left - right.c.x, -right.c.y);
+    return GPUcomplex(left - right.cREAL, -right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator*(const GPUcomplex &left,
                                                   const GPUcomplex &right) {
-    floatT newReal = left.c.x * right.c.x - left.c.y * right.c.y;
-    floatT newImag = left.c.x * right.c.y + left.c.y * right.c.x;
+    floatT newReal = left.cREAL * right.cREAL - left.cIMAG * right.cIMAG;
+    floatT newImag = left.cREAL * right.cIMAG + left.cIMAG * right.cREAL;
     return GPUcomplex(newReal, newImag);
   }
 
   __host__ __device__ friend GPUcomplex operator*(const GPUcomplex &left,
                                                   const floatT &right) {
-    return GPUcomplex(left.c.x * right, left.c.y * right);
+    return GPUcomplex(left.cREAL * right, left.cIMAG * right);
   }
 
   __host__ __device__ friend GPUcomplex operator*(const floatT &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left * right.c.x, left * right.c.y);
+    return GPUcomplex(left * right.cREAL, left * right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex
@@ -204,11 +207,11 @@ public:
     floatT real_res;
     floatT imag_res;
 
-    real_res = (x.c.x * y.c.x) + d.c.x;
-    imag_res = (x.c.x * y.c.y) + d.c.y;
+    real_res = (x.cREAL * y.cREAL) + d.cREAL;
+    imag_res = (x.cREAL * y.cIMAG) + d.cIMAG;
 
-    real_res = -(x.c.y * y.c.y) + real_res;
-    imag_res = (x.c.y * y.c.x) + imag_res;
+    real_res = -(x.cIMAG * y.cIMAG) + real_res;
+    imag_res = (x.cIMAG * y.cREAL) + imag_res;
 
     return GPUcomplex(real_res, imag_res);
   }
@@ -218,26 +221,26 @@ public:
     floatT real_res;
     floatT imag_res;
 
-    real_res = (x * y.c.x) + d.c.x;
-    imag_res = (x * y.c.y) + d.c.y;
+    real_res = (x * y.cREAL) + d.cREAL;
+    imag_res = (x * y.cIMAG) + d.cIMAG;
 
     return GPUcomplex(real_res, imag_res);
   }
 
   __host__ __device__ void addProduct(const GPUcomplex &x,
                                       const GPUcomplex &y) {
-    this->c.x = (x.c.x * y.c.x) + this->c.x;
-    this->c.y = (x.c.x * y.c.y) + this->c.y;
+    this->cREAL = (x.cREAL * y.cREAL) + this->cREAL;
+    this->cIMAG = (x.cREAL * y.cIMAG) + this->cIMAG;
 
-    this->c.x = -(x.c.y * y.c.y) + this->c.x;
-    this->c.y = (x.c.y * y.c.x) + this->c.y;
+    this->cREAL = -(x.cIMAG * y.cIMAG) + this->cREAL;
+    this->cIMAG = (x.cIMAG * y.cREAL) + this->cIMAG;
 
     return;
   }
 
   __host__ __device__ void addProduct(const floatT &x, const GPUcomplex &y) {
-    this->c.x = (x * y.c.x) + this->c.x;
-    this->c.y = (x * y.c.y) + this->c.y;
+    this->cREAL = (x * y.cREAL) + this->cREAL;
+    this->cIMAG = (x * y.cIMAG) + this->cIMAG;
 
     return;
   }
@@ -245,15 +248,15 @@ public:
   template <typename T>
   __host__ __device__ friend GPUcomplex operator/(const GPUcomplex &left,
                                                   const T &right) {
-    return GPUcomplex(left.c.x / right, left.c.y / right);
+    return GPUcomplex(left.cREAL / right, left.cIMAG / right);
   }
 
   template <typename T>
   __host__ __device__ friend GPUcomplex operator/(const T &left,
                                                   const GPUcomplex &right) {
     return GPUcomplex(
-        left * right.c.x / (right.c.x * right.c.x + right.c.y * right.c.y),
-        -left * right.c.y / (right.c.x * right.c.x + right.c.y * right.c.y));
+        left * right.cREAL / (right.cREAL * right.cREAL + right.cIMAG * right.cIMAG),
+        -left * right.cIMAG / (right.cREAL * right.cREAL + right.cIMAG * right.cIMAG));
   }
 
   __host__ __device__ inline static GPUcomplex invalid();
@@ -276,13 +279,13 @@ public:
   __host__ __device__ GPUcomplex(){};
 
   __host__ __device__ GPUcomplex(const __half &real, const __half &imag) {
-    c.x = real;
-    c.y = imag;
+    cREAL = real;
+    cIMAG = imag;
   };
 
   __host__ __device__ GPUcomplex(const __half &real) {
-    c.x = real;
-    c.y = __float2half(0.0f);
+    cREAL = real;
+    cIMAG = __float2half(0.0f);
   };
 
   __host__ __device__ GPUcomplex(const __half2 &vec_type) { c = vec_type; };
@@ -293,8 +296,8 @@ public:
   }
 
   __host__ __device__ GPUcomplex &operator=(const GPUcomplex<double> &orig) {
-    __half realpart = __double2half(orig.c.x);
-    __half imagpart = __double2half(orig.c.y);
+    __half realpart = __double2half(orig.cREAL);
+    __half imagpart = __double2half(orig.cIMAG);
     this->c = __halves2half2(realpart, imagpart);
     return *this;
   }
@@ -304,12 +307,12 @@ public:
     return *this;
   }
   __host__ __device__ GPUcomplex &operator=(const __half &orig) {
-    this->c.x = orig;
-    this->c.y = 0.0f;
+    this->cREAL = orig;
+    this->cIMAG = 0.0f;
     return *this;
   }
   __host__ __device__ GPUcomplex &operator+=(const __half &op) {
-    this->c.x += op;
+    this->cREAL += op;
     return *this;
   }
   __host__ __device__ GPUcomplex &operator+=(const GPUcomplex &op) {
@@ -324,10 +327,10 @@ public:
 
   __host__ __device__ GPUcomplex &operator*=(const GPUcomplex &op) {
 
-    const __half2 a_re = __half2half2(this->c.x);
+    const __half2 a_re = __half2half2(this->cREAL);
     __half2 acc = __hfma2(a_re, op.c, __float2half2_rn(0.0));
-    const __half2 a_im = __half2half2(this->c.y);
-    const __half2 ib = __halves2half2(__hneg(op.c.y), op.c.x);
+    const __half2 a_im = __half2half2(this->cIMAG);
+    const __half2 ib = __halves2half2(__hneg(op.cIMAG), op.cREAL);
     acc = __hfma2(a_im, ib, acc);
     //            __half2 result = __hcmadd( this->c , op.c , __float2half2_rn (
     //            0.0 ) );
@@ -354,12 +357,12 @@ public:
 
   __host__ __device__ friend GPUcomplex operator+(const GPUcomplex &left,
                                                   const __half &right) {
-    return GPUcomplex(left.c.x + right, left.c.y);
+    return GPUcomplex(left.cREAL + right, left.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator+(const __half &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left + right.c.x, right.c.y);
+    return GPUcomplex(left + right.cREAL, right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator-(const GPUcomplex &op) {
@@ -373,21 +376,21 @@ public:
 
   __host__ __device__ friend GPUcomplex operator-(const GPUcomplex &left,
                                                   const __half &right) {
-    return GPUcomplex(left.c.x - right, left.c.y);
+    return GPUcomplex(left.cREAL - right, left.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator-(const __half &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left - right.c.x, -right.c.y);
+    return GPUcomplex(left - right.cREAL, -right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex operator*(const GPUcomplex &left,
                                                   const GPUcomplex &right) {
 
-    const __half2 a_re = __half2half2(left.c.x);
+    const __half2 a_re = __half2half2(left.cREAL);
     __half2 acc = __hfma2(a_re, right.c, __float2half2_rn(0.0));
-    const __half2 a_im = __half2half2(left.c.y);
-    const __half2 ib = __halves2half2(__hneg(right.c.y), right.c.x);
+    const __half2 a_im = __half2half2(left.cIMAG);
+    const __half2 ib = __halves2half2(__hneg(right.cIMAG), right.cREAL);
     acc = __hfma2(a_im, ib, acc);
     //            __half2 result = __hcmadd( left.c , right.c , __float2half2_rn
     //            ( 0.0 ) );
@@ -397,20 +400,20 @@ public:
 
   __host__ __device__ friend GPUcomplex operator*(const GPUcomplex &left,
                                                   const __half &right) {
-    return GPUcomplex(left.c.x * right, left.c.y * right);
+    return GPUcomplex(left.cREAL * right, left.cIMAG * right);
   }
 
   __host__ __device__ friend GPUcomplex operator*(const __half &left,
                                                   const GPUcomplex &right) {
-    return GPUcomplex(left * right.c.x, left * right.c.y);
+    return GPUcomplex(left * right.cREAL, left * right.cIMAG);
   }
 
   __host__ __device__ friend GPUcomplex
   fma(const GPUcomplex &a, const GPUcomplex &b, const GPUcomplex &d) {
-    const __half2 a_re = __half2half2(a.c.x);
+    const __half2 a_re = __half2half2(a.cREAL);
     __half2 acc = __hfma2(a_re, b.c, d.c);
-    const __half2 a_im = __half2half2(a.c.y);
-    const __half2 ib = __halves2half2(__hneg(b.c.y), b.c.x);
+    const __half2 a_im = __half2half2(a.cIMAG);
+    const __half2 ib = __halves2half2(__hneg(b.cIMAG), b.cREAL);
     acc = __hfma2(a_im, ib, acc);
     //            return GPUcomplex( __hcmadd( x.c, y.c, d.c ) );
     return GPUcomplex(acc);
@@ -424,10 +427,10 @@ public:
 
   __host__ __device__ void addProduct(const GPUcomplex &a,
                                       const GPUcomplex &b) {
-    const __half2 a_re = __half2half2(a.c.x);
+    const __half2 a_re = __half2half2(a.cREAL);
     __half2 acc = __hfma2(a_re, b.c, this->c);
-    const __half2 a_im = __half2half2(a.c.y);
-    const __half2 ib = __halves2half2(__hneg(b.c.y), b.c.x);
+    const __half2 a_im = __half2half2(a.cIMAG);
+    const __half2 ib = __halves2half2(__hneg(b.cIMAG), b.cREAL);
     acc = __hfma2(a_im, ib, acc);
     this->c = acc;
     // this->c = __hcmadd( x.c, y.c, this->c );
@@ -443,7 +446,7 @@ public:
   template <typename T>
   __host__ __device__ friend GPUcomplex operator/(const GPUcomplex &left,
                                                   const T &right) {
-    return GPUcomplex(left.c.x / right, left.c.y / right);
+    return GPUcomplex(left.cREAL / right, left.cIMAG / right);
   }
 
   __host__ __device__ friend GPUcomplex operator/(const GPUcomplex &left,
@@ -457,8 +460,8 @@ public:
   __host__ __device__ friend GPUcomplex operator/(const T &left,
                                                   const GPUcomplex &right) {
     return GPUcomplex(
-        left * right.c.x / (right.c.x * right.c.x + right.c.y * right.c.y),
-        -left * right.c.y / (right.c.x * right.c.x + right.c.y * right.c.y));
+        left * right.cREAL / (right.cREAL * right.cREAL + right.cIMAG * right.cIMAG),
+        -left * right.cIMAG / (right.cREAL * right.cREAL + right.cIMAG * right.cIMAG));
   }
 
   __host__ __device__ inline static GPUcomplex invalid();
@@ -475,34 +478,34 @@ public:
 
 template <class floatT>
 __host__ __device__ inline floatT real(const GPUcomplex<floatT> &op) {
-  return op.c.x;
+  return op.cREAL;
 }
 
 template <class floatT>
 __host__ __device__ inline floatT imag(const GPUcomplex<floatT> &op) {
-  return op.c.y;
+  return op.cIMAG;
 }
 
 template <class floatT>
 __host__ __device__ inline floatT abs(const GPUcomplex<floatT> &op) {
-  floatT square = op.c.x * op.c.x + op.c.y * op.c.y;
+  floatT square = op.cREAL * op.cREAL + op.cIMAG * op.cIMAG;
   return sqrtf(square);
 }
 
 template <class floatT>
 __host__ __device__ inline floatT abs2(const GPUcomplex<floatT> &op) {
-  return op.c.x * op.c.x + op.c.y * op.c.y;
+  return op.cREAL * op.cREAL + op.cIMAG * op.cIMAG;
 }
 
 template <class floatT>
 __host__ __device__ inline GPUcomplex<floatT>
 conj(const GPUcomplex<floatT> &op) {
-  return GPUcomplex<floatT>(op.c.x, -op.c.y);
+  return GPUcomplex<floatT>(op.cREAL, -op.cIMAG);
 }
 
 template <class floatT>
 __host__ __device__ inline floatT arg(const GPUcomplex<floatT> &op) {
-  return atan2(op.c.y, op.c.x);
+  return atan2(op.cIMAG, op.cREAL);
 }
 
 template <class floatT>

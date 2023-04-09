@@ -38,7 +38,11 @@ private:
     bool recvReqUsed = false;
     MPI_Request hostRequestSend = 0;
     MPI_Request hostRequestRecv = 0;
+#ifndef USE_CPU_ONLY
     std::vector<gpuStream_t> deviceStream;
+#else
+    std::vector<void*> deviceStream;
+#endif
     std::vector<bool> streamUsed;
 
 public:
@@ -146,13 +150,13 @@ public:
         recvReqUsed = true;
         return hostRequestRecv;
     }
-
+#ifndef USE_CPU_ONLY
     gpuStream_t &getDeviceStream(int ind = 0) {
         streamUsed[ind] = true;
 
         return deviceStream[ind];
     }
-
+#endif
 
     void init(__attribute__((unused)) int deviceStreamCount = 2) {
 #ifndef CPUONLY
@@ -165,6 +169,7 @@ public:
         hostRequestRecv = MPI_REQUEST_NULL;
     }
 
+#ifndef USE_CPU_ONLY
     int addDeviceStream() {
         deviceStream.emplace_back();
 
@@ -176,12 +181,16 @@ public:
         streamUsed[lastIndex] = false;
         return lastIndex;
     }
+#endif
 
     void synchronizeAll() {
+#ifndef USE_CPU_ONLY
         synchronizeStream();
+#endif
         synchronizeRequest();
     }
 
+#ifndef USE_CPU_ONLY
     void synchronizeStream(int streamIndex = -1) {
         if (streamIndex == -1){
             for (unsigned int i = 0; i < deviceStream.size();i++){
@@ -200,6 +209,7 @@ public:
             }
         }
     }
+#endif
 
     void synchronizeRequest(int sendRecv = -1) {
 
@@ -233,7 +243,7 @@ public:
     uint8_t *getMyDeviceDestinationPtr() {
         return &destinationBase->template getPointer<uint8_t>()[reverseOffset];
     }
-
+#ifndef USE_CPU_ONLY
     uint8_t *getDeviceDestinationPtrP2P() {
         return destinationBase->getOppositeP2PPointer(oppositeP2PRank) + reverseOffset;
     }
@@ -241,12 +251,15 @@ public:
     uint8_t *getDeviceDestinationPtrGPUAwareMPI() {
         return &destinationBase->template getPointer<uint8_t>()[offset];
     }
+#endif
 
     ~HaloSegmentInfo() {
+#ifndef USE_CPU_ONLY
         for (auto & i : deviceStream) {
             gpuError_t gpuErr = gpuStreamDestroy(i);
             if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamDestroy", gpuErr);
         }
+#endif
 
         if ((hostRequestSend != MPI_REQUEST_NULL) && (hostRequestSend != 0)) {
             MPI_Request_free(&hostRequestSend);
@@ -280,7 +293,11 @@ private:
     std::array<HaloSegmentInfo,32> _stripeInfo;
     std::array<HaloSegmentInfo,16> _cornerInfo;
 
+#ifndef USE_CPU_ONLY
     gpuIPCEvent _cIPCEvent;
+#else
+    void* _cIPCEvent;
+#endif
 
 
 public:
@@ -299,8 +316,11 @@ public:
             sendBaseP2P(MemoryManagement::getMemAt<true>("sendBaseP2P")),
             recvBaseP2P(MemoryManagement::getMemAt<true>("recvBaseP2P")),
             _gpuAwareMPI(gpuAwareMPI),
-            _gpuP2P(gpuP2P),
-            _cIPCEvent(cart_comm, _myRank) {
+            _gpuP2P(gpuP2P)
+#ifndef USE_CPU_ONLY
+    ,_cIPCEvent(cart_comm, _myRank)
+#endif
+            {
 
         for (auto &HypPlane : HaloHypPlanes) {
             _HalSegMapLeft[HypPlane] = _hypPlaneInfo.data();
@@ -420,6 +440,7 @@ public:
         recvBaseP2P = ptr;
     }
 
+#ifndef USE_CPU_ONLY
     void initP2P() {
         if (_gpuP2P && onDevice) {
             sendBaseP2P->initP2P(cart_comm, _myRank);
@@ -427,6 +448,7 @@ public:
             //      _cIPCEvent = gpuIPCEvent(cart_comm,_myRank);
         }
     }
+#endif
 
     gMemoryPtr<true> getRecvBaseP2P() {
         return recvBaseP2P;
@@ -435,7 +457,7 @@ public:
     void setMemoryPointer(HaloSegmentInfo &segInfo, ProcessInfo &neighborInfo, int index, int oppositeIndex) {
         segInfo.setRecvBase(recvBase);
         segInfo.setSendBase(sendBase);
-
+#ifndef USE_CPU_ONLY
         if (onDevice) {
             segInfo.setSourceBase(sendBaseP2P);
             if (_gpuP2P || _gpuAwareMPI)segInfo.setDestinationBase(recvBaseP2P);
@@ -453,8 +475,10 @@ public:
                 _cIPCEvent.addP2PRank(index, oppositeIndex, neighborInfo.world_rank);
             }
         }
+#endif
     }
 
+#ifndef USE_CPU_ONLY
     void syncAndInitP2PRanks() {
         if (onDevice && _gpuP2P) {
             sendBaseP2P->syncAndInitP2PRanks();
@@ -462,6 +486,7 @@ public:
             _cIPCEvent.syncAndInitAllP2PRanks();
         }
     }
+#endif
 
     void exchangeHandles() {
         for (const HaloSegment &hseg : AllHaloSegments) {
@@ -517,6 +542,7 @@ public:
         }
     }
 
+#ifndef USE_CPU_ONLY
     deviceEventPair &getGpuEventPair(HaloSegment hseg, size_t direction, bool leftRight) {
         int oppositeIndex = haloSegmentCoordToIndex(hseg, direction, !leftRight);
         int rank = neighbor_info.getNeighborInfo(hseg, direction, leftRight).world_rank;
@@ -528,6 +554,7 @@ public:
         int rank = neighbor_info.getNeighborInfo(hseg, direction, leftRight).world_rank;
         return _cIPCEvent.getMyEventPair(index, rank);
     }
+#endif
 
     HaloSegmentInfo &get(HaloSegment hseg, size_t direction, bool leftRight) {
         size_t pos_l = getSegTypeOffset(hseg, direction);

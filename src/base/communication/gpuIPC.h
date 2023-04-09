@@ -8,6 +8,7 @@
 #ifndef GPUIPC_H
 #define GPUIPC_H
 
+#ifndef USE_CPU_ONLY
 #include <mpi.h>
 #include "../../define.h"
 #include <map>
@@ -434,4 +435,5 @@ public:
 
 };
 
+#endif
 #endif //GPUIPC_H

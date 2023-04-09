@@ -8,6 +8,7 @@
 #include <cmath>
 #include <limits>
 #include "../wrapper/gpu_wrapper.h"
+#include "../../define.h"
 
 
 

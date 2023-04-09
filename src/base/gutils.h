@@ -36,6 +36,7 @@ __host__ void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
 /**
  * Utility class to report errors in GPU code.
  */
+#ifndef USE_CPU_ONLY
 class GpuError {
 public:
     explicit GpuError(gpuError_t err);
@@ -49,7 +50,7 @@ public:
 private:
     gpuError_t gpuErr;
 };
-
+#endif
 /**
  * Utility method for speedy testing of whether a number is odd
  */

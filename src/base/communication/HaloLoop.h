@@ -79,16 +79,21 @@ public:
                     ExtractInnerHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> extractLeft(acc,
                                                                                                        hal_acc);
 #ifdef DYNAMIC_HALO_LOOP
+#ifdef USE_CPU_ONLY
+                    void* stream = nullptr;
+#else
+                    GPUSTREAM_T_ stream = segmentInfo.getDeviceStream(streamNo);
+#endif
                     iterateFunctorNoReturn<onDevice>(extractLeft,
                                                             CalcInnerHaloSegIndexComm<floatT, LatLayout, HaloDepth>(
                                                                     hseg, subIndex),
-                                                            length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+                                                            length, 1, 1, stream);
 #else
                     iterateFunctorNoReturn<onDevice>(extractLeft,
                                                     CalcInnerHaloSegIndexComm<floatT, LatLayout, HaloDepth, hseg, subIndex>(),
-                                                    length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+                                                    length, 1, 1, stream);
 #endif
-
+#ifndef USE_CPU_ONLY
                     if (info.p2p && onDevice && commBase.useGpuP2P()) {
                         deviceEventPair &p2pCopyEvent = HalInfo.getMyGpuEventPair(hseg, dir, leftRight);
                         p2pCopyEvent.start.record(segmentInfo.getDeviceStream());
@@ -106,6 +111,7 @@ public:
                         deviceEventPair &p2pCopyEvent = HalInfo.getMyGpuEventPair(hseg, dir, leftRight);
                         p2pCopyEvent.stop.record(segmentInfo.getDeviceStream());
                     }
+#endif
                 }
             }
         }
@@ -180,7 +186,7 @@ public:
             if (size != 0) {
 
                 int streamNo = 1;
-
+#ifndef USE_CPU_ONLY
                 if (info.p2p && onDevice && commBase.useGpuP2P()) {
                     deviceEvent &p2pCopyEvent = HalInfo.getGpuEventPair(hseg, dir, leftRight).stop;
                     p2pCopyEvent.streamWaitForMe(segmentInfo.getDeviceStream(streamNo));
@@ -189,6 +195,7 @@ public:
                 if (onDevice && commBase.useGpuP2P() && info.sameRank) {
                     segmentInfo.synchronizeStream(0);
                 }
+#endif
                 if (!onDevice || (onDevice && !commBase.useGpuP2P())) {
                     segmentInfo.synchronizeRequest();
                 }
@@ -197,15 +204,20 @@ public:
                                                                                                  Accessor(pointer,
                                                                                                           size));
 #ifdef DYNAMIC_HALO_LOOP
+#ifdef USE_CPU_ONLY
+                void* stream = nullptr;
+#else
+                GPUSTREAM_T_ stream = segmentInfo.getDeviceStream(streamNo);
+#endif
                 iterateFunctorNoReturn<onDevice>(injectLeft,
                                                         CalcOuterHaloSegIndexComm<floatT, LatLayout, HaloDepth>(
                                                                 hseg,
                                                                 subIndex),
-                                                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+                                                        length, 1, 1, stream);
 #else
                 iterateFunctorNoReturn<onDevice>(injectLeft,
                                                         CalcOuterHaloSegIndexComm<floatT, LatLayout, HaloDepth, hseg, subIndex>(),
-                                                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+                                                        length, 1, 1, stream);
 #endif
             }
         }

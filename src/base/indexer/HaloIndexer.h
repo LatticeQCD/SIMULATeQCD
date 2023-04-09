@@ -269,14 +269,15 @@ private:
 
 };
 
-
+#ifndef USE_CPU_ONLY
 extern __device__ __constant__ struct HaloData globHalDataGPU[MAXHALO + 1];
 extern __device__ __constant__ struct HaloData globHalDataGPUReduced[MAXHALO + 1];
+#endif
+
 extern struct HaloData globHalDataCPU[MAXHALO + 1];
 extern struct HaloData globHalDataCPUReduced[MAXHALO + 1];
 
 void initGPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt);
-
 void initCPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt);
 
 template<Layout LatLayout, size_t HaloDepth>
@@ -346,7 +347,7 @@ public:
     __device__ __host__ ~HaloIndexer() {};
 
     __device__ __host__ inline static HaloData getHalData() {
-#ifdef __GPU_ARCH__
+#if defined(__GPU_ARCH__)
         return globHalDataGPU[HaloDepth];
 #else
         return globHalDataCPU[HaloDepth];
@@ -354,7 +355,7 @@ public:
     }
 
     __device__ __host__ inline static HaloData getHalDataReduced() {
-#ifdef __GPU_ARCH__
+#if defined(__GPU_ARCH__)
         return globHalDataGPUReduced[HaloDepth];
 #else
         return globHalDataCPUReduced[HaloDepth];

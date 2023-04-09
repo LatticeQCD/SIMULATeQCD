@@ -8,6 +8,8 @@
 #ifndef DEVICESTREAM_H
 #define DEVICESTREAM_H
 
+#ifndef USE_CPU_ONLY
+
 #include "../../define.h"
 #include "../gutils.h"
 
@@ -71,4 +73,5 @@ public:
 
 };
 
+#endif
 #endif //DEVICEEVENT_H
