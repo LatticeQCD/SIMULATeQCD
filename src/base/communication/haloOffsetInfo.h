@@ -20,6 +20,7 @@
 #include <utility>
 #include "neighborInfo.h"
 #include "../memoryManagement.h"
+#include <array>
 
 struct HaloSegmentInfo {
 private:
