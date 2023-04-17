@@ -10,27 +10,82 @@
 
 SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it simple and easy for physicists to implement lattice QCD formulas while still providing the best possible performance.
 
+- [SIMULATeQCD](#simulateqcd)
+  - [How to Build](#how-to-build)
+    - [Prerequisites](#prerequisites)
+    - [Download SimulateQCD](#download-simulateqcd)
+      - [Manual Download](#manual-download)
+      - [Using git Command Line](#using-git-command-line)
+    - [Compile Using Container](#compile-using-container)
+      - [Install Podman](#install-podman)
+      - [Build the Code](#build-the-code)
+    - [Compile Manually](#compile-manually)
+  - [Example: Plaquette action computation](#example-plaquette-action-computation)
+  - [Documentation](#documentation)
+  - [Getting help and bug report](#getting-help-and-bug-report)
+  - [Contributors](#contributors)
+  - [Citing SIMULATeQCD](#citing-simulateqcd)
+  - [Acknowledgment](#acknowledgment)
 
-## Prerequisites
+## How to Build
 
-The following software is required to compile SIMULATeQCD:
+### Prerequisites
+
+You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
+
+### Download SimulateQCD
+
+#### Manual Download
+
+1. Go to [SIMULATeQCD's website](https://github.com/LatticeQCD/SIMULATeQCD)
+2. Click the green *Code* button and then click *Download Zip*
+
+![](images/2023-04-15-06-03-10.png)
+
+3. Extract the zip in a location of your choosing and extract it
+
+#### Using git Command Line
+
+Run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
+
+### Compile Using Container
+
+#### Install Podman
+
+**On RHEL-based (Rocky/CentOS/RHEL) systems**
+
+Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.
+
+**On Arch-based systems**
+
+See [install instructions](https://wiki.archlinux.org/title/Podman). If you have installed Arch before the upgrade to shadow (as in /etc/shadow) 4.11.1-3 rootless podman may encounter some issues. The build script will check for these anomalies and prompt you if you need to fix them.
+
+**Other \*NIX Systems**
+
+If you have a non RHEL-based OS see [here](https://podman.io/getting-started/installation.html#linux-distributions) for installation instructions.
+
+------------
+
+Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, simulateqcd will not run correctly.
+
+**WARNING**: If you are SSH'ing to your server, make sure you ssh as a user and **not** root. If you SSH as root and then `su` to user, podman will issue `ERRO[0000] XDG_RUNTIME_DIR directory "/run/user/0" is not owned by the current user`. This happens because the user that originally setup `/run` is root rather than your user.
+
+#### Build the Code
+
+1. Update [config.yml](./podman-build/config.yml) with any settings you would like to use for your build. This includes your target output directory.
+   1. You can run `<where_you_downloaded>/simulate_qcd.sh list` to get a list of possible build targets.
+   2. If you want to change where the code outputs to, you need to update OUTPUT_DIRECTORY in [config.yml](./podman-build/config.yml). It will create a folder called build in the specified folder.
+2. Run `chmod +x ./simulate_qcd.sh && ./simulate_qcd.sh build`
+
+### Compile Manually
+
+You will need to download the following before continuing:
 
 * `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 * `C++` compiler with `C++17` support.
 * `MPI` (e.g. `openmpi-4.0.4`).
 * `CUDA Toolkit` version 11+. 
 * `pip install -r requirements.txt` to build the documentation.
-
-## Downloading the code
-
-
-First download and activate `git-lfs`. The code can then be cloned to your machine using:
-```shell
-git clone https://github.com/LatticeQCD/SIMULATeQCD.git
-```
-
-
-## Building the code
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
@@ -117,6 +172,7 @@ M. Rodekamp,
 [C. Schmidt](https://github.com/schmidt74), 
 [P. Scior](https://github.com/philomat), 
 [H.-T. Shu](https://github.com/haitaoshu), 
+[G. Curell](https://github.com/grantcurell/)
 
 ## Citing SIMULATeQCD
 

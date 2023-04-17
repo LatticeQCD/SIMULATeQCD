@@ -1,0 +1,79 @@
+ARG CUDA_VERSION
+
+# Get the CUDA toolkit from the NVIDIA CUDA image
+FROM docker.io/nvidia/cuda:${CUDA_VERSION}-devel-rockylinux${RHEL_VERSION} as cuda-builder
+
+# Use the official Rocky Linux image
+FROM rockylinux:${RHEL_VERSION}-minimal
+
+ARG USER_ID
+ARG GROUP_ID
+ARG USERNAME
+ARG GROUPNAME
+ARG RHEL_VERSION
+
+ENV BUILDAH_ISOLATION=chroot
+
+# This code is just ensuring that our user exists and is running with the same permissions as the host user.
+# This is usually userid/gid 1000
+RUN echo "GROUP_ID=${GROUP_ID} GROUPNAME=${GROUPNAME}" \
+    && echo "RHEL_VERSION=${RHEL_VERSION}" \
+    && (getent group ${GROUP_ID}  && (echo groupdel by-id ${GROUP_ID}; groupdel $(getent group ${GROUP_ID} | cut -d: -f1))) ||: \
+    && (getent group ${GROUPNAME} && (echo groupdel ${GROUPNAME}; groupdel ${GROUPNAME})) ||: \
+    && (getent passwd ${USERNAME} && (echo userdel ${USERNAME}; userdel -f ${USERNAME})) ||: \
+    && groupadd -g ${GROUP_ID} ${GROUPNAME} \
+    && useradd -l -u ${USER_ID} -g ${GROUPNAME} ${USERNAME}
+
+# Install dependencies
+RUN microdnf update -y \
+    && microdnf install -y cmake gcc-c++ openmpi-devel kernel-devel openmpi \
+    && microdnf clean all
+
+# Set environment variables for CUDA
+ENV PATH=/usr/lib64/openmpi/bin:$PATH
+ENV PATH=/usr/local/cuda/bin:$PATH
+ENV LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"
+
+# Set the environment variables in the user's shell profile
+RUN echo 'export PATH="/usr/lib64/openmpi/bin:$PATH"' >> /home/${USERNAME}/.profile && \
+    echo 'export PATH="/usr/local/cuda/bin/nvcc:${PATH}"' >> /home/${USERNAME}/.profile && \
+    echo 'export LD_LIBRARY_PATH="/usr/local/cuda/lib64:${LD_LIBRARY_PATH}"' >> /home/${USERNAME}/.profile
+
+# Create simulateqcd directory
+RUN mkdir /simulateqcd && mkdir /build
+
+# Copy source code into the container
+COPY src /simulateqcd/src
+COPY CMakeLists.txt /simulateqcd/CMakeLists.txt
+COPY parameter /simulateqcd/parameter
+COPY scripts /simulateqcd/scripts
+COPY test_conf /simulateqcd/test_conf
+
+# Copy CUDA Toolkit from the CUDA builder image. We put this later on because the copy is
+# sufficiently large that podman can't cache it so anything after this must rerun every time.
+COPY --from=cuda-builder /usr/local/cuda /usr/local/cuda
+
+# Set the working directory to /app
+WORKDIR /build
+
+# Test CUDA installation
+RUN nvcc --version
+
+ARG ARCHITECTURE
+ARG USE_GPU_AWARE_MPI
+ARG USE_GPU_P2P
+ARG TARGET
+ARG CORES
+ARG ADDITIONAL_CMAKE_OPTIONS
+ARG ADDITIONAL_MAKE_OPTIONS
+
+# Build code using cmake
+RUN cmake ../simulateqcd/ \
+    -DARCHITECTURE=${ARCHITECTURE} \
+    -DUSE_GPU_AWARE_MPI=${USE_GPU_AWARE_MPI} \
+    -DUSE_GPU_P2P=${USE_GPU_P2P} \
+    ${ADDITIONAL_CMAKE_OPTIONS} && \
+    make -j ${CORES} ${TARGET} ${ADDITIONAL_MAKE_OPTIONS}
+
+# Set the user to the user we created earlier
+USER ${USERNAME}
