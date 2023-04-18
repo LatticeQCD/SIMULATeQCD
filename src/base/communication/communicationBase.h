@@ -1,10 +1,10 @@
-/* 
- * communicationBase.h                                                               
- * 
- * L. Mazur 
- * 
- * Wrappers for methods used in these various communication libraries are collected here. 
- * The CommunicationBase will also detect whether CUDA-aware MPI or GPUDirect P2P are available, 
+/*
+ * communicationBase.h
+ *
+ * L. Mazur
+ *
+ * Wrappers for methods used in these various communication libraries are collected here.
+ * The CommunicationBase will also detect whether CUDA-aware MPI or GPUDirect P2P are available,
  * and if they are, use them automatically.
  *
  */

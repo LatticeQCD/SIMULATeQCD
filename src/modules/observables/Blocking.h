@@ -1,5 +1,5 @@
 //
-// Created by Hai-Tao Shu on 2021.05.11 
+// Created by Hai-Tao Shu on 2021.05.11
 //
 
 #ifndef BLOCKING_H
@@ -44,7 +44,7 @@ public:
         return A*B;
     }
     __host__ __device__ floatT inline correlate(Matrix4x4Sym<floatT> A, Matrix4x4Sym<floatT> B) {
-        //"reduce" shear correlators. not good enough when using blocking method 
+        //"reduce" shear correlators. not good enough when using blocking method
         //return (0.25*( A.elems[0] - A.elems[1])*( B.elems[0] - B.elems[1])
         //      + 0.25*( A.elems[0] - A.elems[2])*( B.elems[0] - B.elems[2])
         //      + 0.25*( A.elems[1] - A.elems[2])*( B.elems[1] - B.elems[2]))/3.0;
@@ -53,7 +53,7 @@ public:
            + 0.25*( A.elems[0] - A.elems[2])*( B.elems[0] - B.elems[2])
            + 0.25*( A.elems[1] - A.elems[2])*( B.elems[1] - B.elems[2]))/3.0;
         Y = A.elems[4]*B.elems[4] + A.elems[5]*B.elems[5] + A.elems[7]*B.elems[7];
-        return (X*4. + Y*2.)/10.; 
+        return (X*4. + Y*2.)/10.;
     }
 };
 
@@ -70,14 +70,14 @@ struct ReadIndexSpatialBlock {
 
         typedef GIndexer<All, HaloDepth> GInd;
         size_t i = blockDim.x * blockIdx.x + threadIdx.x;
-        size_t numBlocksInX = GInd::getLatData().lx/_binsize; 
+        size_t numBlocksInX = GInd::getLatData().lx/_binsize;
         size_t numBlocksInY = GInd::getLatData().ly/_binsize;
 
         size_t rem, x, y, z; //the coordinate of small lattice
-        divmod(i,numBlocksInX*numBlocksInY,z,rem); 
-        divmod(rem,numBlocksInX,y,x); 
-        
-        
+        divmod(i,numBlocksInX*numBlocksInY,z,rem);
+        divmod(rem,numBlocksInX,y,x);
+
+
         gSite site = GInd::getSite(x*_binsize, y*_binsize, z*_binsize, _t);
         return site;
     }
@@ -101,7 +101,7 @@ struct EMTtrace {
     __device__ __host__ inline floatT operator()(gSite site) {
 
         GSU3<floatT> FS01, FS02, FS03, FS12, FS13, FS23;
-        
+
         floatT FsigmaSquare = 0;
         FS01 = FT(site, 0, 1);
         FsigmaSquare += tr_d(FS01 * FS01);
@@ -119,7 +119,7 @@ struct EMTtrace {
         return FtauSquare+FsigmaSquare;
 
     }
-};         
+};
 
 
 template<class floatT, bool onDevice, size_t HaloDepth>
@@ -133,7 +133,7 @@ struct EMTtraceless {
     __device__ __host__ inline Matrix4x4Sym<floatT> operator()(gSite site) {
 
         GSU3<floatT> FS01, FS02, FS03, FS12, FS13, FS23;
-        
+
         floatT FsigmaSquare = 0;
         FS01 = FT(site, 0, 1);
         FsigmaSquare += tr_d(FS01 * FS01);
@@ -148,28 +148,28 @@ struct EMTtraceless {
         FtauSquare += tr_d(FS13 * FS13);
         FS23 = FT(site, 2, 3);
         FtauSquare += tr_d(FS23 * FS23);
-        
+
         Matrix4x4Sym<floatT> emTensor;
         SimpleArray<GSU3<floatT>,16> FS(gsu3_zero<floatT>());
-        
+
         FS[1] = FS01;
         FS[2] = FS02;
         FS[3] = FS03;
         FS[6] = FS12;
         FS[7] = FS13;
         FS[11] = FS23;
-        
+
         floatT factor = -1;
         for (size_t mu=1;mu<4;mu++) {
             for(size_t nu=0;nu<mu;nu++) {
                 FS[mu*4+nu] = factor*FS[nu*4+mu];
             }
         }
-        
+
 
         for (size_t mu=0;mu<4;mu++) {
             for(size_t nu=mu;nu<4;nu++) {
-        
+
                 GSU3<floatT> FS1, FS2, FS3;
                 FS1 = gsu3_zero<floatT>();
                 FS2 = gsu3_zero<floatT>();
@@ -179,7 +179,7 @@ struct EMTtraceless {
                     FS1 += FS[mu*4+sigma] * FS[nu*4+sigma];
                 }
                 result = 2 * tr_d(FS1);
-        
+
                 if (mu == nu) {
                     result -= FtauSquare+FsigmaSquare;
                 }

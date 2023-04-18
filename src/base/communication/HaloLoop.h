@@ -1,8 +1,8 @@
-/* 
- * HaloLoop.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * HaloLoop.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef HALOLOOP_H

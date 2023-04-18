@@ -13,7 +13,7 @@ __device__ __host__ gVect3<floatT> dDdmuFunctor<floatT, onDevice, LatLayoutRHS, 
     Stmp -= (static_cast<floatT>(C_1000) * _sign) * _gAcc_smeared.getLinkDagger(
             GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu))) *
         _spinorIn.getElement(GInd::site_dn(site, mu));
-    
+
     Stmp += _pow_3 * _gAcc_Naik.getLink(
             GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_up(site, mu), mu))) *
         _spinorIn.getElement(GInd::site_up_up_up(site, mu, mu, mu));

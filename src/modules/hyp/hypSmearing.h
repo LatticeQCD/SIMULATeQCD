@@ -20,7 +20,7 @@ private:
   int _excluded_dir2;
 
 public:
-  HypStaple(gaugeAccessor<floatT, comp> gAccIn_0, //this is really the only required arg, but I'm not sure what the default is for gAcc 
+  HypStaple(gaugeAccessor<floatT, comp> gAccIn_0, //this is really the only required arg, but I'm not sure what the default is for gAcc
 	    gaugeAccessor<floatT, comp> gAccIn_1,
 	    gaugeAccessor<floatT, comp> gAccIn_2,
 	    gaugeAccessor<floatT, comp> gAccIn_3,
@@ -42,7 +42,7 @@ public:
       return gsu3_zero<floatT>();
     }
   }
-    
+
 };
 
 //template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R14, CompressionType compLvl1 = R18, CompressionType compLvl2 = R18>
@@ -109,8 +109,8 @@ public:
   void SmearAll(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out);
   void SmearTest(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out);
   void Su3Unitarize(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_out, Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_base);
- 
- 
+
+
 
 };
 #endif //HYPSMEARING_H

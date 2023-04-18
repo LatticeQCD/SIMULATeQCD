@@ -1,6 +1,6 @@
-/* 
- * dslash.h                                                               
- * 
+/*
+ * dslash.h
+ *
  */
 
 #ifndef DSLASH_H

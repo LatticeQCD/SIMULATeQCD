@@ -55,12 +55,12 @@ template<class floatT, bool onDevice, size_t HaloDepth>
 struct ColorElecCloverSecondWilLineKernel{
     gaugeAccessor<floatT> gaugeAccessor;
     MemoryAccessor ColorElecCloverSecondWilLineGpu;
-    
+
     ColorElecCloverSecondWilLineKernel(Gaugefield<floatT,onDevice,HaloDepth> &gauge, MemoryAccessor ColorElecCloverSecondWilLineGpu) :
             gaugeAccessor(gauge.getAccessor()), ColorElecCloverSecondWilLineGpu(ColorElecCloverSecondWilLineGpu) {}
-    
+
     __device__ __host__ void operator()(gSite site) {
-        
+
         typedef GIndexer<All,HaloDepth> GInd;
         int Nt = (int)GInd::getLatData().globLT;
         size_t Id = site.isite;
@@ -69,7 +69,7 @@ struct ColorElecCloverSecondWilLineKernel{
         gSite rsite = site;
         rsite = GInd::site_up(rsite, 3);
         for ( size_t i = 0; i < Nt-1; ++i)
-        {   
+        {
             wl *= gaugeAccessor.getLink(GInd::getSiteMu(rsite, 3));
             rsite = GInd::site_up(rsite, 3);
         }

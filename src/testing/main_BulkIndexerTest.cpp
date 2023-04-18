@@ -1,10 +1,10 @@
-/* 
- * main_BulkIndexerTest.cpp                                                               
- * 
+/*
+ * main_BulkIndexerTest.cpp
+ *
  * Philipp Scior, 11 Oct 2018
- * 
+ *
  * Test that the indexer is working correctly.
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -18,7 +18,7 @@ __device__ __host__ bool operator!=(const sitexyzt &lhs, const sitexyzt &rhs){
 
 template<int mu_steps, int nu_steps, int rho_steps, Layout LatLayout, size_t HaloDepth>
 __device__ __host__ sitexyzt testMove(const gSite &s, const int mu, const int nu, const int rho, const GIndexer<LatLayout, HaloDepth> Indexer){
-    
+
     int x = s.coordFull.x;
     int y = s.coordFull.y;
     int z = s.coordFull.z;
@@ -198,9 +198,9 @@ __device__ __host__ sitexyzt testMove(const gSite &s, const int mu, const int nu
 
 template<Layout LatLayout, size_t HaloDepth>
 bool checkSites(const GIndexer<LatLayout, HaloDepth> Indexer) {
-  
-    bool ret_val = true;  
-  
+
+    bool ret_val = true;
+
     for (size_t x = 0; x<Indexer.getLatData().lx; x++)
         for (size_t y=0; y<Indexer.getLatData().ly; y++)
             for (size_t z=0; z<Indexer.getLatData().lz; z++)
@@ -232,7 +232,7 @@ bool checkSites(const GIndexer<LatLayout, HaloDepth> Indexer) {
                            Indexer.fullCoordToCoord(Indexer.indexToCoord_Full_eo(site.isiteFull, 1)) != testsite){
                             ret_val = false;
                         }
-                    }    
+                    }
                     else if(LatLayout == Odd && oddness){
                         if(Indexer.indexToCoord_eo(site.isite, 1) != testsite ||
                            Indexer.fullCoordToCoord(Indexer.indexToCoord_Full_eo(site.isiteFull, 1)) != testsite){
@@ -329,18 +329,18 @@ bool checkIndex(const GIndexer<LatLayout, HaloDepth> Indexer) {
                             ret_val=false;
                         if (Indexer.coordMuToIndexMu_Full(fullsite.x, fullsite.y, fullsite.z, fullsite.t, mu) != Indexer.getSiteMu(site, mu).indexMuFull)
                             ret_val=false;
-                        
+
                         if (LatLayout==All){
                             if (link.indexMuFull != Indexer.getSiteMu(site, mu).indexMuFull)
-                                ret_val=false;  
+                                ret_val=false;
                         }
                         if (LatLayout==Even && !oddness){
                             if (link.indexMuFull != Indexer.getSiteMu(site, mu).indexMuFull)
-                                ret_val=false; 
+                                ret_val=false;
                         }
                         if (LatLayout==Odd && oddness){
                             if (link.indexMuFull != Indexer.getSiteMu(site, mu).indexMuFull)
-                                ret_val=false; 
+                                ret_val=false;
                         }
                     }
                 }
@@ -364,7 +364,7 @@ bool checkMoves(const GIndexer<LatLayout, HaloDepth> Indexer) {
                             for (int rho = 0; rho < 4; ++rho){
 
                                 sitexyzt mycoords = testMove<1,6,9, LatLayout, HaloDepth>(site, mu, nu , rho, Indexer);
-                                gSite moved_site = Indexer.template  site_move<1,6,9>(site, mu, nu, rho);                              
+                                gSite moved_site = Indexer.template  site_move<1,6,9>(site, mu, nu, rho);
 
                                 if(mycoords!=moved_site.coord)
                                     ret_val = false;
@@ -428,13 +428,13 @@ struct do_tests_on_device
             if (GInd::coordMuToIndexMu_Full(fullcoords.x, fullcoords.y, fullcoords.z, fullcoords.t, mu) != GInd::getSiteMu(site, mu).indexMuFull)
                 ret_val=0;
             if (link.indexMuFull != GInd::getSiteMu(site, mu).indexMuFull)
-                ret_val=0;  
+                ret_val=0;
 
             for( int nu = 0; nu < 4; ++nu){
                 for (int rho = 0; rho < 4; ++rho){
 
                     sitexyzt mycoords = testMove<1,6,9, LatLayout, HaloDepth>(site, mu, nu , rho, Indexer);
-                    gSite moved_site = GInd::template site_move<1,6,9>(site, mu, nu, rho);                              
+                    gSite moved_site = GInd::template site_move<1,6,9>(site, mu, nu, rho);
 
                     if(mycoords!=moved_site.coord)
                         ret_val = 0;
@@ -510,7 +510,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialize Lattice with all indices");
 
     const Layout LatLayout = All;
-    
+
     bool testDevice = true;
 
     bool fullTest = checkSites<LatLayout, HaloDepth>(GInd);
@@ -588,7 +588,7 @@ int main(int argc, char *argv[]) {
         rootLogger.error("At least one test failed!");
         rootLogger.error("           ");
         rootLogger.error("==========================================");
-        return -1; 
+        return -1;
     }
 
     return 0;

@@ -39,8 +39,8 @@ public:
 
     }
 
-    void updateSubEMT(int pos_t, int count, MemoryAccessor &sub_E_gpu, MemoryAccessor &sub_U_gpu, std::vector<floatT> &SubBulk_Nt_p0, 
-         std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt_p0, std::vector<floatT> &SubBulk_Nt, std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt, 
+    void updateSubEMT(int pos_t, int count, MemoryAccessor &sub_E_gpu, MemoryAccessor &sub_U_gpu, std::vector<floatT> &SubBulk_Nt_p0,
+         std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt_p0, std::vector<floatT> &SubBulk_Nt, std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt,
          int dist, int pz, int count_i, floatT displacement, int flag_real_imag);
     void updateSubPolyCorr(int pos_t, int count, MemoryAccessor &sub_poly_Nt, MemoryAccessor &sub1_cec_Nt, MemoryAccessor &sub2_cec_Nt);
 

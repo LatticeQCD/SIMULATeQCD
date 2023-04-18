@@ -1,8 +1,8 @@
-/* 
- * derivativeLepagelink.h                                                               
- * 
- * D. Bollweg  
- * 
+/*
+ * derivativeLepagelink.h
+ *
+ * D. Bollweg
+ *
  */
 
 #ifndef DERIVATIVE_LEPAGE_H

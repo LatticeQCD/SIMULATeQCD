@@ -1,9 +1,9 @@
-/* 
- * gsu2.h                                                               
+/*
+ * gsu2.h
  *
  * Header file for algebra involving SU(2) subgoups embedded in SU(3).
  *
- *  
+ *
  *
  *  Representation:
  *
@@ -25,7 +25,7 @@ template<typename floatT>
 class GSU2 {
 public:
 
-  __device__ __host__ GSU2() { }; 
+  __device__ __host__ GSU2() { };
   GCOMPLEX(floatT) _e11,_e12;
   __device__ __host__ GSU2(GCOMPLEX(floatT) e11, GCOMPLEX(floatT) e12) : _e11(e11), _e12(e12) {}
 
@@ -192,7 +192,7 @@ __device__ __host__ inline GSU2<floatT> sub23(const GSU3<floatT> &u, const GSU3<
 }
 
 template<typename floatT>
-__device__ __host__ inline GSU3<floatT> sub12(const GSU2<floatT> &u, 
+__device__ __host__ inline GSU3<floatT> sub12(const GSU2<floatT> &u,
 					      const GSU3<floatT> &v) {
   return GSU3<floatT> (u._e11 *v.getLink00() + u._e12 *v.getLink10(),
 		                   u._e11 *v.getLink01() + u._e12 *v.getLink11(),

@@ -1,8 +1,8 @@
-/* 
- * smearParameters.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * smearParameters.h
+ *
+ * J. Goswami
+ *
  */
 
 #ifndef PARAMETERS_H

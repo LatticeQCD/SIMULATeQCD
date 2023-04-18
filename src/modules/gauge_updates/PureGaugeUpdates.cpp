@@ -1,10 +1,10 @@
-/* 
- * PureGaugeUpdates.cpp                                                               
- * 
+/*
+ * PureGaugeUpdates.cpp
+ *
  * v1.0: D. Clarke, 1 Feb 2019
- * 
+ *
  * Some methods to update pure gauge systems.
- * 
+ *
  */
 
 #include "PureGaugeUpdates.h"

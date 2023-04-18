@@ -153,7 +153,7 @@ public:
         {
             rs += r_sf_num[i]/(x + r_sf_den[i]);
             rsinv += r_inv_sf_num[i]/(x + r_inv_sf_den[i]);
-            
+
             rl += r_lf_num[i]/(z + r_lf_den[i]);
             rlinv += r_inv_lf_num[i]/(z + r_inv_lf_den[i]);
         }
@@ -164,7 +164,7 @@ public:
             rlbar += r_bar_lf_num[i]/(z + r_bar_lf_den[i]);
         }
 
-        if (cmp_rel(get_exp(rs,x), -get_exp(rsinv,x), 0.0001 , 0.0001) && 
+        if (cmp_rel(get_exp(rs,x), -get_exp(rsinv,x), 0.0001 , 0.0001) &&
             cmp_rel(get_exp(rs,x), 0.5*get_exp(rsbar,x), 0.0001 , 0.0001) )
         {
             if(cmp_rel(get_exp(rs,x),-3.0/8.0, 0.0001 , 0.0001))
@@ -174,7 +174,7 @@ public:
             error = true;
         }
 
-        if (cmp_rel(get_exp(rl,y), -get_exp(rlinv,y), 0.0001 , 0.0001) && 
+        if (cmp_rel(get_exp(rl,y), -get_exp(rlinv,y), 0.0001 , 0.0001) &&
             cmp_rel(get_exp(rl,y), 0.5*get_exp(rlbar,y), 0.0001 , 0.0001) )
         {
             if(cmp_rel(get_exp(rl,y),-0.25, 0.0001 , 0.0001))
@@ -183,7 +183,7 @@ public:
                 tpo = tpo && false;
         } else {
             rootLogger.error("light quark rational approximations are not consistent");
-            rootLogger.error(get_exp(rl,x) ,  " " ,  - get_exp(rlinv,x) ,  " " ,  0.5*get_exp(rlbar,x)); 
+            rootLogger.error(get_exp(rl,x) ,  " " ,  - get_exp(rlinv,x) ,  " " ,  0.5*get_exp(rlbar,x));
             error = true;
         }
 

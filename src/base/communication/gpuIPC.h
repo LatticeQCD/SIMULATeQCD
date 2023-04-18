@@ -1,8 +1,8 @@
-/* 
- * gpuIPC.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * gpuIPC.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef GPUIPC_H

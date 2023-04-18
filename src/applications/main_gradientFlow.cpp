@@ -1,5 +1,5 @@
-/* 
- * main_gradientFlow.cpp                                                               
+/*
+ * main_gradientFlow.cpp
  *
  * Lukas Mazur
  *
@@ -61,7 +61,7 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> shear_bulk_corr_block;
     Parameter<bool> energyMomentumTensorTracelessTimeSlices;
     Parameter<bool> energyMomentumTensorTracefullTimeSlices;
-    Parameter<int> binsize; //! the binsize used in the blocking method 
+    Parameter<int> binsize; //! the binsize used in the blocking method
 
     Parameter<bool> PolyakovLoopCorrelator;
     Parameter<floatT> GaugeFixTol;
@@ -135,7 +135,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
                                                                      lp.measurement_intervall()[1],
                                                                      lp.necessary_flow_times.get(), lp.accuracy());
 
-    //! check for blocking method 
+    //! check for blocking method
     size_t numBlocks=lp.latDim()[0]/size_t(lp.binsize());
 
     if ( lp.topCharge_imp_block() || lp.shear_bulk_corr_block() ) {
@@ -562,8 +562,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
             LineFormatter newLine_normEMT = file_normEMT.tag("");
             newLine_normEMT << flow_time << " ";
-            newLine_normEMT << std::scientific << std::setprecision(15) << EnergyDensity << " " << EMTensorTraceless.elems[0] << " " 
-                            << EMTensorTraceless.elems[1] << " " << EMTensorTraceless.elems[2] << " " << EMTensorTraceless.elems[3] << " " 
+            newLine_normEMT << std::scientific << std::setprecision(15) << EnergyDensity << " " << EMTensorTraceless.elems[0] << " "
+                            << EMTensorTraceless.elems[1] << " " << EMTensorTraceless.elems[2] << " " << EMTensorTraceless.elems[3] << " "
                             << EMTensorTraceless.elems[4] << " " << EMTensorTraceless.elems[5] << " " << EMTensorTraceless.elems[6] << " "
                             << EMTensorTraceless.elems[7] << " " << EMTensorTraceless.elems[8] << " " << EMTensorTraceless.elems[9] <<"\n";
         }
@@ -599,7 +599,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
                 newLineColEl_clover << imag(elem);
             }
         }
-   
+
         if (lp.ColorMagneticCorrTimeSlices_naive() && gradFlow.checkIfnecessaryTime()) {
             //! print naive discretization for cm
             LineFormatter newLineColMa_naive = fileColMagnCorrSl_naive.tag("");
@@ -630,7 +630,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             for (auto &elem : resultColMagnCorSl_clover) {
                 newLineColMa_clover << imag(elem);
             }
-        } 
+        }
 
         if ((lp.PolyakovLoopCorrelator() && gradFlow.checkIfnecessaryTime())) {
             Gaugefield<floatT, false, HaloDepth> gauge_host(gauge.getComm());

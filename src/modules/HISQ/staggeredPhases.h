@@ -1,8 +1,8 @@
-/* 
- * staggeredPhases.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * staggeredPhases.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef STAGGEREDPHASES_H

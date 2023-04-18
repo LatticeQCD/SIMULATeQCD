@@ -9,9 +9,9 @@
 template <class floatT>
 struct HypSmearingParameters{
   //HypSmearingParameters(){}
-    floatT alpha_1;               
-    floatT alpha_2;               
-    floatT alpha_3;               
+    floatT alpha_1;
+    floatT alpha_2;
+    floatT alpha_3;
     HypSmearingParameters() :
         alpha_1(0.75),
         alpha_2(0.6),

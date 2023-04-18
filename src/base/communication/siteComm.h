@@ -1,8 +1,8 @@
-/* 
- * siteComm.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * siteComm.h
+ *
+ * L. Mazur
+ *
  * This class glues together all other classes needed to exchange halos. Again loosely speaking,
  * to exchange some information for my stencil calculation between a sublattice and his neighbor,
  * I need to

@@ -1,8 +1,8 @@
-# 
-# DSlashTest.param                                                               
-# 
+#
+# DSlashTest.param
+#
 #    Lattice: Nx Ny Nz Nt
-#      Nodes: Number of sublattices per direction 
+#      Nodes: Number of sublattices per direction
 #
 Lattice    = 8  8  8  4
 Nodes      = 2  1  1  1

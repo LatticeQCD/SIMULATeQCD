@@ -227,7 +227,7 @@ public:
 
     __device__ __host__ void u3reconstruct(const GCOMPLEX(floatT) phase)   // project to u3 using first two rows of link
     {
-        
+
         _e20 = GCOMPLEX(floatT)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
                                  - (_e02.cREAL * _e11.cREAL - _e02.cIMAG * _e11.cIMAG)),
                                 (-(_e01.cIMAG * _e12.cREAL + _e01.cREAL * _e12.cIMAG)
@@ -242,9 +242,9 @@ public:
                                  - (_e01.cREAL * _e10.cREAL - _e01.cIMAG * _e10.cIMAG)),
                                 (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                                  + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
-        
-        
-        
+
+
+
         //For half prec, this block is faster than the above because GCOMPLEX(__half)*GCOMPLEX(__half) uses __half2 intrinsics. The above version would end up using __half intrinsics.
         /*_e20 = _e01*_e12 - _e02*_e11;
         _e12 = _e02*_e10 - _e00*_e12;
@@ -257,7 +257,7 @@ public:
 
     __device__ __host__ void u3reconstructDagger(const GCOMPLEX(floatT) phase)   // project to u3 using first two rows of link
     {
-        
+
         _e02 = GCOMPLEX(floatT)((_e10.cREAL * _e21.cREAL - _e10.cIMAG * _e21.cIMAG
                                  - (_e20.cREAL * _e11.cREAL - _e20.cIMAG * _e11.cIMAG)),
                                 (-(_e10.cIMAG * _e21.cREAL + _e10.cREAL * _e21.cIMAG)
@@ -272,7 +272,7 @@ public:
                                  - (_e10.cREAL * _e01.cREAL - _e10.cIMAG * _e01.cIMAG)),
                                 (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                                  + (_e10.cIMAG * _e01.cREAL + _e10.cREAL * _e01.cIMAG)));
-        
+
         //For half prec, this block is faster than the above because GCOMPLEX(__half)*GCOMPLEX(__half) uses __half2 intrinsics. The above version would end up using __half intrinsics.
         /*_e02 = _e10*_e21 - _e20*_e11;
         _e12 = _e20*_e01 - _e00*_e21;
@@ -532,7 +532,7 @@ template <>
 __device__ __host__ inline GSU3<__half> gsu3_one() {
     GPUcomplex<__half> g_one(__float2half(1.0));
     GPUcomplex<__half> g_zero(__float2half(0.0));
-    
+
     return GSU3<__half>( g_one, g_zero, g_zero,
                          g_zero, g_one, g_zero,
                          g_zero, g_zero, g_one);
@@ -840,21 +840,21 @@ template<class floatT>
 __device__ __host__ void GSU3<floatT>::gauss(uint4 *state) {
     if constexpr (!std::is_same<floatT,__half>::value) {
             floatT rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
-            
+
             for (int i = 0; i < 4; ++i) {
                 rand1[i] = get_rand<floatT>(state);
                 rand2[i] = get_rand<floatT>(state);
             }
-            
+
             for (int i = 0; i < 4; ++i) {
                 phi[i] = 2.0 * M_PI * rand1[i];
                 rand2[i] = rand2[i]+(1.0 - rand2[i])*minVal<floatT>(); // exclude 0 from random numbers!
                 radius[i] = sqrt(-log(rand2[i]));
-                
+
                 temp1[i] = radius[i] * cos(phi[i]);
                 temp2[i] = radius[i] * sin(phi[i]);
             }
-            
+
             _e00 = GCOMPLEX(floatT)(temp1[2] + 1. / sqrt(3.0) * temp2[3], 0.0);
             _e01 = GCOMPLEX(floatT)(temp1[0], -temp1[1]);
             _e02 = GCOMPLEX(floatT)(temp1[3], -temp2[0]);
@@ -908,7 +908,7 @@ __device__ __host__ int su3unitarize_hits(
    	floatT tol              /* tolerance for SU(3) projection.
 			     If nonzero, treat Nhit as a maximum
 			     number of hits.  If zero, treat Nhit
-			     as a prescribed number of hits. */ 
+			     as a prescribed number of hits. */
 		) {
 
    int index1, ina, inb,ii;
@@ -974,7 +974,7 @@ __device__ __host__ int su3unitarize_hits(
 	conver = (new_tr-old_tr)/old_tr; /* trace always increases */
 	old_tr = new_tr;
       }
-      
+
    } /* hits */
 
    int status = 0;
@@ -1110,7 +1110,7 @@ __device__ __host__ void GSU3<floatT>::su3unitarize() {
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));
     #endif
     }
-    
+
 }
 
 template<class floatT>

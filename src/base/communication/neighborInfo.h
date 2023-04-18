@@ -1,7 +1,7 @@
-/* 
- * neighborInfo.h                                                               
- * 
- * L. Mazur 
+/*
+ * neighborInfo.h
+ *
+ * L. Mazur
  *
  * In order to communicate, each sublattice needs to know something about his neighbors,
  * for example their rank or whether they are on the same node. (See ProcessInfo struct.)

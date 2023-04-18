@@ -23,8 +23,8 @@ public:
     LuscherWeisz(Gaugefield<floatT, true, HaloDepth> &gaugefield) :
             _gauge(gaugefield){}
 
-    void subUpdateOR(int sub_lt, int local_pos_t);   
-    void subUpdateHB(uint4* state, floatT beta, int sub_lt, int local_pos_t, bool ltest=false); 
+    void subUpdateOR(int sub_lt, int local_pos_t);
+    void subUpdateHB(uint4* state, floatT beta, int sub_lt, int local_pos_t, bool ltest=false);
     // release the object (destructor)
     ~LuscherWeisz() {}
 };

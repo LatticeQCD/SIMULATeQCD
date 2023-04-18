@@ -21,9 +21,9 @@ __host__ __device__ GSU3<floatT> inline gaugeActionDerivPlaq(gaugeAccessor<float
     GSU3<floatT> tmp = gsu3_zero<floatT>();
 
     for (int nu_aux = 1; nu_aux < 4; ++nu_aux) {
-        const int nu = (mu + nu_aux) % 4; 
+        const int nu = (mu + nu_aux) % 4;
         tmp = Plaq_P<floatT,HaloDepth>(gAcc, site, mu, nu) + dagger(Plaq_Q<floatT,HaloDepth>(gAcc, site, mu, nu));
-        
+
         result += tmp;
 
     }
@@ -168,7 +168,7 @@ __host__ __device__ GSU3<floatT> inline symanzikGaugeActionDeriv(gaugeAccessor<f
 //up to an additional factor of -beta/3 identical to symanikGaugeActionDeriv but faster
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
 __host__ __device__ GSU3<floatT> inline gauge_force(gaugeAccessor<floatT,comp> latacc, gSiteMu site, floatT beta){
-    
+
     typedef GIndexer<All,HaloDepth> GInd;
 
     const gSite s(GInd::getSite(site.isite));
@@ -179,7 +179,7 @@ __host__ __device__ GSU3<floatT> inline gauge_force(gaugeAccessor<floatT,comp> l
 
     //CAVE: In contrast to std. textbook definitions of the gauge action: We use a definition inherited from MILC!
     //      Therefore we find an additional factor of 3/5 in r_1!
-    const GCOMPLEX(floatT) r_1 = GCOMPLEX(floatT)(beta / 3.0, 0.0)* 3.0/5.0; // 
+    const GCOMPLEX(floatT) r_1 = GCOMPLEX(floatT)(beta / 3.0, 0.0)* 3.0/5.0; //
 
 
     GSU3<floatT> m_0, m_res1, staple;

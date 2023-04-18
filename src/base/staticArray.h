@@ -1,8 +1,8 @@
-/* 
- * staticArray.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * staticArray.h
+ *
+ * L. Mazur
+ *
  */
 #include <iostream>
 #ifndef STATIC_ARRAY_H

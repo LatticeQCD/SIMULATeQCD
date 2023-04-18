@@ -1,10 +1,10 @@
-/* 
- * main_confReadWriteTest.cu                                                               
- * 
+/*
+ * main_confReadWriteTest.cu
+ *
  * Test to check whether that the NERSC and ILDG read/write as well as the MILC read work correctly.
- * 
- * M. Rodekamp, S. Ali, D. Clarke 
- * 
+ *
+ * M. Rodekamp, S. Ali, D. Clarke
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -58,6 +58,6 @@ int main(int argc, char *argv[]) {
 	} else {
 		rootLogger.info(CoutColors::green , "All tests passed!", CoutColors::reset);
     }
-   
+
     return 0;
 }

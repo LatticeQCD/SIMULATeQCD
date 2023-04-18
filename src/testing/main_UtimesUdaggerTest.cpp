@@ -1,4 +1,4 @@
-/* 
+/*
  * main_UtimesUdagger.cpp
  *
  * Hai-Tao Shu, 5 May 2020
@@ -9,7 +9,7 @@
 
 #include "../SIMULATeQCD.h"
 
-#define PREC double 
+#define PREC double
 
 /// Get tr_d(UxUdagger) for each link
 template<class floatT,size_t HaloDepth>

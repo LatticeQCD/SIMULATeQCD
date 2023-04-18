@@ -45,10 +45,10 @@ __host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gS
         S_coeff = sqrt(S_coeff);
         double R_cOverS_ccubed = R_coeff/(S_coeff*S_coeff*S_coeff);
         double Theta;
-  
+
         if (fabs(R_cOverS_ccubed) < 1.0) {
         Theta = acos(R_cOverS_ccubed);
-  
+
         } else {
             if (R_coeff > 0) {
               Theta = 0.0;
@@ -56,7 +56,7 @@ __host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gS
               Theta = M_PI;
             }
         }
-  
+
         //Solutions to characteristic equation
         g0 = c0*(1./3.)+2.0*S_coeff*cos(Theta/3.0-2*M_PI/3.0);
         g1 = c0*(1./3.)+2.0*S_coeff*cos(Theta/3.0);
@@ -79,9 +79,9 @@ __host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gS
         double f0  = (-w*(u*u+v)+u*v*v)/den;
         double f1  = (-w-u*u*u+2*u*v)/den;
         double f2  = u/den;
-  
+
         GSU3<double> Qinvsq = f0*gsu3_one<double>() + f1*Q + f2*Q*Q;
-  
+
         return V*Qinvsq;
     }
 }

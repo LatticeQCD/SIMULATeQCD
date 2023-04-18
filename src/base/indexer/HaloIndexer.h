@@ -1,8 +1,8 @@
-/* 
- * HaloIndexer.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * HaloIndexer.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef HALOINDEXER_H

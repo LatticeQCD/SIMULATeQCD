@@ -1,8 +1,8 @@
-/* 
- * deviceEvent.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * deviceEvent.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef DEVICEEVENT_H

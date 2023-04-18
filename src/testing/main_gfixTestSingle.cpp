@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gfixTestSingle.cpp
  *
  * D. Clarke
@@ -11,7 +11,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/gfix.h"
 
-#define PREC double 
+#define PREC double
 
 /// Get tr U for each link
 template<class floatT,size_t HaloDepth>

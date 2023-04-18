@@ -151,13 +151,13 @@ std::vector<GCOMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth
 
     _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
             SpinorDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
-    
+
     std::vector<GCOMPLEX(double)> result;
 
     _redBase.reduceStacked(result, NStacks, getNumberLatticePoints(), true);
     return result;
 
-        
+
 }
 
 /// S_out *= val

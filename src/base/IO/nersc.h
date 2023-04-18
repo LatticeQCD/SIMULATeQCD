@@ -1,6 +1,6 @@
-/* 
- * nersc.h                                                               
- * 
+/*
+ * nersc.h
+ *
  */
 
 #ifndef INC_NERSC_H
@@ -127,7 +127,7 @@ private:
     uint32_t stored_checksum, computed_checksum;
     int su3_size;
     size_t index; //position in buffer
-    static const bool sep_lines = false; // make the buffer smaller and read each xline separately 
+    static const bool sep_lines = false; // make the buffer smaller and read each xline separately
                                          // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
@@ -241,7 +241,7 @@ public:
         std::stringstream s(header.checksum());
         s >> std::hex >> stored_checksum;
         if (s.fail()) {
-            rootLogger.error("Could not interpret checksum " , 
+            rootLogger.error("Could not interpret checksum " ,
                                header.checksum() ,  "as hexadecimal number.");
             error = true;
         }

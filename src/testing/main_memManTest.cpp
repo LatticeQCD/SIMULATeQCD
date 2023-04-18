@@ -1,10 +1,10 @@
-/* 
- * main_memManTest.cpp                                                               
- * 
+/*
+ * main_memManTest.cpp
+ *
  * D. Clarke
- * 
+ *
  * Test the methods of the new memory management, both for the device and the host.
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"

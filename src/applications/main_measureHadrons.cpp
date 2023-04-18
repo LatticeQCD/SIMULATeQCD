@@ -1,10 +1,10 @@
-/* 
- * main_measureHadrons.cpp                                                               
- * 
+/*
+ * main_measureHadrons.cpp
+ *
  * Luis Altenkort, 6 Jan 2021
- * 
+ *
  * Main application for measuring hadronic correlators.
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"

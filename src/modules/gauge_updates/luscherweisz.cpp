@@ -1,9 +1,9 @@
-/* 
- * luscherweisz.cpp                                                               
- * 
+/*
+ * luscherweisz.cpp
+ *
  * v1.0: Hai-Tao Shu, 10 May 2019
- * 
- * 
+ *
+ *
  */
 
 #include "luscherweisz.h"
@@ -20,7 +20,7 @@ struct SubORKernel{
   __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<LatLayout,HaloDepth> GInd;
         int Nt = (int)GInd::getLatData().globLT;
- 
+
         sitexyzt coord = site.coord;
 
         if ( coord[3]%_sub_lt == _local_pos_t && _mu != 3 ) { //not the spatial links on the (left) border. the right border won't be updated anyway
@@ -112,5 +112,5 @@ void LuscherWeisz<floatT,onDevice,HaloDepth>::subUpdateHB(uint4* state, floatT b
 
 ///initialize various instances of the class
 #define CLASS_INIT(floatT,HALO, comp) \
-template class LuscherWeisz<floatT,true,HALO>; 
+template class LuscherWeisz<floatT,true,HALO>;
 INIT_PHC(CLASS_INIT)

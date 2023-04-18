@@ -1,8 +1,8 @@
-/* 
- * deviceStream.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * deviceStream.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef DEVICESTREAM_H

@@ -1,8 +1,8 @@
-/* 
- * generalAccessor.h                                                               
- * 
+/*
+ * generalAccessor.h
+ *
  * Lukas Mazur, 12 Dec 2018
- * 
+ *
  * The GeneralAccessor class makes it easier to access elements of arrays on the GPU by performing pointer
  * arithmetic automatically. This is necessary whenever you want to make an array of values that can themselves be
  * represented as arrays; for example an array of SU(3) matrices can be thought of as an array of floatT arrays

@@ -1,8 +1,8 @@
-/* 
- * configConverter.cu                                                               
- * 
+/*
+ * configConverter.cu
+ *
  * R. Larsen, S. Ali, D. Clarke
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     if(param.format_out()=="nersc") {
         if(param.compress_out()) {
             gauge.writeconf_nersc(param.GaugefileName_out(), 2, param.prec_out());
-        } else { 
+        } else {
             gauge.writeconf_nersc(param.GaugefileName_out(), 3, param.prec_out());
         }
     } else if(param.format_out()=="ildg") {

@@ -1,5 +1,5 @@
-/* 
- * hisqSmearing.h 
+/*
+ * hisqSmearing.h
  *
  * The methods related to HISQ smearing, which give a better approach to the continuum limit.
  *
@@ -62,7 +62,7 @@ private:
     Gaugefield<floatT, onDevice, HaloDepth> _dummy;
     SmearingParameters<floatT> _Lvl1 = getLevel1Params<floatT>();
     SmearingParameters<floatT> _Lvl2;
-   
+
     staple<floatT, HaloDepth, comp, 3> staple3_lvl1;
     staple<floatT, HaloDepth, comp, 5,1> staple5_1_lvl1;
     staple<floatT, HaloDepth, comp, 5,2> staple5_2_lvl1;
@@ -76,7 +76,7 @@ private:
     staple<floatT, HaloDepth, comp, 7,6> staple7_6_lvl1;
     staple<floatT, HaloDepth, comp, 7,7> staple7_7_lvl1;
     staple<floatT, HaloDepth, comp, 7,8> staple7_8_lvl1;
-   
+
     staple<floatT, HaloDepth, compLvl1, 3> staple3_lvl2;
     staple<floatT, HaloDepth, compLvl1, 5,1> staple5_1_lvl2;
     staple<floatT, HaloDepth, compLvl1, 5,2> staple5_2_lvl2;
@@ -90,14 +90,14 @@ private:
     staple<floatT, HaloDepth, compLvl1, 7,6> staple7_6_lvl2;
     staple<floatT, HaloDepth, compLvl1, 7,7> staple7_7_lvl2;
     staple<floatT, HaloDepth, compLvl1, 7,8> staple7_8_lvl2;
-   
+
     staple<floatT, HaloDepth, compLvl1, -3> stapleNaik;
     staple<floatT, HaloDepth, compLvl1, -5> stapleLepage;
 
  public:
     HisqSmearing(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_base,Gaugefield<floatT, onDevice, HaloDepth, compLvl2> &gauge_lvl2,
-		         Gaugefield<floatT, onDevice, HaloDepth, compNaik> &gauge_naik, floatT naik_epsilon = 0.0) 
-        : _gauge_base(gauge_base),                                   // This is the to-be-updated gauge field 
+		         Gaugefield<floatT, onDevice, HaloDepth, compNaik> &gauge_naik, floatT naik_epsilon = 0.0)
+        : _gauge_base(gauge_base),                                   // This is the to-be-updated gauge field
           _gauge_lvl1(gauge_base.getComm(), "SHARED_GAUGENAIK" ),
           _gauge_lvl2(gauge_lvl2),                                   // In RHMC initializer this is "smearW"
           _gauge_naik(gauge_naik),                                   // In RHMC initializer this is "smearX"
@@ -129,11 +129,11 @@ private:
           staple7_6_lvl2(_gauge_lvl1.getAccessor()),
           staple7_7_lvl2(_gauge_lvl1.getAccessor()),
           staple7_8_lvl2(_gauge_lvl1.getAccessor()),
-          stapleLepage(_gauge_lvl1.getAccessor()), 
+          stapleLepage(_gauge_lvl1.getAccessor()),
           stapleNaik(_gauge_lvl1.getAccessor()) {}
 
     void SmearAll(floatT mu_f=0.0, bool multiplyPhase = true);
-    
+
     // Will be used in the force calculation
     template<CompressionType comp_tmp>
     void SmearLvl1(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_out) {
@@ -143,42 +143,42 @@ private:
 
         _dummy.iterateOverBulkAllMu(staple5_1_lvl1);
         gauge_out = gauge_out + _Lvl1._c_5 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple5_2_lvl1);
         gauge_out = gauge_out + _Lvl1._c_5 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple5_3_lvl1);
         gauge_out = gauge_out + _Lvl1._c_5 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple5_4_lvl1);
         gauge_out = gauge_out + _Lvl1._c_5 * _dummy;
-       
+
         _dummy.iterateOverBulkAllMu(staple7_1_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-       
+
         _dummy.iterateOverBulkAllMu(staple7_2_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple7_3_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple7_4_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple7_5_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple7_6_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple7_7_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
-   
+
         _dummy.iterateOverBulkAllMu(staple7_8_lvl1);
         gauge_out = gauge_out + _Lvl1._c_7 * _dummy;
         gauge_out.updateAll();
     }
- 
+
     // Will be used in the force calculation
     template<CompressionType comp_tmp, CompressionType comp_tmp2>
     void ProjectU3(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_in,Gaugefield<floatT, onDevice, HaloDepth, comp_tmp2> &gauge_out) {

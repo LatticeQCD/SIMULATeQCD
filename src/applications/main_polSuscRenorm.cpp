@@ -1,4 +1,4 @@
-/* 
+/*
  * main_polSuscRenorm.cpp
  *
  * D. Clarke
@@ -10,7 +10,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/PolyakovLoop.h"
 
-#define PREC double 
+#define PREC double
 
 /// Custom parameter structure for this program.
 template<class floatT>

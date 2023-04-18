@@ -1,8 +1,8 @@
-/* 
- * linkStaple7Constructs.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * linkStaple7Constructs.h
+ *
+ * J. Goswami
+ *
  */
 
 #ifndef LINKSTAPLE7CONSTRUCTS_H

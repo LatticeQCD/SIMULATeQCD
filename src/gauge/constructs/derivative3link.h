@@ -1,8 +1,8 @@
-/* 
- * derivative3link.h                                                               
- * 
- * D. Bollweg 
- * 
+/*
+ * derivative3link.h
+ *
+ * D. Bollweg
+ *
  */
 
 #ifndef DERIVATIVE_3LINK_H

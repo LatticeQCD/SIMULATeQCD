@@ -1,6 +1,6 @@
-/* 
- * main_DslashMultiTest.cpp                                                               
- * 
+/*
+ * main_DslashMultiTest.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -29,7 +29,7 @@ struct compare_smearing {
             }
             sum += sqrt(norm);
         }
-    return (sum < 1e-5 ? 0 : 1); 
+    return (sum < 1e-5 ? 0 : 1);
     }
 };
 
@@ -37,9 +37,9 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR) {
     LatticeContainer<onDevice,int> redBase(GaugeL.getComm());
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    
+
     redBase.adjustSize(elems);
-    
+
     redBase.template iterateOverBulk<All,HaloDepth>(compare_smearing<floatT, onDevice, HaloDepth, comp>(GaugeL,GaugeR));
 
     int faults = 0;
@@ -116,7 +116,7 @@ bool local_site(sitexyzt globalPos, gSite * site, CommunicationBase &commBase){
     if (int(offset[1]+GInd::getLatData().ly) > y && y >= offset[1]) {
         y-=offset[1];
         local[1] = true;
-    }  
+    }
     if (int(offset[2]+GInd::getLatData().lz) > z && z >= offset[2]) {
         z-=offset[2];
         local[2] = true;}
@@ -147,7 +147,7 @@ bool test_dslash2(CommunicationBase &commBase){
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    
+
     rootLogger.info("Read configuration");
     gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
 
@@ -202,7 +202,7 @@ bool test_dslash2(CommunicationBase &commBase){
     gVect3<floatT> AA_vec_79912 = gVect3<floatT>(GCOMPLEX(floatT)(1.94435,0.211277),GCOMPLEX(floatT)(0.540431,0.0692634),
         GCOMPLEX(floatT)(0.0145495,-0.483509));
     gVect3<floatT> AA_vec_155500 = gVect3<floatT>(GCOMPLEX(floatT)(-0.762942,-2.22293),GCOMPLEX(floatT)(-0.678135,-2.19784),
-        GCOMPLEX(floatT)(-0.96457,-1.29161));   
+        GCOMPLEX(floatT)(-0.96457,-1.29161));
     gVect3<floatT> AA_vec_159999 = gVect3<floatT>(GCOMPLEX(floatT)(-1.16874,-0.447845),GCOMPLEX(floatT)(2.64052,0.548778),
         GCOMPLEX(floatT)(-0.4966,-3.00779));
 
@@ -336,7 +336,7 @@ bool test_dslash2(CommunicationBase &commBase){
         stdLogger.info("Test of Dslash: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     } else {
         stdLogger.error("Test of Dslash: failed");
-        stdLogger.info("mycoords = " ,  commBase.mycoords()*GInd::getLatData().localLattice(),  
+        stdLogger.info("mycoords = " ,  commBase.mycoords()*GInd::getLatData().localLattice(),
                        ": " ,   success[0] ,  " " ,  success[1] ,  " " ,  success[2] ,  " " ,  success[3]);
         return true;
     }
@@ -349,10 +349,10 @@ bool test_dslash2(CommunicationBase &commBase){
 
     if (LatLayoutRHS==All)
         reference = GCOMPLEX(floatT)(-20.616344023,-374.68626006);
-    
+
     else if(LatLayoutRHS==Odd)
         reference = GCOMPLEX(floatT)(-245.143001,983.5859418);
-    
+
     else
         reference = GCOMPLEX(floatT)(-34.25902057,-404.02228596);
 

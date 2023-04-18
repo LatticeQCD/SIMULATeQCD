@@ -53,7 +53,7 @@ inline std::string sformat(const std::string &fmt, Ts&&... vs)
 {
     using namespace format_helper;
     char b;
-    
+
     //not counting the terminating null character.
     size_t required = std::snprintf(&b, 0, fmt.c_str(), cast(std::forward<Ts>(vs))...);
     std::string result;

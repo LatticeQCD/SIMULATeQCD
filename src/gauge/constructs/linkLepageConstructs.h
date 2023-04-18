@@ -1,8 +1,8 @@
-/* 
- * linkLepageConstructs.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * linkLepageConstructs.h
+ *
+ * J. Goswami
+ *
  */
 
 #ifndef LINKLEPAGECONSTRUCTS_H
@@ -19,7 +19,7 @@
 template<class floatT,size_t HaloDepth,CompressionType comp>
 __device__ GSU3<floatT> inline linkLpUp(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
-  
+
     gSite origin = site;
     gSite up = GInd::site_up(site, nu);
     gSite twoUp = GInd::site_up(up, nu);
@@ -39,7 +39,7 @@ __device__ GSU3<floatT> inline linkLpUp(gaugeAccessor<floatT,comp> gAcc, gSite s
      *   ^    v
      *   |    |
      *   *
-     *    
+     *
      */
 
     temp =  gAcc.getLink(GInd::getSiteMu(origin, nu))

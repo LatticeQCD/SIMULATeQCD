@@ -1,18 +1,18 @@
-/* 
- * LatticeContainer.h                                                               
- * 
- * L. Mazur 
- * 
- * This class oversees LatticeContainer objects, which are essentially intermediate containers 
- * used to store intermediate results that will be reduced later. For instance if one calculates 
- * the action, one first finds each local contribution, sums these contributions over a sublattice, 
+/*
+ * LatticeContainer.h
+ *
+ * L. Mazur
+ *
+ * This class oversees LatticeContainer objects, which are essentially intermediate containers
+ * used to store intermediate results that will be reduced later. For instance if one calculates
+ * the action, one first finds each local contribution, sums these contributions over a sublattice,
  * then sums this result over all sublattices. This whole process is carried out with reduce call.
  *
- * The LatticeContainer can hold elements of arbitrary type, and it is spread over the processes 
- * in a similar way as the Gaugefield or Spinorfield. The memory of the LatticeContainer is by 
- * default shared with the memory of the halo buffer, because in general the intermediate results 
- * have to be re-calculated after a halo update. 
- * 
+ * The LatticeContainer can hold elements of arbitrary type, and it is spread over the processes
+ * in a similar way as the Gaugefield or Spinorfield. The memory of the LatticeContainer is by
+ * default shared with the memory of the halo buffer, because in general the intermediate results
+ * have to be re-calculated after a halo update.
+ *
  */
 
 #ifndef LATTICECONTAINER_H
@@ -172,54 +172,54 @@ public:
         if (onDevice) {
             ReductionResult->template adjustSize<elemType>(NStacks);
             ReductionResultHost->template adjustSize<elemType>(NStacks);
-                
+
             if (sequentialLoop) {
-                
+
                 for (size_t i = 0; i < NStacks; i++) {
                     /// Determine temporary device storage requirements
                     size_t temp_storage_bytes = 0;
                     gpuError_t gpuErr = CubReduce<elemType>(NULL, &temp_storage_bytes,
                                                             ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
-                    
+
                     if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (1)", gpuErr);
-                    
+
                     HelperArray->template adjustSize<void *>(temp_storage_bytes);
-                    
+
                     gpuErr = CubReduce<elemType>(HelperArray->getPointer(), &temp_storage_bytes,
                                                  ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
-                    
+
                     if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (2)", gpuErr);
                 }
-                
+
             }
             else {
-                
+
                 StackOffsetsHostTemp->template adjustSize<size_t>(NStacks+1);
                 LatticeContainerAccessor acc(StackOffsetsHostTemp->getPointer());
                 StackOffsetsTemp->template adjustSize<size_t>(NStacks+1);
-                
+
                 for (size_t i = 0; i < NStacks + 1; i++) {
                     acc.setValue(i, i * stackSize);
                 }
-                
+
                 StackOffsetsTemp->copyFrom(StackOffsetsHostTemp, sizeof(size_t)*(NStacks+1));
                 /// Determine temporary device storage requirements
                 size_t temp_storage_bytes = 0;
                 gpuError_t gpuErr = CubReduceStacked<elemType>(NULL, &temp_storage_bytes,
                                                                ContainerArray->getPointer(), ReductionResult->getPointer(), NStacks,
                                                                StackOffsetsTemp->getPointer());
-                
+
                 if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceSegmentedReduce::Sum (1)", gpuErr);
-                
+
                 HelperArray->template adjustSize<void *>(temp_storage_bytes);
-                
+
                 gpuErr = CubReduceStacked<elemType>(HelperArray->getPointer(), &temp_storage_bytes,
                                                     ContainerArray->getPointer(), ReductionResult->getPointer(), NStacks,
                                                     StackOffsetsTemp->getPointer());
-                
+
                 if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceSegmentedReduce::Sum (2)", gpuErr);
             }
-            
+
             ReductionResultHost->copyFrom(ReductionResult, NStacks* sizeof(elemType));
 
             LatticeContainerAccessor accRes(ReductionResultHost->getPointer());

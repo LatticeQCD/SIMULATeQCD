@@ -1,10 +1,10 @@
-/* 
- * logging.h                                                               
- * 
- * L. Mazur 
- * 
- * The logger class, which is used to output information to screen. 
- * 
+/*
+ * logging.h
+ *
+ * L. Mazur
+ *
+ * The logger class, which is used to output information to screen.
+ *
  */
 
 #ifndef LOGGER
@@ -51,7 +51,7 @@ class Logger {
             setVerbosity(verbosity_stack.top());
             verbosity_stack.pop();
         }
-        
+
         void set_colored_output(bool val){
             colorized_output = val;
         }
@@ -63,7 +63,7 @@ class Logger {
         template <LogLevel level, typename... Args>
             inline std::string message(Args&&... args) {
                 std::ostringstream prefix, loginfo, postfix;
-                
+
                 bool resetColor = false;
                 if (colorized_output && level == WARN){
                     prefix << COLORS::yellow;
@@ -83,7 +83,7 @@ class Logger {
                 std::string msg = sjoin(std::forward<Args>(args)...);
 
                 if(resetColor) postfix << COLORS::reset;
-                
+
                 postfix << std::resetiosflags(
                             std::ios_base::floatfield | std::ios_base::basefield |
                             std::ios_base::adjustfield | std::ios_base::uppercase |
@@ -129,7 +129,7 @@ class Logger {
         };
 };
 
-/// This logger prints something on each node. It is created in base/communicationBase_*.cpp and its verbosity 
+/// This logger prints something on each node. It is created in base/communicationBase_*.cpp and its verbosity
 /// should be set at the beginning of main()
 extern Logger stdLogger;
 

@@ -1,8 +1,8 @@
-# 
-# cudaIpcTest.param                                                               
-# 
+#
+# cudaIpcTest.param
+#
 #    Lattice: Nx Ny Nz Nt
-#      Nodes: Number of sublattices per direction 
+#      Nodes: Number of sublattices per direction
 #
 # Please always use exactly two nodes.
 #

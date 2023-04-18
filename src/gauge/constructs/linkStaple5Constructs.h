@@ -1,8 +1,8 @@
-/* 
- * linkStaple5Constructs.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * linkStaple5Constructs.h
+ *
+ * J. Goswami
+ *
  */
 
 #ifndef LINKSTAPLE5CONSTRUCTS_H

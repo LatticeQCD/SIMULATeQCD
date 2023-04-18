@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
 
     rootLogger.info("Rng initialized with seed ", param.seed());
 
-    
+
     if (is_test) {
         // run the test and compare the result to a known value
         rootLogger.info("Starting in Test Mode");

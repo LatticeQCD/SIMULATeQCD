@@ -1,8 +1,8 @@
-/* 
- * LatticeDimension.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * LatticeDimension.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef JUST_INDEXER_LATTICEDIMENSION_H

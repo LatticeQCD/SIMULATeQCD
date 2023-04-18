@@ -1,8 +1,8 @@
-/* 
- * refValues_gfixplc.h                                                               
- * 
- * Reference values from Olaf's gauge fixing script. 
- * 
+/*
+ * refValues_gfixplc.h
+ *
+ * Reference values from Olaf's gauge fixing script.
+ *
  */
 
 #ifndef GFIXPLC_REFVALUES_H

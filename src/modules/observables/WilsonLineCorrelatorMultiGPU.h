@@ -1,6 +1,6 @@
-/* 
+/*
  * Created by Rasmus Larsen on 17-02-2021
- * 
+ *
  */
 
 #ifndef WILSONLINECORRELATORMULTIGPU_H
@@ -31,7 +31,7 @@ class WilsonLineCorrelatorMultiGPU{
 
     //construct the class
         WilsonLineCorrelatorMultiGPU() {}
-    
+
     // Function to compute the wilson line using the above struct CalcWilson.
     //template<class floatT, size_t HaloDepth>
     void gWilson(Gaugefield<floatT,true,HaloDepth> &gauge , size_t length);
@@ -43,7 +43,7 @@ class WilsonLineCorrelatorMultiGPU{
     GCOMPLEX(floatT) gDotAlongXY( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,GCOMPLEX(floatT)> &redBase);
 
     GCOMPLEX(floatT) gDotAlongXYFull( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,GCOMPLEX(floatT)> &redBase);
-  
+
     std::vector<floatT> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,floatT> &redBase);
 
     std::vector<floatT> gDotAlongXYStackedShared( Gaugefield<floatT,true,HaloDepth> &gauge , int shifty,  LatticeContainer<true,floatT> &redBase);
@@ -71,7 +71,7 @@ struct ShiftVectorOne{
 
     // takes vector from mu=1 direction from up or down 1 and saves and returns it
     // needed since A(x).A(x+r) product is done by making a copy of A and then move it around
-    // and takes the dot product between original and moved vector    
+    // and takes the dot product between original and moved vector
     if(Up == true){
         Stmp =  _gaugeIn.getLink(GInd::getSiteMu(GInd::site_up(site, direction),1));
     }
@@ -266,7 +266,7 @@ struct DotAlongXYIntervalFull{
 
 
 // calculates 1 wilson line of length length
-// The wilson line is calculated from any spacetime point 
+// The wilson line is calculated from any spacetime point
 template<class floatT,size_t HaloDepth>
 struct CalcWilson{
 

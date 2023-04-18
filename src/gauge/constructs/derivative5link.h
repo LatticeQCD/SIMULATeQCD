@@ -1,8 +1,8 @@
-/* 
- * derivative5link.h                                                               
- * 
- * D. Bollweg 
- * 
+/*
+ * derivative5link.h
+ *
+ * D. Bollweg
+ *
  */
 
 #ifndef DERIVATIVE_5LINK_H
@@ -184,7 +184,7 @@ __host__ __device__ GSU3<floatT> linkDerivative5_3(gaugeAccessor<floatT,compIn> 
                 *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), nu))
                 *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
 };
-    
+
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
 __host__ __device__ GSU3<floatT> linkDerivative5_5(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu, int rho) {
     typedef GIndexer<All,HaloDepth> GInd;

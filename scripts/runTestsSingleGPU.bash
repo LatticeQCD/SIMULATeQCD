@@ -1,17 +1,17 @@
 #!/bin/bash
 
 ## prefix could be for example optirun on some systems. Leave empty if not necessary.
-if [ -z "$1" ]; then 
+if [ -z "$1" ]; then
     prefix=""
-else 
+else
     prefix=$1
     echo "Run tests with prefix ${prefix}"
 fi
 
 ## Default Nodes = "1 1 1 1"
-if [ -z "$2" ]; then 
+if [ -z "$2" ]; then
     nodes="1 1 1 1"
-else 
+else
     nodes="$2"
 fi
 
@@ -202,7 +202,7 @@ echo ""
 echo ==========================================================================================================
 echo Running Test: ./_memManTest
 echo ==========================================================================================================
-${prefix} ./_memManTest 
+${prefix} ./_memManTest
 
 echo ""
 echo ==========================================================================================================

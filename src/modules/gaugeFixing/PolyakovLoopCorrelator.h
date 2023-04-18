@@ -1,6 +1,6 @@
-/* 
+/*
  * PolyakovLoopCorrelator.h
- * 
+ *
  * D. Clarke, 27 Apr 2020
  *
  */

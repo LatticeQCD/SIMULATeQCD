@@ -1,8 +1,8 @@
-/* 
- * SIMULATeQCD.h                                                               
- * 
- * Principal header file containing base, spinor, and gauge classes. 
- * 
+/*
+ * SIMULATeQCD.h
+ *
+ * Principal header file containing base, spinor, and gauge classes.
+ *
  */
 
 #ifndef SIMULATE_QCD_H

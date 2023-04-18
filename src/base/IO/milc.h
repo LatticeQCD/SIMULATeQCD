@@ -1,8 +1,8 @@
-/* 
- * milc.h                                                               
- * 
- * R. Larsen 
- * 
+/*
+ * milc.h
+ *
+ * R. Larsen
+ *
  */
 
 #ifndef INC_MILC_H

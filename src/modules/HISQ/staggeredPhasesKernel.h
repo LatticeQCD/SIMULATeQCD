@@ -1,8 +1,8 @@
-/* 
- * staggeredPhasesKernel.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * staggeredPhasesKernel.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef STAGGEREDPHASES_KERNEL_H
@@ -23,7 +23,7 @@ struct staggeredPhaseKernel {
     double mu_f;
 
     //Constructor to initialize this member variable.
-    explicit staggeredPhaseKernel(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeIn, floatT _mu_f=0.0) 
+    explicit staggeredPhaseKernel(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeIn, floatT _mu_f=0.0)
         : gAcc(gaugeIn.getAccessor()),mu_f(_mu_f) {}
 
     __host__ __device__ GSU3<floatT> operator()(gSiteMu siteMu) {

@@ -1,8 +1,8 @@
-/* 
- * calcGSiteHalo.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * calcGSiteHalo.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef CALCGSITEHALO_H

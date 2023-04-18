@@ -1,8 +1,8 @@
-/* 
- * calcGSiteHalo_dynamic.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * calcGSiteHalo_dynamic.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef CALCGSITEHALO_DYNAMIC_H
