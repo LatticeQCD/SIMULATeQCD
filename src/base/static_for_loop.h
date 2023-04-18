@@ -18,9 +18,7 @@
  *
  */
 
-#ifndef STATIC_FOR_LOOP_H
-#define STATIC_FOR_LOOP_H
-
+#pragma once
 
 template <int First, int Last>
 struct static_for
@@ -43,4 +41,3 @@ struct static_for<N, N>
 };
 
 
-#endif //STATIC_FOR_LOOP_H

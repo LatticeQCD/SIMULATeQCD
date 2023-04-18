@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef JUST_INDEXER_LATTICEDIMENSION_H
-#define JUST_INDEXER_LATTICEDIMENSION_H
-
+#pragma once
 #include <iostream>
 #include <stdexcept>
 #include "wrapper/gpu_wrapper.h"
@@ -173,4 +171,3 @@ public :
 
 };
 
-#endif //JUST_INDEXER_LATTICEDIMENSION_H

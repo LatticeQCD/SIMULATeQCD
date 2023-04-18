@@ -1,6 +1,4 @@
-#ifndef HYPSMEARING_H
-#define HYPSMEARING_H
-
+#pragma once
 
 #include "../../gauge/gaugefield.h"
 #include "../../gauge/constructs/fat7LinkConstructs.h"
@@ -113,4 +111,3 @@ public:
 
 
 };
-#endif //HYPSMEARING_H

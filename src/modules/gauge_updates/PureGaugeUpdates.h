@@ -7,8 +7,7 @@
  *
  */
 
-#ifndef PUREGAUGEUPDATES_H
-#define PUREGAUGEUPDATES_H
+#pragma once
 
 #include "../../gauge/gaugefield.h"
 #include "../../base/math/gcomplex.h"
@@ -185,5 +184,3 @@ __device__ __host__ inline GSU3<float> HB_GPUSU3(const GSU3<floatT> &U, GSU3<flo
 
     return x;
 }
-
-#endif

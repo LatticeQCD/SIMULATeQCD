@@ -3,8 +3,7 @@
  *
  */
 
-#ifndef INC_NERSC_H
-#define INC_NERSC_H
+#pragma once
 
 #include "parameterManagement.h"
 #include "misc.h"
@@ -392,5 +391,3 @@ public:
         return true;
     }
 };
-
-#endif

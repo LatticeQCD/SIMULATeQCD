@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef CALCGSITEHALO_H
-#define CALCGSITEHALO_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/gutils.h"
 #include "../math/operators.h"
@@ -246,4 +244,3 @@ struct CalcGSiteCenter {
 };
 
 
-#endif //CALCGSITEHALO_H

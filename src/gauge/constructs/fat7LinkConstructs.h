@@ -3,9 +3,7 @@
  *
  */
 
-#ifndef FAT7LINKCONSTRUCTS_H
-#define FAT7LINKCONSTRUCTS_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -351,5 +349,4 @@ __host__ __device__ GSU3<floatT> inline sevenLinkStaple(gaugeAccessor<floatT, co
     }
 }
 
-#endif //FAT7LINKCONSTRUCTS_H
 

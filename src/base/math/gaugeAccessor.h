@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 17.12.18.
 //
 
-#ifndef GAUGEACCESSOR_H
-#define GAUGEACCESSOR_H
-
+#pragma once
 #include "gaugeConstructor.h"
 
 #define BACKWARD_CONST 16
@@ -138,4 +136,3 @@ public:
     }
 };
 
-#endif //GAUGEACCESSOR_H

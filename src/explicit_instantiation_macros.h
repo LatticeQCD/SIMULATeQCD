@@ -11,9 +11,7 @@
  *
  */
 
-#ifndef EXPLICITINSTANTIATION_H
-#define EXPLICITINSTANTIATION_H
-
+#pragma once
 #include "preprocessorWrapper.h"
 
 
@@ -620,4 +618,3 @@ enum CompressionType {
 
 
 
-#endif //EXPLICITINSTANTIATION_H

@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 05.12.21.
 //
 
-#ifndef STRINGFUNCTIONS_H
-#define STRINGFUNCTIONS_H
-
+#pragma once
 #include <iostream>
 #include <sstream>
 
@@ -72,4 +70,3 @@ inline std::string timeStamp() {
     return strStream.str();
 }
 
-#endif //STRINGFUNCTIONS_H

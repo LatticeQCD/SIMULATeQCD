@@ -3,9 +3,7 @@
 // Contains ordered reference values for the gradientFlowTest for all combinations of RK_method and force.
 //
 
-#ifndef GRADFLOW_REFVALUES_H
-#define GRADFLOW_REFVALUES_H
-
+#pragma once
 #include <vector>
 
 std::vector<std::vector<double>> refValues_gradFlow = {{
@@ -253,4 +251,3 @@ std::vector<std::vector<double>> refValues_gradFlow = {{
     {1.0000000000000000, 0.9990483595086853, 0.0288035159570841, -0.0129836950054666}
 }};
 
-#endif //GRADFLOW_REFVALUES_H

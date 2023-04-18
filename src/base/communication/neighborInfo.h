@@ -8,9 +8,7 @@
  *
  */
 
-#ifndef NEIGHBORINFO_H
-#define NEIGHBORINFO_H
-
+#pragma once
 #include "../../define.h"
 #include <mpi.h>
 
@@ -477,4 +475,3 @@ inline void NeighborInfo::checkP2P() {
 #endif
 }
 
-#endif //NEIGHBORINFO_H

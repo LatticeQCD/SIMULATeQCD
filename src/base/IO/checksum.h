@@ -2,9 +2,7 @@
 // Created by sajid Ali on 12/13/21.
 //
 
-#ifndef SIMULATEQCD_CHECKSUM_H
-#define SIMULATEQCD_CHECKSUM_H
-class Checksum{
+#pragma onceclass Checksum{
 public:
     int32_t checksumb;
     int32_t checksuma;
@@ -64,4 +62,3 @@ void checksum_crc32_combine(Checksum  *checksum_crc32,size_t global_vol, uint32_
 
 }
 //######################################################################################################################
-#endif //SIMULATEQCD_CHECKSUM_H

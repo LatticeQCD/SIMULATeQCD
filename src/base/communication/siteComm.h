@@ -15,9 +15,7 @@
  *
  */
 
-#ifndef GPU_LATTICE_GAUGECOMM_H
-#define GPU_LATTICE_GAUGECOMM_H
-
+#pragma once
 
 #include "../../define.h"
 #include <iostream>
@@ -407,4 +405,3 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
 }
 
-#endif //GPU_LATTICE_GAUGECOMM_H

@@ -15,9 +15,7 @@
  *
  */
 
-#ifndef LATTICECONTAINER_H
-#define LATTICECONTAINER_H
-
+#pragma once
 #include "communication/communicationBase.h"
 #include "indexer/BulkIndexer.h"
 #include "memoryManagement.h"
@@ -422,4 +420,3 @@ void LatticeContainer<onDevice, elemType>::iterateOverSpatialBulk(Functor op) {
     this->template iterateFunctor<BlockSize>(op, calcGSiteSpatial, writeAtRead, elems);
 }
 
-#endif //LATTICECONTAINER_H

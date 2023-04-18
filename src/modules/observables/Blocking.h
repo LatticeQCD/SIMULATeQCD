@@ -2,9 +2,7 @@
 // Created by Hai-Tao Shu on 2021.05.11
 //
 
-#ifndef BLOCKING_H
-#define BLOCKING_H
-
+#pragma once
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/gaugefield.h"
 #include "FieldStrengthTensor.h"
@@ -214,4 +212,3 @@ struct BlockingKernel {
 };
 
 
-#endif //BLOCKING_H

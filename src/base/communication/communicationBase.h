@@ -9,9 +9,7 @@
  *
  */
 
-#ifndef COMMUNICATOR_COMMUNICATIONBASE_H
-#define COMMUNICATOR_COMMUNICATIONBASE_H
-
+#pragma once
 #include <iostream>
 #include <cstdlib>
 #include <mpi.h>
@@ -336,4 +334,3 @@ public:
 
 };
 
-#endif //COMMUNICATOR_COMMUNICATIONBASE_H

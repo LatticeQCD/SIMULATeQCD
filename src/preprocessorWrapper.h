@@ -17,10 +17,7 @@
  * macro definitions to handle O(N) arguments (with the exception of DEFERn).
  */
 
-#ifndef CPP_MAGIC_H
-#define CPP_MAGIC_H
-
-
+#pragma once
 
 /**
  * Force the pre-processor to expand the macro a large number of times. Usage:
@@ -443,6 +440,3 @@
  */
 #define REMOVE_TRAILING_COMMAS(...) \
 	MAP(PASS, COMMA, __VA_ARGS__)
-
-
-#endif

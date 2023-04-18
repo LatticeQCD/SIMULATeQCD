@@ -4,9 +4,7 @@
  * D. Clarke, 27 Apr 2020
  *
  */
-#ifndef FASTPLC_H
-#define FASTPLC_H
-
+#pragma once
 #include "../../base/math/correlators.h"
 #include "../observables/PolyakovLoop.h"
 
@@ -40,4 +38,3 @@ __host__ __device__ void inline plc_contrib(GSU3<floatT> pol1, GSU3<floatT> pol2
     addplc8     += 0.125*tmpa - 0.04166666666*tmps;
 }
 
-#endif //FASTPLC_H

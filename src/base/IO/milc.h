@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef INC_MILC_H
-#define INC_MILC_H
+#pragma once
 
 #include "parameterManagement.h"
 #include "misc.h"
@@ -372,5 +371,3 @@ public:
         return true;
     }
 };
-
-#endif

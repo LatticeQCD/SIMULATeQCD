@@ -4,8 +4,8 @@
  * Utility functions usable in GPUs.
  *
  */
-#ifndef UTIL_H
-#define UTIL_H
+
+#pragma once
 
 #include "../define.h"
 #include "wrapper/gpu_wrapper.h"
@@ -54,8 +54,3 @@ private:
  * Utility method for speedy testing of whether a number is odd
  */
 __device__ __host__ inline bool isOdd(int cand) { return (cand & 0x1); }
-
-
-
-
-#endif /* UTIL_H */

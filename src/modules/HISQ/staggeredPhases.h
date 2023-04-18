@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef STAGGEREDPHASES_H
-#define STAGGEREDPHASES_H
-#include "../../define.h"
+#pragma once#include "../../define.h"
 #include "../../base/indexer/BulkIndexer.h"
 
 struct calcStaggeredPhase {
@@ -69,4 +67,3 @@ struct imagMuphase {
     }
 };
 
-#endif //STAGGEREDPHASES_H

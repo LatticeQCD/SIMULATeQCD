@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 03.06.20.
 //
 
-#ifndef GPU_WRAPPER_H
-#define GPU_WRAPPER_H
-
+#pragma once
 #ifdef USE_CUDA
 
 #include <cuda.h>
@@ -163,4 +161,3 @@
 
 #endif
 
-#endif //GPU_WRAPPER_H

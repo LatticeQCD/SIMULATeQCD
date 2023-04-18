@@ -2,9 +2,7 @@
 // Created by Hai-Tao Shu on 06.05.19
 //
 
-#ifndef LUSCHER_WEISZ_H
-#define LUSCHER_WEISZ_H
-
+#pragma once
 #include "../../gauge/gaugefield.h"
 
 
@@ -29,4 +27,3 @@ public:
     ~LuscherWeisz() {}
 };
 
-#endif //LUSCHER_WEISZ_H

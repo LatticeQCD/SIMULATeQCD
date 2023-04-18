@@ -1,20 +1,19 @@
 /*
-
-  Mike Clark - 25th May 2005
-
-  bigfloat.h
-
-  Simple C++ wrapper for multiprecision datatype used by AlgRemez
-  algorithm
-
-*/
+ *
+ *  Mike Clark - 25th May 2005
+ *
+ *  bigfloat.h
+ *
+ *  Simple C++ wrapper for multiprecision datatype used by AlgRemez
+ *  algorithm
+ *
+ */
 
 #include <gmp.h>
 #include <mpf2mpfr.h>
 #include <mpfr.h>
 
-#ifndef INCLUDED_BIGFLOAT_H
-#define INCLUDED_BIGFLOAT_H
+#pragma once
 
 class bigfloat {
 
@@ -204,5 +203,3 @@ public:
   friend int sgn(const bigfloat&);
 
 };
-
-#endif

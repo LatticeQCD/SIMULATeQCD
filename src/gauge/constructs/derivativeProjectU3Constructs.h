@@ -3,8 +3,7 @@
  *
  */
 
-#ifndef DERIVATIVE_PROJECTU3CONSTRUCTS_H
-#define DERIVATIVE_PROJECTU3CONSTRUCTS_H
+#pragma once
 
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
@@ -206,5 +205,3 @@ __host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn
 
     return temp;
 }
-
-#endif // DERIVATIVE_PROJECTU3CONSTRUCTS_H

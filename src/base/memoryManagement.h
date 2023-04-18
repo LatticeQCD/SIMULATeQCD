@@ -27,9 +27,7 @@
  *
  */
 
-#ifndef MEMORYMANAGEMENT_H
-#define MEMORYMANAGEMENT_H
-
+#pragma once
 #include "wrapper/gpu_wrapper.h"
 #include "../define.h"
 #include "gutils.h"
@@ -567,4 +565,3 @@ public:
     }
 };
 
-#endif //MEMORYMANAGEMENT_H

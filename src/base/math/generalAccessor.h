@@ -14,9 +14,7 @@
  *
  */
 
-#ifndef GENERALACCESSOR_H
-#define GENERALACCESSOR_H
-
+#pragma once
 #include "../../define.h"
 
 
@@ -59,4 +57,3 @@ public:
     }
 };
 
-#endif //GENERALACCESSOR_H

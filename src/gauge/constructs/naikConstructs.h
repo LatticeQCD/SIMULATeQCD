@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef NAIKCONSTRUCTS_H
-#define NAIKCONSTRUCTS_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -32,4 +30,3 @@ __device__ GSU3<floatT> inline naik3LinkUp(gaugeAccessor<floatT> gAcc, gSite sit
     return temp;
 }
 
-#endif //NAIKCONSTRUCTS_H

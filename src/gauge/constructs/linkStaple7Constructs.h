@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef LINKSTAPLE7CONSTRUCTS_H
-#define LINKSTAPLE7CONSTRUCTS_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -68,4 +66,3 @@ __device__ GSU3<floatT> inline linkStaple7Up(gaugeAccessor<floatT,comp> gAcc,gSi
 
     return temp;
 }
-#endif //LINKSTAPLE7CONSTRUCTS_H

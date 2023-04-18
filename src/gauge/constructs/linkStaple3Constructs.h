@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef LINKSTAPLE3CONSTRUCTS_H
-#define LINKSTAPLE3CONSTRUCTS_H
-
+#pragma once
 
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
@@ -64,4 +62,3 @@ __device__ GSU3<floatT> inline linkStaple3Dn(gaugeAccessor<floatT,comp> gAcc, gS
     temp = gAcc.template getLinkPath<All, HaloDepth>(site, Back(nu), mu, nu);
     return temp;
 }
-#endif //3LINKSTAPLECONSTRUCTS_H

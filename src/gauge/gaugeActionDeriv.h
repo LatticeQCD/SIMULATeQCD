@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 06.07.18.
 //
 
-#ifndef GAUGEACTIONDERIV_H
-#define GAUGEACTIONDERIV_H
-
+#pragma once
 #include "../define.h"
 #include "../base/math/gcomplex.h"
 #include "../base/gutils.h"
@@ -261,4 +259,3 @@ __host__ __device__ GSU3<floatT> inline gauge_force(gaugeAccessor<floatT,comp> l
 
 
 
-#endif //GAUGEACTIONDERIV_H

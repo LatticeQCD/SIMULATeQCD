@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef LINKCONSTRUCTS_H
-#define LINKCONSTRUCTS_H
-
+#pragma once
 
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
@@ -260,4 +258,3 @@ __device__ GSU3<floatT> inline Rect_R(gaugeAccessor<floatT> gAcc, gSite site, in
     return temp;
 }
 
-#endif //LINKCONSTRUCTS_H

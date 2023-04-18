@@ -1,13 +1,7 @@
-#ifndef OPERAIndexOR_H
-#define OPERAIndexOR_H
-
-#include <type_traits>
-#include "gcomplex.h"
-#include "gsu3.h"
-#include "gvect3.h"
-#include "../indexer/BulkIndexer.h"
-
-/*! Using the syntax below stuff like this is possible:
+/* 
+ * operators.h
+ *
+ * Using the syntax below stuff like this is possible:
  *   Spinor a, b, c, d
  *   Spinor a = b*c + d;
  * The way this works is the following: Instead of actually performing the operations + and *, they only return an
@@ -16,6 +10,14 @@
  * (=) of the spinor. This is done by calling a kernel, which takes the operator object as right hand side object.
  * Inside this kernel the operation is then executed.
  */
+
+#pragma once
+
+#include <type_traits>
+#include "gcomplex.h"
+#include "gsu3.h"
+#include "gvect3.h"
+#include "../indexer/BulkIndexer.h"
 enum Operation {
     add, subtract, mult, divide
 };
@@ -601,6 +603,3 @@ GeneralOperator<isAllowedType<typeLHS>,
 operator/(const typeLHS lhs, const GeneralOperator<typeLHS1, typeRHS1, op1> &rhs) {
     return GeneralOperator<typeLHS, GeneralOperator<typeLHS1, typeRHS1, op1>, divide>(lhs, rhs);
 }
-
-
-#endif

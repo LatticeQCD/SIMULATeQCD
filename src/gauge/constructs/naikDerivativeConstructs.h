@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef NAIKDERIVATIVECONSTRUCTS_H
-#define NAIKDERIVATIVECONSTRUCTS_H
-#include "../../base/indexer/BulkIndexer.h"
+#pragma once#include "../../base/indexer/BulkIndexer.h"
 #include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth>
@@ -30,4 +28,3 @@ __host__ __device__ GSU3<floatT> inline naikLinkDerivative(gaugeAccessor<floatT>
 
     return temp;
 }
-#endif //NAIKDERIVATIVECONSTRUCTS_H

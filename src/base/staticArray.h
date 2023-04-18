@@ -5,8 +5,8 @@
  *
  */
 #include <iostream>
-#ifndef STATIC_ARRAY_H
-#define STATIC_ARRAY_H
+
+#pragma once
 
 template<class T, size_t N>
 
@@ -81,5 +81,3 @@ class StaticArray<T, 0>{
     template<typename... Args>
     StaticArray(__attribute__((unused)) Args&&... args){}
 };
-
-#endif

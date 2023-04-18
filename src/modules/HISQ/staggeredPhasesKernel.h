@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef STAGGEREDPHASES_KERNEL_H
-#define STAGGEREDPHASES_KERNEL_H
-
+#pragma once
 #include "../../gauge/gaugefield.h"
 #include "staggeredPhases.h"
 
@@ -36,4 +34,3 @@ struct staggeredPhaseKernel {
     }
 };
 
-#endif //STAGGEREDPHASES_H

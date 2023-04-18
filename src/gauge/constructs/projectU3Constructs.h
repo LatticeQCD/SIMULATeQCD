@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef PROJECTU3CONSTRUCTS_H
-#define PROJECTU3CONSTRUCTS_H
-#include "../../define.h"
+#pragma once#include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
 #include "../../base/math/gsu3array.h"
@@ -86,4 +84,3 @@ __host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gS
     }
 }
 
-#endif //PROJECTU3CONSTRUCTS_H

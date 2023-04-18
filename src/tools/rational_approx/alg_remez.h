@@ -12,8 +12,7 @@
 
 */
 
-#ifndef INCLUDED_ALG_REMEZ_H
-#define INCLUDED_ALG_REMEZ_H
+# pragma once
 
 #include "bigfloat.h"
 
@@ -180,8 +179,3 @@ public:
   double evaluateInverseFunc(double x);
 
 };
-
-#endif  // Include guard
-
-
-

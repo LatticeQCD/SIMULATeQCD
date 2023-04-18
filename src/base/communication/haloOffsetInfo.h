@@ -11,9 +11,7 @@
  *
  */
 
-#ifndef HALOOFFSETINFO_H
-#define HALOOFFSETINFO_H
-
+#pragma once
 #include <mpi.h>
 #include "../../define.h"
 #include <map>
@@ -540,4 +538,3 @@ public:
 
 };
 
-#endif //HALOOFFSETINFO_H

@@ -3,8 +3,7 @@
  *
  */
 
-#ifndef DSLASH_H
-#define DSLASH_H
+#pragma once
 
 #include "../inverter/inverter.h"
 
@@ -213,5 +212,3 @@ public:
     getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
 
 };
-
-#endif

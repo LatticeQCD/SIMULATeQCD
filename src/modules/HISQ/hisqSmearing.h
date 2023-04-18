@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef HISQSMEARING_H
-#define HISQSMEARING_H
-
+#pragma once
 
 #include "../../gauge/gaugefield.h"
 #include "../../gauge/constructs/fat7LinkConstructs.h"
@@ -186,4 +184,3 @@ private:
         gauge_out.updateAll();
     }
 };
-#endif //HISQSMEARING_H

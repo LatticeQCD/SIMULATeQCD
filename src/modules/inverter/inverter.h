@@ -2,8 +2,8 @@
  * inverter.h
  *
  */
-#ifndef INVERTER_H
-#define INVERTER_H
+
+#pragma once
 
 #include "../../gauge/gaugefield.h"
 #include "../../spinor/spinorfield.h"
@@ -59,5 +59,3 @@ public:
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 };
-
-#endif

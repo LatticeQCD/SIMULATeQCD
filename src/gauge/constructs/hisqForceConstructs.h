@@ -7,9 +7,7 @@
  *
  */
 
-#ifndef HISQFORCE_H
-#define HISQFORCE_H
-
+#pragma once
 #include "../../modules/HISQ/smearParameters.h"
 #include "derivative3link.h"
 #include "derivative5link.h"
@@ -836,4 +834,3 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_7(gaugeAccessor<floatT,co
 };
 
 
-#endif //HISQFORCE_H

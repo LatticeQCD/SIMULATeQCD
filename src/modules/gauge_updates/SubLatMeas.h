@@ -2,9 +2,7 @@
 // Created by Hai-Tao Shu on 07.06.2019
 //
 
-#ifndef SUBLATMEAS_H
-#define SUBLATMEAS_H
-
+#pragma once
 #include "../observables/EnergyMomentumTensor.h"
 #include "../observables/PolyakovLoop.h"
 #include "../../gauge/gaugefield.h"
@@ -64,4 +62,3 @@ public:
     void ImproveContractionShear(std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_real, std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_imag, int min_dist, size_t global_spatial_vol, int pz, std::vector<floatT> &Improve_ShearResult);
 };
 
-#endif //SUBLATMEAS_H

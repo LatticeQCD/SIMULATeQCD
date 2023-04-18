@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef LINKLEPAGECONSTRUCTS_H
-#define LINKLEPAGECONSTRUCTS_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -85,4 +83,3 @@ __device__ GSU3<floatT> inline linkLpDn(gaugeAccessor<floatT,comp> gAcc, gSite s
 
     return temp;
 }
-#endif //LINKLEPAGECONSTRUCTS_H

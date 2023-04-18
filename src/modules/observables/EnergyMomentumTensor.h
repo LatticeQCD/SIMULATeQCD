@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 28.11.18.
 //
 
-#ifndef ENERGYMOMENTUMTENSOR_H
-#define ENERGYMOMENTUMTENSOR_H
-
+#pragma once
 #include "../../base/LatticeContainer.h"
 #include "../../base/math/simpleArray.h"
 #include "../../gauge/gaugefield.h"
@@ -318,4 +316,3 @@ void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::EMTETimeSlices(std::vect
     _redBaseEMTETimeSlices.template iterateOverTimeslices<All, HaloDepth>(EMTtrace<floatT, onDevice, HaloDepth>(_gauge.getAccessor()));
     _redBaseEMTETimeSlices.reduceTimeSlices(result);
 }
-#endif //ENERGYMOMENTUMTENSOR_H
