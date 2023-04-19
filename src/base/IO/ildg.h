@@ -547,8 +547,13 @@ public:
         std::stringstream suma, sumb;
         suma << std::hex << sum.checksuma;
         sumb << std::hex << sum.checksumb;
-        if (header.checksuma() == suma.str() && header.checksumb() == sumb.str()) {
-            rootLogger.info(CoutColors::green, "Checksums match successfully!", CoutColors::reset);
+        if ( header.checksuma() == suma.str() && header.checksumb() == sumb.str() ) {
+            rootLogger.info("Checksums match successfully!");
+            return true;
+        } else if ( header.checksuma().empty() && header.checksumb().empty() ) {
+            // Technically a checksum is not part of the ILDG specification. Therefore our code must be able to read
+            // ILDG configurations that have no checksum metadata.
+            rootLogger.warn("Couldn't find checksums for read-in ILDG binary.");
             return true;
         } else {
             rootLogger.info("Checksuma: ",std::hex, header.checksuma()," (Stored) != ", sum.checksuma," (Computed)");
