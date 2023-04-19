@@ -440,3 +440,4 @@
  */
 #define REMOVE_TRAILING_COMMAS(...) \
 	MAP(PASS, COMMA, __VA_ARGS__)
+

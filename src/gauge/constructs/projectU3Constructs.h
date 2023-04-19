@@ -5,7 +5,8 @@
  *
  */
 
-#pragma once#include "../../define.h"
+#pragma once
+#include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
 #include "../../base/math/gsu3array.h"

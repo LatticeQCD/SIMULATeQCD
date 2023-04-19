@@ -5,7 +5,8 @@
  *
  */
 
-#pragma once#include "../../define.h"
+#pragma once
+#include "../../define.h"
 #include "../../base/indexer/BulkIndexer.h"
 
 struct calcStaggeredPhase {

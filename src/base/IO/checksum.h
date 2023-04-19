@@ -2,7 +2,8 @@
 // Created by sajid Ali on 12/13/21.
 //
 
-#pragma onceclass Checksum{
+#pragma once
+class Checksum{
 public:
     int32_t checksumb;
     int32_t checksuma;

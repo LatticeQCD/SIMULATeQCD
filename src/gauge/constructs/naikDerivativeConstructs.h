@@ -5,7 +5,8 @@
  *
  */
 
-#pragma once#include "../../base/indexer/BulkIndexer.h"
+#pragma once
+#include "../../base/indexer/BulkIndexer.h"
 #include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth>
