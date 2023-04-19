@@ -252,13 +252,19 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
     IldgFormat<HaloDepth> ildg(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
+    // Open configuration binary.
     std::ifstream in;
-    if (this->getComm().IamRoot())
+    if (this->getComm().IamRoot()) {
         in.open(fname.c_str(), std::ios::in | std::ios::binary);
-    if (!ildg.read_header(in)){
+    }
+
+    // Read header.
+    if (!ildg.read_header(in)) {
         throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 
+    // Initialize crc32 checksum. The checksum gets a contribution at every site, so we need to
+    // set aside an array for that.
     Checksum read_crc32;
     InitializeChecksum(&read_crc32);
     gMemoryPtr<false> crc32_array_read = MemoryManagement::getMemAt<false>("crc32_array_read");
@@ -266,14 +272,16 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
     crc32_array_read->memset(0);
     uint32_t *crc32_array_read_ptr=crc32_array_read->template getPointer<uint32_t>();
     LatticeDimensions global = GInd::getLatData().globalLattice();
-    LatticeDimensions local = GInd::getLatData().localLattice();
+    LatticeDimensions local  = GInd::getLatData().localLattice();
 
+    // Calculate the checksum on this read configuration.
     this->getComm().initIOBinary(fname, 0, ildg.bytes_per_site(), ildg.header_size(), global, local, READ);
     typedef GIndexer<All, HaloDepth> GInd;
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+
         gSite site = GInd::getSite(x, y, z, t);
         LatticeDimensions localCoord(site.coord.x, site.coord.y, site.coord.z, site.coord.t);
         size_t index = GInd::localCoordToGlobalIndex(localCoord);
@@ -291,8 +299,8 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
                 gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
             }
             ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(float));
-            crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
-                                                                  ildg.bytes_per_site());;
+            crc32_array_read_ptr[index] = checksum_crc32_sitedata( (char *) (&sitedata[0]), ildg.bytes_per_site() );
+
         } else if (ildg.precision_read() == 2 || (ildg.precision_read() == 0 && sizeof(floatT) == sizeof(double))) {
             std::vector <GSU3<double>> sitedata;
             for (int mu = 0; mu < 4; mu++) {
@@ -301,15 +309,15 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_ildg_host(gaugeAcce
                 gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
             }
             ildg.byte_swap_sitedata((char *) (&sitedata[0]), sizeof(double));
-            crc32_array_read_ptr[index] = checksum_crc32_sitedata((char *) (&sitedata[0]),
-                                                                  ildg.bytes_per_site());
+            crc32_array_read_ptr[index] = checksum_crc32_sitedata( (char *) (&sitedata[0]), ildg.bytes_per_site() );
+
         } else {
             rootLogger.error("Disk precision should be 0, 1 or 2.");
         }
     }
 
     this->getComm().reduce(crc32_array_read_ptr, GInd::getLatData().globvol4);
-    if(this->getComm().IamRoot()){
+    if(this->getComm().IamRoot()) {
         checksum_crc32_combine(&read_crc32, GInd::getLatData().globvol4, crc32_array_read_ptr);
         ildg.checksums_match(read_crc32);
     }
