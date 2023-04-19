@@ -7,7 +7,6 @@
 #include "../../define.h"
 template <class floatT>
 struct HypSmearingParameters{
-  //HypSmearingParameters(){}
     floatT alpha_1;
     floatT alpha_2;
     floatT alpha_3;
@@ -16,3 +15,4 @@ struct HypSmearingParameters{
         alpha_2(0.6),
         alpha_3(0.3) {}
 };
+

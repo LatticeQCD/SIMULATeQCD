@@ -46,3 +46,4 @@ __host__ __device__ GSU3<floatT> linkDerivative3(gaugeAccessor<floatT,compIn> gA
 
     return temp;
 };
+

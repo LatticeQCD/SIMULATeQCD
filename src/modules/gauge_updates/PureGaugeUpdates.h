@@ -184,3 +184,4 @@ __device__ __host__ inline GSU3<float> HB_GPUSU3(const GSU3<floatT> &U, GSU3<flo
 
     return x;
 }
+

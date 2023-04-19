@@ -59,3 +59,4 @@ public:
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 };
+

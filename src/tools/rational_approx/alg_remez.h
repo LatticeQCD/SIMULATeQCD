@@ -179,3 +179,4 @@ public:
   double evaluateInverseFunc(double x);
 
 };
+

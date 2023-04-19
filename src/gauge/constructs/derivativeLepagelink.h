@@ -102,3 +102,4 @@ __host__ __device__ GSU3<floatT> linkDerivativeLepage(gaugeAccessor<floatT,compI
 
     return temp;
 }
+

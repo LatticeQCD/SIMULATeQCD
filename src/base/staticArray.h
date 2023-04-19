@@ -81,3 +81,4 @@ class StaticArray<T, 0>{
     template<typename... Args>
     StaticArray(__attribute__((unused)) Args&&... args){}
 };
+

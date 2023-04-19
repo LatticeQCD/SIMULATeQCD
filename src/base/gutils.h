@@ -54,3 +54,4 @@ private:
  * Utility method for speedy testing of whether a number is odd
  */
 __device__ __host__ inline bool isOdd(int cand) { return (cand & 0x1); }
+

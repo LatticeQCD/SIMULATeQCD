@@ -27,3 +27,4 @@ public:
                      std::vector<int> &vec_factor , std::vector<int> &vec_weight , bool fastWLC);
 
 };
+

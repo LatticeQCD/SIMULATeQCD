@@ -603,3 +603,4 @@ GeneralOperator<isAllowedType<typeLHS>,
 operator/(const typeLHS lhs, const GeneralOperator<typeLHS1, typeRHS1, op1> &rhs) {
     return GeneralOperator<typeLHS, GeneralOperator<typeLHS1, typeRHS1, op1>, divide>(lhs, rhs);
 }
+

@@ -41,3 +41,4 @@ public:
     std::vector<GCOMPLEX(floatT)> getColorElectricCorr_naive();
     std::vector<GCOMPLEX(floatT)> getColorElectricCorr_clover();
 };
+

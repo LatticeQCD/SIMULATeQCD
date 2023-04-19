@@ -212,3 +212,4 @@ public:
     getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
 
 };
+

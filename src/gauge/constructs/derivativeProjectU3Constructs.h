@@ -205,3 +205,4 @@ __host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn
 
     return temp;
 }
+

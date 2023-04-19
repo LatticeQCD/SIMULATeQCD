@@ -30,3 +30,4 @@ inline SmearingParameters<floatT> getLevel2Params(floatT naik_epsilon = 0.0){
     SmearingParameters<floatT> params_L2(1.0*(1+naik_epsilon/8),1/8./2.,1/8./8.,1/48./8.,-1/8.0);
     return params_L2;
 }
+

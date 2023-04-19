@@ -49,3 +49,4 @@ public:
     std::vector<GCOMPLEX(floatT)> getColorMagneticCorr_naive();
     std::vector<GCOMPLEX(floatT)> getColorMagneticCorr_clover();
 };
+

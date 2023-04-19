@@ -38,10 +38,6 @@ private:
 
         std::string line;
         getline(in, line);
-//        if (line != "BEGIN_HEADER") {
-//            rootLogger.error("BEGIN_HEADER not found!");
-//            return false;
-//        }
 
         rootLogger.info(line);
 
@@ -371,3 +367,4 @@ public:
         return true;
     }
 };
+

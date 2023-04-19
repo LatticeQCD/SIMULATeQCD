@@ -225,3 +225,4 @@ GeneralOperator<SimpleArray<T, N>,
 operator*(const SimpleArray<T, N> lhs, const GeneralOperator<typeLHS1, typeRHS1, op1> &rhs) {
     return GeneralOperator<SimpleArray<T,N>, GeneralOperator<typeLHS1, typeRHS1, op1>, mult>(lhs, rhs);
 }
+

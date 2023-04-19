@@ -203,3 +203,4 @@ public:
   friend int sgn(const bigfloat&);
 
 };
+

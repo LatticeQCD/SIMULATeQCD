@@ -32,3 +32,4 @@ public:
     GCOMPLEX(floatT) getPolyakovLoop();          /// Return reduced Polyakov loop
     void  PloopInArray(MemoryAccessor _ploop);   /// Store untraced Polyakov loop in array _ploop
 };
+

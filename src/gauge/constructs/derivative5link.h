@@ -364,3 +364,4 @@ __host__ __device__ GSU3<floatT> linkDerivative5_39(gaugeAccessor<floatT,compIn>
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu), mu))
                 *finAccessor.getLink(GInd::getSiteMu(site,nu));
 };
+

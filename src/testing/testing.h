@@ -56,3 +56,4 @@ bool compare_fields(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gauge
         return true;
     }
 }
+
