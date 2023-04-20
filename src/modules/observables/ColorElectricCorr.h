@@ -10,8 +10,8 @@
  * <------  v <---v          <----
  *
  */
-#ifndef COLORELECTRICCORR_H
-#define COLORELECTRICCORR_H
+
+#pragma once
 
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/gaugefield.h"
@@ -42,4 +42,3 @@ public:
     std::vector<GCOMPLEX(floatT)> getColorElectricCorr_clover();
 };
 
-#endif

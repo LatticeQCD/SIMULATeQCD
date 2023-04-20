@@ -1,6 +1,6 @@
-/* 
- * gaugefield.cpp                                                               
- * 
+/*
+ * gaugefield.cpp
+ *
  */
 
 #include "gaugefield.h"
@@ -359,7 +359,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
             GSU3<floatT> ret = milc.template get<floatT>();
             gSite site = GInd::getSite(x, y, z, t);
             gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
-    
+
             traceSum += tr_d(ret);
         }
     }

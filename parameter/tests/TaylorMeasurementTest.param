@@ -1,6 +1,6 @@
-# 
-# TaylorMeasurementTest.param                                                               
-# 
+#
+# TaylorMeasurementTest.param
+#
 # input file for measurement of the derivatives of the partitionfunction with respect to the chemical potential.
 #
 #      Lattice: Nx Ny Nz Nt

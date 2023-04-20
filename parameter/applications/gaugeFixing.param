@@ -1,8 +1,8 @@
-# 
-# gfix.param                                                               
-# 
-# Example parameter file for main_gfix. 
-# 
+#
+# gfix.param
+#
+# Example parameter file for main_gfix.
+#
 #          Lattice: Nx Ny Nz Nt
 #            Nodes: Number of nodes per direction
 #       gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
@@ -17,7 +17,7 @@
 #   WilsonLineCorr: same as above
 #       SaveConfig: save gfixed configuration or not
 #
-Lattice          = 32 32 32 8 
+Lattice          = 32 32 32 8
 Nodes            = 1  1  1  1
 beta             = 6.285
 gtolerance       = 1e-6
@@ -29,7 +29,7 @@ stream           = 51
 conf_nr          = 26
 Gaugefile        = ../test_conf/l328f21b6285m0009875m0790a_019.995
 measurements_dir = ./
-SavedConfName    = gtol1em6_l328f21b6285m0009875m0790a_019.995 
+SavedConfName    = gtol1em6_l328f21b6285m0009875m0790a_019.995
 PolyakovLoopCorr = 0
 WilsonLineCorr   = 0
 SaveConfig       = 0

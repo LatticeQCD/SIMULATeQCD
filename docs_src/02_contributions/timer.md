@@ -7,7 +7,7 @@ To initialize the timer you simply call
 ```C++
 StopWatch<device> timer;
 ```
-where `device` is boolean template parameter. 
+where `device` is boolean template parameter.
 If `device = false` then only the time duration of CPU routines of the current rank will be considered.
 If `device = true` then the time duration of GPU-kernel executions will be considered
 as well. **Please do not construct the StopWatch before the CommBase!**
@@ -50,10 +50,10 @@ timer1.start();
 
 timer1.stop();
 
-// The streaming operator is overloaded, so you can directly 
+// The streaming operator is overloaded, so you can directly
 // print the time with the correct unit.
 // The call below could print for example "First time: 5min 34s":
-rootLogger.info("First time: ", timer1); 
+rootLogger.info("First time: ", timer1);
 
 
 timer2.start();
@@ -83,12 +83,12 @@ There are some additional convenience functions to obtain the times in different
 double microseconds = timer.microseconds();
 double milliseconds = timer.milliseconds();
 double seconds = timer.seconds();
-double minutes = timer.minutes(); 
+double minutes = timer.minutes();
 double hours = timer.hours();
 double days = timer.days();
 
 // Get time duration in a human friendly unit, e.g "123ms"
-std::string time_str = timer.autoFormat(); 
+std::string time_str = timer.autoFormat();
 ```
 
 ## Compute FLOP/s and MB/s
@@ -99,7 +99,7 @@ timer.setBytes(500);
 // return MBytes/s (be sure to call setBytes() before)
 double mbytess = timer.mbs();
 
-// set how many FLOPs were calculated 
+// set how many FLOPs were calculated
 timer.setFlops(500);
 // return MFLOP/s (be sure to call setFlops() before)
 double mflopss = timer.mflps();

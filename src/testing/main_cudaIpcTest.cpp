@@ -1,8 +1,8 @@
-/* 
- * main_cudaIpcTest.cpp                                                               
- * 
+/*
+ * main_cudaIpcTest.cpp
+ *
  * L. Mazur
- * 
+ *
  */
 #include "../SIMULATeQCD.h"
 
@@ -87,10 +87,10 @@ void sendRecvBufferP2P(CommunicationBase& commBase, uint8_t *sendBufferDevice, u
     gpuError_t gpuErr;
     gpuErr = gpuMemcpyAsync(recvBufferDeviceP2P, sendBufferDevice, size, gpuMemcpyDefault, deviceStream);
     if (gpuErr) GpuError("gpuMemcpyAsync", gpuErr);
-    
+
     gpuErr = gpuStreamSynchronize(deviceStream);
     if (gpuErr) GpuError("gpuStreamSynchronize", gpuErr);
-    
+
     commBase.nodeBarrier();
 }
 
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     param.readfile(commBase, "../parameter/tests/cudaIpcTest.param", argc, argv);
     commBase.init(param.nodeDim());
     StopWatch<true> timer;
-    
+
     if (!commBase.useGpuP2P()) {
         throw std::runtime_error(stdLogger.fatal("P2P is not activated. Exit."));
     }
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
 
     MPI_Request requestSend[2];
     gpuStream_t deviceStream;
-    
+
     gpuError_t gpuErr;
     gpuErr = gpuStreamCreate(&deviceStream);
     if (gpuErr) GpuError("gpuStreamCreate", gpuErr);

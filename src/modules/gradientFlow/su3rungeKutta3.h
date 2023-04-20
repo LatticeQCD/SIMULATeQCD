@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 17.11.18.
 //
 
-#ifndef SU3_RUNGEKUTTA3_H
-#define SU3_RUNGEKUTTA3_H
-
+#pragma once
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
 #include "../../gauge/GaugeAction.h"
@@ -320,4 +318,3 @@ floatT su3rungeKutta3<floatT, HaloDepth, Zi>::updateFlow() {
     return thisStepSize;
 }
 
-#endif //SU3_RUNGEKUTTA3_H

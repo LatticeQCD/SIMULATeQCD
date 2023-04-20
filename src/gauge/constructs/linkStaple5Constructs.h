@@ -1,13 +1,11 @@
-/* 
- * linkStaple5Constructs.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * linkStaple5Constructs.h
+ *
+ * J. Goswami
+ *
  */
 
-#ifndef LINKSTAPLE5CONSTRUCTS_H
-#define LINKSTAPLE5CONSTRUCTS_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -110,4 +108,3 @@ __device__ GSU3<floatT> inline linkStaple5Up(gaugeAccessor<floatT,comp> gAcc, gS
 
     return temp;
 }
-#endif //5LINKSTAPLECONSTRUCTS_H

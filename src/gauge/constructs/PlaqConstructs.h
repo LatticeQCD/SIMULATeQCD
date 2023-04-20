@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef LINKCONSTRUCTS_H
-#define LINKCONSTRUCTS_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -117,4 +115,3 @@ __host__ __device__ GSU3<floatT> inline Plaq_S(gaugeAccessor<floatT,comp> gAcc, 
 }
 
 
-#endif //LINKCONSTRUCTS_H

@@ -1,6 +1,6 @@
-/* 
- * main_CompressionTest.cpp                                                               
- * 
+/*
+ * main_CompressionTest.cpp
+ *
  * Lukas Mazur, 9 Oct 2017
  *
  * Test and compare the various kinds of compression.

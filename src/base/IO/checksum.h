@@ -7,8 +7,7 @@
  * 
  */
 
-#ifndef SIMULATEQCD_CHECKSUM_H
-#define SIMULATEQCD_CHECKSUM_H
+#pragma once
 class Checksum{
 public:
     int32_t checksumb;
@@ -67,5 +66,3 @@ void checksum_crc32_combine(Checksum  *checksum_crc32,size_t global_vol, uint32_
     }
 
 }
-
-#endif //SIMULATEQCD_CHECKSUM_H

@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 28.11.18.
 //
 
-#ifndef ENERGYMOMENTUMTENSOR_H
-#define ENERGYMOMENTUMTENSOR_H
-
+#pragma once
 #include "../../base/LatticeContainer.h"
 #include "../../base/math/simpleArray.h"
 #include "../../gauge/gaugefield.h"
@@ -49,8 +47,8 @@ public:
     GCOMPLEX(floatT) getFtau2PlusMinusFsigma2();
 
     //same as emTimeSlices but doesn't save data in memory for later use
-    void EMTUTimeSlices(std::vector<Matrix4x4Sym<floatT>> &result);    
-    void EMTETimeSlices(std::vector<floatT> &result);    
+    void EMTUTimeSlices(std::vector<Matrix4x4Sym<floatT>> &result);
+    void EMTETimeSlices(std::vector<floatT> &result);
 };
 
 
@@ -100,8 +98,8 @@ struct Ftau2PlusMinusFsigma2Elements {
     __device__ __host__ inline GCOMPLEX(floatT) operator()(gSite site) {
 
         GSU3<floatT> FS01, FS02, FS03, FS12, FS13, FS23;
-        floatT FtauSquare = 0; 
-        floatT FsigmaSquare = 0; 
+        floatT FtauSquare = 0;
+        floatT FsigmaSquare = 0;
         FS01 = FT(site, 0, 1);
         FsigmaSquare += tr_d(FS01 * FS01);
         FS02 = FT(site, 0, 2);
@@ -154,7 +152,7 @@ struct energyMomentumTensorEKernel {
 
         if ( pz == 0 && real_imag == 0) {
             EMTE(newSite);
-        } 
+        }
         floatT temp, result;
         sub_E_gpu.getValue<floatT>(Id, temp);
         if ( pz==0 && real_imag == 0) {
@@ -192,7 +190,7 @@ struct emTensorElementsU {
                 FS[mu*4+nu] = FT(site, mu, nu);
             }
         }
-        
+
         floatT factor = -1.;
         for (int mu=1;mu<4;mu++) {
             for(int nu=0;nu<mu;nu++) {
@@ -202,7 +200,7 @@ struct emTensorElementsU {
 
         for (int mu=0;mu<4;mu++) {
             for(int nu=mu;nu<4;nu++) {
-        
+
                 GSU3<floatT> FS1, FS2, FS3;
                 FS1 = gsu3_zero<floatT>();
                 FS2 = gsu3_zero<floatT>();
@@ -212,7 +210,7 @@ struct emTensorElementsU {
                     FS1 += FS[mu*4+sigma] * FS[nu*4+sigma];
                 }
                 result = 2 * tr_d(FS1);
-        
+
                 if (mu == nu) {
                     sub_E_gpu.getValue<floatT>(Id, temp);
                     result -= temp;
@@ -234,7 +232,7 @@ struct energyMomentumTensorUKernel {
     int pz;
     int real_imag;
 
-    energyMomentumTensorUKernel(Gaugefield<floatT, onDevice, HaloDepth> &gauge, MemoryAccessor sub_E_gpu, MemoryAccessor sub_U_gpu, int tau, int pz, int real_imag) : 
+    energyMomentumTensorUKernel(Gaugefield<floatT, onDevice, HaloDepth> &gauge, MemoryAccessor sub_E_gpu, MemoryAccessor sub_U_gpu, int tau, int pz, int real_imag) :
     gAcc(gauge.getAccessor()), sub_E_gpu(sub_E_gpu), sub_U_gpu(sub_U_gpu), EMTU(gAcc,sub_E_gpu,sub_U_gpu), tau(tau), pz(pz), real_imag(real_imag) {}
 
     typedef GIndexer<All, HaloDepth> GInd;
@@ -318,4 +316,3 @@ void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::EMTETimeSlices(std::vect
     _redBaseEMTETimeSlices.template iterateOverTimeslices<All, HaloDepth>(EMTtrace<floatT, onDevice, HaloDepth>(_gauge.getAccessor()));
     _redBaseEMTETimeSlices.reduceTimeSlices(result);
 }
-#endif //ENERGYMOMENTUMTENSOR_H

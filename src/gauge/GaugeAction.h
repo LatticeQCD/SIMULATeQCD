@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 22.06.18.
 //
 
-#ifndef ENERGYDENSITY_H
-#define ENERGYDENSITY_H
-
+#pragma once
 #include "../base/LatticeContainer.h"
 #include "../modules/observables/FieldStrengthTensor.h"
 #include "gaugefield.h"
@@ -99,4 +97,3 @@ public:
 };
 
 
-#endif //ENERGYDENSITY_H

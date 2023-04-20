@@ -1,6 +1,6 @@
 #
 # ColorElectricMagneticCloverTest.param
-# 
+#
 #    Lattice: Nx Ny Nz Nt
 #      Nodes: Number of sublattices per direction
 #  Gaugefile: File to read in

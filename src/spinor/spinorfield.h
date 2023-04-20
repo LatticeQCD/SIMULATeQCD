@@ -124,7 +124,7 @@ typedef floatT floatT_inner;
     void operator+=(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & S2);
     void operator-=(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & S2);
 
-    void gauss(uint4* rand_state); // generate gaussian spinors. 
+    void gauss(uint4* rand_state); // generate gaussian spinors.
 
     void one();
 
@@ -457,7 +457,7 @@ struct convert_spinor_precision {
     convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
 
     __device__ __host__ auto operator()(gSiteStack site) {
-        
+
         return spinor_source.template getElement<floatT_target>(site);
     }
 };

@@ -1,8 +1,8 @@
-/* 
- * main_plaquette.cpp                                                               
- * 
+/*
+ * main_plaquette.cpp
+ *
  * Lukas Mazur, 10 Apr 2018
- * 
+ *
  * This is just an example how a very very basic program works. Look at src/testing/main_GeneralOperatorTest.cpp to see
  * how to write more advanced GPU code.
  *
@@ -12,7 +12,7 @@
 
 #define PREC double
 
-/* A quick implementation of the plaquette. This object must be called in member function 
+/* A quick implementation of the plaquette. This object must be called in member function
    iterateOverBulk of LatticeContainer. This will initiate a kernel, that runs over all lattice sites
    and performs operator() at this sites
    */
@@ -70,7 +70,7 @@ struct CalcPlaq{
             }
         }
 
-        //Return the result 
+        //Return the result
         //The return value will be stored in the array of the reductionbase at index site.isite.
         return result;
     }
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     /// Apart from the method info() there is also alloc() trace() debug() info() warn() error() fatal() which
     /// highlight the output differently.
     rootLogger.info("Initialize Lattice");
-    /// Initialize the Indexer on GPU and CPU.  
+    /// Initialize the Indexer on GPU and CPU.
     initIndexer(HaloDepth,param,commBase,true);
     typedef GIndexer<All,HaloDepth> GInd;
 
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
     timer.start();
     /// define variable where the plaquette should be stored.
     PREC plaq = 0;
-    
+
     /// Exchange Halos before calculating the plaquette!
     gauge.updateAll();
 

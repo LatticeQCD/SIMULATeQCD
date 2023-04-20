@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# 
-# testingTools.bash 
-# 
+#
+# testingTools.bash
+#
 # D. Clarke
-# 
-# A collection of useful functions for running BASH scripts.  
-# 
+#
+# A collection of useful functions for running BASH scripts.
+#
 
 cred="\e[91m"
 cyan="\e[36m"
@@ -16,7 +16,7 @@ endc="\e[0m"
 # ----------------------------------------------------------------------------------------------------- DEFINE FUNCTIONS
 
 
-# You may need either mpiexec or srun depending on the system. 
+# You may need either mpiexec or srun depending on the system.
 run_command="mpiexec --oversubscribe -np";
 #run_command="srun -n";
 

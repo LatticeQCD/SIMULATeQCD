@@ -1,8 +1,8 @@
-/* 
- * siteComm.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * siteComm.h
+ *
+ * L. Mazur
+ *
  * This class glues together all other classes needed to exchange halos. Again loosely speaking,
  * to exchange some information for my stencil calculation between a sublattice and his neighbor,
  * I need to
@@ -15,9 +15,7 @@
  *
  */
 
-#ifndef GPU_LATTICE_GAUGECOMM_H
-#define GPU_LATTICE_GAUGECOMM_H
-
+#pragma once
 
 #include "../../define.h"
 #include <iostream>
@@ -407,4 +405,3 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
 }
 
-#endif //GPU_LATTICE_GAUGECOMM_H

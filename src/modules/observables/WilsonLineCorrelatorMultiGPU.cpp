@@ -1,11 +1,11 @@
-/* 
- * main_ploop.cpp                                                               
- * 
+/*
+ * main_ploop.cpp
+ *
  * v1.0: D. Clarke, 30 Oct 2018
- * 
+ *
  * Measure Polyakov loops using the multi-GPU framework. Initialization copied from main_plaquette.cpp. This is a good
  * example of a simple operator calculated on spatial sites only.
- * 
+ *
  */
 
 #include "../../define.h"
@@ -124,7 +124,7 @@ void WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gMoveOne( Gaugefield
         }
         else{
             gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,0,false>(gauge));
-        }            
+        }
     }
 
     if(direction == 1){
@@ -253,11 +253,11 @@ std::vector<floatT> WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gDotA
         const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
                     / static_cast<float> (blockDim.x)));
 
-#ifdef USE_CUDA        
+#ifdef USE_CUDA
 	DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,stacks><<< gridDim, blockDim>>> (redBase.getAccessor(),gauge.getAccessor(),shifty, elems);
 #elif defined USE_HIP
         hipLaunchKernelGGL((DotAlongXYIntervalStackedShared<floatT,HaloDepth,All,stacks>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),gauge.getAccessor(),shifty, elems);
-#endif	
+#endif
 
         /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
         floatT vol=GInd::getLatData().globvol4;

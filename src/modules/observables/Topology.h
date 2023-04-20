@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 22.06.18.
 //
 
-#ifndef TOPOLOGY_H
-#define TOPOLOGY_H
-
+#pragma once
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/gaugefield.h"
 #include "FieldStrengthTensor.h"
@@ -155,4 +153,3 @@ struct topChargeDensKernel {
 
 };
 
-#endif //TOPOLOGY_H

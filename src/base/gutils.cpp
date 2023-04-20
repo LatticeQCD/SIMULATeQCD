@@ -1,6 +1,6 @@
-/* 
- * gutils.cpp                                                               
- * 
+/*
+ * gutils.cpp
+ *
  */
 
 #include "gutils.h"

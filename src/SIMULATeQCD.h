@@ -1,12 +1,11 @@
-/* 
- * SIMULATeQCD.h                                                               
- * 
- * Principal header file containing base, spinor, and gauge classes. 
- * 
+/*
+ * SIMULATeQCD.h
+ *
+ * Principal header file containing base, spinor, and gauge classes.
+ *
  */
 
-#ifndef SIMULATE_QCD_H
-#define SIMULATE_QCD_H
+#pragma once
 
 #include "define.h"
 #include "explicit_instantiation_macros.h"
@@ -92,4 +91,3 @@
 
 #include "spinor/spinorfield.h"
 
-#endif // SIMULATE_QCD_H

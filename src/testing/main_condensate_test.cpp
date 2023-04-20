@@ -3,7 +3,7 @@
 #include "../modules/dslash/condensate.h"
 #include "../modules/HISQ/hisqSmearing.h"
 
-#define PREC double 
+#define PREC double
 
 int main(int argc, char *argv[])
 {

@@ -1,12 +1,11 @@
-/* 
- * HaloIndexer.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * HaloIndexer.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef HALOINDEXER_H
-#define HALOINDEXER_H
+#pragma once
 
 #include "BulkIndexer.h"
 #include <vector>
@@ -1581,4 +1580,3 @@ public:
 
 };
 
-#endif

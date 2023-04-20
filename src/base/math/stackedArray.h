@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 10.12.18.
 //
 
-#ifndef STACKEDARRAY_H
-#define STACKEDARRAY_H
-
+#pragma once
 #include "../memoryManagement.h"
 
 //TODO Use the new class
@@ -87,4 +85,3 @@ public:
     }
 };
 
-#endif //STACKEDARRAY_H
