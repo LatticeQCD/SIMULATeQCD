@@ -79,7 +79,7 @@
 #include "gauge/constructs/fat7LinkConstructs.h"
 #include "gauge/constructs/gsvd.h"
 #include "gauge/constructs/hisqForceConstructs.h"
-#include "gauge/constructs/naikDerivative.h"
+#include "gauge/constructs/naikDerivativeConstructs.h"
 #include "gauge/constructs/PlaqConstructs.h"
 #include "gauge/constructs/projectU3.h"
 #include "gauge/constructs/RectConstructs.h"
