@@ -52,6 +52,8 @@ Run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
 
 #### Install Podman
 
+**THIS REQUIRES ADMIN PRIVILIGES** If you are doing this on a supercomputer you will likely need to ask your admin to perform the below.
+
 **On RHEL-based (Rocky/CentOS/RHEL) systems**
 
 Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.
@@ -67,6 +69,14 @@ If you have a non RHEL-based OS see [here](https://podman.io/getting-started/ins
 ------------
 
 Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, simulateqcd will not run correctly.
+
+If you see the error:
+
+```
+ERRO[0014] cannot find UID/GID for user u6042105: No subuid ranges found for user "u6042105" in /etc/subuid - check rootless mode in man pages.
+```
+
+this indicates someone has modified the standard user privileges or you are running an older operating system. To fix this error run `sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 <YOUR_USER> && podman system migrate`
 
 **WARNING**: If you are SSH'ing to your server, make sure you ssh as a user and **not** root. If you SSH as root and then `su` to user, podman will issue `ERRO[0000] XDG_RUNTIME_DIR directory "/run/user/0" is not owned by the current user`. This happens because the user that originally setup `/run` is root rather than your user.
 

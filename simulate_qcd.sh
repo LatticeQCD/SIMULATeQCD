@@ -226,23 +226,24 @@ case $1 in
         else
             echo "slirp4netns is installed."
         fi
+      fi
 
-        # Get the current user's username
-        username=$(whoami)
+      # Get the current user's username
+      username=$(whoami)
 
-        # Get the current user's UID and GID
-        uid=$(id -u $username)
-        gid=$(id -g $username)
+      # Get the current user's UID and GID
+      uid=$(id -u $username)
+      gid=$(id -g $username)
 
-        # Check if the current user already has subuid and subgid entries
-        if grep -q "^$username:" /etc/subuid && grep -q "^$username:" /etc/subgid; then
-          echo "subuid and subgid entries already exist for $username"
-        else
-          echo "Your user does not have subuid and subgid entries. This is an issue on Arch Linux. This is required for rootless Podman to work properly."
-          echo "Try running 'sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $username && podman system migrate'"
-          echo "If you encounter problems see https://wiki.archlinux.org/title/Podman#Set_subuid_and_subgid"
-          exit 1
-        fi
+      # Check if the current user already has subuid and subgid entries
+      if grep -q "^$username:" /etc/subuid && grep -q "^$username:" /etc/subgid; then
+        echo "subuid and subgid entries already exist for $username"
+      else
+        echo "Your user does not have subuid and subgid entries. This is required for rootless Podman to work properly."
+        echo "You need to run 'sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 $username && podman system migrate'"
+        echo "If you are not an administrator you will need to contact your administrator to do this for you."
+        echo "For details see see https://wiki.archlinux.org/title/Podman#Set_subuid_and_subgid"
+        exit 1
       fi
 
       # Enable the podman service for the user if it isn't already on
