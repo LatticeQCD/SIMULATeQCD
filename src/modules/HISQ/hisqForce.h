@@ -8,7 +8,7 @@
  */
 
 #include "../../gauge/constructs/hisqForceConstructs.h"
-#include "../../gauge/constructs/derivativeProjectU3Constructs.h"
+#include "../../gauge/constructs/derivativeProjectU3.h"
 #include "../../gauge/constructs/naikDerivativeConstructs.h"
 #include "hisqSmearing.h"
 #include "../inverter/inverter.h"
