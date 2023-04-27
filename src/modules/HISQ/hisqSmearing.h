@@ -9,8 +9,7 @@
 
 #include "../../gauge/gaugefield.h"
 #include "../../gauge/constructs/fat7LinkConstructs.h"
-#include "../../gauge/constructs/projectU3Constructs.h"
-#include "../../gauge/constructs/naikConstructs.h"
+#include "../../gauge/constructs/projectU3.h"
 #include "smearParameters.h"
 
 // Staples that appear in the fat link. Each staple object is one local staple.
