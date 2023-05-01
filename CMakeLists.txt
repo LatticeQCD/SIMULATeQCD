@@ -187,6 +187,7 @@ set(SOURCE_FILES_GFIX
     src/modules/observables/WilsonLineCorrelator.cpp)
 set(SOURCE_FILES_GFLOW
     src/modules/observables/Topology.cpp
+    src/modules/observables/Weinberg.cpp
     src/modules/observables/Blocking.cpp
     src/modules/observables/ColorElectricCorr.cpp
     src/modules/observables/ColorMagneticCorr.cpp)
@@ -282,6 +283,7 @@ set_SIMULATeQCD_gpu_backend(
     src/modules/observables/ColorMagneticCorr.cpp
     src/modules/observables/PolyakovLoop.cpp
     src/modules/observables/Topology.cpp
+    src/modules/observables/Weinberg.cpp
     src/modules/observables/WilsonLineCorrelator.cpp
     src/modules/rhmc/integrator.cpp
     src/modules/rhmc/pure_gauge_hmc.cpp
@@ -487,8 +489,8 @@ set_SIMULATeQCD_property(gfixTestSingle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tes
 SIMULATeQCD_target_compile_definitions(gfixTestSingle PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests gfixTestSingle)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
-add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/observables/Weinberg.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/observables/Weinberg.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
 set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
