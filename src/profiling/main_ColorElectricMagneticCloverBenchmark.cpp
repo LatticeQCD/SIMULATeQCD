@@ -1,5 +1,5 @@
 /* 
- * main_ColorElectricMagneticCloverBenchmark.cu                                                               
+ * main_ColorElectricMagneticCloverBenchmark.cpp
  *
  * Hai Tao Shu, 7 Apr 2021
  *

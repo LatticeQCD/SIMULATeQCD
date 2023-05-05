@@ -1,3 +1,7 @@
+/* 
+ * inverter.cpp                                                               
+ * 
+ */
 #include "inverter.h"
 #define BLOCKSIZE 64
 

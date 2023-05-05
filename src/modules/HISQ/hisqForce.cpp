@@ -214,34 +214,66 @@ __host__ __device__ GSU3<floatT> tensor_product<floatT, onDevice, HaloDepth, Hal
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin,  CompressionType comp, bool runTesting, const int rdeg>
-HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::
-HisqForce(Gaugefield<floatT, onDevice,  HaloDepth,R18> &GaugeBase,
-      Gaugefield<floatT, onDevice,  HaloDepth, comp> &Force,
-      AdvancedMultiShiftCG<floatT, rdeg> &cg,
-      HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
-      HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, rdeg> &dslash_multi,
-      RhmcParameters &rhmc_param,
-      RationalCoeff &rat,
-      HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
-: _GaugeU3P(GaugeBase.getComm(),"SHARED_GAUGELVL2"),
-  _GaugeLvl1(GaugeBase.getComm(),"SHARED_GAUGENAIK"),
-  _TmpForce(GaugeBase.getComm()),
-  _GaugeBase(GaugeBase),
-  _spinor_x(GaugeBase.getComm()),
-  _spinor_y(GaugeBase.getComm(), "SHARED_tmp"),
-  _Dummy(GaugeBase.getComm(), "SHARED_DUMMY"),
-  _createF2(_GaugeLvl1,_TmpForce),
-  _createNaikF1(_GaugeU3P,_TmpForce), _finalizeF3(_GaugeU3P,_TmpForce),
-  _cg(cg), _dslash(dslash), _dslash_multi(dslash_multi), _smearing(smearing),
-  _rhmc_param(rhmc_param), _rat(rat),
-  F1_create_3Link(_GaugeU3P,Force),F1_7link_part_1(_GaugeU3P,Force), F1_7link_part_2(_GaugeU3P,Force), F1_7link_part_3(_GaugeU3P,Force), F1_7link_part_4(_GaugeU3P,Force) , F1_7link_part_5(_GaugeU3P,Force), F1_7link_part_6(_GaugeU3P,Force), F1_7link_part_7(_GaugeU3P,Force), F1_5link_part11(_GaugeU3P,Force), F1_5link_part12(_GaugeU3P,Force), F1_5link_part13(_GaugeU3P,Force), F1_5link_part14(_GaugeU3P,Force),F1_5link_part20(_GaugeU3P,Force),  F1_5link_part30(_GaugeU3P,Force), F1_lepagelink(_GaugeU3P, Force),
-  F3_create_3Link(_GaugeU3P,Force), F3_7link_part_1(_GaugeU3P,Force), F3_7link_part_2(_GaugeU3P,Force), F3_7link_part_3(_GaugeU3P,Force), F3_7link_part_4(_GaugeU3P,Force) , F3_7link_part_5(_GaugeU3P,Force), F3_7link_part_6(_GaugeU3P,Force), F3_7link_part_7(_GaugeU3P,Force), F3_5link_part11(_GaugeU3P,Force), F3_5link_part12(_GaugeU3P,Force), F3_5link_part13(_GaugeU3P,Force), F3_5link_part14(_GaugeU3P,Force),F3_5link_part20(_GaugeU3P,Force),  F3_5link_part30(_GaugeU3P,Force)  {}
+HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::HisqForce(Gaugefield<floatT, onDevice,  HaloDepth,R18> &GaugeBase,
+        Gaugefield<floatT, onDevice,  HaloDepth, comp> &Force,
+        AdvancedMultiShiftCG<floatT, rdeg> &cg,
+        HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
+        HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, rdeg> &dslash_multi,
+        RhmcParameters &rhmc_param,
+        RationalCoeff &rat,
+        HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
+    : _GaugeU3P(GaugeBase.getComm(),"SHARED_GAUGELVL2"),
+      _GaugeLvl1(GaugeBase.getComm(),"SHARED_GAUGENAIK"),
+      _TmpForce(GaugeBase.getComm()),
+      _GaugeBase(GaugeBase),
+      _spinor_x(GaugeBase.getComm()),
+      _spinor_y(GaugeBase.getComm(), "SHARED_tmp"),
+      _Dummy(GaugeBase.getComm(), "SHARED_DUMMY"),
+      _createF2(_GaugeLvl1,_TmpForce),
+      _createNaikF1(_GaugeU3P,_TmpForce), 
+      _finalizeF3(_GaugeU3P,_TmpForce),
+      _cg(cg), 
+      _dslash(dslash), 
+      _dslash_multi(dslash_multi), 
+      _smearing(smearing),
+      _rhmc_param(rhmc_param), 
+      _rat(rat),
+      F1_create_3Link(_GaugeU3P,Force),
+      F1_7link_part_1(_GaugeU3P,Force), 
+      F1_7link_part_2(_GaugeU3P,Force), 
+      F1_7link_part_3(_GaugeU3P,Force), 
+      F1_7link_part_4(_GaugeU3P,Force), 
+      F1_7link_part_5(_GaugeU3P,Force), 
+      F1_7link_part_6(_GaugeU3P,Force), 
+      F1_7link_part_7(_GaugeU3P,Force), 
+      F1_5link_part11(_GaugeU3P,Force), 
+      F1_5link_part12(_GaugeU3P,Force), 
+      F1_5link_part13(_GaugeU3P,Force), 
+      F1_5link_part14(_GaugeU3P,Force),
+      F1_5link_part20(_GaugeU3P,Force),  
+      F1_5link_part30(_GaugeU3P,Force), 
+      F1_lepagelink(_GaugeU3P, Force),
+      F3_create_3Link(_GaugeU3P,Force), 
+      F3_7link_part_1(_GaugeU3P,Force), 
+      F3_7link_part_2(_GaugeU3P,Force), 
+      F3_7link_part_3(_GaugeU3P,Force), 
+      F3_7link_part_4(_GaugeU3P,Force), 
+      F3_7link_part_5(_GaugeU3P,Force), 
+      F3_7link_part_6(_GaugeU3P,Force), 
+      F3_7link_part_7(_GaugeU3P,Force), 
+      F3_5link_part11(_GaugeU3P,Force), 
+      F3_5link_part12(_GaugeU3P,Force), 
+      F3_5link_part13(_GaugeU3P,Force), 
+      F3_5link_part14(_GaugeU3P,Force),
+      F3_5link_part20(_GaugeU3P,Force),  
+      F3_5link_part30(_GaugeU3P,Force)  {}
+
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
 void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>::make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn,
-                              Gaugefield<floatT, onDevice,  HaloDepth, comp> &Force,
-                              Gaugefield<floatT, onDevice,  HaloDepth, comp> &NaikForce,
-                              bool isLight)
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &Force,
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &NaikForce,
+        bool isLight)
 {
 
     Force.iterateWithConst(gsu3_zero<floatT>());
@@ -274,7 +306,6 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
     
     Force.updateAll();
     _TmpForce.iterateOverBulkAllMu(tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, 3, runTesting>(NaikForce, _spinor_x.getAccessor(), _spinor_y.getAccessor(),rat_num));
-  
     
     _TmpForce.updateAll();
     return;
@@ -417,18 +448,21 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
 void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::updateForce(Spinorfield<floatT,onDevice,Even,HaloDepthSpin> &SpinorIn,
-                                  Gaugefield<floatT,onDevice,HaloDepth,comp> &Force,
-                                  bool isLight) {
+        Gaugefield<floatT,onDevice,HaloDepth,comp> &Force, bool isLight) {
+
     make_f0(SpinorIn,Force,_TmpForce,isLight);
+
+    // Level 1 smearing.
     _smearing.template SmearLvl1<R18>(_GaugeLvl1);
-    
+
+    // U3 projection.    
     _smearing.template ProjectU3<R18,R18>(_GaugeLvl1,_GaugeU3P);
     
     staggeredPhaseKernel<floatT, onDevice, HaloDepth,R18> multPhase(_GaugeU3P,_rhmc_param.mu_f());
     _GaugeU3P.iterateOverBulkAllMu(multPhase);
-   
     _GaugeU3P.updateAll();
-    
+
+    // Force part. 
     _Dummy.iterateOverBulkAllMu(_createNaikF1);
     _TmpForce = _Dummy;
     _Dummy.template iterateOverBulkAllMu<64>(F1_create_3Link);

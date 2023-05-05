@@ -1,3 +1,7 @@
+/* 
+ * inverter.h                                                               
+ * 
+ */
 #ifndef INVERTER_H
 #define INVERTER_H
 
@@ -20,22 +24,20 @@ class ConjugateGradient{
 public:
 
     template <typename Spinor_t>
-    void invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
-            Spinor_t& spinorIn, int max_iter, double precision);
+    void invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, Spinor_t& spinorIn, int max_iter, double precision);
     
     template <typename Spinor_t>
-    void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-        const int max_iter, const double precision);
+    void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
                             const int max_iter, const double precision, double delta);
 
     template <typename Spinor_t, typename Spinor_t_half>
-void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta);
-
-
+    void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, 
+                      const int max_iter, const double precision, double delta);
 };
+
 
 template <typename floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 class MultiShiftCG {
@@ -46,6 +48,7 @@ public:
                 SimpleArray<floatT, NStacks> sigma, int max_iter, double precision);
 };
 
+
 /// This is a reimplementation of the old BielefeldGPUcode MultishiftCG, the cool feature here is that parts of the
 /// stack that have already converged are not updated any more in the CGM iterations. Might produce better results for
 /// the rational approximations. Not finished yet.
@@ -55,8 +58,6 @@ public:
     template <typename SpinorIn_t, typename SpinorOut_t>
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, 
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
-
-
 };
 
 #endif

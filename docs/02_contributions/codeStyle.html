@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>How to write clean and readable code &mdash; SIMULATeQCD 0.7 documentation</title>
+  <title>Our coding style &mdash; SIMULATeQCD 0.7 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
@@ -44,7 +44,7 @@
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">How to write clean and readable code</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Our coding style</a></li>
 <li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
 <li class="toctree-l2"><a class="reference internal" href="codeStructure.html">General structure of the code</a></li>
 <li class="toctree-l2"><a class="reference internal" href="templates.html">Template instantiation</a></li>
@@ -77,7 +77,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>How to write clean and readable code</li>
+      <li>Our coding style</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/codeStyle.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,39 +87,72 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="how-to-write-clean-and-readable-code">
-<h1>How to write clean and readable code<a class="headerlink" href="#how-to-write-clean-and-readable-code" title="Permalink to this headline"></a></h1>
-<ul>
-<li><p><strong>Warnings</strong><br />
-Switch on compiler warnings with -Wall -Wextra. Do care about these warnings. A code should compile without any warning. If a warning is unavoidable use pragmas to suppress them.</p></li>
-<li><p><strong>Do not repeat yourself</strong><br />
-Do not copy code or use similar code all the time. This makes it harder to maintain the code, for example by requiring the developer to make the same change in multiple places.</p></li>
-<li><p><strong>Do not use the new and delete operators</strong><br />
-The <code class="docutils literal notranslate"><span class="pre">new</span></code> and the <code class="docutils literal notranslate"><span class="pre">delete</span></code> operators are a source for many errors, especially memory leaks. It is better to avoid them completely and use the <a class="reference internal" href="memoryAllocation.html"><span class="doc std std-doc">Memory Manager</span></a>. There is absolutely no reason to use <code class="docutils literal notranslate"><span class="pre">new</span></code> for small objects. (Most objects are small. Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.) Use the initialization list to create class members instead.</p></li>
-<li><p><strong>Avoid pointers</strong><br />
-Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type safe. This causes a lot of errors. There are cases where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.</p></li>
-<li><p><strong>Delete the copy constructor for classes which manage large amounts of memory</strong><br />
-Delete the copy constructor using
+  <section class="tex2jax_ignore mathjax_ignore" id="our-coding-style">
+<h1>Our coding style<a class="headerlink" href="#our-coding-style" title="Permalink to this headline"></a></h1>
+<p>SIMULATeQCD exists in a space of many lattice codes, all of which perform extremely well, many of which are favorites
+for large collaborations. Besides being one of the only lattice codes supporting multiple HISQ GPUs for multiple APIs,
+the main reason to use SIMULATeQCD at all is that it’s readable, well structured, and for relatively simple computing
+clusters works “out of the box”.</p>
+<p>In order for our code to stay this way, we need you to please follow these coding practices to the best of your
+ability when you make contributions.</p>
+<section id="warnings">
+<h2>Warnings<a class="headerlink" href="#warnings" title="Permalink to this headline"></a></h2>
+<p>Switch on compiler warnings with -Wall -Wextra. Do care about these warnings. A code should compile without any warning.
+If a warning is unavoidable use pragmas to suppress them.</p>
+</section>
+<section id="do-not-repeat-yourself">
+<h2>Do not repeat yourself<a class="headerlink" href="#do-not-repeat-yourself" title="Permalink to this headline"></a></h2>
+<p>Do not copy code or use similar code all the time. This makes it harder to maintain the code, for example by requiring the developer
+to make the same change in multiple places.</p>
+</section>
+<section id="do-not-use-the-new-and-delete-operators">
+<h2>Do not use the new and delete operators<a class="headerlink" href="#do-not-use-the-new-and-delete-operators" title="Permalink to this headline"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">new</span></code> and the <code class="docutils literal notranslate"><span class="pre">delete</span></code> operators are a source for many errors, especially memory leaks. It is better to avoid them completely and
+use the <a class="reference internal" href="memoryAllocation.html"><span class="doc std std-doc">Memory Manager</span></a>. There is absolutely no reason to use <code class="docutils literal notranslate"><span class="pre">new</span></code> for small objects. (Most objects are small.
+Even the GPU-Memory classes are small: They only contain pointers to the memory. The allocated memory itself is not part of the class.)
+Use the initialization list to create class members instead. The only case we have found where <code class="docutils literal notranslate"><span class="pre">new</span></code> and <code class="docutils literal notranslate"><span class="pre">delete</span></code> operators are
+acceptable is with trees.</p>
+</section>
+<section id="avoid-pointers">
+<h2>Avoid pointers<a class="headerlink" href="#avoid-pointers" title="Permalink to this headline"></a></h2>
+<p>Avoid pointers where you can. Use references instead. Pointer arithmetic is difficult to read and pointers are not type safe.
+This causes a lot of errors. There are cases where pointers are necessary (GPU memory). Everywhere else they should be avoided completely.</p>
+</section>
+<section id="delete-the-copy-constructor-for-classes-which-manage-large-amounts-of-memory">
+<h2>Delete the copy constructor for classes which manage large amounts of memory<a class="headerlink" href="#delete-the-copy-constructor-for-classes-which-manage-large-amounts-of-memory" title="Permalink to this headline"></a></h2>
+<p>Delete the copy constructor using
 <code class="docutils literal notranslate"><span class="pre">myClass(myClass&amp;</span> <span class="pre">)</span> <span class="pre">=</span> <span class="pre">delete</span></code>.
-The default copy constructor does not copy memory that is not part of the class. However, it calls the destructor. This deletes the memory that the class points to. This can lead to bad memory accesses. Implement a move constructor instead.</p></li>
-<li><p><strong>Only functions should be public</strong><br />
-Do not use public member variables in classes.</p></li>
-<li><p><strong>Use const whenever possible</strong><br />
-The usage of <code class="docutils literal notranslate"><span class="pre">const</span></code> can help avoid undesired modification of objects.</p></li>
-<li><p><strong>Proper naming</strong><br />
-Use proper and consistent naming for everything. Use the same name for file names as for the classes they contain. Use long names which describe what is done. Do not use different names between different function calls. Follow the following naming scheme:
-Classes:
-<code class="docutils literal notranslate"><span class="pre">ThisIsMyClass</span></code>
-Private class members:
-<code class="docutils literal notranslate"><span class="pre">_my_member</span></code>
-Member function:
-<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">thisIsMyFunction()</span></code>
-Function parameter:
-<code class="docutils literal notranslate"><span class="pre">this_is_my_parameter</span></code>
-For example: <code class="docutils literal notranslate"><span class="pre">thisIsMyFunction(double</span> <span class="pre">this_is_my_parameter);</span></code></p></li>
-<li><p><strong>Formatting</strong><br />
-These are the conventions we have chosen for SIMULATeQCD. Please stick to them. Besides making the code a bit more readable, it will look more professional if we all follow the same conventions.</p>
-<ul>
+The default copy constructor does not copy memory that is not part of the class. However, it calls the destructor. This deletes
+the memory that the class points to. This can lead to bad memory accesses. Implement a move constructor instead.</p>
+</section>
+<section id="only-functions-should-be-public">
+<h2>Only functions should be public<a class="headerlink" href="#only-functions-should-be-public" title="Permalink to this headline"></a></h2>
+<p>Do not use public member variables in classes.</p>
+</section>
+<section id="use-const-whenever-possible">
+<h2>Use const whenever possible<a class="headerlink" href="#use-const-whenever-possible" title="Permalink to this headline"></a></h2>
+<p>The usage of <code class="docutils literal notranslate"><span class="pre">const</span></code> can help avoid undesired modification of objects.</p>
+</section>
+<section id="proper-naming">
+<h2>Proper naming<a class="headerlink" href="#proper-naming" title="Permalink to this headline"></a></h2>
+<p>Use proper and consistent naming for everything. Use the same name for file names as for the classes they contain. Use long names
+which describe what is done. Do not use different names between different function calls. Follow the following naming scheme:</p>
+<ul class="simple">
+<li><p>Classes:
+<code class="docutils literal notranslate"><span class="pre">ThisIsMyClass</span></code></p></li>
+<li><p>Private class members:
+<code class="docutils literal notranslate"><span class="pre">_my_member</span></code></p></li>
+<li><p>Member function:
+<code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">thisIsMyFunction()</span></code></p></li>
+<li><p>Function parameter:
+<code class="docutils literal notranslate"><span class="pre">this_is_my_parameter</span></code></p></li>
+</ul>
+</section>
+<section id="formatting">
+<h2>Formatting<a class="headerlink" href="#formatting" title="Permalink to this headline"></a></h2>
+<p>These are the conventions we have chosen for SIMULATeQCD. Please stick to them. Besides making the code a bit more readable,
+it will look more professional if we all follow the same conventions.</p>
+<ul class="simple">
 <li><p>DO NOT USE TABS. Instead, please indent using 4 spaces.</p></li>
 <li><p>Try for a maximum line length of 120 characters.</p></li>
 <li><p>Try for a maximum function length of 80 lines.</p></li>
@@ -159,15 +192,20 @@ These are the conventions we have chosen for SIMULATeQCD. Please stick to them. 
 </li>
 <li><p><strong>Write helpful comments</strong></p>
 <ul class="simple">
-<li><p>Give comments about complex sections, tricks that you used, relevant visualizations, DOIs for papers, your design philosophy (when relevant), etc. DO NOT comment trivial code. Remove commented-out code. (It is anyway in the git history if we need it later.)</p></li>
-<li><p>Use <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/scripts/comments.bash</span></code> to put some leading comments at the top of your code. This helps ensure that we all include the same information in the same way at the beginning of our code.</p></li>
+<li><p>Give comments about complex sections, tricks that you used, relevant visualizations, DOIs for papers, your design philosophy (when relevant), etc.
+DO NOT comment trivial code. Remove commented-out code. (It is anyway in the git history if we need it later.)</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/scripts/comments.bash</span></code> to put some leading comments at the top of your code. This helps ensure that we all include the same
+information in the same way at the beginning of our code.</p></li>
 </ul>
-</li>
-<li><p><strong>Remove old features</strong><br />
-If features are not needed any more, remove them.</p></li>
-<li><p><strong>Use <code class="docutils literal notranslate"><span class="pre">C++11/14/17/20</span></code> features</strong> (lambda expressions, move constructor, initializer_list,…)<br />
-Read about them. They are nice!</p></li>
-</ul>
+</section>
+<section id="remove-old-features">
+<h2>Remove old features<a class="headerlink" href="#remove-old-features" title="Permalink to this headline"></a></h2>
+<p>If features are not needed any more, remove them.</p>
+</section>
+<section id="use-c-11-14-17-20-features">
+<h2>Use <code class="docutils literal notranslate"><span class="pre">C++11/14/17/20</span></code> features<a class="headerlink" href="#use-c-11-14-17-20-features" title="Permalink to this headline"></a></h2>
+<p>Lambda expressions, initializer lists, move constructors, and so on. Read about them. They are nice!</p>
+</section>
 </section>
 
 

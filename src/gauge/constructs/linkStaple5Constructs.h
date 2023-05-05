@@ -1,6 +1,9 @@
-//
-// Created by Jishnu on 07/08/18.
-//
+/* 
+ * linkStaple5Constructs.h                                                               
+ * 
+ * J. Goswami 
+ * 
+ */
 
 #ifndef LINKSTAPLE5CONSTRUCTS_H
 #define LINKSTAPLE5CONSTRUCTS_H
@@ -14,15 +17,11 @@
 #include "linkStaple3Constructs.h"
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-  __device__ GSU3<floatT> inline linkStaple5Up(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu, int rho,
-                                             int gamma) {
+__device__ GSU3<floatT> inline linkStaple5Up(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu, int rho, int gamma) {
     typedef GIndexer<All,HaloDepth> GInd;
 
     GSU3<floatT> staple3;
     GSU3<floatT> temp = gsu3_zero<floatT>() ;
-
-
-
 
     gSite origin = site;
     gSite site_up_rho = GInd::site_up(site,rho);
@@ -33,35 +32,31 @@ template<class floatT,size_t HaloDepth,CompressionType comp>
     gSite site_dn_rho_up_mu= GInd::site_up(site_dn_rho,mu);
     gSite site_dn_gamma_up_mu= GInd::site_up(site_dn_gamma,mu);
 
-
-
-
-    //staple5
     /*
      *
-
-
-    nu ^   ^ rho
-       |  /
-       | /
-       |/
-       -------> mu
-
-
-    sum of staple3
-      ^+++>
-     /   /
-    /   /
-   *   v
-
-
-        *   ^
-       /   /
-      /   /
-     v+++>
-    sum of staple3
-
-
+     *
+     *
+     *    nu ^   ^ rho
+     *       |  /
+     *       | /
+     *       |/
+     *       -------> mu
+     *
+     *
+     *    sum of staple3
+     *      ^+++>
+     *     /   /
+     *    /   /
+     *   *   v
+     *
+     *
+     *        *   ^
+     *       /   /
+     *      /   /
+     *     v+++>
+     *    sum of staple3
+     *
+     *
      */
 
     staple3=linkStaple3Up<floatT,HaloDepth,comp>(gAcc,site_up_rho,mu,gamma)
@@ -78,36 +73,28 @@ template<class floatT,size_t HaloDepth,CompressionType comp>
            * gAcc.getLink(GInd::getSiteMu(site_dn_rho_up_mu, rho));
 
 
-
-
-    //staple5
     /*
+     *    nu ^   ^ gamma
+     *       |  /
+     *       | /
+     *       |/
+     *       -------> mu
      *
-
-
-    nu ^   ^ gamma
-       |  /
-       | /
-       |/
-       -------> mu
-
-
-    sum of staple3
-      ^+++>
-     /   /
-    /   /
-   *   v
-
-
-        *   ^
-       /   /
-      /   /
-     v+++>
-    sum of staple3
-
-
+     *
+     *    sum of staple3
+     *      ^+++>
+     *     /   /
+     *    /   /
+     *   *   v
+     *
+     *
+     *        *   ^
+     *       /   /
+     *      /   /
+     *     v+++>
+     *    sum of staple3
+     *
      */
-
 
     staple3=linkStaple3Up<floatT,HaloDepth,comp>(gAcc,site_up_gamma,mu,rho)
             + linkStaple3Dn<floatT,HaloDepth,comp>(gAcc,site_up_gamma,mu,rho);
@@ -115,18 +102,12 @@ template<class floatT,size_t HaloDepth,CompressionType comp>
     temp += gAcc.getLink(GInd::getSiteMu(origin, gamma)) * staple3
            * gAcc.getLinkDagger(GInd::getSiteMu(site_up_mu, gamma));
 
-
     staple3=linkStaple3Up<floatT,HaloDepth,comp>(gAcc,site_dn_gamma,mu,rho)
             + linkStaple3Dn<floatT,HaloDepth,comp>(gAcc,site_dn_gamma,mu,rho);
 
     temp += gAcc.getLinkDagger(GInd::getSiteMu(site_dn_gamma, gamma))*staple3
                    * gAcc.getLink(GInd::getSiteMu(site_dn_gamma_up_mu, gamma));
 
-
-
-
     return temp;
-
-
 }
 #endif //5LINKSTAPLECONSTRUCTS_H

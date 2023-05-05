@@ -1,4 +1,9 @@
-//created by Dennis on 02.11.18
+/* 
+ * derivativeLepagelink.h                                                               
+ * 
+ * D. Bollweg  
+ * 
+ */
 
 #ifndef DERIVATIVE_LEPAGE_H
 #define DERIVATIVE_LEPAGE_H
