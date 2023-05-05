@@ -1,4 +1,4 @@
-/* 
+/*
  * main_createCorrelatorNorm.cpp
  *
  * D. Clarke
@@ -11,7 +11,7 @@
 
 #include "../SIMULATeQCD.h"
 
-#define PREC double 
+#define PREC double
 
 struct corrParam : LatticeParameters {
     Parameter<std::string>  domain;

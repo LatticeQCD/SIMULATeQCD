@@ -1,6 +1,6 @@
-/* 
+/*
  * PolyakovLoopCorrelator.cpp
- * 
+ *
  * D. Clarke, 27 Apr 2020
  *
  * This includes some functions for computing Polyakov loop correlations. There are more general implementations of

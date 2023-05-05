@@ -1,6 +1,6 @@
-/* 
- * main_InverterTest.cpp                                                               
- * 
+/*
+ * main_InverterTest.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -26,7 +26,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    
+
     gauge.one();
 
     smearing.SmearAll();
@@ -72,13 +72,13 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     rootLogger.info("Very simple test");
 
     dslash_.Dslash(spinorOut3, spinorIn, true);
-    
+
     dot1 = spinorOut3.dotProductStacked(spinorOut3);
 
     dslash.applyMdaggM(spinorOut, spinorIn);
     dot1 = spinorOut.dotProductStacked(spinorOut);
 
-    rootLogger.info("|| D^+D eta ||^2 = " ,  dot1[0]);     
+    rootLogger.info("|| D^+D eta ||^2 = " ,  dot1[0]);
 
     dot1 = spinorIn.dotProductStacked(spinorIn);
 
@@ -149,7 +149,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     spinortmp.copyFromStackToStack(spinorOutMulti, 0, 0);
     spinorHost = spinortmp;
-    rootLogger.info("0th component of xi[" ,  0 ,  "] =" ,  spinorHost.getAccessor().getElement(origin)); 
+    rootLogger.info("0th component of xi[" ,  0 ,  "] =" ,  spinorHost.getAccessor().getElement(origin));
 
     cgM.invert(dslashMulti, spinorOutMulti, spinorInMulti, shifts, param.cgMax(), param.residue_force());
 
@@ -157,7 +157,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     for (size_t i = 0; i < rat.r_bar_sf_den.get().size(); ++i) {
         spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
         spinorHost = spinortmp;
-        rootLogger.info("0th component of xi[" ,  i ,  "] =" ,  spinorHost.getAccessor().getElement(origin));    
+        rootLogger.info("0th component of xi[" ,  i ,  "] =" ,  spinorHost.getAccessor().getElement(origin));
     }
 
 
@@ -185,9 +185,9 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         phi = phi + floatT(rat.r_inv_lf_num[i])*spinortmp;
     }
 
-    
 
-    
+
+
 
     ////////////
     // make r_lf^4
@@ -216,7 +216,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     spinorHost = spinorOutSingle;
 
-    
+
 
 
     ///////////
@@ -317,7 +317,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
             spinorOutSingle = spinorOutSingle + floatT(rat.r_inv_lf_num[i])*spinortmp;
-        } 
+        }
 
         spinorInMulti = spinorOutSingle;
     }
@@ -338,7 +338,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     rootLogger.info("relative error of r_inv_lf^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " ,  abs(diff_normsq/phi_sq));
     if (!(abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
-    
+
     //////////////////////////////////
     // r_sf test
     //////////////////////////////////
@@ -377,7 +377,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         for (size_t i = 0; i < rat.r_sf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
             spinorOutSingle = spinorOutSingle + floatT(rat.r_sf_num[i])*spinortmp;
-        } 
+        }
         spinorInMulti = spinorOutSingle;
     }
 
@@ -420,7 +420,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         for (size_t i = 0; i < rat.r_bar_sf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti_bar, 0, i);
             spinorOutSingle = spinorOutSingle + floatT(rat.r_bar_sf_num[i])*spinortmp;
-        } 
+        }
         spinorInMulti = spinorOutSingle;
     }
 
@@ -460,7 +460,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
         for (size_t i = 0; i < rat.r_inv_sf_den.get().size(); ++i) {
             spinortmp.copyFromStackToStack(spinorOutMulti, 0, i);
             spinorOutSingle = spinorOutSingle + floatT(rat.r_inv_sf_num[i])*spinortmp;
-        } 
+        }
         spinorInMulti = spinorOutSingle;
     }
 

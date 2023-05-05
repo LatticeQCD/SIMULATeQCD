@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef POLYAKOVLOOP_H
-#define POLYAKOVLOOP_H
+#pragma once
 
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/gaugefield.h"
@@ -34,4 +33,3 @@ public:
     void  PloopInArray(MemoryAccessor _ploop);   /// Store untraced Polyakov loop in array _ploop
 };
 
-#endif

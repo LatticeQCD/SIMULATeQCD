@@ -1,6 +1,6 @@
-/* 
- * LatticeContainer.cpp                                                               
- * 
+/*
+ * LatticeContainer.cpp
+ *
  */
 #include "LatticeContainer.h"
 

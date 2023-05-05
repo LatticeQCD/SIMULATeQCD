@@ -1,6 +1,6 @@
-/* 
- * runFunctors.h                                                               
- * 
+/*
+ * runFunctors.h
+ *
  */
 
 #ifndef _runFunctors_h_
@@ -152,7 +152,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
-#else 
+#else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
@@ -254,7 +254,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
                         op.initialize(site);
 
                         for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++){
-                            if(loopIdx >= Nmax) break; 
+                            if(loopIdx >= Nmax) break;
                                 resAcc.setElement(calcWriteInd(site, loopIdx), op(site, loopIdx));
                         }
                     }
@@ -506,7 +506,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     }
 }
 
-//Simple functions to calculate lattice indices. These functions are usually passed to 
+//Simple functions to calculate lattice indices. These functions are usually passed to
 //constructing Kernels (See spinorfield.h) as argument
 
 template<Layout LatticeLayout, size_t HaloDepth>

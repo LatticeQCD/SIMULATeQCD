@@ -1,6 +1,6 @@
-/* 
- * condensate.h                                                               
- * 
+/*
+ * condensate.h
+ *
  */
 
 #include "../../define.h"
@@ -19,10 +19,10 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
 
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase, "SHARED_GAUGELVL2");
-    
+
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> smearing(gauge, smeared_W, smeared_X);
     smearing.SmearAll(param.mu_f());
-    
+
     ConjugateGradient<floatT, NStacks> cg;
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_e(smeared_W, smeared_X, 0.0);
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_e_inv(smeared_W, smeared_X, mass);
@@ -31,7 +31,7 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> eta_e(commBase);
     Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, NStacks> eta_o(commBase);
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> x_e(commBase);
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> w_e(commBase);  
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> w_e(commBase);
     Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, NStacks> w_o(commBase);
 
     eta_o.gauss(d_rand.state);

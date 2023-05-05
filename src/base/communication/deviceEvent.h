@@ -1,13 +1,11 @@
-/* 
- * deviceEvent.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * deviceEvent.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef DEVICEEVENT_H
-#define DEVICEEVENT_H
-
+#pragma once
 #include "../../define.h"
 #include "../gutils.h"
 #include "../wrapper/gpu_wrapper.h"
@@ -103,4 +101,3 @@ public:
     }
 };
 
-#endif //DEVICEEVENT_H

@@ -1,11 +1,11 @@
-/* 
- * gutils.h                                                               
- * 
- * Utility functions usable in GPUs. 
- * 
+/*
+ * gutils.h
+ *
+ * Utility functions usable in GPUs.
+ *
  */
-#ifndef UTIL_H
-#define UTIL_H
+
+#pragma once
 
 #include "../define.h"
 #include "wrapper/gpu_wrapper.h"
@@ -39,11 +39,11 @@ __host__ void inline compute_dim3(dim3 &blockDim, dim3 &gridDim,
 class GpuError {
 public:
     explicit GpuError(gpuError_t err);
-  
+
     GpuError(const char *warn, gpuError_t err);
-  
+
     gpuError_t getError();
-  
+
     const std::string getErrorMessage();
 
 private:
@@ -55,7 +55,3 @@ private:
  */
 __device__ __host__ inline bool isOdd(int cand) { return (cand & 0x1); }
 
-
-
-
-#endif /* UTIL_H */

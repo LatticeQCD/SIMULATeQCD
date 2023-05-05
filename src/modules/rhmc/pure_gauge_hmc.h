@@ -2,7 +2,7 @@
  * pure_gauge_hmc.h
  *
  * P. Scior
- * 
+ *
  */
 
 #ifndef PURE_GAUGE_HMC
@@ -30,8 +30,8 @@ public:
     pure_gauge_hmc(RhmcParameters rhmc_param, Gaugefield<floatT, true, HaloDepth, comp> &gaugeField, uint4 *rand_state)
             : _rhmc_param(rhmc_param), _gaugeField(gaugeField),
               gAcc(gaugeField.getAccessor()), _savedField(gaugeField.getComm()), elems(GInd::getLatData().vol4),
-              _p(gaugeField.getComm()), _rand_state(rand_state), energy_dens_old(gaugeField.getComm(), "old_energy_density"), 
-              energy_dens_new(gaugeField.getComm(), "new_energy_density"), dens_delta(gaugeField.getComm(), "energy_density_difference") 
+              _p(gaugeField.getComm()), _rand_state(rand_state), energy_dens_old(gaugeField.getComm(), "old_energy_density"),
+              energy_dens_new(gaugeField.getComm(), "new_energy_density"), dens_delta(gaugeField.getComm(), "energy_density_difference")
               {
                 energy_dens_old.adjustSize(elems);
                 energy_dens_new.adjustSize(elems);

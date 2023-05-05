@@ -1,6 +1,6 @@
-/* 
- * main_HisqSmearingTestMulti.cpp                                                               
- * 
+/*
+ * main_HisqSmearingTestMulti.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -29,7 +29,7 @@ struct compare_smearing {
 
             sum += sqrt(norm);
         }
-    return (sum < 1e-5 ? 0 : 1); 
+    return (sum < 1e-5 ? 0 : 1);
     }
 };
 
@@ -37,9 +37,9 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR) {
     LatticeContainer<onDevice,int> redBase(GaugeL.getComm());
     const size_t elems = GIndexer<All,HaloDepth>::getLatData().vol4;
-    
+
     redBase.adjustSize(elems);
-    
+
     redBase.template iterateOverBulk<All,HaloDepth>(compare_smearing<floatT, onDevice, HaloDepth, comp>(GaugeL,GaugeR));
 
     int faults = 0;
@@ -53,7 +53,7 @@ bool checkfields(Gaugefield<floatT,onDevice,HaloDepth, comp> &GaugeL, Gaugefield
         return true;
     }
 }
-						    
+
 int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
         rootLogger.error("Test failed!");
         return -1;
     }
-    
+
     return 0;
 }
 

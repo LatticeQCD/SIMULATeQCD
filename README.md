@@ -82,17 +82,17 @@ You will need to download the following before continuing:
 - `CUDA Toolkit` version 11+. 
 - `pip install -r requirements.txt` to build the documentation.
 
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
+To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script:
 ```shell
 cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=ON \
-``` 
+```
 Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
-`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta. 
-Inside the build folder, you can now begin to use `make` to compile your executables, e.g. 
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta.
+Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
 ```shell
 make NameOfExecutable
 ```
@@ -160,6 +160,7 @@ or clarke(dot)davida(at)gmail.com.
 
 ## Contributors
 
+
 [L. Mazur](https://github.com/lukas-mazur), 
 [S. Ali](https://github.com/Sajidali1031), 
 [L. Altenkort](https://github.com/luhuhis), 
@@ -168,8 +169,8 @@ or clarke(dot)davida(at)gmail.com.
 [G. Curell](https://github.com/grantcurell/),
 [H. Dick](https://github.com/redweasel),
 [J. Goswami](https://github.com/jishnuxx)
-[O. Kaczmarek](https://github.com/olaf-kaczmarek), 
-[R. Larsen](https://github.com/RasmusNL), 
+[O. Kaczmarek](https://github.com/olaf-kaczmarek),
+[R. Larsen](https://github.com/RasmusNL),
 M. Neumann,
 M. Rodekamp, 
 [H. Sandmeyer](https://github.com/hsandmeyer), 
@@ -186,9 +187,9 @@ If you are using this code in your research please cite:
 
 ## Acknowledgments
 
-- We acknowledge support by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the CRC-TR 211 
+- We acknowledge support by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the CRC-TR 211
 'Strong-interaction matter under extreme conditions'– project number 315477589 – TRR 211.
 - This work was partly performed in the framework of the PUNCH4NFDI consortium supported by DFG fund "NFDI 39/1", Germany.
-- This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance 
-Computing (SciDAC) award Computing the Properties of Matter with Leadership Computing Resources.
-- We like to acknowledge enlightening technical discussions with the ILDG team, in particular H. Simma.
+- This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance
+- We would also like to acknowedge enlightening technical discussions with the ILDG team, in particular H. Simma.
+

@@ -1,8 +1,8 @@
-/* 
- * main_sampleTopology.cpp                                                               
- * 
+/*
+ * main_sampleTopology.cpp
+ *
  * L. Altenkort
- * 
+ *
  * Executable to generate quenched configurations with non-zero topological charge.
  *
  */
@@ -312,7 +312,7 @@ void init(CommunicationBase &commBase,
         for (int i = 0; i < lp.nsweeps_thermal_HB_only(); ++i){
             gaugeUpdate.updateHB(dev_state.state,lp.beta());
         }
-        rootLogger.info("Now do " ,  lp.nsweeps_thermal_HBwithOR() ,  " HB sweeps with " ,  lp.nsweeps_ORperHB() , 
+        rootLogger.info("Now do " ,  lp.nsweeps_thermal_HBwithOR() ,  " HB sweeps with " ,  lp.nsweeps_ORperHB() ,
                           " OR sweeps per HB.");
         for (int i = 0; i < lp.nsweeps_thermal_HBwithOR(); ++i){
             gaugeUpdate.updateHB(dev_state.state,lp.beta());
@@ -331,7 +331,7 @@ void init(CommunicationBase &commBase,
 
 
 
-    rootLogger.info("Generating up to " ,  lp.nconfs() ,  " confs with a separation of " , 
+    rootLogger.info("Generating up to " ,  lp.nconfs() ,  " confs with a separation of " ,
                       lp.nsweeps_HBwithOR() ,  " HBOR sweeps (OR/HB = " ,  lp.nsweeps_ORperHB() ,  ") ...");
 
 

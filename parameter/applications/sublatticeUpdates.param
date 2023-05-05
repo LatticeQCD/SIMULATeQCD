@@ -1,5 +1,5 @@
-# 
-# sublatticeUpdates.param                                                               
+#
+# sublatticeUpdates.param
 #
 #    Lattice: Nx Ny Nz Nt
 #      Nodes: Number of nodes per direction
@@ -39,7 +39,7 @@ VacuumSubtractionHelper = 1.72
 
 # path of output files
 out_dir = ./
-        
+
 # compute energy-momentum tensor correlators. default to be 0
 EnergyMomentumTensorCorr = 0
 

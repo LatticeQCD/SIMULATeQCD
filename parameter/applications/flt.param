@@ -1,6 +1,6 @@
-# 
-# flt.param                                                               
-# 
+#
+# flt.param
+#
 # Parameter file for main_flt.cu.
 #
 #     Lattice: Nx Ny Nz Nt

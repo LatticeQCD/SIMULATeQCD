@@ -2,9 +2,7 @@
 // Created by Hai-Tao Shu on 06.05.19
 //
 
-#ifndef LUSCHER_WEISZ_H
-#define LUSCHER_WEISZ_H
-
+#pragma once
 #include "../../gauge/gaugefield.h"
 
 
@@ -23,10 +21,9 @@ public:
     LuscherWeisz(Gaugefield<floatT, true, HaloDepth> &gaugefield) :
             _gauge(gaugefield){}
 
-    void subUpdateOR(int sub_lt, int local_pos_t);   
-    void subUpdateHB(uint4* state, floatT beta, int sub_lt, int local_pos_t, bool ltest=false); 
+    void subUpdateOR(int sub_lt, int local_pos_t);
+    void subUpdateHB(uint4* state, floatT beta, int sub_lt, int local_pos_t, bool ltest=false);
     // release the object (destructor)
     ~LuscherWeisz() {}
 };
 
-#endif //LUSCHER_WEISZ_H

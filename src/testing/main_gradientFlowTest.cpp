@@ -1,6 +1,6 @@
-/* 
- * main_gradientFlowTest.cpp                                                               
- * 
+/*
+ * main_gradientFlowTest.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"

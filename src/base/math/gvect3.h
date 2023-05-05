@@ -90,7 +90,7 @@ public:
     __device__ __host__ void random( rndstateT * const);   // set gvect3 randomly
     __device__ __host__ void gauss( uint4 * state )
     {
-#ifndef USE_HIP_AMD 
+#ifndef USE_HIP_AMD
    	if constexpr (!std::is_same<floatT,__half>::value) {
 #endif
         floatT radius0,radius1,radius2,phi0,phi1,phi2;

@@ -1,13 +1,13 @@
-/* 
- * main_sublatticeUpdates.cpp                                                               
- * 
+/*
+ * main_sublatticeUpdates.cpp
+ *
  * Hai-Tao Shu, 6 May 2019
- * 
+ *
  */
 
 /***********************************************
 
-the rountine performs local updates for the sub lattices and the contraction 
+the rountine performs local updates for the sub lattices and the contraction
 to get color-electric correlators ( one square lies in sub lattice 1 and the other in sub lattice 2 )
 and energy-momentum tensor correlators in bulk & shear channel at finite momentum
 
@@ -17,11 +17,11 @@ s    |_|_|_I_|_|_|_I_|_|_|_|_|_|_I_|_|_|_I_|_|_
 |    |_|_|_I_|_|_|_I_|_|_|_|_|_|_I_|_|_|_I_|_|_
 |    |_|_|_I_|_|_|_I_|_|_|_|_|_|_I_|_|_|_I_|_|_
 |    |_|_|_I_|_|_|_I_|_|_|_|_|_|_I_|_|_|_I_|_|_
-|    |_|_|_I_|_|_|_I_|_|_|_|_|_|_I_|_|_|_I_|_|_ 
+|    |_|_|_I_|_|_|_I_|_|_|_|_|_|_I_|_|_|_I_|_|_
 |          |--\/---|             |--\/---|
 |        sub lattice1           sub lattice 2
 |
----------------------------> t 
+---------------------------> t
 
 The spatial links on the border won't be updated.
 
@@ -39,7 +39,7 @@ The spatial links on the border won't be updated.
 template<class floatT>
 struct SubLatParam : LatticeParameters {
 
-    //the temporal extent of the sublattice 
+    //the temporal extent of the sublattice
     Parameter<int> sublattice_lt;
 
     //measure how many times
@@ -54,12 +54,12 @@ struct SubLatParam : LatticeParameters {
     //the finite mometum for EMT, directing only in z
     Parameter<int> PzMax;
 
-    //a magic value used to subtract the first a few useless digits appearing in the traceanomaly at zero momentum 
+    //a magic value used to subtract the first a few useless digits appearing in the traceanomaly at zero momentum
     //does not contribute the bulk correlators. It helps to avoid the numerical problem and can be obtained by running
     //another programm "getMagicTraceAnomaly" on any of the configurations of the same lattice size and beta
     Parameter<PREC> VacuumSubtractionHelper;
 
-    // path of output files 
+    // path of output files
     Parameter<std::string> out_dir;
 
     Parameter<bool> EnergyMomentumTensorCorr;
@@ -67,7 +67,7 @@ struct SubLatParam : LatticeParameters {
 
     // constructor
     SubLatParam() {
- 
+
         addDefault(sublattice_lt, "sublattice_lt", 6);
         addDefault(num_meas, "num_meas", 100);
         addDefault(num_update, "num_update", 10);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
     UsedDevice = TotalDevice - AvailDevice;
     double StarterUsedInMB = UsedDevice/1024./1024.;
     rootLogger.info("Memory for the starter[MB]: " ,  StarterUsedInMB);
-    double Ratio = (double)(elem2)/elem1; 
+    double Ratio = (double)(elem2)/elem1;
     double MemLatNoHalo = sizeof(PREC)*18.*elem1*lp.latDim()[3]*4/1024./1024.;
     double MemLatWithHalo = sizeof(PREC)*18.*P2P*4/1024./1024.;
 
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
     gauge_host.updateAll();
 
     grnd_state<false> host_state;
-    grnd_state<true> dev_state; 
+    grnd_state<true> dev_state;
 
     StopWatch<true> timer;
     timer.start();
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
     MemTypeGPU mem50 = MemoryManagement::getMemAt<true>("subpoly_Nt_gpu");
     MemTypeGPU mem51 = MemoryManagement::getMemAt<true>("sub1_cec_Nt_gpu");
     MemTypeGPU mem52 = MemoryManagement::getMemAt<true>("sub2_cec_Nt_gpu");
- 
+
     if (lp.ColorElectricCorr()) {
         mem50->template adjustSize<GSU3<PREC>>(elem1*lp.latDim()[3]);
         mem50->memset(0);
@@ -232,18 +232,18 @@ int main(int argc, char *argv[]) {
 
 
     for (int local_pos_t=0;local_pos_t<lp.sublattice_lt();local_pos_t++) {
-    
+
         rootLogger.info("measure. update the sub-lattice at shift position: " ,  local_pos_t ,  "/" ,  lp.sublattice_lt());
-        // copy field to device 
-        Gaugefield<PREC, USE_GPU, HaloDepth> gauge_device(gauge_host.getComm()); 
+        // copy field to device
+        Gaugefield<PREC, USE_GPU, HaloDepth> gauge_device(gauge_host.getComm());
         gauge_device = gauge_host;
         gauge_device.updateAll();
 
-        // initialize sub-lattice updates 
+        // initialize sub-lattice updates
         LuscherWeisz<PREC, USE_GPU, HaloDepth> luscherweisz(gauge_device);
 
         // initialize for caculating sub poly and sub cec
-        SubLatMeas<PREC, USE_GPU, HaloDepth> sublatmeas(gauge_device,lp.sublattice_lt()); 
+        SubLatMeas<PREC, USE_GPU, HaloDepth> sublatmeas(gauge_device,lp.sublattice_lt());
 
         //generate random seed
         auto seed = std::chrono::duration_cast< std::chrono::milliseconds >(std::chrono::system_clock::now().time_since_epoch()).count();
@@ -254,26 +254,26 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < lp.num_meas(); ++i) {
             for (int j = 0; j < lp.num_update(); ++j) {
                 luscherweisz.subUpdateHB(dev_state.state, lp.beta(), lp.sublattice_lt(), local_pos_t, false);
-                for (int k = 0; k < 4; k++) { 
+                for (int k = 0; k < 4; k++) {
                     luscherweisz.subUpdateOR(lp.sublattice_lt(), local_pos_t);
                 }
             }
 
             for (int sub_i=0;sub_i<lp.latDim()[3]/lp.sublattice_lt();sub_i++) {
-                //measure the energy-momentum tensor at each possible time slice within each sub lattice 
+                //measure the energy-momentum tensor at each possible time slice within each sub lattice
                 if (lp.EnergyMomentumTensorCorr()) {
-                    sublatmeas.updateSubNorm(local_pos_t+sub_i*lp.sublattice_lt(), SubTbarbp00, SubSbp, SubTbarbc00_SubSbc); 
+                    sublatmeas.updateSubNorm(local_pos_t+sub_i*lp.sublattice_lt(), SubTbarbp00, SubSbp, SubTbarbc00_SubSbc);
                     for ( int dist=0; dist<lp.sublattice_lt()-3; dist++ ) { //minus 3 because T is from F, clover boundary can NOT hit sublattice boudndary
                         for ( int pz=0;pz<=lp.PzMax();pz++ ) {
-                            sublatmeas.updateSubEMT(local_pos_t+sub_i*lp.sublattice_lt(), lp.num_meas(), sub_E_gpu, sub_U_gpu, SubBulk_Nt_p0, SubShear_Nt_p0, SubBulk_Nt_real, 
+                            sublatmeas.updateSubEMT(local_pos_t+sub_i*lp.sublattice_lt(), lp.num_meas(), sub_E_gpu, sub_U_gpu, SubBulk_Nt_p0, SubShear_Nt_p0, SubBulk_Nt_real,
                                                     SubShear_Nt_real, dist, pz, i, lp.VacuumSubtractionHelper(), 0);
-                            sublatmeas.updateSubEMT(local_pos_t+sub_i*lp.sublattice_lt(), lp.num_meas(), sub_E_gpu, sub_U_gpu, SubBulk_Nt_p0, SubShear_Nt_p0, SubBulk_Nt_imag, 
+                            sublatmeas.updateSubEMT(local_pos_t+sub_i*lp.sublattice_lt(), lp.num_meas(), sub_E_gpu, sub_U_gpu, SubBulk_Nt_p0, SubShear_Nt_p0, SubBulk_Nt_imag,
                                                     SubShear_Nt_imag, dist, pz, i, lp.VacuumSubtractionHelper(), 1);
                         }
                     }
                 }
-    
-                //measure sub polyakov loop and sub color electric correlator from the locally updated confs 
+
+                //measure sub polyakov loop and sub color electric correlator from the locally updated confs
                 if (lp.ColorElectricCorr()) {
                     sublatmeas.updateSubPolyCorr(local_pos_t+sub_i*lp.sublattice_lt(), lp.num_meas(), sub_poly_Nt, sub1_cec_Nt, sub2_cec_Nt);
                 }
@@ -311,14 +311,14 @@ int main(int argc, char *argv[]) {
 
 
         Contraction_cpu<PREC> contraction(lp.sublattice_lt(), lp.latDim()[3]);
-        //normalize the zero p traceanomaly by summing over and deviding lp.num_meas(). aim to reduing the numerical error 
-        contraction.ImproveNormalizeBulk(SubBulk_Nt_real, SubBulk_Nt_p0, lp.num_meas()); 
+        //normalize the zero p traceanomaly by summing over and deviding lp.num_meas(). aim to reduing the numerical error
+        contraction.ImproveNormalizeBulk(SubBulk_Nt_real, SubBulk_Nt_p0, lp.num_meas());
 
-        //contraction for the improve emt correlators in bulk channel  
+        //contraction for the improve emt correlators in bulk channel
         rootLogger.info("contration to obtain the multi-level improved energy-momentum correlator in bulk channel");
         std::vector<PREC> ImproveBulk_Correlator((lp.PzMax()+1)*lp.latDim()[3], 0) ;
         for(int pz=0; pz<=lp.PzMax();pz++) {
-            contraction.ImproveContractionBulk(SubBulk_Nt_real, SubBulk_Nt_imag, lp.min_dist(), global_spatial_vol, pz, ImproveBulk_Correlator);  
+            contraction.ImproveContractionBulk(SubBulk_Nt_real, SubBulk_Nt_imag, lp.min_dist(), global_spatial_vol, pz, ImproveBulk_Correlator);
         }
 
         //write improve emt correlators in bulk channel
@@ -347,21 +347,21 @@ int main(int argc, char *argv[]) {
         FileWriter file_ImproveTraceAnomaly(gauge_host.getComm(), lp);
         file_ImproveTraceAnomaly.createFile(datNameEMT_ImproveTraceAnomaly.str());
         LineFormatter newTagImproveTraceAnomaly = file_ImproveTraceAnomaly.header(15);
-        newTagImproveTraceAnomaly << "only need zero momentum value, thus only real part" << "\n"; 
-        newTagImproveTraceAnomaly << std::scientific << std::setprecision(15) << ImproveTraceAnomaly_real << "\n"; 
+        newTagImproveTraceAnomaly << "only need zero momentum value, thus only real part" << "\n";
+        newTagImproveTraceAnomaly << std::scientific << std::setprecision(15) << ImproveTraceAnomaly_real << "\n";
 
         /******************************** shear part below **************************************************/
 
         //normalize the shear channel element
-        contraction.ImproveNormalizeShear(SubShear_Nt_real, SubShear_Nt_p0, lp.num_meas()); 
-        //contraction for the improve emt correlators in bulk channel  
+        contraction.ImproveNormalizeShear(SubShear_Nt_real, SubShear_Nt_p0, lp.num_meas());
+        //contraction for the improve emt correlators in bulk channel
         rootLogger.info("contration to obtain the multi-level improved energy-momentum correlator in shear channel");
         std::vector<PREC> ImproveShear_Correlator((lp.PzMax()+1)*lp.latDim()[3], 0) ;
         for(int pz=0; pz<=lp.PzMax();pz++) {
             contraction.ImproveContractionShear(SubShear_Nt_real, SubShear_Nt_imag, lp.min_dist(), global_spatial_vol, pz, ImproveShear_Correlator);
         }
 
-        //write improve emt correlators in bulk channel and the improve traceless parts of this conf  
+        //write improve emt correlators in bulk channel and the improve traceless parts of this conf
         datNameEMT_ImproveShear << lp.out_dir() << "MultiLevel_Shear" << "_PzMax" << lp.PzMax() << lp.fileExt();
         FileWriter file_ImproveShear(gauge_host.getComm(), lp);
         file_ImproveShear.createFile(datNameEMT_ImproveShear.str());
@@ -387,7 +387,7 @@ int main(int argc, char *argv[]) {
         //PolyakovLoop<PREC, USE_GPU, HaloDepth> StandardPolyloop(gauge_device);
         //GCOMPLEX(PREC) NonimprovePolyakovLoop = StandardPolyloop.getPolyakovLoop();
 
-        ////calculate standard  color electric correlator 
+        ////calculate standard  color electric correlator
         //std::vector<GCOMPLEX(PREC)> NonimproveColorElectricCorrelator;
         //ColorElectricCorr<PREC, USE_GPU, HaloDepth> StandardCEC(gauge_device);
         //NonimproveColorElectricCorrelator = StandardCEC.getColorElectricCorr();
@@ -401,7 +401,7 @@ int main(int argc, char *argv[]) {
         //newTagNonimprovePoly << "Re(PolyLoop) " << "Im(PolyLoop) " << "\n";
         //newTagNonimprovePoly << std::scientific << std::setprecision(15) << real(NonimprovePolyakovLoop) << " " << imag(NonimprovePolyakovLoop) << "\n";
 
-        ////write nonimprove color electric correlator  
+        ////write nonimprove color electric correlator
         //rootLogger.info("calculate the nonimprove colorelectric correlator");
         //datNameCE_NonimproveCorr << lp.out_dir() << "Standard_colorelectriccorr" << lp.fileExt();
         //FileWriter file_NonimproveCorr(gauge_host.getComm(), lp);
@@ -417,7 +417,7 @@ int main(int argc, char *argv[]) {
         GCOMPLEX(PREC) ImprovePolyakovLoop ;
         ImprovePolyakovLoop = sublatmeas.contraction_poly(sub_poly_Nt, lp.min_dist());
 
-        //contraction for the improve color electric correlator 
+        //contraction for the improve color electric correlator
         std::vector<GCOMPLEX(PREC)> ImproveColorElectricCorrelator(lp.latDim()[3]/2+1, 0) ;
         ImproveColorElectricCorrelator = sublatmeas.contraction_cec(sub1_cec_Nt, sub2_cec_Nt, lp.min_dist());
 
@@ -430,7 +430,7 @@ int main(int argc, char *argv[]) {
         newTagImprovePoly << "Re(PolyLoop) " << "Im(PolyLoop) " << "\n";
         newTagImprovePoly << std::scientific << std::setprecision(15) << real(ImprovePolyakovLoop) << " " << imag(ImprovePolyakovLoop) << "\n";
 
-        //write improve color electric correlator  
+        //write improve color electric correlator
         rootLogger.info("contract to obtain improve colorelectric correlator");
         datNameCE_ImproveColEleCorr << lp.out_dir() << "MultiLevel_colorelectriccorr" << lp.fileExt();
         FileWriter file_ImproveColEleCorr(gauge_host.getComm(), lp);

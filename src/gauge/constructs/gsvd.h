@@ -95,12 +95,12 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
     register svdfloatT lna01a11, lna00, ln_num, tau, t;
     register svdfloatT P00, P01, P10, P11;
     register int isign;
-  
+
     U2[0][0]=1.0f; U2[0][1]=0.0f;
     U2[1][0]=0.0f; U2[1][1]=1.0f;
     V2[0][0]=1.0f; V2[0][1]=0.0f;
     V2[1][0]=0.0f; V2[1][1]=1.0f;
-  
+
     if( *a00==0 ) {
         if( *a11==0 ) {
             cosphi=1.0f;
@@ -163,7 +163,7 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
         }
         a=min/max;
         lna01a11=2*log(max)+log(1+a*a);
-    
+
         abs00=fabs(*a00);
         lna00=2*log(abs00);
         if( lna01a11>lna00 ) {
@@ -184,7 +184,7 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
         if(*a01<0.) {
             tau*=-1;
           }
-    
+
         /* calculate b=sqrt(1+tau^2) */
         a=fabs(tau);
         if( a>1. ) {
@@ -203,7 +203,7 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
         } else {
             t = 1.0/(tau - b);
         }
-    
+
         /* calculate b=sqrt(1+t^2) */
         a=fabs(t);
         if( a>1. ) {
@@ -219,17 +219,17 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
         }
         cosphi=1./b;
         sinphi=t*cosphi;
-    
+
         /* transform matrix A so it has othogonal columns */
         P00= cosphi*(*a00)-sinphi*(*a01);
         P10=-sinphi*(*a11);
         P01= sinphi*(*a00)+cosphi*(*a01);
         P11= cosphi*(*a11);
-    
+
         /* prepare V  */
         V2[0][0]= cosphi; V2[0][1]= sinphi;
         V2[1][0]=-sinphi; V2[1][1]= cosphi;
-    
+
         /* make column with the largest norm first column */
         if( sqrt(P00*P00+P10*P10)<sqrt(P01*P01+P11*P11) ) {
             a=P00; P00=P01; P01=a;
@@ -238,7 +238,7 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
             a=V2[0][0]; V2[0][0]=V2[0][1]; V2[0][1]=a;
             a=V2[1][0]; V2[1][0]=V2[1][1]; V2[1][1]=a;
         }
-    
+
         /* calculate left Givens rotation and diagonalize */
         if( P10==0 ) {
             cosphi=1.0f;
@@ -257,12 +257,12 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
         *a00=P00*cosphi-P10*sinphi;
         *a01=0.0f;
         *a11=P01*sinphi+P11*cosphi;
-    
+
         /* U is just Givens rotation */
         U2[0][0]= cosphi; U2[0][1]= sinphi;
         U2[1][0]=-sinphi; U2[1][1]= cosphi;
     }
-  
+
     return 0;
 }
 

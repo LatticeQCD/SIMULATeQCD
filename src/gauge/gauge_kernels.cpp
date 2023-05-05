@@ -178,7 +178,7 @@ struct rectangleKernel_double{
                     temp *= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), mu));
                     temp *= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_up(site, nu), mu));
                     temp *= gAcc.template getLinkDagger<double>(GInd::getSiteMu(site, nu));
-                    
+
                     temp2 =  gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_up(site, mu), nu) );
                     temp2 *= gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_up_up(site, mu, nu), nu) );
                     temp2 *= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_2up(site, nu), mu));

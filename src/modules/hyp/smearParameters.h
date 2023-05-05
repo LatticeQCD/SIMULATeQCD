@@ -2,8 +2,7 @@
 // Created by Jishnu on 10/09/18.
 //
 
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
+#pragma once
 
 #include "../../define.h"
 template <class floatT>
@@ -32,6 +31,3 @@ inline SmearingParameters<floatT> getLevel2Params(floatT naik_epsilon = 0.0){
     return params_L2;
 }
 
-#endif
-
-//PARAMETERS_H

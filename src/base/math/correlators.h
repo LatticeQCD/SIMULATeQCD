@@ -1,4 +1,4 @@
-/* 
+/*
  * correlators.h
  *
  * D. Clarke
@@ -20,9 +20,7 @@
  *
  */
 
-#ifndef CORRELATORS_H
-#define CORRELATORS_H
-
+#pragma once
 #include "../../define.h"
 #include "../communication/siteComm.h"
 #include "../LatticeContainer.h"
@@ -1183,4 +1181,3 @@ void CorrelatorTools<floatT,onDevice,HaloDepth>::getFactorArray(std::vector<int>
     }
 };
 
-#endif //CORRELATORS_H

@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 17.11.18.
 //
 
-#ifndef FLOATCOMPARISON_H
-#define FLOATCOMPARISON_H
-
+#pragma once
 #include <cmath>
 #include <limits>
 #include "../wrapper/gpu_wrapper.h"
@@ -84,4 +82,3 @@ static bool isWithinPrecisionInterval(const TReal a, const TReal b, unsigned int
     return min_a <= b && max_a >= b;
 }
 
-#endif //FLOATCOMPARISON_H

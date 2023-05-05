@@ -1,9 +1,9 @@
-/* 
- * inverter.h                                                               
- * 
+/*
+ * inverter.h
+ *
  */
-#ifndef INVERTER_H
-#define INVERTER_H
+
+#pragma once
 
 #include "../../gauge/gaugefield.h"
 #include "../../spinor/spinorfield.h"
@@ -25,7 +25,7 @@ public:
 
     template <typename Spinor_t>
     void invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, Spinor_t& spinorIn, int max_iter, double precision);
-    
+
     template <typename Spinor_t>
     void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 
@@ -34,7 +34,7 @@ public:
                             const int max_iter, const double precision, double delta);
 
     template <typename Spinor_t, typename Spinor_t_half>
-    void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, 
+    void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn,
                       const int max_iter, const double precision, double delta);
 };
 
@@ -44,7 +44,7 @@ class MultiShiftCG {
 public:
     void invert(LinearOperator<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>>& dslash,
                 Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut,
-                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>& spinorIn, 
+                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>& spinorIn,
                 SimpleArray<floatT, NStacks> sigma, int max_iter, double precision);
 };
 
@@ -56,8 +56,7 @@ template <typename floatT, size_t NStacks = 14>
 class AdvancedMultiShiftCG {
 public:
     template <typename SpinorIn_t, typename SpinorOut_t>
-    void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, 
+    void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 };
 
-#endif

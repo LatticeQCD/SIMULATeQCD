@@ -1,6 +1,6 @@
-/* 
+/*
  * main_wilson_lines_fields.cpp
- * 
+ *
  * Rasmus Larsen, 16 Dec 2020
  *
  */
@@ -12,7 +12,7 @@
 #include <iostream>
 using namespace std;
 
-#define PREC double 
+#define PREC double
 #define MY_BLOCKSIZE 256
 
 
@@ -37,7 +37,7 @@ struct ShiftVectorOne{
 
     // takes vector from mu=1 direction from up or down 1 and saves and returns it
     // needed since A(x).A(x+r) product is done by making a copy of A and then move it around
-    // and takes the dot product between original and moved vector    
+    // and takes the dot product between original and moved vector
     if(Up == true){
         Stmp =  _gaugeIn.getLink(GInd::getSiteMu(GInd::site_up(site, direction),1));
     }
@@ -98,7 +98,7 @@ struct DotAlongXY{
 
     /// Constructor to initialize all necessary members.
     DotAlongXY(Gaugefield<floatT,true,HaloDepth> &gaugeIn,int shiftx,int shifty) :
-            _gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty) 
+            _gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty)
    {
     }
 
@@ -244,7 +244,7 @@ GCOMPLEX(floatT) gDotAlongXY( Gaugefield<floatT,true,HaloDepth> &gauge ,int shif
 };
 
 // calculates 1 wilson line of length length
-// The wilson line is calculated from any spacetime point 
+// The wilson line is calculated from any spacetime point
 template<class floatT,size_t HaloDepth>
 struct CalcWilson{
 
@@ -331,7 +331,7 @@ void gMoveOne( Gaugefield<floatT,true,HaloDepth> &gauge , int direction, int up)
         }
         else{
             gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,0,false>(gauge));
-        }            
+        }
     }
 
     if(direction == 1){
@@ -395,7 +395,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim());
 
-    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl; 
+    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl;
 
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
@@ -448,7 +448,7 @@ int main(int argc, char *argv[]) {
  //   rootLogger.info("Read configuration");
 //    gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
-    
+
 //    std::string gauge_file;
 //    gauge_file = param.gauge_file() + std::to_string(param.confnumber());
 //    rootLogger.info("Starting from configuration: " ,  gauge_file);
@@ -458,7 +458,7 @@ int main(int argc, char *argv[]) {
 ///////////// gauge fixing
 
     if(param.load_conf() ==2){
-    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge); 
+    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge);
     int ngfstep=0;
     PREC gftheta=1e10;
     const PREC gtol=1e-6;          /// When theta falls below this number, stop...
@@ -518,12 +518,12 @@ int main(int argc, char *argv[]) {
         Correlator<false,GCOMPLEX(PREC)> CPUnormR(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUnormR(CPUnormR.getAccessor());
 
-	
+
 ///////////////
 
 
 
-    ///  
+    ///
     timer.start();
     //// loop over length of wilson lines
     for(int length = 1; length < 2;length++){
@@ -579,9 +579,9 @@ int main(int argc, char *argv[]) {
                  dot = gDotAlongXY(gauge,x0,0,redBase);
             }
 
-            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dot); 
-    
-  
+            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dot);
+
+
             // save results
             if(length == 1){
 
@@ -697,7 +697,7 @@ int main(int argc, char *argv[]) {
 	    corrComplex2 = corrComplex2/real(corrComplex3);
 	}
 
-    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));            
+    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));
     difference += abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2));
     if(abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2)) > 1e-10){
 	   rootLogger.info(" Error, large difference");

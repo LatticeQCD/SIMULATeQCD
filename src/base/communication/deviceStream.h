@@ -1,13 +1,11 @@
-/* 
- * deviceStream.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * deviceStream.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef DEVICESTREAM_H
-#define DEVICESTREAM_H
-
+#pragma once
 #include "../../define.h"
 #include "../gutils.h"
 
@@ -71,4 +69,3 @@ public:
 
 };
 
-#endif //DEVICEEVENT_H

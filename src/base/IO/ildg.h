@@ -1,13 +1,13 @@
-/* 
- * ildg.h                                                               
- * 
- * R. Larsen, S. Ali, D. Clarke 
+/*
+ * ildg.h
+ *
+ * R. Larsen, S. Ali, D. Clarke
  *
  * This class is the reader class for ILDG configurations. ILDG configurations are packed as LIME files. The best
  * way to write this class would be to only allow reading configurations that are exactly in ILDG format, as
  * specified by their documentation. Unfortunately it seems that some codes, while correctly packing their
  * configuration as a LIME file, did not adhere to the ILDG specification. This class can read such configurations
- * anyway. Hence this class should rather be thought of as an "ILDG-type" configuration reader. On the bright side, 
+ * anyway. Hence this class should rather be thought of as an "ILDG-type" configuration reader. On the bright side,
  * we have written it so that the writing is done to correct ILDG specification.
  *
  * To help with understanding LIME format, note the following organizational hierarchy:
@@ -20,7 +20,7 @@
  *
  * Special thanks to H. Simma for the explanation. Since we are not using the message organizational level, we
  * will always set these flags to 1.
- * 
+ *
  */
 
 #pragma once
@@ -44,7 +44,7 @@ floatT returnEndian(floatT input,bool change) {
         } else if(sizeof(input) == 4) {
             return __builtin_bswap32(input);
         }
-    } 
+    }
     return input;
 }
 
@@ -76,16 +76,16 @@ private:
     const CommunicationBase &comm;
     int header_size;
 
-    Parameter<std::string> checksuma, checksumb, floatingpoint; 
+    Parameter<std::string> checksuma, checksumb, floatingpoint;
     Parameter<int>         dim[4];
     Parameter<double>      linktrace, plaq;
 
     bool read_info(std::istream &in) {
         int32_t magic_number;
         int64_t data_length;
-        int dimx=-1; 
+        int dimx=-1;
         int dimy=-1;
-        int dimz=-1; 
+        int dimz=-1;
         int dimt=-1;
         int dataPos=-1;
         std::string precision, suma, sumb, lstr;
@@ -365,7 +365,7 @@ public:
 
     void lime_record(std::ostream &out, bool switch_endian, std::string header_ildg, std::string data) {
 
-        // The first 32+16=48 bits (0-47) of the header word are the magic number and the version number. 
+        // The first 32+16=48 bits (0-47) of the header word are the magic number and the version number.
         const int32_t magic_number   = ILDG_MAGIC_NUMBER;
         const int16_t version_number = 1;
 
@@ -454,8 +454,8 @@ public:
         if (comm.IamRoot()) {
             if (head) {
 
-                data = xmlProlog + "<ildgFormat xmlns=\"http://www.lqcd.org/ildg\"\n" 
-                                 + "            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" 
+                data = xmlProlog + "<ildgFormat xmlns=\"http://www.lqcd.org/ildg\"\n"
+                                 + "            xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
                                  + "            xsi:schemaLocation=\"http://www.lqcd.org/ildg/filefmt.xsd\">\n"
                                  + "  <version>1.0</version>\n"
                                  + "  <field>su3gauge</field>\n"
@@ -547,8 +547,13 @@ public:
         std::stringstream suma, sumb;
         suma << std::hex << sum.checksuma;
         sumb << std::hex << sum.checksumb;
-        if (header.checksuma() == suma.str() && header.checksumb() == sumb.str()) {
-            rootLogger.info(CoutColors::green, "Checksums match successfully!", CoutColors::reset);
+        if ( header.checksuma() == suma.str() && header.checksumb() == sumb.str() ) {
+            rootLogger.info("Checksums match successfully!");
+            return true;
+        } else if ( header.checksuma().empty() && header.checksumb().empty() ) {
+            // Technically a checksum is not part of the ILDG specification. Therefore our code must be able to read
+            // ILDG configurations that have no checksum metadata.
+            rootLogger.warn("Couldn't find checksums for read-in ILDG binary.");
             return true;
         } else {
             rootLogger.info("Checksuma: ",std::hex, header.checksuma()," (Stored) != ", sum.checksuma," (Computed)");

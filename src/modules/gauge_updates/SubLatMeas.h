@@ -2,9 +2,7 @@
 // Created by Hai-Tao Shu on 07.06.2019
 //
 
-#ifndef SUBLATMEAS_H
-#define SUBLATMEAS_H
-
+#pragma once
 #include "../observables/EnergyMomentumTensor.h"
 #include "../observables/PolyakovLoop.h"
 #include "../../gauge/gaugefield.h"
@@ -39,8 +37,8 @@ public:
 
     }
 
-    void updateSubEMT(int pos_t, int count, MemoryAccessor &sub_E_gpu, MemoryAccessor &sub_U_gpu, std::vector<floatT> &SubBulk_Nt_p0, 
-         std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt_p0, std::vector<floatT> &SubBulk_Nt, std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt, 
+    void updateSubEMT(int pos_t, int count, MemoryAccessor &sub_E_gpu, MemoryAccessor &sub_U_gpu, std::vector<floatT> &SubBulk_Nt_p0,
+         std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt_p0, std::vector<floatT> &SubBulk_Nt, std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt,
          int dist, int pz, int count_i, floatT displacement, int flag_real_imag);
     void updateSubPolyCorr(int pos_t, int count, MemoryAccessor &sub_poly_Nt, MemoryAccessor &sub1_cec_Nt, MemoryAccessor &sub2_cec_Nt);
 
@@ -64,4 +62,3 @@ public:
     void ImproveContractionShear(std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_real, std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_imag, int min_dist, size_t global_spatial_vol, int pz, std::vector<floatT> &Improve_ShearResult);
 };
 
-#endif //SUBLATMEAS_H

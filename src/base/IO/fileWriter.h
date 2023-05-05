@@ -1,8 +1,8 @@
-/* 
- * fileWriter.h                                                               
- * 
+/*
+ * fileWriter.h
+ *
  * L. Mazur
- * 
+ *
  * This header file defines objects used to output results to file. The to-be-outputted data are stored in
  * LineFormatter objects, which are essentially ostream objects. They automatically end the line whenever they are
  * destructed; for example they will end lines automatically inside a loop. At the end of each line there is appended

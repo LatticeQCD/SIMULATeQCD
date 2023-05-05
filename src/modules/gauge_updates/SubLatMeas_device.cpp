@@ -76,8 +76,8 @@ void SubLatMeas<floatT, onDevice, HaloDepth>::updateSubNorm(int pos_t, std::vect
 
 
 template<class floatT, bool onDevice, size_t HaloDepth>
-void SubLatMeas<floatT, onDevice, HaloDepth>::updateSubEMT(int pos_t, int count, MemoryAccessor &sub_E_gpu, MemoryAccessor &sub_U_gpu, 
-    std::vector<floatT> &SubBulk_Nt_p0, std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt_p0, std::vector<floatT> &SubBulk_Nt, 
+void SubLatMeas<floatT, onDevice, HaloDepth>::updateSubEMT(int pos_t, int count, MemoryAccessor &sub_E_gpu, MemoryAccessor &sub_U_gpu,
+    std::vector<floatT> &SubBulk_Nt_p0, std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt_p0, std::vector<floatT> &SubBulk_Nt,
     std::vector<Matrix4x4Sym<floatT>> &SubShear_Nt, int dist, int pz, int count_i, floatT displacement, int flag_real_imag) {
 
     _redBaseE.template iterateOverSpatialBulk<All, HaloDepth>(energyMomentumTensorEKernel<floatT, HaloDepth, onDevice>(_gauge, sub_E_gpu, (pos_t+dist+2)%_Nt, pz, flag_real_imag, displacement));
@@ -147,8 +147,8 @@ struct updateSubPoly_Kernel{
 
  /*| vol3 spatial links:  x global_vol3
    | not one the border:  x (sub_lt-2)
-   | mu=0,1,2 for the vertical links: x 3 
-   | flipped diagram: x 2  
+   | mu=0,1,2 for the vertical links: x 3
+   | flipped diagram: x 2
    | so a vector of global_vol3*(sub_lt-2)*6 entries */
 
 template<class floatT, bool onDevice, size_t HaloDepth>
@@ -183,13 +183,13 @@ struct updateSubCorr_Kernel{
         GSU3<floatT> temp1, temp2;
         /*caculate contribution from the left sublattice
 
- |      ^ ----------> | 
- |      |     |       | 
- |      |  -  |       | 
- |-----> --->         | 
+ |      ^ ----------> |
+ |      |     |       |
+ |      |  -  |       |
+ |-----> --->         |
  |                    | and its flipped one*/
 
-        //loop over possible square positions of sub correlator. 
+        //loop over possible square positions of sub correlator.
         //We do not update squares at the border of the sublattice. so sqPos=0 corresponds to postion of square - left border = 1
         for(int sqPos = 0; sqPos < sub_lt - 2; ++sqPos){
             for( size_t mu = 0; mu <= 2; ++mu){
@@ -198,14 +198,14 @@ struct updateSubCorr_Kernel{
                 GSU3<floatT> p_dn = gsu3_one<floatT>();
                 gSite looppos_up = shifted_site; //initialize loop positions
                 gSite looppos_dn = shifted_site;
-        
+
                 for (int j = 0; j < sqPos+1; ++j){
                     p_up *= gAcc.getLink(GInd::getSiteMu(looppos_up, 3));
                     p_dn *= gAcc.getLink(GInd::getSiteMu(looppos_dn, 3));
                     looppos_up = GInd::site_up(looppos_up, 3);
                     looppos_dn = GInd::site_up(looppos_dn, 3);
                 }
-        
+
                 //rectangle
                 p_up *= gAcc.getLink(GInd::getSiteMu(looppos_up, mu))
                       * gAcc.getLink(GInd::getSiteMu(GInd::site_up(looppos_up, mu), 3))
@@ -216,10 +216,10 @@ struct updateSubCorr_Kernel{
                       * gAcc.getLink(GInd::getSiteMu(GInd::site_dn(looppos_dn, mu), 3))
                       - gAcc.getLink(GInd::getSiteMu(looppos_dn, 3))
                       * gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(looppos_dn, 3, mu), mu));
-        
+
                 looppos_up = GInd::site_up_up(looppos_up, mu, 3);
                 looppos_dn = GInd::site_up_dn(looppos_dn, 3, mu);
-        
+
                 //To the end
                 for (int j = sqPos + 1; j < sub_lt - 1; ++ j){
                     p_up *= gAcc.getLink(GInd::getSiteMu(looppos_up, 3));
@@ -237,10 +237,10 @@ struct updateSubCorr_Kernel{
         }
 /*caculate contribution from the right sublattice. consider only the ones on the boundary.
 
- |------> ---->       | 
- |      |     |       | 
- |      |  -  |       | 
- |      ----->------> | 
+ |------> ---->       |
+ |      |     |       |
+ |      |  -  |       |
+ |      ----->------> |
  |                    | and its flipped one*/
         bool is_onBoundary = (coord[0] == 0 || coord[0]== Nx-1 || coord[1]==0 || coord[1]==Ny-1 || coord[2]==0 || coord[2]==Nz-1);
         if ( is_onBoundary ) {
@@ -262,7 +262,7 @@ struct updateSubCorr_Kernel{
 
             size_t index;
             for (size_t i=0; i<elems2; i++) {
-                mapping.getValue<size_t>(i, index); 
+                mapping.getValue<size_t>(i, index);
                 if ( Id1 == index)
                 {
                     Id2 = i;
@@ -277,18 +277,18 @@ struct updateSubCorr_Kernel{
                     GSU3<floatT> p_dn = gsu3_one<floatT>();
                     gSite looppos_up = shifted_site; //initialize loop positions
                     gSite looppos_dn = shifted_site;
- 
+
                     looppos_up = GInd::site_up(looppos_up, mu);
                     looppos_dn = GInd::site_dn(looppos_dn, mu);
 
-           
+
                     for (int j = 0; j < sqPos+1; ++j){
                         p_up *= gAcc.getLink(GInd::getSiteMu(looppos_up, 3));
                         p_dn *= gAcc.getLink(GInd::getSiteMu(looppos_dn, 3));
                         looppos_up = GInd::site_up(looppos_up, 3);
                         looppos_dn = GInd::site_up(looppos_dn, 3);
                     }
-            
+
                     //rectangle
                     p_up *= gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(looppos_up, mu), mu))
                             * gAcc.getLink(GInd::getSiteMu(GInd::site_dn(looppos_up, mu), 3))
@@ -298,10 +298,10 @@ struct updateSubCorr_Kernel{
                             * gAcc.getLink(GInd::getSiteMu(GInd::site_up(looppos_dn, mu), 3))
                             - gAcc.getLink(GInd::getSiteMu(looppos_dn, 3))
                             * gAcc.getLink(GInd::getSiteMu(GInd::site_up(looppos_dn, 3), mu));
- 
+
                     looppos_up = GInd::site_up_dn(looppos_up, 3, mu);
                     looppos_dn = GInd::site_up_up(looppos_dn, 3, mu);
-            
+
                     //To the end
                     for (int j = sqPos + 1; j < sub_lt - 1; ++ j){
                         p_up *= gAcc.getLink(GInd::getSiteMu(looppos_up, 3));
@@ -396,7 +396,7 @@ struct contractCorr_Kernel{
     MemoryAccessor sub2_cec_Nt;
     int sub_lt;
     int min_dist;
-    int tau; //will be the sqDist 
+    int tau; //will be the sqDist
     MemoryAccessor mapping;
     contractCorr_Kernel(Gaugefield<floatT,onDevice,HaloDepth> &gauge, MemoryAccessor sub1_cec_Nt, MemoryAccessor sub2_cec_Nt, int sub_lt, int min_dist, int tau, MemoryAccessor mapping) :
             gAcc(gauge.getAccessor()), sub1_cec_Nt(sub1_cec_Nt), sub2_cec_Nt(sub2_cec_Nt), sub_lt(sub_lt), min_dist(min_dist), tau(tau), mapping(mapping)  { }
@@ -443,16 +443,16 @@ struct contractCorr_Kernel{
                             gSite running_site_up = GInd::getSite(site.coord.x,site.coord.y,site.coord.z,i);
                             gSite running_site_dn = GInd::getSite(site.coord.x,site.coord.y,site.coord.z,i);
                             //get the sub contribution in direction mu from the 1st square at sqPos1
-                            sub1_cec_Nt.getValue<GSU3<floatT>>(i*(6*elems1*(sub_lt-2)) + 6*elems1*sqPos1+mu*elems1+Id1, tmp1_up);    
-                            sub1_cec_Nt.getValue<GSU3<floatT>>(i*(6*elems1*(sub_lt-2)) + 6*elems1*sqPos1+(mu+3)*elems1+Id1, tmp1_dn);    
+                            sub1_cec_Nt.getValue<GSU3<floatT>>(i*(6*elems1*(sub_lt-2)) + 6*elems1*sqPos1+mu*elems1+Id1, tmp1_up);
+                            sub1_cec_Nt.getValue<GSU3<floatT>>(i*(6*elems1*(sub_lt-2)) + 6*elems1*sqPos1+(mu+3)*elems1+Id1, tmp1_dn);
 
-                            GSU3<floatT> p_up =gsu3_one<floatT>();                            
-                            GSU3<floatT> p_dn =gsu3_one<floatT>();                            
+                            GSU3<floatT> p_up =gsu3_one<floatT>();
+                            GSU3<floatT> p_dn =gsu3_one<floatT>();
 
                             //contribution from 1st sublattice
-                            p_up *= tmp1_up;  
+                            p_up *= tmp1_up;
                             p_dn *= tmp1_dn;
- 
+
                             for(int k=0; k<sub_lt; k++) { //move site for the 1st sublattice
                                 running_site_up = GInd::site_up(running_site_up, 3);
                                 running_site_dn = GInd::site_up(running_site_dn, 3);
@@ -492,7 +492,7 @@ struct contractCorr_Kernel{
                                         break;
                                     }
                                 }
- 
+
                                 //contribution from the second square, using the values on the boundary saved in sub2_cec_Nt
                                 sub2_cec_Nt.getValue<GSU3<floatT>>(((j+sub_lt)%Ntau)*(6*elems2*(sub_lt-2)) + 6*elems2*sqPos2+mu*elems2+Id2, tmp2_up);
                                 sub2_cec_Nt.getValue<GSU3<floatT>>(((j+sub_lt)%Ntau)*(6*elems2*(sub_lt-2)) + 6*elems2*sqPos2+(mu+3)*elems2+Id2, tmp2_dn);
@@ -504,7 +504,7 @@ struct contractCorr_Kernel{
                                 sub1_cec_Nt.getValue<GSU3<floatT>>(((j+sub_lt)%Ntau)*(6*elems1*(sub_lt-2)) + 6*elems1*sqPos2+mu*elems1+Id4, tmp2_dn);
                             }
                             //contribution from 2nd sublattice
-                            p_up *= tmp2_up;   
+                            p_up *= tmp2_up;
                             p_dn *= tmp2_dn;
 
                             for(int k=0; k<sub_lt; k++) { //move site for the 2nd sublattice
@@ -513,9 +513,9 @@ struct contractCorr_Kernel{
                             }
                             running_site_up = GInd::site_dn(running_site_up, mu);
                             running_site_dn = GInd::site_up(running_site_dn, mu);
-                            
+
                             //links after the 2nd sublattice
-                            for (int k = 0; k<Ntau-2*sub_lt-sub_dist; k++ ) { 
+                            for (int k = 0; k<Ntau-2*sub_lt-sub_dist; k++ ) {
                                 p_up *= gAcc.getLink(GInd::getSiteMu(running_site_up, 3));
                                 running_site_up = GInd::site_up(running_site_up,3);
                                 p_dn *= gAcc.getLink(GInd::getSiteMu(running_site_dn, 3));
@@ -524,10 +524,10 @@ struct contractCorr_Kernel{
                             result += tr_c(p_up + p_dn);
                         }
                         //counter for normelization
-                        count++; 
+                        count++;
                     }
                 }
-            }        
+            }
         }
         if(count == 0) {
             result = GCOMPLEX(floatT)(0,0);
@@ -542,13 +542,13 @@ template<class floatT, bool onDevice, size_t HaloDepth>
 void SubLatMeas<floatT, onDevice, HaloDepth>::updateSubPolyCorr(int pos_t, int count, MemoryAccessor &sub_poly_Nt, MemoryAccessor &sub1_cec_Nt, MemoryAccessor &sub2_cec_Nt) {
 
     typedef gMemoryPtr<true>  MemTypeGPU;
-    
+
     MemTypeGPU mem47 = MemoryManagement::getMemAt<true>("mapping_gpu");
     mem47->template adjustSize<size_t>(_elems2);
-    MemoryAccessor mapping (mem47->getPointer());     
+    MemoryAccessor mapping (mem47->getPointer());
 
     ReadIndexSpatial<HaloDepth> calcReadIndexSpatial;
-    //calculate sub poly and sub cec 
+    //calculate sub poly and sub cec
     iterateFunctorNoReturn<onDevice>(updateSubPoly_Kernel<floatT,onDevice,HaloDepth>(_gauge, sub_poly_Nt, _sub_lt, pos_t, count), calcReadIndexSpatial, _elems1);
     iterateFunctorNoReturn<onDevice>(updateSubCorr_Kernel<floatT,onDevice,HaloDepth>(_gauge, sub1_cec_Nt, sub2_cec_Nt, _sub_lt, pos_t, count, mapping), calcReadIndexSpatial, _elems1);
 

@@ -1,8 +1,8 @@
-/* 
- * main_cudaAwareMPITest.cpp                                                               
- * 
+/*
+ * main_cudaAwareMPITest.cpp
+ *
  * L. Mazur
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
