@@ -93,22 +93,22 @@ polyakovloop and color-electric correlators have been implemented. For details, 
 <p>To compile, one can <code class="docutils literal notranslate"><span class="pre">make</span></code> the executable <code class="docutils literal notranslate"><span class="pre">sublatticeUpdates</span></code>. You can then find it under <code class="docutils literal notranslate"><span class="pre">applications/sublatticeUpdates</span></code>.
 The example parameter file is found under <code class="docutils literal notranslate"><span class="pre">parameter/sublatticeUpdates.param</span></code> and looks like this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#parameter file for sublatticeUpdates</span>
-<span class="nv">Lattice</span> <span class="o">=</span> <span class="m">20</span> <span class="m">20</span> <span class="m">20</span> <span class="m">20</span>
-<span class="nv">Nodes</span> <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
-<span class="nv">beta</span> <span class="o">=</span> <span class="m">6</span>.498
-<span class="nv">Gaugefile</span> <span class="o">=</span>../test_conf/l20t20b06498a_nersc.302500
-<span class="nv">conf_nr</span> <span class="o">=</span> <span class="m">302500</span>
-<span class="nv">format</span> <span class="o">=</span> nersc
-<span class="nv">endianness</span> <span class="o">=</span> auto
-<span class="nv">sublattice_lt</span> <span class="o">=</span> <span class="m">6</span>
-<span class="nv">num_meas</span> <span class="o">=</span> <span class="m">100</span>
-<span class="nv">num_update</span> <span class="o">=</span> <span class="m">10</span>
-<span class="nv">min_dist</span> <span class="o">=</span> <span class="m">0</span>
-<span class="nv">PzMax</span> <span class="o">=</span> <span class="m">0</span>
-<span class="nv">VacuumSubtractionHelper</span> <span class="o">=</span> <span class="m">1</span>.72
-<span class="nv">out_dir</span> <span class="o">=</span> ./
-<span class="nv">EnergyMomentumTensorCorr</span> <span class="o">=</span> <span class="m">0</span>
-<span class="nv">ColorElectricCorr</span> <span class="o">=</span> <span class="m">0</span>
+<span class="nv">Lattice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span>
+<span class="nv">Nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span>
+<span class="nv">beta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6</span>.498
+<span class="nv">Gaugefile</span><span class="w"> </span><span class="o">=</span>../test_conf/l20t20b06498a_nersc.302500
+<span class="nv">conf_nr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">302500</span>
+<span class="nv">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>nersc
+<span class="nv">endianness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>auto
+<span class="nv">sublattice_lt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6</span>
+<span class="nv">num_meas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">100</span>
+<span class="nv">num_update</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span>
+<span class="nv">min_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">PzMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">VacuumSubtractionHelper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>.72
+<span class="nv">out_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>./
+<span class="nv">EnergyMomentumTensorCorr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">ColorElectricCorr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 <p>Calling <code class="docutils literal notranslate"><span class="pre">./sublatticeUpdates</span> <span class="pre">sublatticeUpdates.param</span></code> will output the multi-level improved energy-momentum

@@ -8,34 +8,41 @@
 *a SImple MUlti-GPU LATtice code for QCD calculations*
 
 
-SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it simple and easy for physicists to implement lattice QCD formulas while still providing the best possible performance.
+SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it easy for physicists to implement lattice QCD formulas while still providing
+competetive performance. 
 
-- [SIMULATeQCD](#simulateqcd)
-  - [How to Build](#how-to-build)
-    - [Prerequisites](#prerequisites)
-    - [Download SimulateQCD](#download-simulateqcd)
-      - [Manual Download](#manual-download)
-      - [Using git Command Line](#using-git-command-line)
-    - [Compile Using Container](#compile-using-container)
-      - [Install Podman](#install-podman)
-      - [Build the Code](#build-the-code)
-    - [Compile Manually](#compile-manually)
-  - [Example: Plaquette action computation](#example-plaquette-action-computation)
-  - [Documentation](#documentation)
-  - [Getting help and bug report](#getting-help-and-bug-report)
-  - [Contributors](#contributors)
-  - [Citing SIMULATeQCD](#citing-simulateqcd)
-  - [Acknowledgment](#acknowledgment)
+- [How to Build](#how-to-build)
+  - [Prerequisites](#prerequisites)
+  - [Download SIMULATeQCD](#download-simulateqcd)
+    - [Manual Download](#manual-download)
+    - [Using git Command Line](#using-git-command-line)
+  - [Compile Using Container](#compile-using-container)
+    - [Install Podman](#install-podman)
+    - [Build the Code](#build-the-code)
+  - [Compile Manually](#compile-manually)
+- [Example: Plaquette action computation](#example-plaquette-action-computation)
+- [Documentation](#documentation)
+- [Getting help and bug report](#getting-help-and-bug-report)
+- [Contributors](#contributors)
+- [Citing SIMULATeQCD](#citing-simulateqcd)
+- [Acknowledgments](#acknowledgment)
 
-## How to Build
+## How to Build 
+
+There are two possible ways to build SIMULATeQCD. If you are running somewhere where you have superuser privileges,
+we recommend that you use the [container build](#compile-using-container). The container will automatically grab all software you need.
+If you don't have superuser privileges, you will have to [compile manually](#compile-manually) and ensure that all needed
+software already exists on the system you're using.
+This README attempts to give a succinct overview of how to build and use SIMULATeQCD. If you run into problems building, first
+please have a look at the "Getting started" section of the [documentation](https://latticeqcd.github.io/SIMULATeQCD).
 
 ### Prerequisites
 
 You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
 
-### Download SimulateQCD
+### Download SIMULATeQCD
 
-#### Manual Download
+#### Option 1: Manual Download
 
 1. Go to [SIMULATeQCD's website](https://github.com/LatticeQCD/SIMULATeQCD)
 2. Click the green *Code* button and then click *Download Zip*
@@ -44,7 +51,7 @@ You will need to install [`git-lfs`](https://git-lfs.github.com/) before continu
 
 3. Extract the zip in a location of your choosing and extract it
 
-#### Using git Command Line
+#### Option 2: Using git Command Line
 
 Run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
 
@@ -52,33 +59,11 @@ Run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
 
 #### Install Podman
 
-**THIS REQUIRES ADMIN PRIVILIGES** If you are doing this on a supercomputer you will likely need to ask your admin to perform the below.
-
-**On RHEL-based (Rocky/CentOS/RHEL) systems**
-
+We assume you use a RHEL-based (Rocky/CentOS/RHEL) system. If you are using another operating system, please check out the [documentation](https://latticeqcd.github.io/SIMULATeQCD).
 Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.
 
-**On Arch-based systems**
-
-See [install instructions](https://wiki.archlinux.org/title/Podman). If you have installed Arch before the upgrade to shadow (as in /etc/shadow) 4.11.1-3 rootless podman may encounter some issues. The build script will check for these anomalies and prompt you if you need to fix them.
-
-**Other \*NIX Systems**
-
-If you have a non RHEL-based OS see [here](https://podman.io/getting-started/installation.html#linux-distributions) for installation instructions.
-
-------------
-
-Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, simulateqcd will not run correctly.
-
-If you see the error:
-
-```
-ERRO[0014] cannot find UID/GID for user u6042105: No subuid ranges found for user "u6042105" in /etc/subuid - check rootless mode in man pages.
-```
-
-this indicates someone has modified the standard user privileges or you are running an older operating system. To fix this error run `sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 <YOUR_USER> && podman system migrate`
-
-**WARNING**: If you are SSH'ing to your server, make sure you ssh as a user and **not** root. If you SSH as root and then `su` to user, podman will issue `ERRO[0000] XDG_RUNTIME_DIR directory "/run/user/0" is not owned by the current user`. This happens because the user that originally setup `/run` is root rather than your user.
+Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, SIMULATeQCD will not run correctly. Common errors are addressed
+in the [documentation](https://latticeqcd.github.io/SIMULATeQCD).
 
 #### Build the Code
 
@@ -91,11 +76,11 @@ this indicates someone has modified the standard user privileges or you are runn
 
 You will need to download the following before continuing:
 
-* `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
-* `C++` compiler with `C++17` support.
-* `MPI` (e.g. `openmpi-4.0.4`).
-* `CUDA Toolkit` version 11+. 
-* `pip install -r requirements.txt` to build the documentation.
+- `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
+- `C++` compiler with `C++17` support.
+- `MPI` (e.g. `openmpi-4.0.4`).
+- `CUDA Toolkit` version 11+. 
+- `pip install -r requirements.txt` to build the documentation.
 
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
@@ -128,7 +113,12 @@ In the [documentation](https://latticeqcd.github.io/SIMULATeQCD/03_applications/
 
 ## Example: Plaquette action computation
 
-(See [Full code example](https://github.com/LatticeQCD/SIMULATeQCD/blob/main/src/examples/main_plaquette.cu).)
+Here we showcase a snippet of code. It is not important that you understand all details: We just
+want to emphasize that these two blocks are roughly all that is required to compute the plaquette
+at every site for every orientation. These blocks take care of periodic BCs, GPU parallelization,
+and communication between neighboring GPUs behind the scenes.
+See this [Full code example](https://github.com/LatticeQCD/SIMULATeQCD/blob/main/src/examples/main_plaquette.cu)
+for a more detailed understanding.
 
 ```C++
 template<class floatT, bool onDevice, size_t HaloDepth>
@@ -147,7 +137,9 @@ struct CalcPlaq {
 };
 
 (... main ...)
+gauge.updateAll()
 latticeContainer.template iterateOverBulk<All, HaloDepth>(CalcPlaq<floatT, HaloDepth>(gauge))
+latticeContainer.reduce(plaq, elems);
 ```
 
 
@@ -162,7 +154,8 @@ Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
 - you have found a bug.
 - you have a feature request.
 
-If none of the above cases apply, you may also send an email to lukas.mazur(at)uni-paderborn(dot)de.
+If none of the above cases apply, you may also send an email to lukas.mazur(at)uni-paderborn(dot)de
+or clarke(dot)davida(at)gmail.com.
 
 
 ## Contributors
@@ -172,6 +165,7 @@ If none of the above cases apply, you may also send an email to lukas.mazur(at)u
 [L. Altenkort](https://github.com/luhuhis), 
 [D. Bollweg](https://github.com/dbollweg), 
 [D. A. Clarke](https://github.com/clarkedavida), 
+[G. Curell](https://github.com/grantcurell/),
 [H. Dick](https://github.com/redweasel),
 [J. Goswami](https://github.com/jishnuxx)
 [O. Kaczmarek](https://github.com/olaf-kaczmarek), 
@@ -181,8 +175,7 @@ M. Rodekamp,
 [H. Sandmeyer](https://github.com/hsandmeyer), 
 [C. Schmidt](https://github.com/schmidt74), 
 [P. Scior](https://github.com/philomat), 
-[H.-T. Shu](https://github.com/haitaoshu), 
-[G. Curell](https://github.com/grantcurell/)
+[H.-T. Shu](https://github.com/haitaoshu)
 
 ## Citing SIMULATeQCD
 
@@ -191,11 +184,11 @@ If you are using this code in your research please cite:
 - *L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, Bielefeld University (2021), [https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
 - *L. Altenkort, D.Bollweg, D. A. Clarke, O. Kaczmarek, L. Mazur, C. Schmidt, P. Scior, H.-T. Shu, HotQCD on Multi-GPU Systems, PoS LATTICE2021, Bielefeld University (2021), [https://arxiv.org/abs/2111.10354](https://arxiv.org/abs/2111.10354)*
 
-## Acknowledgment
+## Acknowledgments
 
 - We acknowledge support by the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation) through the CRC-TR 211 
 'Strong-interaction matter under extreme conditions'– project number 315477589 – TRR 211.
 - This work was partly performed in the framework of the PUNCH4NFDI consortium supported by DFG fund "NFDI 39/1", Germany.
 - This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance 
 Computing (SciDAC) award Computing the Properties of Matter with Leadership Computing Resources.
-- We would also like to acknowedge enlightening technical discussions with the ILDG team, in particular H. Simma. 
+- We like to acknowledge enlightening technical discussions with the ILDG team, in particular H. Simma.

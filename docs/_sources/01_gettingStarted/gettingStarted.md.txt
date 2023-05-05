@@ -1,5 +1,31 @@
-Getting started
-===============
+# Getting started
+
+There are two possible ways to build SIMULATeQCD. If you are running somewhere where you have superuser privileges,
+we recommend that you use the [container build](./gettingStarted.md#build-container). The container will automatically grab all software you need.
+If you don't have superuser privileges, you will have to [compile manually](./gettingStarted.md#build-manual), and ensure that all needed
+software already exists on the system you're using.
+
+## Prerequisites
+
+Before cloning anything, we recommend you get `git-lfs`. The reason we recommend this is that we have several configurations
+used to test some of the SIMULATeQCD methods. These are too large to keep in a conventional repository, so we host them
+using `git-lfs`. SIMULATeQCD will work without it, but you won't be able to run the tests.
+
+You can install [git-lfs](https://git-lfs.github.com/) by 
+```shell
+# For Debian-based system
+sudo apt install git-lfs
+ 
+# For Arch-based system
+sudo pacman -S git-lfs
+```
+and activate it by calling `git lfs install`. If you do not have superuser privileges where you are, you can use [wget](https://www.gnu.org/software/wget/) as follows:
+```shell
+wget https://github.com/git-lfs/git-lfs/releases/download/v3.0.2/git-lfs-linux-amd64-v3.0.2.tar.gz
+tar -xf git-lfs-linux-amd64-v3.0.2.tar.gz
+PREFIX=/path/to/install/dir ./install.sh
+```
+and you can activate it with `/path/to/install/dir/bin/git-lfs install`. Finally you will need to add `export PATH=/path/to/install/dir/bin:$PATH` to your `.bashrc`.
 
 ## How to download the code
 
@@ -8,37 +34,29 @@ The code can then be cloned to your folder using:
 ```shell
 git clone https://github.com/LatticeQCD/SIMULATeQCD.git
 ```
-If you are using two-factor authentication on GitHub, you may need to use the command
+If you are using two-factor authentication on GitHub, which is likely the case if you
+are interested in developing SIMULATeQCD, you will need to use the command
 ```shell
 git clone git@github.com:LatticeQCD/SIMULATeQCD.git
 ```
 
-## Prerequisites
+## Build (manual) 
 
-The following software is required to compile SIMULATeQCD:
+If you would like to use AMD, would like to make substantial contributions to SIMULATeQCD, 
+or don't have superuser privileges, you will need to do a manual build. 
+If you have an NVIDIA GPU, are running locally, and don't plan to do much development, we recommend you
+skip down to the [container build](./gettingStarted.md#build-container) section, because the container will take
+care of all the hassle of finding and installing software automatically.
 
-1. [git-lfs](https://git-lfs.github.com/) to also be able to clone test configurations:
-    ```shell
-    # For Debian-based system
-    sudo apt install git-lfs
-     
-    # For Arch-based system
-    sudo pacman -S git-lfs
-    ```
-    and activate it by calling `git lfs install`. If you do not have superuser privileges where you are, you can use [wget](https://www.gnu.org/software/wget/) as follows:
-    ```shell
-    wget https://github.com/git-lfs/git-lfs/releases/download/v3.0.2/git-lfs-linux-amd64-v3.0.2.tar.gz
-    tar -xf git-lfs-linux-amd64-v3.0.2.tar.gz
-    PREFIX=/path/to/install/dir ./install.sh
-    ```
-    and you can activate it with `/path/to/install/dir/bin/git-lfs install`. Finally you will need to add `export PATH=/path/to/install/dir/bin:$PATH` to your `.bashrc`.
-2. `cmake` (Some versions have the "--pthread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
-3. `C++` compiler with `C++17` support.
-4. `MPI` (e.g. `openmpi-4.0.4`).
-5. `CUDA Toolkit` version 11+ or `HIP`.
-6. `pip install -r requirements.txt` to build the documentation.
+For the manual build, you will need to make sure the following are installed:
 
-## Building source with CUDA
+1. `cmake` (Some versions have the "--pthread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
+2. `C++` compiler with `C++17` support.
+3. `MPI` (e.g. `openmpi-4.0.4`).
+4. `CUDA Toolkit` version 11+ or `HIP`.
+5. `pip install -r requirements.txt` to build the documentation.
+
+### Building source with CUDA
 To build the source with CUDA, you need to have the `CUDA Toolkit` version 11.0 or higher installed on your machine.
 To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
 ```shell
@@ -56,7 +74,7 @@ make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
-## Building source with HIP for NVIDIA platforms (Experimental!)
+### Building source with HIP for NVIDIA platforms (Experimental!)
 
 In order to build the source with HIP for NVIDIA platforms, 
 you need to make sure that
@@ -84,7 +102,7 @@ make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
-## Building source with HIP for AMD platforms (Experimental!)
+### Building source with HIP for AMD platforms (Experimental!)
 
 In order to build the source with HIP for AMD platforms, 
 you need to make sure that
@@ -110,13 +128,51 @@ make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
+## Build (container) 
+
+### Install Podman
+
+**THIS REQUIRES ADMIN PRIVILIGES** If you are doing this on a supercomputer you will likely need to ask your admin to perform the below.
+
+#### On RHEL-based (Rocky/CentOS/RHEL) systems
+
+Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.
+
+#### On Arch-based systems
+
+See [install instructions](https://wiki.archlinux.org/title/Podman). If you have installed Arch before the upgrade to shadow (as in /etc/shadow) 4.11.1-3 rootless podman may encounter some issues. The build script will check for these anomalies and prompt you if you need to fix them.
+
+#### Other \*NIX Systems
+
+If you have a non RHEL-based OS see [here](https://podman.io/getting-started/installation.html#linux-distributions) for installation instructions.
+
+### Make sure Podman works
+
+Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, simulateqcd will not run correctly.
+
+If you see the error:
+
+```
+ERRO[0014] cannot find UID/GID for user u6042105: No subuid ranges found for user "u6042105" in /etc/subuid - check rootless mode in man pages.
+```
+
+this indicates someone has modified the standard user privileges or you are running an older operating system. To fix this error run `sudo usermod --add-subuids 100000-165535 --add-subgids 100000-165535 <YOUR_USER> && podman system migrate`
+
+**WARNING**: If you are SSH'ing to your server, make sure you ssh as a user and **not** root. If you SSH as root and then `su` to user, podman will issue `ERRO[0000] XDG_RUNTIME_DIR directory "/run/user/0" is not owned by the current user`. This happens because the user that originally setup `/run` is root rather than your user.
+
+### Build the code
+
+1. Update `podman-build/config.yml` with any settings you would like to use for your build. This includes your target output directory.
+   1. You can run `<where_you_downloaded>/simulate_qcd.sh list` to get a list of possible build targets.
+   2. If you want to change where the code outputs to, you need to update OUTPUT_DIRECTORY in `podman-build/config.yml`. It will create a folder called build in the specified folder.
+2. Run `chmod +x ./simulate_qcd.sh && ./simulate_qcd.sh build`
 
 ## How to run
 
 
 ### On a cluster using `slurm`
 
-If you are on a cluster that uses slurm, e.g. the Bielefeld GPU cluster, then, inside of your sbatch script do not use mpiexec or mpirun, but instead do
+If you are on a cluster that uses slurm, then inside of your sbatch script do not use `mpiexec` or `mpirun`, but instead do
 ```shell
 srun -n <NoGPUs> ./<program> 
 ```
