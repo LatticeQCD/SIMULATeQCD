@@ -1,8 +1,8 @@
-/* 
+/*
  * explicit_instantiation_macros.h
- * 
+ *
  * L. Mazur, 28 Dec 2018
- * 
+ *
  * Header to initialize preprocessor variables and helper macros to explicitly instantiate templates. This is needed,
  * since we don't necessarily want to compile everything; we can save compile time by compiling only the precision,
  * Halosize, etc. which is required for a particular program. Unfortunately macros have to be defined from the
@@ -11,9 +11,7 @@
  *
  */
 
-#ifndef EXPLICITINSTANTIATION_H
-#define EXPLICITINSTANTIATION_H
-
+#pragma once
 #include "preprocessorWrapper.h"
 
 
@@ -549,7 +547,7 @@ enum CompressionType {
   IF(BOOL(HALODEPTHSPIN_2)) (STACK_LOOP_PLHHSN(INIT_TEMPLATES, floatT, LAYOUT, HALO_DEPTH, 2)) \
   IF(BOOL(HALODEPTHSPIN_3)) (STACK_LOOP_PLHHSN(INIT_TEMPLATES, floatT, LAYOUT, HALO_DEPTH, 3)) \
   IF(BOOL(HALODEPTHSPIN_4)) (STACK_LOOP_PLHHSN(INIT_TEMPLATES, floatT, LAYOUT, HALO_DEPTH, 4))
-  
+
 
 #define HALO_LOOP_PLHHSN(INIT_TEMPLATES, floatT, LAYOUT) \
     IF(BOOL(HALODEPTH_0)) (HALOSPIN_LOOP_PLHHSN(INIT_TEMPLATES, floatT, LAYOUT, 0)) \
@@ -596,7 +594,7 @@ enum CompressionType {
   IF(BOOL(HALODEPTHSPIN_2)) (STACK_LOOP_PLHHSN_HALF(INIT_TEMPLATES, floatT, LAYOUT, HALO_DEPTH, 2)) \
   IF(BOOL(HALODEPTHSPIN_3)) (STACK_LOOP_PLHHSN_HALF(INIT_TEMPLATES, floatT, LAYOUT, HALO_DEPTH, 3)) \
   IF(BOOL(HALODEPTHSPIN_4)) (STACK_LOOP_PLHHSN_HALF(INIT_TEMPLATES, floatT, LAYOUT, HALO_DEPTH, 4))
-  
+
 
 #define HALO_LOOP_PLHHSN_HALF(INIT_TEMPLATES, floatT, LAYOUT) \
     IF(BOOL(HALODEPTH_0)) (HALOSPIN_LOOP_PLHHSN_HALF(INIT_TEMPLATES, floatT, LAYOUT, 0)) \
@@ -620,4 +618,3 @@ enum CompressionType {
 
 
 
-#endif //EXPLICITINSTANTIATION_H

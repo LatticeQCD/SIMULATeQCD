@@ -1,8 +1,8 @@
-/* 
- * initGPUIndexer.cpp                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * initGPUIndexer.cpp
+ *
+ * L. Mazur
+ *
  */
 
 #include "../../define.h"

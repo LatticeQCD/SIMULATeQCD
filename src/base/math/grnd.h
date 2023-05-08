@@ -101,7 +101,7 @@ private:
 
     };
     ~RNDHeader(){};
-    
+
     template<bool onDevice>
     friend class grnd_state;
 
@@ -180,7 +180,7 @@ public:
         return *this;
     }
 
-    void write_to_file(const std::string &fname, CommunicationBase &comm, Endianness en=ENDIAN_BIG); 
+    void write_to_file(const std::string &fname, CommunicationBase &comm, Endianness en=ENDIAN_BIG);
     void read_from_file(const std::string &fname, CommunicationBase &comm);
 
     template<class floatT, Layout LatticeLayout, size_t HaloDepth>

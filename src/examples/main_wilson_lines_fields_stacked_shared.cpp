@@ -1,8 +1,8 @@
-/* 
+/*
  * main_wilson_lines_fields_stacked_shared.cpp
- * 
+ *
  * Rasmus Larsen, 23 Mar 2021
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -13,7 +13,7 @@
 using namespace std;
 
 #define PREC double
-#define STACKS 20 
+#define STACKS 20
 #define MY_BLOCKSIZE 256
 
 #define SHARED 20
@@ -39,7 +39,7 @@ struct ShiftVectorOne{
 
     // takes vector from mu=1 direction from up or down 1 and saves and returns it
     // needed since A(x).A(x+r) product is done by making a copy of A and then move it around
-    // and takes the dot product between original and moved vector    
+    // and takes the dot product between original and moved vector
     if(Up == true){
         Stmp =  _gaugeIn.getLink(GInd::getSiteMu(GInd::site_up(site, direction),1));
     }
@@ -100,7 +100,7 @@ struct DotAlongXY{
 
     /// Constructor to initialize all necessary members.
     DotAlongXY(Gaugefield<floatT,true,HaloDepth> &gaugeIn,int shiftx,int shifty) :
-            _gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty) 
+            _gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty)
    {
     }
 
@@ -299,10 +299,10 @@ __global__ void DotAlongXYIntervalStackedShared(MemoryAccessor _redBase, gaugeAc
 
 
         for(int tt = 0; tt < (int)GInd::getLatData().ltFull; tt += 1){
-         
+
 
                GSU3<floatT> su3Temp = _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it+tt)),0));
-               Links_shared[ix]     = _gaugeIn.getLink(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy_shift, (size_t)iz, (size_t)(it+tt)),1));                     
+               Links_shared[ix]     = _gaugeIn.getLink(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy_shift, (size_t)iz, (size_t)(it+tt)),1));
 
                __syncthreads();
 
@@ -485,7 +485,7 @@ std::vector<GCOMPLEX(floatT)> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDep
 
 
 // calculates 1 wilson line of length length
-// The wilson line is calculated from any spacetime point 
+// The wilson line is calculated from any spacetime point
 template<class floatT,size_t HaloDepth>
 struct CalcWilson{
 
@@ -572,7 +572,7 @@ void gMoveOne( Gaugefield<floatT,true,HaloDepth> &gauge , int direction, int up)
         }
         else{
             gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,0,false>(gauge));
-        }            
+        }
     }
 
     if(direction == 1){
@@ -636,7 +636,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim());
 
-    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl; 
+    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl;
 
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
@@ -689,7 +689,7 @@ int main(int argc, char *argv[]) {
  //   rootLogger.info("Read configuration");
 //    gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
-    
+
 //    std::string gauge_file;
 //    gauge_file = param.gauge_file() + std::to_string(param.confnumber());
 //    rootLogger.info("Starting from configuration: " ,  gauge_file);
@@ -699,7 +699,7 @@ int main(int argc, char *argv[]) {
 ///////////// gauge fixing
 
     if(param.load_conf() ==2){
-    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge); 
+    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge);
     int ngfstep=0;
     PREC gftheta=1e10;
     const PREC gtol=1e-6;          /// When theta falls below this number, stop...
@@ -759,13 +759,13 @@ int main(int argc, char *argv[]) {
         Correlator<false,GCOMPLEX(PREC)> CPUnormR(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUnormR(CPUnormR.getAccessor());
 
-	
+
 ///////////////
 
     std::vector<GCOMPLEX(PREC)> dotVector;
     GCOMPLEX(PREC) * results;
     results = new GCOMPLEX(PREC)[GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY];
-    ///  
+    ///
     timer.start();
     //// loop over length of wilson lines
     for(int length = 1; length < 2;length++){
@@ -825,18 +825,18 @@ int main(int argc, char *argv[]) {
                  }
                  else{
                   //   dotVector = gDotAlongXYStacked<PREC,HaloDepth,STACKS>(gauge,x0,y0,redBase);
-                     dotVector = gDotAlongXYStackedShared<PREC,HaloDepth,SHARED>(gauge,x0,y0,redBase);     
+                     dotVector = gDotAlongXYStackedShared<PREC,HaloDepth,SHARED>(gauge,x0,y0,redBase);
                      for(int j = 0;j < STACKS ; j++){
                          results[i+STACKS-1-j] = dotVector[j];
-                     } 
+                     }
                  }
             }
             else{
                  dot = gDotAlongXY(gauge,x0,0,redBase);
             }
 
-            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[0] ,  " " ,  dotVector[1]); 
-    
+            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[0] ,  " " ,  dotVector[1]);
+
             }
 
         x0 = -1;
@@ -865,7 +865,7 @@ int main(int argc, char *argv[]) {
 
             // save results
             if(length == 1){
-                
+
 
 	        int ir2 = 0;
 	        if(x0 > (int)GInd::getLatData().globLX/2){
@@ -979,7 +979,7 @@ int main(int argc, char *argv[]) {
 	    corrComplex2 = corrComplex2/real(corrComplex3);
 	}
 
-    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));            
+    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));
     difference += abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2));
     if(abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2)) > 1e-10){
 	   rootLogger.info(" Error, large difference");

@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 17.11.18.
 //
 
-#ifndef SU3EXP_H
-#define SU3EXP_H
-
+#pragma once
 #include "../../define.h"
 #include "gsu3.h"
 #include "float.h"
@@ -77,4 +75,3 @@ __device__ __host__ inline void SU3Exp(const GSU3<floatT> inGSU3, GSU3<floatT> &
     outGSU3 = q_0 * gsu3_one<floatT>() + q_1 * inGSU3 + q_2 * inGSU3 * inGSU3;
 }
 
-#endif //SU3EXP_H

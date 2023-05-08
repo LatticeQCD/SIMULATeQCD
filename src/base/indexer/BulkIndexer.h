@@ -68,7 +68,7 @@ struct gSite {
           << "coordFull: " << site.coordFull.x << " " << site.coordFull.y << " " << site.coordFull.z << " " << site.coordFull.t << " "
           << "isite: " << site.isite << " isiteFull: " << site.isiteFull;
         return s;
-    
+
     }
     __host__ inline std::string getStr() {
         std::ostringstream s;

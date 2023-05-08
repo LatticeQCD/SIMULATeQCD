@@ -1,9 +1,9 @@
 # Generate quenched gauge configurations
 
-To learn more about the specifics of the gauge updates, take a look at 
+To learn more about the specifics of the gauge updates, take a look at
 [Gauge Updates (HB and OR)](../05_modules/gaugeUpdates.md).
-To generate quenched gauge configurations, `make` the executable `GenerateQuenched`. 
-You can then find it under `applications/GenerateQuenched`. The example parameter file is 
+To generate quenched gauge configurations, `make` the executable `GenerateQuenched`.
+You can then find it under `applications/GenerateQuenched`. The example parameter file is
 found under `parameter/GenerateQuenched.param` and looks like this:
 ```shell
 #parameter file for GenerateQuenched
@@ -28,7 +28,7 @@ nsweeps_thermal_HBwithOR = 4000
 ```
 
 
-Calling `./GenerateQuenched GenerateQuenched.param` will output gauge configurations (in nersc format with double precision and 2/3 compression) and their corresponding random number state in the folder `output_dir`. The output looks like this: e.g. 
+Calling `./GenerateQuenched GenerateQuenched.param` will output gauge configurations (in nersc format with double precision and 2/3 compression) and their corresponding random number state in the folder `output_dir`. The output looks like this: e.g.
 ```shell
 conf_s064t16_b0687361_a_U000500
 conf_s064t16_b0687361_a_U001000
@@ -42,16 +42,16 @@ With `nconfs` you can specify how many configurations should be generated before
 With `nsweeps_ORperHB` you can specify how many OR updates should be done for each HeatBath update.
 With `nsweeps_HBwithOR` you can specify how many HB updates (with `nsweeps_ORperHB` OR updates per HB) should be done between each saved configuration.
 
-## Thermalization parameters 
+## Thermalization parameters
 These are required when starting a new stream.
 With `start` you can specify with which kind of configuration the thermalization should start.
  The options are `one` (all links = unity matrix), `fixed_random` (all links = same random SU3 matrix) and `all_random`
-  (a random configuration of SU3 matrices). 
+  (a random configuration of SU3 matrices).
 With  `nsweeps_thermal_HB_only` you can specify how many pure HB updates should be done after the cold start.
 With `nsweeps_thermal_HBwithOR` you can specify how many HBOR updates should be done after the pure HB updates.
 The seed for the random number generator is the time since Unix epoch in milliseconds and is output to stdout.
 
-## Parameters for resuming a previous run 
+## Parameters for resuming a previous run
 With `prev_conf` you can specify the path of the last configuration you generated.
 With `conf_nr` you can specify the number of this last configuration, so that the next configuration's number will be ( previous_number + `nsweeps_ORperHB` ). Don't forget to set `stream` to the correct value.
 With `prev_rand` you can specify the path of the according random number state of that configuration. If you don't specify this then a new random number state will be generated (The seed for this is also time since Unix epoch in milliseconds and is output to stdout.)

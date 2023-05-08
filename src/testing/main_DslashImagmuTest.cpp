@@ -1,4 +1,4 @@
-/* 
+/*
  * main_DslashImagmuTest.cu
  *
  * J. Goswami

@@ -1,12 +1,12 @@
-/* 
- * staticArray.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * staticArray.h
+ *
+ * L. Mazur
+ *
  */
 #include <iostream>
-#ifndef STATIC_ARRAY_H
-#define STATIC_ARRAY_H
+
+#pragma once
 
 template<class T, size_t N>
 
@@ -82,4 +82,3 @@ class StaticArray<T, 0>{
     StaticArray(__attribute__((unused)) Args&&... args){}
 };
 
-#endif

@@ -1,8 +1,8 @@
-/* 
- * main_gradientFlow_example.cpp                                                               
- * 
+/*
+ * main_gradientFlow_example.cpp
+ *
  * Lukas Mazur, 25 Nov 2018
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"

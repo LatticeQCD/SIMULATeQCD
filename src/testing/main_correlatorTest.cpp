@@ -1,4 +1,4 @@
-/* 
+/*
  * main_correlatorTest.cpp
  *
  * D. Clarke
@@ -10,7 +10,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 
-#define PREC double 
+#define PREC double
 #define HAVECONFIG true
 
 /// INTENT:  IN--CPUcorr, CPUnorm, testName, r2max, referenceValue; OUT--lerror

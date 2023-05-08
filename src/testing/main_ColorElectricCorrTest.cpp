@@ -3,7 +3,7 @@
  *
  * L. Altenkort, 14 Jan 2019
  *
- * Tests the Color-Electric Correlator (ColorElectricCorr) using the multi-GPU framework. 
+ * Tests the Color-Electric Correlator (ColorElectricCorr) using the multi-GPU framework.
  * Read sketch from right to left (time advances to the left, space advances to the top)
  *          <----   <------  ^ <---^
  *          |  -  |          |  -  |   +  flipped = "going downwards" + "going upwards"

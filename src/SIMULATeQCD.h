@@ -1,12 +1,11 @@
-/* 
- * SIMULATeQCD.h                                                               
- * 
- * Principal header file containing base, spinor, and gauge classes. 
- * 
+/*
+ * SIMULATeQCD.h
+ *
+ * Principal header file containing base, spinor, and gauge classes.
+ *
  */
 
-#ifndef SIMULATE_QCD_H
-#define SIMULATE_QCD_H
+#pragma once
 
 #include "define.h"
 #include "explicit_instantiation_macros.h"
@@ -76,20 +75,14 @@
 #include "gauge/constructs/derivative5link.h"
 #include "gauge/constructs/derivative7link.h"
 #include "gauge/constructs/derivativeLepagelink.h"
-#include "gauge/constructs/derivativeProjectU3Constructs.h"
+#include "gauge/constructs/derivativeProjectU3.h"
 #include "gauge/constructs/fat7LinkConstructs.h"
 #include "gauge/constructs/gsvd.h"
 #include "gauge/constructs/hisqForceConstructs.h"
-#include "gauge/constructs/linkLepageConstructs.h"
-#include "gauge/constructs/linkStaple3Constructs.h"
-#include "gauge/constructs/linkStaple5Constructs.h"
-#include "gauge/constructs/linkStaple7Constructs.h"
-#include "gauge/constructs/naikConstructs.h"
 #include "gauge/constructs/naikDerivativeConstructs.h"
 #include "gauge/constructs/PlaqConstructs.h"
-#include "gauge/constructs/projectU3Constructs.h"
+#include "gauge/constructs/projectU3.h"
 #include "gauge/constructs/RectConstructs.h"
 
 #include "spinor/spinorfield.h"
 
-#endif // SIMULATE_QCD_H

@@ -1,8 +1,8 @@
-/* 
- * main_SpinorHaloTest.cpp                                                               
- * 
+/*
+ * main_SpinorHaloTest.cpp
+ *
  * L. Mazur
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"

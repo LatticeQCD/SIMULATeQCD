@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gaugeFixing.cpp
  *
  * D. Clarke
@@ -21,7 +21,7 @@
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 #include "../modules/observables/WilsonLineCorrelator.h"
 
-#define PREC double 
+#define PREC double
 
 template<class floatT>
 struct gfixParam : LatticeParameters {

@@ -1,8 +1,8 @@
-# 
-# force_profiling.param                                                               
-# 
+#
+# force_profiling.param
+#
 # Parameter file for HISQ action.
-# 
+#
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass

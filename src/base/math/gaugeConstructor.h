@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 17.12.18.
 //
 
-#ifndef GAUGECONSTRUCTOR_H
-#define GAUGECONSTRUCTOR_H
-
+#pragma once
 #include "generalAccessor.h"
 #include "gsu3.h"
 #include "../../modules/HISQ/staggeredPhases.h"
@@ -366,4 +364,3 @@ public:
     }
 };
 
-#endif //GAUGECONSTRUCTOR_H

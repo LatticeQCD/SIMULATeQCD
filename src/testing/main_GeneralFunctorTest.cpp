@@ -1,9 +1,9 @@
-/* 
- * main_GeneralFunctorTest.cpp                                                               
- * 
+/*
+ * main_GeneralFunctorTest.cpp
+ *
  * This file includes a lot of examples for how to our coding paradigm, which we call "general functor syntax".
  * Please start reading at run_func below.
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -60,7 +60,7 @@ struct QuickDslash {
                     * spinorIn.getElement(GInd::site_dn(site, mu));
 
 #define C_3000 (-1./48.0)
-            
+
             Stmp += static_cast<floatT>(C_3000)
                     * gAccN.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_up(site, mu), mu)))
                     * spinorIn.getElement(GInd::site_up_up_up(site, mu, mu, mu));

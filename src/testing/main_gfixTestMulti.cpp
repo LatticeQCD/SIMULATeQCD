@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gfixTestMulti.cu
  *
  * D. Clarke
@@ -12,7 +12,7 @@
 #include "../modules/gaugeFixing/gfix.h"
 #include "testing.h"
 
-#define PREC double 
+#define PREC double
 
 /// Get tr U for each link
 template<class floatT,size_t HaloDepth>
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     const int  ngfstepMAX = 30;
     const int  nunit      = 20;
     const PREC gtol       = 1e-6;
-    const PREC tolp       = 1e-14; 
+    const PREC tolp       = 1e-14;
     param.latDim.set(LatDim);
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/gfixTestMulti.param", argc, argv);

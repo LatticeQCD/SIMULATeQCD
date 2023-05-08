@@ -1,6 +1,6 @@
-/* 
- * main_HisqSmearing_Create_Multi.cpp                                                               
- * 
+/*
+ * main_HisqSmearing_Create_Multi.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -13,12 +13,12 @@
 int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
-    
+
     CommunicationBase commBase(&argc, &argv);
 
     RhmcParameters param;
     param.readfile(commBase,"../parameter/tests/run.param", argc, argv);
-    
+
     commBase.init(param.nodeDim());
 
     const size_t HaloDepth = 2;
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     typedef GIndexer<All,HaloDepth> GInd;
     initIndexer(HaloDepth,param,commBase);
     grnd_state<true> d_rand;
-  
+
     initialize_rng(1337,d_rand);
     rootLogger.info("Initialize Gaugefield");
     Gaugefield<PREC, true, HaloDepth> gauge_in(commBase);
@@ -40,8 +40,8 @@ int main(int argc, char *argv[]) {
     gauge_in.updateAll();
     StopWatch<true> timer;
 
-    
-    timer.start();    
+
+    timer.start();
     smearing.SmearAll();
     timer.stop();
     rootLogger.info("Time for full smearing: " ,  timer);
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     if (param.nodeDim[1] + param.nodeDim[2] == 4 ) {
         filename_out = "../test_conf/pgpu_naik_smearing_multi_x.nersc";
     }
-    
+
     gauge_naik.writeconf_nersc(filename_out);
 
     return 0;

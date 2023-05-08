@@ -1,13 +1,11 @@
-/* 
- * smearParameters.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * smearParameters.h
+ *
+ * J. Goswami
+ *
  */
 
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
-
+#pragma once
 #include "../../define.h"
 template <class floatT>
 struct SmearingParameters{
@@ -43,4 +41,3 @@ floatT get_naik_epsilon_from_amc(floatT amc) {
     return amc_sqr * (-27./40. + amc_sqr * (327./1120. + amc_sqr * (-15607./268800. - amc_sqr * 73697./3942400.)));
 }
 
-#endif //PARAMETERS_H

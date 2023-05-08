@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 19.11.18.
 //
 
-#ifndef GRADIENTFLOW_H
-#define GRADIENTFLOW_H
-
+#pragma once
 #if ADAPTIVE_STEPSIZE
 #include "su3rungeKutta3AdStepSize.h"
 #include "su3rungeKutta3AdStepSizeAllGPU.h"
@@ -187,4 +185,3 @@ public:
 #endif
 #endif
 
-#endif //GRADIENTFLOW_H

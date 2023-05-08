@@ -1,10 +1,10 @@
-/* 
- * stopWatch.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * stopWatch.h
+ *
+ * L. Mazur
+ *
  * A class to time events/function calls
- * 
+ *
  */
 #ifndef _INC_TIMER
 #define _INC_TIMER
@@ -28,14 +28,14 @@ class StopWatch {
 
     host_clock::time_point _host_start_time, _host_stop_time;
 
-    inline void _host_start() { 
-        _host_start_time = host_clock::now(); 
+    inline void _host_start() {
+        _host_start_time = host_clock::now();
     }
 
     inline double _host_stop() {
         float time;
         _host_stop_time = host_clock::now();
-        time = std::chrono::duration_cast<std::chrono::microseconds>(_host_stop_time - 
+        time = std::chrono::duration_cast<std::chrono::microseconds>(_host_stop_time -
                 _host_start_time)
             .count();
         _elapsed += time/1000;
@@ -76,7 +76,7 @@ class StopWatch {
         }
     }
 
-    inline void start() { 
+    inline void start() {
         if(device){
             gpuError_t gpuErr = gpuEventRecord(_device_start_time, nullptr);
             if (gpuErr) {
@@ -117,22 +117,22 @@ class StopWatch {
 
     StopWatch() : _elapsed(0.0), _bytes(0), _flops(0) {}
 
-    inline void start() { 
+    inline void start() {
         if(device == true){
-            throw std::runtime_error( stdLogger.fatal("StopWatch.start() error:", 
+            throw std::runtime_error( stdLogger.fatal("StopWatch.start() error:",
                         "No device timer support with that compiler!"));
         }
         else{
-            _host_start(); 
+            _host_start();
         }
     }
-    inline double stop() { 
+    inline double stop() {
         if(device == true){
-            throw std::runtime_error( stdLogger.fatal("StopWatch.stop() error:", 
+            throw std::runtime_error( stdLogger.fatal("StopWatch.stop() error:",
                         "No device timer support with that compiler!"));
         }
         else{
-            return _host_stop(); 
+            return _host_stop();
         }
     }
 #endif
@@ -174,8 +174,8 @@ class StopWatch {
 
     //! set how many bytes were processed (for an MB/s output)
     void setBytes(const long b ) { _bytes = b ; }
-    //! set how many FLOPs were calculated 
-    void setFlops(const long f ) { _flops = f ; } 
+    //! set how many FLOPs were calculated
+    void setFlops(const long f ) { _flops = f ; }
 
     //! return MBytes/s (be sure to call setBytes() before)
     [[nodiscard]] double mbs() const {
@@ -200,7 +200,7 @@ class StopWatch {
         StopWatch<device> & operator+=(const StopWatch<_device> & rhs) {
             _elapsed += rhs._elapsed;
             return *this ;
-        }   
+        }
 
     //! Substract two timings (_bytes and flops are not transfered atm)
     template<bool _device>
@@ -214,7 +214,7 @@ class StopWatch {
         StopWatch<device> & operator-=(const StopWatch<_device> & rhs) {
             _elapsed -= rhs._elapsed;
             return *this ;
-        }   
+        }
 
 
     StopWatch<device> operator*(const int & rhs) {
@@ -226,7 +226,7 @@ class StopWatch {
     StopWatch<device> & operator*=(const int & rhs) {
         _elapsed *= rhs;
         return *this ;
-    }   
+    }
 
 
     //! Calculate ratio of two timings
@@ -240,7 +240,7 @@ class StopWatch {
     StopWatch<device> & operator/=(const int & rhs) {
         _elapsed /= rhs;
         return *this ;
-    }   
+    }
 
     template<bool _device>
         inline friend std::ostream &operator<<(std::ostream &stream,
