@@ -1,3 +1,12 @@
+/* 
+ * main_CheckConf.cpp                                                               
+ * 
+ * L. Altenkort 
+ * 
+ * A short main to check whether a configuration file is corrupt. 
+ * 
+ */
+
 #include "../SIMULATeQCD.h"
 
 struct CheckParams : LatticeParameters {
@@ -62,8 +71,6 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
     if ( (plaq > 1.0) || (plaq < 0.0) ) {
         throw std::runtime_error(rootLogger.fatal("Plaquette should not be negative or larger than 1."));
     }
-
-
 }
 
 

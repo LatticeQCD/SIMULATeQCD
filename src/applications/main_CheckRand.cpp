@@ -1,3 +1,12 @@
+/* 
+ * main_CheckRand.cpp                                                               
+ * 
+ * L. Altenkort 
+ * 
+ * A short main to check whether a random state file is corrupt.
+ * 
+ */
+
 #include "../SIMULATeQCD.h"
 
 struct CheckParams : LatticeParameters {

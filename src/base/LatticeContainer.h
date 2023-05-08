@@ -283,9 +283,6 @@ public:
         elemType result = 0;
 
         if (onDevice) {
-            // elemType *d_out = NULL;
-            // gpuMalloc((void **) &d_out, sizeof(elemType));
-            // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
 
             gpuError_t gpuErr = CubReduceMax(NULL, &temp_storage_bytes, ContainerArray->getPointer(),
@@ -300,7 +297,6 @@ public:
             gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
             if (gpuErr)
                 GpuError("Reductionbase.h: Failed to copy data", gpuErr);
-            // gpuFree(d_out);
         } else {
             rootLogger.warn("Max Host reduction has not been properly tested. Check the results and remove this warning");
             LatticeContainerAccessor acc = getAccessor();

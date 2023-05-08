@@ -3,6 +3,8 @@
  * 
  * R. Larsen, S. Ali, D. Clarke
  * 
+ * A main to convert a configuration from one format into another.
+ * 
  */
 
 #include "../SIMULATeQCD.h"

@@ -3,6 +3,8 @@
  *
  * Luis Altenkort, 2 Apr 2019
  *
+ * A main for generating pure SU(3) configurations using heatbath and overrelaxation updates.
+ * 
  */
 
 #include "../SIMULATeQCD.h"

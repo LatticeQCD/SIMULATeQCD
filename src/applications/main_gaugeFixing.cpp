@@ -4,8 +4,9 @@
  * D. Clarke
  *
  * GPU code to fix a configuration to the Coulomb gauge. Computes average, singlet, and octet Polyakov loop correlations
- * as well as Wilson line correlators. This does not work for multiGPU, because it is hard to find a way to calculate
- * correlations on multiGPU.
+ * as well as Wilson line correlators. Will also compute average thermal Wilson line, which is sometimes needed to normalize
+ * aforementioned Polyakov loop correlators to the long-distance behavior. This main does not work for multiGPU, because it 
+ * is hard to find a way to calculate correlations efficiently on multiGPU.
  *
  * For the Polyakov loop correlations, this program uses functions defined in the header file. There are more general
  * functions to measure such correlators in ../math/correlators.h, but these functions are slower because they call a
@@ -13,6 +14,8 @@
  *
  */
 
+
+#include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/observables/PolyakovLoop.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
@@ -31,6 +34,7 @@ struct gfixParam : LatticeParameters {
     Parameter<std::string> SavedConfName;
     Parameter<bool>        PolyakovLoopCorr;
     Parameter<bool>        WilsonLineCorr;
+    Parameter<bool>        ThermalWilsonLine;
     Parameter<bool>        SaveConfig;
 
     gfixParam() {
@@ -39,9 +43,10 @@ struct gfixParam : LatticeParameters {
         addDefault (numunit   ,"numunit"   ,20);
         addOptional(cml       ,"mlight");
         addOptional(cms       ,"mstrange");
-        addDefault(PolyakovLoopCorr, "PolyakovLoopCorr", false);
-        addDefault(WilsonLineCorr  , "WilsonLineCorr"  , false);
-        addDefault(SaveConfig      , "SaveConfig"      , false);
+        addDefault(PolyakovLoopCorr , "PolyakovLoopCorr" , false);
+        addDefault(WilsonLineCorr   , "WilsonLineCorr"   , false);
+        addDefault(ThermalWilsonLine, "ThermalWilsonLine", false);
+        addDefault(SaveConfig       , "SaveConfig"       , false);
         add(measurements_dir, "measurements_dir");
         add(SavedConfName   , "SavedConfName");
     }
@@ -83,9 +88,9 @@ int main(int argc, char *argv[]) {
     wlcfilename << param.measurements_dir() << "wlc_l" << param.latDim[0] << param.latDim[3] << "f21";
 
     if (param.beta.isSet()) {
-        cbeta<<std::setw(4)<<(int)(1000*param.beta());
-        plcfilename<<"b"<<cbeta.str();
-        wlcfilename<<"b"<<cbeta.str();
+        cbeta << std::setw(4) << (int)(1000*param.beta());
+        plcfilename << "b" << cbeta.str();
+        wlcfilename << "b" << cbeta.str();
     }
     if (param.cml.isSet()) {
         plcfilename << "m" << param.cml();
@@ -119,17 +124,19 @@ int main(int argc, char *argv[]) {
         wlcresultfile.open(wlcfilename.str());
         rootLogger.info("WilsonLineCorr OUTPUT TO FILE: " ,  wlcfilename.str());
     }
- 
+
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
     rootLogger.info("Read configuration");
     gauge.readconf_nersc(param.GaugefileName());
-    gauge.updateAll();
 
     /// Measure the Polyakov loop and report to user.
     GCOMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
     rootLogger.info("# POLYAKOV LOOP :: " ,  ploop);
 
+
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING
+
+
     rootLogger.info("GAUGE FIXING...");
     if (commBase.MyRank()==0) std::cout << "\nngfstep\t  act\t         act diff\ttheta\n";
     timer.start();
@@ -164,6 +171,14 @@ int main(int argc, char *argv[]) {
     /// Optionally save configuration.
     if ( param.SaveConfig() ) gauge.writeconf_nersc(param.SavedConfName(), 2, 2);
 
+    /// ------------------------------------------------------------------------------------ AVERAGE THERMAL WILSON LINE
+
+    
+    if ( param.ThermalWilsonLine() ) {
+        rootLogger.info("CALCULATING AVERAGE THERMAL WILSON LINE...");
+    }
+
+
     /// ---------------------------------------------------------------------------------------POLYAKOV LOOP CORRELATORS
     if ( param.PolyakovLoopCorr() ) {
         rootLogger.info("CALCULATING POLYAKOVLOOP CORRELATORS...");
@@ -180,8 +195,6 @@ int main(int argc, char *argv[]) {
         Corrs.getFactorArray(vec_factor,vec_weight);
 
         if (commBase.MyRank()==0) plcresultfile << "#  r**2\t  plca\t         plc1\t        plc8\n";
-
-        rootLogger.info("the rank is:" ,  commBase.MyRank());
 
         /// Calculation of Polyakov loop correlators.
         PLC.PLCtoArrays(vec_plca, vec_plc1, vec_plc8, vec_factor, vec_weight, true);
@@ -219,8 +232,6 @@ int main(int argc, char *argv[]) {
         Corrs.getFactorArray(vec_factor,vec_weight);
 
         if (commBase.MyRank()==0) wlcresultfile << "#  r**2\t   dtau\t  wlca\t         wlc1\t        wlc8\n";
-
-        rootLogger.info("the rank is:" ,  commBase.MyRank());
 
         /// Calculation of wilsonline correlators.
         WLC.WLCtoArrays(vec_wlca_full, vec_wlc1_full, vec_wlc8_full, vec_factor, vec_weight, true);

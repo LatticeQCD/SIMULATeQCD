@@ -1,5 +1,5 @@
 /*
- * PolyakovLoop.h
+ * PolyakovLoop.cpp
  *
  * L. Altenkort, 29 Jan 2019
  *
@@ -17,7 +17,7 @@ struct PolyakovLoopKernel{
 
     __device__ __host__ GCOMPLEX(floatT) operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
-        const int Ntau  = GInd::getLatData().lt;
+        const int Ntau = GInd::getLatData().lt;
         /// Start off at this site, pointing in N_tau direction.
         GSU3<floatT> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
         /// Loop over N_tau direction.
@@ -29,7 +29,7 @@ struct PolyakovLoopKernel{
     }
 };
 
-/// Kernel to compute untraced, unnormalized Polyakov loop and store in the array _ploop.
+/// Kernel to compute thermal Wilson line and store in the array _ploop.
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct CalcPloopKernel{
     gaugeAccessor<floatT, comp> gaugeAccessor;
@@ -38,7 +38,7 @@ struct CalcPloopKernel{
             gaugeAccessor(_gauge.getAccessor()), _ploop(ploop) {}
     __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
-        const int Ntau=GInd::getLatData().lt;
+        const int    Ntau = GInd::getLatData().lt;
         size_t       pind = site.isite;
         GSU3<floatT> temp = gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
         for(int tau = 1; tau < Ntau; tau++){
@@ -49,17 +49,15 @@ struct CalcPloopKernel{
     }
 };
 
-/// Call this to get the PolyakovLoop. Don't forget to exchange halos before this!
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 GCOMPLEX(floatT) PolyakovLoop<floatT, onDevice, HaloDepth, comp>::getPolyakovLoop() {
-    /// Exit if lattice is split in time
     if (_gauge.getComm().nodes()[3] != 1){
         throw std::runtime_error(stdLogger.fatal("Do not split lattice in time direction!"));
     }
-    GCOMPLEX(floatT) poly_result;
+    GCOMPLEX(floatT) result;
     _redBase.template iterateOverSpatialBulk<All, HaloDepth>(PolyakovLoopKernel<floatT, onDevice, HaloDepth, comp>(_gauge));
-    _redBase.reduce(poly_result, elems);
-    return poly_result / spatialvol; /// normalize to GLOBAL lattice
+    _redBase.reduce(result, elems);
+    return result / spatialvol; /// normalize to GLOBAL lattice
 }
 
 /// Function calculates Polyakov loop at each spatial site and stores the result at that site in _ploop array.

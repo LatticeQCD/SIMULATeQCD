@@ -3,6 +3,8 @@
  *
  * L. Mazur, 22 Jun 2018
  *
+ *  Class for calculating Polyakov loops. Make sure you exchange halos before measurements.
+ *
  */
 
 #ifndef POLYAKOVLOOP_H
@@ -13,7 +15,6 @@
 #include "../../base/math/gcomplex.h"
 #include "../../base/math/correlators.h"
 
-/// Class for calculating Polyakov loops. Make sure you exchange halos before measurements.
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R18>
 class PolyakovLoop {
 protected:
@@ -26,7 +27,10 @@ private:
     const size_t spatialvol = GInd::getLatData().globvol3;
 
 public:
-    PolyakovLoop(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugefield) : _redBase(gaugefield.getComm()), _gauge(gaugefield) {
+    PolyakovLoop(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugefield) 
+        : _redBase(gaugefield.getComm()), 
+          _gauge(gaugefield) 
+    {
         _redBase.adjustSize(elems);
     }
 

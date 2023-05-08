@@ -3,33 +3,33 @@
 # 
 # Example parameter file for main_gfix. 
 # 
-#          Lattice: Nx Ny Nz Nt
-#            Nodes: Number of nodes per direction
-#       gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
-#       maxgfsteps: Maximum number of OR gauge fixing steps (DEFAULT = 1000)
-#          numunit: Reunitarize after this many OR gauge fixing steps (DEFAULT = 20)
-#           mlight: Light quark mass label (OPTIONAL, for labelling plc output file)
-#         mstrange: Strange quark mass label (OPTIONAL, for labelling plc output file)
-#        Gaugefile: Configuration to be read in
-# measurements_dir: the directory to save the measurements
-#    SavedConfName: name of to-be-saved configuration
-# PolyakovLoopCorr: calculate or not
-#   WilsonLineCorr: same as above
-#       SaveConfig: save gfixed configuration or not
+#           Lattice: Nx Ny Nz Nt
+#             Nodes: Number of nodes per direction
+#        gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
+#        maxgfsteps: Maximum number of OR gauge fixing steps (DEFAULT = 1000)
+#           numunit: Reunitarize after this many OR gauge fixing steps (DEFAULT = 20)
+#            mlight: Light quark mass label (OPTIONAL, for labelling plc output file)
+#          mstrange: Strange quark mass label (OPTIONAL, for labelling plc output file)
+#         Gaugefile: Configuration to be read in
+#  measurements_dir: the directory to save the measurements
+#     SavedConfName: name of to-be-saved configuration
+#  PolyakovLoopCorr: Avg, singlet, octet Polyakov loop correlations. Calcuate or not? 
+#    WilsonLineCorr: Calculate or not? 
+# ThermalWilsonLine: Mean thermal Wilson line. Calculate or not? 
+#        SaveConfig: Save gfixed configuration or not?
 #
-Lattice          = 32 32 32 8 
-Nodes            = 1  1  1  1
-beta             = 6.285
-gtolerance       = 1e-6
-maxgfsteps       = 3000
-numunit          = 20
-mlight           = 0009875
-mstrange         = 0790
-stream           = 51
-conf_nr          = 26
-Gaugefile        = ../test_conf/l328f21b6285m0009875m0790a_019.995
-measurements_dir = ./
-SavedConfName    = gtol1em6_l328f21b6285m0009875m0790a_019.995 
-PolyakovLoopCorr = 0
-WilsonLineCorr   = 0
-SaveConfig       = 0
+Lattice           = 32 32 32 8 
+Nodes             = 1  1  1  1
+beta              = 6.285
+gtolerance        = 1e-6
+maxgfsteps        = 3000
+numunit           = 20
+mlight            = 0009875
+mstrange          = 0790
+Gaugefile         = ../test_conf/l328f21b6285m0009875m0790a_019.995
+measurements_dir  = ./
+SavedConfName     = gtol1em6_l328f21b6285m0009875m0790a_019.995 
+PolyakovLoopCorr  = 0
+WilsonLineCorr    = 0
+ThermalWilsonLine = 0
+SaveConfig        = 0
