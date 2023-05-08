@@ -24,6 +24,8 @@ public:
     void PLCtoArrays(std::vector<floatT> &vec_plca, std::vector<floatT> &vec_plc1, std::vector<floatT> &vec_plc8,
                      std::vector<int> &vec_factor , std::vector<int> &vec_weight , bool fastPLC);
 
+    /// Average thermal Wilson line.
+    GSU3<floatT> getLavg();
 };
 
 /// Compute average, singlet, and octet Polyakov loop correlation contributions.

@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     CorrelatorTools<PREC,true,HaloDepth> Corrs;             /// general correlator class
     PolyakovLoopCorrelator<PREC,true,HaloDepth> PLC(gauge); /// class for Polyakov loop correlators
     PolyakovLoop<PREC,true,HaloDepth> ploopClass(gauge);    /// class for measuring Polyakov loops
-    WilsonLineCorrelator<PREC,true,HaloDepth> WLC(gauge);   /// class for Polyakov loop correlators
+    WilsonLineCorrelator<PREC,true,HaloDepth> WLC(gauge);   /// class for Wilson line correlators 
 
     ///prepare output file
     std::stringstream plcfilename,wlcfilename,cbeta,cstream;
@@ -175,7 +175,10 @@ int main(int argc, char *argv[]) {
 
     
     if ( param.ThermalWilsonLine() ) {
-        rootLogger.info("CALCULATING AVERAGE THERMAL WILSON LINE...");
+        GSU3<PREC> Lavg;
+        rootLogger.info("Average thermal Wilson line:");
+        Lavg = PLC.getLavg();
+        std::cout << Lavg << std::endl;
     }
 
 

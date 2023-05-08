@@ -297,6 +297,40 @@ void PolyakovLoopCorrelator<floatT,onDevice,HaloDepth>::PLCtoArrays(std::vector<
     }
 }
 
+/// Sometimes it is useful in the context of normalizing Polyakov loop correlators to know <L>, where L is the
+/// thermal Wilson line. In particular this happens when you need a long-distance normalization like tr<L><L^dag>.
+template<class floatT, bool onDevice, size_t HaloDepth>
+GSU3<floatT> PolyakovLoopCorrelator<floatT,onDevice,HaloDepth>::getLavg() {
+
+    PolyakovLoop<floatT,onDevice,HaloDepth> PLoop(_gauge);
+
+    /// ploopGPU
+    gMemoryPtr<onDevice> PtrPloopGPU = MemoryManagement::getMemAt<onDevice>("ploopGPU");
+    PtrPloopGPU->template adjustSize<GSU3<floatT>>(this->vol3);
+    MemoryAccessor _ploopGPU(PtrPloopGPU->getPointer());
+
+    /// ploopCPU
+    gMemoryPtr<false> PtrPloopCPU = MemoryManagement::getMemAt<false>("ploopCPU");
+    PtrPloopCPU->template adjustSize<GSU3<floatT>>(this->vol3);
+
+    /// Caclulate L, then copy to host
+    PLoop.PloopInArray(_ploopGPU);
+    PtrPloopCPU->template copyFrom<>(PtrPloopGPU, PtrPloopGPU->getSize());
+    MemoryAccessor _ploopCPU(PtrPloopCPU->getPointer());
+
+    /// Compute <L> 
+    GSU3<floatT> Lavg = gsu3_zero<floatT>();
+    GSU3<floatT> L    = gsu3_zero<floatT>();
+    for (int i=0 ; i<(this->vol3) ; i++) {
+        _ploopCPU.getValue(i,L);
+        Lavg += L;
+    }
+    Lavg = Lavg/(this->vol3);
+
+    return Lavg; 
+}
+
+
 /// Initialize various possibilities of template parameter combinations for the correlators class.
 #define CLASS_INIT(floatT,HALO) \
 template class PolyakovLoopCorrelator<floatT,true,HALO>;

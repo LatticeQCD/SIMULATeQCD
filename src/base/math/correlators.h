@@ -28,8 +28,8 @@
 #include <array>
 #include <algorithm>
 #include <functional>
-#include <iostream>       ///TODO: move kernels to cu file
-                          ///TODO: implement correlateAtRestricted
+#include <iostream>
+
 
 /// Initialize the correlator to zero, regardless of type. ---------------------------------- FUNCTIONS FOR CORRELATIONS
 template<class floatT>

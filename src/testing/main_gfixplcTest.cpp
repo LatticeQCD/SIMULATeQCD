@@ -11,8 +11,10 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
+#include "testing.h"
 
 #include "refValues_gfixplc.h"
+
 
 #define PREC double
 
@@ -62,6 +64,7 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC,true,HaloDepth>   gauge(commBase);      /// gauge field
     GaugeFixing<PREC,true,HaloDepth>  GFixing(gauge);       /// gauge fixing class
     CorrelatorTools<PREC,true,HaloDepth>  corrTools;        /// general correlator class
+    PolyakovLoop<PREC,true,HaloDepth> ploopClass(gauge);    /// class for measuring Polyakov loops
     PolyakovLoopCorrelator<PREC,true,HaloDepth> PLC(gauge); /// class for Polyakov loop correlators
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
@@ -104,6 +107,14 @@ int main(int argc, char *argv[]) {
     timer.stop();
     rootLogger.info("Time to gauge fix: " ,  timer);
     timer.reset();
+
+    /// ---------------------------------------------------------------------------------------------THERMAL WILSON LINE
+
+    GSU3<PREC> Lavg;
+    Lavg = PLC.getLavg();
+    GCOMPLEX(PREC) ploop  = ploopClass.getPolyakovLoop();
+    GCOMPLEX(PREC) wilson = tr_c(Lavg)/3;
+    compare_relative<GCOMPLEX(PREC)>(ploop,wilson,1e-8,1e-8,"tr <L>"); 
 
     /// --------------------------------------------------------------------------------------POLYAKOV LOOP CORRELATIONS
     const int distmax=corrTools.distmax;

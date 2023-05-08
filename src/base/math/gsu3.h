@@ -54,6 +54,9 @@ template<class floatT>
 __device__ __host__ inline GSU3<floatT> operator/(const GSU3<floatT> &, const floatT &);
 
 template<class floatT>
+__device__ __host__ inline GSU3<floatT> operator/(const GSU3<floatT> &, const size_t &);
+
+template<class floatT>
 __device__ __host__ floatT tr_d(const GSU3<floatT> &);
 
 template<class floatT>
@@ -149,6 +152,8 @@ public:
 
     __device__ __host__ friend GSU3<floatT> operator/<>(const GSU3<floatT> &x, const floatT &y);
 
+    __device__ __host__ friend GSU3<floatT> operator/<>(const GSU3<floatT> &x, const size_t &y);
+
     __device__ __host__ bool operator==(const GSU3<floatT> &);
 
     __device__ __host__ GSU3<floatT> &operator=(const GSU3<floatT> &);
@@ -164,6 +169,8 @@ public:
     __device__ __host__ GSU3<floatT> &operator*=(const GSU3<floatT> &);
 
     __device__ __host__ GSU3<floatT> &operator/=(const floatT &);
+
+    __device__ __host__ GSU3<floatT> &operator/=(const size_t &);
 
     // cast operations single <-> double precision
     template<class T>
@@ -663,6 +670,14 @@ __device__ __host__ GSU3<floatT> operator/(const GSU3<floatT> &x, const floatT &
             x._e20 / y, x._e21 / y, x._e22 / y);
 }
 
+template<class floatT>
+__device__ __host__ GSU3<floatT> operator/(const GSU3<floatT> &x, const size_t &y) {
+    return GSU3<floatT>(
+            x._e00 / y, x._e01 / y, x._e02 / y,
+            x._e10 / y, x._e11 / y, x._e12 / y,
+            x._e20 / y, x._e21 / y, x._e22 / y);
+}
+
 
 template<class floatT>
 __device__ __host__ GSU3<floatT> operator*(const GSU3<floatT> &x, const GSU3<floatT> &y) {
@@ -769,6 +784,12 @@ __device__ __host__ GSU3<floatT> &GSU3<floatT>::operator*=(const GSU3<floatT> &y
 
 template<class floatT>
 __device__ __host__ GSU3<floatT> &GSU3<floatT>::operator/=(const floatT &y) {
+    *this = *this / y;
+    return *this;
+}
+
+template<class floatT>
+__device__ __host__ GSU3<floatT> &GSU3<floatT>::operator/=(const size_t &y) {
     *this = *this / y;
     return *this;
 }
