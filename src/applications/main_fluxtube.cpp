@@ -1,4 +1,4 @@
-/* 
+/*
  * main_fluxtube.cu
  *
  * v1.0: Sodbileg Ch., Battogtokh P. & Enkhtuya G.
@@ -7,11 +7,11 @@
  *	v1.0--Working on 1
  *
  * About the program:
- *	The code can compute flux tube profiles produced by 
- *	quark–antiquark pair with reference point method reading a configuration. 
- *	It can create 9 output files automatically. Output files: 
- *	- flt_beta_fields --> 
- *		correlation of the Polyakov loops (L(0), L+(R)) 
+ *	The code can compute flux tube profiles produced by
+ *	quark–antiquark pair with reference point method reading a configuration.
+ *	It can create 9 output files automatically. Output files:
+ *	- flt_beta_fields -->
+ *		correlation of the Polyakov loops (L(0), L+(R))
  *		with plaquette (P(mu,nu)) --> <L(0) P(mu,nu) L+(R)>
  *	- flt_beta_fields_ref -->
  *		correlation of the reference plaquette (P_{ref})
@@ -24,7 +24,7 @@
  *
  * How to use the code:
  *	- to change separation distances R in the source code
- *	  before compile the program... (R --> $dist, dist = dist + $1). 
+ *	  before compile the program... (R --> $dist, dist = dist + $1).
  *	  (maybe it should be defined in parameter file or not!!!)
  *	- you should change parameters in parameter/flt.parameter.
  *	- you should use bash code to measure flux tube as follows:
@@ -35,7 +35,7 @@ for((j=101; j<=125; j++)); do for ((i=50;i<=2300;i=i+50)); do mpiexec -np 1 ./fl
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/PolyakovLoop.h"
 
-#define PREC double 
+#define PREC double
 
 template<class floatT,size_t HaloDepth>
 struct CalcPloop{
@@ -44,11 +44,11 @@ struct CalcPloop{
     gaugeAccessor<floatT> gaugeAccessor;
     MemoryAccessor _ploop;
     /// Constructor to initialize all necessary members.
-    CalcPloop(Gaugefield<floatT,true,HaloDepth> &gauge, MemoryAccessor ploop) : gaugeAccessor(gauge.getAccessor()), _ploop(ploop) {} 
+    CalcPloop(Gaugefield<floatT,true,HaloDepth> &gauge, MemoryAccessor ploop) : gaugeAccessor(gauge.getAccessor()), _ploop(ploop) {}
     /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
     __device__ __host__ GCOMPLEX(floatT) operator()(gSite site) {
-	
+
         typedef GIndexer<All,HaloDepth> GInd;
         /// Define an SU(3) matrix and initialize result variable.
         GSU3<floatT> temp;
@@ -63,7 +63,7 @@ struct CalcPloop{
         size_t iy=coords.y;
         size_t iz=coords.z;
         size_t it=coords.t;
-	
+
 	size_t pind = site.isite;
         /// Start off at this site, pointing in N_tau direction.
         temp=gsu3_one<floatT>();
@@ -89,7 +89,7 @@ struct plaq4 {
     plaq4(Gaugefield<floatT,true,HaloDepth> &gauge) : acc(gauge.getAccessor()) {}
 
     __device__ __host__  inline GCOMPLEX(floatT) operator()(gSite site, int mu, int nu) {
-       
+
 	/// Define an SU(3) matrix and initialize result variable.
         typedef GIndexer<All,HaloDepth> GInd;
 
@@ -115,34 +115,34 @@ template<class floatT,size_t HaloDepth>
 struct calcTmpPL {
 
 /// Gauge accessor to access the gauge field.
-    gaugeAccessor<floatT> acc;  
+    gaugeAccessor<floatT> acc;
     MemoryAccessor _tmp_pl01;
     MemoryAccessor _tmp_pl02;
     MemoryAccessor _tmp_pl03;
     MemoryAccessor _tmp_pl12;
     MemoryAccessor _tmp_pl13;
     MemoryAccessor _tmp_pl23;
-    plaq4<floatT,HaloDepth> plq4;    
-    
+    plaq4<floatT,HaloDepth> plq4;
+
 /// Constructor to initialize all necessary members.
     calcTmpPL(Gaugefield<floatT,true,HaloDepth> &gauge, MemoryAccessor tmp_pl01,
       MemoryAccessor tmp_pl02,
-      MemoryAccessor tmp_pl03, 
-      MemoryAccessor tmp_pl12, 
-      MemoryAccessor tmp_pl13, 
-      MemoryAccessor tmp_pl23) : 
-    acc(gauge.getAccessor()), 
-    _tmp_pl01(tmp_pl01), 
-    _tmp_pl02(tmp_pl02), 
-    _tmp_pl03(tmp_pl03), 
-    _tmp_pl12(tmp_pl12), 
-    _tmp_pl13(tmp_pl13), 
+      MemoryAccessor tmp_pl03,
+      MemoryAccessor tmp_pl12,
+      MemoryAccessor tmp_pl13,
+      MemoryAccessor tmp_pl23) :
+    acc(gauge.getAccessor()),
+    _tmp_pl01(tmp_pl01),
+    _tmp_pl02(tmp_pl02),
+    _tmp_pl03(tmp_pl03),
+    _tmp_pl12(tmp_pl12),
+    _tmp_pl13(tmp_pl13),
     _tmp_pl23(tmp_pl23), plq4(gauge) {}
-    
+
 /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
 	__device__ __host__ GCOMPLEX(floatT) operator()(gSite site) {
-        
+
 	typedef GIndexer<All,HaloDepth> GInd;
 
         /// Extension in timelike direction. In general unsigned declarations reduce compiler warnings.
@@ -164,7 +164,7 @@ struct calcTmpPL {
 
             size_t itau=it+itp;
             gSite sitel = GInd::getSite(ix,iy,iz,itau);
-            
+
 	        result01 += plq4(sitel, 0, 1);
             result02 += plq4(sitel, 0, 2);
             result03 += plq4(sitel, 0, 3);
@@ -188,7 +188,7 @@ struct calcTmpPL {
         _tmp_pl23.setValue<GCOMPLEX(floatT)>(pind,result23);
 
        // printf("%f %f %f %f %f %f \n", result01.cREAL, result02.cREAL, result03.cREAL, result12.cREAL, result13.cREAL, result23.cREAL);
-		
+
 	return 0;
     }
 };
@@ -240,22 +240,22 @@ struct calcPPCORR
         size_t dzmax    = Nz/4+1;
         size_t distmax = dist + 2*dxmax - 3;
         size_t pindex, site1, site2, site3, site31, site32, site33;
-    
-        GCOMPLEX(floatT) pol_1, pol_2, val; 
+
+        GCOMPLEX(floatT) pol_1, pol_2, val;
         GCOMPLEX(floatT) pl_01, pl1_01, pl2_01, pl3_01;
         GCOMPLEX(floatT) pl_02, pl1_02, pl2_02, pl3_02;
         GCOMPLEX(floatT) pl_03, pl1_03, pl2_03, pl3_03;
         GCOMPLEX(floatT) pl_12, pl1_12, pl2_12, pl3_12;
         GCOMPLEX(floatT) pl_13, pl1_13, pl2_13, pl3_13;
         GCOMPLEX(floatT) pl_23, pl1_23, pl2_23, pl3_23;
-    
+
         /// Get coordinates.
         sitexyzt coords=site.coord;
         size_t ix=coords.x;
         size_t iy=coords.y;
         size_t iz=coords.z;
         //size_t it=coords.t;
-	
+
         GCOMPLEX(floatT) result01, result02, result03, result12, result13, result23;
 
         GCOMPLEX(floatT) sum = 0.0;
@@ -267,7 +267,7 @@ struct calcPPCORR
         result01 = 0.0; result02 = 0.0; result03 = 0.0; result12 = 0.0; result13 = 0.0; result23 = 0.0;
 
 	//pol_1=0.0; pol_2=0.0; val=0.0;
-        
+
 	for(size_t tx=0;tx<Nx;tx++)
             for(size_t ty=0;ty<Ny;ty++)
                 for(size_t tz=0;tz<Nz;tz++){
@@ -278,7 +278,7 @@ struct calcPPCORR
 
                     _ploop.getValue<GCOMPLEX(floatT)>(site1, pol_1);
                     _ploop.getValue<GCOMPLEX(floatT)>(site2, pol_2);
-                    
+
                     val = pol_1 * conj(pol_2);
 
                     _tmp_pl01.getValue<GCOMPLEX(floatT)>(site3, pl_01);
@@ -353,7 +353,7 @@ struct calcPPCORR
                 result12 /= (floatT)(4.0 * vol3);
                 result13 /= (floatT)(4.0 * vol3);
                 result23 /= (floatT)(4.0 * vol3);
-	
+
                 _tmp_plc01.setValue<GCOMPLEX(floatT)>(pindex,result01);
                 _tmp_plc02.setValue<GCOMPLEX(floatT)>(pindex,result02);
                 _tmp_plc03.setValue<GCOMPLEX(floatT)>(pindex,result03);
@@ -379,26 +379,26 @@ struct CalcReferencePoint{
     int dist;
     /// Constructor to initialize all necessary members.
     CalcReferencePoint(MemoryAccessor ploop,
-                MemoryAccessor tmp_pl01, int dist) :  _ploop(ploop), _tmp_pl01(tmp_pl01), dist(dist) {} 
+                MemoryAccessor tmp_pl01, int dist) :  _ploop(ploop), _tmp_pl01(tmp_pl01), dist(dist) {}
     /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
-   
+
     __device__ __host__ GCOMPLEX(floatT) operator()(gSite site) {
-   
+
         typedef GIndexer<All,HaloDepth> GInd;
 
         size_t site1, site2, site3;
 
         GCOMPLEX(floatT) pol_1, pol_2, val;
-  
+
         GCOMPLEX(floatT) pl_01;
-             
+
         int Nx       = (int)GInd::getLatData().globLX; /// globL% is a size_t object, but in practice N% will never be
         int Ny       = (int)GInd::getLatData().globLY; /// large enough for that to matter. Furthermore N% variables are
         int Nz       = (int)GInd::getLatData().globLZ; /// used in statements involving subtraction.
-        
+
         size_t vol3  = GInd::getLatData().globvol3;
- 
+
         GCOMPLEX(floatT) result01;
 
         //GCOMPLEX(floatT) pl_01, pl_02, pl_03, pl_12, pl_13, pl_23;
@@ -417,7 +417,7 @@ struct CalcReferencePoint{
 
         _ploop.getValue<GCOMPLEX(floatT)>(site1, pol_1);
         _ploop.getValue<GCOMPLEX(floatT)>(site2, pol_2);
-                    
+
         val = pol_1 * conj(pol_2);
 
         _tmp_pl01.getValue<GCOMPLEX(floatT)>(site3, pl_01);
@@ -427,7 +427,7 @@ struct CalcReferencePoint{
         //printf("%u %f %f %f \n", dx, result01.cREAL, result02.cREAL, result23.cREAL);
 
     return result01;
-    
+
     }
 };
 
@@ -447,7 +447,7 @@ struct averOS
     MemoryAccessor _old_tmp_plc13;
     MemoryAccessor _old_tmp_plc23;
     int dist;
-               
+
     averOS(     MemoryAccessor tmp_plc01,
                 MemoryAccessor tmp_plc02,
                 MemoryAccessor tmp_plc03,
@@ -476,16 +476,16 @@ struct averOS
         size_t distmax = dist + 2*dxmax - 3;
         size_t pindex, site1;
 
-        GCOMPLEX(floatT) pl1_01, pl1_02, pl1_03, pl1_12, pl1_13, pl1_23;      
+        GCOMPLEX(floatT) pl1_01, pl1_02, pl1_03, pl1_12, pl1_13, pl1_23;
         GCOMPLEX(floatT) pl2_01, pl2_02, pl2_03, pl2_12, pl2_13, pl2_23;
-    
+
         /// Get coordinates.
         sitexyzt coords=site.coord;
         size_t ix=coords.x;
         size_t iy=coords.y;
         size_t iz=coords.z;
         //size_t it=coords.t;
-    
+
         GCOMPLEX(floatT) result01, result02, result03, result12, result13, result23;
 
         if (ix <= distmax && iy <= dymax && iz <= dzmax){
@@ -527,14 +527,14 @@ struct averOS
             _tmp_plc12.setValue<GCOMPLEX(floatT)>(pindex,result12);
             _tmp_plc13.setValue<GCOMPLEX(floatT)>(pindex,result13);
             _tmp_plc23.setValue<GCOMPLEX(floatT)>(pindex,result23);
-  
+
             //_tmp_plc01.setValue<GCOMPLEX(floatT)>(site1,result01);
             //_tmp_plc02.setValue<GCOMPLEX(floatT)>(site1,result02);
             //_tmp_plc03.setValue<GCOMPLEX(floatT)>(site1,result03);
             //_tmp_plc12.setValue<GCOMPLEX(floatT)>(site1,result12);
             //_tmp_plc13.setValue<GCOMPLEX(floatT)>(site1,result13);
             //_tmp_plc23.setValue<GCOMPLEX(floatT)>(site1,result23);
-    
+
             }
 
     return 0;
@@ -562,7 +562,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
 
     sprintf(flt_name_2b_ort,"flt_%0.3f_2b_ort", beta);
     sprintf(flt_name_e_par,"flt_%0.3f_e_par", beta);
-    sprintf(flt_name_b_par,"flt_%0.3f_b_par", beta);  
+    sprintf(flt_name_b_par,"flt_%0.3f_b_par", beta);
     sprintf(flt_name_2e_ort,"flt_%0.3f_2e_ort", beta);
     sprintf(flt_name_plc_sum,"flt_%0.3f_plc_sum", beta);
     sprintf(flt_name_2b_ort_ref,"flt_%0.3f_2b_ort_ref", beta);
@@ -635,14 +635,14 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
 
     /// Now we create memory accessors for some auxiliary arrays that will aid us with the correlation function
     /// calculations. The memory accessors are the things that refer to the arrays. Some arrays will be accessed on the
-    /// GPU, while others will be accessed on the CPU. Therefore we need a MemType for each. 
+    /// GPU, while others will be accessed on the CPU. Therefore we need a MemType for each.
     typedef gMemoryPtr<true>  MemTypeGPU;
     typedef gMemoryPtr<false> MemTypeCPU;
 
     /// These next three lines create a memory accessor for the untraced Polyakov loop array. The getMemAt template
     /// parameter must be true for GPU and false for CPU.
     MemTypeGPU mem20 = MemoryManagement::getMemAt<true>("PPCorrs");
-   
+
     mem20->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
 
     MemoryAccessor _ploopGPU(mem20->getPointer());
@@ -676,7 +676,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     MemTypeGPU memc12 = MemoryManagement::getMemAt<true>("PPCorrs");
     MemTypeGPU memc13 = MemoryManagement::getMemAt<true>("PPCorrs");
     MemTypeGPU memc23 = MemoryManagement::getMemAt<true>("PPCorrs");
-   
+
     memc01->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
     memc02->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
     memc03->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
@@ -698,7 +698,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     MemTypeGPU memas12 = MemoryManagement::getMemAt<true>("PPCorrs");
     MemTypeGPU memas13 = MemoryManagement::getMemAt<true>("PPCorrs");
     MemTypeGPU memas23 = MemoryManagement::getMemAt<true>("PPCorrs");
-   
+
     memas01->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
     memas02->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
     memas03->template adjustSize<GCOMPLEX(PREC)>(GInd::getLatData().globvol3);
@@ -712,39 +712,39 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     MemoryAccessor _tmp_plc_pl12GPU(memas12->getPointer());
     MemoryAccessor _tmp_plc_pl13GPU(memas13->getPointer());
     MemoryAccessor _tmp_plc_pl23GPU(memas23->getPointer());
-    
+
     /// The ploop is an operator that is defined on spacelike points; therefore the kernel should run only over
     /// spacelike sites. If this is what you require, use iterateOverSpatialBulk instead of iterateOverBulk.
     redBase.template iterateOverSpatialBulk<All, HaloDepth>(CalcPloop<floatT,HaloDepth>(gauge, _ploopGPU));
 
     /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
     floatT spacelikevol=GInd::getLatData().globvol3;
-    
+
     GCOMPLEX(floatT) ploop;
     redBase.reduce(ploop, elems);
- 
-    /// Normalize. 
+
+    /// Normalize.
     ploop /= (spacelikevol);
- 
+
     ReadIndexSpatial<HaloDepth> calcReadIndexSpatial;
-    
+
     iterateFunctorNoReturn<true>(calcTmpPL<floatT,HaloDepth>(gauge, _tmp_pl01GPU, _tmp_pl02GPU, _tmp_pl03GPU, _tmp_pl12GPU, _tmp_pl13GPU, _tmp_pl23GPU),calcReadIndexSpatial,elems);
 
     for( int dist = 4; dist <= 10; dist=dist+2){
 
     	redBase7.template iterateOverSpatialBulk<All, HaloDepth>(calcPPCORR<floatT,HaloDepth>(_ploopGPU, _tmp_pl01GPU, _tmp_pl02GPU, _tmp_pl03GPU, _tmp_pl12GPU, _tmp_pl13GPU, _tmp_pl23GPU, _tmp_plc01GPU, _tmp_plc02GPU, _tmp_plc03GPU, _tmp_plc12GPU, _tmp_plc13GPU, _tmp_plc23GPU, dist));
-    
+
     	GCOMPLEX(floatT) plc_sum;
     	redBase7.reduce(plc_sum, elems);
     	//plc_sum /= ((dist + 2*dxmax - 2)*(dymax + 1)*(dzmax + 1)*(spacelikevol));
 
         iterateFunctorNoReturn<true>(averOS<floatT,HaloDepth>(_tmp_plc_pl01GPU, _tmp_plc_pl02GPU, _tmp_plc_pl03GPU, _tmp_plc_pl12GPU, _tmp_plc_pl13GPU, _tmp_plc_pl23GPU, _tmp_plc01GPU, _tmp_plc02GPU, _tmp_plc03GPU, _tmp_plc12GPU, _tmp_plc13GPU, _tmp_plc23GPU, dist),calcReadIndexSpatial,elems);
- 
+
    	redBase1.template iterateOverSpatialBulk<All, HaloDepth>(CalcReferencePoint<floatT,HaloDepth>(_ploopGPU, _tmp_pl01GPU, dist));
-   
+
     	GCOMPLEX(floatT) tmp_plc01_ref;
     	redBase1.reduce(tmp_plc01_ref, elems);
-    
+
    	redBase2.template iterateOverSpatialBulk<All, HaloDepth>(CalcReferencePoint<floatT,HaloDepth>(_ploopGPU, _tmp_pl02GPU, dist));
 
     	GCOMPLEX(floatT) tmp_plc02_ref;
@@ -771,7 +771,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     	redBase6.reduce(tmp_plc23_ref, elems);
 
     	//printf("%f\n", tmp_plc01_ref.cREAL / elems + tmp_plc02_ref.cREAL / elems);
-   
+
     	//CPU allocate memory for Plaquette-Polyakov loop correlation
     	MemTypeCPU memu01 = MemoryManagement:: getMemAt<false>("plcCorrs");
     	MemTypeCPU memu02 = MemoryManagement:: getMemAt<false>("plcCorrs");
@@ -789,21 +789,21 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     /// This time, we have to copy data from the GPU array to the CPU array. The template parameter for copyFrom should
     /// match the target array from which we copy. In this case it's true, because we copy from an array on the GPU.
     /// The second argument is the size of the array in bytes.
-  
+
         memu01->template copyFrom<true>(memas01,GInd::getLatData().globvol3*sizeof(GCOMPLEX(floatT)));
         memu02->template copyFrom<true>(memas02,GInd::getLatData().globvol3*sizeof(GCOMPLEX(floatT)));
         memu03->template copyFrom<true>(memas03,GInd::getLatData().globvol3*sizeof(GCOMPLEX(floatT)));
         memu12->template copyFrom<true>(memas12,GInd::getLatData().globvol3*sizeof(GCOMPLEX(floatT)));
         memu13->template copyFrom<true>(memas13,GInd::getLatData().globvol3*sizeof(GCOMPLEX(floatT)));
         memu23->template copyFrom<true>(memas23,GInd::getLatData().globvol3*sizeof(GCOMPLEX(floatT)));
-  
+
     	MemoryAccessor _tmp_plc01CPU (memu01->getPointer());
     	MemoryAccessor _tmp_plc02CPU (memu02->getPointer());
     	MemoryAccessor _tmp_plc03CPU (memu03->getPointer());
     	MemoryAccessor _tmp_plc12CPU (memu12->getPointer());
     	MemoryAccessor _tmp_plc13CPU (memu13->getPointer());
     	MemoryAccessor _tmp_plc23CPU (memu23->getPointer());
- 
+
     	GCOMPLEX(floatT) polm1, polm2, polm3, polm4, polm5, polm6;
 
     	int indx;
@@ -817,7 +817,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
     	for( int dx=0; dx<=dist+2*dxmax-3;dx++)
         	for( int dz=0;dz<=dzmax;dz++)
             		for( int dy=0;dy<=dz;dy++){
-                
+
 		indx = dx + dy * Nx + dz * Nx * (dymax + 1);
 
                 _tmp_plc01CPU.getValue<GCOMPLEX(floatT)>(indx, polm1);
@@ -839,7 +839,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
         fclose(flt_out3);
         fclose(flt_out4);
 
-	//printing Reference point method data         
+	//printing Reference point method data
         flt_out = fopen(flt_name_plc_sum, "a");
         flt_out1 = fopen(flt_name_2b_ort_ref, "a");
         flt_out2 = fopen(flt_name_e_par_ref, "a");
@@ -847,7 +847,7 @@ GCOMPLEX(floatT) flt_meas(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeConta
         flt_out4 = fopen(flt_name_2e_ort_ref, "a");
 
         fprintf(flt_out, "%d %.10le\n", dist, plc_sum.cREAL / ((dist + 2*dxmax - 2)*(dymax + 1)*(dzmax + 1)*(vol3)) );
-        
+
         fprintf(flt_out1, "%d %.10le\n", dist, tmp_plc01_ref.cREAL / elems + tmp_plc02_ref.cREAL / elems);
         fprintf(flt_out2, "%d %.10le\n", dist, tmp_plc03_ref.cREAL / elems);
         fprintf(flt_out3, "%d %.10le\n", dist, tmp_plc12_ref.cREAL / elems );
@@ -919,15 +919,15 @@ int main(int argc, char *argv[]) {
     /// Calculate Plaquette-Ploop correlation and report polyakov loop.
 
     ploop = flt_meas<PREC,HaloDepth>(gauge, redBase, commBase, (double)(param.beta()));
- 
+
     rootLogger.info(std::setprecision(20) ,  "Reduced RE(ploop) = " ,  ploop.cREAL);
     rootLogger.info(std::setprecision(20) ,  "Reduced IM(ploop) = " ,  ploop.cIMAG);
-    
+
     /// stop timer and print time
     timer.stop();
 
     rootLogger.info("Time for operators: " ,  timer);
-   
+
     return 0;
 }
 

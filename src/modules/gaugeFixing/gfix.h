@@ -1,4 +1,4 @@
-/* 
+/*
  * gfix.h
  *
  * D. Clarke
@@ -7,9 +7,7 @@
  *
  */
 
-#ifndef GFIX_H
-#define GFIX_H
-
+#pragma once
 #define I_FIX 3   /// 3=coulomb, 4=landau
 #define D_FIX 3.0
 
@@ -55,4 +53,3 @@ struct gfixReadIndexEvenOddFull {
     }
 };
 
-#endif //GFIX_H

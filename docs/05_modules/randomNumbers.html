@@ -89,23 +89,23 @@
 <a class="reference external" href="https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch37.html">here</a>. The state of the random number
 generator consists of four unsigned integers (We use the GPU type <code class="docutils literal notranslate"><span class="pre">uint4</span></code>) and every site of the
 lattice has its own state. A random number, e.g. in a Kernel is generated with the function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">floatT</span><span class="w"> </span><span class="n">get_rand</span><span class="p">(</span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">state</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">floatT</span><span class="w"> </span><span class="n">get_rand</span><span class="p">(</span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">state</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The argument is a pointer on the <code class="docutils literal notranslate"><span class="pre">uint4</span></code> element on the given site, not on the whole uint4 array that runs over the lattice!
 You now have two choices how to do this: 1) pass your kernel a reference of the rng state object and use the getElement function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">getElement</span><span class="p">(</span><span class="n">gSite</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">getElement</span><span class="p">(</span><span class="n">gSite</span><span class="w"> </span><span class="n">site</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>or 2) pass your kernel a reference of the <code class="docutils literal notranslate"><span class="pre">uint4</span></code> array state (it is a public member of the rng state class) and call</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">floatT</span><span class="w"> </span><span class="n">get_rand</span><span class="p">(</span><span class="o">&amp;</span><span class="n">state</span><span class="p">[</span><span class="n">site</span><span class="p">.</span><span class="n">isite</span><span class="p">])</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">floatT</span><span class="w"> </span><span class="n">get_rand</span><span class="p">(</span><span class="o">&amp;</span><span class="n">state</span><span class="p">[</span><span class="n">site</span><span class="p">.</span><span class="n">isite</span><span class="p">])</span>
 </pre></div>
 </div>
 <section id="generating-the-rng-state">
 <h2>Generating the RNG State<a class="headerlink" href="#generating-the-rng-state" title="Permalink to this headline"></a></h2>
 <p>Before drawing random numbers we have to generate the state of the random number generator from a seed. This seed is an unsigned integer that should be specified in the parameter file. The function to set up the
 the rng state is</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">make_rng_state</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">seed</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">make_rng_state</span><span class="p">(</span><span class="kt">unsigned</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">seed</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>It is rather slow, though that does not matter as we have to call it only at the beginning of a completely new run/measurement. It is so slow as it is backwards compatible to the old BielefeldGPU code.

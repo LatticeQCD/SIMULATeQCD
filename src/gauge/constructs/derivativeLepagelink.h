@@ -1,7 +1,11 @@
-//created by Dennis on 02.11.18
+/*
+ * derivativeLepagelink.h
+ *
+ * D. Bollweg
+ *
+ */
 
-#ifndef DERIVATIVE_LEPAGE_H
-#define DERIVATIVE_LEPAGE_H
+#pragma once
 
 #include "../../base/indexer/BulkIndexer.h"
 #include "../../base/math/gaugeAccessor.h"
@@ -99,4 +103,3 @@ __host__ __device__ GSU3<floatT> linkDerivativeLepage(gaugeAccessor<floatT,compI
     return temp;
 }
 
-#endif // DERIVATIVE_LEPAGE_H

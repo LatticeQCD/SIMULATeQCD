@@ -1,6 +1,6 @@
-/* 
- * main_InverterProfiling.cu                                                               
- * 
+/*
+ * main_InverterProfiling.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -25,7 +25,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    
+
     rootLogger.info("Read configuration");
 
     rootLogger.info("Initialize random state");
@@ -71,24 +71,24 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 int main(int argc, char **argv) {
     try {
         stdLogger.setVerbosity(INFO);
-    
+
         CommunicationBase commBase(&argc, &argv);
         RhmcParameters param;
         param.readfile(commBase, "../parameter/profiling/InverterProfile.param", argc, argv);
         param.cgMax.set(4000);
-    
+
         RationalCoeff rat;
         rat.readfile(commBase, param.rat_file());
-    
+
         commBase.init(param.nodeDim());
-    
+
         const int HaloDepthSpin = 4;
         initIndexer(HaloDepthSpin, param, commBase);
-    
+
         rootLogger.info("-------------------------------------");
         rootLogger.info("Running on Device");
         rootLogger.info("-------------------------------------");
-    
+
         rootLogger.info("------------------");
         rootLogger.info("Testing Even - Odd");
         rootLogger.info("------------------");

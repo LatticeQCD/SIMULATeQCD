@@ -12,7 +12,7 @@ The input file should be structured as
 ```C
 npff        // Number of pseudo-fermion flavors
 
-y1  
+y1
 y2
 mprec       // Pre-conditioner mass (reduces the condition number in CG)
 mq
@@ -29,7 +29,7 @@ f(x) = x^(`y1`/8)  (x+ `mprec`^2 -`mq`^2 )^(`y2`/8)
 g(x) = x^(-`y1`/8) (x+ `mprec`^2 -`mq`^2 )^(-`y2`/8)
 h(x) = x^(-`y1`/4) (x+ `mprec`^2 -`mq`^2 )^(-`y2`/4)
 
-with m^2 = `mprec`^2 - `mq`^2. For example, consider 2+1 flavors of fermions with 
+with m^2 = `mprec`^2 - `mq`^2. For example, consider 2+1 flavors of fermions with
 standard Hasenbusch preconditioning for the light flavors. The input file will be
 
 2

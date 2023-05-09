@@ -1,8 +1,8 @@
-# 
+#
 # polSuscRenorm.param
-# 
+#
 # Example parameter file for main_polSuscRenorm.cu
-# 
+#
 #    Lattice: Nx Ny Nz Nt
 #      Nodes: Number of nodes per direction
 #     mlight: Light quark mass label (OPTIONAL, for labelling plc output file)

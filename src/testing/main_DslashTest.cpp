@@ -1,6 +1,6 @@
-/* 
- * main_DslashTest.cpp                                                               
- * 
+/*
+ * main_DslashTest.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -63,7 +63,7 @@ bool test_dslash(CommunicationBase &commBase){
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
 
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    
+
     rootLogger.info("Read conf");
 
     gauge.readconf_nersc("../test_conf/gauge12750");
@@ -89,7 +89,7 @@ bool test_dslash(CommunicationBase &commBase){
 
     rootLogger.info("Initialize DSlash");
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
-    
+
     dslash.Dslash(spinorOut, spinorIn);
 
     spinorOut2 = spinorOut;

@@ -12,8 +12,7 @@
 
 */
 
-#ifndef INCLUDED_ALG_REMEZ_H
-#define INCLUDED_ALG_REMEZ_H
+# pragma once
 
 #include "bigfloat.h"
 
@@ -31,7 +30,7 @@ private:
 
   // The numerator and denominator degree (n=d)
   int n, d;
-  
+
   // The bounds of the approximation
   bigfloat apstrt, apwidt, apend;
 
@@ -89,7 +88,7 @@ private:
   void equations();
 
   // Search for error maxima and minima
-  void search(bigfloat *step); 
+  void search(bigfloat *step);
 
   // Initialise step sizes
   void stpini(bigfloat *step);
@@ -131,7 +130,7 @@ private:
   bigfloat approx(bigfloat x);
 
 public:
-  
+
   // Constructor
   AlgRemez(double lower, double upper, long prec);
 
@@ -142,13 +141,13 @@ public:
   void setBounds(double lower, double upper);
 
   // Generate the rational approximation x^(pnum/pden)
-  double generateApprox(int num_degree, int den_degree, 
+  double generateApprox(int num_degree, int den_degree,
       double power_num1, double power_den1, double m1,
       double power_num2, double power_den2, double m2,
       double power_num3, double power_den3, double m3,
       double power_num4, double power_den4, double m4,
       int a_len, double* a_param, double* a_pow);
-  double generateApprox(int num_degree, int den_degree, 
+  double generateApprox(int num_degree, int den_degree,
       double power_num1, double power_den1, double m1,
       double power_num2, double power_den2, double m2,
       double power_num3, double power_den3, double m3,
@@ -180,8 +179,4 @@ public:
   double evaluateInverseFunc(double x);
 
 };
-
-#endif  // Include guard
-
-
 

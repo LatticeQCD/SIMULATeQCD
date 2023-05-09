@@ -8,7 +8,7 @@ which is itself repetitive, messy, and tedious.
 
 In order to help streamline this process we have introduced explicit instantiation macros,
 which help automate the instantiation of the most commonly used template parameters.
-These macros are kept in the header file `explicit_instantiation_macros.h`. 
+These macros are kept in the header file `explicit_instantiation_macros.h`.
 For example one can instantiate a generic class `INIT_CLASS` for all possible precisions,
 halo depths, and gauge field compression types using `INIT_PHC(INIT_CLASS)`.
 

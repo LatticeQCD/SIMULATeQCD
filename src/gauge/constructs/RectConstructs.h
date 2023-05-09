@@ -1,10 +1,11 @@
-//
-// Created by Lukas Mazur on 05.07.18.
-//
+/*
+ * RectConstructs.h
+ *
+ * L. Mazur
+ *
+ */
 
-#ifndef LINKCONSTRUCTS_H
-#define LINKCONSTRUCTS_H
-
+#pragma once
 
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
@@ -18,7 +19,6 @@ template<class floatT,size_t HaloDepth>
 __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
 
-
     gSite origin = site;
     gSite up = GInd::site_up(site, nu);
     gSite twoUp = GInd::site_up(up, nu);
@@ -27,10 +27,8 @@ __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, in
     gSite twoRight = GInd::site_up(right, mu);
     gSite rightUp = GInd::site_up(right, nu);
 
-
     GSU3<floatT> temp;
 
-    // top right
     /*
      *  Rect_(mu,nu)(x) = U_(mu)(x)*U_(mu)(x+mu)*U_(nu)(x+2mu)*U+_(mu)(x+nu+mu)*U+_(mu)(x+nu)*U+_(nu)(x)
      *  			+ U_(mu)(x)*U_(nu)(x+mu)*U_(nu)(x+mu+nu)*U+_(mu)(x+2nu)*U+_(nu)(x+nu)*U+_(nu)(x)
@@ -38,13 +36,13 @@ __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, in
      *     |
      *     |
      *  mu  --->
-     *     
-     *      
-     *     
+     *
+     *
+     *
      *     <--<--^
      *     |  	 |
      *    *v-->-->
-     * 
+     *
      *
      */
     temp = gAcc.getLink(GInd::getSiteMu(origin, mu))
@@ -57,14 +55,14 @@ __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, in
      *     |
      *     |
      *  mu  --->
-     *     
-     *      
+     *
+     *
      *     <--^
-     *     |  | 
+     *     |  |
      *     v  ^
-     *     |  |	 
+     *     |  |
      *    *v-->
-     * 
+     *
      *
      */
     temp += gAcc.getLink(GInd::getSiteMu(origin, mu))
@@ -73,9 +71,6 @@ __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, in
             * gAcc.getLinkDagger(GInd::getSiteMu(twoUp, mu))
             * gAcc.getLinkDagger(GInd::getSiteMu(up, nu))
             * gAcc.getLinkDagger(GInd::getSiteMu(origin, nu));
-
-
-
 
     return temp;
 }
@@ -95,10 +90,7 @@ __device__ GSU3<floatT> inline Rect_Q(gaugeAccessor<floatT> gAcc, gSite site, in
     gSite rightDn = GInd::site_dn(right, nu);
     gSite right2Dn = GInd::site_dn(rightDn, nu);
 
-
     GSU3<floatT> temp;
-
-    // bottom right
 
     /*
      *  Rect_(mu,nu)(x) = U+_(nu)(x-nu)*U_(mu)(x-nu)*U_(mu)(x+mu-nu)*U_(nu)(x+2mu-nu)*U+_(mu)(x+mu)*U+_(mu)(x)
@@ -113,7 +105,7 @@ __device__ GSU3<floatT> inline Rect_Q(gaugeAccessor<floatT> gAcc, gSite site, in
      *     *--<--^
      *     |  	 |
      *     v-->-->
-     * 
+     *
      *
      */
     temp += gAcc.getLinkDagger(GInd::getSiteMu(dn, nu))
@@ -143,9 +135,6 @@ __device__ GSU3<floatT> inline Rect_Q(gaugeAccessor<floatT> gAcc, gSite site, in
             * gAcc.getLink(GInd::getSiteMu(rightDn, nu))
             * gAcc.getLinkDagger(GInd::getSiteMu(origin, mu));
 
-
-
-
     return temp;
 }
 
@@ -162,12 +151,9 @@ __device__ GSU3<floatT> inline Rect_S(gaugeAccessor<floatT> gAcc, gSite site, in
     gSite leftUp = GInd::site_up(left, nu);
     gSite left2Up = GInd::site_up(leftUp, nu);
 
-
-
     GSU3<floatT> temp;
-    //top left
     /*  Rect_(mu,nu)(x) = U_(nu)(x)*U+_(mu)(x-mu+nu)*U+_(mu)(x-2mu+nu)*U+_(nu)(x-2mu)*U_(mu)(x-2mu)*U_(nu)(x-mu)
-            + U_(nu)(x)*U_(nu)(x+nu)*U+_(mu)(x-mu+2nu)*U+_(nu)(x+2nu)*U+_(nu)(x+nu)*U+_(nu)(x)
+     *      + U_(nu)(x)*U_(nu)(x+nu)*U+_(mu)(x-mu+2nu)*U+_(nu)(x+2nu)*U+_(nu)(x+nu)*U+_(nu)(x)
      *  nu ^
      *     |
      *     |
@@ -188,7 +174,6 @@ __device__ GSU3<floatT> inline Rect_S(gaugeAccessor<floatT> gAcc, gSite site, in
             * gAcc.getLink(GInd::getSiteMu(twoLeft, mu))
             * gAcc.getLink(GInd::getSiteMu(left, mu));
 
-    //top left
     /*
      *  nu ^
      *     |
@@ -210,9 +195,6 @@ __device__ GSU3<floatT> inline Rect_S(gaugeAccessor<floatT> gAcc, gSite site, in
             * gAcc.getLinkDagger(GInd::getSiteMu(left, nu))
             * gAcc.getLink(GInd::getSiteMu(left, mu));
 
-
-
-
     return temp;
 }
 
@@ -230,23 +212,19 @@ __device__ GSU3<floatT> inline Rect_R(gaugeAccessor<floatT> gAcc, gSite site, in
     gSite left2Dn = GInd::site_dn(leftDn, nu);
 
     GSU3<floatT> temp;
-    // bottom left
 
     /* Rect_(mu,nu)(x) = {U+_(mu)(x-mu)*U+_(mu)(x-2mu)*U+_(mu)(x-2mu+nu)*U_(mu)(x-2mu-nu)*U_(nu)(x-mu-nu)
-            +U_(nu)(x-nu)}
-
-           + {U+_(mu)(x-mu)*U+_(nu)(x-mu-nu)*U+_(nu)(x-mu-2nu)*U_(mu)(x-mu-2nu)*U_(nu)(x-2nu)*U_(nu)(x-nu)}
+     *      +U_(nu)(x-nu)}
+     *     + {U+_(mu)(x-mu)*U+_(nu)(x-mu-nu)*U+_(nu)(x-mu-2nu)*U_(mu)(x-mu-2nu)*U_(nu)(x-2nu)*U_(nu)(x-nu)}
      *  nu ^
      *     |
      *     |
      *      ---> mu
      *
      *
-     *
      *     <--<--^*
      *     |  	 |
      *     v-->-->
-     *
      *
      */
 
@@ -268,7 +246,6 @@ __device__ GSU3<floatT> inline Rect_R(gaugeAccessor<floatT> gAcc, gSite site, in
      *     |   |
      *     v -->
      *
-     *
      */
 
     temp += gAcc.getLinkDagger(GInd::getSiteMu(left, mu))
@@ -278,12 +255,6 @@ __device__ GSU3<floatT> inline Rect_R(gaugeAccessor<floatT> gAcc, gSite site, in
             * gAcc.getLink(GInd::getSiteMu(twoDn, nu))
             * gAcc.getLink(GInd::getSiteMu(dn, nu));
 
-
-
-
     return temp;
 }
 
-
-
-#endif //LINKCONSTRUCTS_H

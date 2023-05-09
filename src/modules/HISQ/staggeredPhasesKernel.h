@@ -1,9 +1,11 @@
-//
-// Created by Lukas Mazur on 04.01.19.
-//
-#ifndef STAGGEREDPHASES_KERNEL_H
-#define STAGGEREDPHASES_KERNEL_H
+/*
+ * staggeredPhasesKernel.h
+ *
+ * L. Mazur
+ *
+ */
 
+#pragma once
 #include "../../gauge/gaugefield.h"
 #include "staggeredPhases.h"
 
@@ -19,8 +21,8 @@ struct staggeredPhaseKernel {
     double mu_f;
 
     //Constructor to initialize this member variable.
-    explicit staggeredPhaseKernel(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeIn, floatT _mu_f=0.0) :
-            gAcc(gaugeIn.getAccessor()),mu_f(_mu_f) {}
+    explicit staggeredPhaseKernel(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeIn, floatT _mu_f=0.0)
+        : gAcc(gaugeIn.getAccessor()),mu_f(_mu_f) {}
 
     __host__ __device__ GSU3<floatT> operator()(gSiteMu siteMu) {
         GCOMPLEX(floatT) phase =1.0;
@@ -32,4 +34,3 @@ struct staggeredPhaseKernel {
     }
 };
 
-#endif //STAGGEREDPHASES_H

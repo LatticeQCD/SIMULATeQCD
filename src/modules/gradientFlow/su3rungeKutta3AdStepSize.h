@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 24.11.18.
 //
 
-#ifndef SU3RUNGEKUTTA3ADSTEPSIZE_H
-#define SU3RUNGEKUTTA3ADSTEPSIZE_H
-
+#pragma once
 #include "su3rungeKutta3.h"
 
 template<class floatT, size_t HaloDepth, typename Zi>
@@ -236,5 +234,4 @@ floatT su3rungeKutta3AdStepSize<floatT, HaloDepth, Zi>::updateFlow() {
 
 
 
-#endif //SU3RUNGEKUTTA3ADSTEPSIZE_H
 

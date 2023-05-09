@@ -1,5 +1,9 @@
-#ifndef DERIVATIVE_PROJECTU3CONSTRUCTS_H
-#define DERIVATIVE_PROJECTU3CONSTRUCTS_H
+/*
+ * derivativeProjectU3.h
+ *
+ */
+
+#pragma once
 
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
@@ -84,9 +88,9 @@ __host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn
 
     //force cut-off
     if (g0 < delta || g1 < delta || g2 < delta) {
-#ifndef USE_HIP_AMD        
+#ifndef USE_HIP_AMD
 	    printf("HISQ FORCE filter active\n");
-#endif	    
+#endif
         g0 = g0 + delta;
         g1 = g1 + delta;
         g2 = g2 + delta;
@@ -202,4 +206,3 @@ __host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn
     return temp;
 }
 
-#endif // DERIVATIVE_PROJECTU3CONSTRUCTS_H

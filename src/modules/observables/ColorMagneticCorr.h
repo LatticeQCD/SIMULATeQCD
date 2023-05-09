@@ -21,8 +21,8 @@
  *
  * similar to EE correlators but no shift for tau in the "square"
  */
-#ifndef COLORMAGNETICCORR_H
-#define COLORMAGNETICCORR_H
+
+#pragma once
 
 #include "../../base/LatticeContainer.h"
 #include "../../gauge/gaugefield.h"
@@ -50,4 +50,3 @@ public:
     std::vector<GCOMPLEX(floatT)> getColorMagneticCorr_clover();
 };
 
-#endif

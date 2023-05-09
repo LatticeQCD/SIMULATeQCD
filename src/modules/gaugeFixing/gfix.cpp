@@ -1,4 +1,4 @@
-/* 
+/*
  * gfix.cpp
  *
  * D. Clarke

@@ -1,6 +1,6 @@
-/* 
- * main_LinkPathTest.cpp                                                               
- * 
+/*
+ * main_LinkPathTest.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -139,7 +139,7 @@ struct FiveLinkExplicit {
         return temp;
     }
 };
-  
+
 template<class floatT, size_t HaloDepth>
 struct FiveLinkPath {
     gaugeAccessor<floatT> gaugeAccessor;

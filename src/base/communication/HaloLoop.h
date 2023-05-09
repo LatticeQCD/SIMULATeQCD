@@ -1,13 +1,11 @@
-/* 
- * HaloLoop.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * HaloLoop.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef HALOLOOP_H
-#define HALOLOOP_H
-
+#pragma once
 #define DYNAMIC_HALO_LOOP
 
 #include "communicationBase.h"
@@ -230,4 +228,3 @@ public:
     }
 };
 
-#endif //HALOLOOP_H

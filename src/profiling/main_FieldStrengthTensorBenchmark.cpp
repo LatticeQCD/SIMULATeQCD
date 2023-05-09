@@ -1,8 +1,8 @@
-/* 
- * main_FieldStrengthTensorBenchmark.cu                                                               
- * 
+/*
+ * main_FieldStrengthTensorBenchmark.cpp
+ *
  * Hai Tao Shu
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -20,11 +20,11 @@ struct FieldStrengthTensorTemporalKernel{
     __device__ __host__ GSU3<floatT> operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-        GSU3<floatT> Ft; 
-        Ft = FT(site, 0, 3) + FT(site, 1, 3) + FT(site, 2, 3); 
+        GSU3<floatT> Ft;
+        Ft = FT(site, 0, 3) + FT(site, 1, 3) + FT(site, 2, 3);
         return Ft;
     }
-};  
+};
 
 template<class floatT, bool onDevice, size_t HaloDepth>
 struct FieldStrengthTensorSpatialKernel{
@@ -36,11 +36,11 @@ struct FieldStrengthTensorSpatialKernel{
     __device__ __host__ GSU3<floatT> operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-        GSU3<floatT> Fs;    
-        Fs = FT(site, 0, 1) + FT(site, 0, 2) + FT(site, 1, 2);   
+        GSU3<floatT> Fs;
+        Fs = FT(site, 0, 1) + FT(site, 0, 2) + FT(site, 1, 2);
         return Fs;
-    }   
-}; 
+    }
+};
 
 template<class floatT, bool onDevice, size_t HaloDepth>
 GSU3<floatT> getFmunu_spatial(Gaugefield<floatT,true, HaloDepth> &gauge, LatticeContainer<true,GSU3<floatT>> &redBase){

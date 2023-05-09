@@ -2,8 +2,7 @@
 // Created by Hai-Tao Shu on 11.11.2020
 //
 
-#ifndef WILSONLINECORRELATOR_H
-#define WILSONLINECORRELATOR_H
+#pragma once
 
 #include "../../base/math/correlators.h"
 #include "../observables/PolyakovLoop.h"
@@ -29,4 +28,3 @@ public:
 
 };
 
-#endif

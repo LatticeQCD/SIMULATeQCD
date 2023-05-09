@@ -1,11 +1,13 @@
-//
-// Created by Lukas Mazur on 04.01.19.
-//
-#ifndef STAGGEREDPHASES_H
-#define STAGGEREDPHASES_H
+/*
+ * staggeredPhases.h
+ *
+ * L. Mazur
+ *
+ */
+
+#pragma once
 #include "../../define.h"
 #include "../../base/indexer/BulkIndexer.h"
-
 
 struct calcStaggeredPhase {
     inline __host__ __device__ int operator()(const gSiteMu &siteMu) const {
@@ -16,8 +18,6 @@ struct calcStaggeredPhase {
         /// I think we don't need to compute global coord here..
         sitexyzt globalCoord = GInd::getLatData().globalPos(localCoord);
 
-        // printf("Is this even used?\n");
-
         int rest = globalCoord.x % 2;
         if (rest == 1 && siteMu.mu == 1) return -1;
 
@@ -27,14 +27,11 @@ struct calcStaggeredPhase {
         rest = (globalCoord.x + globalCoord.y + globalCoord.z) % 2;
         if (rest == 1 && siteMu.mu == 3) return -1;
 
-
         return 1;
     }
 };
 
-/*! For fermi statistics we want anti-periodic boundary conditions in the time-direction
- *
- */
+// For fermi statistics we want anti-periodic boundary conditions in the time-direction
 struct calcStaggeredBoundary {
     inline __host__ __device__ int operator()(const gSiteMu &siteMu) const {
 
@@ -55,7 +52,6 @@ struct imagMuphase {
 
         GPUcomplex<floatT> img_chmp;
 
-
         if (chmp>=0) {
             img_chmp.cREAL = cos(chmp);
             img_chmp.cIMAG = sin(chmp);
@@ -66,11 +62,9 @@ struct imagMuphase {
             img_chmp.cIMAG = -sin(chmp);
         }
 
-
         if ( siteMu.mu == 3) return img_chmp;
 
         return 1;
     }
 };
 
-#endif //STAGGEREDPHASES_H

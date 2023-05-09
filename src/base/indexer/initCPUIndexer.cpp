@@ -1,8 +1,8 @@
-/* 
- * initCPUIndexer.cpp                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * initCPUIndexer.cpp
+ *
+ * L. Mazur
+ *
  */
 
 #include "../../define.h"

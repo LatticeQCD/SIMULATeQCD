@@ -1,11 +1,11 @@
-//
-// Created by Lukas Mazur on 05.07.18.
-//
+/*
+ * PlaqConstructs.h
+ *
+ * L. Mazur
+ *
+ */
 
-#ifndef LINKCONSTRUCTS_H
-#define LINKCONSTRUCTS_H
-
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -37,6 +37,8 @@ __host__ __device__ GSU3<floatT> inline Plaq_P(gaugeAccessor<floatT,comp> gAcc, 
             * gAcc.getLinkDagger(GInd::getSiteMu(site, nu));
     return temp;
 }
+
+
 template<class floatT,size_t HaloDepth,CompressionType comp>
 __host__ __device__ GSU3<floatT> inline Plaq_Q(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
@@ -61,6 +63,7 @@ __host__ __device__ GSU3<floatT> inline Plaq_Q(gaugeAccessor<floatT,comp> gAcc, 
     return temp;
 }
 
+
 template<class floatT,size_t HaloDepth,CompressionType comp>
 __host__ __device__ GSU3<floatT> inline Plaq_R(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
@@ -84,6 +87,8 @@ __host__ __device__ GSU3<floatT> inline Plaq_R(gaugeAccessor<floatT,comp> gAcc, 
             * gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site, nu), nu));
     return temp;
 }
+
+
 template<class floatT,size_t HaloDepth,CompressionType comp>
 __host__ __device__ GSU3<floatT> inline Plaq_S(gaugeAccessor<floatT,comp> gAcc, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
@@ -110,4 +115,3 @@ __host__ __device__ GSU3<floatT> inline Plaq_S(gaugeAccessor<floatT,comp> gAcc, 
 }
 
 
-#endif //LINKCONSTRUCTS_H

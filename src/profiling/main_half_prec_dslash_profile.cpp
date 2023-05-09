@@ -1,8 +1,8 @@
-/* 
- * main_half_prec_dslash_profile.cu                                                               
- * 
+/*
+ * main_half_prec_dslash_profile.cpp
+ *
  * Dennis Bollweg
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -29,7 +29,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     Gaugefield<__half, true, HaloDepth, R18> gauge_smeared_half(commBase);
     Gaugefield<__half, true, HaloDepth, U3R14> gauge_Naik_half(commBase);
-    
+
     HisqSmearing<floatT, onDevice, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
     rootLogger.info("Starting Test with " ,  NStacks ,  " Stacks");
     rootLogger.info("Initialize random state");
@@ -58,7 +58,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     gpuErr = gpuGetLastError();
     if (gpuErr)
         rootLogger.info("Error in smearing");
-        
+
     gauge_smeared_half.convert_precision<floatT>(gauge_smeared);
     gauge_Naik_half.convert_precision<floatT>(gauge_Naik);
 
@@ -81,20 +81,20 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     rootLogger.info("Initialize DSlash");
     HisqDSlash<__half, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared_half, gauge_Naik_half, 0.0);
-    
+
     gpuErr = gpuGetLastError();
     if (gpuErr)
         rootLogger.info("Error in Initialization of DSlash");
 
-   
+
     for (int i = 0; i < 500; ++i) {
         timer.start();
         dslash.applyMdaggM(spinorOut, spinorIn, false);
         timer.stop();
         spinorIn=spinorSave;
     }
-   
-    
+
+
 
 
     Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorTest(commBase);
@@ -105,10 +105,10 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     norm = real<double>(dot);
     SimpleArray<double, NStacks> Vol_Stack(Vol);
     norm = norm / Vol_Stack;
-    
+
     rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
- 
+
     float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /timer.seconds()*1e-12;
     rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 
@@ -128,11 +128,11 @@ int main(int argc, char **argv) {
 
     const int LatDim[] = {param.latDim[0],param.latDim[1],param.latDim[2],param.latDim[3]};
 
-    
-    
+
+
     int Vol = LatDim[0]*LatDim[1]*LatDim[2]*LatDim[3];
-    
-    
+
+
     param.latDim.set(LatDim);
 
     commBase.init(param.nodeDim());

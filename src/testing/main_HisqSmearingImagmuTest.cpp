@@ -1,9 +1,9 @@
-/* 
+/*
  * main_HisqSmearingImagmuTest.cu
  *
- * D. Bollweg 
+ * D. Bollweg
  *
- * Quick single-GPU test comparing the output of the imaginary mu smearing against the old results from the ParallelGPUCode. 
+ * Quick single-GPU test comparing the output of the imaginary mu smearing against the old results from the ParallelGPUCode.
  *
  */
 
@@ -46,16 +46,16 @@ int main(int argc, char *argv[]) {
 
     rootLogger.info("Read configuration");
     gauge_in.readconf_nersc("../test_conf/gauge12750");
-    
+
     gauge_in.updateAll();
-   
+
     timer.start();
     smearing.SmearAll(chmp);
     timer.stop();
     rootLogger.info("Time for full smearing: ",timer);
     gauge_smeared_reference.readconf_nersc("../test_conf/smearing_imagmu_reference_conf");
     gauge_Lv2.writeconf_nersc("../test_conf/smearing_imagmu_testrun");
-    
+
     gauge_Lv2.readconf_nersc("../test_conf/smearing_imagmu_testrun");
 
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge_Lv2,gauge_smeared_reference);

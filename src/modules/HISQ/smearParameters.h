@@ -1,10 +1,11 @@
-//
-// Created by Jishnu on 10/09/18.
-//
+/*
+ * smearParameters.h
+ *
+ * J. Goswami
+ *
+ */
 
-#ifndef PARAMETERS_H
-#define PARAMETERS_H
-
+#pragma once
 #include "../../define.h"
 template <class floatT>
 struct SmearingParameters{
@@ -21,22 +22,22 @@ struct SmearingParameters{
         _c_7(c_7),
         _c_lp(c_lp){}
 };
+
 template<class floatT>
 inline SmearingParameters<floatT> getLevel1Params(){
     SmearingParameters<floatT> params_L1(1/8.,1/8./2.,1/8./8.,1/48./8.,0.0);
     return params_L1;
 }
+
 template<class floatT>
 inline SmearingParameters<floatT> getLevel2Params(floatT naik_epsilon = 0.0){
     SmearingParameters<floatT> params_L2(1.0*(1+naik_epsilon/8),1/8./2.,1/8./8.,1/48./8.,-1/8.0);
     return params_L2;
 }
+
 template<class floatT>
 floatT get_naik_epsilon_from_amc(floatT amc) {
     floatT amc_sqr = amc * amc;
     return amc_sqr * (-27./40. + amc_sqr * (327./1120. + amc_sqr * (-15607./268800. - amc_sqr * 73697./3942400.)));
 }
 
-#endif
-
-//PARAMETERS_H

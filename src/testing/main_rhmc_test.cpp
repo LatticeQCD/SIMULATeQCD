@@ -1,13 +1,13 @@
-/* 
- * main_rhmc_test.cpp                                                               
- * 
+/*
+ * main_rhmc_test.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/PolyakovLoop.h"
-#include "testing.h" 
-    
+#include "testing.h"
+
 
 template<class floatT, int HaloDepth>
 bool reverse_test(CommunicationBase &commBase, RhmcParameters param, RationalCoeff rat){

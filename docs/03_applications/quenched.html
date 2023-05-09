@@ -89,20 +89,20 @@ To generate quenched gauge configurations, <code class="docutils literal notrans
 You can then find it under <code class="docutils literal notranslate"><span class="pre">applications/GenerateQuenched</span></code>. The example parameter file is
 found under <code class="docutils literal notranslate"><span class="pre">parameter/GenerateQuenched.param</span></code> and looks like this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#parameter file for GenerateQuenched</span>
-<span class="nv">Lattice</span> <span class="o">=</span> <span class="m">64</span> <span class="m">64</span> <span class="m">64</span> <span class="m">16</span>
-<span class="nv">Nodes</span> <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
-<span class="nv">beta</span> <span class="o">=</span> <span class="m">6</span>.87361
-<span class="nv">format</span> <span class="o">=</span> nersc
-<span class="nv">endianness</span> <span class="o">=</span> auto
-<span class="nv">stream</span> <span class="o">=</span> a
-<span class="nv">output_dir</span> <span class="o">=</span> .
-<span class="nv">nconfs</span> <span class="o">=</span> <span class="m">1000</span>
-<span class="nv">nsweeps_ORperHB</span> <span class="o">=</span> <span class="m">4</span>
-<span class="nv">nsweeps_HBwithOR</span> <span class="o">=</span> <span class="m">500</span>
+<span class="nv">Lattice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">16</span>
+<span class="nv">Nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span>
+<span class="nv">beta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6</span>.87361
+<span class="nv">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>nersc
+<span class="nv">endianness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>auto
+<span class="nv">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>a
+<span class="nv">output_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.
+<span class="nv">nconfs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1000</span>
+<span class="nv">nsweeps_ORperHB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">4</span>
+<span class="nv">nsweeps_HBwithOR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span>
 
-<span class="nv">start</span> <span class="o">=</span> one
-<span class="nv">nsweeps_thermal_HB_only</span> <span class="o">=</span> <span class="m">500</span>
-<span class="nv">nsweeps_thermal_HBwithOR</span> <span class="o">=</span> <span class="m">4000</span>
+<span class="nv">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>one
+<span class="nv">nsweeps_thermal_HB_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span>
+<span class="nv">nsweeps_thermal_HBwithOR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">4000</span>
 
 <span class="c1">#conf_nr = 500</span>
 <span class="c1">#prev_conf = conf_s064t16_b0687361_a_U000500</span>

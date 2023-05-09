@@ -1,11 +1,15 @@
-#ifndef DSLASH_H
-#define DSLASH_H
+/*
+ * dslash.h
+ *
+ */
+
+#pragma once
 
 #include "../inverter/inverter.h"
 
 #define C_1000 (0.5)
 
-//! Abstract base class for all kind of Dslash operators that shall enter the inversion
+//! Abstract base class for all kinds of Dslash operators that shall enter the inversion
 template<typename SpinorLHS_t, typename SpinorRHS_t>
 class DSlash : public LinearOperator<SpinorRHS_t> {
 public:
@@ -17,8 +21,8 @@ public:
     virtual void applyMdaggM(SpinorRHS_t &, const SpinorRHS_t &, bool update = true) = 0;
 };
 
-//! HisqDslash
 
+//! HisqDslash
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct HisqDslashFunctor {
 
@@ -41,7 +45,6 @@ struct HisqDslashFunctor {
     auto getAccessor() const {
         return *this;
     }
-
 };
 
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
@@ -210,4 +213,3 @@ public:
 
 };
 
-#endif

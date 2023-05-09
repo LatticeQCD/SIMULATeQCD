@@ -1,20 +1,19 @@
 /*
-
-  Mike Clark - 25th May 2005
-
-  bigfloat.h
-
-  Simple C++ wrapper for multiprecision datatype used by AlgRemez
-  algorithm
-
-*/
+ *
+ *  Mike Clark - 25th May 2005
+ *
+ *  bigfloat.h
+ *
+ *  Simple C++ wrapper for multiprecision datatype used by AlgRemez
+ *  algorithm
+ *
+ */
 
 #include <gmp.h>
 #include <mpf2mpfr.h>
 #include <mpfr.h>
 
-#ifndef INCLUDED_BIGFLOAT_H
-#define INCLUDED_BIGFLOAT_H
+#pragma once
 
 class bigfloat {
 
@@ -30,7 +29,7 @@ public:
   bigfloat(const long i) { mpf_init_set_si(x, i); }
   bigfloat(const int i) {mpf_init_set_si(x,(long)i);}
   bigfloat(const float d) { mpf_init_set_d(x, (double)d); }
-  bigfloat(const double d) { mpf_init_set_d(x, d); }  
+  bigfloat(const double d) { mpf_init_set_d(x, d); }
   bigfloat(const char *str) { mpf_init_set_str(x, (char*)str, 10); }
   ~bigfloat(void) { mpf_clear(x); }
   operator double (void) const { return (double)mpf_get_d(x); }
@@ -43,33 +42,33 @@ public:
     unsigned long bprec =  (unsigned long)(3.321928094 * (double)dprec);
     mpf_set_prec(x,bprec);
   }
-  
+
   unsigned long getPrecision(void) const { return mpf_get_prec(x); }
 
   unsigned long getDefaultPrecision(void) const { return mpf_get_default_prec(); }
 
   bigfloat& operator=(const bigfloat& y) {
-    mpf_set(x, y.x); 
+    mpf_set(x, y.x);
     return *this;
   }
 
-  bigfloat& operator=(const unsigned long y) { 
+  bigfloat& operator=(const unsigned long y) {
     mpf_set_ui(x, y);
-    return *this; 
-  }
-  
-  bigfloat& operator=(const signed long y) {
-    mpf_set_si(x, y); 
     return *this;
   }
-  
+
+  bigfloat& operator=(const signed long y) {
+    mpf_set_si(x, y);
+    return *this;
+  }
+
   bigfloat& operator=(const float y) {
-    mpf_set_d(x, (double)y); 
+    mpf_set_d(x, (double)y);
     return *this;
   }
 
   bigfloat& operator=(const double y) {
-    mpf_set_d(x, y); 
+    mpf_set_d(x, y);
     return *this;
   }
 
@@ -100,13 +99,13 @@ public:
     mpf_sub(a.x,x.x,y.x);
     return a;
   }
-  
+
   friend bigfloat operator-(const unsigned long x, const bigfloat& y) {
     bigfloat a;
     mpf_ui_sub(a.x,x,y.x);
     return a;
   }
-  
+
   friend bigfloat operator-(const bigfloat& x, const unsigned long y) {
     bigfloat a;
     mpf_sub_ui(a.x,x.x,y);
@@ -205,4 +204,3 @@ public:
 
 };
 
-#endif

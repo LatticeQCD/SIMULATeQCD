@@ -1,8 +1,8 @@
-/* 
- * communicationBase_scalar.cpp                                                               
- * 
- * Scalar implementation with no communication. 
- * 
+/*
+ * communicationBase_scalar.cpp
+ *
+ * Scalar implementation with no communication.
+ *
  */
 
 #include "../../define.h"
@@ -27,6 +27,6 @@ void CommunicationBase::init(const LatticeParameters &lp ) {
         throw std::runtime_error(stdLogger.fatal("Running scalar code, but more than one node set."));
     }
 
-}; 
+};
 
 #endif

@@ -1,8 +1,8 @@
-/* 
- * gaugefield.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * gaugefield.h
+ *
+ * L. Mazur
+ *
  */
 
 #ifndef _gaugefield_h_
@@ -90,12 +90,12 @@ public:
     void gauss_test(uint4* rand_state);
 
 //TODO: put that into the cpp file and fix explicit instantiation macros to reduce compile time
-    template<class floatT_source> 
+    template<class floatT_source>
     void convert_precision(Gaugefield<floatT_source, onDevice, HaloDepth, comp> &gaugeIn) {
-        
+
         iterateOverFullAllMu(convert_prec<floatT_source,floatT,onDevice, HaloDepth, comp>(gaugeIn));
     }
-        
+
 
     void swap_memory(Gaugefield<floatT, onDevice, HaloDepth,comp> &gauge){
         _lattice.swap(gauge._lattice);
@@ -127,7 +127,7 @@ public:
     template<unsigned BlockSize = 256, typename Object>
     void iterateWithConst(Object ob);
 
-    /// THIS IS EXPERIMENTAL!! 
+    /// THIS IS EXPERIMENTAL!!
     template<unsigned BlockSize = 256, typename Functor>
     void constructWithHaloUpdateAllMu(Functor op);
 

@@ -1,8 +1,8 @@
-/* 
- * main_SimpleFunctorTest.cpp                                                               
- * 
- * Simplest relevant implementations of Functor syntax. 
- * 
+/*
+ * main_SimpleFunctorTest.cpp
+ *
+ * Simplest relevant implementations of Functor syntax.
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -70,7 +70,7 @@ class Spinor{
 #endif
     }
 
-        
+
     ~Spinor(){
 #ifndef CPU
         gpuError_t gpuErr;
@@ -86,7 +86,7 @@ class Spinor{
         }
         upload();
     }
-    
+
     SpinorAccessor getAccessor() const{
 #ifndef CPU
         return SpinorAccessor(_d_mem);
@@ -99,7 +99,7 @@ class Spinor{
     Spinor& operator=(Function func){
 
         performFunctorsLaunch(this->getAccessor(), func, _size);
-        
+
 
         return *this;
     }
@@ -130,7 +130,7 @@ void compare_relative(Spinor& ref, Spinor& res, double rel, double prec, std::st
 }
 
 
-template<typename T> 
+template<typename T>
 auto operator*(const T lhs, const Spinor& rhs){
     return general_mult(lhs, rhs);
 }
@@ -148,12 +148,12 @@ auto operator/(const Spinor& lhs, const Spinor& rhs){
     return general_divide(lhs, rhs);
 }
 
-template<typename T> 
+template<typename T>
 auto operator/(const T lhs, const Spinor& rhs){
     return general_divide(lhs, rhs);
 }
 
-template<typename T> 
+template<typename T>
 auto operator/(const Spinor& lhs, const T rhs){
     return general_divide(lhs, rhs);
 }
@@ -162,12 +162,12 @@ auto operator+(const Spinor& lhs, const Spinor& rhs){
     return general_add(lhs, rhs);
 }
 
-template<typename T> 
+template<typename T>
 auto operator+(const T lhs, const Spinor& rhs){
     return general_add(lhs, rhs);
 }
 
-template<typename T> 
+template<typename T>
 auto operator+(const Spinor& lhs, const T rhs){
     return general_add(lhs, rhs);
 }
@@ -176,12 +176,12 @@ auto operator-(const Spinor& lhs, const Spinor& rhs){
     return general_subtract(lhs, rhs);
 }
 
-template<typename T> 
+template<typename T>
 auto operator-(const T lhs, const Spinor& rhs){
     return general_subtract(lhs, rhs);
 }
 
-template<typename T> 
+template<typename T>
 auto operator-(const Spinor& lhs, const T rhs){
     return general_subtract(lhs, rhs);
 }
@@ -357,7 +357,7 @@ int main(){
     timer.print("reference kernel");
 
     compare_relative(res, ref, 1e-8, 1e-8, "Reference kernel vs operators test");
-    
+
     //This should cover all existing kinds of operator combinations
     res = a*b + a/b
               - ((a + b) / (a - 2.3*b)) * (2*a)
@@ -367,7 +367,7 @@ int main(){
               + (a*b)/2 + 2/(a*c)
               + (2 + (a*b)) + (2+(a*c))
               + (2 - (a*b)) + (2-(a*c));
-    
+
     ref = ComplexReferenceFunctor(a, b, c, d);
 
     compare_relative(res, ref, 1e-8, 1e-8, "Complex operators vs one operator test");

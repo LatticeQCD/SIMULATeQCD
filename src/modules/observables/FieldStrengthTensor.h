@@ -3,9 +3,7 @@
 //
 
 
-#ifndef FIELDSTRENGTHTENSOR_H
-#define FIELDSTRENGTHTENSOR_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -613,4 +611,3 @@ struct FieldStrengthTensor_imp_imp {
         return Fmunu - floatT(1./3.) * tr_c(Fmunu) * unityGSU3;
     }
 };
-#endif //FIELDSTRENGTHTENSOR_H

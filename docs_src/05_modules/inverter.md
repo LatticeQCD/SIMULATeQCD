@@ -1,12 +1,12 @@
 # Inverter (Conjugate Gradient)
 
 
-The Conjugate Gradient (CG) inverter solves the equation $Ax=b$, where $A$ is a symmetric and positive definite matrix, 
-$b$ an input vector and $x$ the solution vector. Different versions of the CG inverter are implemented in our code 
-in the two classes `ConjugateGradient` and `AdvancedMultiShiftCG`. The matrix $A$ in our case is, up to now, always $M^{\dagger}M$, 
+The Conjugate Gradient (CG) inverter solves the equation $Ax=b$, where $A$ is a symmetric and positive definite matrix,
+$b$ an input vector and $x$ the solution vector. Different versions of the CG inverter are implemented in our code
+in the two classes `ConjugateGradient` and `AdvancedMultiShiftCG`. The matrix $A$ in our case is, up to now, always $M^{\dagger}M$,
 with $M$ being the fermion matrix.
 
-## The Basic Algorithm 
+## The Basic Algorithm
 
 Given an initial guess $x_0$ and a target residual $\epsilon$, compute $r_0=b-Ax$ and set $p_0=r_0$.
 
@@ -27,12 +27,12 @@ In exact arithmetic, the iteratively computed residual $r_i$ is always equivalen
 ## Multi-RHS and Multi-shift
 
 Two important improvements of the basic CG algorithm that we employ in our code are the use of multiple right-hand sides and multiple shifts. These two optimizations cannot be used at the same time.
-The multi rhs version of the CG solves $Ax_{k}=b_{k}$ for multiple "right-hand sides" $b_k$ simultaneously. This can improve performance significantly since the most expensive part in a CG iteration is the matrix-vector product $Ap$ that enters $\alpha$. The performance of this matrix-vector product, the Dslash kernel, is limited by the GPU's memory bandwidth. By applying the same matrix $A$ to multiple vectors at once, $A$ only needs to be loaded once, thereby saving memory bandwidth and increasing performance. 
+The multi rhs version of the CG solves $Ax_{k}=b_{k}$ for multiple "right-hand sides" $b_k$ simultaneously. This can improve performance significantly since the most expensive part in a CG iteration is the matrix-vector product $Ap$ that enters $\alpha$. The performance of this matrix-vector product, the Dslash kernel, is limited by the GPU's memory bandwidth. By applying the same matrix $A$ to multiple vectors at once, $A$ only needs to be loaded once, thereby saving memory bandwidth and increasing performance.
 The multi-shift CG solves $\left(A+\sigma_{k}\mathbb{1}\right)x_{k}=b$ with multiple shifts $\sigma_{k}$. Without going into too much technical details, the multi-shift CG essentially solves the system $\left(A+\sigma_{0}\mathbb{1}\right)x_0=b$ with the smallest shift $\sigma_0$ with the basic CG algorithm and computes the solutions for the larger shifts through some smart linear algebra on the way, thereby solving multiple problems at the cost of only one.
 
 ## The ConjugateGradient Class
 
-This class implements the CG algorithm shown above and supports using multiple right hand sides. 
+This class implements the CG algorithm shown above and supports using multiple right hand sides.
 It has two template parameters, `floatT` and `NStacks` that define the floating point type to be used and the number of right hand sides, respectively.
 ```C++
 ConjugateGradient<floatT, NStacks> cg;
@@ -51,19 +51,19 @@ which implements a multi-rhs CG with an absolute stopping criterion, i.e. the al
 template <typename Spinor_t>
 void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 ```
- invert_new does the same as invert but uses a relative stopping criterion, i.e. the algorithm stops when $\frac{|r|^2}{|r_{0}|^2}<\mathrm{precision}$, where $r_0$ is the starting residual. 
+ invert_new does the same as invert but uses a relative stopping criterion, i.e. the algorithm stops when $\frac{|r|^2}{|r_{0}|^2}<\mathrm{precision}$, where $r_0$ is the starting residual.
 
 ```C++
 template <typename Spinor_t>
 void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 ```
-invert_res_replace employs a residual replacement strategy where the iterated residual is replaced by the exact residual occasionally. 
+invert_res_replace employs a residual replacement strategy where the iterated residual is replaced by the exact residual occasionally.
 
 ## The AdvancedMultiShiftCG Class
 
-This class implements the multi-shift CG algorithm. The template parameters are the same as for the ConjugateGradient class. 
+This class implements the multi-shift CG algorithm. The template parameters are the same as for the ConjugateGradient class.
 
-The member function 
+The member function
 ```C++
 template <typename SpinorIn_t, typename SpinorOut_t>
 void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
@@ -72,7 +72,7 @@ performs the multi-shift inversion. In contrast to ConjugateGradient::invert, th
 
 ## Mixed precision
 
-The time to solution of the CG can be significantly decreased by using mixed precision approaches. Since it is an iterative method, we can use half precision floating point arithmetic for the bulk part of the computation and inject full precision residuals occasionally to correct for rounding errors accumulated along the way.  This is implemented in the member function `invert_mixed` of `ConjugateGradient`: 
+The time to solution of the CG can be significantly decreased by using mixed precision approaches. Since it is an iterative method, we can use half precision floating point arithmetic for the bulk part of the computation and inject full precision residuals occasionally to correct for rounding errors accumulated along the way.  This is implemented in the member function `invert_mixed` of `ConjugateGradient`:
 ```C++
 template <typename Spinor_t, typename Spinor_t_inner>
 void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_inner>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta);
@@ -86,27 +86,27 @@ In contrast to the other invert methods, one has to pass an additional, lower pr
 ```C++
  //declare target precision gauge fields and half precision gauge fields
  Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
- Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_naik(commBase); 
+ Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_naik(commBase);
  Gaugefield<floatT_inner, onDevice, HaloDepth, R18> gauge_smeared_lowprec(commBase);
  Gaugefield<floatT_inner, onDevice, HaloDepth, U3R14> gauge_naik_lowprec(commBase);
 
 //declare spinors
 Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorIn(commBase);
 Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
-    
+
 
 //declare CG, regular dslash and half precision dslash
 ConjugateGradient<floatT, NStacks> cg;
-    
+
 HisqDSlash<floatT, onDevice, LatLayout, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_naik, param.m_ud());
-HisqDSlash<floatT_inner, onDevice, LatLayout, HaloDepth, HaloDepthSpin, NStacks> dslash_lowprec(gauge_smeared_lowprec, gauge_naik_lowprec, param.m_ud());    
+HisqDSlash<floatT_inner, onDevice, LatLayout, HaloDepth, HaloDepthSpin, NStacks> dslash_lowprec(gauge_smeared_lowprec, gauge_naik_lowprec, param.m_ud());
 
 
 
 //do stuff with the regular gaugefield and spinors, like smearing and some physics
 
 
-//copy results into half prec gauge fields. THIS STEP IS IMPORTANT! 
+//copy results into half prec gauge fields. THIS STEP IS IMPORTANT!
  gauge_smeared_lowprec.convert_precision(gauge_smeared);
  gauge_naik_lowprec.convert_precision(gauge_naik);
 

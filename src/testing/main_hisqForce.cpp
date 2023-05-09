@@ -1,9 +1,9 @@
-/* 
- * main_hisqForce.cpp                                                               
- * 
+/*
+ * main_hisqForce.cpp
+ *
  * This program tests the HISQ fermion force and has to yield the same result as the gaction_test_hisqforce.cpp
  * in the BielefeldGPUCode.
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -11,7 +11,7 @@
 #include "../modules/HISQ/hisqForce.h"
 #include "testing.h"
 
-#define PREC double 
+#define PREC double
 #define USE_GPU true
 
 
@@ -47,14 +47,14 @@ int main(int argc, char *argv[]) {
 
     grnd_state<true> d_rand;
 
-    initialize_rng(rhmc_param.seed(),d_rand);    
+    initialize_rng(rhmc_param.seed(),d_rand);
     rootLogger.info("seed=",rhmc_param.seed());
     gauge.random(d_rand.state);
     gauge.updateAll();
 
     HisqSmearing<PREC, true, HaloDepth,R18> smearing(gauge,gaugeLvl2,gaugeNaik);
     smearing.SmearAll();
-    
+
     AdvancedMultiShiftCG<PREC, 14> CG;
 
     HisqDSlash<PREC, true, Even, HaloDepth, HaloDepthSpin,1> dslash(gaugeLvl2,gaugeNaik,0.0);
@@ -80,13 +80,13 @@ int main(int argc, char *argv[]) {
     rootLogger.info(test1.getLink00(), test1.getLink01(), test1.getLink02());
     rootLogger.info(test1.getLink10(), test1.getLink11(), test1.getLink12());
     rootLogger.info(test1.getLink20(), test1.getLink21(), test1.getLink22());
-    
+
     Gaugefield<PREC,true,HaloDepth> force_reference(commBase);
 
     force_reference.readconf_nersc(rhmc_param.GaugefileName());
 
     // readconf_nersc does some reunitarization. Writing and reading makes sure the comparison between this generated
-    // force field and force_reference have both been reunitarized in the same way.    
+    // force field and force_reference have both been reunitarized in the same way.
     force.writeconf_nersc("../test_conf/force_testrun",3,2);
     force.readconf_nersc("../test_conf/force_testrun");
 
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         rootLogger.error("Force is wrong!");
         return 1;
     }
-       
+
     return 0;
 }
 

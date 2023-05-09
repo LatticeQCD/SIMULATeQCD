@@ -1,5 +1,9 @@
-#ifndef DERIVATIVE_7LINK_H
-#define DERIVATIVE_7LINK_H
+/*
+ * derivative7link.h
+ *
+ */
+
+#pragma once
 
 #include "../../base/indexer/BulkIndexer.h"
 #include "../../base/math/gaugeAccessor.h"
@@ -656,4 +660,3 @@ __host__ __device__ GSU3<floatT> linkDerivative7(gaugeAccessor<floatT,compIn> gA
 return temp;
 }
 
-#endif // DERIVATIVE_7LINK_H
