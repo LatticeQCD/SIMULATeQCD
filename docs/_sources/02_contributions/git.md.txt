@@ -1,4 +1,4 @@
-# How to do pull requests 
+# How to do pull requests
 
 You just finished your feature branch and want to merge it with the main. Please follow this procedure to make sure
 that nothing has been broken:

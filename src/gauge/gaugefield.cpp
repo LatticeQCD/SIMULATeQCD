@@ -12,7 +12,7 @@
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::writeconf_nersc(const std::string &fname, int rows,
-                                                                             int diskprec, Endianness en) {
+                                                                    int diskprec, Endianness en) {
     if(onDevice) {
         rootLogger.info("writeconf_nersc: Writing NERSC configuration ",fname);
         GSU3array<floatT, false, comp>  lattice_host((int)GInd::getLatData().vol4Full*4);
@@ -212,7 +212,6 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::readconf_openqcd(const std::s
     } else {
         readconf_openqcd_host(getAccessor(),fname);
     }
-//    this->su3latunitarize();
 }
 
 
@@ -392,7 +391,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(gaugeAcce
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_openqcd_host(gaugeAccessor<floatT,comp> gaugeAccessor,
-                                                                       const std::string &fname)
+                                                                          const std::string &fname)
 {
     typedef GIndexer<All,HaloDepth> GInd;
 
@@ -405,8 +404,6 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_openqcd_host(gaugeA
 
     const int bytes_per_site = 9 * 2 * 4 * 8;
     const int bytes_per_su3 = 9 * 2 * 8;
-
-    
 
     this->getComm().initIOBinary(fname, 0, bytes_per_site, 24, global, local, READ);
 
@@ -456,8 +453,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_openqcd_host(gaugeA
                 floatT im = start[i++];
                 ret(j, k) = GCOMPLEX(floatT)(re, im);
             }
-            // std::cout << ret(0, 0) << std::endl;
-            // std::exit(0);
+
             if(mu == 0){
                 site = GInd::getSite(x, y, z, (t+GInd::getLatData().lt-1) % GInd::getLatData().lt);
                 mmu = 3;
@@ -475,7 +471,6 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_openqcd_host(gaugeA
             pos += bytes_per_su3;
         }
     }
-
     this->getComm().closeIOBinary();
 }
 

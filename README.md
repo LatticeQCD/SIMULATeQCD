@@ -110,13 +110,14 @@ If none of the above cases apply, you may also send an email to lukas.mazur(at)u
 [H. Dick](https://github.com/redweasel),
 [J. Goswami](https://github.com/jishnuxx)
 [O. Kaczmarek](https://github.com/olaf-kaczmarek),
+[J. Kim](https://github.com/kimjangho1120),
 [R. Larsen](https://github.com/RasmusNL),
 M. Neumann,
 M. Rodekamp,
 [H. Sandmeyer](https://github.com/hsandmeyer),
 [C. Schmidt](https://github.com/schmidt74),
 [P. Scior](https://github.com/philomat),
-[H.-T. Shu](https://github.com/haitaoshu),
+[H.-T. Shu](https://github.com/haitaoshu)
 
 ## Citing SIMULATeQCD
 

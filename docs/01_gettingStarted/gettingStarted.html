@@ -94,7 +94,7 @@ The code can then be cloned to your folder using:</p>
 <li><p><a class="reference external" href="https://git-lfs.github.com/">git-lfs</a> to also be able to clone test configurations:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># For Debian-based system</span>
 sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>git-lfs
-<span class="w"> </span>
+
 <span class="c1"># For Arch-based system</span>
 sudo<span class="w"> </span>pacman<span class="w"> </span>-S<span class="w"> </span>git-lfs
 </pre></div>
@@ -194,7 +194,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <section id="on-a-cluster-using-slurm">
 <h3>On a cluster using <code class="docutils literal notranslate"><span class="pre">slurm</span></code><a class="headerlink" href="#on-a-cluster-using-slurm" title="Permalink to this headline"></a></h3>
 <p>If you are on a cluster that uses slurm, e.g. the Bielefeld GPU cluster, then, inside of your sbatch script do not use mpiexec or mpirun, but instead do</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>-n<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;<span class="w"> </span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>-n<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;
 </pre></div>
 </div>
 </section>
@@ -202,7 +202,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <h3>On your local machine (desktop, laptop, …)<a class="headerlink" href="#on-your-local-machine-desktop-laptop" title="Permalink to this headline"></a></h3>
 <p>Any program has to be launched using mpirun or mpiexec.
 For example:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;<span class="w"> </span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;NoGPUs&gt;</span></code> is the number of GPUs you want to use.</p>

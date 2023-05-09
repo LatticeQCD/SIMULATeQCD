@@ -4,7 +4,7 @@ The pure gauge update class contains both heat bath (HB) and over-relaxation (OR
 
 To use this class include the `src/gauge/PureGaugeUpdates.h` header file and include `src/gauge/PureGaugeUpdates.cpp` as a source file for your program in `CMakeLists.txt`.  The pure gauge update class is initialized with, for example,
 ```C++
-GaugeUpdate<PREC,true,HaloDepth>    gUpdate(gauge); 
+GaugeUpdate<PREC,true,HaloDepth>    gUpdate(gauge);
 ```
 and one OR sweep of the entire lattice can be performed with
 ```C++
@@ -64,6 +64,6 @@ The following use `HaloDepth=1`. Each sweep consists of 1 HB with 4 OR updates. 
 | 143 664(16) | 143 432(16) | 143 138(11) | 120 595(34) | 120 581(12) | 120 180(15) |
 
 4 processor: $272\times68^3$:
-| x split | y split | z split | t split | 
+| x split | y split | z split | t split |
 | :------ | ------- | ------- | ------: |
 | 134 423(17) | 99 072(30) | 98 397(22) | 97 810(29) |

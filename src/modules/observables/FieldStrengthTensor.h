@@ -1,6 +1,9 @@
-//
-//created by Marcel Rodekamp 30.05.2018
-//
+/* 
+ * FieldStrengthTensor.h                                                               
+ * 
+ * M. Rodekamp 
+ * 
+ */
 
 
 #pragma once
@@ -13,9 +16,9 @@
 
 
 /*Qmunu(gaugeAccessor<floatT>, GSU3<floatT> &,  gSite,  int ,  int )
-	Determine:
-	Q_(mu,nu)(x) = U_(mu,nu)(x) + U_(-mu,nu)(x) + U_(-mu,-nu)(x) + U_(mu,nu)(x)
-	where U_(mu,nu)(x) denotes the plaquette at site x.
+        Determine:
+        Q_(mu,nu)(x) = U_(mu,nu)(x) + U_(-mu,nu)(x) + U_(-mu,-nu)(x) + U_(mu,nu)(x)
+        where U_(mu,nu)(x) denotes the plaquette at site x.
 */
 template<class floatT, size_t HaloDepth, bool onDevice, CompressionType comp>
 struct plaqClover {
@@ -283,7 +286,7 @@ struct rectClover1x3 {
                * acc.getLinkDagger(GInd::getSiteMu(rightUp, mu))
                * acc.getLinkDagger(GInd::getSiteMu(up, mu))
                * acc.getLinkDagger(GInd::getSiteMu(origin, nu));
-       
+
         // top left
         // 1x3
         temp += acc.getLink(GInd::getSiteMu(origin, nu))
@@ -423,8 +426,7 @@ struct squareClover3x3 {
                * acc.getLinkDagger(GInd::getSiteMu(twoUp, nu))
                * acc.getLinkDagger(GInd::getSiteMu(up, nu))
                * acc.getLinkDagger(GInd::getSiteMu(origin, nu));
-      
-//EDIT
+
         // top left
         // 3x3
         temp += acc.getLink(GInd::getSiteMu(origin, nu))
@@ -474,11 +476,11 @@ struct squareClover3x3 {
 };
 
 /*FmunuKernel(gaugeAccessor<floatT> , GSU3<floatT> & ,  gSite ,  int ,  int )
-	computes the tracless clover given by
-		a^2 * F_{mu,nu} = -i * 1/8 * (Q_{mu,nu} - Q_{nu,mu}) - 1/3 tr(F_mu_nu)*I
-	with
-		Q_{mu,nu} = U_(mu,nu)(x) + U_(nu,-mu)(x) + U_(-mu,-nu)(x) + U_(-nu,mu)(x)
-	where U denotes the Link variables.
+        computes the tracless clover given by
+                a^2 * F_{mu,nu} = -i * 1/8 * (Q_{mu,nu} - Q_{nu,mu}) - 1/3 tr(F_mu_nu)*I
+        with
+                Q_{mu,nu} = U_(mu,nu)(x) + U_(nu,-mu)(x) + U_(-mu,-nu)(x) + U_(-nu,mu)(x)
+        where U denotes the Link variables.
 
 */
 template<class floatT, size_t HaloDepth, bool onDevice, CompressionType comp>
@@ -547,7 +549,6 @@ struct FieldStrengthTensor_imp {
 
         // return tracless F_{mu,nu}
         return Fmunu - floatT(1./3.) * tr_c(Fmunu) * unityGSU3;
-
     }
 };
 
@@ -588,24 +589,24 @@ struct FieldStrengthTensor_imp_imp {
         Fmunu=0.0;
 
         if (k1 != 0.0){ //1x1
-          Qmunu = k1*plClov(site, mu, nu);
-          Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu)); 
+            Qmunu = k1*plClov(site, mu, nu);
+            Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu)); 
         }
         if (k2 != 0.0){ //2x2
-          Qmunu = k2*sqClov2x2(site, mu, nu);
-          Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
+            Qmunu = k2*sqClov2x2(site, mu, nu);
+            Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
         }
         if (k3 != 0.0){ //1x2
-          Qmunu = k3*rcClov(site, mu, nu);
-          Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
+            Qmunu = k3*rcClov(site, mu, nu);
+            Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
         }
         if (k4 != 0.0){ //1x3
-          Qmunu = k4*rcClov1x3(site, mu, nu);
-          Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
+            Qmunu = k4*rcClov1x3(site, mu, nu);
+            Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
         }
         if (k5 != 0.0){ //3x3
-          Qmunu = k5*sqClov3x3(site, mu, nu);
-          Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
+            Qmunu = k5*sqClov3x3(site, mu, nu);
+            Fmunu += (GCOMPLEX(floatT)(0, -1)) / ((floatT) 8) * (Qmunu - dagger(Qmunu));
         }
 
         return Fmunu - floatT(1./3.) * tr_c(Fmunu) * unityGSU3;

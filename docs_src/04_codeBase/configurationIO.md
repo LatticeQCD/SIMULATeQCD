@@ -201,4 +201,8 @@ all links in the lattice. This `checksum` is not as sensitive as the ILDG checks
 ## MILC
 
 MILC format is the format of the [MILC](https://github.com/milc-qcd/milc_qcd) code base.
-As of v7.7.11, these binaries are always in single-precision.
+As of v7.7.11, these binaries are always in single-precision. They save all three rows. 
+
+## OPENQCD
+
+OPENQCD format is the format of the [openQCD](https://luscher.web.cern.ch/luscher/openQCD/) library.
