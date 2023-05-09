@@ -53,7 +53,7 @@ GSU3<floatT> getFmunu_spatial(Gaugefield<floatT,true, HaloDepth> &gauge, Lattice
     GSU3<floatT> Fmunu;
     redBase.reduce(Fmunu, elems);
 
-    Fmunu /= (GInd::getLatData().globalLattice().mult()*4);
+    Fmunu /= (floatT)(GInd::getLatData().globalLattice().mult()*4);
     return Fmunu;
 }
 
@@ -68,7 +68,7 @@ GSU3<floatT> getFmunu_temporal(Gaugefield<floatT,true, HaloDepth> &gauge, Lattic
     GSU3<floatT> Fmunu;
     redBase.reduce(Fmunu, elems);
 
-    Fmunu /= (GInd::getLatData().globalLattice().mult()*4);
+    Fmunu /= (floatT)(GInd::getLatData().globalLattice().mult()*4);
     return Fmunu;
 }
 
