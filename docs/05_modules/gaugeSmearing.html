@@ -160,10 +160,10 @@ For the first level, we smear <span class="math notranslate nohighlight">\(U\)</
 </pre></div>
 </div>
 <p>To do the tadpole improvement we use the Naik term in the Dirac operator. For HISQ dslash,
-the Naik links are constructed from the unitarized links, i.e. using the <span class="math notranslate nohighlight">\(W\)</span> links.<br />
+the Naik links are constructed from the unitarized links, i.e. using the <span class="math notranslate nohighlight">\(W\)</span> links.
 MILC calls it <span class="math notranslate nohighlight">\(N\)</span>.
 To use this we have to call</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w">   </span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
 <span class="w"> </span><span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -172,7 +172,7 @@ To use this we have to call</p>
 <div><p>hisqSmearing.cpp.
 How to construct the smeared links are defined in</p>
 </div></blockquote>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>main_HisqSmearing.cpp.<span class="w"> </span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>main_HisqSmearing.cpp.
 </pre></div>
 </div>
 </section>

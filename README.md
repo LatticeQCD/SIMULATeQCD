@@ -25,9 +25,9 @@ competetive performance.
 
 ## How to Build 
 
-There are two possible ways to build SIMULATeQCD. If you are running somewhere where you have superuser privileges,
+There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
 we recommend that you use the [container build](#compile-using-container). The container will automatically grab all software you need.
-If you don't have superuser privileges, you will have to [compile manually](#compile-manually) and ensure that all needed
+If you are running on an HPC system or want to use AMD, we recommmend you [compile manually](#compile-manually) and ensure that all needed
 software already exists on the system you're using.
 This README attempts to give a succinct overview of how to build and use SIMULATeQCD. If you run into problems building, first
 please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
@@ -47,6 +47,7 @@ To build using the container, you need to have `podman` properly configured on y
 run `podman run hello-world` as your user. If this does not run correctly, SIMULATeQCD will not run correctly. How to install `podman`
 and troubleshooting common errors are addressed
 in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
+You also need an NVIDIA GPU.
 
 To build the code, you then simply
 
@@ -145,7 +146,6 @@ or clarke(dot)davida(at)gmail.com.
 
 ## Contributors
 
-
 [L. Mazur](https://github.com/lukas-mazur), 
 [S. Ali](https://github.com/Sajidali1031), 
 [L. Altenkort](https://github.com/luhuhis), 
@@ -153,10 +153,11 @@ or clarke(dot)davida(at)gmail.com.
 [D. A. Clarke](https://github.com/clarkedavida), 
 [G. Curell](https://github.com/grantcurell/),
 [H. Dick](https://github.com/redweasel),
-[J. Goswami](https://github.com/jishnuxx)
+[J. Goswami](https://github.com/jishnuxx),
+[D. Hoying](https://github.com/goracle),
 [O. Kaczmarek](https://github.com/olaf-kaczmarek),
 [R. Larsen](https://github.com/RasmusNL),
-M. Neumann,
+[M. Neumann](https://github.com/mneumann177),
 [M. Rodekamp](https://github.com/Marcel-Rodekamp), 
 [H. Sandmeyer](https://github.com/hsandmeyer), 
 [C. Schmidt](https://github.com/schmidt74), 

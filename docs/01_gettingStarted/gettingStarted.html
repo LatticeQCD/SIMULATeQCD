@@ -75,9 +75,9 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="getting-started">
 <h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
-<p>There are two possible ways to build SIMULATeQCD. If you are running somewhere where you have superuser privileges,
-we recommend that you use the <a class="reference internal" href="#build-container"><span class="std std-doc">container build</span></a>. The container will automatically grab all software you need.
-If you don’t have superuser privileges, you will have to <a class="reference internal" href="#build-manual"><span class="std std-doc">compile manually</span></a>, and ensure that all needed
+<p>There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
+we recommend that you use the container build. The container will automatically grab all software you need.
+If you are running on an HPC system or want to use AMD, we recommmend you compile manually and ensure that all needed
 software already exists on the system you’re using.</p>
 <section id="prerequisites">
 <h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h2>
@@ -116,7 +116,7 @@ are interested in developing SIMULATeQCD, you will need to use the command</p>
 <section id="build-manual">
 <h2>Build (manual)<a class="headerlink" href="#build-manual" title="Permalink to this headline"></a></h2>
 <p>If you would like to use AMD, would like to make substantial contributions to SIMULATeQCD,
-or don’t have superuser privileges, you will need to do a manual build.
+or are running on an HPC system, you will need to do a manual build.
 If you have an NVIDIA GPU, are running locally, and don’t plan to do much development, we recommend you
 skip down to the <a class="reference internal" href="#build-container"><span class="std std-doc">container build</span></a> section, because the container will take
 care of all the hassle of finding and installing software automatically.</p>
@@ -131,7 +131,7 @@ care of all the hassle of finding and installing software automatically.</p>
 <section id="building-source-with-cuda">
 <h3>Building source with CUDA<a class="headerlink" href="#building-source-with-cuda" title="Permalink to this headline"></a></h3>
 <p>To build the source with CUDA, you need to have the <code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">Toolkit</span></code> version 11.0 or higher installed on your machine.
-To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
+To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../buildSIMULATeQCD/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>../SIMULATeQCD/<span class="w"> </span><span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span><span class="w"> </span><span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
@@ -140,12 +140,7 @@ To setup the compilation, create a folder outside of the code directory (e.g. <c
 </div>
 <p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
 You can set the CUDA installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DCUDA_TOOLKIT_ROOT_DIR</span></code>.
-<code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.
-Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>NameOfExecutable
-</pre></div>
-</div>
-<p>If you would like to speed up the compiling process, add the option <code class="docutils literal notranslate"><span class="pre">-j</span></code>, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">4</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.</p>
 </section>
 <section id="building-source-with-hip-for-nvidia-platforms-experimental">
 <h3>Building source with HIP for NVIDIA platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-nvidia-platforms-experimental" title="Permalink to this headline"></a></h3>
@@ -157,7 +152,7 @@ you need to make sure that</p>
 <li><p>The environment variable <code class="docutils literal notranslate"><span class="pre">HIP_PATH</span></code> holds the path to the HIP installation folder</p></li>
 <li><p>The environment variables <code class="docutils literal notranslate"><span class="pre">CC</span></code> and <code class="docutils literal notranslate"><span class="pre">CXX</span></code> hold the path to the HIP clang compiler</p></li>
 </ul>
-<p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
+<p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../buildSIMULATeQCD/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>../SIMULATeQCD/<span class="w"> </span><span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;70&quot;</span><span class="w"> </span><span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
@@ -169,12 +164,7 @@ you need to make sure that</p>
 You can set the HIP installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DHIP_PATH</span></code>.
 You can also set the CUDA installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DCUDA_TOOLKIT_ROOT_DIR</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.
-<code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.
-Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>NameOfExecutable
-</pre></div>
-</div>
-<p>If you would like to speed up the compiling process, add the option <code class="docutils literal notranslate"><span class="pre">-j</span></code>, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">4</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.</p>
 </section>
 <section id="building-source-with-hip-for-amd-platforms-experimental">
 <h3>Building source with HIP for AMD platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-amd-platforms-experimental" title="Permalink to this headline"></a></h3>
@@ -185,7 +175,7 @@ you need to make sure that</p>
 <li><p>The environment variable <code class="docutils literal notranslate"><span class="pre">HIP_PATH</span></code> holds the path to the HIP installation folder</p></li>
 <li><p>The environment variables <code class="docutils literal notranslate"><span class="pre">CC</span></code> and <code class="docutils literal notranslate"><span class="pre">CXX</span></code> hold the path to the HIP clang compiler</p></li>
 </ul>
-<p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../build/</span></code>) and <strong>from there</strong> call the following example script:</p>
+<p>To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../buildSIMULATeQCD/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>../SIMULATeQCD/<span class="w"> </span><span class="se">\</span>
 -DARCHITECTURE<span class="o">=</span><span class="s2">&quot;gfx906,gfx908&quot;</span><span class="w"> </span><span class="se">\</span>
 -DUSE_GPU_AWARE_MPI<span class="o">=</span>ON<span class="w"> </span><span class="se">\</span>
@@ -196,19 +186,25 @@ you need to make sure that</p>
 <p>Here, it is assumed that your source code folder is called <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD</span></code>. <strong>Do NOT compile your code in the source code folder!</strong>
 You can set the HIP installation path manually by setting the <code class="docutils literal notranslate"><span class="pre">cmake</span></code> parameter <code class="docutils literal notranslate"><span class="pre">-DHIP_PATH</span></code>.
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture. For example gfx906,gfx908.
-<code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.
-Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
+<code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.</p>
+</section>
+<section id="compiling-particular-executables">
+<h3>Compiling particular executables<a class="headerlink" href="#compiling-particular-executables" title="Permalink to this headline"></a></h3>
+<p>Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>NameOfExecutable
 </pre></div>
 </div>
 <p>If you would like to speed up the compiling process, add the option <code class="docutils literal notranslate"><span class="pre">-j</span></code>, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">4</span></code>.</p>
+<p>You also have the option to compile certain subsets of executables. For instance <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">tests</span></code> will make all the executables used for testing.
+One can also compile <code class="docutils literal notranslate"><span class="pre">applications</span></code>, <code class="docutils literal notranslate"><span class="pre">examples</span></code>, <code class="docutils literal notranslate"><span class="pre">profilers</span></code>, <code class="docutils literal notranslate"><span class="pre">tools</span></code>, and <code class="docutils literal notranslate"><span class="pre">everything</span></code>. To see a full list of available executables,
+look at <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/CMakeLists.txt</span></code>.</p>
 </section>
 </section>
 <section id="build-container">
 <h2>Build (container)<a class="headerlink" href="#build-container" title="Permalink to this headline"></a></h2>
+<p>If you just want to get something running quickly on your laptop or desktop, this is likely the easiest way to go.</p>
 <section id="install-podman">
 <h3>Install Podman<a class="headerlink" href="#install-podman" title="Permalink to this headline"></a></h3>
-<p><strong>THIS REQUIRES ADMIN PRIVILIGES</strong> If you are doing this on a supercomputer you will likely need to ask your admin to perform the below.</p>
 <section id="on-rhel-based-rocky-centos-rhel-systems">
 <h4>On RHEL-based (Rocky/CentOS/RHEL) systems<a class="headerlink" href="#on-rhel-based-rocky-centos-rhel-systems" title="Permalink to this headline"></a></h4>
 <p>Before continuing make sure there are no updates pending with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">dnf</span> <span class="pre">update</span> <span class="pre">-y</span> <span class="pre">&amp;&amp;</span> <span class="pre">sudo</span> <span class="pre">dnf</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">podman</span></code> and then reboot with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">reboot</span></code>. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.</p>
@@ -224,7 +220,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 </section>
 <section id="make-sure-podman-works">
 <h3>Make sure Podman works<a class="headerlink" href="#make-sure-podman-works" title="Permalink to this headline"></a></h3>
-<p>Run <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">hello-world</span></code> as your user to test your privileges. If this does not run correctly, simulateqcd will not run correctly.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">hello-world</span></code> as your user to test your privileges. If this does not run correctly, SIMULATeQCD will not run correctly.</p>
 <p>If you see the error:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ERRO</span><span class="p">[</span><span class="mi">0014</span><span class="p">]</span> <span class="n">cannot</span> <span class="n">find</span> <span class="n">UID</span><span class="o">/</span><span class="n">GID</span> <span class="k">for</span> <span class="n">user</span> <span class="n">u6042105</span><span class="p">:</span> <span class="n">No</span> <span class="n">subuid</span> <span class="n">ranges</span> <span class="n">found</span> <span class="k">for</span> <span class="n">user</span> <span class="s2">&quot;u6042105&quot;</span> <span class="ow">in</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">subuid</span> <span class="o">-</span> <span class="n">check</span> <span class="n">rootless</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">man</span> <span class="n">pages</span><span class="o">.</span>
 </pre></div>
@@ -250,7 +246,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <section id="on-a-cluster-using-slurm">
 <h3>On a cluster using <code class="docutils literal notranslate"><span class="pre">slurm</span></code><a class="headerlink" href="#on-a-cluster-using-slurm" title="Permalink to this headline"></a></h3>
 <p>If you are on a cluster that uses slurm, then inside of your sbatch script do not use <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code> or <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>, but instead do</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>-n<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;<span class="w"> </span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>-n<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;
 </pre></div>
 </div>
 </section>
@@ -258,7 +254,7 @@ Inside the build folder, you can now begin to use <code class="docutils literal 
 <h3>On your local machine (desktop, laptop, …)<a class="headerlink" href="#on-your-local-machine-desktop-laptop" title="Permalink to this headline"></a></h3>
 <p>Any program has to be launched using mpirun or mpiexec.
 For example:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;<span class="w"> </span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;NoGPUs&gt;</span></code> is the number of GPUs you want to use.</p>

@@ -1,10 +1,9 @@
 # Getting started
 
-There are two possible ways to build SIMULATeQCD. If you are running somewhere where you have superuser privileges,
-we recommend that you use the [container build](./gettingStarted.md#build-container). The container will automatically grab all software you need.
-If you don't have superuser privileges, you will have to [compile manually](./gettingStarted.md#build-manual), and ensure that all needed
+There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
+we recommend that you use the container build. The container will automatically grab all software you need.
+If you are running on an HPC system or want to use AMD, we recommmend you compile manually and ensure that all needed
 software already exists on the system you're using.
-
 ## Prerequisites
 
 Before cloning anything, we recommend you get `git-lfs`. The reason we recommend this is that we have several configurations
@@ -43,7 +42,7 @@ git clone git@github.com:LatticeQCD/SIMULATeQCD.git
 ## Build (manual) 
 
 If you would like to use AMD, would like to make substantial contributions to SIMULATeQCD, 
-or don't have superuser privileges, you will need to do a manual build. 
+or are running on an HPC system, you will need to do a manual build. 
 If you have an NVIDIA GPU, are running locally, and don't plan to do much development, we recommend you
 skip down to the [container build](./gettingStarted.md#build-container) section, because the container will take
 care of all the hassle of finding and installing software automatically.
@@ -59,7 +58,7 @@ For the manual build, you will need to make sure the following are installed:
 ### Building source with CUDA
 
 To build the source with CUDA, you need to have the `CUDA Toolkit` version 11.0 or higher installed on your machine.
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script:
+To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script:
 ```shell
 cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="70" \
@@ -69,11 +68,6 @@ cmake ../SIMULATeQCD/ \
 Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
 You can set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
 `-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta.
-Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
-```shell
-make NameOfExecutable
-```
-If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
 ### Building source with HIP for NVIDIA platforms (Experimental!)
 
@@ -84,7 +78,7 @@ you need to make sure that
 - The environment variable `HIP_PATH` holds the path to the HIP installation folder
 - The environment variables `CC` and `CXX` hold the path to the HIP clang compiler
 
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script:
+To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script:
 ```shell
 cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="70" \
@@ -97,11 +91,6 @@ You can set the HIP installation path manually by setting the `cmake` parameter 
 You can also set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
 `-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta.
 `-DUSE_GPU_P2P=ON` is not yet supported by this backend.
-Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
-```shell
-make NameOfExecutable
-```
-If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
 ### Building source with HIP for AMD platforms (Experimental!)
 
@@ -111,7 +100,7 @@ you need to make sure that
 - The environment variable `HIP_PATH` holds the path to the HIP installation folder
 - The environment variables `CC` and `CXX` hold the path to the HIP clang compiler
 
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script:
+To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script:
 ```shell
 cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="gfx906,gfx908" \
@@ -123,17 +112,22 @@ Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do N
 You can set the HIP installation path manually by setting the `cmake` parameter `-DHIP_PATH`.
 `-DARCHITECTURE` sets the GPU architecture. For example gfx906,gfx908.
 `-DUSE_GPU_P2P=ON` is not yet supported by this backend.
+
+### Compiling particular executables
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
 ```shell
 make NameOfExecutable
 ```
 If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
+You also have the option to compile certain subsets of executables. For instance `make tests` will make all the executables used for testing.
+One can also compile `applications`, `examples`, `profilers`, `tools`, and `everything`. To see a full list of available executables,
+look at `SIMULATeQCD/CMakeLists.txt`. 
+
 ## Build (container) 
 
+If you just want to get something running quickly on your laptop or desktop, this is likely the easiest way to go.
 ### Install Podman
-
-**THIS REQUIRES ADMIN PRIVILIGES** If you are doing this on a supercomputer you will likely need to ask your admin to perform the below.
 
 #### On RHEL-based (Rocky/CentOS/RHEL) systems
 
@@ -149,7 +143,7 @@ If you have a non RHEL-based OS see [here](https://podman.io/getting-started/ins
 
 ### Make sure Podman works
 
-Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, simulateqcd will not run correctly.
+Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, SIMULATeQCD will not run correctly.
 
 If you see the error:
 
