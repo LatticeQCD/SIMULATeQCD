@@ -143,7 +143,8 @@ If you have a non RHEL-based OS see [here](https://podman.io/getting-started/ins
 
 ### Make sure Podman works
 
-Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, SIMULATeQCD will not run correctly.
+Run `podman run hello-world` as your user to test your privileges. 
+If this does not run correctly, the container build will not function. 
 
 If you see the error:
 

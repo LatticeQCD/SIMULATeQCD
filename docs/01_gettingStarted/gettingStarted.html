@@ -220,7 +220,8 @@ look at <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD
 </section>
 <section id="make-sure-podman-works">
 <h3>Make sure Podman works<a class="headerlink" href="#make-sure-podman-works" title="Permalink to this headline"></a></h3>
-<p>Run <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">hello-world</span></code> as your user to test your privileges. If this does not run correctly, SIMULATeQCD will not run correctly.</p>
+<p>Run <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">hello-world</span></code> as your user to test your privileges.
+If this does not run correctly, the container build will not function.</p>
 <p>If you see the error:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ERRO</span><span class="p">[</span><span class="mi">0014</span><span class="p">]</span> <span class="n">cannot</span> <span class="n">find</span> <span class="n">UID</span><span class="o">/</span><span class="n">GID</span> <span class="k">for</span> <span class="n">user</span> <span class="n">u6042105</span><span class="p">:</span> <span class="n">No</span> <span class="n">subuid</span> <span class="n">ranges</span> <span class="n">found</span> <span class="k">for</span> <span class="n">user</span> <span class="s2">&quot;u6042105&quot;</span> <span class="ow">in</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">subuid</span> <span class="o">-</span> <span class="n">check</span> <span class="n">rootless</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">man</span> <span class="n">pages</span><span class="o">.</span>
 </pre></div>

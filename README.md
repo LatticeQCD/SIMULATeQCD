@@ -12,7 +12,6 @@ SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it easy for physicis
 competetive performance. 
 
 - [How to Build](#how-to-build)
-  - [Prerequisites](#prerequisites)
   - [Download SIMULATeQCD](#download-simulateqcd)
   - [Compile Using Container](#compile-using-container)
   - [Compile Manually](#compile-manually)
@@ -32,20 +31,16 @@ software already exists on the system you're using.
 This README attempts to give a succinct overview of how to build and use SIMULATeQCD. If you run into problems building, first
 please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
 
-### Prerequisites
-
-You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
-This is needed for downloading configurations used in the unit tests.
-
 ### Download SIMULATeQCD
 
-Run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
+You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
+This is needed for downloading configurations used in the unit tests. Then run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
 
 ### Compile Using Container
 
 To build using the container, you need to have `podman` properly configured on your system. To test this,
-run `podman run hello-world` as your user. If this does not run correctly, SIMULATeQCD will not run correctly. How to install `podman`
-and troubleshooting common errors are addressed
+run `podman run hello-world` as your user. If this does not run correctly, the container build will not function. 
+How to install `podman` and how to troubleshoot common errors are addressed
 in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
 You also need an NVIDIA GPU.
 
@@ -58,7 +53,7 @@ To build the code, you then simply
 
 ### Compile Manually
 
-You will need to download the following before continuing:
+The following software is required to manually compile SIMULATeQCD:
 
 - `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 - `C++` compiler with `C++17` support.
