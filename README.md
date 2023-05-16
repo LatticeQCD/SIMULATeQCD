@@ -14,11 +14,7 @@ competetive performance.
 - [How to Build](#how-to-build)
   - [Prerequisites](#prerequisites)
   - [Download SIMULATeQCD](#download-simulateqcd)
-    - [Manual Download](#manual-download)
-    - [Using git Command Line](#using-git-command-line)
   - [Compile Using Container](#compile-using-container)
-    - [Install Podman](#install-podman)
-    - [Build the Code](#build-the-code)
   - [Compile Manually](#compile-manually)
 - [Example: Plaquette action computation](#example-plaquette-action-computation)
 - [Documentation](#documentation)
@@ -34,38 +30,25 @@ we recommend that you use the [container build](#compile-using-container). The c
 If you don't have superuser privileges, you will have to [compile manually](#compile-manually) and ensure that all needed
 software already exists on the system you're using.
 This README attempts to give a succinct overview of how to build and use SIMULATeQCD. If you run into problems building, first
-please have a look at the "Getting started" section of the [documentation](https://latticeqcd.github.io/SIMULATeQCD).
+please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
 
 ### Prerequisites
 
 You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
+This is needed for downloading configurations used in the unit tests.
 
 ### Download SIMULATeQCD
-
-#### Option 1: Manual Download
-
-1. Go to [SIMULATeQCD's website](https://github.com/LatticeQCD/SIMULATeQCD)
-2. Click the green *Code* button and then click *Download Zip*
-
-![](images/2023-04-15-06-03-10.png)
-
-3. Extract the zip in a location of your choosing and extract it
-
-#### Option 2: Using git Command Line
 
 Run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
 
 ### Compile Using Container
 
-#### Install Podman
+To build using the container, you need to have `podman` properly configured on your system. To test this,
+run `podman run hello-world` as your user. If this does not run correctly, SIMULATeQCD will not run correctly. How to install `podman`
+and troubleshooting common errors are addressed
+in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
 
-We assume you use a RHEL-based (Rocky/CentOS/RHEL) system. If you are using another operating system, please check out the [documentation](https://latticeqcd.github.io/SIMULATeQCD).
-Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.
-
-Run `podman run hello-world` as your user to test your privileges. If this does not run correctly, SIMULATeQCD will not run correctly. Common errors are addressed
-in the [documentation](https://latticeqcd.github.io/SIMULATeQCD).
-
-#### Build the Code
+To build the code, you then simply
 
 1. Update [config.yml](./podman-build/config.yml) with any settings you would like to use for your build. This includes your target output directory.
    1. You can run `<where_you_downloaded>/simulate_qcd.sh list` to get a list of possible build targets.
@@ -82,7 +65,7 @@ You will need to download the following before continuing:
 - `CUDA Toolkit` version 11+. 
 - `pip install -r requirements.txt` to build the documentation.
 
-To setup the compilation, create a folder outside of the code directory (e.g. `../build/`) and **from there** call the following example script: 
+To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script: 
 ```shell
 cmake ../SIMULATeQCD/ \
 -DARCHITECTURE="70" \
@@ -145,7 +128,9 @@ latticeContainer.reduce(plaq, elems);
 
 ## Documentation
 
-Please check out [the documentation](https://latticeqcd.github.io/SIMULATeQCD) to learn how to use SIMULATeQCD.
+Please check out [the documentation](https://latticeqcd.github.io/SIMULATeQCD) to learn how to use SIMULATeQCD in detail,
+including how to make contributions, details for installation, and to see what kinds of modules and applications are
+already available.
 
 ## Getting help and bug report
 Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
@@ -171,7 +156,7 @@ or clarke(dot)davida(at)gmail.com.
 [O. Kaczmarek](https://github.com/olaf-kaczmarek), 
 [R. Larsen](https://github.com/RasmusNL), 
 M. Neumann,
-M. Rodekamp, 
+[M. Rodekamp](https://github.com/Marcel-Rodekamp), 
 [H. Sandmeyer](https://github.com/hsandmeyer), 
 [C. Schmidt](https://github.com/schmidt74), 
 [P. Scior](https://github.com/philomat), 
