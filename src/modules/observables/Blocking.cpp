@@ -1,5 +1,5 @@
 //
-// Created by Hai-Tao Shu on 2021.05.11 
+// Created by Hai-Tao Shu on 2021.05.11
 //
 
 #include "Blocking.h"
@@ -10,14 +10,14 @@ struct sumBlock {
     MemoryAccessor _Data;
     MemoryAccessor _DataBlock;
     size_t _binsize;
-    sumBlock(MemoryAccessor Data, MemoryAccessor DataBlock, size_t binsize) : 
+    sumBlock(MemoryAccessor Data, MemoryAccessor DataBlock, size_t binsize) :
                _Data(Data), _DataBlock(DataBlock), _binsize(binsize) {}
 
     __device__ __host__ inline void operator()(gSite site) {
 
         typedef GIndexer<All, HaloDepth> GInd;
 
-     
+
         size_t Nx = (size_t)GInd::getLatData().globLX;
         size_t nx = (size_t)GInd::getLatData().lx;
         size_t ny = (size_t)GInd::getLatData().ly;
@@ -55,13 +55,13 @@ dataType BlockingMethod<floatT, onDevice, HaloDepth, dataType, observableType, c
     const size_t Nx = (size_t)GInd::getLatData().globLX;
     const size_t local_vol3 = GInd::getLatData().vol3;
     const size_t global_vol3 = GInd::getLatData().globvol3;
-  
+
     const size_t global_nbins = global_vol3/binsize/binsize/binsize; //global nbins in all directions
     const size_t local_nbins = local_vol3/binsize/binsize/binsize;
 
     size_t global_binxyz = Nx/binsize;//global nbins in each direction
 
-    typedef gMemoryPtr<true> MemTypeGPU; 
+    typedef gMemoryPtr<true> MemTypeGPU;
 
     MemTypeGPU mem57 = MemoryManagement::getMemAt<true>("DataBlock");
     mem57->template adjustSize<dataType>(global_nbins);
@@ -99,10 +99,10 @@ dataType BlockingMethod<floatT, onDevice, HaloDepth, dataType, observableType, c
         mem59->template copyFrom<true>(mem57, mem57->getSize());
         MemoryAccessor DataBlockCPU (mem59->getPointer());
 
-        
+
         std::vector<dataType> vec_DataBlock_temp(global_nbins, 0);
-   
-      
+
+
         for (size_t k=0;k<global_binxyz;k++)
         {
             for (size_t j=0;j<global_binxyz;j++)
@@ -126,7 +126,7 @@ dataType BlockingMethod<floatT, onDevice, HaloDepth, dataType, observableType, c
                     DataBlockOrdered[index+t*global_nbins] = vec_DataBlock_temp[index];
                 }
             }
-        } 
+        }
     }
     DataMean /= 1.*global_vol3*Nt;
     return DataMean;
@@ -178,7 +178,7 @@ struct contractionKernel {
                 }
             }
         }
-        size_t binsize = _Ns/_global_binxyz; 
+        size_t binsize = _Ns/_global_binxyz;
         Corr *= 1./_Nt*binsize*binsize*binsize/_global_binxyz/_global_binxyz/_global_binxyz;
 
         _CorrGPU.setValue<floatT>(dindex, Corr);
@@ -206,15 +206,15 @@ std::vector<floatT> BlockingMethod<floatT, onDevice, HaloDepth, dataType, observ
     mem61->template adjustSize<dataType>(vol3*Nt);
     MemoryAccessor DataBlockOrderedCPU (mem61->getPointer());
 
-    for (size_t t=0;t<Nt;t++) 
+    for (size_t t=0;t<Nt;t++)
     {
         for (size_t k=0;k<vol1;k++)
-        {   
+        {
             for (size_t j=0;j<vol1;j++)
-            {   
+            {
                 for (size_t i=0;i<vol1;i++)
                 {
-                    size_t index = i+j*vol1+k*vol1*vol1+t*vol3;   
+                    size_t index = i+j*vol1+k*vol1*vol1+t*vol3;
                     DataBlockOrderedCPU.setValue(index, DataBlockOrdered[index]);
                 }
             }
@@ -238,13 +238,13 @@ std::vector<floatT> BlockingMethod<floatT, onDevice, HaloDepth, dataType, observ
     size_t RsqSize = 3*(vol1/2+1)*(vol1/2+1);
     std::vector<floatT> Corr(RsqSize*(Nt/2+1), 0);
 
-    for (size_t dt=0;dt<Nt/2+1;dt++) 
-    { 
+    for (size_t dt=0;dt<Nt/2+1;dt++)
+    {
         mem65->memset(0);
         MemoryAccessor CorrGPU (mem65->getPointer());
-        
+
         iterateFunctorNoReturn<onDevice>(contractionKernel<floatT,dataType,corrFunc>(DataBlockOrderedGPU, CorrGPU, dt, vol1, Nt, Nx), passReadIndex, vol3);
-    
+
         mem66->template copyFrom<true>(mem65, mem65->getSize());
         MemoryAccessor CorrCPU (mem66->getPointer());
 
@@ -260,8 +260,8 @@ std::vector<floatT> BlockingMethod<floatT, onDevice, HaloDepth, dataType, observ
 
             floatT temp;
             CorrCPU.getValue<floatT>(index, temp);
- 
-            Corr[rsq+dt*RsqSize] += temp; 
+
+            Corr[rsq+dt*RsqSize] += temp;
         }
     }
     return Corr;

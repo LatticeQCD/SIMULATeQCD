@@ -1,6 +1,6 @@
-/* 
- * parameterManagement.h                                                               
- * 
+/*
+ * parameterManagement.h
+ *
  */
 #ifndef INC_PARAMETERS
 #define INC_PARAMETERS
@@ -26,7 +26,7 @@ struct strpair {
             return;
         key = line.substr(0, pos);
         key.erase(key.find_last_not_of(" \t\r\n\v\f") + 1); //remove whitespaces at end
-        
+
 
         value = line.substr(pos + 1);
 
@@ -36,7 +36,7 @@ struct strpair {
         key=line.substr(0,pos);
         key.erase(key.find_last_not_of(" \t\r\n\v\f") + 1); //remove whitespaces at end
 
-        
+
     }
 };
 

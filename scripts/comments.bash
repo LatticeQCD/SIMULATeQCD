@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#     
-# comments.bash                                                
+#
+# comments.bash
 #
 # D. Clarke
 #
@@ -26,7 +26,7 @@ USAGE: sh $0 [options] [program name]
 OPTIONS:
  -h  Show this message
  -l  Language {bash, c (default), fortran, python, param}
- -f  Put comments on top of a previously existing file 
+ -f  Put comments on top of a previously existing file
 
 EOF
 }
@@ -42,13 +42,13 @@ while getopts "hl:pf" OPTION; do
       usage
       exit
       ;;
-    l) 
+    l)
       LANGUAGE=$OPTARG
       ;;
-    f) 
+    f)
       FRONT=true
       ;;
-    ?) 
+    ?)
       usage
       exit
       ;;
@@ -107,7 +107,7 @@ esac
 
 # Create temporary file with comment block.
 echo "${c1}
-${c2}${NAME}                                                               
+${c2}${NAME}
 ${c2}
 ${c2}[F. Last]
 ${c2}

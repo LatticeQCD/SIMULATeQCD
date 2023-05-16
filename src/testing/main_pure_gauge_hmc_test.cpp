@@ -1,6 +1,6 @@
-/* 
- * main_pure_gauge_hmc_test.cpp                                                               
- * 
+/*
+ * main_pure_gauge_hmc_test.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -14,7 +14,7 @@ bool no_rng_test(CommunicationBase &commBase, RhmcParameters param){
     Gaugefield<double, true, HaloDepth> gauge(commBase);
     GaugeAction<double, true, HaloDepth> gaugeaction(gauge);
     grnd_state<true> d_rand;
-    
+
     gauge.one();
 
     rootLogger.info("constructed gauge field");
@@ -82,7 +82,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
 
     Gaugefield<double, true, HaloDepth, COMP> gauge(commBase);
     GaugeAction<double, true, HaloDepth, COMP> gaugeaction(gauge);
-    
+
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
 
@@ -102,7 +102,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
     int acc = 0;
     double acceptance = 0.0;
     PolyakovLoop<double, true, HaloDepth> ploop(gauge);
-    
+
     StopWatch<true> timer;
     timer.start();
 
@@ -112,7 +112,7 @@ bool full_test(CommunicationBase &commBase, RhmcParameters param) {
 
         rootLogger.info("|Ploop|= " ,  abs(ploop.getPolyakovLoop()));
     }
-    
+
     timer.stop();
 
     rootLogger.info("Elapsed time: " ,  timer);
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     param.readfile(commBase, "../parameter/tests/PureGaugeHmcTest.param", argc, argv);
 
     const int HaloDepth = 2;
-    
+
     commBase.init(param.nodeDim());
 
     initIndexer(HaloDepth,param, commBase);
@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
         rootLogger.error("UPDATE WITHOUT RNG: failed");
 
     rootLogger.info("STARTING FULL UPDATE TEST:");
-    rootLogger.info("Now, there should be some dynamics"); 
+    rootLogger.info("Now, there should be some dynamics");
 
     bool full = full_test<HaloDepth>(commBase, param);
 

@@ -1,8 +1,8 @@
-/* 
- * gaugefield.cu                                                               
- * 
+/*
+ * gaugefield.cu
+ *
  * L. Mazur
- * 
+ *
  */
 
 

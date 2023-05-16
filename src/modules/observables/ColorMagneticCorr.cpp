@@ -1,14 +1,14 @@
 /*
  * ColorMagneticCorr.cpp
  *
- * v1.0: Hai-Tao Shu, 6 Nov 2020 
+ * v1.0: Hai-Tao Shu, 6 Nov 2020
  * Measure Color-Magnetic Correlator using the multi-GPU framework. Read sketch from right to left
  *
  *                x
  *                ^    ^ y
  *                |   /
  *                |  /
- *                | / 
+ *                | /
  *     t <_______ |/
  *
  *              <-----------
@@ -19,7 +19,7 @@
  *          | - /       | - /   read from right to left
  *          |  /        |  /
  *          | /         | /
- * <------  v           |<     tau direction is the horizontal one. we should consider all situations, i.e. squares in xy, yz, and zx plane. and for each plane there are 4 combinations, for instance in xy plane the links of the squres could start from +x+y, +x-y, -x-y, -x+y directions. 
+ * <------  v           |<     tau direction is the horizontal one. we should consider all situations, i.e. squares in xy, yz, and zx plane. and for each plane there are 4 combinations, for instance in xy plane the links of the squres could start from +x+y, +x-y, -x-y, -x+y directions.
  *
  * B_0=F_{12}=U_1(\vec{x})U_2(\vec{x}+\hat{1})-U_2(\vec{x})U_1(\vec{x}+\hat{2})
  * B_1=F_{20}=U_2(\vec{x})U_0(\vec{x}+\hat{2})-U_0(\vec{x})U_2(\vec{x}+\hat{0})
@@ -79,10 +79,10 @@ struct ColorMagnNaiveKernel{
     __device__ __host__ GCOMPLEX(floatT) operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         const size_t Ntau=GInd::getLatData().lt;
-        GSU3<floatT> p_plusplus; 
+        GSU3<floatT> p_plusplus;
         GSU3<floatT> p_minusminus;
-        GSU3<floatT> p_plusminus; 
-        GSU3<floatT> p_minusplus; 
+        GSU3<floatT> p_plusminus;
+        GSU3<floatT> p_minusplus;
         GCOMPLEX(floatT) result(0,0);
 
         size_t Id = site.isite;
@@ -156,7 +156,7 @@ struct ColorMagnNaiveKernel{
                         * gaugeAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(rsite_minusplus, mu, (mu+1)%3), (mu+1)%3))
                         - gaugeAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(rsite_minusplus, (mu+1)%3), (mu+1)%3))
                         * gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(rsite_minusplus, (mu+1)%3), mu));
-           
+
             result += tr_c(p_plusplus*wl2+p_minusminus*wl2+p_minusplus*wl2+p_plusminus*wl2);
         }
         rsite_plusplus = GInd::site_dn_dn(rsite_plusplus, 0, 2);

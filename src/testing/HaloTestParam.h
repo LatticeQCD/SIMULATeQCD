@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 12.04.19.
 //
 
-#ifndef HALOTESTPARAM_H
-#define HALOTESTPARAM_H
-
+#pragma once
 class HaloTestParam : public LatticeParameters{
 public:
     Parameter<int, 4> SimulatedNodeDim;
@@ -15,4 +13,3 @@ public:
     }
 };
 
-#endif //HALOTESTPARAM_H

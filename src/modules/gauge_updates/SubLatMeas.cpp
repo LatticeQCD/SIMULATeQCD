@@ -1,9 +1,9 @@
-/* 
+/*
  * SubLatMeas.cpp
- *   
+ *
  * Hai-Tao Shu, 31.07.2019
- * 
- * Implementations of contractions of both standard operators and multi-level improved operators. 
+ *
+ * Implementations of contractions of both standard operators and multi-level improved operators.
  *
  **/
 
@@ -16,20 +16,20 @@ void Contraction_cpu<floatT>::ImproveNormalizeBulk(std::vector<floatT> &SubBulk_
         for ( int dist=0; dist<_sub_lt-3; dist++ ) {
             int mid = count;
             int count_cp=count;
-            while(mid != 0) 
+            while(mid != 0)
             {
                  mid = count_cp/2;
                  for (int i=0;i<mid;i++ )
-                 { 
+                 {
                      int span = count_cp-i-1;
                      SubBulk_Nt_p0[pos_t*(_sub_lt-3)*count+dist*count+i] += SubBulk_Nt_p0[pos_t*(_sub_lt-3)*count+dist*count+span];
-                 }  
+                 }
                  if ( count_cp%2==0 )
                      count_cp /= 2;
                  else
                      count_cp = (count_cp+1)/2;
             }
-            SubBulk_Nt_real[pos_t*(_sub_lt-3)+dist] = SubBulk_Nt_p0[pos_t*(_sub_lt-3)*count+dist*count]/count; 
+            SubBulk_Nt_real[pos_t*(_sub_lt-3)+dist] = SubBulk_Nt_p0[pos_t*(_sub_lt-3)*count+dist*count]/count;
         }
     }
 }
@@ -79,8 +79,8 @@ void Contraction_cpu<floatT>::ImproveContractionBulk(std::vector<floatT> &SubBul
                     for (int Pos2 = 0; Pos2 < _sub_lt-3; ++Pos2) {
                          //the time distance
                          int PosDist = j - i + Pos2 - Pos1;
-                         Improve_BulkResult_temp[PosDist].push_back( SubBulk_Nt_real[i*(_sub_lt-3)+Pos1] 
-                                                                   * SubBulk_Nt_real[(j%_Nt)*(_sub_lt-3)+Pos2] ); 
+                         Improve_BulkResult_temp[PosDist].push_back( SubBulk_Nt_real[i*(_sub_lt-3)+Pos1]
+                                                                   * SubBulk_Nt_real[(j%_Nt)*(_sub_lt-3)+Pos2] );
                          count[PosDist] ++ ;
                     }
                 }
@@ -107,7 +107,7 @@ void Contraction_cpu<floatT>::ImproveContractionBulk(std::vector<floatT> &SubBul
             }
         }
     } else {
-          
+
         //loop over position of the first sublattice
         for (int i = 0; i < _Nt; ++i) {
             //loop over position of the second sublattice. position is j
@@ -119,9 +119,9 @@ void Contraction_cpu<floatT>::ImproveContractionBulk(std::vector<floatT> &SubBul
                          //the time distance
                          int PosDist = j - i + Pos2 - Pos1;
                          Improve_BulkResult[pz*_Nt+PosDist] += SubBulk_Nt_real[pz*_Nt*(_sub_lt-3)+i*(_sub_lt-3)+Pos1]
-                                                             * SubBulk_Nt_real[pz*_Nt*(_sub_lt-3)+(j%_Nt)*(_sub_lt-3)+Pos2] 
+                                                             * SubBulk_Nt_real[pz*_Nt*(_sub_lt-3)+(j%_Nt)*(_sub_lt-3)+Pos2]
                                                              + SubBulk_Nt_imag[pz*_Nt*(_sub_lt-3)+i*(_sub_lt-3)+Pos1]
-                                                             * SubBulk_Nt_imag[pz*_Nt*(_sub_lt-3)+(j%_Nt)*(_sub_lt-3)+Pos2]; 
+                                                             * SubBulk_Nt_imag[pz*_Nt*(_sub_lt-3)+(j%_Nt)*(_sub_lt-3)+Pos2];
                          count[PosDist] ++ ;
                     }
                 }
@@ -137,8 +137,8 @@ void Contraction_cpu<floatT>::ImproveContractionBulk(std::vector<floatT> &SubBul
 
 
 template<class floatT>
-void Contraction_cpu<floatT>::ImproveContractionShear(std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_real, 
-                                                      std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_imag, int min_dist, 
+void Contraction_cpu<floatT>::ImproveContractionShear(std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_real,
+                                                      std::vector<Matrix4x4Sym<floatT> > &SubShear_Nt_imag, int min_dist,
                                                       size_t global_spatial_vol, int pz, std::vector<floatT> &Improve_ShearResult) {
 
     std::vector<int> count(_Nt, 0);
@@ -176,10 +176,10 @@ void Contraction_cpu<floatT>::ImproveContractionShear(std::vector<Matrix4x4Sym<f
                 int mid = count[i];
                 int count_cp=count[i];
                 while(mid != 0)
-                {    
+                {
                      mid = count_cp/2;
                      for (int j=0;j<mid;j++ )
-                     {   
+                     {
                          int span = count_cp-j-1;
                          Improve_ShearResult_temp[i][j] += Improve_ShearResult_temp[i][span];
                      }
@@ -229,9 +229,9 @@ void Contraction_cpu<floatT>::ImproveContractionShear(std::vector<Matrix4x4Sym<f
     for (int i = 0; i < _Nt; ++i) {
         if ( count[i] != 0 ) {
             if ( pz == 0 ) {
-                Improve_ShearResult[pz*_Nt+i] *= global_spatial_vol/3./count[i]; 
+                Improve_ShearResult[pz*_Nt+i] *= global_spatial_vol/3./count[i];
             } else {
-                Improve_ShearResult[pz*_Nt+i] *= global_spatial_vol/2./count[i]; 
+                Improve_ShearResult[pz*_Nt+i] *= global_spatial_vol/2./count[i];
             }
         }
     }

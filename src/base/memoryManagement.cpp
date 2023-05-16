@@ -1,6 +1,6 @@
-/* 
+/*
  * memoryManagement.cpp
- * 
+ *
  * D. Clarke, L. Altenkort
  *
  * Implementations of some of the methods given in the MemoryManagement header file.

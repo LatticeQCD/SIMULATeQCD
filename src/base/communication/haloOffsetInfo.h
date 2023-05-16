@@ -1,25 +1,24 @@
-/* 
- * haloOffsetInfo.h                                                               
- * 
- * L. Mazur 
+/*
+ * haloOffsetInfo.h
+ *
+ * L. Mazur
  *
  * The sites on a sublattice's halo have some cartesian index. When communicating, information
- * from these sites are saved into a buffer. The cardinality of this communication buffer is 
- * smaller than the sublattice because it only contains halo information; hence it has its own 
+ * from these sites are saved into a buffer. The cardinality of this communication buffer is
+ * smaller than the sublattice because it only contains halo information; hence it has its own
  * indexing scheme. Loosely speaking, the difference between these indexing schemes is the offset.
  * This header contains methods to calculate that.
- *  
+ *
  */
 
-#ifndef HALOOFFSETINFO_H
-#define HALOOFFSETINFO_H
-
+#pragma once
 #include <mpi.h>
 #include "../../define.h"
 #include <map>
 #include <utility>
 #include "neighborInfo.h"
 #include "../memoryManagement.h"
+#include <array>
 
 struct HaloSegmentInfo {
 private:
@@ -540,4 +539,3 @@ public:
 
 };
 
-#endif //HALOOFFSETINFO_H

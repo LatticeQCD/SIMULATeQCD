@@ -1,8 +1,8 @@
-# 
-# hypSmearingTest.param                                                               
-# 
-#    Lattice: Nx Ny Nz Nt
-#      Nodes: Number of sublattices per direction 
 #
-Lattice    = 6  6  6  6 
+# hypSmearingTest.param
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of sublattices per direction
+#
+Lattice    = 6  6  6  6
 Nodes      = 1  1  1  1

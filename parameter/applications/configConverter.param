@@ -1,14 +1,14 @@
-# 
-# configConverter.param                                                               
+#
+# configConverter.param
 #
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
 #    Gaugefile: Name of input gauge configuration
 #   endianness: Endianness of input configuration
-#       format: Format of input configuration (ildg, milc, or nersc) 
-#   format_out: Format of output configuration (ildg or nersc) 
+#       format: Format of input configuration (ildg, milc, or nersc)
+#   format_out: Format of output configuration (ildg or nersc)
 #     prec_out: Precision of the output configuration, 1 for single and 2 for double
-# 
+#
 Lattice       = 8 8 8 4
 Nodes         = 1 1 1 1
 beta          = 3.360
@@ -18,4 +18,4 @@ endianness    = auto
 Gaugefile_out = ./ildg.l8t4b3360_bie_readtest
 format_out    = ildg
 prec_out      = 2
-compress_out  = 0 
+compress_out  = 0

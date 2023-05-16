@@ -1,4 +1,4 @@
-/* 
+/*
  * hisqSmearing.cu
  *
  */
@@ -25,10 +25,10 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
 
     _dummy.iterateOverBulkAllMu(staple5_4_lvl1);
     _gauge_lvl1 = _gauge_lvl1 + _Lvl1._c_5 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_1_lvl1);
     _gauge_lvl1 = _gauge_lvl1 + _Lvl1._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_2_lvl1);
     _gauge_lvl1 = _gauge_lvl1 + _Lvl1._c_7 * _dummy;
 
@@ -51,7 +51,7 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
     _gauge_lvl1 = _gauge_lvl1 + _Lvl1._c_7 * _dummy;
 
 
-    // Unitarization. 
+    // Unitarization.
     _gauge_lvl1.iterateOverBulkAllMu(U3ProjectStruct<floatT, HaloDepth,compLvl1>(_gauge_lvl1.getAccessor()));
     _gauge_lvl1.updateAll();
 
@@ -77,42 +77,42 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
 
     _dummy.iterateOverBulkAllMu(staple7_1_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_2_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_3_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_4_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_5_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_6_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_7_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
     _dummy.iterateOverBulkAllMu(staple7_8_lvl2);
     _gauge_lvl2 = _gauge_lvl2 + _Lvl2._c_7 * _dummy;
-    
+
 
     if (multiplyPhase) {
         staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2,mu_f);
         _gauge_lvl2.iterateOverBulkAllMu(multPhase);
     }
     _gauge_lvl2.updateAll();
-    
+
     if (multiplyPhase) {
         staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1,mu_f);
         _gauge_lvl1.iterateOverBulkAllMu(multPhase);
         _gauge_lvl1.updateAll();
     }
     _gauge_naik.iterateOverBulkAllMu(stapleNaik);
-    
+
     _gauge_naik.updateAll();
 }
 

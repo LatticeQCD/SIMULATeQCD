@@ -1,10 +1,14 @@
-#ifndef SIMPLE_ARRAY_H
-#define SIMPLE_ARRAY_H
+/* 
+ * ./src/base/math/simpleArray.h                                                               
+ * 
+ * Simple array class to work with the general operators and can interact with std::vector
+ * 
+ */
+#pragma once
 
 #include<vector>
 #include "operators.h"
 
-//Simple array class to work with the general operators and can interact with std::vector
 template<typename T, size_t N>
 class SimpleArray{
 
@@ -222,5 +226,3 @@ operator*(const SimpleArray<T, N> lhs, const GeneralOperator<typeLHS1, typeRHS1,
     return GeneralOperator<SimpleArray<T,N>, GeneralOperator<typeLHS1, typeRHS1, op1>, mult>(lhs, rhs);
 }
 
-
-#endif

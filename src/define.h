@@ -5,9 +5,7 @@
  *
  */
 
-#ifndef GPU_LATTICE_DEFINE_H
-#define GPU_LATTICE_DEFINE_H
-
+#pragma once
 #include "base/IO/logging.h"
 #include "explicit_instantiation_macros.h"
 
@@ -159,4 +157,3 @@ namespace CoutColors {
 }
 
 
-#endif //GPU_LATTICE_DEFINE_H

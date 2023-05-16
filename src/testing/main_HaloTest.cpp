@@ -1,8 +1,8 @@
-/* 
- * main_HaloTest.cpp                                                               
- * 
+/*
+ * main_HaloTest.cpp
+ *
  * L. Mazur, 9 Oct 2017
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"

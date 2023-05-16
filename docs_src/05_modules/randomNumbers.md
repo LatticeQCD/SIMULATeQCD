@@ -1,13 +1,13 @@
 # Random Number Generator
 
-The random number generator is using using the hybrid Tausworthe generator from 
+The random number generator is using using the hybrid Tausworthe generator from
 [here](https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch37.html). The state of the random number
-generator consists of four unsigned integers (We use the GPU type `uint4`) and every site of the 
+generator consists of four unsigned integers (We use the GPU type `uint4`) and every site of the
 lattice has its own state. A random number, e.g. in a Kernel is generated with the function
 ```C++
 floatT get_rand(uint4* state)
 ```
-The argument is a pointer on the `uint4` element on the given site, not on the whole uint4 array that runs over the lattice! 
+The argument is a pointer on the `uint4` element on the given site, not on the whole uint4 array that runs over the lattice!
 You now have two choices how to do this: 1) pass your kernel a reference of the rng state object and use the getElement function
 ```C++
 uint4* getElement(gSite site)
@@ -24,6 +24,6 @@ the rng state is
 ```C++
 void make_rng_state(unsigned int seed)
 ```
-It is rather slow, though that does not matter as we have to call it only at the beginning of a completely new run/measurement. It is so slow as it is backwards compatible to the old BielefeldGPU code. 
+It is rather slow, though that does not matter as we have to call it only at the beginning of a completely new run/measurement. It is so slow as it is backwards compatible to the old BielefeldGPU code.
 The state is generated on the Host so remember to copy it to the device! You can use the `=` operator for that.
 

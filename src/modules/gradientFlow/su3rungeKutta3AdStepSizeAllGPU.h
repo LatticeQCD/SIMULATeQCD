@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 24.11.18.
 //
 
-#ifndef SU3RUNGEKUTTA3ADSTEPSIZEALLGPU_H
-#define SU3RUNGEKUTTA3ADSTEPSIZEALLGPU_H
-
+#pragma once
 #include "su3rungeKutta3.h"
 #include "su3rungeKutta3AdStepSize.h"
 
@@ -121,5 +119,4 @@ floatT su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Zi>::updateFlow() {
     }
 }
 
-#endif //SU3RUNGEKUTTA3ADSTEPSIZEALLGPU_H
 

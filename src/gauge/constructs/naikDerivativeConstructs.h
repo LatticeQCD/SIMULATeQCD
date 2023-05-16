@@ -1,12 +1,11 @@
-/* 
- * naikDerivativeConstructs.h                                                               
- * 
- * J. Goswami 
- * 
+/*
+ * naikDerivativeConstructs.h
+ *
+ * J. Goswami
+ *
  */
 
-#ifndef NAIKDERIVATIVECONSTRUCTS_H
-#define NAIKDERIVATIVECONSTRUCTS_H
+#pragma once
 #include "../../base/indexer/BulkIndexer.h"
 #include "../../base/math/gaugeAccessor.h"
 
@@ -23,11 +22,10 @@ __host__ __device__ GSU3<floatT> inline naikLinkDerivative(gaugeAccessor<floatT>
     gSite dn_2mu = GInd::site_dn(dn_mu, mu);
 
     temp = gAcc.getLink(GInd::getSiteMu(up_mu, mu)) * gAcc.getLink(GInd::getSiteMu(up_2mu, mu)) * finAccessor.getLink(GInd::getSiteMu(origin, mu));
-     
+
     temp += gAcc.getLink(GInd::getSiteMu(up_mu, mu)) * finAccessor.getLink(GInd::getSiteMu(dn_mu, mu)) * gAcc.getLink(GInd::getSiteMu(dn_mu, mu));
-     
+
     temp += finAccessor.getLink(GInd::getSiteMu(dn_2mu, mu)) * gAcc.getLink(GInd::getSiteMu(dn_2mu, mu)) * gAcc.getLink(GInd::getSiteMu(dn_mu, mu));
-     
+
     return temp;
 }
-#endif //NAIKDERIVATIVECONSTRUCTS_H

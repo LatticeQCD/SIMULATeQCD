@@ -1,10 +1,9 @@
-/* 
- * dslash.h                                                               
- * 
+/*
+ * dslash.h
+ *
  */
 
-#ifndef DSLASH_H
-#define DSLASH_H
+#pragma once
 
 #include "../inverter/inverter.h"
 
@@ -214,4 +213,3 @@ public:
 
 };
 
-#endif

@@ -1,10 +1,10 @@
-# 
-# isParamFileInUse.bash                                                               
-# 
-# D. Clarke 
-# 
+#
+# isParamFileInUse.bash
+#
+# D. Clarke
+#
 # Script to check for any unused .param files. Call this from within the
-# current folder. 
+# current folder.
 #
 
 paramFolder='../parameter/'
@@ -23,10 +23,10 @@ for f in ${paramFolder}*; do
   fi
 
   ext=${f##*.}
-  if [ ${ext} = 'param' ]; then 
+  if [ ${ext} = 'param' ]; then
     echo
     echo "---"$f"---"
-    grep -r "${f##*/}" ${srcFolder}* 
-  fi     
+    grep -r "${f##*/}" ${srcFolder}*
+  fi
 
 done

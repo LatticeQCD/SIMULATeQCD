@@ -13,7 +13,7 @@ struct ResetWilsonLineKernel{
                     MemoryAccessor wline) :
             gaugeAccessor(_gauge.getAccessor()), _wline(wline) {}
     __device__ __host__ void operator()(gSite site) {
-        
+
         int id = site.isite;
         _wline.setValue<GSU3<floatT>>(id, gsu3_one<floatT>());
 
@@ -71,15 +71,15 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
         MemTypeGPU PtrPloopGPU = MemoryManagement::getMemAt<true>("ploopGPU");
         PtrPloopGPU->template adjustSize<GSU3<floatT>>(GInd::getLatData().globvol3);
         MemoryAccessor _wlineGPU(PtrPloopGPU->getPointer());
-    
+
         iterateFunctorNoReturn<onDevice>(ResetWilsonLineKernel<floatT,onDevice,HaloDepth>(_gauge, _wlineGPU), calcReadIndexSpatial, _elems);
         for (int dtau=0;dtau<Nt;dtau++)
         {
             std::vector<floatT> vec_wlca(this->distmax,0);
             std::vector<floatT> vec_wlc1(this->distmax,0);
             std::vector<floatT> vec_wlc8(this->distmax,0);
-    
-    
+
+
             MemTypeGPU PtrwlcaoffGPU = MemoryManagement::getMemAt<true>("wlcaoffGPU");
             MemTypeGPU Ptrwlc1offGPU = MemoryManagement::getMemAt<true>("wlc1offGPU");
             MemTypeGPU Ptrwlc8offGPU = MemoryManagement::getMemAt<true>("wlc8offGPU");
@@ -98,11 +98,11 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
             MemoryAccessor _wlcaonGPU  (PtrwlcaonGPU->getPointer());
             MemoryAccessor _wlc1onGPU  (Ptrwlc1onGPU->getPointer());
             MemoryAccessor _wlc8onGPU  (Ptrwlc8onGPU->getPointer());
-    
+
             iterateFunctorNoReturn<onDevice>(MeasureWilsonLineKernel<floatT,onDevice,HaloDepth>(_gauge, _wlineGPU, tau, dtau), calcReadIndexSpatial, _elems);
-    
+
             PassIndex passReadIndex;
-    
+
             if (fastCorr) {
                 iterateFunctorNoReturn<onDevice>(
                         PloopCorrOffAxisKernel<floatT,HaloDepth>(_wlineGPU,_wlcaoffGPU,_wlc1offGPU,_wlc8offGPU),passReadIndex,this->pvol3 );
@@ -129,12 +129,12 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
                         RestrictedOnAxisKernel<floatT,HaloDepth,GSU3<floatT>,floatT,polCorrOCT<floatT>>(_wlineGPU,_wlineGPU,_wlc8offGPU,_wlc8onGPU),
                         passReadIndex,this->RSonmax);
             }
-    
+
             MemTypeCPU PtrwlcaoffCPU = MemoryManagement:: getMemAt<false>("wlcaoffCPU");
             PtrwlcaoffCPU->template adjustSize<floatT>(this->pvol3);
             PtrwlcaoffCPU->template copyFrom<true>(PtrwlcaoffGPU, PtrwlcaoffGPU->getSize());
             MemoryAccessor _wlcaoffCPU (PtrwlcaoffCPU->getPointer());
-    
+
             MemTypeCPU Ptrwlc1offCPU = MemoryManagement::getMemAt<false>("wlc1offCPU");
             MemTypeCPU Ptrwlc8offCPU = MemoryManagement::getMemAt<false>("wlc8offCPU");
             MemTypeCPU PtrwlcaonCPU  = MemoryManagement::getMemAt<false>("wlcaonCPU");
@@ -155,7 +155,7 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
             MemoryAccessor _wlcaonCPU  (PtrwlcaonCPU->getPointer());
             MemoryAccessor _wlc1onCPU  (Ptrwlc1onCPU->getPointer());
             MemoryAccessor _wlc8onCPU  (Ptrwlc8onCPU->getPointer());
-    
+
             for (int dx=0 ; dx<(this->distmax) ; dx++) {
                 vec_wlca[dx]   = 0.;
                 vec_wlc1[dx]   = 0.;
@@ -194,7 +194,7 @@ void WilsonLineCorrelator<floatT,onDevice,HaloDepth>::WLCtoArrays(std::vector<fl
                     vec_wlc8[dx]=vec_wlc8[dx]/((floatT)vec_factor[dx]);
                 }
             }
-    
+
             for (int dx=0 ; dx<(this->distmax) ; dx++) {
                 vec_wlca_full[(this->distmax)*dtau+dx]+=vec_wlca[dx]/Nt;
                 vec_wlc1_full[(this->distmax)*dtau+dx]+=vec_wlc1[dx]/Nt;

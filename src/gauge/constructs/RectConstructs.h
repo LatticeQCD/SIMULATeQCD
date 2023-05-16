@@ -1,13 +1,11 @@
-/* 
- * RectConstructs.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * RectConstructs.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef LINKCONSTRUCTS_H
-#define LINKCONSTRUCTS_H
-
+#pragma once
 
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
@@ -38,13 +36,13 @@ __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, in
      *     |
      *     |
      *  mu  --->
-     *     
-     *      
-     *     
+     *
+     *
+     *
      *     <--<--^
      *     |  	 |
      *    *v-->-->
-     * 
+     *
      *
      */
     temp = gAcc.getLink(GInd::getSiteMu(origin, mu))
@@ -57,14 +55,14 @@ __device__ GSU3<floatT> inline Rect_P(gaugeAccessor<floatT> gAcc, gSite site, in
      *     |
      *     |
      *  mu  --->
-     *     
-     *      
+     *
+     *
      *     <--^
-     *     |  | 
+     *     |  |
      *     v  ^
-     *     |  |	 
+     *     |  |
      *    *v-->
-     * 
+     *
      *
      */
     temp += gAcc.getLink(GInd::getSiteMu(origin, mu))
@@ -107,7 +105,7 @@ __device__ GSU3<floatT> inline Rect_Q(gaugeAccessor<floatT> gAcc, gSite site, in
      *     *--<--^
      *     |  	 |
      *     v-->-->
-     * 
+     *
      *
      */
     temp += gAcc.getLinkDagger(GInd::getSiteMu(dn, nu))
@@ -260,4 +258,3 @@ __device__ GSU3<floatT> inline Rect_R(gaugeAccessor<floatT> gAcc, gSite site, in
     return temp;
 }
 
-#endif //LINKCONSTRUCTS_H

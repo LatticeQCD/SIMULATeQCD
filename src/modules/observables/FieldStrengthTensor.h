@@ -3,9 +3,7 @@
 //
 
 
-#ifndef FIELDSTRENGTHTENSOR_H
-#define FIELDSTRENGTHTENSOR_H
-
+#pragma once
 #include "../../define.h"
 #include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
@@ -214,4 +212,3 @@ struct FieldStrengthTensor_imp {
     }
 };
 
-#endif //FIELDSTRENGTHTENSOR_H

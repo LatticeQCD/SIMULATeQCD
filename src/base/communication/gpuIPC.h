@@ -1,13 +1,11 @@
-/* 
- * gpuIPC.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * gpuIPC.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef GPUIPC_H
-#define GPUIPC_H
-
+#pragma once
 #include <mpi.h>
 #include "../../define.h"
 #include <map>
@@ -434,4 +432,3 @@ public:
 
 };
 
-#endif //GPUIPC_H

@@ -1,12 +1,11 @@
-/* 
- * staggeredPhases.h                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * staggeredPhases.h
+ *
+ * L. Mazur
+ *
  */
 
-#ifndef STAGGEREDPHASES_H
-#define STAGGEREDPHASES_H
+#pragma once
 #include "../../define.h"
 #include "../../base/indexer/BulkIndexer.h"
 
@@ -69,4 +68,3 @@ struct imagMuphase {
     }
 };
 
-#endif //STAGGEREDPHASES_H

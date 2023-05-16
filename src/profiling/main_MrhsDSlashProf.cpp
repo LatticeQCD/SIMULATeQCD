@@ -1,6 +1,6 @@
-/* 
+/*
  * main_MrhsDSlashProf.cpp
- * 
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -69,18 +69,18 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     gpuErr = gpuGetLastError();
     if (gpuErr)
         rootLogger.info("Error in initialization of DSlash");
-    
+
     for (int i = 0; i < 500; ++i) {
         timer.start();
         dslash.applyMdaggM(spinorOut, spinorIn, false);
         timer.stop();
         spinorIn=spinorSave;
     }
-     
+
     rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
-  
+
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
-  
+
     float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 }
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     LatticeParameters param;
     param.readfile(commBase, "../parameter/profiling/MrhsDSlashProf.param", argc, argv);
 
- 
+
     const int LatDim[] = {param.latDim[0],param.latDim[1],param.latDim[2],param.latDim[3]};
 
     int Vol = LatDim[0]*LatDim[1]*LatDim[2]*LatDim[3];

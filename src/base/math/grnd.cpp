@@ -192,7 +192,7 @@ bool grnd_state<onDevice>::read_header(std::istream &in, CommunicationBase &comm
     std::stringstream s(header.checksum());
     s >> std::hex >> stored_checksum;
     if (s.fail()) {
-        rootLogger.error("Could not interpret checksum " , 
+        rootLogger.error("Could not interpret checksum " ,
                            header.checksum() ,  "as hexadecimal number.");
         error = true;
     }
@@ -358,7 +358,7 @@ void grnd_state<onDevice>::read_from_file(const std::string &fname, Communicatio
                     linktrace = dummy.x + dummy.y + dummy.z + dummy.w;
                     computed_checksum += uint32_t(hash_f(linktrace));
 
-                    
+
 
                 }
 

@@ -1,6 +1,6 @@
-/* 
- * main_StackedSpinorTest.cpp                                                               
- * 
+/*
+ * main_StackedSpinorTest.cpp
+ *
  */
 
 #include "../SIMULATeQCD.h"
@@ -61,7 +61,7 @@ template<class floatT, Layout LatLayout, size_t HaloDepth, size_t NStacks, bool 
 struct FillStacks{
     gVect3arrayAcc<floatT> spinorIn;
 
-    FillStacks(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) : 
+    FillStacks(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) :
                 spinorIn(spinorIn.getAccessor()){}
 
     __host__ __device__ gVect3<floatT> operator()(gSiteStack site){
@@ -81,7 +81,7 @@ struct FillStacksLoop{
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    FillStacksLoop(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) : 
+    FillStacksLoop(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) :
                 spinorIn(spinorIn.getAccessor()){}
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
@@ -135,7 +135,7 @@ void run_func(CommunicationBase &commBase) {
     Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> stackedSpinor2(commBase);
     Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> stackedProjectToSpinor(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth, NStacks> stackedSpinorRHS(commBase);
-    
+
     //This will hold the result of the projection
     std::vector<GCOMPLEX(floatT)> res_projected(NStacks);
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gfixplcTest.cpp
  *
  * D. Clarke
@@ -14,7 +14,7 @@
 
 #include "refValues_gfixplc.h"
 
-#define PREC double 
+#define PREC double
 
 /// Create our own parameter structure, which inherits from LatticeParameters.
 template<class floatT>
