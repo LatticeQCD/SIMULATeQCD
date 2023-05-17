@@ -11,17 +11,6 @@
 SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it easy for physicists to implement lattice QCD formulas while still providing
 competetive performance. 
 
-- [How to Build](#how-to-build)
-  - [Download SIMULATeQCD](#download-simulateqcd)
-  - [Compile Using Container](#compile-using-container)
-  - [Compile Manually](#compile-manually)
-- [Example: Plaquette action computation](#example-plaquette-action-computation)
-- [Documentation](#documentation)
-- [Getting help and bug report](#getting-help-and-bug-report)
-- [Contributors](#contributors)
-- [Citing SIMULATeQCD](#citing-simulateqcd)
-- [Acknowledgments](#acknowledgment)
-
 ## How to Build 
 
 There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
@@ -29,20 +18,21 @@ we recommend that you use the [container build](#compile-using-container). The c
 If you are running on an HPC system or want to use AMD, we recommmend you [compile manually](#compile-manually) and ensure that all needed
 software already exists on the system you're using.
 This README attempts to give a succinct overview of how to build and use SIMULATeQCD. If you run into problems building, first
-please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
+please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the **[documentation](https://latticeqcd.github.io/SIMULATeQCD)**.
 
 ### Download SIMULATeQCD
 
 You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
-This is needed for downloading configurations used in the unit tests. Then run `git clone https://github.com/LatticeQCD/SIMULATeQCD.git`
+This is needed for downloading configurations used in the unit tests. Then run 
+```shell
+git clone https://github.com/LatticeQCD/SIMULATeQCD.git
+```
 
 ### Compile Using Container
 
-To build using the container, you need to have `podman` properly configured on your system. To test this,
-run `podman run hello-world` as your user. If this does not run correctly, the container build will not function. 
-How to install `podman` and how to troubleshoot common errors are addressed
-in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
-You also need an NVIDIA GPU.
+To build using the container, you need to have `podman` properly configured on your system.  
+More information on that you may find in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
+To run the container you need an NVIDIA GPU.
 
 To build the code, you then simply
 
@@ -64,13 +54,13 @@ The following software is required to manually compile SIMULATeQCD:
 To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script: 
 ```shell
 cmake ../SIMULATeQCD/ \
--DARCHITECTURE="70" \
+-DARCHITECTURE="80" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=ON \
 ```
-Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
+Here, it is assumed that your source code folder is called `SIMULATeQCD`. 
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
-`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta.
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "70" for Volta or "80" for Ampere.
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
 ```shell
 make NameOfExecutable
