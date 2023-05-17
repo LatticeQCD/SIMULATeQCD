@@ -18,25 +18,31 @@ message(STATUS "Using git version ${GIT_HASH}")
 
 set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
 
+# Determine the backend for GPU acceleration
 if (BACKEND STREQUAL "cuda")
+    set(USE_CUDA ON)
     add_definitions(-DUSE_CUDA)
     message(STATUS "Using CUDA backend")
-    set(USE_CUDA ON)
+    
 elseif (BACKEND STREQUAL "hip_nvidia")
+    set(USE_HIP_NVIDIA ON)
+    set(USE_HIP ON)
     add_definitions(-DUSE_HIP_NVIDIA)
     add_definitions(-DUSE_HIP)
-    set(USE_HIP ON)
-    set(USE_HIP_NVIDIA ON)
     message(STATUS "Using HIP backend for NVIDIA GPUs (Experimental!)")
+    
 elseif (BACKEND STREQUAL "hip_amd")
+    set(USE_HIP_AMD ON)
+    set(USE_HIP ON)
     add_definitions(-DUSE_HIP_AMD)
     add_definitions(-DUSE_HIP)
-    set(USE_HIP ON)
-    set(USE_HIP_AMD ON)
     message(STATUS "Using HIP backend for AMD GPUs. (Experimental!)")
+    
 else()
+    # If the backend is not recognized, print an error message
     message(STATUS "Backend ${BACKEND} is not known!")
 endif()
+
 
 
 if (USE_CUDA)

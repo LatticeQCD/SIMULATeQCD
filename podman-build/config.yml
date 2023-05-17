@@ -1,0 +1,93 @@
+# Options are nvidia, hip_nvidia, and hip_amd. Options are defined at https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html#
+# nvidia - Builds the source just using CUDA. See https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html#building-source-with-cuda
+# Build the source with HIP for Nvidia Platforms. See https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html#building-source-with-hip-for-nvidia-platforms-experimental
+# Build the source with HIP for AMD Platforms. See https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html#building-source-with-hip-for-amd-platforms-experimental
+# Note: This automatically sets the CMake variable BACKEND.
+# TODO - ONLY nvidia IS IMPLEMENTED. AMD IS STILL A WORK IN PROGRESS.
+PROFILE: nvidia
+
+# This controls the number of threads that the build will spawn. It is used as
+# follows, `make -j ${CORES}` If left undefined, it will use all cores available
+# on the system.
+CORES: 
+
+# USE_GPU_AWARE_MPI boolean option that enables or disables the use of GPU-aware MPI libraries when
+# building an MPI-enabled application with CUDA. When USE_GPU_AWARE_MPI is set to ON, CMake will
+# attempt to find and link against a GPU-aware MPI library, which is a version of the MPI library
+# that is optimized for communication between CPUs and GPUs. This can result in better performance
+# when running MPI applications that use CUDA/HIP. See https://developer.nvidia.com/blog/introduction-cuda-aware-mpi/
+# Options are ON or OFF
+USE_GPU_AWARE_MPI: "ON"
+
+# This sets the version of the OS *in the container*. This does not need to match
+# the target computer. The primary reason for changing this is to allow the use
+# of older verisons of the CUDA toolkit. Older toolkits are only available on
+# older operating systems. This can be ignored when using the hip_amd profile.
+# You will generally want to leave this at latest. This tells the code to grab
+# the latest version available. You can also set it to RHEL's major version number.
+# Ex: 7, 8, 9.
+RHEL_VERSION: latest
+
+# This is the CUDA version you want to use for the build. See https://developer.nvidia.com/cuda-toolkit-archive
+# for a list of versions. If you set it to latest, the code will check that link for the highest
+# version and use it.
+CUDA_VERSION: latest
+
+# USE_GPU_P2P enables or disables the use of GPU peer-to-peer (P2P) communication when building an
+# application with CUDA. Nvidia's proprietary GPU interconnect is called NVLink. GPU P2P communication
+# allows for direct data transfer between two GPUs without the need to transfer the data to the host
+# system first. This can result in faster data transfer and reduced CPU overhead, especially for
+# multi-GPU systems. Options are ON or OFF
+USE_GPU_P2P: "ON"
+
+# Enable or disable the use of the HIP programming language for AMD GPUs. Options are ON or OFF
+# WARNING: This is not currently defined and does not do anything!
+# TODO - THIS IS NOT YET IMPLEMENTED
+USE_HIP_AMD: "OFF" 
+
+################################################################################################
+#                                          For CUDA                                            #
+################################################################################################
+# This is the CUDA architecture for which you want to generate device code. 
+# It is defined here: https://cmake.org/cmake/help/latest/prop_tgt/CUDA_ARCHITECTURES.html.
+# Each CUDA Toolkit has a list of supported architectures. This post is
+# helpful: https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/
+# See https://en.wikipedia.org/wiki/CUDA#GPUs_supported for a list of compatibilities
+# Current list:
+# Fermi: 20
+# Kepler: 30, 35, 37
+# Maxwell: 50, 52, 53
+# Pascal: 60, 61, 62
+# Volta: 70, 72
+# Turing: 75
+# Ampere: 80, 86, 87
+# Ada: 89
+# Hopper: 90
+################################################################################################
+#                                          For AMD                                             #
+################################################################################################
+# AMD Vega 10: gfx900
+# AMD Vega 7nm: gfx906
+# AMD Instinct® MI100 accelerator: gfx908
+# Aldebaran: gfx90a
+# Navi10: gfx1010
+# Navi12: gfx1011
+# Navi14: gfx1012
+# Sienna Cichlid: gfx1030
+# Navy Flounder: gfx1031
+# See https://rocmdocs.amd.com/projects/ROCgdb/en/hybrid/gdb/doc/gdb/AMD-GPU.html
+ARCHITECTURE: "70"
+
+# The build target. If you specify nothing, it will build all targets. You can get a list of possible build
+# targets by running `./simulateqcd list`
+TARGET:
+
+# These are added to the end of the cmake line. Any other options you would like to add to cmake you can add here
+ADDITIONAL_CMAKE_OPTIONS: 
+
+# These are added to the end of the make line. Any other options you would like to add to make you can add here
+ADDITIONAL_MAKE_OPTIONS:
+
+# The directory you want the build to be copied to after the build completes. It will create a folder called build
+# in this directory.
+OUTPUT_DIRECTORY: ./

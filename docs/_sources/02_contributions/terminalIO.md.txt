@@ -1,10 +1,10 @@
 # Terminal output & terminating the program
 
 Instead of using `printf` or `std::cout`, we use a custom `Logger` class to print statements in a nicely formatted way.
-There are two global instances of the class `Logger` that are automatically created when you include files of the base that include `logging.h`. (This is automatically included in `SIMULATeQCD.h`.) 
+There are two global instances of the class `Logger` that are automatically created when you include files of the base that include `logging.h`. (This is automatically included in `SIMULATeQCD.h`.)
 These two classes are called `stdLogger` and `rootLogger`.
 
-## Printing a statement 
+## Printing a statement
 
 This is accomplished through
 ```C++
@@ -14,7 +14,7 @@ rootLogger.info("Some information about the currently running program.");
 This will output the statement **on the root process only** in a nicely formatted way with time stamp and also append a newline (no more `std::endl` or \n's that clutter the code).
 If you want to output something from every process you can use `stdLogger`.
 
-These are some of the different Logger levels you can choose from: 
+These are some of the different Logger levels you can choose from:
 ```C++
 alloc(), debug(), info(), warn(), error(), fatal()
 ```
@@ -45,7 +45,7 @@ std::string c = "test";
 
 std::string str1 = sformat("%.3f, %g %s %.2e", 1.23, 0.001, c, b);
 std::string str2 = sjoin(a, " ", b, COLORS::red, " 123 ", COLORS::reset, c);
-// Result of str1 and str2 is: 
+// Result of str1 and str2 is:
 // str1 = "1.230, 0.001 test 2.51e-03"
 // str2 = "2 0.00251 123 test"
 ```
@@ -53,7 +53,7 @@ std::string str2 = sjoin(a, " ", b, COLORS::red, " 123 ", COLORS::reset, c);
 
 ## When to use Logger.error()
 
-Use this when **something goes wrong that can work in principle** but the **program can still continue** and no runtime exception has to be thrown. 
+Use this when **something goes wrong that can work in principle** but the **program can still continue** and no runtime exception has to be thrown.
 For example, if one subroutine of a test gives the wrong results, but others after it may still be correct,
 it makes sense to use `error`.
 
@@ -66,7 +66,7 @@ The way to close your program at runtime because of an error is
 throw std::runtime_error(stdLogger.fatal("Put", "your", "error message here"));
 ```
 
-This will call rootLogger.fatal() and write out the error message, then `throw std::runtime_error`. 
+This will call rootLogger.fatal() and write out the error message, then `throw std::runtime_error`.
 In your main, you should use something like this to catch any runtime errors and close the program in a clean way:
 ```C++
 int main(int argc, char *argv[]) {
