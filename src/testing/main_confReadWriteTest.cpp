@@ -52,6 +52,9 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Try reading QUDA configuration...");
     gauge.readconf_ildg("../test_conf/ildg.l8t4b3360_QUDA");
 
+    rootLogger.info("Try OPENQCD read...");
+    gauge.readconf_openqcd("../test_conf/openQCD.l4t4b12.0k0.125csw1.13295");
+
     if(!pass) {
 		rootLogger.error("Binaries are not equal.");
         return -1;
