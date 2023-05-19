@@ -291,6 +291,11 @@ IEEE big-endian byte order for their data types, <code class="docutils literal n
 <code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">long</span></code>, respectively.</p>
 </section>
 </section>
+<section id="milc">
+<h2>MILC<a class="headerlink" href="#milc" title="Permalink to this headline"></a></h2>
+<p>MILC format is the format of the <a class="reference external" href="https://github.com/milc-qcd/milc_qcd">MILC</a> code base.
+As of v7.7.11, these binaries are always in single precision. They save all three rows.</p>
+</section>
 <section id="nersc">
 <h2>NERSC<a class="headerlink" href="#nersc" title="Permalink to this headline"></a></h2>
 <p>A NERSC format file consists of a simple header</p>
@@ -308,16 +313,18 @@ IEEE big-endian byte order for their data types, <code class="docutils literal n
 </pre></div>
 </div>
 <p>followed by the binary. The NERSC <code class="docutils literal notranslate"><span class="pre">checksum</span></code> is essentially a sum over all elements of
-all links in the lattice. This <code class="docutils literal notranslate"><span class="pre">checksum</span></code> is not as sensitive as the ILDG checksum.</p>
-</section>
-<section id="milc">
-<h2>MILC<a class="headerlink" href="#milc" title="Permalink to this headline"></a></h2>
-<p>MILC format is the format of the <a class="reference external" href="https://github.com/milc-qcd/milc_qcd">MILC</a> code base.
-As of v7.7.11, these binaries are always in single-precision. They save all three rows.</p>
+all links in the lattice. This <code class="docutils literal notranslate"><span class="pre">checksum</span></code> is not as sensitive as the ILDG checksum.
+An advantage of NERSC format is that one has the option of saving two rows, then
+reconstructing the third row on the read in. Such compressed gauge configurations
+save a good deal of storage space.</p>
 </section>
 <section id="openqcd">
 <h2>OPENQCD<a class="headerlink" href="#openqcd" title="Permalink to this headline"></a></h2>
-<p>OPENQCD format is the format of the <a class="reference external" href="https://luscher.web.cern.ch/luscher/openQCD/">openQCD</a> library.</p>
+<p>OPENQCD format is the format of the <a class="reference external" href="https://luscher.web.cern.ch/luscher/openQCD/">openQCD</a> library.
+OPENQCD has a bit of an unconventional set up: It stores the spatial and time dimensions
+in two integers, the plaquette as a double, and then all the links as <span class="math notranslate nohighlight">\(3\times 3\)</span> complex matrices.
+However, they only store links for odd sites, with links going both forward and backward from the sites.
+One needs to read them in and get the conjugate for the even sites.</p>
 </section>
 </section>
 
