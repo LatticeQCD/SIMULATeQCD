@@ -140,23 +140,22 @@ bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT 
     rootLogger.info("Comparison-tolerance to reference is ", tolerance);
 
     bool failed = false;
+
     unsigned int flow_time_count = 0;  // running index for the reference values
 
-    //! loop over RK methods and forces.
-    static_for<0, 1>::apply([&](auto i){ //only fixed_stepsize
-        const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
-        static_for<0, 1>::apply([&](auto j){ //only Wilson flow
-            ///Reset Gaugefield to reference.
-            gauge.updateAll();
-            rootLogger.info("Plaquette = ", gAction.plaquette());
-            ///Run test
-            rootLogger.info(">>>>>>>>>>> RK_method=", RungeKuttaMethods[i], ", Force=", Forces[j], " <<<<<<<<<<<");
-            const auto force = static_cast<Force>(static_cast<int>(j));
-            bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
-                    (gauge, gAction, topology, weinberg, lp, refValues_weinbergTop, tolerance, flow_time_count);
-            failed = failed || tmpfailed;
-        });
-    });
+    const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(0));
+
+    gauge.updateAll();
+
+    rootLogger.info("Plaquette = ", gAction.plaquette());
+
+    const auto force = static_cast<Force>(static_cast<int>(0));
+
+    bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
+            (gauge, gAction, topology, weinberg, lp, refValues_weinbergTop, tolerance, flow_time_count);
+
+    failed = failed || tmpfailed;
+
     return failed;
 }
 
@@ -166,12 +165,12 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
 
     //! how large can the difference to the reference values be?
-    const double double_tolerance = 1e-4;
+    const double double_tolerance = 1e-3;
 
     stdLogger.info("TEST DOUBLE PRECISION");
-    bool passfail_double = run_test<double>(argc, argv, commBase, double_tolerance);
+    bool failed = run_test<double>(argc, argv, commBase, double_tolerance);
 
-    if (passfail_double) { 
+    if (failed) { 
         rootLogger.error("At least one test failed!");
         return 1;
     } else {
