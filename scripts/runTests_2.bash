@@ -30,6 +30,7 @@ testRoutinesNoParam[_RndSingleTest]="1"
 testRoutinesNoParam[_SimpleFunctorTest]="1"
 testRoutinesNoParam[_UtimesUdaggerTest]="1"
 testRoutinesNoParam[_TaylorMeasurementTest]="4"
+testRoutinesNoParam[_weinbergTopTest]="1"
 
 # Counting the number of test sets lets us give the user some indication of progress.
 numberOfTestRoutines="$((${#testRoutinesNoParam[@]}))"
