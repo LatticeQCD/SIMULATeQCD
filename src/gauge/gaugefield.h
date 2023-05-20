@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef _gaugefield_h_
-#define _gaugefield_h_
+#pragma once
 
 #include "../define.h"
 #include "../base/math/operators.h"
@@ -16,7 +15,7 @@
 #include "../base/communication/siteComm.h"
 
 template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDepth, CompressionType comp>
-    struct convert_prec;
+struct convert_prec;
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R18>
 class Gaugefield : public siteComm<floatT, onDevice, gaugeAccessor<floatT, comp>, GSU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
@@ -51,33 +50,25 @@ public:
 
     const GSU3array<floatT, onDevice,comp> &get_lattice_pointer() const { return _lattice; }
 
-    /// read in a NERSC file
     void readconf_nersc(const std::string &fname);
-
     void readconf_nersc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
-    /// read in a ILDG file
     void readconf_ildg(const std::string &fname);
-
     void readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
-    /// read in a MILC file
     void readconf_milc(const std::string &fname);
-
     void readconf_milc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
+    void readconf_openqcd(const std::string &fname);
+    void readconf_openqcd_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
 
-    /// write gaugefield to NERSC file
-    void writeconf_nersc(const std::string &fname, int rows = 2,
-                         int diskprec = 1, Endianness e = ENDIAN_BIG);
-
+    void writeconf_nersc(const std::string &fname, int rows = 2, int diskprec = 1, Endianness e = ENDIAN_BIG);
     void writeconf_nersc_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, int rows = 2,
                               int diskprec = 1, Endianness e = ENDIAN_BIG);
 
-    /// write gaugefield to ILDG file
     void writeconf_ildg(const std::string &fname, LatticeParameters param);
-
     void writeconf_ildg_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, LatticeParameters param);
+
 
     /// init lattice
     void one();                        /// set all links to one
@@ -276,4 +267,3 @@ auto operator/(Gaugefield<floatT, onDevice, HaloDepth, comp> &lhs, T rhs)
     return general_divide(lhs, rhs);
 }
 
-#endif

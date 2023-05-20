@@ -179,6 +179,11 @@ the header, i.e. the magic number, version number, and data length, are written 
 IEEE big-endian byte order for their data types, `long`, `short`, and
 `long long`, respectively.
 
+## MILC
+
+MILC format is the format of the [MILC](https://github.com/milc-qcd/milc_qcd) code base.
+As of v7.7.11, these binaries are always in single precision. They save all three rows. 
+
 ## NERSC
 
 A NERSC format file consists of a simple header
@@ -197,8 +202,14 @@ END_HEADER
 ```
 followed by the binary. The NERSC `checksum` is essentially a sum over all elements of
 all links in the lattice. This `checksum` is not as sensitive as the ILDG checksum.
+An advantage of NERSC format is that one has the option of saving two rows, then
+reconstructing the third row on the read in. Such compressed gauge configurations
+save a good deal of storage space.
 
-## MILC
+## OPENQCD
 
-MILC format is the format of the [MILC](https://github.com/milc-qcd/milc_qcd) code base.
-As of v7.7.11, these binaries are always in single-precision.
+OPENQCD format is the format of the [openQCD](https://luscher.web.cern.ch/luscher/openQCD/) library.
+OPENQCD has a bit of an unconventional set up: It stores the spatial and time dimensions 
+in two integers, the plaquette as a double, and then all the links as $3\times 3$ complex matrices. 
+However, they only store links for odd sites, with links going both forward and backward from the sites. 
+One needs to read them in and get the conjugate for the even sites.

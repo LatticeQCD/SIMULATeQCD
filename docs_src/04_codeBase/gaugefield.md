@@ -68,5 +68,11 @@ gauge.readconf_milc("path/to/gaugefile");
 ```
 There is no MILC writer.
 
+Reading an openQCD configuration to a `Gaugefield` object `gauge` is done with
+```C++
+gauge.readconf_openqcd("path/to/gaugefile");
+```
+There is no openQCD writer.
+
 To learn more about the various configuration formats, look
 [here](configurationIO.md).

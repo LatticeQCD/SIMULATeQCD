@@ -9,3 +9,10 @@ test_conf/smearing_reference_conf filter=lfs diff=lfs merge=lfs -text
 test_conf/hisqF_BIGPU.nersc filter=lfs diff=lfs merge=lfs -text
 test_conf/nersc.l8t4b3360_bieHB filter=lfs diff=lfs merge=lfs -text
 test_conf/nersc.l8t4b3360_bieOR filter=lfs diff=lfs merge=lfs -text
+test_conf/openQCD.l4t4b12.0k0.125csw1.13295 filter=lfs diff=lfs merge=lfs -text
+test_conf/rhmc_4pf_reference_conf filter=lfs diff=lfs merge=lfs -text
+test_conf/rhmc_reference_conf filter=lfs diff=lfs merge=lfs -text
+test_conf/smearing_imagmu_reference_conf filter=lfs diff=lfs merge=lfs -text
+test_conf/force_imagmu_reference filter=lfs diff=lfs merge=lfs -text
+test_conf/force_reference filter=lfs diff=lfs merge=lfs -text
+test_conf/ildg.l8t4b3360_QUDA filter=lfs diff=lfs merge=lfs -text

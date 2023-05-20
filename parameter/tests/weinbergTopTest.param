@@ -1,0 +1,8 @@
+#
+# weinbergTopTest.param
+#
+Nodes      = 1 1 1 1
+Lattice    = 4 4 4 4
+Gaugefile  = ../test_conf/openQCD.l4t4b12.0k0.125csw1.13295
+format     = openqcd
+measurement_intervall = 0 0.02

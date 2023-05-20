@@ -1,7 +1,10 @@
-//
-// Luis Altenkort
-// Contains ordered reference values for the gradientFlowTest for all combinations of RK_method and force.
-//
+/*
+ * refValues_gradFlow.h
+ *
+ * Luis Altenkort
+ *
+ * Contains ordered reference values for the gradientFlowTest for all combinations of RK_method and force.
+ */
 
 #pragma once
 #include <vector>

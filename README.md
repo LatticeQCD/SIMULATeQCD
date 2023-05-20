@@ -141,6 +141,7 @@ or clarke(dot)davida(at)gmail.com.
 [J. Goswami](https://github.com/jishnuxx),
 [D. Hoying](https://github.com/goracle),
 [O. Kaczmarek](https://github.com/olaf-kaczmarek),
+[J. Kim](https://github.com/kimjangho1120),
 [R. Larsen](https://github.com/RasmusNL),
 [M. Neumann](https://github.com/mneumann177),
 [M. Rodekamp](https://github.com/Marcel-Rodekamp), 

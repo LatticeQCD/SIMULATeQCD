@@ -46,6 +46,8 @@ int main(int argc, char *argv[]) {
         gauge.readconf_ildg(param.GaugefileName());
     } else if(param.format()=="milc"){
         gauge.readconf_milc(param.GaugefileName());
+    } else if(param.format()=="openqcd"){
+        gauge.readconf_openqcd(param.GaugefileName());
     } else {
         throw(rootLogger.fatal("Invalid specification for format ",param.format()));
     }

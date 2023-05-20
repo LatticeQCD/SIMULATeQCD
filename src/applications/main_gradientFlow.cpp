@@ -13,6 +13,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/observables/Topology.h"
+#include "../modules/observables/Weinberg.h"
 #include "../modules/observables/Blocking.h"
 #include "../modules/observables/EnergyMomentumTensor.h"
 #include "../modules/observables/ColorElectricCorr.h"
@@ -51,6 +52,14 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> topChargeTimeSlices;
     Parameter<bool> topCharge_imp;
     Parameter<bool> topChargeTimeSlices_imp;
+    Parameter<bool> topCharge_imp_imp;
+    Parameter<bool> topChargeTimeSlices_imp_imp;
+    Parameter<bool> weinberg;
+    Parameter<bool> weinbergTimeSlices;
+    Parameter<bool> weinberg_imp;
+    Parameter<bool> weinbergTimeSlices_imp;
+    Parameter<bool> weinberg_imp_imp;
+    Parameter<bool> weinbergTimeSlices_imp_imp;
     Parameter<bool> ColorElectricCorrTimeSlices_naive;
     Parameter<bool> ColorElectricCorrTimeSlices_clover;
     Parameter<bool> ColorMagneticCorrTimeSlices_naive;
@@ -58,6 +67,7 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> RenormPolyakovSusc;
 
     Parameter<bool> topCharge_imp_block;
+    Parameter<bool> topCharge_imp_imp_block;
     Parameter<bool> shear_bulk_corr_block;
     Parameter<bool> energyMomentumTensorTracelessTimeSlices;
     Parameter<bool> energyMomentumTensorTracefullTimeSlices;
@@ -106,7 +116,16 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(topChargeTimeSlices, "topChargeTimeSlices", false);
         addDefault(topCharge_imp, "topCharge_imp", false);
         addDefault(topChargeTimeSlices_imp, "topChargeTimeSlices_imp", false);
+        addDefault(topCharge_imp_imp, "topCharge_imp_imp", false);
+        addDefault(topChargeTimeSlices_imp_imp, "topChargeTimeSlices_imp_imp", false);
         addDefault(topCharge_imp_block, "topCharge_imp_block", false);
+        addDefault(topCharge_imp_imp_block, "topCharge_imp_imp_block", false);
+        addDefault(weinberg, "Weinberg", false);
+        addDefault(weinbergTimeSlices, "WeinbergTimeSlices", false);
+        addDefault(weinberg_imp, "Weinberg_imp", false);
+        addDefault(weinbergTimeSlices_imp, "WeinbergTimeSlices_imp", false);
+        addDefault(weinberg_imp_imp, "Weinberg_imp_imp", false);
+        addDefault(weinbergTimeSlices_imp_imp, "WeinbergTimeSlices_imp_imp", false);
         addDefault(shear_bulk_corr_block, "shear_bulk_corr_block", false);
         addDefault(energyMomentumTensorTracelessTimeSlices, "energyMomentumTensorTracelessTimeSlices", false);
         addDefault(energyMomentumTensorTracefullTimeSlices, "energyMomentumTensorTracefullTimeSlices", false);
@@ -149,11 +168,12 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     //! -------------------------------prepare file output--------------------------------------------------------------
 
-    std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp,
+    std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
             datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
             datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTUTimeSlices, datNameEMTETimeSlices,
-            datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT;
+            datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
+            datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
     // fill stream with 0's
     datName.fill('0');
     // get the data file name
@@ -171,6 +191,10 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datNameCloverSlices << lp.measurements_dir() << prefix.str() << "_CloverTimeSlices" << lp.fileExt();
     datNameTopChSlices << lp.measurements_dir() << prefix.str() << "_TopChTimeSlices" << lp.fileExt();
     datNameTopChSlices_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImp" << lp.fileExt();
+    datNameTopChSlices_imp_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImpImp" << lp.fileExt();
+    datNameWeinbergSlices << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlices" << lp.fileExt();
+    datNameWeinbergSlices_imp << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlicesImp" << lp.fileExt();
+    datNameWeinbergSlices_imp_imp << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlicesImpImp" << lp.fileExt();
     datNameColElecCorrSlices_naive << lp.measurements_dir() << prefix.str() << "_ColElecCorrTimeSlices_naive" << lp.fileExt();
     datNameColMagnCorrSlices_naive << lp.measurements_dir() << prefix.str() << "_ColMagnCorrTimeSlices_naive" << lp.fileExt();
     datNamePolyCorrSinglet << lp.measurements_dir() << prefix.str() << "_PolyakovCorrSinglet" << lp.fileExt();
@@ -196,6 +220,10 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     if (lp.clover()) header << "Clover ";
     if (lp.topCharge()) header << "Top. Charge ";
     if (lp.topCharge_imp() || lp.topCharge_imp_block()) header << "Impr. top. Charge ";
+    if (lp.topCharge_imp_imp() || lp.topCharge_imp_imp_block()) header << "O(a^6) Impr. top. Charge ";
+    if (lp.weinberg()) header << "Weinberg ";
+    if (lp.weinberg_imp()) header << "Impr. Weinberg ";
+    if (lp.weinberg_imp_imp()) header << "O(a^6) Impr. Weinberg ";
     header.endLine();
 
     FileWriter file_BlockTopCharge(gauge.getComm(), lp);
@@ -291,6 +319,50 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         headerThSl_imp.endLine();
     }
 
+    FileWriter fileTopChSl_imp_imp(gauge.getComm(), lp);
+    if (lp.topChargeTimeSlices_imp_imp()) {
+        fileTopChSl_imp_imp.createFile(datNameTopChSlices_imp_imp.str());
+        LineFormatter headerThSl_imp_imp = fileTopChSl_imp_imp.header();
+        headerThSl_imp_imp << "Flow time ";
+        for (int nt = 0; nt < lp.latDim[3]; nt++) {
+            headerThSl_imp_imp << "Nt=" + std::to_string(nt) + " ";
+        }
+        headerThSl_imp_imp.endLine();
+    }
+
+    FileWriter fileWeinbergSl(gauge.getComm(), lp);
+    if (lp.weinbergTimeSlices()) {
+        fileWeinbergSl.createFile(datNameWeinbergSlices.str());
+        LineFormatter headerThSl = fileWeinbergSl.header();
+        headerThSl << "Flow time ";
+        for (int nt = 0; nt < lp.latDim[3]; nt++) {
+            headerThSl << "Nt=" + std::to_string(nt) + " ";
+        }
+        headerThSl.endLine();
+    }
+    
+    FileWriter fileWeinbergSl_imp(gauge.getComm(), lp);
+    if (lp.weinbergTimeSlices_imp()) {
+        fileWeinbergSl_imp.createFile(datNameWeinbergSlices_imp.str());
+        LineFormatter headerThSl_imp = fileWeinbergSl_imp.header();
+        headerThSl_imp << "Flow time ";
+        for (int nt = 0; nt < lp.latDim[3]; nt++) {
+            headerThSl_imp << "Nt=" + std::to_string(nt) + " ";
+        }
+        headerThSl_imp.endLine();
+    }
+
+    FileWriter fileWeinbergSl_imp_imp(gauge.getComm(), lp);
+    if (lp.weinbergTimeSlices_imp_imp()) {
+        fileWeinbergSl_imp_imp.createFile(datNameWeinbergSlices_imp_imp.str());
+        LineFormatter headerThSl_imp_imp = fileWeinbergSl_imp_imp.header();
+        headerThSl_imp_imp << "Flow time ";
+        for (int nt = 0; nt < lp.latDim[3]; nt++) {
+            headerThSl_imp_imp << "Nt=" + std::to_string(nt) + " ";
+        }
+        headerThSl_imp_imp.endLine();
+    }
+    
     FileWriter fileColElecCorrSl_naive(gauge.getComm(), lp);
     if (lp.ColorElectricCorrTimeSlices_naive()) {
         fileColElecCorrSl_naive.createFile(datNameColElecCorrSlices_naive.str());
@@ -361,8 +433,17 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         rootLogger.info("Using unit configuration for tests/benchmarks");
         gauge.one();
     } else {
-        rootLogger.info("Read configuration");
-        gauge.readconf_nersc(lp.GaugefileName());
+        if (lp.format() == "nersc") {
+            gauge.readconf_nersc(lp.GaugefileName());
+        } else if (lp.format() == "ildg") {
+            gauge.readconf_ildg(lp.GaugefileName());
+        } else if (lp.format() == "milc") {
+            gauge.readconf_milc(lp.GaugefileName()); 
+        } else if (lp.format() == "openqcd") {
+            gauge.readconf_openqcd(lp.GaugefileName());
+        } else {
+            throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", lp.format())));
+        }
     }
     gauge.updateAll();
 
@@ -370,6 +451,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     GaugeAction<floatT, USE_GPU, HaloDepth> gAction(gauge);
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
+    Weinberg<floatT, USE_GPU, HaloDepth> weinberg(gauge);
     EnergyMomentumTensor<floatT, USE_GPU, HaloDepth> EMT(gauge);
 
     BlockingMethod<floatT, true, HaloDepth, floatT, topChargeDens_imp<floatT, HaloDepth, true>, CorrType<floatT>> BlockTopChDens(gauge);
@@ -385,8 +467,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     //! -------------------------------variables for the observables----------------------------------------------------
 
-    floatT plaq, clov, topChar;
-    std::vector<floatT> resultClSl, resultThSl, resultThSl_imp, resultEMTETimeSlices;
+    floatT plaq, clov, topChar, wb;
+    std::vector<floatT> resultClSl, resultThSl, resultThSl_imp, resultThSl_imp_imp, resultEMTETimeSlices;
     std::vector<Matrix4x4Sym<floatT>> resultEMTUTimeSlices;
     std::vector<GCOMPLEX(floatT)> resultColElecCorSl_naive, resultColMagnCorSl_naive, resultColElecCorSl_clover,
                                   resultColMagnCorSl_clover;
@@ -476,15 +558,18 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         if (lp.topCharge()) {
             topChar = topology.topCharge();
-            logStream << std::fixed << std::setprecision(6) << "   topCharge = " << topChar;
+            logStream << std::scientific << std::setprecision(14) << "   topCharge = " << topChar;
+//            logStream << std::fixed << std::setprecision(6) << "   topCharge = " << topChar;
             newLine << topChar;
             topology.recomputeField();
         }
 
         if (lp.topChargeTimeSlices_imp()) {
             LineFormatter newLineTh = fileTopChSl_imp.tag("");
-            topology.template topChargeTimeSlices<true>(resultThSl_imp);
+            topology.template topChargeTimeSlices<true,false>(resultThSl_imp);
             newLineTh << flow_time;
+            logStream << "   topCharge_imp TimeSlices = ";
+            logStream << std::scientific << std::setprecision(14) << resultThSl_imp[0];
             for (auto &elem : resultThSl_imp) {
                 newLineTh << elem;
             }
@@ -492,8 +577,29 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         }
 
         if (lp.topCharge_imp() && !lp.topCharge_imp_block()) {
-            topChar = topology.template topCharge<true>();
-            logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
+            topChar = topology.template topCharge<true,false>();
+            logStream << std::scientific << std::setprecision(14) << "   topCharge_imp = " << topChar;
+//            logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
+            newLine << topChar;
+            topology.recomputeField();
+        }
+
+        if (lp.topChargeTimeSlices_imp_imp()) {
+            LineFormatter newLineTh = fileTopChSl_imp_imp.tag("");
+//            std::cout << "topChargeTimeSlices_imp_imp" << std::endl;
+            topology.template topChargeTimeSlices<false,true>(resultThSl_imp_imp);
+            newLineTh << flow_time;
+            logStream << "   topCharge_imp_imp TimeSlices = ";
+            logStream << std::scientific << std::setprecision(14) << resultThSl_imp_imp[0];
+            for (auto &elem : resultThSl_imp_imp) {
+                newLineTh << elem;
+            }
+            topology.dontRecomputeField();
+        }
+
+        if (lp.topCharge_imp_imp()) {
+            topChar = topology.template topCharge<false,true>();
+            logStream << std::scientific << std::setprecision(14) << "   topCharge_imp_imp = " << topChar;
             newLine << topChar;
             topology.recomputeField();
         }
@@ -515,6 +621,66 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << TopologicalCharge;
             newLine << TopologicalCharge;
         }
+
+      
+        if (lp.weinbergTimeSlices()) {
+            LineFormatter newLineTh = fileWeinbergSl.tag("");
+            weinberg.WBTimeSlices(resultThSl);
+            newLineTh << flow_time;
+            for (auto &elem : resultThSl) {
+                newLineTh << elem;
+            }
+            weinberg.dontRecomputeField();
+        }
+
+        if (lp.weinberg()) {
+            wb = weinberg.WB();
+            logStream << std::scientific << std::setprecision(14) << "   Weinberg = " << wb;
+//            logStream << std::fixed << std::setprecision(6) << "   topCharge = " << topChar;
+            newLine << wb;
+            weinberg.recomputeField();
+        }
+
+        if (lp.weinbergTimeSlices_imp()) {
+            LineFormatter newLineTh = fileWeinbergSl_imp.tag("");
+            weinberg.template WBTimeSlices<true,false>(resultThSl_imp);
+            newLineTh << flow_time;
+            logStream << "   Weinberg_imp TimeSlices = ";
+            logStream << std::scientific << std::setprecision(14) << resultThSl_imp[0];
+            for (auto &elem : resultThSl_imp) {
+                newLineTh << elem;
+            }
+            weinberg.dontRecomputeField();
+        }
+
+        if (lp.weinberg_imp()) {
+            wb = weinberg.template WB<true,false>();
+            logStream << std::scientific << std::setprecision(14) << "   Weinberg_imp = " << topChar;
+//            logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
+            newLine << wb;
+            weinberg.recomputeField();
+        }
+
+        if (lp.weinbergTimeSlices_imp_imp()) {
+            LineFormatter newLineTh = fileWeinbergSl_imp_imp.tag("");
+            weinberg.template WBTimeSlices<false,true>(resultThSl_imp_imp);
+            newLineTh << flow_time;
+            logStream << "   Weinberg_imp_imp TimeSlices = ";
+            logStream << std::scientific << std::setprecision(14) << resultThSl_imp_imp[0];
+            for (auto &elem : resultThSl_imp_imp) {
+                newLineTh << elem;
+            }
+            weinberg.dontRecomputeField();
+        }
+
+        if (lp.weinberg_imp_imp()) {
+            wb = weinberg.template WB<false,true>();
+            logStream << std::scientific << std::setprecision(14) << "   Weinberg_imp_imp = " << topChar;
+            newLine << wb;
+            weinberg.recomputeField();
+        }
+
+
 
         if (lp.energyMomentumTensorTracelessTimeSlices() && gradFlow.checkIfnecessaryTime()) {
             LineFormatter newLineEMTUTimeSlices = file_EMTUTimeSlices.tag("");
@@ -752,7 +918,7 @@ int main(int argc, char *argv[]) {
         }
 
         size_t input_HaloDepth = 1;
-        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp())) {
+        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp() || lp.topCharge_imp_imp() || lp.topChargeTimeSlices_imp_imp())) {
             input_HaloDepth = 2;
         } else if (input_force == zeuthen ) {
             input_HaloDepth = 3;
