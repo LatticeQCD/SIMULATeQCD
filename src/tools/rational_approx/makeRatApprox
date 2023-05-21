@@ -1,0 +1,4 @@
+#!/bin/bash
+
+g++ poly4.C alg_remez.C alg_remez.h bigfloat.h -lmpfr -o ratApprox -O2 -Wall
+

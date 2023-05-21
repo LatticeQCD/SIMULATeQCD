@@ -12,8 +12,6 @@
 
 */
 
-# pragma once
-
 #include "bigfloat.h"
 
 #define JMAX 10000 //Maximum number of iterations of Newton's approximation
