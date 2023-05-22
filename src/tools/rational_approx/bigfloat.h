@@ -13,8 +13,6 @@
 #include <mpf2mpfr.h>
 #include <mpfr.h>
 
-#pragma once
-
 class bigfloat {
 
 private:

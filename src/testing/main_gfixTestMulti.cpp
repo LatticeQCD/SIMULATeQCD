@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
         GFixing.gaugefixOR();
         /// Due to the nature of the update, we have to re-unitarize every so often.
         if ( (ngfstep%nunit) == 0 ) {
-              gauge.su3latunitarize();
+            gauge.su3latunitarize();
         }
         /// Compute GF functional difference, compute theta, and report to user.
         act2   =GFixing.getAction();
