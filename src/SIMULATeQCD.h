@@ -29,7 +29,6 @@
 #include "base/communication/gpuIPC.h"
   // Contains:
   //   base/communication/calcGSiteHalo_dynamic.h
-  //   base/communication/calcGSiteHalo.h
 #include "base/communication/haloOffsetInfo.h"
 #include "base/communication/neighborInfo.h"
 #include "base/communication/siteComm.h"
