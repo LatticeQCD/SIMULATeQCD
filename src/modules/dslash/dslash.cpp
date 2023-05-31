@@ -13,7 +13,7 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 
     gVect3<floatT> Stmp(0.0);
 
-#pragma unroll
+//#pragma unroll
     for (int mu = 0; mu < 4; mu++) {
 
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))

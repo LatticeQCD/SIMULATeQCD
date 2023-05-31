@@ -27,7 +27,6 @@
 #include "base/communication/deviceEvent.h"
 #include "base/communication/deviceStream.h"
 #include "base/communication/gpuIPC.h"
-#include "base/communication/HaloLoop.h"
   // Contains:
   //   base/communication/calcGSiteHalo_dynamic.h
   //   base/communication/calcGSiteHalo.h
