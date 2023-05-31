@@ -36,51 +36,48 @@
 #include "calcGSiteHalo_dynamic.h"
 
 
-template<bool onDevice, class floatT, class Accessor, size_t ElemCount, size_t EntryCount, Layout LatLayout, size_t HaloDepth>
+template<size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 class HaloSegmentConfig {
-    int N;
+    int _N;
 
-    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
-    HaloType _haloType;
-    HaloSegment _haloSeg;
+    HaloType _currentHaltype;
+    HaloSegment _hseg;
     int _subIndex;
     int _dir;
     int _leftRight;
 
-    HaloSegmentInfo& _segmentInfo;
-    NeighborInfo& _NInfo;
-    ProcessInfo& _PInfo;
     int _index;
     int _size;
     int _length;
-    Accessor _hal_acc;
 
     public:
-    HaloSegmentConfig(int N, HaloOffsetInfo<onDevice> &HalInfo, GCOMPLEX(floatT) *haloBuffer) : 
-        N(N),
-        _segmentInfo(HalInfo.get(HSegSelector(N).haloSeg(), HSegSelector(N).dir(), HSegSelector(N).leftRight())),
-        _NInfo(HalInfo.getNeighborInfo()),
-        _PInfo(HalInfo.getNeighborInfo().getNeighborInfo(HSegSelector(N).haloSeg(), HSegSelector(N).dir(), HSegSelector(N).leftRight())),
-        _index(haloSegmentCoordToIndex(HSegSelector(N).haloSeg(), HSegSelector(N).dir(), HSegSelector(N).leftRight())),
-        _size(HInd::get_SubHaloSize(haloSegmentCoordToIndex(HSegSelector(N).haloSeg(), HSegSelector(N).dir(), HSegSelector(N).leftRight())) * ElemCount),
-        _length(HInd::get_SubHaloSize(haloSegmentCoordToIndex(HSegSelector(N).haloSeg(), HSegSelector(N).dir(), HSegSelector(N).leftRight()))),
-        _hal_acc(Accessor(haloBuffer + HInd::get_SubHaloOffset(N) * EntryCount * ElemCount,  HInd::get_SubHaloSize(haloSegmentCoordToIndex(HSegSelector(N).haloSeg(), HSegSelector(N).dir(), HSegSelector(N).leftRight())) * ElemCount)) {
-        }
+    HaloSegmentConfig(int N) 
+    {
+        typedef HaloIndexer<LatLayout, HaloDepth> HInd;
+        _N = N;
+        
+        HSegSelector HS = HSegSelector(N);
+        _hseg = HS.haloSeg();
+        _dir = HS.dir();
+        _leftRight = HS.leftRight();
+        _subIndex = HS.subIndex();
+        _currentHaltype = HS.haloType();
 
-    HaloType haloType() { return _haloType; }
-    HaloSegment haloSeg() { return _haloSeg; }
-    int subIndex() { return _subIndex; }
+        _index = haloSegmentCoordToIndex(_hseg, _dir, _leftRight);
+        _length = HInd::get_SubHaloSize(_index);
+        _size = HInd::get_SubHaloSize(_index) * ElemCount;
+    }
+
+    HaloSegment hseg() { return _hseg; }
     int dir() { return _dir; }
-    int leftRight() { return _leftRight; } 
+    int leftRight() { return _leftRight; }
+    int subIndex() { return _subIndex; }
+    HaloType currentHaltype() { return _currentHaltype; }
 
-    HaloSegmentInfo& segmentInfo() { return _segmentInfo; }
-    NeighborInfo& NInfo() {return _NInfo; }
-    ProcessInfo& PInfo() {return _PInfo; }
     int index() {return _index; }
     int length() {return _length; }
     int size() { return _size; }
 
-    Accessor hal_acc() {return _hal_acc; }
 };
 
 
@@ -115,8 +112,8 @@ private:
     void _injectHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
     
 
-    std::vector<HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth>> HSegConfig_send_vec;
-    std::vector<HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth>> HSegConfig_recv_vec;
+    std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_send_vec;
+    std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_recv_vec;
 
 public:
     //! constructor
@@ -224,13 +221,14 @@ public:
         }
 #endif
         
+        commB.globalBarrier();
         if (onDevice) {
             if (commB.gpuAwareMPIAvail() || commB.useGpuP2P()) {
                 for(int N = 0; N < 80; N++){
-                    using HaloSegmentConfig_def = HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth>;
+                    using HaloSegmentConfig_def = HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>;
                     
-                    HaloSegmentConfig_def HSegConfig_send = HaloSegmentConfig_def(N,HaloInfo,_haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
-                    HaloSegmentConfig_def HSegConfig_recv = HaloSegmentConfig_def(N,HaloInfo,_haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >());
+                    HaloSegmentConfig_def HSegConfig_send = HaloSegmentConfig_def(N);
+                    HaloSegmentConfig_def HSegConfig_recv = HaloSegmentConfig_def(N);
 
                     if(HSegConfig_send.size() != 0){
                         HSegConfig_send_vec.push_back(HSegConfig_send);
@@ -485,27 +483,27 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
     _commBase.globalBarrier();
 
+    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
     for (auto &HSegConfig : HSegConfig_send_vec){
 
-        typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
-
-        HaloSegment hseg = HSegConfig.haloSeg();
-        int dir = HSegConfig.dir();
-        int leftRight = HSegConfig.leftRight();
-        int subIndex = HSegConfig.subIndex();
-        HaloType currentHaltype = HSegConfig.haloType();
-
-        HaloSegmentInfo& segmentInfo = HSegConfig.segmentInfo();
-
-        NeighborInfo& NInfo = HSegConfig.NInfo();
-        ProcessInfo& PInfo = HSegConfig.PInfo();
-
-        int size = HSegConfig.size();
-        int length = HSegConfig.length();
-
+        HaloType currentHaltype = HSegConfig.currentHaltype();
         if (param & currentHaltype) {
-                Accessor hal_acc = HSegConfig.hal_acc();
+                HaloSegment hseg = HSegConfig.hseg();
+                int dir = HSegConfig.dir();
+                int leftRight = HSegConfig.leftRight();
+                int subIndex = HSegConfig.subIndex();
+
+                int size = HSegConfig.size();
+                int length = HSegConfig.length();
+                int index = HSegConfig.index();
+
+                HaloSegmentInfo &segmentInfo = HaloInfo.get(hseg, dir, leftRight);
+                NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
+                ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
+
+                GCOMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
+                Accessor hal_acc = Accessor(pointer, size);
 
                 int streamNo = 0;
                 ExtractInnerHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> extractLeft(acc, hal_acc);
@@ -563,33 +561,35 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         Accessor acc,
         GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
+    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
     for (auto &HSegConfig : HSegConfig_recv_vec){
         
-        typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
-
-
-        HaloSegment hseg = HSegConfig.haloSeg();
-        int dir = HSegConfig.dir();
-        int leftRight = HSegConfig.leftRight();
-        int subIndex = HSegConfig.subIndex();
-        HaloType currentHaltype = HSegConfig.haloType();
-
-        HaloSegmentInfo& segmentInfo = HSegConfig.segmentInfo();
-
-        NeighborInfo& NInfo = HSegConfig.NInfo();
-        ProcessInfo& PInfo = HSegConfig.PInfo();
-
-        int size = HSegConfig.size();
-        int length = HSegConfig.length();
-
-
+        HaloType currentHaltype = HSegConfig.currentHaltype();
 
         if (param & currentHaltype) {
+                HaloSegment hseg = HSegConfig.hseg();
+                int dir = HSegConfig.dir();
+                int leftRight = HSegConfig.leftRight();
+                int subIndex = HSegConfig.subIndex();
+
+                int size = HSegConfig.size();
+                int length = HSegConfig.length();
 
 
-                Accessor hal_acc = HSegConfig.hal_acc();
+                int index = HSegConfig.index();
+
+
+                HaloSegmentInfo &segmentInfo = HaloInfo.get(hseg, dir, leftRight);
+                NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
+                ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
+
+
+
+
+                GCOMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
+                Accessor hal_acc = Accessor(pointer, size);
                 int streamNo = 1;
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
