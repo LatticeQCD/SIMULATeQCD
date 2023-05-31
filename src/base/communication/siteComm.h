@@ -227,12 +227,10 @@ public:
         if (onDevice) {
             if (commB.gpuAwareMPIAvail() || commB.useGpuP2P()) {
                 for(int N = 0; N < 80; N++){
-
-                    HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> HSegConfig_send 
-                        = HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth>(N,HaloInfo,_haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >());
-
-                    HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> HSegConfig_recv 
-                        = HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth>(N,HaloInfo,_haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
+                    using HaloSegmentConfig_def = HaloSegmentConfig<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth>;
+                    
+                    HaloSegmentConfig_def HSegConfig_send = HaloSegmentConfig_def(N,HaloInfo,_haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
+                    HaloSegmentConfig_def HSegConfig_recv = HaloSegmentConfig_def(N,HaloInfo,_haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >());
 
                     if(HSegConfig_send.size() != 0){
                         HSegConfig_send_vec.push_back(HSegConfig_send);
