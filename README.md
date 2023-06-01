@@ -3,6 +3,8 @@
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://latticeqcd.github.io/SIMULATeQCD)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/LatticeQCD/SIMULATeQCD/commits/main)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7994983.svg)](https://doi.org/10.5281/zenodo.7994983)
+
 
 
 *a SImple MUlti-GPU LATtice code for QCD calculations*
