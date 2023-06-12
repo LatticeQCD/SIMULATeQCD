@@ -157,7 +157,7 @@ or clarke(dot)davida(at)gmail.com.
 If you are using this code in your research please cite:
 
 - *L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, Bielefeld University (2021), [https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
-- *L. Altenkort, D.Bollweg, D. A. Clarke, O. Kaczmarek, L. Mazur, C. Schmidt, P. Scior, H.-T. Shu, HotQCD on Multi-GPU Systems, PoS LATTICE2021, Bielefeld University (2021), [https://arxiv.org/abs/2111.10354](https://arxiv.org/abs/2111.10354)*
+- *L. Mazur, D.Bollweg, D. A. Clarke, L. Altenkort et al., SIMULATeQCD: A simple multi-GPU lattice code for QCD calculations, [https://arxiv.org/abs/2306.01098](https://arxiv.org/abs/2306.01098)*
 
 ## Acknowledgments
 
