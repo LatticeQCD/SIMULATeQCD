@@ -25,7 +25,7 @@ please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULAT
 You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
 This is needed for downloading configurations used in the unit tests. Then run 
 ```shell
-git clone https://github.com/LatticeQCD/SIMULATeQCD.git
+git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.0.0
 ```
 
 ### Compile Using Container
@@ -141,6 +141,7 @@ or clarke(dot)davida(at)gmail.com.
 [J. Goswami](https://github.com/jishnuxx),
 [D. Hoying](https://github.com/goracle),
 [O. Kaczmarek](https://github.com/olaf-kaczmarek),
+[J. Kim](https://github.com/kimjangho1120),
 [R. Larsen](https://github.com/RasmusNL),
 [M. Neumann](https://github.com/mneumann177),
 [M. Rodekamp](https://github.com/Marcel-Rodekamp), 

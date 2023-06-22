@@ -1,6 +1,8 @@
 /*
  * refValues_gfixplc.h
  *
+ * D. Clarke
+ *
  * Reference values from Olaf's gauge fixing script.
  *
  */

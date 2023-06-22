@@ -142,7 +142,7 @@ elseif (USE_HIP_AMD)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc")
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
-    set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --amdgpu-target=${ARCHITECTURE} -fgpu-rdc")
+    set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
     set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
 
 elseif (USE_HIP_NVIDIA)
@@ -193,6 +193,7 @@ set(SOURCE_FILES_GFIX
     src/modules/observables/WilsonLineCorrelator.cpp)
 set(SOURCE_FILES_GFLOW
     src/modules/observables/Topology.cpp
+    src/modules/observables/Weinberg.cpp
     src/modules/observables/Blocking.cpp
     src/modules/observables/ColorElectricCorr.cpp
     src/modules/observables/ColorMagneticCorr.cpp)
@@ -255,6 +256,7 @@ set(ALL_HALODEPTHS
 
 #-------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: CODEBASE
 
+
 FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)
     if (USE_CUDA)
         set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CUDA)
@@ -288,6 +290,7 @@ set_SIMULATeQCD_gpu_backend(
     src/modules/observables/ColorMagneticCorr.cpp
     src/modules/observables/PolyakovLoop.cpp
     src/modules/observables/Topology.cpp
+    src/modules/observables/Weinberg.cpp
     src/modules/observables/WilsonLineCorrelator.cpp
     src/modules/rhmc/integrator.cpp
     src/modules/rhmc/pure_gauge_hmc.cpp
@@ -382,8 +385,6 @@ ENDFUNCTION()
 FUNCTION(add_to_compound_SIMULATeQCD_target TARGET1 TARGET2)
     add_dependencies(${TARGET1} _${TARGET2})
 ENDFUNCTION()
-
-
 
 
 #-------------------------------------------------------------------------------------------------------COMPOUND TARGETS
@@ -493,8 +494,8 @@ set_SIMULATeQCD_property(gfixTestSingle PROPERTIES RUNTIME_OUTPUT_DIRECTORY "tes
 SIMULATeQCD_target_compile_definitions(gfixTestSingle PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests gfixTestSingle)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
-add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/observables/Weinberg.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/Topology.cpp src/modules/observables/Weinberg.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
 set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
@@ -549,13 +550,11 @@ set_SIMULATeQCD_property(hisqSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(hisqSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
 
-
 set_SIMULATeQCD_gpu_backend(src/testing/main_HypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
 add_SIMULATeQCD_executable(hypSmearingTest src/testing/main_HypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
 set_SIMULATeQCD_property(hypSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(hypSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hypSmearingTest)
-
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_HisqSmearingImagmuTest.cpp src/modules/HISQ/hisqSmearing.cpp)
 add_SIMULATeQCD_executable(hisqSmearingImagmuTest src/testing/main_HisqSmearingImagmuTest.cpp src/modules/HISQ/hisqSmearing.cpp)
@@ -677,6 +676,12 @@ set_SIMULATeQCD_property(UtimesUdaggerTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(UtimesUdaggerTest PRIVATE HALODEPTH_0=1 HALODEPTH_1=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 SINGLEPREC=1 ${ALL_NSTACK} ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests UtimesUdaggerTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_weinbergTopTest.cpp src/modules/observables/Topology.cpp src/modules/observables/Weinberg.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+add_SIMULATeQCD_executable(weinbergTopTest src/testing/main_weinbergTopTest.cpp src/modules/observables/Topology.cpp src/modules/observables/Weinberg.cpp src/modules/gauge_updates/PureGaugeUpdates.cpp)
+set_SIMULATeQCD_property(weinbergTopTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(weinbergTopTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=0 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=0)
+add_to_compound_SIMULATeQCD_target(tests weinbergTopTest)
+
 
 #-------------------------------------------------------------------------------------COMPILATION DEFINITIONS: PROFILING
 
@@ -762,12 +767,6 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
-# This gives a cmake error when using hip, so commented it out.
-#set_SIMULATeQCD_gpu_backend(src/applications/main_fluxtube.cpp)
-#add_SIMULATeQCD_executable(fluxtube src/applications/main_fluxtube.cpp ${SOURCE_FILES_BASE} ${SOURCE_FILES_GFIX})
-#set_SIMULATeQCD_property(fluxtube PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-#SIMULATeQCD_target_compile_definitions(fluxtube PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
-##add_to_compound_SIMULATeQCD_target(applications fluxtube)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_configConverter.cpp)
 add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cpp) 
@@ -858,6 +857,7 @@ add_to_compound_SIMULATeQCD_target(tools correlatorNorm)
 
 
 #------------------------------------------------------------------------ADDITIONAL FIND FUNCTIONS AND TARGETS FOR TOOLS
+
 
 if(USE_MPFR)
     find_path(GMP_INCLUDE_DIR gmp.h gmpxx.h 

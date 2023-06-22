@@ -1,13 +1,16 @@
-/*
- * main_gradientFlowTest.cpp
- *
+/* 
+ * main_weinbergTopTest.cpp                                                               
+ * 
+ * Jangho Kim
+ * 
  */
 
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/Topology.h"
+#include "../modules/observables/Weinberg.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include <cstdio>
-#include "refValues_gradFlow.h"
+#include "refValues_weinbergTop.h"
 #include "../modules/gauge_updates/PureGaugeUpdates.h"
 
 #define USE_GPU true
@@ -49,6 +52,7 @@ template<class floatT, size_t HaloDepth, RungeKuttaMethod RKmethod, Force force>
 bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         GaugeAction<floatT, USE_GPU, HaloDepth> &gAction,
         Topology<floatT, USE_GPU, HaloDepth> &topology,
+        Weinberg<floatT, USE_GPU, HaloDepth> &weinberg,
         gradientFlowParam<floatT> &lp,
         std::vector<std::vector<double>> &reference_values,
         const floatT acceptance,
@@ -59,7 +63,7 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
 
     //! initialize some values for the measurement
     floatT flow_time = 0;
-    floatT plaq, clov, topChar;
+    floatT plaq, clov, topChar, topChar_imp, topChar_imp_imp, wb, wb_imp, wb_imp_imp;
     std::stringstream logStream, logStream_ref;
     logStream << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
     logStream_ref << std::fixed << std::setprecision(std::numeric_limits<floatT>::digits10 + 1);
@@ -67,13 +71,13 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     bool failed = false;
     bool continueFlow = true;
 
-    rootLogger.info("Flowtime            Plaquette           Clover              topCharge");
+    rootLogger.info("     Flowtime            topCharge            topCharge_imp        top_Charge_imp_imp   weinberg              weinberg_imp          weinberg_imp_imp");
 
     //! flow the field until max flow time
     while(continueFlow) {
 
         if (flow_time_count >= reference_values.size()) {
-            rootLogger.info("End of reference values reached! Is the lattice size correct?");
+            rootLogger.info("End of reference values reached!");
             failed = true;
             return failed;
         }
@@ -82,8 +86,8 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         logStream << "     ";
         logStream_ref << "ref: ";
 
-        const size_t n_obs = 4;
-        floatT values[n_obs] = {flow_time, gAction.plaquette(), gAction.clover(), topology.topCharge()};
+        const size_t n_obs = 7;
+        floatT values[n_obs] = {flow_time, topology.topCharge(), topology.template topCharge<true,false>(), topology.template topCharge<false,true>(), weinberg.WB(), weinberg.template WB<true,false>(), weinberg.template WB<false,true>()};
 
         for (int i=0; i<n_obs; i++){
             bool tmpfailed = compare<floatT>(logStream, logStream_ref, values[i], floatT(reference_values[flow_time_count][i]), floatT(acceptance));
@@ -110,48 +114,48 @@ bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT 
     gradientFlowParam<floatT> lp;
 
     //! do not change these! they are hardcoded to match the reference values.
-    lp.accuracy.set(1e-5);
-    lp.latDim.set({32, 32, 32, 16});
-    lp.start_step_size.set(0.05);
+    lp.accuracy.set(1e-6);
+    lp.latDim.set({4, 4, 4, 4});
+    lp.start_step_size.set(0.01);
     lp.measurements_dir.set("./");
     lp.measurement_intervall.set({0.0, 1.0});
-    lp.necessary_flow_times.set({0.0, 0.1, 0.5, 1.0});
+    lp.necessary_flow_times.set({0.0, 0.01, 0.02});
 
-    lp.readfile(commBase, "../parameter/tests/gradientFlowTest.param", argc, argv);
+    lp.readfile(commBase, "../parameter/tests/weinbergTopTest.param", argc, argv);
 
     commBase.init(lp.nodeDim());
 
     initIndexer(HaloDepth, lp, commBase);
     Gaugefield<floatT, USE_GPU, HaloDepth> gauge(commBase);
+    gauge.readconf_openqcd(lp.GaugefileName());
+
     GaugeUpdate<floatT, USE_GPU, HaloDepth> gaugeUpdate(gauge);
 
     LatticeContainer<USE_GPU, floatT> latticeContainer(commBase);
     GaugeAction<floatT, USE_GPU, HaloDepth> gAction(gauge);
 
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
+    Weinberg<floatT, USE_GPU, HaloDepth> weinberg(gauge);
 
     rootLogger.info("Comparison-tolerance to reference is ", tolerance);
 
     bool failed = false;
+
     unsigned int flow_time_count = 0;  // running index for the reference values
 
-    //! loop over RK methods and forces.
-    static_for<0, 3>::apply([&](auto i){
-        const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
-        static_for<0, 2>::apply([&](auto j){
-            ///Reset Gaugefield to reference.
-            gaugeUpdate.set_gauge_to_reference();
-            gauge.updateAll();
-            rootLogger.info("Plaquette = ", gAction.plaquette());
+    const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(0));
 
-            ///Run test
-            rootLogger.info(">>>>>>>>>>> RK_method=", RungeKuttaMethods[i], ", Force=", Forces[j], " <<<<<<<<<<<");
-            const auto force = static_cast<Force>(static_cast<int>(j));
-            bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
-                    (gauge, gAction, topology, lp, refValues_gradFlow, tolerance, flow_time_count);
-            failed = failed || tmpfailed;
-        });
-    });
+    gauge.updateAll();
+
+    rootLogger.info("Plaquette = ", gAction.plaquette());
+
+    const auto force = static_cast<Force>(static_cast<int>(0));
+
+    bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
+            (gauge, gAction, topology, weinberg, lp, refValues_weinbergTop, tolerance, flow_time_count);
+
+    failed = failed || tmpfailed;
+
     return failed;
 }
 
@@ -161,12 +165,12 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
 
     //! how large can the difference to the reference values be?
-    const double double_tolerance = 1e-9;
+    const double double_tolerance = 1e-3;
 
     stdLogger.info("TEST DOUBLE PRECISION");
-    bool passfail_double = run_test<double>(argc, argv, commBase, double_tolerance);
+    bool failed = run_test<double>(argc, argv, commBase, double_tolerance);
 
-    if (passfail_double) { 
+    if (failed) { 
         rootLogger.error("At least one test failed!");
         return 1;
     } else {

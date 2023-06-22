@@ -50,7 +50,9 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
     } else if (format == "ildg") {
         gauge.readconf_ildg(Gaugefile);
     } else if (format == "milc") {
-        gauge.readconf_milc(Gaugefile);
+        gauge.readconf_milc(Gaugefile); 
+    } else if (format == "openqcd") {
+        gauge.readconf_openqcd(Gaugefile);
     } else {
         throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
     }
@@ -62,8 +64,6 @@ void CheckConf(CommunicationBase &commBase, const std::string& format, std::stri
     if ( (plaq > 1.0) || (plaq < 0.0) ) {
         throw std::runtime_error(rootLogger.fatal("Plaquette should not be negative or larger than 1."));
     }
-
-
 }
 
 

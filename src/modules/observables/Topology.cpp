@@ -8,11 +8,11 @@
  */
 
 template<class floatT, bool onDevice, size_t HaloDepth>
-template<bool onDeviceRet, bool improved>
+template<bool onDeviceRet, bool improved, bool improved_O6>
 MemoryAccessor Topology<floatT, onDevice, HaloDepth>::topChargeField() {
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
-                topChargeDensKernel<floatT, HaloDepth, onDevice, improved>(_gauge));
+                topChargeDensKernel<floatT, HaloDepth, onDevice, improved, improved_O6>(_gauge));
     }
 
     if (onDevice) {
@@ -33,11 +33,11 @@ MemoryAccessor Topology<floatT, onDevice, HaloDepth>::topChargeField() {
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth>
-template<bool improved>
+template<bool improved, bool improved_O6>
 floatT Topology<floatT, onDevice, HaloDepth>::topCharge() {
     if (recompute) {
         _redBase.template iterateOverBulk<All, HaloDepth>(
-                topChargeDensKernel<floatT, HaloDepth, onDevice, improved>(_gauge));
+                topChargeDensKernel<floatT, HaloDepth, onDevice, improved, improved_O6>(_gauge));
     }
     floatT topCharge = 0;
     _redBase.reduce(topCharge, GInd::getLatData().vol4);
@@ -45,12 +45,12 @@ floatT Topology<floatT, onDevice, HaloDepth>::topCharge() {
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth>
-template<bool improved>
+template<bool improved, bool improved_O6>
 void Topology<floatT, onDevice, HaloDepth>::topChargeTimeSlices(std::vector<floatT> &result) {
 
     if (recompute) {
         _redBase.template iterateOverTimeslices<All, HaloDepth>(
-                topChargeDensKernel<floatT, HaloDepth, onDevice, improved>(_gauge));
+                topChargeDensKernel<floatT, HaloDepth, onDevice, improved, improved_O6>(_gauge));
     }
     /// Reduce the array on each GPU and also globally on all CPU's
     _redBase.reduceTimeSlices(result);
@@ -63,11 +63,23 @@ template class Topology<floatT,true,HALO>; \
 INIT_PH(CLASS_INIT)
 
 #define CLASS_INIT2(floatT, HALO) \
+template MemoryAccessor Topology<floatT, true,HALO>::topChargeField<true,false>(); \
+template floatT Topology<floatT, true,HALO>::topCharge<true,false>(); \
+template void Topology<floatT, true,HALO>::topChargeTimeSlices<true,false>(std::vector<floatT> &result); \
+template MemoryAccessor Topology<floatT, true,HALO>::topChargeField<false,true>(); \
+template floatT Topology<floatT, true,HALO>::topCharge<false,true>(); \
+template void Topology<floatT, true,HALO>::topChargeTimeSlices<false,true>(std::vector<floatT> &result); \
+template MemoryAccessor Topology<floatT, true,HALO>::topChargeField<false,false>(); \
+template floatT Topology<floatT, true,HALO>::topCharge<false,false>(); \
+template void Topology<floatT, true,HALO>::topChargeTimeSlices<false,false>(std::vector<floatT> &result); \
+
+INIT_PH(CLASS_INIT2)
+
+/*
 template MemoryAccessor Topology<floatT, true,HALO>::topChargeField<true>(); \
 template floatT Topology<floatT, true,HALO>::topCharge<true>(); \
 template void Topology<floatT, true,HALO>::topChargeTimeSlices<true>(std::vector<floatT> &result); \
 template MemoryAccessor Topology<floatT, true,HALO>::topChargeField<false>(); \
 template floatT Topology<floatT, true,HALO>::topCharge<false>(); \
 template void Topology<floatT, true,HALO>::topChargeTimeSlices<false>(std::vector<floatT> &result); \
-
-INIT_PH(CLASS_INIT2)
+*/

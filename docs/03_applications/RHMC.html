@@ -127,7 +127,7 @@ weights of the plaquette and rectangle terms are</p>
 <p>The constructor has to be called with the usual template arguments and passed
 an instance of <code class="docutils literal notranslate"><span class="pre">RhmcParameters</span></code>, the gauge field, and an <code class="docutils literal notranslate"><span class="pre">uint4</span></code> array with
 the RNG state. The function <code class="docutils literal notranslate"><span class="pre">init_ratapprox</span></code> will set the coefficients for
-all the rational approximations and has to be called before update!
+all the rational approximations and has to be called before updating.
 The function update will generate one molecular dynamics (MD) trajectory.
 If no arguments are passed to <code class="docutils literal notranslate"><span class="pre">update()</span></code> it will also perform a Metropolis
 step after the trajectory. The Metropolis step can
@@ -135,6 +135,67 @@ also be omitted by passing the argument <code class="docutils literal notranslat
 the beginning of thermalization. The second argument is <code class="docutils literal notranslate"><span class="pre">false</span></code> by default;
 passing <code class="docutils literal notranslate"><span class="pre">true</span></code> to update will make the updater run the trajectory forward
 and backwards for testing if the integration is reversible.</p>
+<section id="generating-rational-approximation-input-files">
+<h2>Generating rational approximation input files<a class="headerlink" href="#generating-rational-approximation-input-files" title="Permalink to this headline"></a></h2>
+<p>A tool to generate rational approximation files written by K. Clark
+can be found in <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/src/tools/rational_approx</span></code>. One can find a document
+<code class="docutils literal notranslate"><span class="pre">explainRatApprox.pdf</span></code> by Q. Yuan explaining the idea behind the rational
+approximation for the fermion determinant, as well as some of the following
+notation. The makefile <code class="docutils literal notranslate"><span class="pre">makeRatApprox</span></code> will compile the executable <code class="docutils literal notranslate"><span class="pre">ratApprox</span></code>,
+which will generate you a rational approximation file for use with the
+RHMC of SIMULATeQCD.  You can call it with</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ratApprox<span class="w"> </span>input.dat<span class="w"> </span>out.rational<span class="w"> </span>
+</pre></div>
+</div>
+<p>The input file <code class="docutils literal notranslate"><span class="pre">input.dat</span></code> should be structured as</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">npff</span><span class="w">        </span><span class="c1">// Number of pseudo-fermion flavors</span>
+
+<span class="n">y1</span>
+<span class="n">y2</span>
+<span class="n">mprec</span><span class="w">       </span><span class="c1">// Pre-conditioner mass (reduces the condition number in CG)</span>
+<span class="n">mq</span>
+<span class="n">order1</span>
+<span class="n">order2</span>
+<span class="n">lambda_low</span>
+<span class="n">lambda_high</span>
+<span class="n">precision</span>
+</pre></div>
+</div>
+<p>One block will generate three rational approximations according to</p>
+<p><span class="math notranslate nohighlight">\(
+f(x) = x^{y_1/8}  (x+ m_\text{prec}^2 -m_q^2 )^{y_2/8}
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+g(x) = x^{-y_1/8} (x+ m_\text{prec}^2 -m_q^2 )^{-y_2/8}
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+h(x) = x^{-y_1/4} (x+ m_\text{prec}^2 -m_q^2 )^{-y_2/4}
+\)</span></p>
+<p>with <span class="math notranslate nohighlight">\(m^2 = m_\text{prec}^2 - m_q^2\)</span>.
+An example input file for <span class="math notranslate nohighlight">\(N_f=2+1\)</span> with standard Hasenbusch preconditioning
+for the light flavors is given in <code class="docutils literal notranslate"><span class="pre">exampleInput.dat</span></code>.
+This input file has a light block and a strange block, which together
+generate six rational approximations. The light approximations are</p>
+<p><span class="math notranslate nohighlight">\(
+f(x) = x^{1/4}  (x + m_s^2 - m_l^2 )^{-1/4}
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+g(x) = x^{-1/4} (x + m_s^2 - m_l^2 )^{1/4}
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+h(x) = x^{-1/2} (x + m_s^2 + m_l^2 )^{-1/2}
+\)</span></p>
+<p>while the strange are</p>
+<p><span class="math notranslate nohighlight">\(
+f(x) = x^{3/8}
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+g(x) = x^{-3/8}
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+h(x) = x^{-3/4}
+\)</span></p>
+</section>
 <section id="update">
 <h2>Update<a class="headerlink" href="#update" title="Permalink to this headline"></a></h2>
 <p>The update routine saves a copy of the gauge field, applies the smearing to
@@ -150,9 +211,9 @@ You can learn more about the smearing <a class="reference internal" href="../05_
 <h2>Multiple pseudo-fermions<a class="headerlink" href="#multiple-pseudo-fermions" title="Permalink to this headline"></a></h2>
 <p>When you want to use multiple pseudo-fermion fields, set <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> in the RHMC
 input file to the respective number. Be aware that this changes the way you
-have to construct your ratapprox: In the remez <code class="docutils literal notranslate"><span class="pre">in.file</span></code>, if you want to
-generate <span class="math notranslate nohighlight">\(N_f\)</span> flavors using <span class="math notranslate nohighlight">\(N_pf\)</span> pseudo-fermion fields, you have to use <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span>
-as an input (which is then used <span class="math notranslate nohighlight">\(N_{pf}\)</span> times). Note that <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span> must be &lt; 4.
+have to construct your ratapprox: In the remez <code class="docutils literal notranslate"><span class="pre">input.dat</span></code>, if you want to
+generate <span class="math notranslate nohighlight">\(N_f\)</span> flavors using <span class="math notranslate nohighlight">\(N_{pf}\)</span> pseudo-fermion fields, you have to use <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span>
+as an input, (which is then used <span class="math notranslate nohighlight">\(N_{pf}\)</span> times). Note that <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span> must be &lt; 4.
 <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> is 1 per default.</p>
 </section>
 <section id="imaginary-chemical-potential">

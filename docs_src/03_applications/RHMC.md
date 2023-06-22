@@ -49,7 +49,7 @@ int update(bool metro=true, bool reverse=false)
 The constructor has to be called with the usual template arguments and passed
 an instance of `RhmcParameters`, the gauge field, and an `uint4` array with
 the RNG state. The function `init_ratapprox` will set the coefficients for
-all the rational approximations and has to be called before update!
+all the rational approximations and has to be called before updating.
 The function update will generate one molecular dynamics (MD) trajectory.
 If no arguments are passed to `update()` it will also perform a Metropolis
 step after the trajectory. The Metropolis step can
@@ -57,6 +57,82 @@ also be omitted by passing the argument `false` to update. This is handy in
 the beginning of thermalization. The second argument is `false` by default;
 passing `true` to update will make the updater run the trajectory forward
 and backwards for testing if the integration is reversible.
+
+## Generating rational approximation input files
+
+A tool to generate rational approximation files written by K. Clark
+can be found in `SIMULATeQCD/src/tools/rational_approx`. One can find a document
+`explainRatApprox.pdf` by Q. Yuan explaining the idea behind the rational 
+approximation for the fermion determinant, as well as some of the following
+notation. The makefile `makeRatApprox` will compile the executable `ratApprox`,
+which will generate you a rational approximation file for use with the 
+RHMC of SIMULATeQCD.  You can call it with
+
+```shell
+ratApprox input.dat out.rational 
+```
+
+The input file `input.dat` should be structured as
+
+```C
+npff        // Number of pseudo-fermion flavors
+
+y1
+y2
+mprec       // Pre-conditioner mass (reduces the condition number in CG)
+mq
+order1
+order2
+lambda_low
+lambda_high
+precision
+```
+
+One block will generate three rational approximations according to
+
+$
+f(x) = x^{y_1/8}  (x+ m_\text{prec}^2 -m_q^2 )^{y_2/8}
+$
+
+$
+g(x) = x^{-y_1/8} (x+ m_\text{prec}^2 -m_q^2 )^{-y_2/8}
+$
+
+$
+h(x) = x^{-y_1/4} (x+ m_\text{prec}^2 -m_q^2 )^{-y_2/4}
+$
+
+with $m^2 = m_\text{prec}^2 - m_q^2$. 
+An example input file for $N_f=2+1$ with standard Hasenbusch preconditioning 
+for the light flavors is given in `exampleInput.dat`.
+This input file has a light block and a strange block, which together
+generate six rational approximations. The light approximations are
+
+$
+f(x) = x^{1/4}  (x + m_s^2 - m_l^2 )^{-1/4}
+$
+
+$
+g(x) = x^{-1/4} (x + m_s^2 - m_l^2 )^{1/4}
+$
+
+$
+h(x) = x^{-1/2} (x + m_s^2 + m_l^2 )^{-1/2}
+$
+
+while the strange are
+
+$
+f(x) = x^{3/8}
+$
+
+$
+g(x) = x^{-3/8}
+$
+
+$
+h(x) = x^{-3/4}
+$
 
 ## Update
 
@@ -73,9 +149,9 @@ You can learn more about the smearing [here](../05_modules/gaugeSmearing.md).
 
 When you want to use multiple pseudo-fermion fields, set `no_pf` in the RHMC
 input file to the respective number. Be aware that this changes the way you
-have to construct your ratapprox: In the remez `in.file`, if you want to
-generate $N_f$ flavors using $N_pf$ pseudo-fermion fields, you have to use $N_f/N_{pf}$
-as an input (which is then used $N_{pf}$ times). Note that $N_f/N_{pf}$ must be < 4.
+have to construct your ratapprox: In the remez `input.dat`, if you want to
+generate $N_f$ flavors using $N_{pf}$ pseudo-fermion fields, you have to use $N_f/N_{pf}$
+as an input, (which is then used $N_{pf}$ times). Note that $N_f/N_{pf}$ must be < 4.
 `no_pf` is 1 per default.
 
 ## Imaginary chemical potential
