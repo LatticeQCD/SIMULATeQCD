@@ -19,7 +19,7 @@
 Logger rootLogger(OFF);
 Logger stdLogger(ALL);
 
-CommunicationBase::CommunicationBase(int *argc, char ***argv) {
+CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) : _forceHalos(forceHalos) {
 
     int ret;
     ret = MPI_Init(argc, argv);

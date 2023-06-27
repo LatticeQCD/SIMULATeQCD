@@ -9,8 +9,8 @@
 #include "BulkIndexer.h"
 #include "../indexer/HaloIndexer.h"
 
-void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm, bool forceAllHalos) {
-
+void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm) {
+    bool forceAllHalos = comm.forceHalos();
     LatticeDimensions _globalLattice(param.latDim);
     LatticeDimensions _localLattice(_globalLattice / comm.nodes());
 

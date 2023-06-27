@@ -284,7 +284,7 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
-        if (HaloDepth == 0)
+        if (_commBase.getNumberProcesses() != 1)
         {
             return;
         }
@@ -615,7 +615,7 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
-        GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
+        GpuError("siteComm.h: _injectHalosSeg, gpuDeviceSynchronize failed:", gpuErr);
     }
     _commBase.globalBarrier();
 

@@ -676,16 +676,16 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
+    CommunicationBase commBase(&argc, &argv, true);
     param.readfile(commBase, "../parameter/tests/GeneralFunctorTest.param", argc, argv);
     commBase.init(param.nodeDim());
 
     const int HaloDepth = 2;
 
     /// Let's force Halos in all directions; otherwise the test doesn't work... (last parameter)
-    initIndexer(HaloDepth,param, commBase, true);
+    initIndexer(HaloDepth,param, commBase);
     const int HaloDepthSpin = 4;
-    initIndexer(HaloDepthSpin,param, commBase, true);
+    initIndexer(HaloDepthSpin,param, commBase);
 
     rootLogger.info("------------------");
     rootLogger.info("Testing All - All");

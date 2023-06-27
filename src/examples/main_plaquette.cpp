@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
     StopWatch<true> timer;
 
     /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
-    CommunicationBase commBase(&argc, &argv);
+    CommunicationBase commBase(&argc, &argv, true);
     commBase.init(param.nodeDim());
 
     /// Set the HaloDepth. It should be a constant values, since this value should be passed as an non-type template
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     /// highlight the output differently.
     rootLogger.info("Initialize Lattice");
     /// Initialize the Indexer on GPU and CPU.
-    initIndexer(HaloDepth,param,commBase,true);
+    initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;
 
 

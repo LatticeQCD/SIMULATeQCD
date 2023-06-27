@@ -286,12 +286,12 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
+    CommunicationBase commBase(&argc, &argv,true);
     param.readfile(commBase, "../parameter/tests/StackedSpinorTest.param", argc, argv);
     commBase.init(param.nodeDim());
 
     const int HaloDepth = 4;
-    initIndexer(HaloDepth,param, commBase, true);
+    initIndexer(HaloDepth,param, commBase);
     stdLogger.setVerbosity(INFO);
 
     /// Let's force Halos in all directions, otherwise the test doesn't work... (last parameter)

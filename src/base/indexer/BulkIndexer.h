@@ -301,7 +301,7 @@ void initGPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int
 void initCPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int Nodes[4], unsigned int Halos[4]);
 
 class CommunicationBase;
-void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm, bool forceAllHalos = false);
+void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm);
 
 /// ----------------------------------------------------------------------------------------------------------- GINDEXER
 
