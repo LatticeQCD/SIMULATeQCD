@@ -284,7 +284,7 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
-        if (_commBase.getNumberProcesses() != 1)
+        if (_commBase.getNumberProcesses() == 1)
         {
             return;
         }
