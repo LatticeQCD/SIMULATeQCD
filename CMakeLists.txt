@@ -128,6 +128,13 @@ if (USE_GPU_P2P)
     add_definitions(-DUSE_GPU_P2P)
 endif()
 
+set(USE_MARKER OFF CACHE BOOL "Set to ON to build with GPU Marker API (default = OFF)")
+if (USE_MARKER)
+    add_definitions(-DUSE_MARKER)
+    if (USE_CUDA)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnvToolsExt")
+    endif()
+endif()
 
 # Additional compiler flags
 if (USE_CUDA)

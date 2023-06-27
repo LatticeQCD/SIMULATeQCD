@@ -60,10 +60,10 @@ __host__ __device__ static dim3 GetUint3(dim3 Idx){
 #endif
 
 
-void markerBegin(std::string_view name){
+inline void markerBegin(std::string_view name){
 #ifdef USE_MARKER
     #ifdef USE_CUDA
-        nvtxRangePush(name);
+        nvtxRangePush(std::string(name).c_str());
     #elif defined USE_HIP
         HIP_BEGIN_MARKER("KernelCall", name);
     #endif
@@ -71,7 +71,7 @@ void markerBegin(std::string_view name){
 
 }
 
-void markerEnd(){
+inline void markerEnd(){
 #ifdef USE_MARKER
     #ifdef USE_CUDA
         nvtxRangePop();
