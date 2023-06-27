@@ -313,7 +313,7 @@ public:
         }
         value = comm.globalMaximum(result);
         if (rootToAll) comm.root2all(result);
-        markerEnd()
+        markerEnd();
     }
 
     LatticeContainerAccessor getAccessor() const { return LatticeContainerAccessor(ContainerArray->getPointer()); }
