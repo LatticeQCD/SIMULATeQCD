@@ -3,6 +3,8 @@
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://latticeqcd.github.io/SIMULATeQCD)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/LatticeQCD/SIMULATeQCD/commits/main)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7994982.svg)](https://doi.org/10.5281/zenodo.7994982)
+
 
 
 *a SImple MUlti-GPU LATtice code for QCD calculations*
@@ -25,7 +27,7 @@ please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULAT
 You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
 This is needed for downloading configurations used in the unit tests. Then run 
 ```shell
-git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.0.0
+git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.0.1
 ```
 
 ### Compile Using Container
@@ -155,7 +157,7 @@ or clarke(dot)davida(at)gmail.com.
 If you are using this code in your research please cite:
 
 - *L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, Bielefeld University (2021), [https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
-- *L. Altenkort, D.Bollweg, D. A. Clarke, O. Kaczmarek, L. Mazur, C. Schmidt, P. Scior, H.-T. Shu, HotQCD on Multi-GPU Systems, PoS LATTICE2021, Bielefeld University (2021), [https://arxiv.org/abs/2111.10354](https://arxiv.org/abs/2111.10354)*
+- *L. Mazur, D.Bollweg, D. A. Clarke, L. Altenkort et al., SIMULATeQCD: A simple multi-GPU lattice code for QCD calculations, [https://arxiv.org/abs/2306.01098](https://arxiv.org/abs/2306.01098)*
 
 ## Acknowledgments
 

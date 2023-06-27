@@ -24,9 +24,6 @@
 #include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
-#ifndef USE_HIP_AMD
-    #include "nvToolsExt.h"
-#endif
 #include "deviceEvent.h"
 #include "deviceStream.h"
 

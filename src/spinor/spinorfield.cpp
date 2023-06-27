@@ -3,7 +3,7 @@
 //
 
 #include "spinorfield.h"
-#include "../base/static_for_loop.h"
+#include "../base/utilities/static_for_loop.h"
 
 template <class floatT>
 struct fill_with_gauss_vec

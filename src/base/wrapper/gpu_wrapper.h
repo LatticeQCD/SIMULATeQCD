@@ -11,6 +11,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda_fp16.h>
 #include <utility>
+#include "nvToolsExt.h"
 
 
 #define gpuError_t                       cudaError_t
@@ -82,6 +83,7 @@
 #include <hip/hip_vector_types.h>
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_fp16.h>
+#include <hip/hip_profile.h>
 #include <utility>
 
 
@@ -115,8 +117,8 @@
 #define gpuIpcCloseMemHandle             hipIpcCloseMemHandle
 #define gpuIpcGetMemHandle               hipIpcGetMemHandle
 #define gpuIpcMemLazyEnablePeerAccess    hipIpcMemLazyEnablePeerAccess
-#define gpuIpcOpenEventHandle            hipDummyFunction2//cudaIpcOpenEventHandle
-#define gpuIpcGetEventHandle             hipDummyFunction1//cudaIpcGetEventHandle
+#define gpuIpcOpenEventHandle            hipIpcOpenEventHandle
+#define gpuIpcGetEventHandle             hipIpcGetEventHandle
 #define gpuIpcOpenMemHandle              hipIpcOpenMemHandle
 #define gpuMalloc                        hipMalloc
 #define gpuMallocHost                    hipHostMalloc
@@ -138,18 +140,6 @@
 #define gpuStreamSynchronize             hipStreamSynchronize
 #define gpuStreamWaitEvent               hipStreamWaitEvent
 #define gpuSuccess                       hipSuccess
-
-// As soon as HIP supports these two functions below, we need to replace them!
-//
-[[nodiscard]] inline gpuError_t hipDummyFunction1(__attribute__((unused)) gpuIpcEventHandle_t* handle, __attribute__((unused)) hipEvent_t event) {
-    __attribute__((unused)) hipError_t temp = hipErrorUnknown;
-    return temp;
-}
-
-[[nodiscard]] inline gpuError_t hipDummyFunction2(__attribute__((unused)) gpuEvent_t* event, __attribute__((unused)) gpuIpcEventHandle_t handle) {
-    __attribute__((unused)) hipError_t temp = hipErrorUnknown;
-    return temp;
-}
 
 #ifdef __HIP_DEVICE_COMPILE__
 #define __GPU_ARCH__                     __HIP_DEVICE_COMPILE__

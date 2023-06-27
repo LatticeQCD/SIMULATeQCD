@@ -20,8 +20,8 @@
 #include "base/memoryManagement.h"
 #include "base/stopWatch.h"
 #include "base/runFunctors.h"
-#include "base/staticArray.h"
-#include "base/static_for_loop.h"
+#include "base/utilities/staticArray.h"
+#include "base/utilities/static_for_loop.h"
 
 #include "base/communication/communicationBase.h"
 #include "base/communication/deviceEvent.h"
