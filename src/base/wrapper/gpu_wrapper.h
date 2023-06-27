@@ -11,6 +11,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda_fp16.h>
 #include <utility>
+#include "nvToolsExt.h"
 
 
 #define gpuError_t                       cudaError_t
@@ -82,6 +83,7 @@
 #include <hip/hip_vector_types.h>
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_fp16.h>
+#include <hip/hip_profile.h>
 #include <utility>
 
 
