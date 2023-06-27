@@ -12,6 +12,7 @@
 #include "math/operators.h"
 #include "../base/communication/communicationBase.h"
 #include "../base/utilities/ParseObjectName.h"
+#include "wrapper/marker.h"
 
 #include "../base/indexer/HaloIndexer.h"
 
@@ -60,26 +61,6 @@ __host__ __device__ static dim3 GetUint3(dim3 Idx){
 #endif
 
 
-inline void markerBegin(std::string_view name){
-#ifdef USE_MARKER
-    #ifdef USE_CUDA
-        nvtxRangePush(std::string(name).c_str());
-    #elif defined USE_HIP
-        HIP_BEGIN_MARKER("KernelCall", name);
-    #endif
-#endif
-
-}
-
-inline void markerEnd(){
-#ifdef USE_MARKER
-    #ifdef USE_CUDA
-        nvtxRangePop();
-    #elif defined USE_HIP
-        HIP_END_MARKER();
-    #endif
-#endif
-}
 
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
@@ -168,8 +149,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     if (onDevice) {
 #ifdef __GPUCC__
-
-        markerBegin(type_name<Functor>());
+        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctor<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
@@ -241,7 +221,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     if (onDevice) {
 #ifdef __GPUCC__
 
-        markerBegin(type_name<Functor>());
+        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorLoop<Nloops> <<< gridDim, blockDim, 0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x, Nmax);
 #elif defined USE_HIP
@@ -315,8 +295,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     if (onDevice) {
 #ifdef __GPUCC__
-
-        markerBegin(type_name<Object>());
+        markerBegin(type_name<Object>(), "KernelCall (const object)");
 #ifdef USE_CUDA
         performCopyConstObject<<< gridDim, blockDim,0, stream >>> (getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
@@ -406,7 +385,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #ifdef __GPUCC__
 
 
-        markerBegin(type_name<Functor>());
+        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
 #elif defined USE_HIP
@@ -491,7 +470,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     if (onDevice) {
 #ifdef __GPUCC__
 
-        markerBegin(type_name<Functor>());
+        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorComm<<< gridDim, blockDim, 0, stream >>> (op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #elif defined USE_HIP

@@ -62,6 +62,7 @@
 #include "base/math/su3Exp.h"
 
 #include "base/wrapper/gpu_wrapper.h"
+#include "base/wrapper/marker.h"
 
 /// --------------------------------------------------------------------------------------------------- GAUGE AND SPINOR
 

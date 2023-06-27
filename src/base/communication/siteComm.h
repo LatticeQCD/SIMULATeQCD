@@ -26,6 +26,7 @@
 #include "../runFunctors.h"
 #include "deviceEvent.h"
 #include "deviceStream.h"
+#include "../wrapper/marker.h"
 
 
 #include "../indexer/HaloIndexer.h"
@@ -283,15 +284,18 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
+        if (HaloDepth == 0)
+        {
+            return;
+        }
+
+        markerBegin("updateAll", "Communication");
+        
         gpuError_t gpuErr;
 
         /// A check that we don't have multiGPU and halosize=0:
         if (_commBase.getNumberProcesses() != 1 && HaloDepth == 0) {
             throw std::runtime_error(stdLogger.fatal("Useless call of CommunicationBase.updateAll() with multiGPU and HaloDepth=0!"));
-        }
-        if (HaloDepth == 0)
-        {
-            return;
         }
 
         unsigned int haltype = param & 15;
@@ -348,6 +352,7 @@ public:
                 _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
             }
         }
+        markerEnd();
     }
 };
 
