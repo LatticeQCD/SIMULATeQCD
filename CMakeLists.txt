@@ -4,7 +4,7 @@
 # CMake file for programs using the multiGPU code. Compilation target definitions are organized by type, and then
 # alphabetically. Please try to follow these guidelines when adding your target.
 #
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.3 FATAL_ERROR)
 
 # Get the latest abbreviated commit hash of the working branch
 execute_process(
@@ -38,6 +38,10 @@ elseif (BACKEND STREQUAL "hip_amd")
     add_definitions(-DUSE_HIP)
     message(STATUS "Using HIP backend for AMD GPUs. (Experimental!)")
     
+elseif (BACKEND STREQUAL "sycl")
+    set(USE_SYCL ON)
+    add_definitions(-DUSE_SYCL)
+    message(STATUS "Using SYCL backend")
 else()
     # If the backend is not recognized, print an error message
     message(STATUS "Backend ${BACKEND} is not known!")
@@ -55,6 +59,8 @@ elseif (USE_HIP_NVIDIA)
     # This will hopefully work in the future
     # project(SIMULATeQCD LANGUAGES CXX HIP)
     project(SIMULATeQCD LANGUAGES CXX CUDA)
+elseif (USE_SYCL)
+    project(SIMULATeQCD LANGUAGES CXX)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
@@ -95,6 +101,13 @@ if (USE_HIP)
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_PATH}/include;${HIP_INCLUDE_DIRS}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${HIP_LIBRARIES}")
 endif()
+
+if (USE_SYCL)
+    set(CMAKE_CXX_COMPILER icpx)
+    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS}")
+    set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES}")
+endif()
+
 
 include_directories(SYSTEM "${SIMULATEQCD_INCLUDE_DIRS}")
 link_libraries("${SIMULATEQCD_LIBRARIES}")
@@ -152,6 +165,9 @@ elseif (USE_HIP_NVIDIA)
     set(HIP_NVCC_FLAGS "${HIP_NVCC_FLAGS} -O3 -std=c++17 -D__HIP_PLATFORM_NVCC__ -D__HIP_PLATFORM_NVIDIA__ --generate-code arch=compute_${ARCHITECTURE},code=sm_${ARCHITECTURE} --generate-code arch=compute_${ARCHITECTURE},code=compute_${ARCHITECTURE} -rdc=true")
     set(NVCC_LINK_FLAGS "${NVCC_LINK_FLAGS} -rdc=true")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3")
+elseif (USE_SYCL)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fsycl")
+    set(CMAKE_EXE_LINKER_FLAGS "-O3 -fsycl")
 endif()
 
 option(USE_MPFR "Set to ON to include MPFR - needed for rat_approx (default - OFF)" OFF)
@@ -262,6 +278,8 @@ FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)
         set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CUDA)
     elseif (USE_HIP)
         set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CXX HIP_SOURCE_PROPERTY_FORMAT 1)
+    elseif (USE_SYCL)
+        set_source_files_properties(${TARGET} ${ARGN} PROPERTIES LANGUAGE CXX)
     endif()
 ENDFUNCTION()
 
@@ -349,6 +367,15 @@ FUNCTION(add_SIMULATeQCD_executable TARGET)
         set_target_properties(${TARGET} _${TARGET}
             PROPERTIES
             COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+    elseif (USE_SYCL)
+        add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+    
+        target_link_libraries("_${TARGET}" CodeBase)
+        set_target_properties(${TARGET} _${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}")
+            
     elseif (USE_HIP_AMD)
         hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
         hip_add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target

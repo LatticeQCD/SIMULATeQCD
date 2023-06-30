@@ -159,5 +159,11 @@
 #define __GPUCC__                        __HIPCC__
 #endif
 
+#else 
+
+#define __host__ 
+#define __device__  
+
+#define gpuError_t sycl::exception
 #endif
 
