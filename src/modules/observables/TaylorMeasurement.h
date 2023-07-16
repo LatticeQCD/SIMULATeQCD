@@ -152,7 +152,7 @@ public:
 
         int link = (int)(digit - 1);
         if (link < 0 || link > 9)
-            throw std::runtime_error(stdLogger.fatal("Operator ID ", id, " is invalid"));
+            throw std::runtime_error(stdLogger.fatal("Operator ID: ", id, " is invalid"));
         if (nodes[link] == nullptr) {
             nodes[link] = new DerivativeOperatorTreeNode();
         }
