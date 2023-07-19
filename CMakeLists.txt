@@ -62,7 +62,7 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(MPI 3.1 REQUIRED)
 
 
-set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH}")
+set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH};$ENV{MPICH_DIR}/include")
 set(SIMULATEQCD_LIBRARIES "${MPI_LIBRARIES}")
 
 if (USE_CUDA OR USE_HIP_NVIDIA)
@@ -92,7 +92,7 @@ if (USE_HIP)
         find_package(rocprim REQUIRED CONFIG PATHS "${HIP_PATH}/rocprim")
     endif()
     
-    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_PATH}/include;${HIP_INCLUDE_DIRS}")
+    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};$ENV{ROCM_PATH}/include;${HIP_INCLUDE_DIRS}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${HIP_LIBRARIES}")
 endif()
 
@@ -133,6 +133,8 @@ if (USE_MARKER)
     add_definitions(-DUSE_MARKER)
     if (USE_CUDA)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnvToolsExt")
+    elseif(USE_HIP)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
     endif()
 endif()
 
@@ -147,7 +149,7 @@ elseif (USE_HIP_AMD)
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link")
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
@@ -362,7 +364,7 @@ FUNCTION(add_SIMULATeQCD_executable TARGET)
 #        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
         set_target_properties(${TARGET} _${TARGET}
             PROPERTIES
-            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON PUBLIC "-L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
 
     elseif (USE_HIP_NVIDIA)
         hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target

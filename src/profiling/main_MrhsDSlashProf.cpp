@@ -70,18 +70,18 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     if (gpuErr)
         rootLogger.info("Error in initialization of DSlash");
 
-    for (int i = 0; i < 500; ++i) {
+    for (int i = 0; i < 5; ++i) {
         timer.start();
         dslash.applyMdaggM(spinorOut, spinorIn, false);
         timer.stop();
         spinorIn=spinorSave;
     }
 
-    rootLogger.info("Time for 500 applications of multiRHS Dslash: " ,  timer);
+    rootLogger.info("Time for 5 applications of multiRHS Dslash: " ,  timer);
 
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
 
-    float TFlops = NStacks * Vol * EOfactor * 500 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
+    float TFlops = NStacks * Vol * EOfactor * 5 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 }
 
@@ -114,15 +114,15 @@ int main(int argc, char **argv) {
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
+    //test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
+    //test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
+    /*test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 8, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 12, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 12, true>(commBase, Vol);*/
 }

@@ -10,7 +10,8 @@ inline void markerBegin(std::string_view marker_name, std::string_view group_nam
     #ifdef USE_CUDA
         nvtxRangePush((std::string(group_name) + ": " + std::string(marker_name)).c_str());
     #elif defined USE_HIP
-        HIP_BEGIN_MARKER(group_name, name);
+	auto ret = roctxRangePush((std::string(group_name) + ": " + std::string(marker_name)).c_str());
+    std::cout << "roctxRangePush (" << ret << ")" <<": group_name " <<std::string(group_name) << ", marker_name " << std::string(marker_name) << std::endl;
     #endif
 #endif
 
@@ -21,7 +22,8 @@ inline void markerEnd(){
     #ifdef USE_CUDA
         nvtxRangePop();
     #elif defined USE_HIP
-        HIP_END_MARKER();
+        auto ret = roctxRangePop();
+        std::cout << "roctxRangePop (" << ret << ")" << std::endl;
     #endif
 #endif
 }

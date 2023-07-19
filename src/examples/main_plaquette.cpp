@@ -158,11 +158,17 @@ int main(int argc, char *argv[]) {
     LatticeContainer<true,PREC> redBase(commBase);
     /// We need to tell the Reductionbase how large our Array will be
     redBase.adjustSize(GInd::getLatData().vol4);
+    grnd_state<false> h_rand;
+    grnd_state<true> d_rand;
+
+    h_rand.make_rng_state(1337);
+    d_rand = h_rand;
+
 
     /// Read a configuration from hard drive.
     rootLogger.info("Read configuration");
-    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
-
+    //    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
+    gauge.random(d_rand.state);
     /// start timer...
     timer.start();
     /// define variable where the plaquette should be stored.
