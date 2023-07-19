@@ -9,8 +9,8 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/TaylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
-
-
+#include "../testing/testing.h" // for comparing stuff
+//#include "../explicit_instantiation_macros.h" 
 #define PREC double
 
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
     param.readfile(commBase, "./TaylorMeasurement.param", argc, argv);
 
 
-    commBase.iit(param.nodeDim());
+    commBase.init(param.nodeDim());
 
     const int HaloDepth = 2; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
