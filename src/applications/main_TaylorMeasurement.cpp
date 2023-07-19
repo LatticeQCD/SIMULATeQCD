@@ -20,7 +20,6 @@ int main(int argc, char **argv) {
 
     TaylorMeasurementParameters param;
     CommunicationBase commBase(&argc, &argv);
-    bool is_read_ok = false;
     
     // try reading parameter file from the same directory 
     rootLogger.info("Reading parameter file \"TaylorMeasurement.param\" from the current working directory.");
