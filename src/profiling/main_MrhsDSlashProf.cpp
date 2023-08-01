@@ -83,6 +83,18 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     float TFlops = NStacks * Vol * EOfactor * 5 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s " ,  TFlops);
+
+
+    timer.reset();
+    for (int i = 0; i < 5; ++i) {
+        timer.start();
+        dslash.Dslash_stacked(spinorIn,SpinorOut,false);
+        timer.stop();
+
+    }
+    rootLogger.info("Time for 5 applications of multiRHS Dslash (thread version): ", timer);
+    TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
+    rootLogger.info("Achieved TFLOP/s ", TFlops);
 }
 
 
@@ -113,7 +125,7 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
+    // test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
     //test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
     //test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
