@@ -84,9 +84,9 @@
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_fp16.h>
 #include <hip/hip_profile.h>
-#include <roctracer/roctx.h>
-#include <roctracer/roctracer_ext.h>
-#include <roctracer/roctracer.h>
+// #include <roctracer/roctx.h>
+// #include <roctracer/roctracer_ext.h>
+// #include <roctracer/roctracer.h>
 #include <utility>
 
 

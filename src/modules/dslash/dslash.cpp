@@ -34,9 +34,8 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
     return Stmp;
 }
 
-template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
-template<bool onDevice, size_t Nstacks>
-__host__ __device__ void HisqDslashStackedFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSite site) const{
+template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) const{
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
     for (size_t stack = 0; stack<NStacks; stack++) {
@@ -59,8 +58,8 @@ __host__ __device__ void HisqDslashStackedFunctor<floatT, LatLayoutRHS, HaloDept
                 Stmp -= static_cast<floatT>(_c_3000) * _gAcc_Naik.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn_dn(site, mu, mu), mu)))
                                                     * _spinorIn.getElement(GInd::getSiteStack(GInd::site_dn_dn_dn(site, mu, mu, mu),stack));
             }
-    
-        _spinorOut.setElement(GInd::getSiteSTack(site),Stmp);
+        const gSiteStack writeSite = GInd::getSiteStack(site,stack);
+        _spinorOut.setElement(writeSite,Stmp);
     }
     
 }
@@ -98,13 +97,13 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
 }
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void HisqDSlash<floatT, onDevice, LatLayourRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::DSlash_stacked(SpinorLHS_t& lhs, const SpinorRHS_t& rhs, bool update){
+void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::Dslash_stacked(SpinorLHS_t& lhs, const SpinorRHS_t& rhs, bool update){
    
-    HisqDslashStackedFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin> dslash_func(rhs,lhs,_gauge_smeared,_gauge_Naik,_c_3000);
+    HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks> dslash_func(lhs, rhs,_gauge_smeared,_gauge_Naik,_c_3000);
    
-    CalcGSiteAtStack<0, LatticeLayout, HaloDepth> calcGSite;
+    CalcGSiteStack<LatLayoutRHS, HaloDepthSpin> calcGSite;
    
-    iterateFunctorNoReturn<BLOCKSIZE>(dslash_func,calcGSite,lhs.getNumberLatticePoints()/NStacks);
+    iterateFunctorNoReturn<onDevice,BLOCKSIZE>(dslash_func,calcGSite,lhs.getNumberLatticePoints()/NStacks);
 
     if(update) {
         lhs.updateAll(COMM_BOTH | Hyperplane);

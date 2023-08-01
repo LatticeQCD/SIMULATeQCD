@@ -52,6 +52,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorSave(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> spinorOut2(commBase);
     gpuErr = gpuGetLastError();
     if (gpuErr)
         GpuError("Error in spinor initialization", gpuErr);
@@ -88,7 +89,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     timer.reset();
     for (int i = 0; i < 5; ++i) {
         timer.start();
-        dslash.Dslash_stacked(spinorIn,SpinorOut,false);
+        dslash.Dslash_stacked(spinorOut2,spinorIn,false);
         timer.stop();
 
     }

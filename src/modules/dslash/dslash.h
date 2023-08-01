@@ -46,8 +46,8 @@ struct HisqDslashFunctor {
         return *this;
     }
 };
-`
-template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
+
+template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 struct HisqDslashStackedFunctor {
 
     gVect3arrayAcc<floatT> _spinorIn;
@@ -59,10 +59,9 @@ struct HisqDslashStackedFunctor {
 
     floatT _c_3000;
 
-    template<bool onDevice, size_t NStacks>
     HisqDslashStackedFunctor(
+        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorOut,
         const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
-        Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorOut,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
             _spinorIn(spinorIn.getAccessor()),
