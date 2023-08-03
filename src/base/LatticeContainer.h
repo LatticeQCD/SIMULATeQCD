@@ -163,7 +163,7 @@ public:
 
     /// Reduce local per rank.
     void reduceStackedLocal(std::vector<elemType> &values, size_t NStacks, size_t stackSize, bool sequentialLoop = false){
-        markerBegin("reduceStackedLocal", "Reduction");
+        // markerBegin("reduceStackedLocal", "Reduction");
         if (values.size() < NStacks) {
             values.resize(NStacks);
         }
@@ -237,7 +237,7 @@ public:
                 }
             }
         }
-        markerEnd();
+        // markerEnd();
     }
 
 
@@ -249,7 +249,7 @@ public:
 
 
     void reduce(elemType &value, size_t size, bool rootToAll = false) {
-        markerBegin("reduce", "Reduction");
+        // markerBegin("reduce", "Reduction");
         elemType result = 0;
 
         if (onDevice) {
@@ -278,11 +278,11 @@ public:
         }
         value = comm.reduce(result);
         if (rootToAll) comm.root2all(result);
-        markerEnd();
+        // markerEnd();
     }
 
     void reduceMax(elemType &value, size_t size, bool rootToAll = false) {
-        markerBegin("reduceMax", "Reduction");
+        // markerBegin("reduceMax", "Reduction");
         elemType result = 0;
 
         if (onDevice) {
@@ -313,7 +313,7 @@ public:
         }
         value = comm.globalMaximum(result);
         if (rootToAll) comm.root2all(result);
-        markerEnd();
+        // markerEnd();
     }
 
     LatticeContainerAccessor getAccessor() const { return LatticeContainerAccessor(ContainerArray->getPointer()); }

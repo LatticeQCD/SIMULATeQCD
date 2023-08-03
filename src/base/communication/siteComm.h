@@ -289,7 +289,7 @@ public:
             return;
         }
 
-        markerBegin("updateAll", "Communication");
+        // markerBegin("updateAll", "Communication");
         
         gpuError_t gpuErr;
 
@@ -352,7 +352,7 @@ public:
                 _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
             }
         }
-        markerEnd();
+        // markerEnd();
     }
 };
 
