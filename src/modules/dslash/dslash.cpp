@@ -97,7 +97,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
     }
 
     for (size_t stack = 0; stack<NStacks; stack++) {
-        const gSiteStack writeSite = GInd_spinorout::getSiteStack(site,stack);
+        const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[stack]);
  
     }
