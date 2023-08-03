@@ -64,12 +64,12 @@ struct HisqDslashStackedFunctor {
         const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
-            _spinorIn(spinorIn.getAccessor()),
             _spinorOut(spinorOut.getAccessor()),
+            _spinorIn(spinorIn.getAccessor()),
             _gAcc_smeared(gauge_smeared.getAccessor()),
             _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000) {}
 
-    __device__ __host__ inline void operator()(gSite site) const;
+    __device__ __host__ inline void operator()(gSite site);
 
     auto getAccessor() const {
         return *this;

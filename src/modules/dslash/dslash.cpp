@@ -35,7 +35,7 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 }
 
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) const{
+__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
     for (size_t stack = 0; stack<NStacks; stack++) {
@@ -103,7 +103,7 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
    
     CalcGSiteStack<LatLayoutRHS, HaloDepthSpin> calcGSite;
    
-    iterateFunctorNoReturn<onDevice,BLOCKSIZE>(dslash_func,calcGSite,lhs.getNumberLatticePoints()/NStacks);
+    iterateFunctorNoReturn<onDevice,BLOCKSIZE>(dslash_func,calcGSite,lhs.getNumberLatticePoints());
 
     if(update) {
         lhs.updateAll(COMM_BOTH | Hyperplane);

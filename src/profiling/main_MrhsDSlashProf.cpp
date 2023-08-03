@@ -53,6 +53,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorSave(commBase);
     Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> spinorOut3(commBase);
     gpuErr = gpuGetLastError();
     if (gpuErr)
         GpuError("Error in spinor initialization", gpuErr);
@@ -73,16 +74,18 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     for (int i = 0; i < 5; ++i) {
         timer.start();
-        dslash.applyMdaggM(spinorOut, spinorIn, false);
+        dslash.Dslash(spinorOut2, spinorIn, false);
         timer.stop();
-        spinorIn=spinorSave;
+        // spinorIn=spinorSave;
     }
 
     rootLogger.info("Time for 5 applications of multiRHS Dslash: " ,  timer);
 
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
 
-    float TFlops = NStacks * Vol * EOfactor * 5 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
+    // float TFlops = NStacks * Vol * EOfactor * 5 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
+   float TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
+   
     rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 
 
@@ -93,9 +96,21 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         timer.stop();
 
     }
+    spinorIn = spinorSave;
+    dslash.Dslash(spinorOut2,spinorIn,false);
+    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
+    
+    dslash.Dslash_stacked(spinorOut3,spinorIn,false);
+    dot = spinorOut2.dotProductStacked(spinorOut2);
+    dot2 = spinorOut3.dotProductStacked(spinorOut3);
+
     rootLogger.info("Time for 5 applications of multiRHS Dslash (thread version): ", timer);
     TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s ", TFlops);
+    for (int i = 0; i < NStacks; i++) {
+        rootLogger.info("Testing for correctness: dot = ", dot[i], " dot2 = ", dot2[i]);
+    }
 }
 
 
@@ -126,15 +141,15 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    // test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
     //test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
     //test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
-    /*test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 8, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
+    /*test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 12, true>(commBase, Vol);*/
