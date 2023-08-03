@@ -96,21 +96,44 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         timer.stop();
 
     }
-    spinorIn = spinorSave;
-    dslash.Dslash(spinorOut2,spinorIn,false);
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
-    
-    dslash.Dslash_stacked(spinorOut3,spinorIn,false);
-    dot = spinorOut2.dotProductStacked(spinorOut2);
-    dot2 = spinorOut3.dotProductStacked(spinorOut3);
+
 
     rootLogger.info("Time for 5 applications of multiRHS Dslash (thread version): ", timer);
     TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s ", TFlops);
+
+    timer.reset();
+    for (int i = 0; i < 5; ++i) {
+        timer.start();
+        dslash.Dslash_stackloop(spinorOut2,spinorIn,false);
+        timer.stop();
+
+    }
+
+
+    rootLogger.info("Time for 5 applications of multiRHS Dslash (thread version): ", timer);
+    TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
+    rootLogger.info("Achieved TFLOP/s ", TFlops);
+
+    dslash.Dslash(spinorOut2,spinorIn,false);
+    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
+    
+    dslash.Dslash_stackloop(spinorOut3,spinorIn,false);
+    dot = spinorOut2.dotProductStacked(spinorOut2);
+    dot2 = spinorOut3.dotProductStacked(spinorOut3);
+
+    
+
     for (int i = 0; i < NStacks; i++) {
         rootLogger.info("Testing for correctness: dot = ", dot[i], " dot2 = ", dot2[i]);
     }
+    spinorOut2 = spinorOut2 - spinorOut3;
+    dot = spinorOut2.dotProductStacked(spinorOut2);
+
+     for (int i = 0; i < NStacks; i++) {
+        rootLogger.info("Testing for correctness: dot(difference) = ", dot[i]);
+    }   
 }
 
 

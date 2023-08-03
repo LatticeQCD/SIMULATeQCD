@@ -97,11 +97,10 @@ __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcRea
     auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
 #endif
     op.initialize(site);
-#ifdef USE_CUDA
-#pragma unroll
-#endif
+// #ifdef USE_CUDA
+#pragma unroll Nloops
+// #endif
     for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++){
-        if(loopIdx >= Nmax) break;
         res.setElement(calcWriteInd(site, loopIdx), op(site, loopIdx));
     }
 }

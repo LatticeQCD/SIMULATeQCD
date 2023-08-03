@@ -42,6 +42,10 @@ struct HisqDslashFunctor {
 
     __device__ __host__ inline auto operator()(gSiteStack site) const;
 
+    __device__ __host__ inline auto operator()(gSite site, size_t loopidx);
+
+    __host__ __device__ void initialize(__attribute__((unused)) gSite site) {};
+
     auto getAccessor() const {
         return *this;
     }
@@ -71,6 +75,8 @@ struct HisqDslashStackedFunctor {
 
     __device__ __host__ inline void operator()(gSite site);
 
+
+    
     auto getAccessor() const {
         return *this;
     }
@@ -133,6 +139,8 @@ public:
 
     //! Does not use the mass
     virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
+
+    virtual void Dslash_stackloop(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
     virtual void Dslash_stacked(SpinorLHS_t &lhs, const SpinorRHS_t & rhs, bool update = false);
 
