@@ -120,20 +120,26 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
     
     dslash.Dslash_stackloop(spinorOut3,spinorIn,false);
-    dot = spinorOut2.dotProductStacked(spinorOut2);
     dot2 = spinorOut3.dotProductStacked(spinorOut3);
 
     
-
-    for (int i = 0; i < NStacks; i++) {
-        rootLogger.info("Testing for correctness: dot = ", dot[i], " dot2 = ", dot2[i]);
-    }
     spinorOut2 = spinorOut2 - spinorOut3;
     dot = spinorOut2.dotProductStacked(spinorOut2);
 
      for (int i = 0; i < NStacks; i++) {
-        rootLogger.info("Testing for correctness: dot(difference) = ", dot[i]);
+        rootLogger.info("Testing for correctness: dot(difference 1-3) = ", dot[i]);
     }   
+
+
+    dslash.Dslash(spinorOut2,spinorIn,false);
+    dslash.Dslash_stacked(spinorOut3,spinorIn,false);
+    spinorOut2 = spinorOut2 - spinorOut3;
+
+    dot = spinorOut2.dotProductStacked(spinorOut2);
+    for (int i = 0; i < NStacks; i++) {
+        rootLogger.info("Testing for correctness: dot(difference 123) = ", dot[i]);
+    }  
+
 }
 
 
