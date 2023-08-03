@@ -111,7 +111,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     }
 
 
-    rootLogger.info("Time for 5 applications of multiRHS Dslash (thread version): ", timer);
+    rootLogger.info("Time for 5 applications of multiRHS Dslash (thread version - performfunctorloop): ", timer);
     TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s ", TFlops);
 
@@ -137,7 +137,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     dot = spinorOut2.dotProductStacked(spinorOut2);
     for (int i = 0; i < NStacks; i++) {
-        rootLogger.info("Testing for correctness: dot(difference 123) = ", dot[i]);
+        rootLogger.info("Testing for correctness: dot(difference 1-2) = ", dot[i]);
     }  
 
 }
