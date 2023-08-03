@@ -36,32 +36,41 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) {
-    typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
+   typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
+        
+        SimpleArray<gVect3<floatT>, NStacks> Stmp(0.0);
+
+        #pragma unroll
+        for (int mu = 0; mu < 4; mu++) {
+
+     
+            #pragma unroll
+            for (size_t stack = 0; stack<NStacks; stack++) {
+
+                
+
+                Stmp[stack] += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
+                                                    * _spinorIn.getElement(GInd::site_up(GInd::getSiteStack(site,stack), mu));
+
+                Stmp[stack] -= static_cast<floatT>(C_1000) * _gAcc_smeared.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu)))
+                                                    * _spinorIn.getElement(GInd::site_dn(GInd::getSiteStack(site,stack), mu));
+
+                Stmp[stack] += static_cast<floatT>(_c_3000) * _gAcc_Naik.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_up(site, mu), mu)))
+                                                    * _spinorIn.getElement(GInd::site_up_up_up(GInd::getSiteStack(site,stack), mu, mu, mu));
+
+                Stmp[stack] -= static_cast<floatT>(_c_3000) * _gAcc_Naik.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn_dn(site, mu, mu), mu)))
+                                                    * _spinorIn.getElement(GInd::site_dn_dn_dn(GInd::getSiteStack(site,stack), mu, mu, mu));
+            }
+ 
+        
+    }
 
     for (size_t stack = 0; stack<NStacks; stack++) {
-        gVect3<floatT> Stmp(0.0);
-    
-        #ifdef USE_CUDA
-        #pragma unroll
-        #endif
-            for (int mu = 0; mu < 4; mu++) {
-
-                Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
-                                                    * _spinorIn.getElement(GInd::getSiteStack(GInd::site_up(site, mu),stack));
-
-                Stmp -= static_cast<floatT>(C_1000) * _gAcc_smeared.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu)))
-                                                    * _spinorIn.getElement(GInd::getSiteStack(GInd::site_dn(site, mu),stack));
-
-                Stmp += static_cast<floatT>(_c_3000) * _gAcc_Naik.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_up(site, mu), mu)))
-                                                    * _spinorIn.getElement(GInd::getSiteStack(GInd::site_up_up_up(site, mu, mu, mu),stack));
-
-                Stmp -= static_cast<floatT>(_c_3000) * _gAcc_Naik.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn_dn(site, mu, mu), mu)))
-                                                    * _spinorIn.getElement(GInd::getSiteStack(GInd::site_dn_dn_dn(site, mu, mu, mu),stack));
-            }
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
-        _spinorOut.setElement(writeSite,Stmp);
+        _spinorOut.setElement(writeSite,Stmp[stack]);
+ 
     }
-    
+        
 }
 
 
