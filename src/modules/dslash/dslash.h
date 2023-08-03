@@ -51,7 +51,7 @@ struct HisqDslashFunctor {
     }
 };
 
-template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_cached>
 struct HisqDslashStackedFunctor {
 
     gVect3arrayAcc<floatT> _spinorIn;
@@ -64,8 +64,8 @@ struct HisqDslashStackedFunctor {
     floatT _c_3000;
 
     HisqDslashStackedFunctor(
-        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorOut,
-        const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cached> &spinorOut,
+        const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cached> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
             _spinorOut(spinorOut.getAccessor()),
@@ -142,7 +142,8 @@ public:
 
     virtual void Dslash_stackloop(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
-    virtual void Dslash_stacked(SpinorLHS_t &lhs, const SpinorRHS_t & rhs, bool update = false);
+    template<size_t NStacks_cached>
+    void Dslash_stacked(Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cached> &lhs, const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cached>& rhs, bool update = false);
 
     //! Includes the mass term
     virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);

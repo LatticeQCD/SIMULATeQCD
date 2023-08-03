@@ -6,6 +6,8 @@
 #define BLOCKSIZE 32
 #endif
 
+
+
 //! HisqDslash
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const{
@@ -63,8 +65,8 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
     return Stmp;
 }
 
-template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) {
+template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_cached>
+__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_cached>::operator()(gSite site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
     
         
@@ -76,7 +78,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
 
      
             #pragma unroll NStacks
-            for (size_t stack = 0; stack<NStacks; stack++) {
+            for (size_t stack = 0; stack<NStacks; stack+=NStacks_cached) {
 
                 
 
@@ -96,7 +98,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         
     }
 
-    for (size_t stack = 0; stack<NStacks; stack++) {
+    for (size_t stack = 0; stack<NStacks; stack+=NStacks_cached) {
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[stack]);
  
@@ -148,9 +150,10 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
 
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::Dslash_stacked(SpinorLHS_t& lhs, const SpinorRHS_t& rhs, bool update){
+template<size_t NStacks_cache>
+void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::Dslash_stacked(Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cache> &lhs, const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cache>& rhs, bool update){
    
-    HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks> dslash_func(lhs, rhs,_gauge_smeared,_gauge_Naik,_c_3000);
+    HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_cache> dslash_func(lhs, rhs,_gauge_smeared,_gauge_Naik,_c_3000);
    
     CalcGSite<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> calcGSite;
    
@@ -257,5 +260,6 @@ stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin> stdStagDS
 INIT_PLHHSN(DSLASH_INIT)
 
 #define DSLASH_INIT_HALF(floatT, LO, HaloDepth, HaloDepthSpin, NStacks) \
-  template class HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>;
+  template class HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>;\
+  template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<2>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks*2>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks*2>&, bool);
 INIT_PLHHSN_HALF(DSLASH_INIT_HALF)
