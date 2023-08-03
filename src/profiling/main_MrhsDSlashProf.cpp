@@ -142,15 +142,15 @@ int main(int argc, char **argv) {
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
     test_dslash<float, Even, Odd, 1, true>(commBase, Vol);
-    //test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
-    //test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 2, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 6, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 8, true>(commBase, Vol);
-    /*test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 10, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
+    /*test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 12, true>(commBase, Vol);*/
 }

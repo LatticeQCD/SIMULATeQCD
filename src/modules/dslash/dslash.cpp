@@ -37,7 +37,6 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) {
    typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
-        
         SimpleArray<gVect3<floatT>, NStacks> Stmp(0.0);
 
         #pragma unroll
@@ -110,7 +109,7 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
    
     HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks> dslash_func(lhs, rhs,_gauge_smeared,_gauge_Naik,_c_3000);
    
-    CalcGSiteStack<LatLayoutRHS, HaloDepthSpin> calcGSite;
+    CalcGSite<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> calcGSite;
    
     iterateFunctorNoReturn<onDevice,BLOCKSIZE>(dslash_func,calcGSite,lhs.getNumberLatticePoints());
 
