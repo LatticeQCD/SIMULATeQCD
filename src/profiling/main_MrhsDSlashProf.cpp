@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
     test_dslash<float, Even, Odd, 3, 3, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, 3, true>(commBase, Vol);
     // test_dslash<float, Even, Odd, 5, 3,true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 6, 3, true>(commBase, Vol);
+    // test_dslash<float, Even, Odd, 6, 3, true>(commBase, Vol);
     // test_dslash<float, Even, Odd, 7, 2, true>(commBase, Vol);
     // test_dslash<float, Even, Odd, 8, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol);
