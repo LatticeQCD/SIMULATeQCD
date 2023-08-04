@@ -261,5 +261,8 @@ INIT_PLHHSN(DSLASH_INIT)
 
 #define DSLASH_INIT_HALF(floatT, LO, HaloDepth, HaloDepthSpin, NStacks) \
   template class HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>;\
+  template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<1>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks>&, bool);
   template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<2>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks*2>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks*2>&, bool);
+  template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<3>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks*3>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks*3>&, bool);
+  template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<4>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks*4>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks*4>&, bool);
 INIT_PLHHSN_HALF(DSLASH_INIT_HALF)

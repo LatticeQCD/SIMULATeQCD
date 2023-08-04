@@ -188,14 +188,38 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
+
+    test_dslash<float, Even, Odd, 1, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 2, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 3, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 4, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 5, 1,true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 6, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 7, 1, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 8, 1, true>(commBase, Vol);
+
     test_dslash<float, Even, Odd, 1, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 2, 2, true>(commBase, Vol);
-    //test_dslash<float, Even, Odd, 3, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 3, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, 2, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 5, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 5, 2,true>(commBase, Vol);
     test_dslash<float, Even, Odd, 6, 2, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 7, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 7, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 8, 2, true>(commBase, Vol);
+
+    test_dslash<float, Even, Odd, 1, 3, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 2, 3, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 3, 3, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 4, 3, true>(commBase, Vol);
+    // test_dslash<float, Even, Odd, 5, 3,true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 6, 3, true>(commBase, Vol);
+    // test_dslash<float, Even, Odd, 7, 2, true>(commBase, Vol);
+    // test_dslash<float, Even, Odd, 8, 2, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 2, 4, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 3, 4, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 4, 4, true>(commBase, Vol);
+    
     //test_dslash<float, Even, Odd, 9, true>(commBase, Vol);
     // test_dslash<float, Even, Odd, 10, 2, true>(commBase, Vol);
     /*test_dslash<float, Even, Odd, 11, true>(commBase, Vol);
