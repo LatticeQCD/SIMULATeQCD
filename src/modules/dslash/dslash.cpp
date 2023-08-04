@@ -78,7 +78,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
 
      
             #pragma unroll
-            for (auto [stack,i] = std::tuple{stack_offset, 0}; i < Nstacks; stack+=NStacks_cached, i++) {
+            for (auto [stack,i] = std::tuple{stack_offset, 0}; i < NStacks; stack+=NStacks_cached, i++) {
 
                 Stmp[i] += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
                                                     * _spinorIn.getElement(GInd::site_up(GInd::getSiteStack(site,stack), mu));
