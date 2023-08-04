@@ -140,7 +140,7 @@ endif()
 
 # Additional compiler flags
 if (USE_CUDA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -fPIC")
     set(CMAKE_CUDA_FLAGS
         "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
 
@@ -247,7 +247,9 @@ set(REALLY_ALL_NSTACK
     NSTACKS_7=1
     NSTACKS_9=1
     NSTACKS_10=1
-    NSTACKS_11=1)
+    NSTACKS_11=1
+    NSTACKS_16=1
+    NSTACKS_20=1)
 set(ALL_LAYOUTS
     LAYOUT_ALL=1
     LAYOUT_ODD=1
