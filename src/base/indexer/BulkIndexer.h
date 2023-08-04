@@ -571,7 +571,10 @@ public:
     __device__ __host__ inline static gSiteStack getSiteStack(sitexyzt coord, int stack) {
         return getSiteStack(getSite(coord.x, coord.y, coord.z, coord.t), stack);
     }
-
+    __device__ __host__ inline static size_t getStack(const gSiteStack& site) {
+        return site.stack;
+    }
+    
     __device__ __host__ inline static gSiteStack getSiteStackOdd(const gSite& site, const size_t stack){
         size_t isiteStack;
         size_t isiteStackFull;

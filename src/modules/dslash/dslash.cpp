@@ -66,10 +66,10 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 }
 
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_cached>
-__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_cached>::operator()(gSite site) {
+__host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_cached>::operator()(gSiteStack site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
     
-        
+    size_t stack_offset = GInd::getStack(site);
         SimpleArray<gVect3<floatT>, NStacks> Stmp(0.0);
         #ifdef USE_CUDA
         #pragma unroll
@@ -78,7 +78,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
 
      
             #pragma unroll NStacks
-            for (size_t stack = 0; stack<NStacks*NStacks_cached; stack+=NStacks_cached) {
+            for (size_t stack = stack_offset; stack<NStacks*NStacks_cached; stack+=NStacks_cached) {
 
                 
 
@@ -98,7 +98,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         
     }
 
-    for (size_t stack = 0; stack<NStacks*NStacks_cached; stack+=NStacks_cached) {
+    for (size_t stack = stack_offset; stack<NStacks*NStacks_cached; stack+=NStacks_cached) {
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[stack/NStacks_cached]);
  
