@@ -73,7 +73,7 @@ struct HisqDslashStackedFunctor {
             _gAcc_smeared(gauge_smeared.getAccessor()),
             _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000) {}
 
-    __device__ __host__ inline void operator()(gSite site);
+    __device__ __host__ inline void operator()(gSiteStack site);
 
 
     
