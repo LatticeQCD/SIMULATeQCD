@@ -78,7 +78,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
 
      
             #pragma unroll NStacks
-            for (size_t stack = stack_offset, int i = 0; stack<NStacks*NStacks_cached; stack+=NStacks_cached, i++) {
+            for (auto [stack,i] = std::tuple{stack_offset, 0}; stack<NStacks*NStacks_cached; stack+=NStacks_cached, i++) {
 
                 
 
@@ -98,7 +98,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         
     }
 
-    for (size_t stack = stack_offset, int i = 0; stack<NStacks*NStacks_cached; stack+=NStacks_cached, i++) {
+    for (auto [stack,i] = std::tuple{stack_offset, 0}; stack<NStacks*NStacks_cached; stack+=NStacks_cached, i++) {
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[i]);
  
