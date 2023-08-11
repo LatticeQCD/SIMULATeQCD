@@ -138,7 +138,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -203,7 +203,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -284,7 +284,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -372,7 +372,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -458,7 +458,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
