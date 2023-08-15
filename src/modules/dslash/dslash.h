@@ -53,8 +53,8 @@ struct HisqDslashFunctor {
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 struct HisqDslashThreadRHSFunctor {
 
-    gVect3arrayAcc<floatT> _spinorIn;
     gVect3arrayAcc<floatT> _spinorOut;
+    gVect3arrayAcc<floatT> _spinorIn;
     gaugeAccessor<floatT, R18> _gAcc_smeared;
     gaugeAccessor<floatT, U3R14> _gAcc_Naik;
     floatT _c_3000;
@@ -65,8 +65,8 @@ struct HisqDslashThreadRHSFunctor {
         const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
         Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
         Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
+        _spinorOut(spinorOut.getAccessor()), 
         _spinorIn(spinorIn.getAccessor()),
-        _spinorOut(spinorOut.getAccessor()),
         _gAcc_smeared(gauge_smeared.getAccessor()),
         _gAcc_Naik(gauge_Naik.getAccessor()),
         _c_3000(c_3000) {}
@@ -81,8 +81,8 @@ struct HisqDslashThreadRHSFunctor {
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_cached>
 struct HisqDslashStackedFunctor {
 
-    gVect3arrayAcc<floatT> _spinorIn;
     gVect3arrayAcc<floatT> _spinorOut;
+    gVect3arrayAcc<floatT> _spinorIn;
     gaugeAccessor<floatT, R18> _gAcc_smeared;
     gaugeAccessor<floatT, U3R14> _gAcc_Naik;
     
@@ -127,8 +127,8 @@ struct HisqMdaggMFunctor {
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik,
             floatT mass2, floatT c_3000) :
-            _spinorIn(spinorIn.getAccessor()),
             _spinorTmp(spinorTmp.getAccessor()),
+            _spinorIn(spinorIn.getAccessor()),
             _gAcc_smeared(gauge_smeared.getAccessor()),
             _gAcc_Naik(gauge_Naik.getAccessor()),
             _mass2(mass2),

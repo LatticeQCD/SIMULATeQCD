@@ -6,8 +6,7 @@ struct plaquetteKernel{
     plaquetteKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
-        typedef GIndexer<All,HaloDepth> GInd;
-
+       
         GSU3<floatT> temp;
 
         floatT result = 0;
@@ -30,8 +29,7 @@ struct plaquetteKernelSS{
     plaquetteKernelSS(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
-        typedef GIndexer<All,HaloDepth> GInd;
-
+       
         GSU3<floatT> temp;
 
         floatT result = 0;
@@ -78,8 +76,7 @@ struct UtauMinusUsigmaKernel{
     UtauMinusUsigmaKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
-        typedef GIndexer<All,HaloDepth> GInd;
-
+       
         GSU3<floatT> temp;
 
         floatT result = 0;

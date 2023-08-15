@@ -82,7 +82,7 @@ auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(
 
 template<size_t Nloops, typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
-        CalcWriteInd calcWriteInd, const size_t size_x, size_t Nmax=Nloops) {
+        CalcWriteInd calcWriteInd, const size_t size_x, __attribute__((unused)) size_t Nmax=Nloops) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {

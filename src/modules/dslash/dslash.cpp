@@ -81,9 +81,9 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         #endif
         for (int mu = 0; mu < 4; mu++) {
 
-     
+            size_t i = 0;
             #pragma unroll NStacks
-            for (auto [stack,i] = std::tuple{stack_offset, 0}; i < NStacks; stack+=NStacks_cached, i++) {
+            for (size_t stack = stack_offset; i < NStacks; stack+=NStacks_cached, i++) {
 
                 Stmp[i] += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
                                                     * _spinorIn.getElement(GInd::site_up(GInd::getSiteStack(site,stack), mu));
@@ -101,8 +101,9 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         
     }
 
+    size_t i = 0;
     #pragma unroll NStacks
-    for (auto [stack,i] = std::tuple{stack_offset, 0}; i < NStacks; stack+=NStacks_cached, i++) {
+    for (size_t stack = stack_offset; i < NStacks; stack+=NStacks_cached, i++) {
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[i]);
  
@@ -265,6 +266,7 @@ stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin> stdStagDS
   template class stdStagDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>;
 INIT_PLHHSN(DSLASH_INIT)
 
+#ifdef USE_TILED_MULTIRHS
 #define DSLASH_INIT_HALF(floatT, LO, HaloDepth, HaloDepthSpin, NStacks) \
   template class HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>;\
   template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<1>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks>&, bool);\
@@ -286,3 +288,16 @@ INIT_PLHHSN(DSLASH_INIT)
   template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<20>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks*20>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks*20>&, bool);\
   template void HisqDSlash<floatT,true,LO,HaloDepth,HaloDepthSpin,NStacks>::Dslash_stacked<32>(Spinorfield<floatT, true, LayoutSwitcher<LO>(), HaloDepthSpin, NStacks*32>&, const Spinorfield<floatT, true, LO, HaloDepthSpin, NStacks*32>&, bool);
 INIT_PLHHSN_HALF(DSLASH_INIT_HALF)
+#else
+#define DSLASH_INIT2(floatT, HaloDepth, HaloDepthSpin) \
+  template class HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,1>;\
+  template void HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,1>::Dslash_stacked<1>(Spinorfield<floatT, true, LayoutSwitcher<(Layout)2>(), HaloDepthSpin, 1>&, const Spinorfield<floatT, true, (Layout)2, HaloDepthSpin, 1>&, bool);\
+  template void HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,1>::Dslash_stacked<2>(Spinorfield<floatT, true, LayoutSwitcher<(Layout)2>(), HaloDepthSpin, 1*2>&, const Spinorfield<floatT, true, (Layout)2, HaloDepthSpin, 1*2>&, bool);\
+  template void HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,1>::Dslash_stacked<4>(Spinorfield<floatT, true, LayoutSwitcher<(Layout)2>(), HaloDepthSpin, 1*4>&, const Spinorfield<floatT, true, (Layout)2, HaloDepthSpin, 1*4>&, bool);\
+  template class HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,2>;\
+  template void HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,2>::Dslash_stacked<1>(Spinorfield<floatT, true, LayoutSwitcher<(Layout)2>(), HaloDepthSpin, 2>&, const Spinorfield<floatT, true, (Layout)2, HaloDepthSpin, 2>&, bool);\
+  template void HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,2>::Dslash_stacked<2>(Spinorfield<floatT, true, LayoutSwitcher<(Layout)2>(), HaloDepthSpin, 2*2>&, const Spinorfield<floatT, true, (Layout)2, HaloDepthSpin, 2*2>&, bool);\
+  template class HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,4>;\
+  template void HisqDSlash<floatT,true,(Layout)2,HaloDepth,HaloDepthSpin,4>::Dslash_stacked<1>(Spinorfield<floatT, true, LayoutSwitcher<(Layout)2>(), HaloDepthSpin, 4>&, const Spinorfield<floatT, true, (Layout)2, HaloDepthSpin, 4>&, bool);
+INIT_PHHS(DSLASH_INIT2)
+#endif

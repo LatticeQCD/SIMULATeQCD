@@ -17,8 +17,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     const int HaloDepth = 2;
     const int HaloDepthSpin = 4;
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-
+   
     Gaugefield<floatT, onDevice, HaloDepth, R14> gauge(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepth, U3R14> gauge_Naik(commBase);
@@ -112,7 +111,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     dot = spinorOut_ref.dotProductStacked(spinorOut_ref);
     
-    for (int i = 0; i < NStacks*NStacks_cached; i++) {                                                                                                                                                                      
+    for (size_t i = 0; i < NStacks*NStacks_cached; i++) {                                                                                                                                                                      
          rootLogger.info("Testing for correctness: dot prod of difference = ", dot[i]);                                                                                                                           
      }    
     
@@ -196,7 +195,7 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-
+#ifdef USE_TILED_MULTIRHS
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------TESTING 1 STACK---------------");
     rootLogger.info("--------------------------------------");    
@@ -324,7 +323,24 @@ int main(int argc, char **argv) {
     test_dslash<float, Even, Odd, 8, 4, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 16, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 32, 1, true>(commBase, Vol);
+#else
+    rootLogger.info("--------------------------------------");
+    rootLogger.info("--------TESTING 1 STACK---------------");
+    rootLogger.info("--------------------------------------");    
+    test_dslash<float, Even, Odd, 1, 1, true>(commBase, Vol);
 
-
+    rootLogger.info("--------------------------------------");
+    rootLogger.info("--------Testing 2 STACKS--------------");
+    rootLogger.info("--------------------------------------");  
+    test_dslash<float, Even, Odd, 1, 2, true>(commBase, Vol); 
+    test_dslash<float, Even, Odd, 2, 1, true>(commBase, Vol);
+    
+    rootLogger.info("--------------------------------------");
+    rootLogger.info("--------Testing 4 STACKS--------------");
+    rootLogger.info("--------------------------------------");  
+    test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol); 
+    test_dslash<float, Even, Odd, 2, 2, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol);
+#endif
 
 }
