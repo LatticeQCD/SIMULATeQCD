@@ -55,7 +55,7 @@ int main(int argc, char **argv) {
         // run as a standalone programm using the parameter file
         rootLogger.info("Starting in Standalone Mode");
 
-        const int NStacks = 3; // NOTE: this only works after the blocksize fix
+        const int NStacks = 2; // NOTE: this only works for NStacks=8 after the blocksize fix
 
         for (double mass : param.valence_masses.get()) {
             rootLogger.info("Using mass ", mass);
