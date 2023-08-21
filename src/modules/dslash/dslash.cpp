@@ -40,7 +40,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ void HisqDslashThreadRHSFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    SimpleArray<gVect3<floatT>, NStacks> Stmp(0.0);
+    SimpleArray<gVect3<floatT>, NStacks> Stmp((floatT)0.0);
     #ifdef USE_CUDA
     #pragma unroll
     #endif
@@ -75,7 +75,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
     
     size_t stack_offset = GInd::getStack(site);
-        SimpleArray<gVect3<floatT>, NStacks> Stmp(0.0);
+        SimpleArray<gVect3<floatT>, NStacks> Stmp((floatT)0.0);
         #ifdef USE_CUDA
         #pragma unroll
         #endif
