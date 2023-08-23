@@ -394,7 +394,7 @@ struct squareClover3x3 {
         gSite threeRight = GInd::site_up(twoRight, mu); //(3,0)
         gSite twoRightUp = GInd::site_up(twoRight, nu); //(2,1)
         gSite twoRight2Up = GInd::site_up(twoRightUp, nu); //(2,2)
-        gSite twoRight3Up = GInd::site_up(twoRight3Up, nu); //(2,3)
+        gSite twoRight3Up = GInd::site_up(twoRight2Up, nu); //(2,3)
         gSite twoRightDn = GInd::site_dn(twoRight, nu); //(2,-1)
         gSite twoRight2Dn = GInd::site_dn(twoRightDn, nu); //(2,-2)
         gSite twoRight3Dn = GInd::site_dn(twoRight2Dn, nu); //(2,-2)
