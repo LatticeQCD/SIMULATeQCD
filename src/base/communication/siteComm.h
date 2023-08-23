@@ -284,12 +284,12 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
-        if (_commBase.getNumberProcesses() == 1)
+        if (_commBase.getNumberProcesses() == 1 && !_commBase.forceHalos())
         {
             return;
         }
 
-        // markerBegin("updateAll", "Communication");
+        markerBegin("updateAll", "Communication");
         
         gpuError_t gpuErr;
 
@@ -352,7 +352,7 @@ public:
                 _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
             }
         }
-        // markerEnd();
+        markerEnd();
     }
 };
 

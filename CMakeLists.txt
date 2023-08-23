@@ -4,7 +4,7 @@
 # CMake file for programs using the multiGPU code. Compilation target definitions are organized by type, and then
 # alphabetically. Please try to follow these guidelines when adding your target.
 #
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Get the latest abbreviated commit hash of the working branch
 execute_process(
@@ -66,10 +66,15 @@ set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH};$ENV{MPICH_DIR}/include")
 set(SIMULATEQCD_LIBRARIES "${MPI_LIBRARIES}")
 
 if (USE_CUDA OR USE_HIP_NVIDIA)
-    find_package(CUDA 11.0 REQUIRED)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if (CMAKE_CUDA_COMPILER_LOADED)
+        enable_language(CUDA)
+    endif()
     set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++17")
     set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++17")
-    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${CUDA_INCLUDE_DIRS}")
+    find_package(CUDAToolkit REQUIRED)
+    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${CUDA_LIBRARIES}")
 endif()
 
@@ -85,7 +90,7 @@ if (USE_HIP)
     endif()
 
     #set(CMAKE_MODULE_PATH "${HIP_PATH}/hip/cmake" ${CMAKE_MODULE_PATH})
-    find_package(HIP REQUIRED)
+    enable_language(HIP)
     find_package(hipcub REQUIRED CONFIG PATHS "${HIP_PATH}/hipcub/")
 
     if(USE_HIP_AMD)
