@@ -48,7 +48,7 @@ struct UnitKernel{
     gaugeAccessor<floatT,comp> gaugeAccessor;
     explicit UnitKernel(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : gaugeAccessor(gauge.getAccessor()){}
     __device__ __host__ GSU3<floatT> operator()(gSiteMu siteMu){
-        typedef GIndexer<All,HaloDepth> GInd;
+        
         GSU3<double> temp;
         temp=gaugeAccessor.template getLink<double>(siteMu);
         temp.su3unitarize();

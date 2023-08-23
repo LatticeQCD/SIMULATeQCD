@@ -24,15 +24,62 @@
 #include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
-#ifndef USE_HIP_AMD
-    #include "nvToolsExt.h"
-#endif
 #include "deviceEvent.h"
-#include "HaloLoop.h"
 #include "deviceStream.h"
+#include "../wrapper/marker.h"
 
 
 #include "../indexer/HaloIndexer.h"
+
+#include "calcGSiteHalo_dynamic.h"
+
+
+template<size_t ElemCount, Layout LatLayout, size_t HaloDepth>
+class HaloSegmentConfig {
+    int _N;
+
+    HaloType _currentHaltype;
+    HaloSegment _hseg;
+    int _subIndex;
+    int _dir;
+    int _leftRight;
+
+    int _index;
+    int _size;
+    int _length;
+
+    public:
+    HaloSegmentConfig(int N) 
+    {
+        typedef HaloIndexer<LatLayout, HaloDepth> HInd;
+        _N = N;
+        
+        HSegSelector HS = HSegSelector(N);
+        _hseg = HS.haloSeg();
+        _dir = HS.dir();
+        _leftRight = HS.leftRight();
+        _subIndex = HS.subIndex();
+        _currentHaltype = HS.haloType();
+
+        _index = haloSegmentCoordToIndex(_hseg, _dir, _leftRight);
+        _length = HInd::get_SubHaloSize(_index);
+        _size = HInd::get_SubHaloSize(_index) * ElemCount;
+    }
+
+    HaloSegment hseg() { return _hseg; }
+    int dir() { return _dir; }
+    int leftRight() { return _leftRight; }
+    int subIndex() { return _subIndex; }
+    HaloType currentHaltype() { return _currentHaltype; }
+
+    int index() {return _index; }
+    int length() {return _length; }
+    int size() { return _size; }
+
+};
+
+
+
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 class siteComm : public RunFunctors<onDevice, Accessor> {
@@ -61,6 +108,10 @@ private:
     void _extractHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
 
     void _injectHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
+    
+
+    std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_send_vec;
+    std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_recv_vec;
 
 public:
     //! constructor
@@ -167,6 +218,26 @@ public:
             GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
         }
 #endif
+        
+        commB.globalBarrier();
+        if (onDevice) {
+            if (commB.gpuAwareMPIAvail() || commB.useGpuP2P()) {
+                for(int N = 0; N < 80; N++){
+                    using HaloSegmentConfig_def = HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>;
+                    
+                    HaloSegmentConfig_def HSegConfig_send = HaloSegmentConfig_def(N);
+                    HaloSegmentConfig_def HSegConfig_recv = HaloSegmentConfig_def(N);
+
+                    if(HSegConfig_send.size() != 0){
+                        HSegConfig_send_vec.push_back(HSegConfig_send);
+                            
+                    }
+                    if(HSegConfig_recv.size() != 0){
+                        HSegConfig_recv_vec.push_back(HSegConfig_recv);
+                    }
+                }
+            }
+        }
         commB.globalBarrier();
     }
 
@@ -213,6 +284,13 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
+        if (_commBase.getNumberProcesses() == 1 && !_commBase.forceHalos())
+        {
+            return;
+        }
+
+        markerBegin("updateAll", "Communication");
+        
         gpuError_t gpuErr;
 
         /// A check that we don't have multiGPU and halosize=0:
@@ -274,6 +352,7 @@ public:
                 _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
             }
         }
+        markerEnd();
     }
 };
 
@@ -370,6 +449,29 @@ siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, 
 }
 
 
+
+
+template<class floatT, class Accessor, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
+struct ExtractInnerHaloSeg {
+
+    Accessor _acc;
+    Accessor _hal_acc;
+    typedef GIndexer<LatLayout, HaloDepth> GInd;
+    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
+
+    ExtractInnerHaloSeg(Accessor acc, Accessor hal_acc) :
+        _acc(acc), _hal_acc(hal_acc) {}
+
+    inline __host__ __device__ void operator()(HaloSite site) {
+
+        for (size_t mu = 0; mu < ElemCount; mu++) {
+            size_t index = _acc.template getIndexComm<LatLayout, HaloDepth>(site.LatticeIndex, mu);
+            _hal_acc.setEntriesComm(_acc, site.LocHalIndex * ElemCount + mu, index);
+        }
+    }
+};
+
+
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalosSeg(
         Accessor acc,
@@ -382,24 +484,138 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
     }
 
     _commBase.globalBarrier();
-    extractLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(acc, _commBase, HaloInfo,
-                                                                                              HaloBuffer, param);
+
+    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
+    for (auto &HSegConfig : HSegConfig_send_vec){
+
+
+        HaloType currentHaltype = HSegConfig.currentHaltype();
+        if (param & currentHaltype) {
+                HaloSegment hseg = HSegConfig.hseg();
+                int dir = HSegConfig.dir();
+                int leftRight = HSegConfig.leftRight();
+                int subIndex = HSegConfig.subIndex();
+
+                int size = HSegConfig.size();
+                int length = HSegConfig.length();
+                int index = HSegConfig.index();
+
+                HaloSegmentInfo &segmentInfo = HaloInfo.get(hseg, dir, leftRight);
+                NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
+                ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
+
+                GCOMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
+                Accessor hal_acc = Accessor(pointer, size);
+
+                int streamNo = 0;
+                ExtractInnerHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> extractLeft(acc, hal_acc);
+                iterateFunctorNoReturn<onDevice>(extractLeft, CalcInnerHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
+                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+
+                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
+                    p2pCopyEvent.start.record(segmentInfo.getDeviceStream());
+                }
+
+                if ( (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) ||
+                        (onDevice && _commBase.gpuAwareMPIAvail()) )
+                {
+                    segmentInfo.synchronizeStream(streamNo);
+                }
+
+                _commBase.updateSegment(hseg, dir, leftRight, HaloInfo);
+
+                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
+                    p2pCopyEvent.stop.record(segmentInfo.getDeviceStream());
+                }
+        }
+    }
+
     HaloInfo.syncAllStreamRequests();
     _commBase.globalBarrier();
 }
+
+
+
+template<class floatT, class Accessor, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
+struct InjectOuterHaloSeg {
+
+    Accessor _acc;
+    Accessor _hal_acc;
+    typedef GIndexer<LatLayout, HaloDepth> GInd;
+
+    InjectOuterHaloSeg(Accessor acc, Accessor hal_acc) :
+        _acc(acc), _hal_acc(hal_acc) {
+        }
+
+    inline __host__ __device__ void operator()(HaloSite site) {
+
+        for (size_t mu = 0; mu < ElemCount; mu++) {
+            size_t index = _acc.template getIndexComm<LatLayout, HaloDepth>(site.LatticeIndex, mu);
+            _acc.setEntriesComm(_hal_acc, index, site.LocHalIndex * ElemCount + mu);
+        }
+    }
+};
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalosSeg(
         Accessor acc,
         GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
-    injectLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(_commBase, HaloInfo,
-                                                                                         acc,
-                                                                                         HaloBuffer,
-                                                                                         param);
+    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
+
+    for (auto &HSegConfig : HSegConfig_recv_vec){
+        
+
+        HaloType currentHaltype = HSegConfig.currentHaltype();
+
+        if (param & currentHaltype) {
+                HaloSegment hseg = HSegConfig.hseg();
+                int dir = HSegConfig.dir();
+                int leftRight = HSegConfig.leftRight();
+                int subIndex = HSegConfig.subIndex();
+
+                int size = HSegConfig.size();
+                int length = HSegConfig.length();
+
+
+                int index = HSegConfig.index();
+
+
+                HaloSegmentInfo &segmentInfo = HaloInfo.get(hseg, dir, leftRight);
+                NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
+                ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
+
+
+
+
+                GCOMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
+                Accessor hal_acc = Accessor(pointer, size);
+                int streamNo = 1;
+
+                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
+                    p2pCopyEvent.streamWaitForMe(segmentInfo.getDeviceStream(streamNo));
+                }
+
+                if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {
+                    segmentInfo.synchronizeStream(0);
+                }
+                if (!onDevice || (onDevice && !_commBase.useGpuP2P())) {
+                    segmentInfo.synchronizeRequest();
+                }
+
+                InjectOuterHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> injectLeft(acc, hal_acc);
+
+                iterateFunctorNoReturn<onDevice>(injectLeft, CalcOuterHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
+                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+        }
+    }
+
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
-        GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
+        GpuError("siteComm.h: _injectHalosSeg, gpuDeviceSynchronize failed:", gpuErr);
     }
     _commBase.globalBarrier();
 

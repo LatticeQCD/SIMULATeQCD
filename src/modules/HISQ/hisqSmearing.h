@@ -126,8 +126,8 @@ private:
           staple7_6_lvl2(_gauge_lvl1.getAccessor()),
           staple7_7_lvl2(_gauge_lvl1.getAccessor()),
           staple7_8_lvl2(_gauge_lvl1.getAccessor()),
-          stapleLepage(_gauge_lvl1.getAccessor()),
-          stapleNaik(_gauge_lvl1.getAccessor()) {}
+          stapleNaik(_gauge_lvl1.getAccessor()),
+          stapleLepage(_gauge_lvl1.getAccessor()) {}
 
     void SmearAll(floatT mu_f=0.0, bool multiplyPhase = true);
 

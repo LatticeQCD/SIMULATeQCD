@@ -17,14 +17,14 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
 
     LatticeParameters param;
-    CommunicationBase commBase(&argc, &argv);
+    bool forceHalos = true;
+    CommunicationBase commBase(&argc, &argv, forceHalos);
     param.readfile(commBase, "../parameter/tests/CompressionTest.param", argc, argv);
     commBase.init(param.nodeDim());
 
     const int HaloDepth = 2;
-    bool forceHalos = true;
     rootLogger.info("Initialize Lattice");
-    initIndexer(HaloDepth,param,commBase,forceHalos);
+    initIndexer(HaloDepth,param,commBase);
 
     rootLogger.info("Initialize Gaugefields");
 

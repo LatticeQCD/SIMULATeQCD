@@ -13,7 +13,7 @@
 #include "../base/communication/siteComm.h"
 #include "../base/communication/communicationBase.h"
 #include "../base/math/simpleArray.h"
-#include "../base/static_for_loop.h"
+#include "../base/utilities/static_for_loop.h"
 #include <memory>
 
 template <Layout parity>

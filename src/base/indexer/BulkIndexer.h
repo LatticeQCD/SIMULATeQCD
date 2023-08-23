@@ -301,7 +301,7 @@ void initGPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int
 void initCPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int Nodes[4], unsigned int Halos[4]);
 
 class CommunicationBase;
-void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm, bool forceAllHalos = false);
+void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm);
 
 /// ----------------------------------------------------------------------------------------------------------- GINDEXER
 
@@ -571,7 +571,10 @@ public:
     __device__ __host__ inline static gSiteStack getSiteStack(sitexyzt coord, int stack) {
         return getSiteStack(getSite(coord.x, coord.y, coord.z, coord.t), stack);
     }
-
+    __device__ __host__ inline static size_t getStack(const gSiteStack& site) {
+        return site.stack;
+    }
+    
     __device__ __host__ inline static gSiteStack getSiteStackOdd(const gSite& site, const size_t stack){
         size_t isiteStack;
         size_t isiteStackFull;

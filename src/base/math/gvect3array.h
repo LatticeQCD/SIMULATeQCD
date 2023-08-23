@@ -74,7 +74,7 @@ struct gVect3arrayAcc : public GeneralAccessor<GCOMPLEX(floatT), 3 > {
     }
 
     template<class floatT_compute=floatT>
-    __host__ __device__ inline void setElementComm(size_t isiteFull, size_t stack, const gVect3<floatT_compute> &vec) {
+    __host__ __device__ inline void setElementComm(size_t isiteFull, __attribute__((unused)) size_t stack, const gVect3<floatT_compute> &vec) {
         gSiteStack site;
         site.isiteFull = isiteFull;
         site.isiteStackFull = isiteFull;

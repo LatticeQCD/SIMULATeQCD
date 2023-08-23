@@ -20,17 +20,15 @@
 #include "base/memoryManagement.h"
 #include "base/stopWatch.h"
 #include "base/runFunctors.h"
-#include "base/staticArray.h"
-#include "base/static_for_loop.h"
+#include "base/utilities/staticArray.h"
+#include "base/utilities/static_for_loop.h"
 
 #include "base/communication/communicationBase.h"
 #include "base/communication/deviceEvent.h"
 #include "base/communication/deviceStream.h"
 #include "base/communication/gpuIPC.h"
-#include "base/communication/HaloLoop.h"
   // Contains:
   //   base/communication/calcGSiteHalo_dynamic.h
-  //   base/communication/calcGSiteHalo.h
 #include "base/communication/haloOffsetInfo.h"
 #include "base/communication/neighborInfo.h"
 #include "base/communication/siteComm.h"
@@ -64,6 +62,7 @@
 #include "base/math/su3Exp.h"
 
 #include "base/wrapper/gpu_wrapper.h"
+#include "base/wrapper/marker.h"
 
 /// --------------------------------------------------------------------------------------------------- GAUGE AND SPINOR
 

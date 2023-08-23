@@ -175,11 +175,12 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/HaloTest.param", argc, argv);
     commBase.init(param.nodeDim());
-
+    
+    commBase.forceHalos(param.forceHalos());
     const int HaloDepth = 4;
 
     rootLogger.info("Initialize Lattice");
-    initIndexer(HaloDepth,param, commBase, param.forceHalos());
+    initIndexer(HaloDepth,param, commBase);
 
     run_func<HaloDepth,true>(commBase,  param.nodeDim(), param.forceHalos());
     run_func<HaloDepth,false>(commBase, param.nodeDim(), param.forceHalos());

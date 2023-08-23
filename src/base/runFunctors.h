@@ -11,12 +11,17 @@
 #include "../base/gutils.h"
 #include "math/operators.h"
 #include "../base/communication/communicationBase.h"
+// #include "../base/utilities/ParseObjectName.h"
+#include "wrapper/marker.h"
 
 #include "../base/indexer/HaloIndexer.h"
 
 #define DEFAULT_NBLOCKS  128
 #define DEFAULT_NBLOCKS_LOOP  128
 #define DEFAULT_NBLOCKS_CONST  256
+
+
+
 
 template<bool onDevice, class Accessor>
 class RunFunctors {
@@ -56,6 +61,7 @@ __host__ __device__ static dim3 GetUint3(dim3 Idx){
 #endif
 
 
+
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
 
@@ -76,7 +82,7 @@ auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(
 
 template<size_t Nloops, typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
-        CalcWriteInd calcWriteInd, const size_t size_x, size_t Nmax=Nloops) {
+        CalcWriteInd calcWriteInd, const size_t size_x, __attribute__((unused)) size_t Nmax=Nloops) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {
@@ -91,11 +97,10 @@ __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcRea
     auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
 #endif
     op.initialize(site);
-#ifdef USE_CUDA
-#pragma unroll
-#endif
+// #ifdef USE_CUDA
+#pragma unroll Nloops
+// #endif
     for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++){
-        if(loopIdx >= Nmax) break;
         res.setElement(calcWriteInd(site, loopIdx), op(site, loopIdx));
     }
 }
@@ -133,7 +138,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -143,12 +148,13 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     if (onDevice) {
 #ifdef __GPUCC__
-
+        // markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctor<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL(performFunctor, dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #endif
+        // markerEnd();
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
@@ -197,7 +203,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -214,11 +220,13 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     if (onDevice) {
 #ifdef __GPUCC__
 
+        // markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorLoop<Nloops> <<< gridDim, blockDim, 0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x, Nmax);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorLoop<Nloops>), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x,         Nmax);
 #endif
+        // markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -276,7 +284,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -286,13 +294,13 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     if (onDevice) {
 #ifdef __GPUCC__
-
+        // markerBegin(type_name<Object>(), "KernelCall (const object)");
 #ifdef USE_CUDA
         performCopyConstObject<<< gridDim, blockDim,0, stream >>> (getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performCopyConstObject), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #endif
-
+        // markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -364,7 +372,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -376,11 +384,13 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #ifdef __GPUCC__
 
 
+        // markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorNoReturn), dim3(gridDim), dim3(blockDim), 0, stream , op, calcReadInd, elems_x);
 #endif
+        // markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -448,7 +458,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize;
+    blockDim.x = BlockSize/(elems_y * elems_z);
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -459,11 +469,13 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     if (onDevice) {
 #ifdef __GPUCC__
 
+        // markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorComm<<< gridDim, blockDim, 0, stream >>> (op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorComm), dim3(gridDim), dim3(blockDim), 0, stream , op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #endif
+        // markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)

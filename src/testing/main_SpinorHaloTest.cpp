@@ -244,10 +244,11 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/SpinorHaloTest.param", argc, argv);
     commBase.init(param.nodeDim());
-
+    
+    commBase.forceHalos(param.forceHalos());
     const int HaloDepth = 2;
-
-    initIndexer(HaloDepth,param, commBase, param.forceHalos());
+    
+    initIndexer(HaloDepth,param, commBase);
 
     run_func<HaloDepth,true, 1>(commBase, param.nodeDim(),param.forceHalos());
     run_func<HaloDepth,true, 8>(commBase, param.nodeDim(),param.forceHalos());

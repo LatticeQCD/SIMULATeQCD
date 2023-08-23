@@ -357,7 +357,7 @@ __device__ __host__ gVect3<floatT> operator+(const gVect3<floatT> &x,const gVect
     z._v0 = x._v0 + y._v0;
     z._v1 = x._v1 + y._v1;
     z._v2 = x._v2 + y._v2;
-    return (z);
+    return z;
 }
 
 template <class floatT>
@@ -367,7 +367,7 @@ __device__ __host__ gVect3<floatT> operator-(const gVect3<floatT> &x,const gVect
     z._v0 = x._v0 - y._v0;
     z._v1 = x._v1 - y._v1;
     z._v2 = x._v2 - y._v2;
-    return (z);
+    return z;
 }
 
 template <class floatT>
@@ -377,7 +377,7 @@ __device__ __host__ gVect3<floatT> operator*(const GCOMPLEX(floatT)& x,const gVe
     z._v0 = x * y._v0;
     z._v1 = x * y._v1;
     z._v2 = x * y._v2;
-    return (z);
+    return z;
 }
 
 template <class floatT>
@@ -387,7 +387,7 @@ __device__ __host__ gVect3<floatT> operator*(const floatT & x,const gVect3<float
     z._v0 = x * y._v0;
     z._v1 = x * y._v1;
     z._v2 = x * y._v2;
-    return (z);
+    return z;
 }
 
 template <class floatT>
@@ -397,7 +397,7 @@ __device__ __host__ gVect3<floatT> operator*(const gVect3<floatT>& x,const GCOMP
     z._v0 = x._v0 * y;
     z._v1 = x._v1 * y;
     z._v2 = x._v2 * y;
-    return (z);
+    return z;
 }
 
 template <class floatT>
@@ -407,7 +407,7 @@ __device__ __host__ gVect3<floatT> operator*(const gVect3<floatT>& x,const float
     z._v0 = x._v0 * y;
     z._v1 = x._v1 * y;
     z._v2 = x._v2 * y;
-    return (z);
+    return z;
 }
 
 //! complex dot product x*y = sum_i(v_i conj(w_i))
@@ -451,7 +451,7 @@ __device__ __host__ gVect3<floatT> conj(const gVect3<floatT> &x)
     z._v0 = conj(x._v0);
     z._v1 = conj(x._v1);
     z._v2 = conj(x._v2);
-    return (z);
+    return z;
 }
 
 

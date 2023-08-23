@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
     StopWatch<true> timer;
 
     /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
-    CommunicationBase commBase(&argc, &argv);
+    CommunicationBase commBase(&argc, &argv, true);
     commBase.init(param.nodeDim());
 
     /// Set the HaloDepth. It should be a constant values, since this value should be passed as an non-type template
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     /// highlight the output differently.
     rootLogger.info("Initialize Lattice");
     /// Initialize the Indexer on GPU and CPU.
-    initIndexer(HaloDepth,param,commBase,true);
+    initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;
 
 
@@ -158,11 +158,17 @@ int main(int argc, char *argv[]) {
     LatticeContainer<true,PREC> redBase(commBase);
     /// We need to tell the Reductionbase how large our Array will be
     redBase.adjustSize(GInd::getLatData().vol4);
+    grnd_state<false> h_rand;
+    grnd_state<true> d_rand;
+
+    h_rand.make_rng_state(1337);
+    d_rand = h_rand;
+
 
     /// Read a configuration from hard drive.
     rootLogger.info("Read configuration");
-    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
-
+    //    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
+    gauge.random(d_rand.state);
     /// start timer...
     timer.start();
     /// define variable where the plaquette should be stored.

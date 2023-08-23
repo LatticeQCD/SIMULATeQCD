@@ -21,6 +21,7 @@
 #include "memoryManagement.h"
 #include "../base/runFunctors.h"
 #include "math/operators.h"
+#include "wrapper/marker.h"
 
 template<class floatT>
 gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size);
@@ -162,7 +163,7 @@ public:
 
     /// Reduce local per rank.
     void reduceStackedLocal(std::vector<elemType> &values, size_t NStacks, size_t stackSize, bool sequentialLoop = false){
-
+        // markerBegin("reduceStackedLocal", "Reduction");
         if (values.size() < NStacks) {
             values.resize(NStacks);
         }
@@ -236,6 +237,7 @@ public:
                 }
             }
         }
+        // markerEnd();
     }
 
 
@@ -247,6 +249,7 @@ public:
 
 
     void reduce(elemType &value, size_t size, bool rootToAll = false) {
+        // markerBegin("reduce", "Reduction");
         elemType result = 0;
 
         if (onDevice) {
@@ -275,9 +278,11 @@ public:
         }
         value = comm.reduce(result);
         if (rootToAll) comm.root2all(result);
+        // markerEnd();
     }
 
     void reduceMax(elemType &value, size_t size, bool rootToAll = false) {
+        // markerBegin("reduceMax", "Reduction");
         elemType result = 0;
 
         if (onDevice) {
@@ -308,6 +313,7 @@ public:
         }
         value = comm.globalMaximum(result);
         if (rootToAll) comm.root2all(result);
+        // markerEnd();
     }
 
     LatticeContainerAccessor getAccessor() const { return LatticeContainerAccessor(ContainerArray->getPointer()); }

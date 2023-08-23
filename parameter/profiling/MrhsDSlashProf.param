@@ -4,5 +4,5 @@
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
 #
-Lattice     = 20 20 20 20
-Nodes       = 2 1 1 1
+Lattice     = 32 32 32 32
+Nodes       = 1 1 1 1

@@ -4,7 +4,7 @@
 # CMake file for programs using the multiGPU code. Compilation target definitions are organized by type, and then
 # alphabetically. Please try to follow these guidelines when adding your target.
 #
-cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 
 # Get the latest abbreviated commit hash of the working branch
 execute_process(
@@ -62,14 +62,19 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(MPI 3.1 REQUIRED)
 
 
-set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH}")
+set(SIMULATEQCD_INCLUDE_DIRS "${MPI_INCLUDE_PATH};$ENV{MPICH_DIR}/include")
 set(SIMULATEQCD_LIBRARIES "${MPI_LIBRARIES}")
 
 if (USE_CUDA OR USE_HIP_NVIDIA)
-    find_package(CUDA 11.0 REQUIRED)
+    include(CheckLanguage)
+    check_language(CUDA)
+    if (CMAKE_CUDA_COMPILER_LOADED)
+        enable_language(CUDA)
+    endif()
     set(CMAKE_CUDA17_STANDARD_COMPILE_OPTION "-std=c++17")
     set(CMAKE_CUDA17_EXTENSION_COMPILE_OPTION "-std=c++17")
-    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${CUDA_INCLUDE_DIRS}")
+    find_package(CUDAToolkit REQUIRED)
+    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${CUDA_LIBRARIES}")
 endif()
 
@@ -84,16 +89,17 @@ if (USE_HIP)
         message(FATAL_ERROR "No HIP_PATH set!")
     endif()
 
-    set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
-    find_package(HIP REQUIRED)
+    #set(CMAKE_MODULE_PATH "${HIP_PATH}/hip/cmake" ${CMAKE_MODULE_PATH})
+    enable_language(HIP)
     find_package(hipcub REQUIRED CONFIG PATHS "${HIP_PATH}/hipcub/")
 
     if(USE_HIP_AMD)
         find_package(rocprim REQUIRED CONFIG PATHS "${HIP_PATH}/rocprim")
     endif()
-    
-    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_PATH}/include;${HIP_INCLUDE_DIRS}")
+    set(HIP_INCLUDE_DIRS "${HIP_PATH}/include")
+    set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_INCLUDE_DIRS}")
     set(SIMULATEQCD_LIBRARIES "${SIMULATEQCD_LIBRARIES};${HIP_LIBRARIES}")
+    message(STATUS "Using HIP_PATH ${HIP_PATH} with HIP_INCLUDE_DIRS: ${HIP_INCLUDE_DIRS} and HIP_INCLUDE_DIR: ${HIP_INCLUDE_DIR}")
 endif()
 
 include_directories(SYSTEM "${SIMULATEQCD_INCLUDE_DIRS}")
@@ -125,25 +131,37 @@ if (USE_GPU_AWARE_MPI)
 endif()
 set(USE_GPU_P2P ON CACHE BOOL "Set to ON to build with GPU Direct P2P (default = ON)")
 if (USE_GPU_P2P)
-    if(USE_HIP)
-        message(FATAL_ERROR "GPU_P2P is not supported by HIP!")
-    endif()
     add_definitions(-DUSE_GPU_P2P)
+endif()
+
+set(USE_MARKER OFF CACHE BOOL "Set to ON to build with GPU Marker API (default = OFF)")
+if (USE_MARKER)
+    add_definitions(-DUSE_MARKER)
+    if (USE_CUDA)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnvToolsExt")
+    elseif(USE_HIP)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
+    endif()
+endif()
+
+set(USE_TILED_MULTIRHS ON CACHE BOOL "Set to OFF to build without most Multi-RHS DSlash instantiations (default = ON)")
+if(USE_TILED_MULTIRHS)
+    add_definitions(-DUSE_TILED_MULTIRHS)
 endif()
 
 
 # Additional compiler flags
 if (USE_CUDA)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -fPIC")
     set(CMAKE_CUDA_FLAGS
-        "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true")
+        "${CMAKE_CUDA_FLAGS} -O3 -Wno-deprecated-gpu-targets --std=c++17 -arch=sm_${ARCHITECTURE} -Xcudafe --display_error_number -prec-div=true -prec-sqrt=true --expt-relaxed-constexpr")
 
 elseif (USE_HIP_AMD)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fgpu-rdc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -Wno-deprecated-copy-with-user-provided-copy -fPIC -fgpu-rdc")
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "-O3 -fgpu-rdc --hip-link")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link")
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
@@ -241,7 +259,11 @@ set(REALLY_ALL_NSTACK
     NSTACKS_7=1
     NSTACKS_9=1
     NSTACKS_10=1
-    NSTACKS_11=1)
+    NSTACKS_11=1
+    NSTACKS_15=1
+    NSTACKS_16=1
+    NSTACKS_20=1
+    NSTACKS_32=1)
 set(ALL_LAYOUTS
     LAYOUT_ALL=1
     LAYOUT_ODD=1
@@ -350,22 +372,22 @@ FUNCTION(add_SIMULATeQCD_executable TARGET)
             PROPERTIES
             COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
     elseif (USE_HIP_AMD)
-        hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-        hip_add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
 
 # This might work in the future
-#        hip_add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
 #        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
         set_target_properties(${TARGET} _${TARGET}
             PROPERTIES
-            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON)
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON PUBLIC "-L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
 
     elseif (USE_HIP_NVIDIA)
-        hip_add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
-        hip_add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
+        add_executable(_${TARGET} ${ARGN} ${SOURCE_FILES_BASE}) # single target
 
 # This might work in the future
-#        hip_add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
 #        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
         set_target_properties(${TARGET} _${TARGET}
             PROPERTIES
@@ -656,13 +678,13 @@ if (USE_CUDA)
     add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON CUDA_SEPARABLE_COMPILATION ON RUNTIME_OUTPUT_DIRECTORY "testing")
 elseif (USE_HIP_AMD)
-    hip_add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
-    hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
 elseif (USE_HIP_NVIDIA)
-    hip_add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
-    hip_add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    add_executable(SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
+    add_executable(_SimpleFunctorTest src/testing/main_SimpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(SimpleFunctorTest _SimpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
 endif()
@@ -716,11 +738,21 @@ set_SIMULATeQCD_property(InverterProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profi
 SIMULATeQCD_target_compile_definitions(InverterProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers InverterProf)
 
+if (USE_TILED_MULTIRHS)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_MrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
 add_SIMULATeQCD_executable(MultiRHSProf src/profiling/main_MrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
 set_SIMULATeQCD_property(MultiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 ${REALLY_ALL_NSTACK} ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1  ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf)
+else()
+set_SIMULATeQCD_gpu_backend(src/profiling/main_MrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
+add_SIMULATeQCD_executable(MultiRHSProf src/profiling/main_MrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
+set_SIMULATeQCD_property(MultiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(MultiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_4=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers MultiRHSProf)
+endif()
+
+
 
 if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 
@@ -771,7 +803,7 @@ add_to_compound_SIMULATeQCD_target(examples WilsonLinesFieldsShared)
 set_SIMULATeQCD_gpu_backend(src/applications/main_configConverter.cpp)
 add_SIMULATeQCD_executable(configConverter src/applications/main_configConverter.cpp) 
 set_SIMULATeQCD_property(configConverter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
+SIMULATeQCD_target_compile_definitions(configConverter PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(applications configConverter)
 
 add_SIMULATeQCD_executable(CheckConf src/applications/main_CheckConf.cpp)

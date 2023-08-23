@@ -134,7 +134,7 @@ private:
     void init();
 
     void byte_swap() {
-        for (long i = 0; i < buffer.size(); i++)
+        for (size_t i = 0; i < buffer.size(); i++)
             Byte_swap(buffer[i]);
     }
 

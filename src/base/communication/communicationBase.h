@@ -120,6 +120,7 @@ enum IO_Mode {
 
 class CommunicationBase {
 private:
+    bool _forceHalos;
     int world_size; /// Total number of processes
 
     LatticeDimensions dims;
@@ -141,12 +142,11 @@ private:
     void initNodeComm();
 
 public:
-    CommunicationBase(int *argc, char ***argv);
+    CommunicationBase(int *argc, char ***argv, bool forceHalos=false);
 
     void init(const LatticeDimensions &Dim, const LatticeDimensions &Topo = LatticeDimensions());
 
     ~CommunicationBase();
-
 
     bool gpuAwareMPIAvail() const {
 #ifdef USE_GPU_AWARE_MPI
@@ -171,6 +171,8 @@ public:
     bool IamRoot() const RET0_IF_SCALAR;
 
     int MyRank() { return myInfo.world_rank; }
+    bool forceHalos() const { return _forceHalos; }
+    void forceHalos(bool forceHalos) { _forceHalos = forceHalos; }
 
     int getNumberProcesses() { return world_size; }
 
