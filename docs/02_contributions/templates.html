@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Template instantiation &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Terminal output &amp; terminating the program" href="terminalIO.html" />
+    <link rel="prev" title="General structure of the code" href="codeStructure.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="contributions.html">Contributions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="codeStyle.html">Our coding style</a></li>
+<li class="toctree-l2"><a class="reference internal" href="git.html">How to do pull requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="codeStructure.html">General structure of the code</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Template instantiation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="terminalIO.html">Terminal output &amp; terminating the program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timer.html">Timing your code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inputParameter.html">How to make an input parameter file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="memoryAllocation.html">Memory Management</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiGPU.html">Multi-GPU: Distribution of local lattices on the individual GPUs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing the code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documenting.html">Documenting your code</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
+      <li class="breadcrumb-item active">Template instantiation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/02_contributions/templates.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="template-instantiation">
+<h1>Template instantiation<a class="headerlink" href="#template-instantiation" title="Link to this heading"></a></h1>
+<p>In order to make our code as flexible as possible and to reduce code repetition, we make
+extensive use of C++ templates. At the same time, we would like to put kernel implementations
+into <code class="docutils literal notranslate"><span class="pre">cpp</span></code> files in order to reduce build times.
+This requires explicitly instantiating all possible template parameter combinations,
+which is itself repetitive, messy, and tedious.</p>
+<p>In order to help streamline this process we have introduced explicit instantiation macros,
+which help automate the instantiation of the most commonly used template parameters.
+These macros are kept in the header file <code class="docutils literal notranslate"><span class="pre">explicit_instantiation_macros.h</span></code>.
+For example one can instantiate a generic class <code class="docutils literal notranslate"><span class="pre">INIT_CLASS</span></code> for all possible precisions,
+halo depths, and gauge field compression types using <code class="docutils literal notranslate"><span class="pre">INIT_PHC(INIT_CLASS)</span></code>.</p>
+<p>When you want to implement your own kernel in a <code class="docutils literal notranslate"><span class="pre">cpp</span></code> file, you will therefore need
+to make sure that you add the following:</p>
+<ol class="arabic simple">
+<li><p>You have an appropriate forward declaration in your header file.</p></li>
+<li><p>You have instantiated all possible template parameter combinations at the bottom
+of your <code class="docutils literal notranslate"><span class="pre">cpp</span></code> file. Here the instantiation macros can assist you.</p></li>
+<li><p>You have included your <code class="docutils literal notranslate"><span class="pre">cpp</span></code> file in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> with all flags for your template
+parameters set as you desire. See also our <a class="reference internal" href="codeStructure.html"><span class="std std-doc">code structure</span></a> article.</p></li>
+</ol>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

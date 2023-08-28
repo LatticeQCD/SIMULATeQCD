@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gradient Flow &mdash; SIMULATeQCD 0.7 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Multi-level algorithm" href="multiLevel.html" />
+    <link rel="prev" title="Gauge Fixing" href="gaugeFixing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Gradient Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multiLevel.html">Multi-level algorithm</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rhmc.html">Rational Hybrid Monte Carlo</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../05_modules/modules.html">Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="applications.html">Applications</a></li>
+      <li class="breadcrumb-item active">Gradient Flow</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/03_applications/gradientFlow.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="gradient-flow">
+<h1>Gradient Flow<a class="headerlink" href="#gradient-flow" title="Link to this heading"></a></h1>
+<p>Currently there are two different implementations of the gradient flow,
+the Wilson flow and the Zeuthen flow (Symanzik improved flow. See
+<a class="reference external" href="https://arxiv.org/abs/1508.05552">arxiv:1508.05552</a>).
+The flow can be integrated using a standard Runge Kutta 3 or an adaptive
+step size Runge Kutta 3.</p>
+<p>To compile the <code class="docutils literal notranslate"><span class="pre">gradientFlow</span></code> executable run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">gradientFlow</span> <span class="o">-</span><span class="n">j</span><span class="o">&lt;</span><span class="n">NumberOfCores</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>This can take up to 60+ minutes (depending on the Hardware). If you only
+want to use the zeuthen force and the adaptive step size Runge-Kutta, you
+can also compile <code class="docutils literal notranslate"><span class="pre">gradientFlow_zeuthen</span></code>, which will only take 20 minutes
+to compile. (The most compile time is consumed by <code class="docutils literal notranslate"><span class="pre">topology.cpp</span></code>.)</p>
+<p>To run the program, one needs a parameter file. It should take these
+parameters:</p>
+<div class="toggle admonition">
+<p class="admonition-title">Parameters:</p>
+<div class="highlight-Text notranslate"><div class="highlight"><pre><span></span>Lattice = 20 20 20 20
+Nodes = 1 1 1 1
+beta = 6.498
+Gaugefile = ../test_conf/l20t20b06498a_nersc.302500  # Path to input configuration.
+format = nersc                                       # Format of input configuration.
+endianness = auto                                    # Endianness of input configuration.
+conf_nr = 302500                                     # Configuration number (optional).
+force = zeuthen                                      # specify if you want to have the Wilson flow (&quot;wilson&quot;) or Zeuthen flow (&quot;zeuthen&quot;).
+start_step_size = 0.01                               # The (start) step size of the Runge Kutta integration.
+RK_method = adaptive_stepsize                        # Set to fixed_stepsize, adaptive_stepsize or adaptive_stepsize_allgpu (see below).
+accuracy = 0.01                                      # Specify the accuracy of the adaptive step size method.
+
+measurements_dir = ./                                # Measurement output directory
+measurement_intervall = 0 1                          # Flow time Interval which should be iterated.
+necessary_flow_times=0.25 0.5                        # Set the flow-times which shouldn&#39;t be skipped by the fixed or adaptive step size
+
+ignore_fixed_startstepsize = 0                       # ignore the fixed step size and infer steps izes from necessary_flow_times
+save_configuration = 0                               # Save the flowed configuration at each step? (0=no, 1=yes)
+
+binsize = 8                                          # used in the calculation of energy-momentum tensor correlators.
+
+# Set to 1 if you want to measure any of these observables (or 0 if not):
+plaquette = 1
+clover = 0
+cloverTimeSlices = 0
+topCharge = 0
+topCharge_imp = 0
+topChargeTimeSlices = 0
+topChargeTimeSlices_imp = 0
+energyMomentumTensor = 0
+ColorElectricCorrTimeSlices = 0
+ColorMagneticCorrTimeSlices = 0
+
+polyakovLoopCorrelator = 0
+GaugeFixTol = 1e-6
+GaugeFixNMax = 9000
+GaugeFixNUnitarize = 20
+</pre></div>
+</div>
+</div>
+<p>The parameter <code class="docutils literal notranslate"><span class="pre">RK_method</span></code> specifies the Runge-Kutta integration method.
+The options are <code class="docutils literal notranslate"><span class="pre">fixed_stepsize</span></code>, <code class="docutils literal notranslate"><span class="pre">adaptive_stepsize</span></code> (needs only 2 full
+Gaugefields on the GPU but is slower) or <code class="docutils literal notranslate"><span class="pre">adaptive_stepsize_allgpu</span></code>
+(needs 4 full Gaugefields on the GPU but is faster).</p>
+<p>Then program should be executed as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">srun</span> <span class="o">-</span><span class="n">n</span> <span class="o">&lt;</span><span class="n">NoOfGPUs</span><span class="o">&gt;</span> <span class="o">./</span><span class="n">gradientFlow</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">parameterFile</span> <span class="o">&lt;</span><span class="n">optionalParam</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">&lt;optionalParam&gt;</span></code>{=html} can be one of the above mentioned
+parameters (e.g. <code class="docutils literal notranslate"><span class="pre">start_step_size=0.02</span></code>), which then will be replaced in
+the parameter file.</p>
+<p>The results of <code class="docutils literal notranslate"><span class="pre">plaquette</span></code>, <code class="docutils literal notranslate"><span class="pre">clover</span></code>, <code class="docutils literal notranslate"><span class="pre">topCharge</span></code> and <code class="docutils literal notranslate"><span class="pre">topCharge_imp</span></code> will be
+writer in one (ASCII) output file. <code class="docutils literal notranslate"><span class="pre">cloverTimeSlices</span></code>,
+<code class="docutils literal notranslate"><span class="pre">topChargeTimeSlices</span></code>, <code class="docutils literal notranslate"><span class="pre">topChargeTimeSlices_imp</span></code> and
+<code class="docutils literal notranslate"><span class="pre">ColorElectricCorrTimeSlices</span></code> will be written in seperate (ASCII) output
+files.</p>
+<section id="which-flow-times-do-i-want">
+<h2>Which flow times do I want?<a class="headerlink" href="#which-flow-times-do-i-want" title="Link to this heading"></a></h2>
+<div class="toggle admonition">
+<p class="admonition-title">Notation</p>
+<p>This notation may differ from the notation you find in the literature
+(e.g., Lüscher’s papers). Remember temperature $T=\frac{1}{aN_\tau}$.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>lattice spacing</p></th>
+<th class="head text-right"><p>$a$</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>“physical” dimensionful flow time</p></td>
+<td class="text-right"><p>$\tau_\mathrm{F}=t_\mathrm{F} a^2$</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>dimensionless (lattice) flow time</p></td>
+<td class="text-right"><p>$\tau_\mathrm{F}/a^2\equiv t_\mathrm{F}$</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>dimensionless flow time in terms of fixed temperature</p></td>
+<td class="text-right"><p>$\tau_\mathrm{F} T^2= t_\mathrm{F} / N_\tau^2$</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>dimensionless flow radius in terms of fixed temperature</p></td>
+<td class="text-right"><p>$\sqrt{8\tau_\mathrm{F}}T = \sqrt{8t_\mathrm{F}}/N_\tau$</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>physical separation of operators on the lattice</p></td>
+<td class="text-right"><p>$\tau = at$</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>dimensionless (lattice) sepration</p></td>
+<td class="text-right"><p>$\tau/a \equiv t$</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In this section we briefly describe how to estimate which step size(s),
+<code class="docutils literal notranslate"><span class="pre">necessary_flow_times</span></code> and upper limit to use for a given set of
+lattices. In the parameter file you always specify the dimensionless
+flow time(s) $t_\mathrm{F}$.</p>
+<ul class="simple">
+<li><p>The leading order solution to the flowed gauge field reads
+$A^\mathrm{LO}<em>\mu(x,\tau</em>\mathrm{F}) = \int \mathrm{d}y
+\left(\sqrt{2\pi} \sqrt{8\tau_\mathrm{F}}/2\right)^{-4}
+\exp{\frac{-(x-y)^2}{\sqrt{8\tau_\mathrm{F}}^2/2}}
+A_\mu(y)$, which means that the gauge fields are smeared over a
+spherical extent with radius $\simeq \sqrt{8\tau_\mathrm{F}}$.</p></li>
+<li><p>For a correlation function $G(\tau)$, one can compare the flow
+radius with the separation $\tau$ of the correlation function in
+order to obtain an upper limit for the flow time range. In order for
+the operators to be well separated at a distance $\tau$ the flow
+time should obey $\sqrt{8\tau_\mathrm{F}} \leq \tau/2$. Most
+of the time you will probably have an even stricter upper limit
+because the contamination that is caused by overlapping operators
+(especially with improved discretizations that are non-local) will
+start much earlier.</p></li>
+<li><p>For the lower limit of the flow time you often want
+$\sqrt{8\tau_\mathrm{F}} \geq a $ so that
+$a^2/\tau_\mathrm{F}$-type corrections vanish and the operators
+are fully renormalized by the flow.</p></li>
+</ul>
+<p>In most cases one wants to compare the observables on different lattices
+at the same “physical” dimensionful flow time (or radius). Below you can
+find two examples on how to achieve this.</p>
+<div class="toggle admonition">
+<p class="admonition-title">Example 1: Fixed temperature; different lattice spacings:</p>
+<p>In order to keep $\tau_\mathrm{F}=a^2 t_\mathrm{F}$ fixed we need
+a larger lattice flow time $t_\mathrm{F}$ for smaller lattice
+spacing $a$. Since the temperature is fixed in this example, we can
+define the flow radii in terms of it and convert them, for each lattice,
+to the dimensionless flow times that are then used in the integration.</p>
+<p>Let’s say we’ve let the adaptive stepsize algorithm run with a very
+small initial stepsize and high accuracy, and saw that our correlation
+function is already heavily contaminated for
+$\sqrt{8\tau_\mathrm{F}} T = \sqrt{8t_\mathrm{F}}/N_\tau &gt;
+t/N_\tau = \tau T / 5$, which we want to use as the upper limit. Here
+we’ve made the inequality dimensionless by multiplying both sides with
+the fixed temperature $T$.</p>
+<ul class="simple">
+<li><p>On a symmetric lattice the maximum value for the separation is
+$\tau T = a t \frac{1}{aN_\tau} = 0.5$, which means that the
+upper flow radius limit is $\sqrt{8\tau_\mathrm{F}} T = 0.5/5 =
+0.1$. Solving for the flow time gives us $\tau_\mathrm{F} = a^2
+t_\mathrm{F} = (\frac{0.1}{T})^2 / 8 = a^2 (0.1 N_\tau)^2 /
+8$. Divide both sides by $a^2$ and insert the corresponding
+$N_\tau$ for each lattice and you obtain the dimensionless flow
+time $t_\mathrm{F}$ that you can put in the parameter file for
+this $N_\tau$.</p></li>
+<li><p>You may also want to compare the observables on different lattices
+at some (or many) fixed intermediate physical flow radii, let’s say
+$\sqrt{8\tau_\mathrm{F}} T \in {0.01,0.02, \dots 0.09}$. You
+can compute the dimensionless flow times in the same way as above
+and then provide them via the <code class="docutils literal notranslate"><span class="pre">necessary_flow_times</span></code> parameter.</p></li>
+</ul>
+</div>
+<div class="toggle admonition">
+<p class="admonition-title">Example 2: Fixed lattice spacing; different temperatures:</p>
+<p>In order to keep $\tau_\mathrm{F}=a^2 t_\mathrm{F}$ fixed we don’t
+need to change the lattice flow time $t_\mathrm{F}$ for each lattice
+since the lattice spacing $a$ is the same for all of them.</p>
+<ul class="simple">
+<li><p>First we decide again what flow radii
+$\sqrt{8\tau_\mathrm{F}}T$ we want. We then convert those to
+dimensionless flow times $t_\mathrm{F}$ as in the first example,
+but we need to decide for which lattice do to this. The natural
+choice is the the lattice with the lowest temperature (highest
+$N_\tau$), since it will have the largest physical temporal
+extent $aN_\tau$ and thus largest dimensionless flow time
+$t_\mathrm{F}$. We then adjust the upper flow time limit for the
+higher temperature lattices, since those won’t allow for as much
+flow, as they have a smaller physical temporal extent $a N_\tau$.</p></li>
+<li><p>This means that for a fixed number of intermediate flow times that
+we want to explicitly measure on the lowest temperature lattice
+(using the <code class="docutils literal notranslate"><span class="pre">necessary_flow_times</span></code> parameter) we maybe won’t be able
+to realize all of them on the higher temperature lattices, since
+some of them could be larger than the upper flow time limit (which
+is $N_\tau$ dependent) because of the decreased $N_\tau$. One
+should adjust this upper limit accordingly in order to not waste
+computation time.</p></li>
+</ul>
+</div>
+</section>
+<section id="dictating-all-flowtimes-manually-for-improved-speed">
+<h2>Dictating <strong>all</strong> flowtimes manually for improved speed<a class="headerlink" href="#dictating-all-flowtimes-manually-for-improved-speed" title="Link to this heading"></a></h2>
+<p>In order to save GPU memory we can run the <code class="docutils literal notranslate"><span class="pre">adaptive_stepsize</span></code> algorithm
+once on one configuration with high accuracy and a small initial
+start-stepsize, then save the flow times it visits and use the
+<code class="docutils literal notranslate"><span class="pre">fixed_stepsize</span></code> algorithm (which only needs half of the GPU memory)
+with those flow times as the <code class="docutils literal notranslate"><span class="pre">necessary_flow_times</span></code> for all other
+configurations. By setting the parameter <code class="docutils literal notranslate"><span class="pre">ignore_fixed_stepsize=1</span></code> there
+won’t be any additional flow time steps in between the
+<code class="docutils literal notranslate"><span class="pre">necessary_flow_times</span></code> and we effectively obtain an adaptive stepsize
+algorithm while using the fixed stepsize one!</p>
+<ul class="simple">
+<li><p>For a given <code class="docutils literal notranslate"><span class="pre">accuracy</span></code> (see parameter file) of $10^{-5}$, which
+is rather high, the adaptive stepsize algorithm will, after some
+time (for $t_\mathrm{F} \gtrsim 5$), always make steps with a
+fixed stepsize of $t_\mathrm{F} \approx 0.15$, regardless of the
+lattice spacing.<br />
+If you dictate all flow times, you should make sure that two
+adjacent dimensionless flow times $t_\mathrm{F}$ are not
+separated by more than 0.15.</p></li>
+<li><p>Additionally, one should make sure that the step sizes are small in
+the beginning and only increase gradually. If you suddenly increase
+the step size by a large amount or start with a too large one, the
+integration will become unstable quickly and fail!</p></li>
+</ul>
+</section>
+<section id="observables">
+<h2>Observables<a class="headerlink" href="#observables" title="Link to this heading"></a></h2>
+<p>In the following, we list some details about some of the observables that can be calculated
+using the gradient flow application.</p>
+<section id="topological-charge">
+<h3>Topological charge<a class="headerlink" href="#topological-charge" title="Link to this heading"></a></h3>
+<p>We use the field theory motivated definition,</p>
+<p>$
+Q_L=a^4\sum_x q_L(x),
+$</p>
+<p>where the sum is over all lattice sites and</p>
+<p>$
+q_L(x) = -\frac{1}{2^9\pi^2}\sum\limits_{\mu\nu\rho\sigma=\pm 1}^{\pm 4}
+\tilde{\epsilon}<em>{\mu\nu\rho\sigma}
+;\text{tr};U^\Box</em>{\mu\nu}(x)U^\Box_{\rho\sigma}(x).
+$</p>
+<p>This definition is plagued by UV fluctations, which makes it not generally non-integer before
+any gradient flow. Moreover it is a global quantity, so a reasonably chosen amount of
+gradient flow, which affects short-distance physics most strongly, is not expected to damage it.</p>
+</section>
+<section id="energy-momentum-tensor">
+<h3>Energy-Momentum Tensor<a class="headerlink" href="#energy-momentum-tensor" title="Link to this heading"></a></h3>
+<p>The energy-mementum tensor is calculated using blocking method, that is,
+splitting the spatial surface into pieces; each piece of size
+<code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">*</span> <span class="pre">binsize</span> <span class="pre">*</span> <span class="pre">binsize</span></code>. Then the energy-momentum tensor (both the
+traceful part and traceless part) is average over each piece and used
+for the calculation of EMT correlators in shear and bulk channel.</p>
+<p>The improved topological charge is computed using additional rectangles
+in the field strength tensor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Plaq</span><span class="o">-</span><span class="n">Clover</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">Q_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">Q_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}</span><span class="o">^</span><span class="n">dagger</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+<span class="n">Rect</span><span class="o">-</span><span class="n">Clover</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">16</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">R_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">R_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}</span><span class="o">^</span><span class="n">dagger</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+<span class="n">F_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">Plaq</span><span class="o">-</span><span class="n">Clover</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">Rect</span><span class="o">-</span><span class="n">Clover</span><span class="p">,</span>
+</pre></div>
+</div>
+</section>
+<section id="polyakov-loop-correlators">
+<h3>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Link to this heading"></a></h3>
+<p>These correlators related to Polyakov loops generally require
+<a class="reference internal" href="gaugeFixing.html"><span class="std std-doc">gauge fixing</span></a>. You can also learn more in the
+<a class="reference internal" href="../05_modules/correlator.html"><span class="std std-doc">correlator</span></a> article.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
