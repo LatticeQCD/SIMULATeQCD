@@ -5,19 +5,19 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 
 template<class floatT, size_t HaloDepth, CompressionType comp = R18>
 struct simple_add {
-    gaugeAccessor<floatT, comp> gAcc;
+    SU3Accessor<floatT, comp> gAcc;
 
     simple_add(Gaugefield<floatT, true, HaloDepth,comp> &gaugeIn) :
         gAcc(gaugeIn.getAccessor()) {}
 
-    __host__ __device__ GSU3<floatT> operator()(gSiteMu site) {
+    __host__ __device__ SU3<floatT> operator()(gSiteMu site) {
         typedef GIndexer<All, HaloDepth> GInd;
-        GSU3<floatT> temp;
-        GSU3<floatT> temp2 = gAcc.getLink(site);
+        SU3<floatT> temp;
+        SU3<floatT> temp2 = gAcc.getLink(site);
         temp = temp2+temp2+temp2;
         return temp;
     }
@@ -25,15 +25,15 @@ struct simple_add {
 
 template<class floatT, size_t HaloDepth, CompressionType comp = R18>
 struct simple_mult {
-    gaugeAccessor<floatT,comp> gAcc;
+    SU3Accessor<floatT,comp> gAcc;
 
     simple_mult(Gaugefield<floatT, true, HaloDepth, comp> &gaugeIn) :
         gAcc(gaugeIn.getAccessor()) {}
 
-    __host__ __device__ GSU3<floatT> operator()(gSiteMu site) {
+    __host__ __device__ SU3<floatT> operator()(gSiteMu site) {
         typedef GIndexer<All, HaloDepth> GInd;
-        GSU3<floatT> temp;
-        GSU3<floatT> temp2 = gAcc.getLink(site);
+        SU3<floatT> temp;
+        SU3<floatT> temp2 = gAcc.getLink(site);
         temp = temp2*temp2;
         return temp;
     }
@@ -41,27 +41,27 @@ struct simple_mult {
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
 struct convert_to_half {
-    gaugeAccessor<floatT,comp> gAcc_source;
+    SU3Accessor<floatT,comp> gAcc_source;
 
     convert_to_half(Gaugefield<floatT, true, HaloDepth, comp> &gaugeIn) : gAcc_source(gaugeIn.getAccessor()) {}
 
-    __device__ __host__ GSU3<__half> operator()(gSiteMu site) {
-        GSU3<floatT> source = gAcc_source.getLink(site);
-        GSU3<__half> target(source);
+    __device__ __host__ SU3<__half> operator()(gSiteMu site) {
+        SU3<floatT> source = gAcc_source.getLink(site);
+        SU3<__half> target(source);
         return target;
     }
 };
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
 struct simple_matvec_mult {
-    gaugeAccessor<floatT,comp> gAcc;
-    gVect3arrayAcc<floatT> spinorAcc;
+    SU3Accessor<floatT,comp> gAcc;
+    Vect3arrayAcc<floatT> spinorAcc;
 
     simple_matvec_mult(Gaugefield<floatT, true, HaloDepth, comp> &gaugeIn, Spinorfield<floatT, true, All, 0, 1> &spinorIn) : gAcc(gaugeIn.getAccessor()), spinorAcc(spinorIn.getAccessor()) {}
 
-    __device__ __host__ gVect3<floatT> operator()(gSite site) {
+    __device__ __host__ Vect3<floatT> operator()(gSite site) {
         typedef GIndexer<All,0> GInd;
-        gVect3<floatT> tmp(0.0);
+        Vect3<floatT> tmp(0.0);
         for (int mu = 0; mu < 4; mu++) {
             tmp += gAcc.getLink(GInd::getSiteMu(site,mu)) * spinorAcc.getElement(site);
         }
@@ -115,9 +115,9 @@ int main(int argc, char *argv[]) {
 
         typedef GIndexer<All,HaloDepth> GInd;
         gSite site1 = GInd::getSite(0,0,1,1);
-        gaugeAccessor<float,R18> gAcc = gauge_host.getAccessor();
+        SU3Accessor<float,R18> gAcc = gauge_host.getAccessor();
         rootLogger.info("initial values: ");
-        GSU3<float> test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
+        SU3<float> test = gAcc.getLink<float>(GInd::getSiteMu(site1, 3));
         rootLogger.info(test.getLink00() ,  " " , test.getLink01() ,  " " , test.getLink02());
         rootLogger.info(test.getLink10() ,  " " , test.getLink11() ,  " " ,  test.getLink12());
         rootLogger.info(test.getLink20() ,  " " , test.getLink21() ,  " " ,  test.getLink22());

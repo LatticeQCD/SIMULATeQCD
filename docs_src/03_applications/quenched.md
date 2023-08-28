@@ -2,11 +2,11 @@
 
 To learn more about the specifics of the gauge updates, take a look at
 [Gauge Updates (HB and OR)](../05_modules/gaugeUpdates.md).
-To generate quenched gauge configurations, `make` the executable `GenerateQuenched`.
-You can then find it under `applications/GenerateQuenched`. The example parameter file is
-found under `parameter/GenerateQuenched.param` and looks like this:
+To generate quenched gauge configurations, `make` the executable `generateQuenched`.
+You can then find it under `applications/generateQuenched`. The example parameter file is
+found under `parameter/generateQuenched.param` and looks like this:
 ```shell
-#parameter file for GenerateQuenched
+#parameter file for generateQuenched
 Lattice = 64 64 64 16
 Nodes = 1 1 1 1
 beta = 6.87361
@@ -28,7 +28,7 @@ nsweeps_thermal_HBwithOR = 4000
 ```
 
 
-Calling `./GenerateQuenched GenerateQuenched.param` will output gauge configurations (in nersc format with double precision and 2/3 compression) and their corresponding random number state in the folder `output_dir`. The output looks like this: e.g.
+Calling `./generateQuenched generateQuenched.param` will output gauge configurations (in nersc format with double precision and 2/3 compression) and their corresponding random number state in the folder `output_dir`. The output looks like this: e.g.
 ```shell
 conf_s064t16_b0687361_a_U000500
 conf_s064t16_b0687361_a_U001000

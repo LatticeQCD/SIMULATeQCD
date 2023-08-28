@@ -56,7 +56,7 @@ public:
 
     //! Output something formatted
     template<typename T>
-    LineFormatter & operator<<(const GCOMPLEX(T) &obj) {
+    LineFormatter & operator<<(const COMPLEX(T) &obj) {
         _ostr << " ( ";
         _ostr << std::setw(fieldwidth) << obj.cREAL;
         _ostr << " " << std::setw(fieldwidth) << obj.cIMAG;

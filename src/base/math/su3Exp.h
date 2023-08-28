@@ -4,11 +4,11 @@
 
 #pragma once
 #include "../../define.h"
-#include "gsu3.h"
+#include "su3.h"
 #include "float.h"
 
 
-/* SU3Exp(GSU3<floatT> & , GSU3<floatT> & ,int = 10)
+/* SU3Exp(SU3<floatT> & , SU3<floatT> & ,int = 10)
 SU3 Matrix exponential Kernel
 based on a recursive calculation of the Cayley Hamilton polynom with the
 accuracy of 1/(N-1)! where N denotes the number of steps. The recursition is:
@@ -46,7 +46,7 @@ __device__ __host__ constexpr unsigned int countOfApproxInverseFak(){
 
 // Algorithm from https://luscher.web.cern.ch/luscher/notes/su3fcts.pdf
 template<class floatT>
-__device__ __host__ inline void SU3Exp(const GSU3<floatT> inGSU3, GSU3<floatT> &outGSU3){
+__device__ __host__ inline void SU3Exp(const SU3<floatT> inSU3, SU3<floatT> &outSU3){
 
       constexpr unsigned int N = countOfApproxInverseFak<floatT>();
      floatT c_i[N+1];
@@ -56,11 +56,11 @@ __device__ __host__ inline void SU3Exp(const GSU3<floatT> inGSU3, GSU3<floatT> &
         c_i[i+1] = c_i[i] / floatT(i + 1);
     }
 
-    GCOMPLEX(floatT) d = det(inGSU3);
-    GCOMPLEX(floatT) t = -0.5 * tr_c(inGSU3);
+    COMPLEX(floatT) d = det(inSU3);
+    COMPLEX(floatT) t = -0.5 * tr_c(inSU3);
 
-    GCOMPLEX(floatT) q_0_old = c_i[N], q_1_old = 0, q_2_old = 0;
-    GCOMPLEX(floatT) q_0, q_1, q_2;
+    COMPLEX(floatT) q_0_old = c_i[N], q_1_old = 0, q_2_old = 0;
+    COMPLEX(floatT) q_0, q_1, q_2;
 
     for (int i = N - 1; i >= 0; i--) {
         q_0 = c_i[i] + d * q_2_old;
@@ -72,6 +72,6 @@ __device__ __host__ inline void SU3Exp(const GSU3<floatT> inGSU3, GSU3<floatT> &
         q_2_old = q_2;
     }
 
-    outGSU3 = q_0 * gsu3_one<floatT>() + q_1 * inGSU3 + q_2 * inGSU3 * inGSU3;
+    outSU3 = q_0 * su3_one<floatT>() + q_1 * inSU3 + q_2 * inSU3 * inSU3;
 }
 

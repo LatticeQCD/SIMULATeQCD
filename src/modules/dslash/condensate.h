@@ -9,7 +9,7 @@
 #include "../../spinor/spinorfield.h"
 #include "dslash.h"
 #include "../inverter/inverter.h"
-#include "../HISQ/hisqSmearing.h"
+#include "../hisq/hisqSmearing.h"
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, size_t NStacks>
 SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, RhmcParameters param, floatT mass,

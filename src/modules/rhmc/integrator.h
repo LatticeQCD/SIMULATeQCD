@@ -10,15 +10,15 @@
 
 #include "../../gauge/gaugefield.h"
 #include "./rhmcParameters.h"
-#include "../../base/math/gsu3.h"
+#include "../../base/math/su3.h"
 #include "../../gauge/gaugeActionDeriv.h"
-#include "../../base/LatticeContainer.h"
+#include "../../base/latticeContainer.h"
 #include <iostream>
 #include "../../spinor/spinorfield.h"
 #include "../dslash/dslash.h"
 #include "../../base/gutils.h"
-#include "../HISQ/hisqForce.h"
-#include "Spinorfield_container.h"
+#include "../hisq/hisqForce.h"
+#include "spinorfield_container.h"
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
@@ -91,9 +91,9 @@ private:
 
     HisqForce<floatT, onDevice, HaloDepth, 4> ip_dot_f2_hisq;
 
-    gaugeAccessor<floatT, R18> gAcc;
-    gaugeAccessor<floatT> pAccessor;
-    gaugeAccessor<floatT> ipdotAccessor;
+    SU3Accessor<floatT, R18> gAcc;
+    SU3Accessor<floatT> pAccessor;
+    SU3Accessor<floatT> ipdotAccessor;
 };
 
 
@@ -134,9 +134,9 @@ private:
 
     Gaugefield<floatT, onDevice, HaloDepth> ipdot;
 
-    gaugeAccessor<floatT, comp> gAcc;
-    gaugeAccessor<floatT> pAccessor;
-    gaugeAccessor<floatT> ipdotAccessor;
+    SU3Accessor<floatT, comp> gAcc;
+    SU3Accessor<floatT> pAccessor;
+    SU3Accessor<floatT> ipdotAccessor;
 
 };
 

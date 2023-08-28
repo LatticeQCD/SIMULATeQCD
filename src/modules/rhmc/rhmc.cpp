@@ -32,7 +32,7 @@ struct add_f_r_f_r
 template<class floatT,bool onDevice, size_t HaloDepthSpin>
 struct get_fermion_act
 {
-    gVect3arrayAcc<floatT> spin_acc;
+    Vect3arrayAcc<floatT> spin_acc;
 
     double ret;
 
@@ -58,7 +58,7 @@ struct do_check_unitarity
 {
     do_check_unitarity(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()) {};
 
-    gaugeAccessor<floatT, comp> gAcc;
+    SU3Accessor<floatT, comp> gAcc;
 
     __device__ __host__ floatT operator()(gSite site){
 
@@ -204,11 +204,11 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
             for (int mu = 0; mu < 4; mu++) {
                 gSite site = GInd::getSite(x, y, z, t);
 
-                GSU3<double> tmpA = saved_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
+                SU3<double> tmpA = saved_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
 
-                GSU3<double> tmpB = gauge_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
+                SU3<double> tmpB = gauge_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
 
-                    if (!compareGSU3(tmpA, tmpB, 1e-4)) {
+                    if (!compareSU3(tmpA, tmpB, 1e-4)) {
                         rootLogger.error("Difference in saved and evolved Gaugefields at " ,  LatticeDimensions(x, y, z, t) , ", mu = " ,  mu);
                         rootLogger.error("|| S - G ||_inf = " ,  infnorm(tmpA-tmpB));
                     }
@@ -311,7 +311,7 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_momenta() {
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
 void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_const_momenta() {
 
-    _p.iterateWithConst(gsu3_zero<floatT>());
+    _p.iterateWithConst(su3_zero<floatT>());
 }
 
 
@@ -319,7 +319,7 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::generate_const_momenta() 
 template<class floatT, bool onDevice, size_t HaloDepth>
 struct get_momenta
 {
-    gaugeAccessor<floatT> pAccessor;
+    SU3Accessor<floatT> pAccessor;
 
     get_momenta(Gaugefield<floatT,onDevice,HaloDepth> &p) : pAccessor(p.getAccessor()) {
     }
@@ -568,7 +568,7 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_const_phi(Spinorfiel
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> eta(phi.getComm());
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 14> spinorOutMulti(phi.getComm());
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> spinortmp(phi.getComm());
-    eta.iterateWithConst(gvect3_unity<floatT>(0));
+    eta.iterateWithConst(vect3_unity<floatT>(0));
 
     int length = rat_coeff.size();
 

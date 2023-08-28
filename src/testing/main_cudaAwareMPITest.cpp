@@ -5,7 +5,7 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 
 void allocDevice(char **_memoryChunk, size_t size) {
     gpuError_t gpuErr = gpuMalloc((void **) _memoryChunk, size);

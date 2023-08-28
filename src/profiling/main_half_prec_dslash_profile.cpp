@@ -5,10 +5,10 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/dslash/dslash.h"
 #include "../modules/rhmc/rhmcParameters.h"
-#include "../modules/HISQ/hisqSmearing.h"
+#include "../modules/hisq/hisqSmearing.h"
 
 //the Dslash test function. Please start reading here.
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, bool onDevice>
@@ -99,7 +99,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorTest(commBase);
     spinorTest.template convert_precision<__half>(spinorOut);
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0);
     SimpleArray<double, NStacks> norm(0.0);
     dot = spinorTest.dotProductStacked(spinorTest);
     norm = real<double>(dot);
@@ -124,7 +124,7 @@ int main(int argc, char **argv) {
     CommunicationBase commBase(&argc, &argv);
 
     LatticeParameters param;
-    param.readfile(commBase, "../parameter/profiling/MrhsDSlashProf.param", argc, argv);
+    param.readfile(commBase, "../parameter/profiling/mrhsDSlashProf.param", argc, argv);
 
     const int LatDim[] = {param.latDim[0],param.latDim[1],param.latDim[2],param.latDim[3]};
 

@@ -8,8 +8,8 @@
 #include "parameterManagement.h"
 #include "misc.h"
 #include "../../gauge/gaugefield.h"
-#include "../../gauge/GaugeAction.h"
-#include "../LatticeContainer.h"
+#include "../../gauge/gaugeAction.h"
+#include "../latticeContainer.h"
 #include <iostream>
 
 class NerscHeader : virtual private ParameterList {
@@ -131,14 +131,14 @@ private:
     std::vector<char> buf;
 
     template<class f1, class f2>
-    GSU3<f2> from_buf(f1 *buf) const {
+    SU3<f2> from_buf(f1 *buf) const {
         int i = 0;
-        GSU3<f2> U;
+        SU3<f2> U;
         for (int j = 0; j < rows; j++)
             for (int k = 0; k < 3; k++) {
                 f2 re = buf[i++];
                 f2 im = buf[i++];
-                U(j, k) = GCOMPLEX(f2)(re, im);
+                U(j, k) = COMPLEX(f2)(re, im);
 
             }
         if (rows == 2 || sizeof(f1) != sizeof(f2))
@@ -147,7 +147,7 @@ private:
     }
 
     template<class f1, class f2>
-    void to_buf(f1 *buf, const GSU3<f2> &U) const {
+    void to_buf(f1 *buf, const SU3<f2> &U) const {
         int i = 0;
         for (int j = 0; j < rows; j++)
             for (int k = 0; k < 3; k++) {
@@ -172,7 +172,7 @@ private:
     }
 
     template<class floatT>
-    uint32_t checksum(GSU3<floatT> U) {
+    uint32_t checksum(SU3<floatT> U) {
         if (float_size == 4)
             to_buf((float *) &buf[0], U);
         else if (float_size == 8)
@@ -253,7 +253,7 @@ public:
     }
 
     template<class floatT,bool onDevice, CompressionType comp>
-    bool write_header(Gaugefield<floatT, onDevice, HaloDepth,comp> &gf, gaugeAccessor<floatT,comp> gaugeAccessor, int _rows,
+    bool write_header(Gaugefield<floatT, onDevice, HaloDepth,comp> &gf, SU3Accessor<floatT,comp> SU3Accessor, int _rows,
                       int diskprec, Endianness en, std::ostream &out) {
         rows = _rows;
         if (diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)))
@@ -306,7 +306,7 @@ public:
                     for (size_t x = 0; x < GInd::getLatData().lx; x++)
                         for (int mu = 0; mu < 4; mu++) {
                             gSite site = GInd::getSite(x, y, z, t);
-                            GSU3<floatT> temp = gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
+                            SU3<floatT> temp = SU3Accessor.getLink(GInd::getSiteMu(site, mu));
                             linktrace += tr_d(temp);
                             stored_checksum += checksum(temp);
                         }
@@ -359,9 +359,9 @@ public:
     }
 
     template<class floatT>
-    GSU3<floatT> get() {
+    SU3<floatT> get() {
         char *start = &buf[index];
-        GSU3<floatT> ret;
+        SU3<floatT> ret;
         if (float_size == 4)
             ret = from_buf<float,float>((float *) start);
         else if (float_size == 8)
@@ -371,7 +371,7 @@ public:
     }
 
     template<class floatT>
-    void put(GSU3<floatT> U) {
+    void put(SU3<floatT> U) {
         char *start = &buf[index];
         if (float_size == 4)
             to_buf((float *) start, U);

@@ -6,9 +6,9 @@
 
 #include "../base/math/operators.h"
 #include "../define.h"
-#include "../base/math/gvect3array.h"
+#include "../base/math/vect3array.h"
 #include "../base/gutils.h"
-#include "../base/LatticeContainer.h"
+#include "../base/latticeContainer.h"
 #include "../base/IO/misc.h"
 #include "../base/communication/siteComm.h"
 #include "../base/communication/communicationBase.h"
@@ -39,11 +39,11 @@ template<typename floatT, bool onDevice, size_t HaloDepth, size_t NStacks>
     class SpinorfieldAll;
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
-class Spinorfield : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class Spinorfield : public siteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 private:
-    gVect3array<floatT, onDevice> _lattice;
-    LatticeContainer<onDevice,GCOMPLEX(double)> _redBase;
+    Vect3array<floatT, onDevice> _lattice;
+    LatticeContainer<onDevice,COMPLEX(double)> _redBase;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
@@ -51,8 +51,8 @@ public:
 typedef floatT floatT_inner;
     //! constructor
     explicit Spinorfield(CommunicationBase &comm, std::string spinorfieldName="Spinorfield") :
-            siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
-            gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
+            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
+            Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _lattice( (int)(NStacks*( (LatticeLayout == All) ? GInd::getLatData().vol4Full : GInd::getLatData().sizehFull )), spinorfieldName ),
             _redBase(comm)
     {
@@ -83,8 +83,8 @@ typedef floatT floatT_inner;
 
     //! move constructor
     Spinorfield(Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&& source) noexcept :
-            siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
-                    gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
+            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
+                    Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
             _lattice(std::move(source._lattice)),
             _redBase(std::move(source._redBase)){}
 
@@ -110,17 +110,17 @@ typedef floatT floatT_inner;
                 getNumberLatticePointsFull() * stackSrc);
     }
 
-    const gVect3array<floatT, onDevice>& getArray() const {
+    const Vect3array<floatT, onDevice>& getArray() const {
         return _lattice;
     }
 
-    GCOMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
+    COMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     double realdotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
 
-    std::vector<GCOMPLEX(double)> dotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
+    std::vector<COMPLEX(double)> dotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     std::vector<double> realdotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
 
-    void operator*=(const GCOMPLEX(floatT) &y);
+    void operator*=(const COMPLEX(floatT) &y);
     void operator+=(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & S2);
     void operator-=(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & S2);
 
@@ -141,16 +141,16 @@ typedef floatT floatT_inner;
     // TODO MOVE THIS WHERE IT BELONGS
     void setPointSource(const sitexyzt pointsource, const int i_color, const floatT mass){
         //! set whole spinor to zero
-        iterateWithConst(gvect3_zero<floatT>()); //TODO change this to just memset to 0 for possible performance gain?
+        iterateWithConst(vect3_zero<floatT>()); //TODO change this to just memset to 0 for possible performance gain?
 
         //! if we're on the correct GPU, set one entry to one
         if ( GInd::getLatData().isLocal(pointsource) ){
             sitexyzt pointsource_local(GInd::globalCoordToLocalCoord(pointsource));
-            stdLogger.info("Pointsource at " ,  pointsource ,  ": " ,  gvect3_unity<double>(i_color)*(double)mass);
+            stdLogger.info("Pointsource at " ,  pointsource ,  ": " ,  vect3_unity<double>(i_color)*(double)mass);
             //! TODO add support for multiple RHS (stacks)
             sitexyzt pointsource_full = GIndexer<LatticeLayout,HaloDepth>::coordToFullCoord(pointsource_local);
             gSite tmp = GIndexer<LatticeLayout,HaloDepth>::getSiteFull(pointsource_full);
-            setOneSiteToConst(mass*gvect3_unity<floatT>(i_color), tmp);
+            setOneSiteToConst(mass*vect3_unity<floatT>(i_color), tmp);
         }
         this->updateAll();
     }
@@ -187,7 +187,7 @@ typedef floatT floatT_inner;
     template<size_t BlockSize = 128, typename const_T>
     void axupbyThisLoopd(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
-    virtual gVect3arrayAcc<floatT> getAccessor() const;
+    virtual Vect3arrayAcc<floatT> getAccessor() const;
 
     template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
     void iterateOverFull(Functor op, size_t Nmax = NStacks);
@@ -256,7 +256,7 @@ typedef floatT floatT_inner;
 };
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-inline gVect3arrayAcc<floatT> Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
+inline Vect3arrayAcc<floatT> Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
     return (_lattice.getAccessor());
 }
 
@@ -452,7 +452,7 @@ struct convert_spinor_precision {
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
         //We do not initialize anything
     }
-    gVect3arrayAcc<floatT_source> spinor_source;
+    Vect3arrayAcc<floatT_source> spinor_source;
 
     convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
 
@@ -465,10 +465,10 @@ struct convert_spinor_precision {
 
 template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
 struct returnSpinor {
-    gVect3arrayAcc<floatT> _gAcc;
+    Vect3arrayAcc<floatT> _gAcc;
 
     explicit returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn);
-    __host__ __device__ gVect3<floatT> operator()(gSiteStack site);
+    __host__ __device__ Vect3<floatT> operator()(gSiteStack site);
 };
 
 template<typename floatT, bool onDevice, size_t HaloDepth, size_t NStacks = 1>
@@ -526,16 +526,16 @@ public:
     //! destructor
     ~SpinorfieldAll() = default;
 
-    GCOMPLEX(double) dotProduct(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
+    COMPLEX(double) dotProduct(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
         return even.dotProduct(y.even) + odd.dotProduct(y.odd);
     }
     double realdotProduct(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
         return even.realdotProduct(y.even) + odd.realdotProduct(y.odd);
     }
 
-    std::vector<GCOMPLEX(double)> dotProductStacked(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
-        std::vector<GCOMPLEX(double)> even_res = even.dotProductStacked(y.even);
-        std::vector<GCOMPLEX(double)> odd_res = odd.dotProductStacked(y.odd);
+    std::vector<COMPLEX(double)> dotProductStacked(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
+        std::vector<COMPLEX(double)> even_res = even.dotProductStacked(y.even);
+        std::vector<COMPLEX(double)> odd_res = odd.dotProductStacked(y.odd);
         for (std::size_t i = 0, e = even_res.size(); i != e; i++)
             even_res[i] += odd_res[i];
         return even_res;
@@ -548,7 +548,7 @@ public:
         return even_res;
     }
 
-    void operator*=(const GCOMPLEX(floatT) &y) {
+    void operator*=(const COMPLEX(floatT) &y) {
         even *= y;
         odd *= y;
     }

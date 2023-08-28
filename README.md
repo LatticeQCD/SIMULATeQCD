@@ -74,7 +74,7 @@ Popular production-ready executables are:
 # generate HISQ configurations
 rhmc                 # Example Parameter-file: parameter/applications/rhmc.param
 # generate quenched gauge configurations using HB and OR
-GenerateQuenched     # Example Parameter-file: parameter/applications/GenerateQuenched.param
+generateQuenched     # Example Parameter-file: parameter/applications/generateQuenched.param
 # Apply Wilson/Zeuthen flow and measure various observables
 gradientFlow         # Example Parameter-file: parameter/applications/gradientFlow.param
 # Gauge fixing

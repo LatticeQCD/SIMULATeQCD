@@ -25,19 +25,19 @@
 #include <cstring>
 #include <complex>
 #include "../../define.h"
-#include "../LatticeDimension.h"
+#include "../latticeDimension.h"
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
-#include "../math/gcomplex.h"
-#include "../math/gsu3.h"
+#include "../math/complex.h"
+#include "../math/su3.h"
 #include "../IO/misc.h"
 #include "haloOffsetInfo.h"
 #include "../math/matrix4x4.h"
 
 template<class floatT>
-class GSU3;
+class SU3;
 
 /*
 	     T Z Y X 	   Lies on another node
@@ -197,17 +197,17 @@ public:
 
     void root2all(double &) const EMPTY_IF_SCALAR;
 
-    void root2all(GCOMPLEX(float) &) const EMPTY_IF_SCALAR;
+    void root2all(COMPLEX(float) &) const EMPTY_IF_SCALAR;
 
-    void root2all(GCOMPLEX(double) &) const EMPTY_IF_SCALAR;
+    void root2all(COMPLEX(double) &) const EMPTY_IF_SCALAR;
 
     void root2all(Matrix4x4Sym<float> &) const EMPTY_IF_SCALAR;
 
     void root2all(Matrix4x4Sym<double> &) const EMPTY_IF_SCALAR;
 
-    void root2all(GSU3<float> &) const EMPTY_IF_SCALAR;
+    void root2all(SU3<float> &) const EMPTY_IF_SCALAR;
 
-    void root2all(GSU3<double> &) const EMPTY_IF_SCALAR;
+    void root2all(SU3<double> &) const EMPTY_IF_SCALAR;
 
     void root2all(std::vector<int> &) const EMPTY_IF_SCALAR;
 
@@ -240,9 +240,9 @@ public:
     std::complex<double> reduce(std::complex<double> a) const RETa_IF_SCALAR;
 
     /// Reduce (summing up) a complex  value
-    GCOMPLEX(float) reduce(GCOMPLEX(float) a) const RETa_IF_SCALAR;
+    COMPLEX(float) reduce(COMPLEX(float) a) const RETa_IF_SCALAR;
 
-    GCOMPLEX(double) reduce(GCOMPLEX(double) a) const RETa_IF_SCALAR;
+    COMPLEX(double) reduce(COMPLEX(double) a) const RETa_IF_SCALAR;
 
     /// Reduce (summing up) an array of double values, replacing values
     void reduce(float *, int) const EMPTY_IF_SCALAR;
@@ -252,19 +252,19 @@ public:
     void reduce(double *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of values, replacing values
-    void reduce(GCOMPLEX(float) *, int) const EMPTY_IF_SCALAR;
+    void reduce(COMPLEX(float) *, int) const EMPTY_IF_SCALAR;
 
-    void reduce(GCOMPLEX(double) *, int) const EMPTY_IF_SCALAR;
+    void reduce(COMPLEX(double) *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of matrix values, replacing values
     void reduce(Matrix4x4Sym<float> *, int) const EMPTY_IF_SCALAR;
 
     void reduce(Matrix4x4Sym<double> *, int) const EMPTY_IF_SCALAR;
 
-    /// Reduce (summing up) an array of GSU3(double) values, replacing values
-    void reduce(GSU3<float> *, int) const EMPTY_IF_SCALAR;
+    /// Reduce (summing up) an array of SU3(double) values, replacing values
+    void reduce(SU3<float> *, int) const EMPTY_IF_SCALAR;
 
-    void reduce(GSU3<double> *, int) const EMPTY_IF_SCALAR;
+    void reduce(SU3<double> *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of complex values, replacing values
     void reduce(std::complex<float> *, int) const EMPTY_IF_SCALAR;
@@ -276,10 +276,10 @@ public:
 
     Matrix4x4Sym<double> reduce(Matrix4x4Sym<double> a) const RETa_IF_SCALAR;
 
-    /// Reduce (summing up) a GSU3 value
-    GSU3<float> reduce(GSU3<float> a) const RETa_IF_SCALAR;
+    /// Reduce (summing up) a SU3 value
+    SU3<float> reduce(SU3<float> a) const RETa_IF_SCALAR;
 
-    GSU3<double> reduce(GSU3<double> a) const RETa_IF_SCALAR;
+    SU3<double> reduce(SU3<double> a) const RETa_IF_SCALAR;
 
     /// Average values from all processes
     float globalAverage(float a) const RETa_IF_SCALAR;

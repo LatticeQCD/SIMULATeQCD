@@ -14,9 +14,9 @@ struct fill_with_gauss_vec
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){}
 
-    __device__ __host__ gVect3<floatT> operator()(gSite& site, __attribute__((unused)) size_t stack){
+    __device__ __host__ Vect3<floatT> operator()(gSite& site, __attribute__((unused)) size_t stack){
 
-        gVect3<floatT> vec;
+        Vect3<floatT> vec;
         vec.gauss(&state[site.isite]);
         return vec;
     }
@@ -34,7 +34,7 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::gauss(uint4* 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::one()
 {
-    iterateWithConst(gvect3_unity<floatT>(0));
+    iterateWithConst(vect3_unity<floatT>(0));
     this->updateAll();
 }
 
@@ -43,14 +43,14 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::one()
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 struct SpinorrealDotProduct{
 
-    gVect3arrayAcc<floatT> spinorAccOut;
-    gVect3arrayAcc<floatT> spinorAccIn;
+    Vect3arrayAcc<floatT> spinorAccOut;
+    Vect3arrayAcc<floatT> spinorAccIn;
 
     SpinorrealDotProduct(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorIn,
             const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut)
         : spinorAccOut(spinorOut.getAccessor()), spinorAccIn(spinorIn.getAccessor()) {}
 
-    __device__ __host__ GCOMPLEX(double)  operator()(gSiteStack& site){
+    __device__ __host__ COMPLEX(double)  operator()(gSiteStack& site){
         return re_dot_prod(spinorAccIn.template getElement<double>(site), spinorAccOut.template getElement<double>(site));
     }
 };
@@ -63,7 +63,7 @@ double Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realdotProd
         throw std::runtime_error(stdLogger.fatal("realDotProduct only possible for non stacked spinors"));
     }else{
 
-        GCOMPLEX(double) result = 0;
+        COMPLEX(double) result = 0;
 
         size_t elems = getNumberElements();
 
@@ -83,7 +83,7 @@ template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t
 std::vector<double> Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realdotProductStacked(
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y)
 {
-    std::vector<GCOMPLEX(double)> result_complex;
+    std::vector<COMPLEX(double)> result_complex;
     size_t elems = getNumberElements();
 
     _redBase.adjustSize(elems);
@@ -104,23 +104,23 @@ std::vector<double> Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 struct SpinorDotProduct{
 
-    gVect3arrayAcc<floatT> spinorAccOut;
-    gVect3arrayAcc<floatT> spinorAccIn;
+    Vect3arrayAcc<floatT> spinorAccOut;
+    Vect3arrayAcc<floatT> spinorAccIn;
 
     SpinorDotProduct(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorIn,
             const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut)
         : spinorAccOut(spinorOut.getAccessor()), spinorAccIn(spinorIn.getAccessor()) {}
 
-    __device__ __host__ GCOMPLEX(double)  operator()(gSiteStack& site){
+    __device__ __host__ COMPLEX(double)  operator()(gSiteStack& site){
 
-        GCOMPLEX(double) ret =  spinorAccIn.template getElement<double>(site) *  spinorAccOut.template getElement<double>(site);
+        COMPLEX(double) ret =  spinorAccIn.template getElement<double>(site) *  spinorAccOut.template getElement<double>(site);
         return ret;
     }
 };
 
 /// val = S_in * S_out
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-GCOMPLEX(double) Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::dotProduct(
+COMPLEX(double) Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::dotProduct(
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y)
 {
     if (NStacks > 1){
@@ -134,7 +134,7 @@ GCOMPLEX(double) Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::d
         _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
                 SpinorDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
 
-        GCOMPLEX(double) result = 0;
+        COMPLEX(double) result = 0;
         _redBase.reduce(result, elems);
         return result;
     }
@@ -142,7 +142,7 @@ GCOMPLEX(double) Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::d
 
 /// val = S_in * S_out
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-std::vector<GCOMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::dotProductStacked(
+std::vector<COMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::dotProductStacked(
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y)
 {
     size_t elems = getNumberElements();
@@ -152,7 +152,7 @@ std::vector<GCOMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth
     _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
             SpinorDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
 
-    std::vector<GCOMPLEX(double)> result;
+    std::vector<COMPLEX(double)> result;
 
     _redBase.reduceStacked(result, NStacks, getNumberLatticePoints(), true);
     return result;
@@ -162,22 +162,22 @@ std::vector<GCOMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth
 
 /// S_out *= val
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::operator*=(const GCOMPLEX(floatT) &y) {
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::operator*=(const COMPLEX(floatT) &y) {
     iterateOverFull(general_mult(*this, y));
 }
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinor{
 
-    gVect3arrayAcc<floatT> spinor1;
-    gVect3arrayAcc<floatT> spinor2;
+    Vect3arrayAcc<floatT> spinor1;
+    Vect3arrayAcc<floatT> spinor2;
     const_T val;
-    SpinorPlusConstTTimesSpinor(gVect3arrayAcc<floatT> spinor1,
-                                  gVect3arrayAcc<floatT> spinor2,
+    SpinorPlusConstTTimesSpinor(Vect3arrayAcc<floatT> spinor1,
+                                  Vect3arrayAcc<floatT> spinor2,
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
-    __device__ __host__ gVect3<floatT> operator()(gSiteStack& site){
-        gVect3<floatT> Stmp;
+    __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
+        Vect3<floatT> Stmp;
         Stmp = spinor1.getElement(site);
         Stmp += val(site) * spinor2.getElement(site);
 
@@ -188,15 +188,15 @@ struct SpinorPlusConstTTimesSpinor{
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinord{
 
-    gVect3arrayAcc<floatT> spinor1;
-    gVect3arrayAcc<floatT> spinor2;
+    Vect3arrayAcc<floatT> spinor1;
+    Vect3arrayAcc<floatT> spinor2;
     const_T val;
-    SpinorPlusConstTTimesSpinord(gVect3arrayAcc<floatT> spinor1,
-                                  gVect3arrayAcc<floatT> spinor2,
+    SpinorPlusConstTTimesSpinord(Vect3arrayAcc<floatT> spinor1,
+                                  Vect3arrayAcc<floatT> spinor2,
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
-    __device__ __host__ gVect3<floatT> operator()(gSiteStack& site){
-        gVect3<floatT> Stmp;
+    __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
+        Vect3<floatT> Stmp;
         Stmp = spinor1.template getElement<double>(site);
         Stmp += val(site) * spinor2.template getElement<double>(site);
 
@@ -208,21 +208,21 @@ struct SpinorPlusConstTTimesSpinord{
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinorLoop{
 
-    gVect3arrayAcc<floatT> spinor1;
-    gVect3arrayAcc<floatT> spinor2;
+    Vect3arrayAcc<floatT> spinor1;
+    Vect3arrayAcc<floatT> spinor2;
     const_T val;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    SpinorPlusConstTTimesSpinorLoop(gVect3arrayAcc<floatT> spinor1,
-                                  gVect3arrayAcc<floatT> spinor2,
+    SpinorPlusConstTTimesSpinorLoop(Vect3arrayAcc<floatT> spinor1,
+                                  Vect3arrayAcc<floatT> spinor2,
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val) {}
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
     }
 
-    __device__ __host__ gVect3<floatT> operator()(gSite& site, size_t stack){
-        gVect3<floatT> Stmp;
+    __device__ __host__ Vect3<floatT> operator()(gSite& site, size_t stack){
+        Vect3<floatT> Stmp;
         gSiteStack siteStack = GInd::getSiteStack(site, stack);
 
         Stmp = spinor1.getElement(siteStack);
@@ -235,15 +235,15 @@ struct SpinorPlusConstTTimesSpinorLoop{
 template<class floatT, Layout LatLayout, size_t HaloDepth ,size_t NStacks>
 struct SpinorPlusFloatTimesSpinor{
 
-    gVect3arrayAcc<floatT> spinor1;
-    gVect3arrayAcc<floatT> spinor2;
+    Vect3arrayAcc<floatT> spinor1;
+    Vect3arrayAcc<floatT> spinor2;
     floatT val;
-    SpinorPlusFloatTimesSpinor(gVect3arrayAcc<floatT> spinor1,
-                                  gVect3arrayAcc<floatT> spinor2,
+    SpinorPlusFloatTimesSpinor(Vect3arrayAcc<floatT> spinor1,
+                                  Vect3arrayAcc<floatT> spinor2,
                                   floatT val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
-    __device__ __host__ gVect3<floatT> operator()(gSiteStack& site){
-        gVect3<floatT> Stmp;
+    __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
+        Vect3<floatT> Stmp;
         Stmp = spinor1.getElement(site);
         Stmp += val * spinor2.getElement(site);
 
@@ -254,24 +254,24 @@ struct SpinorPlusFloatTimesSpinor{
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStack
 {
-    const gVect3arrayAcc<floatT> spinorIn1;
-    const gVect3arrayAcc<floatT> spinorIn2;
+    const Vect3arrayAcc<floatT> spinorIn1;
+    const Vect3arrayAcc<floatT> spinorIn2;
     const_T _a;
     const_T _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStack(gVect3arrayAcc<floatT> spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStack(Vect3arrayAcc<floatT> spinorIn1,
             SimpleArray<floatT, NStacks> a,
-            gVect3arrayAcc<floatT> spinorIn2,
+            Vect3arrayAcc<floatT> spinorIn2,
             SimpleArray<floatT, NStacks> b) :
         spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b) {}
 
 
-    __host__ __device__ gVect3<floatT> operator()(gSiteStack& siteStack){
+    __host__ __device__ Vect3<floatT> operator()(gSiteStack& siteStack){
         gSiteStack siteUnStack = GInd::getSiteStack(siteStack, 0);
 
-        const gVect3<floatT> my_vec = spinorIn1.getElement(siteStack)*_a(siteStack) + spinorIn2.getElement(siteUnStack)*_b(siteStack);
+        const Vect3<floatT> my_vec = spinorIn1.getElement(siteStack)*_a(siteStack) + spinorIn2.getElement(siteUnStack)*_b(siteStack);
 
         return my_vec;
     }
@@ -280,16 +280,16 @@ struct StackTimesFloatPlusFloatTimesNoStack
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStackLoop
 {
-    gVect3arrayAcc<floatT> spinorIn1;
-    gVect3arrayAcc<floatT> spinorIn2;
+    Vect3arrayAcc<floatT> spinorIn1;
+    Vect3arrayAcc<floatT> spinorIn2;
     const_T _a;
     const_T _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStackLoop(gVect3arrayAcc<floatT> spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStackLoop(Vect3arrayAcc<floatT> spinorIn1,
             SimpleArray<floatT, NStacks> a,
-            gVect3arrayAcc<floatT> spinorIn2,
+            Vect3arrayAcc<floatT> spinorIn2,
             SimpleArray<floatT, NStacks> b) :
         spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b) {}
 
@@ -297,10 +297,10 @@ struct StackTimesFloatPlusFloatTimesNoStackLoop
     }
 
 
-    __host__ __device__ gVect3<floatT> operator()(gSite& site, size_t stack){
+    __host__ __device__ Vect3<floatT> operator()(gSite& site, size_t stack){
         gSiteStack siteUnStack = GInd::getSiteStack(site, 0);
         gSiteStack siteStack = GInd::getSiteStack(site, stack);
-        gVect3<floatT> my_vec;
+        Vect3<floatT> my_vec;
 
         my_vec = spinorIn1.getElement(siteStack)*_a(siteStack) + spinorIn2.getElement(siteUnStack)*_b(siteStack);
 
@@ -312,16 +312,16 @@ struct StackTimesFloatPlusFloatTimesNoStackLoop
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStackLoop_d
 {
-    gVect3arrayAcc<floatT> spinorIn1;
-    gVect3arrayAcc<floatT> spinorIn2;
+    Vect3arrayAcc<floatT> spinorIn1;
+    Vect3arrayAcc<floatT> spinorIn2;
     const_T _a;
     const_T _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStackLoop_d(gVect3arrayAcc<floatT> spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStackLoop_d(Vect3arrayAcc<floatT> spinorIn1,
             SimpleArray<double, NStacks> a,
-            gVect3arrayAcc<floatT> spinorIn2,
+            Vect3arrayAcc<floatT> spinorIn2,
             SimpleArray<double, NStacks> b) :
         spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b) {}
 
@@ -329,10 +329,10 @@ struct StackTimesFloatPlusFloatTimesNoStackLoop_d
     }
 
 
-    __host__ __device__ gVect3<floatT> operator()(gSite& site, size_t stack){
+    __host__ __device__ Vect3<floatT> operator()(gSite& site, size_t stack){
         gSiteStack siteUnStack = GInd::getSiteStack(site, 0);
         gSiteStack siteStack = GInd::getSiteStack(site, stack);
-        gVect3<double> my_vec;
+        Vect3<double> my_vec;
 
         my_vec = spinorIn1.template getElement<double>(siteStack)*_a(siteStack) + spinorIn2.template getElement<double>(siteUnStack)*_b(siteStack);
 
@@ -527,7 +527,7 @@ returnSpinor<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnSpinor(cons
 }
 
 template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
-__host__ __device__ gVect3<floatT> returnSpinor<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::operator()(gSiteStack site) {
+__host__ __device__ Vect3<floatT> returnSpinor<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::operator()(gSiteStack site) {
     //! Deduce gSiteStacked object for the source from the gSite object of the destination
     gSite temp = GIndexer<LatLayout,HaloDepth>::getSite(site.coord);
     return _gAcc.template getElement<floatT>(temp);
@@ -535,8 +535,8 @@ __host__ __device__ gVect3<floatT> returnSpinor<floatT, onDevice, LatLayout, Hal
 
 #define SPINOR_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
 template class Spinorfield<floatT,false,LO,HALOSPIN,STACKS>;\
-template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThis(const GCOMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
-template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThisB(const GCOMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
+template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThis(const COMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
+template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThisB(const COMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThisB<64>(const floatT&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThis(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
@@ -555,8 +555,8 @@ INIT_PLHSN(SPINOR_INIT_PLHSN)
 
 #define SPINOR_INIT_PLHSN_HALF(floatT,LO,HALOSPIN,STACKS)\
 template class Spinorfield<floatT,true,LO,HALOSPIN,STACKS>;\
-template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThis(const GCOMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
-template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThisB(const GCOMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThis(const COMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThisB(const COMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThisB<64>(const floatT&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThis(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\

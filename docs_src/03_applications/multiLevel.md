@@ -8,7 +8,7 @@ HB and OR,  same as the standard ones [Gauge Updates (HB and OR)](../05_modules/
 but performed within a sub lattice. For details see luscherweisz.h and luscherweisz.cpp.
 
 After the sub-lattice updates, the observables will be measured. Currently the calculations of energy-momentum tensor,
-polyakovloop and color-electric correlators have been implemented. For details, see `SubLatMeas.h` and `SubLatMeas.cpp`.
+polyakovloop and color-electric correlators have been implemented. For details, see `subLatMeas.h` and `subLatMeas.cpp`.
 
 To compile, one can `make` the executable `sublatticeUpdates`. You can then find it under `applications/sublatticeUpdates`.
 The example parameter file is found under `parameter/sublatticeUpdates.param` and looks like this:

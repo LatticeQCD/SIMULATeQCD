@@ -1,7 +1,7 @@
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 #include "../modules/dslash/condensate.h"
-#include "../modules/HISQ/hisqSmearing.h"
+#include "../modules/hisq/hisqSmearing.h"
 
 #define PREC double
 

@@ -5,7 +5,7 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 
 #define USE_GPU true

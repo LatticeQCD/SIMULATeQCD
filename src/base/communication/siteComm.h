@@ -29,7 +29,7 @@
 #include "../wrapper/marker.h"
 
 
-#include "../indexer/HaloIndexer.h"
+#include "../indexer/haloIndexer.h"
 
 #include "calcGSiteHalo_dynamic.h"
 
@@ -101,13 +101,13 @@ private:
 
     HaloOffsetInfo<onDevice> HaloInfo;
 
-    void _injectHalos(Accessor lattice, GCOMPLEX(floatT) *HaloBuffer);
+    void _injectHalos(Accessor lattice, COMPLEX(floatT) *HaloBuffer);
 
-    void _extractHalos(Accessor lattice, GCOMPLEX(floatT) *HaloBuffer);
+    void _extractHalos(Accessor lattice, COMPLEX(floatT) *HaloBuffer);
 
-    void _extractHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
+    void _extractHalosSeg(Accessor acc, COMPLEX(floatT) *HaloBuffer, unsigned int param);
 
-    void _injectHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
+    void _injectHalosSeg(Accessor acc, COMPLEX(floatT) *HaloBuffer, unsigned int param);
     
 
     std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_send_vec;
@@ -122,7 +122,7 @@ public:
 
         _elems = HInd::getHalData().getBufferSize(LatLayout);
 
-        _halElementSize = (int) ElemCount * sizeof(GCOMPLEX(floatT)) * EntryCount;
+        _halElementSize = (int) ElemCount * sizeof(COMPLEX(floatT)) * EntryCount;
         _bufferLength = ElemCount * _elems;
         _bufferSize = sizeof(AccType) * _bufferLength;
 
@@ -313,20 +313,20 @@ public:
 
             if (onDevice) {
                 if (!(_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P())) {
-                    _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
-                    gpuErr = gpuMemcpy(_haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >(),
-                                         _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(), _bufferSize,
+                    _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >());
+                    gpuErr = gpuMemcpy(_haloBuffer_Host->template getPointer<COMPLEX(floatT) >(),
+                                         _haloBuffer_Device->template getPointer<COMPLEX(floatT) >(), _bufferSize,
                                          gpuMemcpyDeviceToHost);
                     if (gpuErr) {
                         GpuError("_haloBuffer_Device: Failed to copy to host", gpuErr);
                     }
                     _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
                 } else {
-                    _extractHalosSeg(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
+                    _extractHalosSeg(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >(),
                                      param);
                 }
             } else {
-                _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >());
+                _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<COMPLEX(floatT) >());
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
             }
         }
@@ -336,20 +336,20 @@ public:
 
             if (onDevice) {
                 if (_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P()) {
-                    _injectHalosSeg(getAccessor(), _haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >(),
+                    _injectHalosSeg(getAccessor(), _haloBuffer_Device_recv->template getPointer<COMPLEX(floatT) >(),
                                     param);
                 } else {
 		            HaloInfo.syncAllStreamRequests();
-                    gpuErr = gpuMemcpy(_haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
-                                         _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >(), _bufferSize,
+                    gpuErr = gpuMemcpy(_haloBuffer_Device->template getPointer<COMPLEX(floatT) >(),
+                                         _haloBuffer_Host_recv->template getPointer<COMPLEX(floatT) >(), _bufferSize,
                                          gpuMemcpyHostToDevice);
                     if (gpuErr)
                         GpuError("_haloBuffer_Device: Failed to copy to device", gpuErr);
-                    _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
+                    _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >());
                 }
             } else {
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | haltype);
-                _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
+                _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<COMPLEX(floatT) >());
             }
         }
         markerEnd();
@@ -361,12 +361,12 @@ template<class floatT, class Accessor, class AccType, size_t EntryCount, size_t 
 struct ExtractInnerHalo {
 
     Accessor _acc;
-    GCOMPLEX(floatT) *pointer[80];
+    COMPLEX(floatT) *pointer[80];
     size_t size[80];
     typedef GIndexer<LatLayout, HaloDepth> GInd;
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
-    ExtractInnerHalo(Accessor acc, GCOMPLEX(floatT) *HaloBuffer) :
+    ExtractInnerHalo(Accessor acc, COMPLEX(floatT) *HaloBuffer) :
             _acc(acc) {
 
         for (int i = 0; i < 80; ++i) {
@@ -390,7 +390,7 @@ struct ExtractInnerHalo {
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalos(
         Accessor acc,
-        GCOMPLEX(floatT) *HaloBuffer) {
+        COMPLEX(floatT) *HaloBuffer) {
 
     size_t size = HaloIndexer<LatLayout, HaloDepth>::getBufferSize();
     if (size == 0) return;
@@ -407,12 +407,12 @@ template<class floatT, class Accessor, class AccType, size_t EntryCount, size_t 
 struct InjectOuterHalo {
 
     Accessor _acc;
-    GCOMPLEX(floatT) *pointer[80];
+    COMPLEX(floatT) *pointer[80];
     size_t size[80];
     typedef GIndexer<LatLayout, HaloDepth> GInd;
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
-    InjectOuterHalo(Accessor acc, GCOMPLEX(floatT) *HaloBuffer) :
+    InjectOuterHalo(Accessor acc, COMPLEX(floatT) *HaloBuffer) :
             _acc(acc) {
         for (int i = 0; i < 80; ++i) {
             pointer[i] = HaloBuffer + HInd::get_SubHaloOffset(i) * EntryCount * ElemCount;
@@ -436,7 +436,7 @@ template<class floatT, bool onDevice, class Accessor, class AccType, size_t Entr
 void
 siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalos(
         Accessor acc,
-        GCOMPLEX(floatT) *HaloBuffer) {
+        COMPLEX(floatT) *HaloBuffer) {
 
     size_t size = HaloIndexer<LatLayout, HaloDepth>::getBufferSize();
     if (size == 0) return;
@@ -475,7 +475,7 @@ struct ExtractInnerHaloSeg {
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalosSeg(
         Accessor acc,
-        GCOMPLEX(floatT) *HaloBuffer,
+        COMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
 
     gpuError_t gpuErr = gpuDeviceSynchronize();
@@ -504,7 +504,7 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
                 ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
 
-                GCOMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
+                COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
                 Accessor hal_acc = Accessor(pointer, size);
 
                 int streamNo = 0;
@@ -561,7 +561,7 @@ struct InjectOuterHaloSeg {
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalosSeg(
         Accessor acc,
-        GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
+        COMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
@@ -590,7 +590,7 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
 
 
-                GCOMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
+                COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
                 Accessor hal_acc = Accessor(pointer, size);
                 int streamNo = 1;
 

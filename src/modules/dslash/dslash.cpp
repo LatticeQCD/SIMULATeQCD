@@ -13,7 +13,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const{
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    gVect3<floatT> Stmp(0.0);
+    Vect3<floatT> Stmp(0.0);
 
 
 #ifdef USE_CUDA
@@ -40,7 +40,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ void HisqDslashThreadRHSFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::operator()(gSite site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    SimpleArray<gVect3<floatT>, NStacks> Stmp((floatT)0.0);
+    SimpleArray<Vect3<floatT>, NStacks> Stmp((floatT)0.0);
     #ifdef USE_CUDA
     #pragma unroll
     #endif
@@ -75,7 +75,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
     
     size_t stack_offset = GInd::getStack(site);
-        SimpleArray<gVect3<floatT>, NStacks> Stmp((floatT)0.0);
+        SimpleArray<Vect3<floatT>, NStacks> Stmp((floatT)0.0);
         #ifdef USE_CUDA
         #pragma unroll
         #endif
@@ -116,7 +116,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ auto HisqMdaggMFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site){
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    gVect3<floatT> Stmp(0.0);
+    Vect3<floatT> Stmp(0.0);
     for (int mu = 0; mu < 4; mu++) {
 
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
@@ -199,7 +199,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ auto stdStagDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const{
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    gVect3<floatT> Stmp(0.0);
+    Vect3<floatT> Stmp(0.0);
     floatT phase =1.0;
     floatT up_bound=1.0;
     floatT down_bound=1.0;

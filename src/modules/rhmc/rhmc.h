@@ -8,14 +8,14 @@
 #ifndef RHMC
 #define RHMC
 
-#include "../../base/math/gsu3.h"
-#include "../../base/math/grnd.h"
+#include "../../base/math/su3.h"
+#include "../../base/math/random.h"
 #include "../../gauge/gaugefield.h"
 #include "rhmcParameters.h"
 #include "../../base/memoryManagement.h"
 #include "../../base/stopWatch.h"
-#include "../../base/LatticeContainer.h"
-#include "../../gauge/GaugeAction.h"
+#include "../../base/latticeContainer.h"
+#include "../../gauge/gaugeAction.h"
 #include "../../gauge/gaugeActionDeriv.h"
 #include "integrator.h"
 #include "../../spinor/spinorfield.h"
@@ -24,8 +24,8 @@
 #include <math.h>
 #include <iostream>
 #include <vector>
-#include "../HISQ/hisqSmearing.h"
-#include "Spinorfield_container.h"
+#include "../hisq/hisqSmearing.h"
+#include "spinorfield_container.h"
 
 
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin=4>
@@ -112,7 +112,7 @@ private:
     AdvancedMultiShiftCG<floatT, 14> cgM;
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> dslash;
 
-    gaugeAccessor<floatT, R18> gAcc;
+    SU3Accessor<floatT, R18> gAcc;
 
     void generate_momenta();
 
