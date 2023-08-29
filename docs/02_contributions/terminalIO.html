@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Terminal output &amp; terminating the program &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,11 +13,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -75,9 +84,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>Terminal output &amp; terminating the program</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
+      <li class="breadcrumb-item active">Terminal output &amp; terminating the program</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/terminalIO.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,13 +96,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="terminal-output-terminating-the-program">
-<h1>Terminal output &amp; terminating the program<a class="headerlink" href="#terminal-output-terminating-the-program" title="Permalink to this headline"></a></h1>
+  <section id="terminal-output-terminating-the-program">
+<h1>Terminal output &amp; terminating the program<a class="headerlink" href="#terminal-output-terminating-the-program" title="Link to this heading"></a></h1>
 <p>Instead of using <code class="docutils literal notranslate"><span class="pre">printf</span></code> or <code class="docutils literal notranslate"><span class="pre">std::cout</span></code>, we use a custom <code class="docutils literal notranslate"><span class="pre">Logger</span></code> class to print statements in a nicely formatted way.
 There are two global instances of the class <code class="docutils literal notranslate"><span class="pre">Logger</span></code> that are automatically created when you include files of the base that include <code class="docutils literal notranslate"><span class="pre">logging.h</span></code>. (This is automatically included in <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD.h</span></code>.)
 These two classes are called <code class="docutils literal notranslate"><span class="pre">stdLogger</span></code> and <code class="docutils literal notranslate"><span class="pre">rootLogger</span></code>.</p>
 <section id="printing-a-statement">
-<h2>Printing a statement<a class="headerlink" href="#printing-a-statement" title="Permalink to this headline"></a></h2>
+<h2>Printing a statement<a class="headerlink" href="#printing-a-statement" title="Link to this heading"></a></h2>
 <p>This is accomplished through</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rootLogger</span><span class="p">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Some information about the currently running program.&quot;</span><span class="p">);</span>
 </pre></div>
@@ -135,13 +144,13 @@ For example:</p>
 </div>
 </section>
 <section id="when-to-use-logger-error">
-<h2>When to use Logger.error()<a class="headerlink" href="#when-to-use-logger-error" title="Permalink to this headline"></a></h2>
+<h2>When to use Logger.error()<a class="headerlink" href="#when-to-use-logger-error" title="Link to this heading"></a></h2>
 <p>Use this when <strong>something goes wrong that can work in principle</strong> but the <strong>program can still continue</strong> and no runtime exception has to be thrown.
 For example, if one subroutine of a test gives the wrong results, but others after it may still be correct,
 it makes sense to use <code class="docutils literal notranslate"><span class="pre">error</span></code>.</p>
 </section>
 <section id="terminating-the-program-in-case-of-error">
-<h2>Terminating the program in case of error<a class="headerlink" href="#terminating-the-program-in-case-of-error" title="Permalink to this headline"></a></h2>
+<h2>Terminating the program in case of error<a class="headerlink" href="#terminating-the-program-in-case-of-error" title="Link to this heading"></a></h2>
 <p>The way to close your program at runtime because of an error is</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="n">stdLogger</span><span class="p">.</span><span class="n">fatal</span><span class="p">(</span><span class="s">&quot;Put&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;your&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;error message here&quot;</span><span class="p">));</span>
 </pre></div>

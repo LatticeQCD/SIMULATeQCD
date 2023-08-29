@@ -11,7 +11,7 @@ Some examples can be find directly in that directory. If you are interested in a
 the following set: this one uses, for example, a lattice $20^4$ and a test configuration.
 
 ```shell
-# This is pre-defined in LatticeParameters in src/base/LatticeParameters.h
+# This is pre-defined in LatticeParameters in src/base/latticeParameters.h
 
 #add the lattice dimensions
 Lattice = 20 20 20 20
@@ -58,7 +58,7 @@ Then, the path `../parameter/<YourInputFile>.param` exists and it is always corr
 
 ## RhmcParameters
 
-There is also a class with all the necessary parameters for the RHMC updates. Generate an object with
+There is also a class with all the necessary parameters for the rhmc updates. Generate an object with
 ```C++
 RhmcParameters <YourRhmcParameterObject>;
 ```
@@ -68,7 +68,7 @@ class. A typical .param file should look like this:
 #
 # rhmc.param
 #
-# Parameter file for RHMC runs with HISQ.
+# Parameter file for rhmc runs with HISQ.
 #
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction

@@ -1,5 +1,5 @@
 /*
- * main_sampleTopology.cpp
+ * main_sampletopology.cpp
  *
  * L. Altenkort
  *
@@ -7,10 +7,10 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/gauge_updates/PureGaugeUpdates.h"
+#include "../simulateqcd.h"
+#include "../modules/gauge_updates/pureGaugeUpdates.h"
 #include "../modules/gradientFlow/gradientFlow.h"
-#include "../modules/observables/Topology.h"
+#include "../modules/observables/topology.h"
 #include <chrono>
 
 #define PREC double
@@ -292,7 +292,7 @@ void init(CommunicationBase &commBase,
         if ( lp.start() == "fixed_random" ){
             rootLogger.info("Starting with all U = some single arbitrary SU3");
             gSite first_site; //by default = 0 0 0 0
-            GSU3<PREC> some_SU3;
+            SU3<PREC> some_SU3;
             some_SU3.random(host_state.getElement(first_site));
             gauge.iterateWithConst(some_SU3);
         } else if ( lp.start() == "all_random"  ){
@@ -426,7 +426,7 @@ int main(int argc, char* argv[]) {
 
         sampleTopologyParameters<PREC> lp;
         CommunicationBase commBase(&argc, &argv);
-        lp.readfile(commBase, "../parameter/applications/GenerateQuenched.param", argc, argv);
+        lp.readfile(commBase, "../parameter/applications/generateQuenched.param", argc, argv);
         commBase.init(lp.nodeDim());
 
         if (lp.nsweeps_HBwithOR() % lp.nsweeps_btwn_topology_meas() != 0) {

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Timing your code &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,11 +13,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -75,9 +84,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>Timing your code</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
+      <li class="breadcrumb-item active">Timing your code</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/timer.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,8 +96,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="timing-your-code">
-<h1>Timing your code<a class="headerlink" href="#timing-your-code" title="Permalink to this headline"></a></h1>
+  <section id="timing-your-code">
+<h1>Timing your code<a class="headerlink" href="#timing-your-code" title="Link to this heading"></a></h1>
 <p>SIMULATeQCD provides a build-in timer called <code class="docutils literal notranslate"><span class="pre">StopWatch</span></code> (<code class="docutils literal notranslate"><span class="pre">src/base/stopWatch.h</span></code>).
 It is capable of measuring the time duration CPU-only routines as well as the time duration GPU-kernels.</p>
 <p>To initialize the timer you simply call</p>
@@ -100,7 +109,7 @@ If <code class="docutils literal notranslate"><span class="pre">device</span> <s
 If <code class="docutils literal notranslate"><span class="pre">device</span> <span class="pre">=</span> <span class="pre">true</span></code> then the time duration of GPU-kernel executions will be considered
 as well. <strong>Please do not construct the StopWatch before the CommBase!</strong></p>
 <section id="measuring-time-duration">
-<h2>Measuring time duration<a class="headerlink" href="#measuring-time-duration" title="Permalink to this headline"></a></h2>
+<h2>Measuring time duration<a class="headerlink" href="#measuring-time-duration" title="Link to this heading"></a></h2>
 <p>Measuring the time duration is quite easy. Here is an example:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Initialize timer which also measure GPU-Kernel execution times:</span>
 <span class="n">StopWatch</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="w"> </span><span class="n">timer</span><span class="p">;</span>
@@ -124,7 +133,7 @@ as well. <strong>Please do not construct the StopWatch before the CommBase!</str
 </div>
 </section>
 <section id="combining-different-timers">
-<h2>Combining different timers<a class="headerlink" href="#combining-different-timers" title="Permalink to this headline"></a></h2>
+<h2>Combining different timers<a class="headerlink" href="#combining-different-timers" title="Link to this heading"></a></h2>
 <p>It’s also possible to add/multiply/etc. different timers, e.g.:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">StopWatch</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="w"> </span><span class="n">timer1</span><span class="p">,</span><span class="w"> </span><span class="n">timer2</span><span class="p">,</span><span class="w"> </span><span class="n">timer3</span><span class="p">;</span>
 
@@ -161,7 +170,7 @@ as well. <strong>Please do not construct the StopWatch before the CommBase!</str
 </div>
 </section>
 <section id="getting-time-in-different-units">
-<h2>Getting time in different units<a class="headerlink" href="#getting-time-in-different-units" title="Permalink to this headline"></a></h2>
+<h2>Getting time in different units<a class="headerlink" href="#getting-time-in-different-units" title="Link to this heading"></a></h2>
 <p>There are some additional convenience functions to obtain the times in different units:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Get time duration in certain units:</span>
 <span class="kt">double</span><span class="w"> </span><span class="n">microseconds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">timer</span><span class="p">.</span><span class="n">microseconds</span><span class="p">();</span>
@@ -177,7 +186,7 @@ as well. <strong>Please do not construct the StopWatch before the CommBase!</str
 </div>
 </section>
 <section id="compute-flop-s-and-mb-s">
-<h2>Compute FLOP/s and MB/s<a class="headerlink" href="#compute-flop-s-and-mb-s" title="Permalink to this headline"></a></h2>
+<h2>Compute FLOP/s and MB/s<a class="headerlink" href="#compute-flop-s-and-mb-s" title="Link to this heading"></a></h2>
 <p>To compute FLOP/s and MB/s one may use these functions:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// set how many bytes were processed (for an MB/s output)</span>
 <span class="n">timer</span><span class="p">.</span><span class="n">setBytes</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span>

@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "../../modules/HISQ/smearParameters.h"
+#include "../../modules/hisq/smearParameters.h"
 #include "derivative3link.h"
 #include "derivative5link.h"
 #include "derivative7link.h"
@@ -16,7 +16,7 @@
 
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R14, CompressionType compForce=R18>
-__host__ __device__ GSU3<floatT> smearingForce(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu,
+__host__ __device__ SU3<floatT> smearingForce(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu,
         SmearingParameters<floatT> _smearparam, int TermCheck = -1, int SubTermCheck = -1, bool doL1 = true, bool doL3 = true, bool doL5 = true,
         bool doL7 = true, bool doLLp = true) {
     typedef GIndexer<All,HaloDepth> GInd;
@@ -28,12 +28,12 @@ __host__ __device__ GSU3<floatT> smearingForce(gaugeAccessor<floatT,compIn> gAcc
     floatT c_lp =_smearparam._c_lp;
     bool isLvl1 = (c_lp == 0.0 ? true : false);
 
-    GSU3<floatT> temp= gsu3_zero<floatT>();
-    GSU3<floatT> derivative_single_link = gsu3_zero<floatT>();
-    GSU3<floatT> derivative_staple3 = gsu3_zero<floatT>();
-    GSU3<floatT> derivative_staple5 = gsu3_zero<floatT>();
-    GSU3<floatT> derivative_staple7 = gsu3_zero<floatT>();
-    GSU3<floatT> derivative_staple_lp = gsu3_zero<floatT>();
+    SU3<floatT> temp= su3_zero<floatT>();
+    SU3<floatT> derivative_single_link = su3_zero<floatT>();
+    SU3<floatT> derivative_staple3 = su3_zero<floatT>();
+    SU3<floatT> derivative_staple5 = su3_zero<floatT>();
+    SU3<floatT> derivative_staple7 = su3_zero<floatT>();
+    SU3<floatT> derivative_staple_lp = su3_zero<floatT>();
 
     derivative_single_link= finAccessor.getLink(GInd::getSiteMu(site, mu));
 
@@ -74,13 +74,13 @@ __host__ __device__ GSU3<floatT> smearingForce(gaugeAccessor<floatT,compIn> gAcc
 
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R14, CompressionType compForce=R18>
-__host__ __device__ GSU3<floatT> threeLinkContribution(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu,
+__host__ __device__ SU3<floatT> threeLinkContribution(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu,
         SmearingParameters<floatT> _smearparam) {
 
     typedef GIndexer<All,HaloDepth> GInd;
     floatT c1 =_smearparam._c_1;
     floatT c3 =_smearparam._c_3;
-    GSU3<floatT> derivative_staple3 = gsu3_zero<floatT>();
+    SU3<floatT> derivative_staple3 = su3_zero<floatT>();
 
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
@@ -91,8 +91,8 @@ __host__ __device__ GSU3<floatT> threeLinkContribution(gaugeAccessor<floatT,comp
 
 
 template<class floatT, size_t HaloDepth, CompressionType compIn=R14, CompressionType compForce=R18>
-__host__ __device__ GSU3<floatT> lepagelinkContribution(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, floatT c_lp) {
-    GSU3<floatT> derivative_lp = gsu3_zero<floatT>();
+__host__ __device__ SU3<floatT> lepagelinkContribution(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu, floatT c_lp) {
+    SU3<floatT> derivative_lp = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu+nu_h)%4;
         derivative_lp += linkDerivativeLepage<floatT,HaloDepth,compIn,compForce>(gAcc, finAccessor, site, mu ,nu);
@@ -102,8 +102,8 @@ __host__ __device__ GSU3<floatT> lepagelinkContribution(gaugeAccessor<floatT,com
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7, int Term, int SubTerm) {
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+__host__ __device__ SU3<floatT> sevenLinkContribution(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7, int Term, int SubTerm) {
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -117,9 +117,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution(gaugeAccessor<floatT, com
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5, int part) {
+__host__ __device__ SU3<floatT> fiveLinkContribution(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5, int part) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -139,9 +139,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution(gaugeAccessor<floatT, comp
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution_11(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ SU3<floatT> fiveLinkContribution_11(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -165,9 +165,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution_11(gaugeAccessor<floatT, c
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution_12(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ SU3<floatT> fiveLinkContribution_12(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -192,9 +192,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution_12(gaugeAccessor<floatT, c
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution_13(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ SU3<floatT> fiveLinkContribution_13(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -218,9 +218,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution_13(gaugeAccessor<floatT, c
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution_14(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ SU3<floatT> fiveLinkContribution_14(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -245,9 +245,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution_14(gaugeAccessor<floatT, c
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution_20(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -293,9 +293,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution_20(gaugeAccessor<floatT, c
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> fiveLinkContribution_30(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
+    SU3<floatT> fivelinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -340,9 +340,9 @@ __host__ __device__ GSU3<floatT> fiveLinkContribution_30(gaugeAccessor<floatT, c
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_1(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_1(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
 
@@ -418,9 +418,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_1(gaugeAccessor<floatT,co
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_2(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_2(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -487,9 +487,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_2(gaugeAccessor<floatT,co
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_3(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_3(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -557,9 +557,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_3(gaugeAccessor<floatT,co
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_4(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_4(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -628,9 +628,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_4(gaugeAccessor<floatT,co
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_5(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_5(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -695,9 +695,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_5(gaugeAccessor<floatT,co
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_6(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_6(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -764,9 +764,9 @@ __host__ __device__ GSU3<floatT> sevenLinkContribution_6(gaugeAccessor<floatT,co
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ GSU3<floatT> sevenLinkContribution_7(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+__host__ __device__ SU3<floatT> sevenLinkContribution_7(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {

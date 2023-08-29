@@ -26,9 +26,9 @@ public:
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct HisqDslashFunctor {
 
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
     floatT _c_3000;
 
     template<bool onDevice, size_t NStacks>
@@ -53,10 +53,10 @@ struct HisqDslashFunctor {
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 struct HisqDslashThreadRHSFunctor {
 
-    gVect3arrayAcc<floatT> _spinorOut;
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    Vect3arrayAcc<floatT> _spinorOut;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
     floatT _c_3000;
 
     template<bool onDevice>
@@ -81,10 +81,10 @@ struct HisqDslashThreadRHSFunctor {
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_cached>
 struct HisqDslashStackedFunctor {
 
-    gVect3arrayAcc<floatT> _spinorOut;
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    Vect3arrayAcc<floatT> _spinorOut;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
     
     
 
@@ -113,10 +113,10 @@ struct HisqDslashStackedFunctor {
 
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct HisqMdaggMFunctor {
-    gVect3arrayAcc<floatT> _spinorTmp;
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    Vect3arrayAcc<floatT> _spinorTmp;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
     floatT _mass2;
     floatT _c_3000;
 
@@ -226,8 +226,8 @@ public:
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct stdStagDslashFunctor {
 
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R14> _gAcc;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R14> _gAcc;
 
     template<bool onDevice, size_t NStacks>
     stdStagDslashFunctor(

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Documenting your code &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,11 +13,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -75,9 +84,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>Documenting your code</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
+      <li class="breadcrumb-item active">Documenting your code</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/documenting.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,11 +96,11 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="documenting-your-code">
-<h1>Documenting your code<a class="headerlink" href="#documenting-your-code" title="Permalink to this headline"></a></h1>
-<p>You have written some <a class="reference internal" href="codeStyle.html"><span class="doc std std-doc">readable code</span></a> that is
-<a class="reference internal" href="codeStructure.html"><span class="doc std std-doc">reasonably organized</span></a> and, crucially, you
-<a class="reference internal" href="testing.html"><span class="doc std std-doc">wrote a test for it</span></a>. There is only one thing left for you to do,
+  <section id="documenting-your-code">
+<h1>Documenting your code<a class="headerlink" href="#documenting-your-code" title="Link to this heading"></a></h1>
+<p>You have written some <a class="reference internal" href="codeStyle.html"><span class="std std-doc">readable code</span></a> that is
+<a class="reference internal" href="codeStructure.html"><span class="std std-doc">reasonably organized</span></a> and, crucially, you
+<a class="reference internal" href="testing.html"><span class="std std-doc">wrote a test for it</span></a>. There is only one thing left for you to do,
 to make sure your code can be easily used and adapted by future developers:
 You must document it!</p>
 <p>To create some documentation, please navigate to <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/doc_src/</span></code>,
@@ -109,7 +118,7 @@ just want to show you how to get started.</p>
 <p>If you would like to use the convenience function <code class="docutils literal notranslate"><span class="pre">docs_src/build/auto_compile.sh</span></code>,
 you will also need to install the shell command <code class="docutils literal notranslate"><span class="pre">entr</span></code>.</p>
 <section id="documentation-syntax">
-<h2>Documentation syntax<a class="headerlink" href="#documentation-syntax" title="Permalink to this headline"></a></h2>
+<h2>Documentation syntax<a class="headerlink" href="#documentation-syntax" title="Link to this heading"></a></h2>
 <p>You can <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">Title</span> <span class="pre">Your</span> <span class="pre">Page</span></code> like so. Each <code class="docutils literal notranslate"><span class="pre">##</span> <span class="pre">Heading</span></code> and <code class="docutils literal notranslate"><span class="pre">###</span> <span class="pre">Subheading</span></code> just
 requires more pound symbols #.</p>
 <p>Links to <code class="docutils literal notranslate"><span class="pre">[other</span> <span class="pre">documentation](path_to_documentation.md)</span></code> and to
@@ -136,21 +145,21 @@ you can also see examples of the block code in action by looking into the docume
 <p>Note that not all file types for images are supported.</p>
 </section>
 <section id="compilation">
-<h2>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline"></a></h2>
+<h2>Compilation<a class="headerlink" href="#compilation" title="Link to this heading"></a></h2>
 <p>Once you have added a <code class="docutils literal notranslate"><span class="pre">.md</span></code> file for your file, incorporate it into the most appropriate overarching <code class="docutils literal notranslate"><span class="pre">.md</span></code> file.
 (For instance this one falls under <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/docs_src/02_contributions/contributions.md</span></code>.) You can see how you
 did by compiling your code using <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/docs_src/build/compile.sh</span></code>. If you want to see how it looks, you can
 open the <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/docs_src/build/index.html</span></code> file using your favorite browser. For example you could call
-<code class="docutils literal notranslate"><span class="pre">firefox</span> <span class="pre">index.html</span></code> from the command line inside the <code class="docutils literal notranslate"><span class="pre">build</span></code> folder. When it looks nice, you can <a class="reference internal" href="git.html"><span class="doc std std-doc">commit your changes</span></a>.</p>
+<code class="docutils literal notranslate"><span class="pre">firefox</span> <span class="pre">index.html</span></code> from the command line inside the <code class="docutils literal notranslate"><span class="pre">build</span></code> folder. When it looks nice, you can <a class="reference internal" href="git.html"><span class="std std-doc">commit your changes</span></a>.</p>
 </section>
 <section id="some-stylistic-guidelines-for-documentation">
-<h2>Some stylistic guidelines for documentation<a class="headerlink" href="#some-stylistic-guidelines-for-documentation" title="Permalink to this headline"></a></h2>
+<h2>Some stylistic guidelines for documentation<a class="headerlink" href="#some-stylistic-guidelines-for-documentation" title="Link to this heading"></a></h2>
 <p>SIMULATeQCD is, at the moment, managed only by a handful of rather busy scientists. Nevertheless we would like to
 have our code and documentation look professional and polished. This is difficult to achieve without someone
 explicitly going through and checking for consistency; the best we can do is probably a bottom-up approach,
 where we trust you to read these guidelines and try to keep them in mind. We will try to update this list as we think
 of more things.</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>Please use a spell checker.</p></li>
 <li><p>Try to capitalize page titles and headings consistently. (For example on headings we are generally only capitalizing the first word, unless some grammatical rule would otherwise call for it.)</p></li>
 <li><p>Set aside your code names and snippets in boxes.</p></li>

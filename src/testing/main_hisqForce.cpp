@@ -6,9 +6,9 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/HISQ/hisqSmearing.h"
-#include "../modules/HISQ/hisqForce.h"
+#include "../simulateqcd.h"
+#include "../modules/hisq/hisqSmearing.h"
+#include "../modules/hisq/hisqForce.h"
 #include "testing.h"
 
 #define PREC double
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 
     force_host=force;
 
-    GSU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
+    SU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
 
     rootLogger.info("Time: " ,  timer);
     rootLogger.info("Force:");

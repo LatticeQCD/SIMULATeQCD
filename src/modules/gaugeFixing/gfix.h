@@ -13,8 +13,8 @@
 
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
-#include "../../base/LatticeContainer.h"
-#include "../../base/math/gsu2.h"
+#include "../../base/latticeContainer.h"
+#include "../../base/math/su2.h"
 
 
 /// Class for gauge fixing functions. For now this only includes simple functions that calculate the gauge fixing

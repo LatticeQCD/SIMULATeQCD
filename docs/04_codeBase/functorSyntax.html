@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Functor syntax &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,11 +13,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -72,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="codeBase.html">Code base</a> &raquo;</li>
-      <li>Functor syntax</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="codeBase.html">Code base</a></li>
+      <li class="breadcrumb-item active">Functor syntax</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/functorSyntax.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,8 +93,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="functor-syntax">
-<h1>Functor syntax<a class="headerlink" href="#functor-syntax" title="Permalink to this headline"></a></h1>
+  <section id="functor-syntax">
+<h1>Functor syntax<a class="headerlink" href="#functor-syntax" title="Link to this heading"></a></h1>
 <p>In SIMULATeQCD we try to abstract away highly complex parallelization, which
 depends on the API, whether GPUs or CPUs are used, the number of processes,
 the node layout being used, and so on.
@@ -106,7 +115,7 @@ to the <code class="docutils literal notranslate"><span class="pre">operator()</
 <code class="docutils literal notranslate"><span class="pre">CalcGSite</span></code> methods that tell the iterator how to translate from
 these objects to GPU thread indices.</p>
 <p>There are many thorough examples on how to use functor syntax in
-<code class="docutils literal notranslate"><span class="pre">src/testing/main_GeneralFunctorTest.cpp</span></code>. One example functor implementation
+<code class="docutils literal notranslate"><span class="pre">src/testing/main_generalFunctorTest.cpp</span></code>. One example functor implementation
 for the plaquette is shown below:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">//! Functor to compute the plaquette given a gSite. It is called in a Kernel that is already defined by templates.</span>
 <span class="c1">//! You do not need to write a custom Kernel. See below.</span>
@@ -125,7 +134,7 @@ for the plaquette is shown below:</p>
 <span class="w">    </span><span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="n">floatT</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">gSite</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span>
 
-<span class="w">        </span><span class="n">GSU3</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
+<span class="w">        </span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
 <span class="w">        </span><span class="n">floatT</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
 <span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>

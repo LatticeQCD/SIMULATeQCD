@@ -5,8 +5,8 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
+#include "../simulateqcd.h"
+#include "../modules/observables/wilsonLineCorrelatorMultiGPU.h"
 
 #define PREC double
 #define STACKS 96

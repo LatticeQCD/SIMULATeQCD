@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>How to make an input parameter file &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,14 +13,17 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -77,9 +84,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="contributions.html">Contributions</a> &raquo;</li>
-      <li>How to make an input parameter file</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
+      <li class="breadcrumb-item active">How to make an input parameter file</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/inputParameter.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,18 +96,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="how-to-make-an-input-parameter-file">
-<h1>How to make an input parameter file<a class="headerlink" href="#how-to-make-an-input-parameter-file" title="Permalink to this headline"></a></h1>
+  <section id="how-to-make-an-input-parameter-file">
+<h1>How to make an input parameter file<a class="headerlink" href="#how-to-make-an-input-parameter-file" title="Link to this heading"></a></h1>
 <section id="using-latticeparameters">
-<h2>Using LatticeParameters<a class="headerlink" href="#using-latticeparameters" title="Permalink to this headline"></a></h2>
+<h2>Using LatticeParameters<a class="headerlink" href="#using-latticeparameters" title="Link to this heading"></a></h2>
 <p>After creating your own executable, maybe you want to use an input file with some parameters.
 In order to to that, create an input file in <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/parameter</span></code> with the name:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">custom_name</span><span class="o">&gt;.</span><span class="n">param</span>
 </pre></div>
 </div>
 <p>Some examples can be find directly in that directory. If you are interested in a very basic input file, you can use
-the following set: this one uses, for example, a lattice <span class="math notranslate nohighlight">\(20^4\)</span> and a test configuration.</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># This is pre-defined in LatticeParameters in src/base/LatticeParameters.h</span>
+the following set: this one uses, for example, a lattice $20^4$ and a test configuration.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1"># This is pre-defined in LatticeParameters in src/base/latticeParameters.h</span>
 
 <span class="c1">#add the lattice dimensions</span>
 <span class="nv">Lattice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span>
@@ -143,8 +150,8 @@ executable, without input parameter. Notice that your executable is in <code cla
 Then, the path <code class="docutils literal notranslate"><span class="pre">../parameter/&lt;YourInputFile&gt;.param</span></code> exists and it is always correct.</p>
 </section>
 <section id="rhmcparameters">
-<h2>RhmcParameters<a class="headerlink" href="#rhmcparameters" title="Permalink to this headline"></a></h2>
-<p>There is also a class with all the necessary parameters for the RHMC updates. Generate an object with</p>
+<h2>RhmcParameters<a class="headerlink" href="#rhmcparameters" title="Link to this heading"></a></h2>
+<p>There is also a class with all the necessary parameters for the rhmc updates. Generate an object with</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">RhmcParameters</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourRhmcParameterObject</span><span class="o">&gt;</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -153,7 +160,7 @@ class. A typical .param file should look like this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
 <span class="c1"># rhmc.param</span>
 <span class="c1">#</span>
-<span class="c1"># Parameter file for RHMC runs with HISQ.</span>
+<span class="c1"># Parameter file for rhmc runs with HISQ.</span>
 <span class="c1">#</span>
 <span class="c1">#      Lattice: Nx Ny Nz Nt</span>
 <span class="c1">#        Nodes: Number of nodes per direction</span>
@@ -206,7 +213,7 @@ class. A typical .param file should look like this:</p>
 </div>
 </section>
 <section id="rational-approximation-coefficients">
-<h2>Rational Approximation Coefficients<a class="headerlink" href="#rational-approximation-coefficients" title="Permalink to this headline"></a></h2>
+<h2>Rational Approximation Coefficients<a class="headerlink" href="#rational-approximation-coefficients" title="Link to this heading"></a></h2>
 <p>There is a class holding the coefficients for the rational approximation, again it is a child class of <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code>. To read in rational coefficients, just use</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">RationalCoeff</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourRatCoeffObject</span><span class="o">&gt;</span><span class="p">;</span>
 <span class="o">&lt;</span><span class="n">YourRatCoeffObject</span><span class="o">&gt;</span><span class="p">.</span><span class="n">readfile</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">YourRhmcParameterObject</span><span class="o">&gt;</span><span class="p">.</span><span class="n">rat_file</span><span class="p">(),</span><span class="w"> </span><span class="n">argc</span><span class="p">,</span><span class="w"> </span><span class="n">argv</span><span class="p">);</span>
@@ -238,7 +245,7 @@ class. A typical .param file should look like this:</p>
 <p>CAVE: The rhmc class assumes that r_1f, r_2f, r_inv_1f and r_inv_2f are of the same order! Same goes for r_bar_1f and r_bar_2f.</p>
 </section>
 <section id="using-your-own-parameter-class">
-<h2>Using your own Parameter Class<a class="headerlink" href="#using-your-own-parameter-class" title="Permalink to this headline"></a></h2>
+<h2>Using your own Parameter Class<a class="headerlink" href="#using-your-own-parameter-class" title="Link to this heading"></a></h2>
 <p>If you need more parameters that they are not in the <code class="docutils literal notranslate"><span class="pre">LatticeParameters</span></code> class, consider to create your own parameter class.
 Some example of how to construct an input parameter class can be found in <code class="docutils literal notranslate"><span class="pre">main_gradientFlow.cpp</span></code>, in particular see
 the <code class="docutils literal notranslate"><span class="pre">gradientFlowParam</span></code> class.</p>

@@ -9,7 +9,7 @@
 
 #include "../define.h"
 #include "../base/math/operators.h"
-#include "../base/math/gsu3array.h"
+#include "../base/math/su3array.h"
 #include "../base/gutils.h"
 #include "../base/IO/misc.h"
 #include "../base/communication/siteComm.h"
@@ -18,10 +18,10 @@ template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDep
 struct convert_prec;
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R18>
-class Gaugefield : public siteComm<floatT, onDevice, gaugeAccessor<floatT, comp>, GSU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
+class Gaugefield : public siteComm<floatT, onDevice, SU3Accessor<floatT, comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
 {
 protected:
-    GSU3array<floatT, onDevice, comp> _lattice;
+    SU3array<floatT, onDevice, comp> _lattice;
 private:
 
     Gaugefield(const Gaugefield<floatT, onDevice, HaloDepth> &glat) = delete;
@@ -30,7 +30,7 @@ public:
     typedef GIndexer<All, HaloDepth> GInd;
 
     explicit Gaugefield(CommunicationBase &comm, std::string gaugefieldName="Gaugefield")
-            : siteComm<floatT, onDevice, gaugeAccessor<floatT,comp>, GSU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>(comm),
+            : siteComm<floatT, onDevice, SU3Accessor<floatT,comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>(comm),
               _lattice(GInd::getLatData().vol4Full * 4, gaugefieldName) {
     }
 
@@ -48,26 +48,26 @@ public:
     }
 
 
-    const GSU3array<floatT, onDevice,comp> &get_lattice_pointer() const { return _lattice; }
+    const SU3array<floatT, onDevice,comp> &get_lattice_pointer() const { return _lattice; }
 
     void readconf_nersc(const std::string &fname);
-    void readconf_nersc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
+    void readconf_nersc_host(SU3Accessor<floatT,comp> SU3Accessor, const std::string &fname);
 
     void readconf_ildg(const std::string &fname);
-    void readconf_ildg_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
+    void readconf_ildg_host(SU3Accessor<floatT,comp> SU3Accessor, const std::string &fname);
 
     void readconf_milc(const std::string &fname);
-    void readconf_milc_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
+    void readconf_milc_host(SU3Accessor<floatT,comp> SU3Accessor, const std::string &fname);
 
     void readconf_openqcd(const std::string &fname);
-    void readconf_openqcd_host(gaugeAccessor<floatT,comp> gaugeAccessor, const std::string &fname);
+    void readconf_openqcd_host(SU3Accessor<floatT,comp> SU3Accessor, const std::string &fname);
 
     void writeconf_nersc(const std::string &fname, int rows = 2, int diskprec = 1, Endianness e = ENDIAN_BIG);
-    void writeconf_nersc_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, int rows = 2,
+    void writeconf_nersc_host(SU3Accessor<floatT, comp> SU3Accessor, const std::string &fname, int rows = 2,
                               int diskprec = 1, Endianness e = ENDIAN_BIG);
 
     void writeconf_ildg(const std::string &fname, LatticeParameters param);
-    void writeconf_ildg_host(gaugeAccessor<floatT, comp> gaugeAccessor, const std::string &fname, LatticeParameters param);
+    void writeconf_ildg_host(SU3Accessor<floatT, comp> SU3Accessor, const std::string &fname, LatticeParameters param);
 
 
     /// init lattice
@@ -88,7 +88,7 @@ public:
         _lattice.swap(gauge._lattice);
     }
 
-    gaugeAccessor<floatT, comp> getAccessor() const;
+    SU3Accessor<floatT, comp> getAccessor() const;
 
     template<unsigned BlockSize = 64, typename Functor>
     void iterateOverFullAllMu(Functor op);
@@ -123,17 +123,17 @@ public:
 
 template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct convert_prec {
-    gaugeAccessor<floatT_source,comp> gAcc_source;
+    SU3Accessor<floatT_source,comp> gAcc_source;
 
     convert_prec(Gaugefield<floatT_source, onDevice, HaloDepth, comp> &gaugeIn) : gAcc_source(gaugeIn.getAccessor()) {}
 
-    __device__ __host__ GSU3<floatT_target> operator()(gSiteMu site) {
+    __device__ __host__ SU3<floatT_target> operator()(gSiteMu site) {
         return gAcc_source.template getLink<floatT_target>(site);
     }
 };
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-inline gaugeAccessor<floatT, comp> Gaugefield<floatT, onDevice, HaloDepth, comp>::getAccessor() const {
+inline SU3Accessor<floatT, comp> Gaugefield<floatT, onDevice, HaloDepth, comp>::getAccessor() const {
     return (_lattice.getAccessor());
 }
 

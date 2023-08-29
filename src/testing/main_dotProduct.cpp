@@ -5,7 +5,7 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 template<class floatT, Layout LatLayout, bool onDevice>
@@ -22,7 +22,7 @@ void run_func_nostacks(CommunicationBase &commBase) {
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
-    GCOMPLEX(double) dot(0.0,0.0);
+    COMPLEX(double) dot(0.0,0.0);
 
     timer.start();
     dot = spinorIn.dotProduct(spinorIn);
@@ -49,7 +49,7 @@ void run_func(CommunicationBase &commBase) {
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
 
     timer.start();
     dot = spinorIn.dotProductStacked(spinorIn);
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
         CommunicationBase commBase(&argc, &argv);
         RhmcParameters param;
 
-        param.readfile(commBase, "../parameter/tests/MixedPrecInverterTest.param", argc, argv);
+        param.readfile(commBase, "../parameter/tests/mixedPrecInverterTest.param", argc, argv);
 
         RationalCoeff rat;
 

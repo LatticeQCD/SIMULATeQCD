@@ -4,19 +4,19 @@
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
 struct do_evolve_Q
 {
-    do_evolve_Q(gaugeAccessor<floatT, comp> gAcc,gaugeAccessor<floatT> pAccessor,floatT stepsize) : _stepsize(stepsize),
+    do_evolve_Q(SU3Accessor<floatT, comp> gAcc,SU3Accessor<floatT> pAccessor,floatT stepsize) : _stepsize(stepsize),
     _pAccessor(pAccessor), _gAcc(gAcc){}
 
     double _stepsize;
-    gaugeAccessor<floatT> _pAccessor;
-    gaugeAccessor<floatT, comp> _gAcc;
+    SU3Accessor<floatT> _pAccessor;
+    SU3Accessor<floatT, comp> _gAcc;
 
-    __host__ __device__ __host__ GSU3<floatT> operator()(gSiteMu site){
+    __host__ __device__ __host__ SU3<floatT> operator()(gSiteMu site){
         typedef GIndexer<All,HaloDepth> GInd;
 
-        GSU3<double> temp;
+        SU3<double> temp;
 
-        temp= su3_exp<double>(GCOMPLEX(double)(0.0,1.0)*_stepsize*_pAccessor.template getLink<double>(site))
+        temp= su3_exp<double>(COMPLEX(double)(0.0,1.0)*_stepsize*_pAccessor.template getLink<double>(site))
         *_gAcc.template getLink<double>(site);
 
         temp.su3unitarize();
@@ -28,20 +28,20 @@ struct do_evolve_Q
 template<class floatT, size_t HaloDepth>
 struct do_evolve_P
 {
-    do_evolve_P(gaugeAccessor<floatT> ipdotAccessor,gaugeAccessor<floatT> pAccessor,floatT stepsize) : _stepsize(stepsize),
+    do_evolve_P(SU3Accessor<floatT> ipdotAccessor,SU3Accessor<floatT> pAccessor,floatT stepsize) : _stepsize(stepsize),
     _pAccessor(pAccessor), _ipdotAccessor(ipdotAccessor){}
 
     floatT _stepsize;
-    gaugeAccessor<floatT> _pAccessor;
-    gaugeAccessor<floatT> _ipdotAccessor;
+    SU3Accessor<floatT> _pAccessor;
+    SU3Accessor<floatT> _ipdotAccessor;
 
-    __device__ __host__ GSU3<floatT> operator()(gSiteMu site){
+    __device__ __host__ SU3<floatT> operator()(gSiteMu site){
         typedef GIndexer<All,HaloDepth> GInd;
 
-        GSU3<double> temp;
+        SU3<double> temp;
 
         temp = _pAccessor.template getLink<double>(site);
-        temp -= GCOMPLEX(double)(0.0,1.0)*_stepsize *_ipdotAccessor.template getLink<double>(site);
+        temp -= COMPLEX(double)(0.0,1.0)*_stepsize *_ipdotAccessor.template getLink<double>(site);
 
         return temp;
     }
@@ -50,15 +50,15 @@ struct do_evolve_P
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
 struct get_gauge_Force
 {
-    gaugeAccessor<floatT, comp> _gAcc;
+    SU3Accessor<floatT, comp> _gAcc;
     floatT _beta;
 
-    get_gauge_Force(gaugeAccessor<floatT, comp> gAcc, floatT beta) : _gAcc(gAcc), _beta(beta){}
-    __device__ __host__ GSU3<floatT> operator()(gSiteMu siteM){
+    get_gauge_Force(SU3Accessor<floatT, comp> gAcc, floatT beta) : _gAcc(gAcc), _beta(beta){}
+    __device__ __host__ SU3<floatT> operator()(gSiteMu siteM){
         typedef GIndexer<All,HaloDepth> GInd;
         gSite site(GInd::getSite(siteM.isite));
 
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
         temp = gauge_force<floatT,HaloDepth,comp>(_gAcc, siteM, _beta);
 
         return temp;
@@ -70,8 +70,8 @@ struct get_gauge_Force
 template<class floatT, size_t HaloDepth>
 struct get_mom_tr
 {
-    gaugeAccessor<floatT> _pAccessor;
-    get_mom_tr(gaugeAccessor<floatT> pAccessor): _pAccessor(pAccessor){}
+    SU3Accessor<floatT> _pAccessor;
+    get_mom_tr(SU3Accessor<floatT> pAccessor): _pAccessor(pAccessor){}
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
 
@@ -464,12 +464,12 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::upda
 template<class floatT, size_t HaloDepth>
 struct trace {
 
-    gaugeAccessor<floatT> _ipdotAccessor;
-    trace(gaugeAccessor<floatT> ipdotAccessor) : _ipdotAccessor(ipdotAccessor){}
+    SU3Accessor<floatT> _ipdotAccessor;
+    trace(SU3Accessor<floatT> ipdotAccessor) : _ipdotAccessor(ipdotAccessor){}
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
 
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
 
         floatT ret =0.0;
 

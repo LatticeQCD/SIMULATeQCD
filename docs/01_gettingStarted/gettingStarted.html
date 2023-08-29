@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Getting started &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,11 +13,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -62,8 +71,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting started</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Getting started</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/01_gettingStarted/gettingStarted.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,14 +82,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="getting-started">
-<h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline"></a></h1>
+  <section id="getting-started">
+<h1>Getting started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h1>
 <p>There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
 we recommend that you use the container build. The container will automatically grab all software you need.
 If you are running on an HPC system or want to use AMD, we recommmend you compile manually and ensure that all needed
 software already exists on the system you’re using.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading"></a></h2>
 <p>Before cloning anything, we recommend you get <code class="docutils literal notranslate"><span class="pre">git-lfs</span></code>. The reason we recommend this is that we have several configurations
 used to test some of the SIMULATeQCD methods. These are too large to keep in a conventional repository, so we host them
 using <code class="docutils literal notranslate"><span class="pre">git-lfs</span></code>. SIMULATeQCD will work without it, but you won’t be able to run the tests.</p>
@@ -101,7 +110,7 @@ tar<span class="w"> </span>-xf<span class="w"> </span>git-lfs-linux-amd64-v3.0.2
 <p>and you can activate it with <code class="docutils literal notranslate"><span class="pre">/path/to/install/dir/bin/git-lfs</span> <span class="pre">install</span></code>. Finally you will need to add <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PATH=/path/to/install/dir/bin:$PATH</span></code> to your <code class="docutils literal notranslate"><span class="pre">.bashrc</span></code>.</p>
 </section>
 <section id="how-to-download-the-code">
-<h2>How to download the code<a class="headerlink" href="#how-to-download-the-code" title="Permalink to this headline"></a></h2>
+<h2>How to download the code<a class="headerlink" href="#how-to-download-the-code" title="Link to this heading"></a></h2>
 <p>First, make sure you have activated git-lfs using <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">lfs</span> <span class="pre">install</span></code>.
 The code can then be cloned to your folder using:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/LatticeQCD/SIMULATeQCD.git
@@ -114,14 +123,14 @@ are interested in developing SIMULATeQCD, you will need to use the command</p>
 </div>
 </section>
 <section id="build-manual">
-<h2>Build (manual)<a class="headerlink" href="#build-manual" title="Permalink to this headline"></a></h2>
+<h2>Build (manual)<a class="headerlink" href="#build-manual" title="Link to this heading"></a></h2>
 <p>If you would like to use AMD, would like to make substantial contributions to SIMULATeQCD,
 or are running on an HPC system, you will need to do a manual build.
 If you have an NVIDIA GPU, are running locally, and don’t plan to do much development, we recommend you
-skip down to the <a class="reference internal" href="#build-container"><span class="std std-doc">container build</span></a> section, because the container will take
+skip down to the <a class="reference internal" href="#build-container"><span class="std std-ref">container build</span></a> section, because the container will take
 care of all the hassle of finding and installing software automatically.</p>
 <p>For the manual build, you will need to make sure the following are installed:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">cmake</span></code> (Some versions have the “–pthread” compiler bug. Versions that definitely work are <a class="reference external" href="https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6">3.14.6</a> or 3.19.2.)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C++</span></code> compiler with <code class="docutils literal notranslate"><span class="pre">C++17</span></code> support.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">MPI</span></code> (e.g. <code class="docutils literal notranslate"><span class="pre">openmpi-4.0.4</span></code>).</p></li>
@@ -129,7 +138,7 @@ care of all the hassle of finding and installing software automatically.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> to build the documentation.</p></li>
 </ol>
 <section id="building-source-with-cuda">
-<h3>Building source with CUDA<a class="headerlink" href="#building-source-with-cuda" title="Permalink to this headline"></a></h3>
+<h3>Building source with CUDA<a class="headerlink" href="#building-source-with-cuda" title="Link to this heading"></a></h3>
 <p>To build the source with CUDA, you need to have the <code class="docutils literal notranslate"><span class="pre">CUDA</span> <span class="pre">Toolkit</span></code> version 11.0 or higher installed on your machine.
 To setup the compilation, create a folder outside of the code directory (e.g. <code class="docutils literal notranslate"><span class="pre">../buildSIMULATeQCD/</span></code>) and <strong>from there</strong> call the following example script:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>cmake<span class="w"> </span>../SIMULATeQCD/<span class="w"> </span><span class="se">\</span>
@@ -143,7 +152,7 @@ You can set the CUDA installation path manually by setting the <code class="docu
 <code class="docutils literal notranslate"><span class="pre">-DARCHITECTURE</span></code> sets the GPU architecture (i.e. <a class="reference external" href="https://en.wikipedia.org/wiki/CUDA#GPUs_supported">compute capability</a> version without the decimal point). For example “60” for Pascal and “70” for Volta.</p>
 </section>
 <section id="building-source-with-hip-for-nvidia-platforms-experimental">
-<h3>Building source with HIP for NVIDIA platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-nvidia-platforms-experimental" title="Permalink to this headline"></a></h3>
+<h3>Building source with HIP for NVIDIA platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-nvidia-platforms-experimental" title="Link to this heading"></a></h3>
 <p>In order to build the source with HIP for NVIDIA platforms,
 you need to make sure that</p>
 <ul class="simple">
@@ -167,7 +176,7 @@ You can also set the CUDA installation path manually by setting the <code class=
 <code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.</p>
 </section>
 <section id="building-source-with-hip-for-amd-platforms-experimental">
-<h3>Building source with HIP for AMD platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-amd-platforms-experimental" title="Permalink to this headline"></a></h3>
+<h3>Building source with HIP for AMD platforms (Experimental!)<a class="headerlink" href="#building-source-with-hip-for-amd-platforms-experimental" title="Link to this heading"></a></h3>
 <p>In order to build the source with HIP for AMD platforms,
 you need to make sure that</p>
 <ul class="simple">
@@ -189,7 +198,7 @@ You can set the HIP installation path manually by setting the <code class="docut
 <code class="docutils literal notranslate"><span class="pre">-DUSE_GPU_P2P=ON</span></code> is not yet supported by this backend.</p>
 </section>
 <section id="compiling-particular-executables">
-<h3>Compiling particular executables<a class="headerlink" href="#compiling-particular-executables" title="Permalink to this headline"></a></h3>
+<h3>Compiling particular executables<a class="headerlink" href="#compiling-particular-executables" title="Link to this heading"></a></h3>
 <p>Inside the build folder, you can now begin to use <code class="docutils literal notranslate"><span class="pre">make</span></code> to compile your executables, e.g.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>NameOfExecutable
 </pre></div>
@@ -201,25 +210,25 @@ look at <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD
 </section>
 </section>
 <section id="build-container">
-<h2>Build (container)<a class="headerlink" href="#build-container" title="Permalink to this headline"></a></h2>
+<h2>Build (container)<a class="headerlink" href="#build-container" title="Link to this heading"></a></h2>
 <p>If you just want to get something running quickly on your laptop or desktop, this is likely the easiest way to go.</p>
 <section id="install-podman">
-<h3>Install Podman<a class="headerlink" href="#install-podman" title="Permalink to this headline"></a></h3>
+<h3>Install Podman<a class="headerlink" href="#install-podman" title="Link to this heading"></a></h3>
 <section id="on-rhel-based-rocky-centos-rhel-systems">
-<h4>On RHEL-based (Rocky/CentOS/RHEL) systems<a class="headerlink" href="#on-rhel-based-rocky-centos-rhel-systems" title="Permalink to this headline"></a></h4>
+<h4>On RHEL-based (Rocky/CentOS/RHEL) systems<a class="headerlink" href="#on-rhel-based-rocky-centos-rhel-systems" title="Link to this heading"></a></h4>
 <p>Before continuing make sure there are no updates pending with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">dnf</span> <span class="pre">update</span> <span class="pre">-y</span> <span class="pre">&amp;&amp;</span> <span class="pre">sudo</span> <span class="pre">dnf</span> <span class="pre">install</span> <span class="pre">-y</span> <span class="pre">podman</span></code> and then reboot with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">reboot</span></code>. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.</p>
 </section>
 <section id="on-arch-based-systems">
-<h4>On Arch-based systems<a class="headerlink" href="#on-arch-based-systems" title="Permalink to this headline"></a></h4>
+<h4>On Arch-based systems<a class="headerlink" href="#on-arch-based-systems" title="Link to this heading"></a></h4>
 <p>See <a class="reference external" href="https://wiki.archlinux.org/title/Podman">install instructions</a>. If you have installed Arch before the upgrade to shadow (as in /etc/shadow) 4.11.1-3 rootless podman may encounter some issues. The build script will check for these anomalies and prompt you if you need to fix them.</p>
 </section>
 <section id="other-nix-systems">
-<h4>Other *NIX Systems<a class="headerlink" href="#other-nix-systems" title="Permalink to this headline"></a></h4>
+<h4>Other *NIX Systems<a class="headerlink" href="#other-nix-systems" title="Link to this heading"></a></h4>
 <p>If you have a non RHEL-based OS see <a class="reference external" href="https://podman.io/getting-started/installation.html#linux-distributions">here</a> for installation instructions.</p>
 </section>
 </section>
 <section id="make-sure-podman-works">
-<h3>Make sure Podman works<a class="headerlink" href="#make-sure-podman-works" title="Permalink to this headline"></a></h3>
+<h3>Make sure Podman works<a class="headerlink" href="#make-sure-podman-works" title="Link to this heading"></a></h3>
 <p>Run <code class="docutils literal notranslate"><span class="pre">podman</span> <span class="pre">run</span> <span class="pre">hello-world</span></code> as your user to test your privileges.
 If this does not run correctly, the container build will not function.</p>
 <p>If you see the error:</p>
@@ -230,10 +239,10 @@ If this does not run correctly, the container build will not function.</p>
 <p><strong>WARNING</strong>: If you are SSH’ing to your server, make sure you ssh as a user and <strong>not</strong> root. If you SSH as root and then <code class="docutils literal notranslate"><span class="pre">su</span></code> to user, podman will issue <code class="docutils literal notranslate"><span class="pre">ERRO[0000]</span> <span class="pre">XDG_RUNTIME_DIR</span> <span class="pre">directory</span> <span class="pre">&quot;/run/user/0&quot;</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">owned</span> <span class="pre">by</span> <span class="pre">the</span> <span class="pre">current</span> <span class="pre">user</span></code>. This happens because the user that originally setup <code class="docutils literal notranslate"><span class="pre">/run</span></code> is root rather than your user.</p>
 </section>
 <section id="build-the-code">
-<h3>Build the code<a class="headerlink" href="#build-the-code" title="Permalink to this headline"></a></h3>
-<ol class="simple">
+<h3>Build the code<a class="headerlink" href="#build-the-code" title="Link to this heading"></a></h3>
+<ol class="arabic simple">
 <li><p>Update <code class="docutils literal notranslate"><span class="pre">podman-build/config.yml</span></code> with any settings you would like to use for your build. This includes your target output directory.</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>You can run <code class="docutils literal notranslate"><span class="pre">&lt;where_you_downloaded&gt;/simulate_qcd.sh</span> <span class="pre">list</span></code> to get a list of possible build targets.</p></li>
 <li><p>If you want to change where the code outputs to, you need to update OUTPUT_DIRECTORY in <code class="docutils literal notranslate"><span class="pre">podman-build/config.yml</span></code>. It will create a folder called build in the specified folder.</p></li>
 </ol>
@@ -243,16 +252,16 @@ If this does not run correctly, the container build will not function.</p>
 </section>
 </section>
 <section id="how-to-run">
-<h2>How to run<a class="headerlink" href="#how-to-run" title="Permalink to this headline"></a></h2>
+<h2>How to run<a class="headerlink" href="#how-to-run" title="Link to this heading"></a></h2>
 <section id="on-a-cluster-using-slurm">
-<h3>On a cluster using <code class="docutils literal notranslate"><span class="pre">slurm</span></code><a class="headerlink" href="#on-a-cluster-using-slurm" title="Permalink to this headline"></a></h3>
+<h3>On a cluster using <code class="docutils literal notranslate"><span class="pre">slurm</span></code><a class="headerlink" href="#on-a-cluster-using-slurm" title="Link to this heading"></a></h3>
 <p>If you are on a cluster that uses slurm, then inside of your sbatch script do not use <code class="docutils literal notranslate"><span class="pre">mpiexec</span></code> or <code class="docutils literal notranslate"><span class="pre">mpirun</span></code>, but instead do</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>-n<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;
 </pre></div>
 </div>
 </section>
 <section id="on-your-local-machine-desktop-laptop">
-<h3>On your local machine (desktop, laptop, …)<a class="headerlink" href="#on-your-local-machine-desktop-laptop" title="Permalink to this headline"></a></h3>
+<h3>On your local machine (desktop, laptop, …)<a class="headerlink" href="#on-your-local-machine-desktop-laptop" title="Link to this heading"></a></h3>
 <p>Any program has to be launched using mpirun or mpiexec.
 For example:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mpiexec<span class="w"> </span>-np<span class="w"> </span>&lt;NoGPUs&gt;<span class="w"> </span>./&lt;program&gt;

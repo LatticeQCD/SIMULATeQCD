@@ -11,10 +11,10 @@
 #include "../base/gutils.h"
 #include "math/operators.h"
 #include "../base/communication/communicationBase.h"
-#include "../base/utilities/ParseObjectName.h"
+#include "../base/utilities/parseObjectName.h"
 #include "wrapper/marker.h"
 
-#include "../base/indexer/HaloIndexer.h"
+#include "../base/indexer/haloIndexer.h"
 
 #define DEFAULT_NBLOCKS  128
 #define DEFAULT_NBLOCKS_LOOP  128

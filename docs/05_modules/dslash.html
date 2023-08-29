@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dslash &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,14 +13,17 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -73,9 +80,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="modules.html">Modules</a> &raquo;</li>
-      <li>Dslash</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
+      <li class="breadcrumb-item active">Dslash</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/05_modules/dslash.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -85,15 +92,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="dslash">
-<h1>Dslash<a class="headerlink" href="#dslash" title="Permalink to this headline"></a></h1>
+  <section id="dslash">
+<h1>Dslash<a class="headerlink" href="#dslash" title="Link to this heading"></a></h1>
 <p>This module implements the Dslash operator for staggered and highly improved staggered quark (HISQ) fermions. It is a sparse matrix-vector product that is implemented as a 4 dimensional stencil kernel with nearest and third-nearest neighbor terms. For HISQ fermions, the matrix-vector product takes the form
-<span class="math notranslate nohighlight">\(
+$
 \begin{align}
-D[U]\psi_{x}&amp;=\sum_{\mu=0}^{4}\left[c_{1}\left(V_{x,\mu}\psi_{x+\hat{\mu}}-V^{\dagger}_{x-\hat{\mu},\mu}\psi_{x-\hat{\mu}}\right)+c_{3}\left(W_{x,\mu}\psi_{x+3\hat{\mu}}-W^{\dagger}_{x-3\hat{\mu},\mu}\psi_{x-3\hat{\mu}}\right)\right],
-\end{align}\)</span>
-where <span class="math notranslate nohighlight">\(V_{x,\mu}\)</span> and <span class="math notranslate nohighlight">\(W_{x,\mu}\)</span> are the HISQ smeared fields described in <a class="reference external" href="https://latticeqcd.github.io/SIMULATeQCD/05_modules/08_gaugeSmearing.html">Hisq Smearing</a>.
-For staggered fermions, only the nearest neighbor term is present and the basic gauge field <span class="math notranslate nohighlight">\(U_{x,\mu}\)</span> is used in place of <span class="math notranslate nohighlight">\(V_{x,\mu}\)</span>.</p>
+D[U]\psi_{x}&amp;=\sum_{\mu=0}^{4}\left[c_{1}\left(V_{x,\mu}\psi_{x+\hat{\mu}}-V^{\dagger}<em>{x-\hat{\mu},\mu}\psi</em>{x-\hat{\mu}}\right)+c_{3}\left(W_{x,\mu}\psi_{x+3\hat{\mu}}-W^{\dagger}<em>{x-3\hat{\mu},\mu}\psi</em>{x-3\hat{\mu}}\right)\right],
+\end{align}$
+where $V_{x,\mu}$ and $W_{x,\mu}$ are the HISQ smeared fields described in <a class="reference external" href="https://latticeqcd.github.io/SIMULATeQCD/05_modules/08_gaugeSmearing.html">Hisq Smearing</a>.
+For staggered fermions, only the nearest neighbor term is present and the basic gauge field $U_{x,\mu}$ is used in place of $V_{x,\mu}$.</p>
 <p>In the code, Dslash operators are derived from an abstract base class that defines the interface for Dslash operators.</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">SpinorLHS_t</span><span class="p">,</span><span class="w"> </span><span class="k">typename</span><span class="w"> </span><span class="nc">SpinorRHS_t</span><span class="o">&gt;</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">DSlash</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">LinearOperator</span><span class="o">&lt;</span><span class="n">SpinorRHS_t</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
@@ -104,14 +111,14 @@ For staggered fermions, only the nearest neighbor term is present and the basic 
 </pre></div>
 </div>
 <p>The method <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">Dslash(SpinorLHS_t</span> <span class="pre">&amp;lhs,</span> <span class="pre">SpinorRHS_t</span> <span class="pre">&amp;rhs,</span> <span class="pre">bool</span> <span class="pre">update</span> <span class="pre">=</span> <span class="pre">true)</span></code> applies the stencil operator described above to an input vector <code class="docutils literal notranslate"><span class="pre">rhs</span></code> and write the result into the vector <code class="docutils literal notranslate"><span class="pre">lhs</span></code>.</p>
-<p><span class="math notranslate nohighlight">\(\begin{align}
+<p>$\begin{align}
 \chi=D\psi
-\end{align}\)</span></p>
+\end{align}$</p>
 <p>The method <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">applyMdaggM(SpinorRHS_t</span> <span class="pre">&amp;lhs,</span> <span class="pre">SpinorRHS_t</span> <span class="pre">&amp;rhs,</span> <span class="pre">bool</span> <span class="pre">update</span> <span class="pre">=</span> <span class="pre">true)</span></code> computes</p>
-<p><span class="math notranslate nohighlight">\(\begin{align}
-\chi=M^{\dagger}M\psi \;\;\;\mathrm{where} \;\;M[U]=D[U]+m_{f},
-\end{align}\)</span></p>
-<p>and <span class="math notranslate nohighlight">\(m_{f}\)</span> is the quark mass. In both methods, <code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">update</span></code> toggles wether or not a halo update should be performed on the output spinor after the kernel is applied.</p>
+<p>$\begin{align}
+\chi=M^{\dagger}M\psi ;;;\mathrm{where} ;;M[U]=D[U]+m_{f},
+\end{align}$</p>
+<p>and $m_{f}$ is the quark mass. In both methods, <code class="docutils literal notranslate"><span class="pre">bool</span> <span class="pre">update</span></code> toggles wether or not a halo update should be performed on the output spinor after the kernel is applied.</p>
 <p>The derived class for HISQ fermions is:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">onDevice</span><span class="p">,</span><span class="w"> </span><span class="n">Layout</span><span class="w"> </span><span class="n">LatLayoutRHS</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepthGauge</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepthSpin</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="o">&gt;</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">HisqDSlash</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">DSlash</span><span class="o">&lt;</span><span class="n">Spinorfield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="n">onDevice</span><span class="p">,</span><span class="w"> </span><span class="n">LayoutSwitcher</span><span class="o">&lt;</span><span class="n">LatLayoutRHS</span><span class="o">&gt;</span><span class="p">(),</span><span class="w"> </span><span class="n">HaloDepthSpin</span><span class="p">,</span><span class="w"> </span><span class="n">NStacks</span><span class="o">&gt;</span><span class="p">,</span>
@@ -125,7 +132,7 @@ A HisqDSlash object is constructed with:</p>
 <span class="w">               </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">spinorName</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;SHARED_HisqDSlashSpinor&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Here <code class="docutils literal notranslate"><span class="pre">gaugefield_smeared</span></code> refers to <span class="math notranslate nohighlight">\(V_{x,\mu}\)</span> and <code class="docutils literal notranslate"><span class="pre">gaugefield_Naik</span></code> to <span class="math notranslate nohighlight">\(W_{x,\mu}\)</span>. Note the different compression types for the gauge fields: the field entering the third-nearest neighbor hopping term uses <code class="docutils literal notranslate"><span class="pre">CompressionType</span> <span class="pre">comp=U3R14</span></code> in order to save memory bandwidth. <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">double</span> <span class="pre">mass</span></code> specifies the quark mass that enters <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">MdaggM</span></code> and <code class="docutils literal notranslate"><span class="pre">floatT</span> <span class="pre">naik_epsilon</span></code> specifies the coefficient <span class="math notranslate nohighlight">\(\epsilon\)</span> that can be included in the Naik term. The last parameter that can be given to the constructor is a string identifiying the memory allocated for a temporary spinor that is used internally. By default multiple instances of HisqDslash will share the same memory for this temporary spinor. See the documentation on <code class="docutils literal notranslate"><span class="pre">MemoryManagement</span></code> for further information.</p>
+<p>Here <code class="docutils literal notranslate"><span class="pre">gaugefield_smeared</span></code> refers to $V_{x,\mu}$ and <code class="docutils literal notranslate"><span class="pre">gaugefield_Naik</span></code> to $W_{x,\mu}$. Note the different compression types for the gauge fields: the field entering the third-nearest neighbor hopping term uses <code class="docutils literal notranslate"><span class="pre">CompressionType</span> <span class="pre">comp=U3R14</span></code> in order to save memory bandwidth. <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">double</span> <span class="pre">mass</span></code> specifies the quark mass that enters <code class="docutils literal notranslate"><span class="pre">void</span> <span class="pre">MdaggM</span></code> and <code class="docutils literal notranslate"><span class="pre">floatT</span> <span class="pre">naik_epsilon</span></code> specifies the coefficient $\epsilon$ that can be included in the Naik term. The last parameter that can be given to the constructor is a string identifiying the memory allocated for a temporary spinor that is used internally. By default multiple instances of HisqDslash will share the same memory for this temporary spinor. See the documentation on <code class="docutils literal notranslate"><span class="pre">MemoryManagement</span></code> for further information.</p>
 </section>
 
 

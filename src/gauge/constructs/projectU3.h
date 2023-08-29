@@ -7,18 +7,18 @@
 
 #pragma once
 #include "../../define.h"
-#include "../../base/math/gcomplex.h"
+#include "../../base/math/complex.h"
 #include "../../base/gutils.h"
-#include "../../base/math/gsu3array.h"
-#include "../../base/math/gsu3.h"
+#include "../../base/math/su3array.h"
+#include "../../base/math/su3.h"
 #include "../gaugefield.h"
 #include "gsvd.h"
 template<class floatT,size_t HaloDepth>
-__host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+__host__ __device__ SU3<floatT> inline projectU3(SU3Accessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    GSU3<double> V;
-    GSU3<double> Q;
+    SU3<double> V;
+    SU3<double> Q;
     V = gAcc.template getLink<double>(GInd::getSiteMu(site,mu));
     Q = dagger(V) * V;
     //Calculate Coefficients of characteristic equation
@@ -65,7 +65,7 @@ __host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gS
     double detQ = realdet(Q);
     double sv[3];
 
-    GSU3<double> temp_svd;
+    SU3<double> temp_svd;
     if (fabs(detQ/(g0*g1*g2)-1.0) > 1e-5) {
         printf("Using SVD in smearing\n");
         temp_svd=svd3x3core<double,double>(V,sv);
@@ -79,7 +79,7 @@ __host__ __device__ GSU3<floatT> inline projectU3(gaugeAccessor<floatT> gAcc, gS
         double f1  = (-w-u*u*u+2*u*v)/den;
         double f2  = u/den;
 
-        GSU3<double> Qinvsq = f0*gsu3_one<double>() + f1*Q + f2*Q*Q;
+        SU3<double> Qinvsq = f0*su3_one<double>() + f1*Q + f2*Q*Q;
 
         return V*Qinvsq;
     }

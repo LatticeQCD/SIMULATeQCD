@@ -19,24 +19,24 @@ fi
 echo Run with node settings: "${nodes}"
 
 echo ==========================================================================================================
-echo Running Test: ./_BulkIndexerTest ../parameter/tests/BulkIndexerTest.param Nodes="${nodes}"
+echo Running Test: ./_bulkIndexerTest ../parameter/tests/bulkIndexerTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_BulkIndexerTest ../parameter/tests/BulkIndexerTest.param Nodes="${nodes}"
+${prefix} ./_bulkIndexerTest ../parameter/tests/bulkIndexerTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_ColorElectricCorrTest ../parameter/tests/ColorElectricCorrTest.param Nodes="${nodes}"
+echo Running Test: ./_colorElectricCorrTest ../parameter/tests/colorElectricCorrTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_ColorElectricCorrTest ../parameter/tests/ColorElectricCorrTest.param Nodes="${nodes}"
+${prefix} ./_colorElectricCorrTest ../parameter/tests/colorElectricCorrTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_CompressionTest ../parameter/tests/CompressionTest.param Nodes="${nodes}"
+echo Running Test: ./_compressionTest ../parameter/tests/compressionTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_CompressionTest ../parameter/tests/CompressionTest.param Nodes="${nodes}"
+${prefix} ./_compressionTest ../parameter/tests/compressionTest.param Nodes="${nodes}"
 
 
-cp ../parameter/UA_s8t4.norm ../parameter/US_s8t4.norm .
+cp ../parameter/ua_s8t4.norm ../parameter/us_s8t4.norm .
 echo ""
 echo ==========================================================================================================
 echo Running Test: ./_correlatorTest ../parameter/tests/correlatorTest.param Nodes="${nodes}"
@@ -45,27 +45,27 @@ ${prefix} ./_correlatorTest ../parameter/tests/correlatorTest.param Nodes="${nod
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_dotProductTest ../parameter/tests/MixedPrecInverterTest.param Nodes="${nodes}"
+echo Running Test: ./_dotProductTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_dotProductTest ../parameter/tests/MixedPrecInverterTest.param Nodes="${nodes}"
+${prefix} ./_dotProductTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_DslashMultiTest ../parameter/tests/DslashMultiTest.param Nodes="${nodes}"
+echo Running Test: ./_dslashMultiTest ../parameter/tests/dslashMultiTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_DslashMultiTest ../parameter/tests/DslashMultiTest.param Nodes="${nodes}"
+${prefix} ./_dslashMultiTest ../parameter/tests/dslashMultiTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_DslashTest ../parameter/tests/DslashTest.param Nodes="${nodes}"
+echo Running Test: ./_dslashTest ../parameter/tests/dslashTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_DslashTest ../parameter/tests/DslashTest.param Nodes="${nodes}"
+${prefix} ./_dslashTest ../parameter/tests/dslashTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_GeneralFunctorTest ../parameter/tests/GeneralFunctorTest.param Nodes="${nodes}"
+echo Running Test: ./_generalFunctorTest ../parameter/tests/generalFunctorTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_GeneralFunctorTest ../parameter/tests/GeneralFunctorTest.param Nodes="${nodes}"
+${prefix} ./_generalFunctorTest ../parameter/tests/generalFunctorTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
@@ -93,27 +93,21 @@ ${prefix} ./_gradientFlowTest ../parameter/tests/gradientFlowTest.param Nodes="$
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_HaloTest ../parameter/tests/HaloTest.param Nodes="${nodes}"
+echo Running Test: ./_haloTest ../parameter/tests/haloTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_HaloTest ../parameter/tests/HaloTest.param Nodes="${nodes}"
+${prefix} ./_haloTest ../parameter/tests/haloTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_HBOR_single_test ../parameter/tests/DslashTest.param Nodes="${nodes}"
+echo Running Test: ./_hbor_single_test ../parameter/tests/dslashTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_HBOR_single_test ../parameter/tests/DslashTest.param Nodes="${nodes}"
+${prefix} ./_hbor_single_test ../parameter/tests/dslashTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_HBOR_multiple_test ../parameter/tests/HBOR_multiple_test.param Nodes="${nodes}"
+echo Running Test: ./_hbor_multiple_test ../parameter/tests/hbor_multiple_test.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_HBOR_multiple_test ../parameter/tests/HBOR_multiple_test.param Nodes="${nodes}"
-
-echo ""
-echo ==========================================================================================================
-echo Running Test: ./_hisqForceImagmu ../parameter/tests/hisqForceImagMu.param Nodes="${nodes}"
-echo ==========================================================================================================
-${prefix} ./_hisqForceImagmu ../parameter/tests/hisqForceImagMu.param Nodes="${nodes}"
+${prefix} ./_hbor_multiple_test ../parameter/tests/hbor_multiple_test.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
@@ -141,26 +135,26 @@ ${prefix} ./_hisqSmearingTest ../parameter/tests/hisqSmearingTest.param Nodes="$
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_InverterTest ../parameter/tests/InverterTest.param Nodes="${nodes}"
+echo Running Test: ./_inverterTest ../parameter/tests/inverterTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_InverterTest ../parameter/tests/InverterTest.param Nodes="${nodes}"
+${prefix} ./_inverterTest ../parameter/tests/inverterTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_LinkPathTest ../parameter/tests/LinkPathTest.param Nodes="${nodes}"
+echo Running Test: ./_linkPathTest ../parameter/tests/linkPathTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_LinkPathTest ../parameter/tests/LinkPathTest.param Nodes="${nodes}"
+${prefix} ./_linkPathTest ../parameter/tests/linkPathTest.param Nodes="${nodes}"
 
 echo ""
-echo Running Test: ./_MixedPrecInverterTest ../parameter/tests/MixedPrecInverterTest.param Nodes="${nodes}"
+echo Running Test: ./_mixedPrecInverterTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_MixedPrecInverterTest ../parameter/tests/MixedPrecInverterTest.param Nodes="${nodes}"
+${prefix} ./_mixedPrecInverterTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_PureGaugeHmcTest ../parameter/tests/PureGaugeHmcTest.param Nodes="${nodes}"
+echo Running Test: ./_pureGaugeHmcTest ../parameter/tests/pureGaugeHmcTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_PureGaugeHmcTest ../parameter/tests/PureGaugeHmcTest.param Nodes="${nodes}"
+${prefix} ./_pureGaugeHmcTest ../parameter/tests/pureGaugeHmcTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
@@ -176,27 +170,27 @@ ${prefix} ./_rhmcTest ../parameter/tests/rhmcTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_SaveTest ../parameter/tests/SaveTest.param Nodes="${nodes}"
+echo Running Test: ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_SaveTest ../parameter/tests/SaveTest.param Nodes="${nodes}"
+${prefix} ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_SpinorHaloTest ../parameter/tests/SpinorHaloTest.param Nodes="${nodes}"
+echo Running Test: ./_spinorHaloTest ../parameter/tests/spinorHaloTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_SpinorHaloTest ../parameter/tests/SpinorHaloTest.param Nodes="${nodes}"
+${prefix} ./_spinorHaloTest ../parameter/tests/spinorHaloTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_StackedSpinorTest ../parameter/tests/StackedSpinorTest.param Nodes="${nodes}"
+echo Running Test: ./_stackedSpinorTest ../parameter/tests/stackedSpinorTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_StackedSpinorTest ../parameter/tests/StackedSpinorTest.param Nodes="${nodes}"
+${prefix} ./_stackedSpinorTest ../parameter/tests/stackedSpinorTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_DslashImagmuTest ../parameter/tests/DslashTest.param Nodes="${nodes}"
+echo Running Test: ./_dslashImagmuTest ../parameter/tests/dslashTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_DslashImagmuTest ../parameter/tests/DslashTest.param Nodes="${nodes}"
+${prefix} ./_dslashImagmuTest ../parameter/tests/dslashTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
@@ -212,21 +206,21 @@ ${prefix} ./_halfPrecMathTest
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_RndSingleTest
+echo Running Test: ./_rndSingleTest
 echo ==========================================================================================================
-${prefix} ./_RndSingleTest
+${prefix} ./_rndSingleTest
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_UtimesUdaggerTest
+echo Running Test: ./_utimesUdaggerTest
 echo ==========================================================================================================
-${prefix} ./_UtimesUdaggerTest
+${prefix} ./_utimesUdaggerTest
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_SimpleFunctorTest
+echo Running Test: ./_simpleFunctorTest
 echo ==========================================================================================================
-${prefix} ./_SimpleFunctorTest
+${prefix} ./_simpleFunctorTest
 
 if [[ $nodes != "1 1 1 1" ]]
 then

@@ -3,9 +3,9 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmc.h"
-#include "../modules/observables/PolyakovLoop.h"
+#include "../modules/observables/polyakovLoop.h"
 #include "testing.h"
 
 
