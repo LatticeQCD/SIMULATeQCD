@@ -1,8 +1,8 @@
 /*-----------------------------------------------------------------------------------------------
  * /
- * / cvect3.h
+ * / vect3.h
  * /
- * / $Id: cvect3.h,v 1.1 2002/09/10 11:56:54 okacz Exp $
+ * / $Id: vect3.h,v 1.1 2002/09/10 11:56:54 okacz Exp $
  * /
  * /---------------------------------------------------------------------------------------------*/
 
@@ -17,7 +17,6 @@
 // forward declaration
 template <class floatT> class SU3;
 template <class floatT> class Vect3;
-template <class floatT> class cVect3;
 template <class floatT, bool onDevice> class Vect3array;
 template <class floatT> __host__ std::ostream & operator<<(std::ostream &, const Vect3<floatT> &);
 template <class floatT> __host__ std::istream & operator>>(std::istream &, Vect3<floatT> &);

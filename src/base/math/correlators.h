@@ -268,9 +268,9 @@ public:
     inline std::string getnormfilePrefix(std::string domain){
         std::string normfilePrefix;
         if(domain=="spacetime") {
-            normfilePrefix="UA_s";
+            normfilePrefix="ua_s";
         } else if(domain=="spatial") {
-            normfilePrefix="US_s";
+            normfilePrefix="us_s";
         } else {
             throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
         }
