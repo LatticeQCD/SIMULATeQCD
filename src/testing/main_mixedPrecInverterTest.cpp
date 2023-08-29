@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
         CommunicationBase commBase(&argc, &argv);
         RhmcParameters param;
 
-        param.readfile(commBase, "../parameter/tests/mixedPrecinverterTest.param", argc, argv);
+        param.readfile(commBase, "../parameter/tests/mixedPrecInverterTest.param", argc, argv);
 
         RationalCoeff rat;
 
