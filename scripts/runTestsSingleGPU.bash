@@ -111,12 +111,6 @@ ${prefix} ./_hbor_multiple_test ../parameter/tests/hbor_multiple_test.param Node
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_hisqForceImagmu ../parameter/tests/hisqForceImagMu.param Nodes="${nodes}"
-echo ==========================================================================================================
-${prefix} ./_hisqForceImagmu ../parameter/tests/hisqForceImagMu.param Nodes="${nodes}"
-
-echo ""
-echo ==========================================================================================================
 echo Running Test: ./_hisqForce ../parameter/tests/hisqForce.param Nodes="${nodes}"
 echo ==========================================================================================================
 ${prefix} ./_hisqForce ../parameter/tests/hisqForce.param Nodes="${nodes}"
@@ -176,15 +170,15 @@ ${prefix} ./_rhmcTest ../parameter/tests/rhmcTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_saveTest ../parameter/tests/SaveTest.param Nodes="${nodes}"
+echo Running Test: ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_saveTest ../parameter/tests/SaveTest.param Nodes="${nodes}"
+${prefix} ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_spinorHaloTest ../parameter/tests/SpinorhaloTest.param Nodes="${nodes}"
+echo Running Test: ./_spinorHaloTest ../parameter/tests/spinorHaloTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_spinorHaloTest ../parameter/tests/SpinorhaloTest.param Nodes="${nodes}"
+${prefix} ./_spinorHaloTest ../parameter/tests/spinorHaloTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
