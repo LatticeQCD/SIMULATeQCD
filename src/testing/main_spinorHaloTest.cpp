@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
     HaloTestParam param;
 
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/SpinorhaloTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/spinorHaloTest.param", argc, argv);
     commBase.init(param.nodeDim());
     
     commBase.forceHalos(param.forceHalos());
