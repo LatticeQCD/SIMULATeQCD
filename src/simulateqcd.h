@@ -53,7 +53,7 @@
 #include "base/math/su2.h"
 #include "base/math/su3array.h"
 #include "base/math/su3.h"
-#include "base/math/vect3array.h"
+#include "base/math/vectArray.h"
 #include "base/math/vect3.h"
 #include "base/math/matrix4x4.h"
 #include "base/math/operators.h"

@@ -8,8 +8,8 @@
 template<class floatT, size_t HaloDepth>
 struct contractPropagators {
 
-    Vect3arrayAcc<floatT> _acc_i;
-    Vect3arrayAcc<floatT> _acc_j;
+    Vect3ArrayAcc<floatT> _acc_i;
+    Vect3ArrayAcc<floatT> _acc_j;
 
     contractPropagators(Spinorfield<floatT, false, All, HaloDepth, 3> &spinor_i,
                         Spinorfield<floatT, false, All, HaloDepth, 3> &spinor_j) :
@@ -69,8 +69,8 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik,
                                                                                      mass, naik_epsilon);
 
-        Vect3arrayAcc<floatT> h_Ge_acc = h_Ge.getAccessor();               //! host accessor for even propagator
-        Vect3arrayAcc<floatT> h_Go_acc = h_Go.getAccessor();               //! host accessor for odd propagator
+        Vect3ArrayAcc<floatT> h_Ge_acc = h_Ge.getAccessor();               //! host accessor for even propagator
+        Vect3ArrayAcc<floatT> h_Go_acc = h_Go.getAccessor();               //! host accessor for odd propagator
 
         //! first color
         const int color0 = 0;

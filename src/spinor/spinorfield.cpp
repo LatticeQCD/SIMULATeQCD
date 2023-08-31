@@ -17,7 +17,7 @@ struct fill_with_gauss_vec
     __device__ __host__ Vect3<floatT> operator()(gSite& site, __attribute__((unused)) size_t stack){
 
         Vect3<floatT> vec;
-        vec.gauss(&state[site.isite]);
+        gauss(vec, &state[site.isite]);
         return vec;
     }
 };
@@ -43,8 +43,8 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::one()
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 struct SpinorrealDotProduct{
 
-    Vect3arrayAcc<floatT> spinorAccOut;
-    Vect3arrayAcc<floatT> spinorAccIn;
+    Vect3ArrayAcc<floatT> spinorAccOut;
+    Vect3ArrayAcc<floatT> spinorAccIn;
 
     SpinorrealDotProduct(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorIn,
             const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut)
@@ -104,8 +104,8 @@ std::vector<double> Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 struct SpinorDotProduct{
 
-    Vect3arrayAcc<floatT> spinorAccOut;
-    Vect3arrayAcc<floatT> spinorAccIn;
+    Vect3ArrayAcc<floatT> spinorAccOut;
+    Vect3ArrayAcc<floatT> spinorAccIn;
 
     SpinorDotProduct(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorIn,
             const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut)
@@ -169,11 +169,11 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::operator*=(co
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinor{
 
-    Vect3arrayAcc<floatT> spinor1;
-    Vect3arrayAcc<floatT> spinor2;
+    Vect3ArrayAcc<floatT> spinor1;
+    Vect3ArrayAcc<floatT> spinor2;
     const_T val;
-    SpinorPlusConstTTimesSpinor(Vect3arrayAcc<floatT> spinor1,
-                                  Vect3arrayAcc<floatT> spinor2,
+    SpinorPlusConstTTimesSpinor(Vect3ArrayAcc<floatT> spinor1,
+                                  Vect3ArrayAcc<floatT> spinor2,
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
     __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
@@ -188,11 +188,11 @@ struct SpinorPlusConstTTimesSpinor{
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinord{
 
-    Vect3arrayAcc<floatT> spinor1;
-    Vect3arrayAcc<floatT> spinor2;
+    Vect3ArrayAcc<floatT> spinor1;
+    Vect3ArrayAcc<floatT> spinor2;
     const_T val;
-    SpinorPlusConstTTimesSpinord(Vect3arrayAcc<floatT> spinor1,
-                                  Vect3arrayAcc<floatT> spinor2,
+    SpinorPlusConstTTimesSpinord(Vect3ArrayAcc<floatT> spinor1,
+                                  Vect3ArrayAcc<floatT> spinor2,
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
     __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
@@ -208,14 +208,14 @@ struct SpinorPlusConstTTimesSpinord{
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinorLoop{
 
-    Vect3arrayAcc<floatT> spinor1;
-    Vect3arrayAcc<floatT> spinor2;
+    Vect3ArrayAcc<floatT> spinor1;
+    Vect3ArrayAcc<floatT> spinor2;
     const_T val;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    SpinorPlusConstTTimesSpinorLoop(Vect3arrayAcc<floatT> spinor1,
-                                  Vect3arrayAcc<floatT> spinor2,
+    SpinorPlusConstTTimesSpinorLoop(Vect3ArrayAcc<floatT> spinor1,
+                                  Vect3ArrayAcc<floatT> spinor2,
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val) {}
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
@@ -235,11 +235,11 @@ struct SpinorPlusConstTTimesSpinorLoop{
 template<class floatT, Layout LatLayout, size_t HaloDepth ,size_t NStacks>
 struct SpinorPlusFloatTimesSpinor{
 
-    Vect3arrayAcc<floatT> spinor1;
-    Vect3arrayAcc<floatT> spinor2;
+    Vect3ArrayAcc<floatT> spinor1;
+    Vect3ArrayAcc<floatT> spinor2;
     floatT val;
-    SpinorPlusFloatTimesSpinor(Vect3arrayAcc<floatT> spinor1,
-                                  Vect3arrayAcc<floatT> spinor2,
+    SpinorPlusFloatTimesSpinor(Vect3ArrayAcc<floatT> spinor1,
+                                  Vect3ArrayAcc<floatT> spinor2,
                                   floatT val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
     __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
@@ -254,16 +254,16 @@ struct SpinorPlusFloatTimesSpinor{
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStack
 {
-    const Vect3arrayAcc<floatT> spinorIn1;
-    const Vect3arrayAcc<floatT> spinorIn2;
+    const Vect3ArrayAcc<floatT> spinorIn1;
+    const Vect3ArrayAcc<floatT> spinorIn2;
     const_T _a;
     const_T _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStack(Vect3arrayAcc<floatT> spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStack(Vect3ArrayAcc<floatT> spinorIn1,
             SimpleArray<floatT, NStacks> a,
-            Vect3arrayAcc<floatT> spinorIn2,
+            Vect3ArrayAcc<floatT> spinorIn2,
             SimpleArray<floatT, NStacks> b) :
         spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b) {}
 
@@ -280,16 +280,16 @@ struct StackTimesFloatPlusFloatTimesNoStack
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStackLoop
 {
-    Vect3arrayAcc<floatT> spinorIn1;
-    Vect3arrayAcc<floatT> spinorIn2;
+    Vect3ArrayAcc<floatT> spinorIn1;
+    Vect3ArrayAcc<floatT> spinorIn2;
     const_T _a;
     const_T _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStackLoop(Vect3arrayAcc<floatT> spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStackLoop(Vect3ArrayAcc<floatT> spinorIn1,
             SimpleArray<floatT, NStacks> a,
-            Vect3arrayAcc<floatT> spinorIn2,
+            Vect3ArrayAcc<floatT> spinorIn2,
             SimpleArray<floatT, NStacks> b) :
         spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b) {}
 
@@ -312,16 +312,16 @@ struct StackTimesFloatPlusFloatTimesNoStackLoop
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStackLoop_d
 {
-    Vect3arrayAcc<floatT> spinorIn1;
-    Vect3arrayAcc<floatT> spinorIn2;
+    Vect3ArrayAcc<floatT> spinorIn1;
+    Vect3ArrayAcc<floatT> spinorIn2;
     const_T _a;
     const_T _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStackLoop_d(Vect3arrayAcc<floatT> spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStackLoop_d(Vect3ArrayAcc<floatT> spinorIn1,
             SimpleArray<double, NStacks> a,
-            Vect3arrayAcc<floatT> spinorIn2,
+            Vect3ArrayAcc<floatT> spinorIn2,
             SimpleArray<double, NStacks> b) :
         spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b) {}
 

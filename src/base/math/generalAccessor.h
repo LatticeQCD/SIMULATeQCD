@@ -28,8 +28,8 @@ protected:
 public:
 
     template<int elem>
-    __host__ __device__ inline object_memory getElementEntry(const size_t idx) const {
-        return (_elements[elem][idx]);
+    __host__ __device__ inline object_memory& getElementEntry(const size_t idx) const {
+        return _elements[elem][idx];
     }
 
     template<int elem>
@@ -38,20 +38,20 @@ public:
     }
 
     explicit GeneralAccessor(object_memory *const elements[]) {
-        for (size_t i = 0; i < Nentries; i++) {
+         for(const auto& i: Range<0,Nentries>()) {
             _elements[i] = elements[i];
         }
     }
 
     /// Constructor for one memory chunk, where all entries are separated by object_count
    __host__ __device__ explicit GeneralAccessor(object_memory *elementsBase, size_t object_count) {
-        for (size_t i = 0; i < Nentries; i++) {
+         for(const auto& i: Range<0,Nentries>()) {
             _elements[i] = elementsBase + i * object_count;
         }
     }
 
     explicit GeneralAccessor() {
-        for (size_t i = 0; i < Nentries; i++) {
+         for(const auto& i: Range<0,Nentries>()) {
             _elements[i] = nullptr;
         }
     }

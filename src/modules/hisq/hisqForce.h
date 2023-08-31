@@ -23,11 +23,11 @@ template <> class RatDegreeSelector<false> { public: static const int RatDegree 
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, int steps, bool runTesting = false, const int rdeg = RatDegreeSelector<runTesting>::RatDegree>
 struct tensor_product {
-    Vect3arrayAcc<floatT> _x;
-    Vect3arrayAcc<floatT> _y;
+    Vect3ArrayAcc<floatT> _x;
+    Vect3ArrayAcc<floatT> _y;
     SU3Accessor<floatT> gAccessor;
     SimpleArray<floatT,rdeg> _rat_num;
-    tensor_product(Gaugefield<floatT, onDevice, HaloDepth> &gaugeIn, Vect3arrayAcc<floatT> x, Vect3arrayAcc<floatT> y, SimpleArray<floatT,rdeg> rat_num);
+    tensor_product(Gaugefield<floatT, onDevice, HaloDepth> &gaugeIn, Vect3ArrayAcc<floatT> x, Vect3ArrayAcc<floatT> y, SimpleArray<floatT,rdeg> rat_num);
     __device__ __host__ SU3<floatT> operator()(gSiteMu site);
 };
 

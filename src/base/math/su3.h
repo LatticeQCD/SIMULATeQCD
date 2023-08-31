@@ -691,9 +691,9 @@ template<class floatT>
 __device__ __host__ Vect3<floatT> operator*(const SU3<floatT> &x, const Vect3<floatT> &y) {
     COMPLEX(floatT) tmp0, tmp1, tmp2;
 
-    tmp0 = x._e00 * y._v0 + x._e01 * y._v1 + x._e02 * y._v2;
-    tmp1 = x._e10 * y._v0 + x._e11 * y._v1 + x._e12 * y._v2;
-    tmp2 = x._e20 * y._v0 + x._e21 * y._v1 + x._e22 * y._v2;
+    tmp0 = x._e00 * y.template getElement<0>() + x._e01 * y.template getElement<1>() + x._e02 * y.template getElement<2>();
+    tmp1 = x._e10 * y.template getElement<0>() + x._e11 * y.template getElement<1>() + x._e12 * y.template getElement<2>();
+    tmp2 = x._e20 * y.template getElement<0>() + x._e21 * y.template getElement<1>() + x._e22 * y.template getElement<2>();
 
     return Vect3<floatT>(tmp0, tmp1, tmp2);
 }
@@ -1260,15 +1260,15 @@ template<class floatT>
 __device__ __host__ SU3<floatT> tensor_prod(const Vect3<floatT> &x, const Vect3<floatT> &y) {
     SU3 <floatT> res;
 
-    res._e00 = x._v0 * y._v0;
-    res._e01 = x._v0 * y._v1;
-    res._e02 = x._v0 * y._v2;
-    res._e10 = x._v1 * y._v0;
-    res._e11 = x._v1 * y._v1;
-    res._e12 = x._v1 * y._v2;
-    res._e20 = x._v2 * y._v0;
-    res._e21 = x._v2 * y._v1;
-    res._e22 = x._v2 * y._v2;
+    res._e00 = x.template getElement<0>() * y.template getElement<0>();
+    res._e01 = x.template getElement<0>() * y.template getElement<1>();
+    res._e02 = x.template getElement<0>() * y.template getElement<2>();
+    res._e10 = x.template getElement<1>() * y.template getElement<0>();
+    res._e11 = x.template getElement<1>() * y.template getElement<1>();
+    res._e12 = x.template getElement<1>() * y.template getElement<2>();
+    res._e20 = x.template getElement<2>() * y.template getElement<0>();
+    res._e21 = x.template getElement<2>() * y.template getElement<1>();
+    res._e22 = x.template getElement<2>() * y.template getElement<2>();
 
     return (res);
 }

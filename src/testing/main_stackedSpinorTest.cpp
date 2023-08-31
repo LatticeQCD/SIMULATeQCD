@@ -11,7 +11,7 @@
 template<class floatT, bool onDevice, Layout LatLayout, Layout LatLayoutRHS, size_t HaloDepth, size_t NStacks>
 struct QuickDslash {
 
-    Vect3arrayAcc<floatT> spinorIn;
+    Vect3ArrayAcc<floatT> spinorIn;
     SU3Accessor<floatT> gAcc;
     SU3Accessor<floatT> gAccN;
 
@@ -59,7 +59,7 @@ struct QuickDslash {
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, size_t NStacks, bool onDevice>
 struct FillStacks{
-    Vect3arrayAcc<floatT> spinorIn;
+    Vect3ArrayAcc<floatT> spinorIn;
 
     FillStacks(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) :
                 spinorIn(spinorIn.getAccessor()){}
@@ -76,7 +76,7 @@ struct FillStacks{
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, size_t NStacks, bool onDevice>
 struct FillStacksLoop{
-    Vect3arrayAcc<floatT> spinorIn;
+    Vect3ArrayAcc<floatT> spinorIn;
     Vect3<floatT> my_vec;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;

@@ -70,8 +70,8 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
 template<class floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStack
 {
-    Vect3arrayAcc<floatT> spinorIn1;
-    Vect3arrayAcc<floatT> spinorIn2;
+    Vect3ArrayAcc<floatT> spinorIn1;
+    Vect3ArrayAcc<floatT> spinorIn2;
     SimpleArray<floatT, NStacks> _a;
     SimpleArray<floatT, NStacks> _b;
 
@@ -97,8 +97,8 @@ struct StackTimesFloatPlusFloatTimesNoStack
 template<class floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 struct StackMinusFloatTimeStack
 {
-    Vect3arrayAcc<floatT> spinorIn1;
-    Vect3arrayAcc<floatT> spinorIn2;
+    Vect3ArrayAcc<floatT> spinorIn1;
+    Vect3ArrayAcc<floatT> spinorIn2;
     SimpleArray<floatT, NStacks> _a;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;

@@ -30,7 +30,7 @@ void fillIndices(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &s
     typedef GIndexer<Odd, HaloDepth> GIndOdd;
     Spinorfield<floatT, false, LatLayout, HaloDepth, NStacks> spinorHost(spinor.getComm() );
     spinorHost = spinor;
-    Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
+    Vect3ArrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
     for (size_t x = 0; x < GInd::getLatData().lx; x++)
         for (size_t y = 0; y < GInd::getLatData().ly; y++)
             for (size_t z = 0; z < GInd::getLatData().lz; z++)
@@ -81,7 +81,7 @@ bool CheckIndices(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &
     typedef GIndexer<Odd, HaloDepth> GIndOdd;
     Spinorfield<floatT, false, LatLayout, HaloDepth, NStacks> spinorHost(spinor.getComm());
     spinorHost = spinor;
-    Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
+    Vect3ArrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
 
     bool passed = true;
 
@@ -242,7 +242,7 @@ int main(int argc, char *argv[]) {
     HaloTestParam param;
 
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/SpinorhaloTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/spinorHaloTest.param", argc, argv);
     commBase.init(param.nodeDim());
     
     commBase.forceHalos(param.forceHalos());

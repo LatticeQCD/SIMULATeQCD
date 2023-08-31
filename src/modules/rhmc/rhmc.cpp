@@ -32,7 +32,7 @@ struct add_f_r_f_r
 template<class floatT,bool onDevice, size_t HaloDepthSpin>
 struct get_fermion_act
 {
-    Vect3arrayAcc<floatT> spin_acc;
+    Vect3ArrayAcc<floatT> spin_acc;
 
     double ret;
 

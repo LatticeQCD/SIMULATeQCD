@@ -55,7 +55,7 @@ struct convert_to_half {
 template<class floatT, size_t HaloDepth, CompressionType comp>
 struct simple_matvec_mult {
     SU3Accessor<floatT,comp> gAcc;
-    Vect3arrayAcc<floatT> spinorAcc;
+    Vect3ArrayAcc<floatT> spinorAcc;
 
     simple_matvec_mult(Gaugefield<floatT, true, HaloDepth, comp> &gaugeIn, Spinorfield<floatT, true, All, 0, 1> &spinorIn) : gAcc(gaugeIn.getAccessor()), spinorAcc(spinorIn.getAccessor()) {}
 

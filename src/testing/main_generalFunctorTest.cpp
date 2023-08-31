@@ -21,7 +21,7 @@ struct QuickDslash {
 
     //! The functor has to know about all the elements that it needs for computation.
     //! However, it does not need the Spinor, where the result should go (SpinorOut).
-    Vect3arrayAcc<floatT> spinorIn;
+    Vect3ArrayAcc<floatT> spinorIn;
     SU3Accessor<floatT, R18> gAcc;
     SU3Accessor<floatT, U3R14> gAccN;
 
@@ -311,7 +311,7 @@ void run_func(CommunicationBase &commBase) {
      * (The actual implementation is more complex, as it is more general)
      *
      *  template <typename Functor, class floatT, Layout LatLayout, size_t HaloDepths>
-     *  __global__ void iterateOverBulk( Vect3arrayAcc<floatT> spinorOut, Functor opc, const size_t size) {
+     *  __global__ void iterateOverBulk( Vect3ArrayAcc<floatT> spinorOut, Functor opc, const size_t size) {
      *
      *    size_t i = blockDim.x * blockIdx.x + threadIdx.x;
      *    if (i >= size) {

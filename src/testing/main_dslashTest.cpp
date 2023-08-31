@@ -15,33 +15,33 @@ __host__ bool operator==(const Vect3<floatT> &lhs, const Vect3<floatT> &rhs){
 
     floatT val_lhs, val_rhs;
 
-    val_lhs = lhs.getElement0().cREAL;
-    val_rhs = rhs.getElement0().cREAL;
+    val_lhs = lhs.template getElement<0>().cREAL;
+    val_rhs = rhs.template getElement<0>().cREAL;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement0().cIMAG;
-    val_rhs = rhs.getElement0().cIMAG;
+    val_lhs = lhs.template getElement<0>().cIMAG;
+    val_rhs = rhs.template getElement<0>().cIMAG;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement1().cREAL;
-    val_rhs = rhs.getElement1().cREAL;
+    val_lhs = lhs.template getElement<1>().cREAL;
+    val_rhs = rhs.template getElement<1>().cREAL;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement1().cIMAG;
-    val_rhs = rhs.getElement1().cIMAG;
+    val_lhs = lhs.template getElement<1>().cIMAG;
+    val_rhs = rhs.template getElement<1>().cIMAG;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement2().cREAL;
-    val_rhs = rhs.getElement2().cREAL;
+    val_lhs = lhs.template getElement<2>().cREAL;
+    val_rhs = rhs.template getElement<2>().cREAL;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement2().cIMAG;
-    val_rhs = rhs.getElement2().cIMAG;
+    val_lhs = lhs.template getElement<2>().cIMAG;
+    val_rhs = rhs.template getElement<2>().cIMAG;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 

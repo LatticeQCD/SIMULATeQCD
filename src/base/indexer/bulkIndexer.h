@@ -44,6 +44,7 @@ struct sitexyzt {
     }
 
 };
+
 struct gSite {
     // This holds the local lattice site. This means, there are no halos involved. It cares about even / odd. That means
     // if the LatticeLayout is even or odd, the maximal value is sizeh.
@@ -78,6 +79,7 @@ struct gSite {
         return s.str();
     }
 };
+
 struct gSiteStack : public gSite {
     // Index of the stack
     size_t isiteStack;
@@ -103,6 +105,7 @@ struct gSiteStack : public gSite {
         return s;
     }
 };
+
 struct gSiteMu : public gSite {
     // This holds a link index. This index does not care about even/odd, it is always the full lattice index
     size_t indexMuFull;

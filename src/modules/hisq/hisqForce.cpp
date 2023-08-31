@@ -153,7 +153,7 @@ template<class floatT,bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin,
 struct multiplySimpleArraySpinor {
 
     SimpleArray<floatT, NStacks> _Arr;
-    Vect3arrayAcc<floatT> _Spinor;
+    Vect3ArrayAcc<floatT> _Spinor;
     multiplySimpleArraySpinor(SimpleArray<floatT, NStacks>& Arr, Spinorfield<floatT,onDevice,LatticeLayout,HaloDepthSpin,NStacks>& Spinor) : _Arr(Arr), _Spinor(Spinor.getAccessor()) {}
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site) {
@@ -171,7 +171,7 @@ struct multiplySimpleArraySpinor {
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, int steps, bool runTesting, const int rdeg>
 tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, steps, runTesting,rdeg>::tensor_product(Gaugefield<floatT, onDevice,  HaloDepth> &gaugeIn,
-                                                   Vect3arrayAcc<floatT> x, Vect3arrayAcc<floatT> y,
+                                                   Vect3ArrayAcc<floatT> x, Vect3ArrayAcc<floatT> y,
                                                    SimpleArray<floatT, rdeg> rat_num)
   : _x(x), _y(y), gAccessor(gaugeIn.getAccessor()), _rat_num(rat_num) {}
 
