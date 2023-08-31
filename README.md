@@ -94,7 +94,7 @@ for a more detailed understanding.
 ```C++
 template<class floatT, bool onDevice, size_t HaloDepth>
 struct CalcPlaq {
-  gaugeAccessor<floatT> gaugeAccessor;
+  SU3Accessor<floatT> gaugeAccessor;
   CalcPlaq(Gaugefield<floatT,onDevice,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
   __device__ __host__ floatT operator()(gSite site) {
     floatT result = 0;
