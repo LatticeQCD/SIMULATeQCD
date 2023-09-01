@@ -5,15 +5,11 @@
  * taylor coefficients of Z(mu)
  *
  */
-
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/TaylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
 #include "../testing/testing.h" // for comparing stuff
-//#include "../explicit_instantiation_macros.h" 
-#define PREC double
-
-
+#include "../base/IO/eigenpairs.h"
 int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
@@ -30,6 +26,20 @@ int main(int argc, char **argv) {
 
     const int HaloDepth = 2; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
+    const int nvec= 304; // number of vectors to be read
+    const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
+    typedef float floatT; // Define the precision here
+
+    rootLogger.info("STARTING Taxlor Measurement:");
+
+    if (sizeof(floatT)==4) {
+      rootLogger.info("update done in single precision");
+    } else if(sizeof(floatT)==8) {
+      rootLogger.info("update done in double precision");
+    } else {
+      rootLogger.info("update done in unknown precision");
+    }
+
     initIndexer(HaloDepth, param, commBase);
     stdLogger.setVerbosity(INFO);
 
@@ -38,6 +48,12 @@ int main(int argc, char **argv) {
     rootLogger.info("Read configuration from ", param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
+    // Read the Eigenvalues and Eigenvectors
+    std::vector<Spinorfield<PREC, true, All, HaloDepthSpin, NStacks>> eigenvectors;
+    const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
+    ReadEV(param.EigenvectorfileName().c_str(), nvec, sizeh);
+
+    rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
 
     if (param.valence_masses.numberValues() == 0) {
         rootLogger.error("No valence masses specified, aborting");
@@ -55,7 +71,7 @@ int main(int argc, char **argv) {
         // run as a standalone programm using the parameter file
         rootLogger.info("Starting in Standalone Mode");
 
-        const int NStacks = 2; // NOTE: this only works for NStacks=8 after the blocksize fix
+        
 
         for (double mass : param.valence_masses.get()) {
             rootLogger.info("Using mass ", mass);

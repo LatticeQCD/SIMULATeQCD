@@ -28,6 +28,7 @@ public:
     Parameter<std::string> endianness;  //!< one of "little", "big", "auto"
     Parameter<std::string> GaugefileName;
     Parameter<std::string> GaugefileName_out;
+    Parameter<std::string> EigenvectorfileName;
     Parameter<std::string> format;
     Parameter<int> prec_out;
     Parameter<bool> use_unit_conf;
@@ -47,6 +48,7 @@ public:
         addDefault<int, 4>(gpuTopo, "Topology", nuller);
         addOptional(beta, "beta");
         addOptional(GaugefileName, "Gaugefile");
+	addOptional(EigenvectorfileName, "Eigenvectorfile");
         addOptional(GaugefileName_out, "Gaugefile_out");
         addOptional(format, "format");
         addDefault(endianness, "endianness", std::string("auto"));
