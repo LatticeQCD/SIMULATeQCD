@@ -528,18 +528,6 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::xpayTh
 
 }
 
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t Nstacks>
-returnSpinor<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks>::returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks> &spinorIn) :
-        _gAcc(spinorIn.getAccessor()) {
-}
-
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t Nstacks>
-__host__ __device__ Vect<floatT,elems> returnSpinor<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks>::operator()(gSiteStack site) {
-    //! Deduce gSiteStacked object for the source from the gSite object of the destination
-    gSite temp = GIndexer<LatLayout,HaloDepth>::getSite(site.coord);
-    return _gAcc.template getElement<floatT>(temp);
-}
-
 #define SPINOR_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
 template class Spinorfield<floatT,false,LO,HALOSPIN,3,STACKS>;\
 template void Spinorfield<floatT,false,LO,HALOSPIN,3,STACKS>::axpyThis(const COMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,3,STACKS>&);\

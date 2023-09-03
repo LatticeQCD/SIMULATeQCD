@@ -142,7 +142,7 @@ typedef floatT floatT_inner;
     // TODO MOVE THIS WHERE IT BELONGS
     void setPointSource(const sitexyzt pointsource, const int i_color, const floatT mass){
         //! set whole spinor to zero
-        iterateWithConst(vect3_zero<floatT>()); //TODO change this to just memset to 0 for possible performance gain?
+        iterateWithConst(vect_zero<floatT,elems>()); //TODO change this to just memset to 0 for possible performance gain?
 
         //! if we're on the correct GPU, set one entry to one
         if ( GInd::getLatData().isLocal(pointsource) ){
@@ -468,8 +468,17 @@ template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, siz
 struct returnSpinor {
     VectArrayAcc<floatT,elems> _gAcc;
 
-    explicit returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks> &spinorIn);
-    __host__ __device__ Vect<floatT,elems> operator()(gSiteStack site);
+
+    explicit returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks> &spinorIn) :
+        _gAcc(spinorIn.getAccessor()) { }
+
+    __host__ __device__ Vect<floatT,elems> operator()(gSiteStack site) {
+        //! Deduce gSiteStacked object for the source from the gSite object of the destination
+        gSite temp = GIndexer<LatLayout,HaloDepth>::getSite(site.coord);
+        return _gAcc.template getElement<floatT>(temp);
+    }
+
+
 };
 
 template<typename floatT, bool onDevice, size_t HaloDepth, size_t elems, size_t NStacks = 1>
@@ -594,6 +603,5 @@ Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, elems, NStacks>::operato
     }
     return *this;
 }
-
 
 
