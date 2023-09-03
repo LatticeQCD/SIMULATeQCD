@@ -36,7 +36,7 @@ struct get_fermion_act
 
     double ret;
 
-    get_fermion_act(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &chi) : spin_acc(chi.getAccessor()) {};
+    get_fermion_act(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &chi, 3) : spin_acc(chi.getAccessor()) {};
 
     __device__ __host__ double operator()(gSite site){
 
@@ -487,12 +487,12 @@ bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
 
 // Make the pseudo-spinor field
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
-void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff)
+void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &phi, std::vector<floatT> rat_coeff)
 {
     // generate a gaussian vector
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> eta(phi.getComm());
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 14> spinorOutMulti(phi.getComm());
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> spinortmp(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> eta(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, 14> spinorOutMulti(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> spinortmp(phi.getComm());
     eta.gauss(_rand_state);
 
     int length = rat_coeff.size();
@@ -526,16 +526,16 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_phi(Spinorfield<floa
 
 // make the chi field for constructing the Hamiltonian
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
-void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_chi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &chi,
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff)
+void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_chi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &chi,
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin,3> &phi, std::vector<floatT> rat_coeff)
 {
     int length = rat_coeff.size();
 
     SimpleArray<floatT, 15> rat_num(0.0);
     SimpleArray<floatT, 14> rat_den(0.0);
 
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 14> spinorOutMulti(phi.getComm());
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> spinortmp(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, 14> spinorOutMulti(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> spinortmp(phi.getComm());
 
 
     for (int i = 0; i < length/2+1; ++i)
@@ -562,12 +562,12 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_chi(Spinorfield<floa
 
 // Make const pseudo-spinor field, only use for testing!
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin>
-void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_const_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff)
+void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_const_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &phi, std::vector<floatT> rat_coeff)
 {
     // generate a gaussian vector
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> eta(phi.getComm());
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 14> spinorOutMulti(phi.getComm());
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> spinortmp(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> eta(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, 14> spinorOutMulti(phi.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> spinortmp(phi.getComm());
     eta.iterateWithConst(vect3_unity<floatT>(0));
 
     int length = rat_coeff.size();

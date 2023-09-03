@@ -24,11 +24,11 @@ size_t getGlobalIndex(LatticeDimensions coord, size_t stack) {
 }
 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-void fillIndices(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinor) {
+void fillIndices(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinor) {
     typedef GIndexer<All, HaloDepth> GInd;
     typedef GIndexer<Even, HaloDepth> GIndEven;
     typedef GIndexer<Odd, HaloDepth> GIndOdd;
-    Spinorfield<floatT, false, LatLayout, HaloDepth, NStacks> spinorHost(spinor.getComm() );
+    Spinorfield<floatT, false, LatLayout, HaloDepth, 3, NStacks> spinorHost(spinor.getComm() );
     spinorHost = spinor;
     Vect3ArrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
     for (size_t x = 0; x < GInd::getLatData().lx; x++)
@@ -75,11 +75,11 @@ bool compareGVect3(Vect3<floatT> a, Vect3<floatT> b) {
 }
 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-bool CheckIndices(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinor, LatticeDimensions Halo) {
+bool CheckIndices(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinor, LatticeDimensions Halo) {
     typedef GIndexer<All, HaloDepth> GInd;
     typedef GIndexer<Even, HaloDepth> GIndEven;
     typedef GIndexer<Odd, HaloDepth> GIndOdd;
-    Spinorfield<floatT, false, LatLayout, HaloDepth, NStacks> spinorHost(spinor.getComm());
+    Spinorfield<floatT, false, LatLayout, HaloDepth, 3, NStacks> spinorHost(spinor.getComm());
     spinorHost = spinor;
     Vect3ArrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
 
@@ -143,7 +143,7 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
     const Layout LatLayout2 = Even;
 
     rootLogger.info("Initialize Spinorfield");
-    Spinorfield<PREC, onDevice, LatLayout2, HaloDepth, NStacks> spinor2(commBase);
+    Spinorfield<PREC, onDevice, LatLayout2, HaloDepth, 3, NStacks> spinor2(commBase);
 
     rootLogger.info("Fill indices");
     fillIndices<PREC, onDevice, LatLayout2, HaloDepth>(spinor2);
@@ -174,7 +174,7 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
     const Layout LatLayout3 = Odd;
 
     rootLogger.info("Initialize Spinorfield");
-    Spinorfield<PREC, onDevice, LatLayout3, HaloDepth, NStacks> spinor3(commBase);
+    Spinorfield<PREC, onDevice, LatLayout3, HaloDepth, 3, NStacks> spinor3(commBase);
 
     rootLogger.info("Fill indices");
     fillIndices<PREC, onDevice, LatLayout3, HaloDepth>(spinor3);
@@ -207,7 +207,7 @@ bool run_func(CommunicationBase& commBase, const int NodeDim[4], bool forceHalos
     const Layout LatLayout = All;
 
     rootLogger.info("Initialize Spinorfield");
-    Spinorfield<PREC, onDevice, LatLayout, HaloDepth, NStacks> spinor(commBase);
+    Spinorfield<PREC, onDevice, LatLayout, HaloDepth, 3, NStacks> spinor(commBase);
     Gaugefield<PREC, onDevice, HaloDepth> gauge( commBase);
 
     rootLogger.info("Fill indices");

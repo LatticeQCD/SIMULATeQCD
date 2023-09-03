@@ -14,7 +14,7 @@ struct dDdmuFunctor {
     int _order;
 
     dDdmuFunctor(
-            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, int order, floatT naik_epsilon = 0.0) :
         _spinorIn(spinorIn.getAccessor()),

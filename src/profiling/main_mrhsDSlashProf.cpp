@@ -49,11 +49,11 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     rootLogger.info("Initialize spinors");
 
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorIn2(commBase);
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks * NStacks_cached> spinorOut2(commBase);
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks * NStacks_cached> spinorOut_ref(commBase);
-    
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> spinorOut3(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks * NStacks_cached> spinorIn2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks * NStacks_cached> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks * NStacks_cached> spinorOut_ref(commBase);
+                                                                                  
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks> spinorOut3(commBase);
     
     gpuErr = gpuGetLastError();
     if (gpuErr)

@@ -92,9 +92,9 @@ private:
     LatticeContainer<onDevice,double> dens_delta;
 
     // Pseudo-spinor fields for both flavors and another field for calculating the hamiltonian
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_sf_container;
-    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_lf_container;
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> chi;
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin,3> phi_sf_container;
+    Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin,3> phi_lf_container;
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin,3> chi;
 
     integrator<floatT,onDevice,All,HaloDepth,HaloDepthSpin> integrator;
 
@@ -118,8 +118,8 @@ private:
 
     void check_unitarity();
 
-    void make_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff);
-    void make_chi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &chi, Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff);
+    void make_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin,3> &phi, std::vector<floatT> rat_coeff);
+    void make_chi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin,3> &chi, Spinorfield<floatT, onDevice, Even, HaloDepthSpin,3> &phi, std::vector<floatT> rat_coeff);
 
     double get_Hamiltonian(LatticeContainer<onDevice,double> &energy_dens);
 
@@ -127,7 +127,7 @@ private:
 
     //use this only for testing
     void generate_const_momenta();
-    void make_const_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector<floatT> rat_coeff);
+    void make_const_phi(Spinorfield<floatT, onDevice, Even, HaloDepthSpin,3> &phi, std::vector<floatT> rat_coeff);
 };
 
 #endif //RHMC

@@ -42,9 +42,9 @@ public:
 template <typename floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 class MultiShiftCG {
 public:
-    void invert(LinearOperator<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>>& dslash,
-                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut,
-                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>& spinorIn,
+    void invert(LinearOperator<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, 1>>& dslash,
+                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks>& spinorOut,
+                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, 1>& spinorIn,
                 SimpleArray<floatT, NStacks> sigma, int max_iter, double precision);
 };
 

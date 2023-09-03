@@ -50,9 +50,9 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     }
     shifts[0] = rat.r_inv_sf_den[0] + param.m_s()*param.m_s();
 
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> spinorInMulti(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> spinorInMulti(commBase);
     spinorInMulti.gauss(d_rand.state);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, Multistack> spinorOutMulti(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, Multistack> spinorOutMulti(commBase);
 
     AdvancedMultiShiftCG<floatT, Multistack> cgM;
 

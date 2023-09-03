@@ -18,21 +18,11 @@ using Vect3 = Vect<floatT,3>;
 template <class floatT> __device__ __host__ Vect3<floatT> operator*(const SU3<floatT> &,const Vect3<floatT> &);
 
 
-
-// vect3 = (1,0,0)  or (0,1,0)  or  (0,0,1)
 template <class floatT>
-__device__ __host__ inline Vect3<floatT> vect3_unity(const int& i)
-{
-    switch ( i )
-    {
-    case 1:
-        return Vect3<floatT> (0.0, 1.0, 0.0);
-    case 2:
-        return Vect3<floatT> (0.0, 0.0, 1.0);
-    }
-// default value
-    return Vect3<floatT> (1.0, 0.0, 0.0);
+__device__ __host__ inline Vect3<floatT> unit_basis_vect3(const int& i) {
+    return unit_basis_vect<floatT,3>(i);
 }
+
 
 template <class floatT>
 __device__ __host__ inline Vect3<floatT> vect3_zero() {
@@ -46,7 +36,7 @@ __device__ __host__ inline Vect3<floatT> vect3_one(){
 
 #ifndef USE_HIP_AMD
 template <>
-__device__ inline Vect3<__half> vect3_unity(const int& i)
+__device__ inline Vect3<__half> unit_basis_vect3(const int& i)
 {
 
     switch ( i )

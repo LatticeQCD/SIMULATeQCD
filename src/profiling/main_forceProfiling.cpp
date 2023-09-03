@@ -34,9 +34,9 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase, "SHARED_GAUGENAIK");
     Gaugefield<PREC, true, HaloDepth> force(commBase);
     Gaugefield<PREC, false, HaloDepth> force_host(commBase);
-    Spinorfield<PREC, true, Even, HaloDepthSpin> SpinorIn(commBase);
-    Spinorfield<PREC, true, Even, HaloDepthSpin, 14> SpinorOutMulti(commBase,"SHARED_tmp");
-    Spinorfield<PREC, true, Even, HaloDepthSpin> spinortmp(commBase);
+    Spinorfield<PREC, true, Even, HaloDepthSpin, 3> SpinorIn(commBase);
+    Spinorfield<PREC, true, Even, HaloDepthSpin, 3, 14> SpinorOutMulti(commBase,"SHARED_tmp");
+    Spinorfield<PREC, true, Even, HaloDepthSpin, 3> spinortmp(commBase);
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
 

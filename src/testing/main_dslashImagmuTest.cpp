@@ -83,9 +83,9 @@ bool test_dslash(CommunicationBase &commBase){
     d_rand = h_rand;
 
     rootLogger.info("Initialize spinors");
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
-    Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
-    Spinorfield<floatT, false, LatLayout, HaloDepthSpin, NStacks> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks> spinorOut(commBase);
+    Spinorfield<floatT, false, LatLayout, HaloDepthSpin, 3, NStacks> spinorOut2(commBase);
 
     rootLogger.info( "Randomize spinors");
     spinorIn.gauss(d_rand.state);

@@ -115,8 +115,8 @@ private:
     Gaugefield<floatT, onDevice, HaloDepth, comp> _TmpForce;     // One of its uses is for NaikForce
     Gaugefield<floatT, onDevice, HaloDepth, R18> &_GaugeBase;
     Gaugefield<floatT, onDevice,  HaloDepth, R18> _Dummy;
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, rdeg> _spinor_x;
-    Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, rdeg> _spinor_y;
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, rdeg> _spinor_x;
+    Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, 3, rdeg> _spinor_y;
 
 
     constructU3ProjForce<floatT, onDevice, HaloDepth,comp> _createF2;
@@ -183,12 +183,12 @@ public:
    	    RationalCoeff &rat,
    	    HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing);
 
-    void make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn,
+    void make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &SpinorIn,
         Gaugefield<floatT,onDevice, HaloDepth, comp> &Force,
         Gaugefield<floatT,onDevice, HaloDepth, comp> &NaikForce,
         bool isLight);
 
-    void updateForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn, Gaugefield<floatT, onDevice, HaloDepth, comp> &Force, bool isLight);
+    void updateForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &SpinorIn, Gaugefield<floatT, onDevice, HaloDepth, comp> &Force, bool isLight);
 
-    void TestForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn, Gaugefield<floatT, onDevice, HaloDepth, comp> &Force, grnd_state<true> &d_rand);
+    void TestForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &SpinorIn, Gaugefield<floatT, onDevice, HaloDepth, comp> &Force, grnd_state<true> &d_rand);
 };

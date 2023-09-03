@@ -16,7 +16,7 @@ struct QuickDslash {
     SU3Accessor<floatT> gAccN;
 
     QuickDslash(
-            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth, NStacks> &spinorIn,
+            Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth, 3, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepth> &gauge,
             Gaugefield<floatT, onDevice, HaloDepth> &gaugeN) :
             spinorIn(spinorIn.getAccessor()),
@@ -61,7 +61,7 @@ template<class floatT, Layout LatLayout, size_t HaloDepth, size_t NStacks, bool 
 struct FillStacks{
     Vect3ArrayAcc<floatT> spinorIn;
 
-    FillStacks(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) :
+    FillStacks(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn) :
                 spinorIn(spinorIn.getAccessor()){}
 
     __host__ __device__ Vect3<floatT> operator()(gSiteStack site){
@@ -81,7 +81,7 @@ struct FillStacksLoop{
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    FillStacksLoop(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn) :
+    FillStacksLoop(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn) :
                 spinorIn(spinorIn.getAccessor()){}
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
@@ -126,15 +126,15 @@ void run_func(CommunicationBase &commBase) {
     d_rand = h_rand;
     d_rand_ref = h_rand_ref;
 
-    StaticArray<Spinorfield<floatT, onDevice, LatLayout, HaloDepth>, NStacks> spinorArray1(commBase);
-    StaticArray<Spinorfield<floatT, onDevice, LatLayout, HaloDepth>, NStacks> spinorArray2(commBase);
-    StaticArray<Spinorfield<floatT, onDevice, LatLayout, HaloDepth>, NStacks> projectToSpinorArray(commBase);
-    StaticArray<Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth>, NStacks> spinorRHSArray(commBase);
+    StaticArray<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3>, NStacks> spinorArray1(commBase);
+    StaticArray<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3>, NStacks> spinorArray2(commBase);
+    StaticArray<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3>, NStacks> projectToSpinorArray(commBase);
+    StaticArray<Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth, 3>, NStacks> spinorRHSArray(commBase);
 
-    Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> stackedSpinor1(commBase);
-    Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> stackedSpinor2(commBase);
-    Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> stackedProjectToSpinor(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth, NStacks> stackedSpinorRHS(commBase);
+    Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> stackedSpinor1(commBase);
+    Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> stackedSpinor2(commBase);
+    Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> stackedProjectToSpinor(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepth, 3, NStacks> stackedSpinorRHS(commBase);
 
     //This will hold the result of the projection
     std::vector<COMPLEX(floatT)> res_projected(NStacks);

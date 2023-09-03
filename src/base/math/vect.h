@@ -113,23 +113,23 @@ struct Vect{
         return res;
     }
 
-    template<uint8_t elem>
+    template<uint8_t elem, typename std::enable_if_t<elem < elems, int> = 0 >
         __device__ __host__ inline GPUcomplex<floatT> getElement() const  {
             return data[elem];
         }
 
 
-    template<uint8_t elem>
+    template<uint8_t elem, typename std::enable_if_t<elem < elems, int> = 0 >
         __device__ __host__ inline void addtoElement(const GPUcomplex<floatT> a){
             data[elem] += a;
         }
 
-    template<uint8_t elem>
+    template<uint8_t elem, typename std::enable_if_t<elem < elems, int> = 0 >
         __device__ __host__ inline void setElement(const GPUcomplex<floatT>& a){
             data[elem] = a;
         }
 
-    template<uint8_t elem>
+    template<uint8_t elem, typename std::enable_if_t<elem < elems, int> = 0 >
         __device__ __host__ inline void subfromElement(const GPUcomplex<floatT> a){
             data[elem] -= a;
         }
@@ -308,6 +308,13 @@ __device__ __host__ Vect<floatT,elems> conj(const Vect<floatT,elems> &x)
     return z;
 }
 
+
+template <class floatT, uint8_t elems>
+__device__ __host__ inline Vect<floatT,elems> vect_zero()
+{
+    return Vect<floatT,elems>(GPUcomplex<floatT>(0.0));
+}
+
 template <class floatT, uint8_t elems>
 __device__ __host__ inline Vect<floatT,elems> vect_one()
 {
@@ -315,11 +322,12 @@ __device__ __host__ inline Vect<floatT,elems> vect_one()
 }
 
 
-
 template <class floatT, uint8_t elems>
-__device__ __host__ inline Vect<floatT,elems> vect_zero()
+__device__ __host__ inline Vect<floatT,elems> unit_basis_vect(const int& i)
 {
-    return Vect<floatT,elems>(GPUcomplex<floatT>(0.0));
+    Vect<floatT,elems> vec = vect_zero<floatT,elems>();
+    vec.data[i] = static_cast<floatT>(1.0);
+    return vec;
 }
 
 

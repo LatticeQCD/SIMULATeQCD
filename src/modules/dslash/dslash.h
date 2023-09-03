@@ -33,7 +33,7 @@ struct HisqDslashFunctor {
 
     template<bool onDevice, size_t NStacks>
     HisqDslashFunctor(
-            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
             _spinorIn(spinorIn.getAccessor()),
@@ -61,8 +61,8 @@ struct HisqDslashThreadRHSFunctor {
 
     template<bool onDevice>
     HisqDslashThreadRHSFunctor(
-        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorOut,
-        const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks> &spinorOut,
+        const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> &spinorIn,
         Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
         Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
         _spinorOut(spinorOut.getAccessor()), 
@@ -91,8 +91,8 @@ struct HisqDslashStackedFunctor {
     floatT _c_3000;
 
     HisqDslashStackedFunctor(
-        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cached> &spinorOut,
-        const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cached> &spinorIn,
+        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks*NStacks_cached> &spinorOut,
+        const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks*NStacks_cached> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
             _spinorOut(spinorOut.getAccessor()),
@@ -122,8 +122,8 @@ struct HisqMdaggMFunctor {
 
     template<bool onDevice, size_t NStacks>
     HisqMdaggMFunctor(
-            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
-            Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorTmp,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> &spinorIn,
+            Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks> &spinorTmp,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik,
             floatT mass2, floatT c_3000) :
@@ -138,11 +138,11 @@ struct HisqMdaggMFunctor {
 };
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 1>
-class HisqDSlash : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks>,
-        Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> > {
+class HisqDSlash : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks>,
+        Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> > {
 
-    using SpinorRHS_t = Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks>;
-    using SpinorLHS_t = Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks>;
+    using SpinorRHS_t = Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks>;
+    using SpinorLHS_t = Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks>;
 
     template<CompressionType comp>
     using Gauge_t = Gaugefield<floatT, onDevice, HaloDepthGauge, comp>;
@@ -152,7 +152,7 @@ class HisqDSlash : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<La
 
 
     //! Optimization: The memory of this spinor may be shared. However, it must not share the Halo Buffers
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> _tmpSpin;
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks> _tmpSpin;
 
     double _mass;
     floatT _mass2;
@@ -170,14 +170,14 @@ public:
     virtual void Dslash_threadRHS(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
     template<size_t NStacks_cached>
-    void Dslash_stacked(Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cached> &lhs, const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cached>& rhs, bool update = false);
+    void Dslash_stacked(Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks*NStacks_cached> &lhs, const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks*NStacks_cached>& rhs, bool update = false);
 
     //! Includes the mass term
     virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
 
     template<Layout LatLayout>
     HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
-    getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
+    getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks> &rhs);
 
 
 };
@@ -203,8 +203,8 @@ public:
                       dslash_eo(gauge_smeared, gauge_Naik, 0.0, naik_epsilon),
                       mass(mass) {}
 
-    void apply_Dslash_inverse(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut,
-                const SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn,
+    void apply_Dslash_inverse(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 3, NStacks> &spinorOut,
+                const SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 3, NStacks> &spinorIn,
                 int cgMax, double residue) {
         // compute the inverse using
         // \chi_e = (1m^2 - D_{eo}D_{oe})^{-1} (m \eta_e - D_{eo} \eta_o)
@@ -231,7 +231,7 @@ struct stdStagDslashFunctor {
 
     template<bool onDevice, size_t NStacks>
     stdStagDslashFunctor(
-            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R14> &gauge) :
             _spinorIn(spinorIn.getAccessor()),
             _gAcc(gauge.getAccessor()) {}
@@ -248,11 +248,11 @@ struct stdStagDslashFunctor {
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 1>
 class stdStagDSlash
-        : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks>,
-                Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> > {
+        : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks>,
+                Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin,  3, NStacks> > {
 
-    using SpinorRHS_t = Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks>;
-    using SpinorLHS_t = Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks>;
+    using SpinorRHS_t = Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks>;
+    using SpinorLHS_t = Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin,  3, NStacks>;
 
     template<CompressionType comp>
     using Gauge_t = Gaugefield<floatT, onDevice, HaloDepthGauge, comp>;
@@ -260,7 +260,7 @@ class stdStagDSlash
     Gauge_t<R14> &_gauge;
 
     //! Optimization: The memory of this spinor may be shared. However, it must not share the Halo Buffers
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> _tmpSpin;
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks> _tmpSpin;
     floatT _mass;
     floatT _mass2;
 
@@ -279,7 +279,7 @@ public:
 
     template<Layout LatLayout>
     stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
-    getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
+    getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks> &rhs);
 
 };
 

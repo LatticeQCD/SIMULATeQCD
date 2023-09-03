@@ -47,13 +47,13 @@ public:
 
     ~integrator() {};
 
-    void integrate(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
+    void integrate(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &_phi_sf_container);
 
 private:
     // methods to evolve P and Q
     void updateP_gaugeforce(floatT stepsize);
 
-    void updateP_fermforce(floatT stepsize, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi, bool light);
+    void updateP_fermforce(floatT stepsize, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &phi, bool light);
 
     void evolveQ(floatT stepsize);
 
@@ -65,11 +65,11 @@ private:
     floatT forceinfo2();
 
     //this is only a placeholder function for testing, real implementation is in HISQ force! REMOVE for production!
-    void make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &phi, std::vector <floatT> rat_coeff);
+    void make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &phi, std::vector <floatT> rat_coeff);
 
     // The different integration schemes
-    void SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
-    void PQPQP2MN(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
+    void SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &_phi_sf_container);
+    void PQPQP2MN(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin, 3> &_phi_sf_container);
 
     void PureGaugeleapfrog();
 

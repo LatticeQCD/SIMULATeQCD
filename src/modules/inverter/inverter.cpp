@@ -77,9 +77,9 @@ struct StackTimesFloatPlusFloatTimesNoStack
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn1,
             SimpleArray<floatT, NStacks> a,
-            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> &spinorIn2,
+            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, 1> &spinorIn2,
             SimpleArray<floatT, NStacks> b) :
         spinorIn1(spinorIn1.getAccessor()), spinorIn2(spinorIn2.getAccessor()), _a(a), _b(b) {}
 
@@ -103,8 +103,8 @@ struct StackMinusFloatTimeStack
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackMinusFloatTimeStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn1,
-            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn2,
+    StackMinusFloatTimeStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn1,
+            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn2,
             SimpleArray<floatT,NStacks> a) :
         spinorIn1(spinorIn1.getAccessor()), spinorIn2(spinorIn2.getAccessor()), _a(a) {}
 
@@ -552,26 +552,26 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
 template class ConjugateGradient<floatT, STACKS>;
 
 #define CLASSCG_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
-template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, int, double);\
-template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
-template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-                                                                    Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, double); \
+template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, int, double);\
+template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+                                                            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double); \
+template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+                                                                    Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double, double); \
 
 #define CLASSCG_FLOAT_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
-template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);
+template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN, 3,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double, double);
 
 #define CLASSCG_HALF_INV_INIT(floatT,LO,HALOSPIN,STACKS)  \
-template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<__half, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);
+template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, LinearOperator<Spinorfield<__half, true, LO, HALOSPIN, 3,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN, 3,STACKS>& spinorIn, const int, const double, double);
 
 #define CLASSMCG_INIT(floatT,LO,HALOSPIN,STACKS)                    \
     template class MultiShiftCG<floatT,true ,LO ,HALOSPIN, STACKS>;
 #define CLASSAMCG_INIT(floatT,STACKS) \
     template class AdvancedMultiShiftCG<floatT, STACKS>;
 #define CLASSAMCG_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
-template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 1> >& dslash, \
-            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 1>& spinorIn, \
+template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, 1> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, 1>& spinorIn, \
             SimpleArray<floatT, STACKS> sigma, const int, const double); \
 
 INIT_PN(CLASSCG_INIT)

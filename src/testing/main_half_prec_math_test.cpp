@@ -57,7 +57,7 @@ struct simple_matvec_mult {
     SU3Accessor<floatT,comp> gAcc;
     Vect3ArrayAcc<floatT> spinorAcc;
 
-    simple_matvec_mult(Gaugefield<floatT, true, HaloDepth, comp> &gaugeIn, Spinorfield<floatT, true, All, 0, 1> &spinorIn) : gAcc(gaugeIn.getAccessor()), spinorAcc(spinorIn.getAccessor()) {}
+    simple_matvec_mult(Gaugefield<floatT, true, HaloDepth, comp> &gaugeIn, Spinorfield<floatT, true, All, 0, 3, 1> &spinorIn) : gAcc(gaugeIn.getAccessor()), spinorAcc(spinorIn.getAccessor()) {}
 
     __device__ __host__ Vect3<floatT> operator()(gSite site) {
         typedef GIndexer<All,0> GInd;
@@ -106,9 +106,9 @@ int main(int argc, char *argv[]) {
         gauge_half.iterateOverBulkAllMu(convert_to_half(gauge));
         dummy.template convert_precision<__half>(gauge_half);
         gauge_host = dummy;
-        Spinorfield<__half,true,All,0,1> spinor_half(commBase);
-        Spinorfield<__half,true,All,0,1> spinor_out(commBase);
-        spinor_half.one();
+        Spinorfield<__half,true,All,0,3,1> spinor_half(commBase);
+        Spinorfield<__half,true,All,0,3,1> spinor_out(commBase);
+        spinor_half.unit_basis(0);
         spinor_out.iterateOverBulk(simple_matvec_mult<__half,HaloDepth,R18>(gauge_half,spinor_half));
 
         timer.start();
