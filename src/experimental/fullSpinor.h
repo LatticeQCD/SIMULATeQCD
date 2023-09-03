@@ -70,7 +70,6 @@ struct SpinorColorAcc : public VectArrayAcc<floatT,12> {
         return convertVect12ToColorVect(res);
     }
 
-    template<class floatT_compute=floatT>
     __host__ __device__ inline void setColorVect(const gSite &site, const ColorVect<floatT> &vec) {
         auto res = convertColorVectToVect12(vec);
         this->template setElement(site, res);
