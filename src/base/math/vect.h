@@ -25,6 +25,12 @@ using areAllowedVecElemTypes = typename std::enable_if_t< (std::is_same_v<GPUcom
                                                    || (std::is_same_v<double                 ,inputTypes> && ...)
                                                    , bool>; 
 
+template <class floatT> __device__ __host__ inline floatT minVal();
+
+template<class floatT>
+__device__ __host__ inline floatT get_rand(uint4* state);
+
+
 template <class floatT, uint8_t elems>
 struct Vect{
 
@@ -51,6 +57,42 @@ struct Vect{
                 elem = v0;
             }
         };
+    
+    __device__ __host__ void gauss( uint4 * state )
+    {
+#ifndef USE_HIP_AMD
+   	if constexpr (!std::is_same<floatT,__half>::value) {
+#endif
+
+        for(int i = 0; i<elems; ++i){
+            floatT radius0,phi0;
+
+            phi0 = 2.0*M_PI * get_rand<floatT>(state);
+
+            radius0 = get_rand<floatT>(state);
+            radius0 = radius0 + (1.0 - radius0) * minVal<floatT>(); // exclude 0 from random numbers!
+            radius0 = sqrt(-1.0 * log(radius0));
+
+            data[i] = COMPLEX(floatT)(radius0 * cos(phi0), radius0 * sin(phi0));
+        }
+#ifndef USE_HIP_AMD
+	    }
+    else {
+        #ifdef __GPU_ARCH__
+        for(int i = 0; i<elems; ++i){
+            float radius0,phi0;
+            phi0 = 2.0*M_PI * get_rand<float>(state);
+
+            radius0 = get_rand<float>(state);
+            radius0 = radius0 + (1.0 - radius0) * minVal<float>(); // exclude 0 from random numbers!
+            radius0 = sqrt(-1.0 * log(radius0));
+
+            data[i] = COMPLEX(__half)(__float2half(radius0 * cos(phi0)), __float2half(radius0 * sin(phi0)));
+        }
+        #endif
+    }
+#endif
+    }
 
 
     __device__ __host__ Vect<floatT,elems> &operator=(const Vect<floatT,elems> &y);

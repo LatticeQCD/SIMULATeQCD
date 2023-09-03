@@ -17,7 +17,7 @@ struct fill_with_gauss_vec
     __device__ __host__ Vect3<floatT> operator()(gSite& site, __attribute__((unused)) size_t stack){
 
         Vect3<floatT> vec;
-        gauss(vec, &state[site.isite]);
+        vec.gauss(&state[site.isite]);
         return vec;
     }
 };
