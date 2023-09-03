@@ -25,45 +25,45 @@ struct Matrix4x4Sym {
 
     __device__ __host__ inline floatT operator()(int mu, int nu) {
         if (mu == 0 && nu == 0) return elems[entry::e00];
-        if (mu == 1 && nu == 1) return elems[entry::e11];
-        if (mu == 2 && nu == 2) return elems[entry::e22];
-        if (mu == 3 && nu == 3) return elems[entry::e33];
-
-        if (mu == 0 && nu == 1) return elems[entry::e01];
-        if (mu == 0 && nu == 2) return elems[entry::e02];
-        if (mu == 0 && nu == 3) return elems[entry::e03];
-        if (mu == 1 && nu == 2) return elems[entry::e12];
-        if (mu == 1 && nu == 3) return elems[entry::e13];
-        if (mu == 2 && nu == 3) return elems[entry::e23];
-
-        if (nu == 0 && mu == 1) return elems[entry::e01];
-        if (nu == 0 && mu == 2) return elems[entry::e02];
-        if (nu == 0 && mu == 3) return elems[entry::e03];
-        if (nu == 1 && mu == 2) return elems[entry::e12];
-        if (nu == 1 && mu == 3) return elems[entry::e13];
-        if (nu == 2 && mu == 3) return elems[entry::e23];
+        else if (mu == 1 && nu == 1) return elems[entry::e11];
+        else if (mu == 2 && nu == 2) return elems[entry::e22];
+        else if (mu == 3 && nu == 3) return elems[entry::e33];
+        
+        else if (mu == 0 && nu == 1) return elems[entry::e01];
+        else if (mu == 0 && nu == 2) return elems[entry::e02];
+        else if (mu == 0 && nu == 3) return elems[entry::e03];
+        else if (mu == 1 && nu == 2) return elems[entry::e12];
+        else if (mu == 1 && nu == 3) return elems[entry::e13];
+        else if (mu == 2 && nu == 3) return elems[entry::e23];
+        
+        else if (nu == 0 && mu == 1) return elems[entry::e01];
+        else if (nu == 0 && mu == 2) return elems[entry::e02];
+        else if (nu == 0 && mu == 3) return elems[entry::e03];
+        else if (nu == 1 && mu == 2) return elems[entry::e12];
+        else if (nu == 1 && mu == 3) return elems[entry::e13];
+        else if (nu == 2 && mu == 3) return elems[entry::e23];
         return 0;
     }
 
     __device__ __host__ inline void operator()(int mu, int nu, floatT value) {
         if (mu == 0 && nu == 0) elems[entry::e00] = value;
-        if (mu == 1 && nu == 1) elems[entry::e11] = value;
-        if (mu == 2 && nu == 2) elems[entry::e22] = value;
-        if (mu == 3 && nu == 3) elems[entry::e33] = value;
+        else if (mu == 1 && nu == 1) elems[entry::e11] = value;
+        else if (mu == 2 && nu == 2) elems[entry::e22] = value;
+        else if (mu == 3 && nu == 3) elems[entry::e33] = value;
 
-        if (mu == 0 && nu == 1) elems[entry::e01] = value;
-        if (mu == 0 && nu == 2) elems[entry::e02] = value;
-        if (mu == 0 && nu == 3) elems[entry::e03] = value;
-        if (mu == 1 && nu == 2) elems[entry::e12] = value;
-        if (mu == 1 && nu == 3) elems[entry::e13] = value;
-        if (mu == 2 && nu == 3) elems[entry::e23] = value;
+        else if (mu == 0 && nu == 1) elems[entry::e01] = value;
+        else if (mu == 0 && nu == 2) elems[entry::e02] = value;
+        else if (mu == 0 && nu == 3) elems[entry::e03] = value;
+        else if (mu == 1 && nu == 2) elems[entry::e12] = value;
+        else if (mu == 1 && nu == 3) elems[entry::e13] = value;
+        else if (mu == 2 && nu == 3) elems[entry::e23] = value;
 
-        if (nu == 0 && mu == 1) elems[entry::e01] = value;
-        if (nu == 0 && mu == 2) elems[entry::e02] = value;
-        if (nu == 0 && mu == 3) elems[entry::e03] = value;
-        if (nu == 1 && mu == 2) elems[entry::e12] = value;
-        if (nu == 1 && mu == 3) elems[entry::e13] = value;
-        if (nu == 2 && mu == 3) elems[entry::e23] = value;
+        else if (nu == 0 && mu == 1) elems[entry::e01] = value;
+        else if (nu == 0 && mu == 2) elems[entry::e02] = value;
+        else if (nu == 0 && mu == 3) elems[entry::e03] = value;
+        else if (nu == 1 && mu == 2) elems[entry::e12] = value;
+        else if (nu == 1 && mu == 3) elems[entry::e13] = value;
+        else if (nu == 2 && mu == 3) elems[entry::e23] = value;
     }
 
    /* __device__ __host__ inline Matrix4x4Sym<floatT>& operator=(const floatT &y)
