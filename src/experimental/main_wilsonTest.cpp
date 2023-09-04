@@ -31,9 +31,10 @@ struct TestKernel{
 
         ColorVect<floatT> spinCol = _SpinorColorAccessor.getColorVect(site);
         
-        for (auto& s : spinCol){
-            s = link*s;
-        }
+        /* for (auto& s : spinCol){ */
+        /*     s = link*s; */
+        /* } */
+        spinCol = link * spinCol;
 
         return convertColorVectToVect12(spinCol);
     }
