@@ -27,7 +27,7 @@ struct plaqClover {
 
     plaqClover(SU3Accessor<floatT,comp> acc) : acc(acc) {}
 
-    __device__ __host__  inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__  inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
 
         return Plaq_P<floatT, HaloDepth>(acc, site, mu, nu)
                + Plaq_Q<floatT, HaloDepth>(acc, site, mu, nu)
@@ -44,7 +44,7 @@ struct rectClover {
 
     rectClover(SU3Accessor<floatT,comp> acc) : acc(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         gSite origin = site;
         gSite up = GInd::site_up(site, nu);
         gSite twoUp = GInd::site_up(up, nu);
@@ -145,7 +145,7 @@ struct squareClover2x2 {
 
     squareClover2x2(SU3Accessor<floatT,comp> acc) : acc(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         gSite origin = site;
         gSite up = GInd::site_up(site, nu); //(0,1)
         gSite twoUp = GInd::site_up(up, nu); //(0,2)
@@ -228,7 +228,7 @@ struct rectClover1x3 {
 
     rectClover1x3(SU3Accessor<floatT,comp> acc) : acc(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         gSite origin = site;
         gSite up = GInd::site_up(site, nu); //(0,1)
         gSite twoUp = GInd::site_up(up, nu); //(0,2)
@@ -358,7 +358,7 @@ struct squareClover3x3 {
 
     squareClover3x3(SU3Accessor<floatT,comp> acc) : acc(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         gSite origin = site;
         gSite up = GInd::site_up(site, nu); //(0,1)
         gSite twoUp = GInd::site_up(up, nu); //(0,2)
@@ -493,7 +493,7 @@ struct FieldStrengthTensor {
     FieldStrengthTensor(SU3Accessor<floatT,comp> acc) : acc(acc),
     plClov(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         //define a unitary matrix for the addition in the end
         SU3<floatT> unitySU3 = su3_one<floatT>();
 
@@ -525,7 +525,7 @@ struct FieldStrengthTensor_imp {
     FieldStrengthTensor_imp(SU3Accessor<floatT,comp> acc) : acc(acc),
     plClov(acc), rcClov(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         //define a unitary matrix for the addition in the end
         SU3<floatT> unitySU3 = su3_one<floatT>();
 
@@ -566,7 +566,7 @@ struct FieldStrengthTensor_imp_imp {
     FieldStrengthTensor_imp_imp(SU3Accessor<floatT,comp> acc) : acc(acc),
     plClov(acc), rcClov(acc), sqClov2x2(acc), rcClov1x3(acc), sqClov3x3(acc) {}
 
-    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSite site, int mu, int nu) const {
         //define a unitary matrix for the addition in the end
         SU3<floatT> unitySU3 = su3_one<floatT>();
 

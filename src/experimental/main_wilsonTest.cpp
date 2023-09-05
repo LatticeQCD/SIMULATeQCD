@@ -21,8 +21,6 @@ struct WilsonQuickDslash {
 
     //! The functor has to know about all the elements that it needs for computation.
     //! However, it does not need the Spinor, where the result should go (SpinorOut).
-    //Vect2ArrayAcc<floatT> spinorIn;
-    //SU3Accessor<floatT, R18> gAcc;
     SU3Accessor<floatT> gAcc;
     SpinorColorAcc<floatT> spinorIn;
     floatT _kappa;
@@ -35,9 +33,10 @@ struct WilsonQuickDslash {
             Gaugefield<floatT, true, HaloDepthGauge, R18> &gauge,
             floatT kappa, floatT c_sw
         ) :
-      spinorIn(spinorIn.getAccessor()),
       gAcc(gauge.getAccessor()),
-      _kappa(kappa), _c_sw(c_sw), FT(gauge.getAccessor())
+      spinorIn(spinorIn.getAccessor()),
+      _kappa(kappa), _c_sw(c_sw), 
+      FT(gauge.getAccessor())
   {}
 
     /*! This is the operator() overload that is called to perform the Dslash. This has to have the following design: It
@@ -76,13 +75,13 @@ struct WilsonQuickDslash {
       Dirac_psi = Dirac_psi + M * spinorIn.getColorVect(site);
 
       ColorVect<floatT> Clover;
+          
 
       for(int mu = 0 ; mu < 4 ; mu++){
         for(int nu = 0 ; nu < 4 ; nu++){
           if(mu==nu) continue;
-          //SU3<floatT> Fmunu=FT(site,mu,nu);
-          //Clover = Clover + (_c_sw/2.0) * (COMPLEX(floatT)(0, -1)) * ( Fmunu * ((G[mu]*G[nu]) * spinorIn.getColorVect(site) ) );
-          Clover =  ( spinorIn.getColorVect(site) ) ;
+            SU3<floatT> Fmunu = FT(site,mu,nu);
+          Clover = Clover + (_c_sw/2.0) * (COMPLEX(floatT)(0, -1)) * ( Fmunu * ((G[mu]*G[nu]) * spinorIn.getColorVect(site) ) );
         }
       }
       Dirac_psi = Dirac_psi + Clover;
@@ -150,7 +149,7 @@ int main(int argc, char *argv[]) {
 
     CommunicationBase commBase(&argc, &argv);
     WilsonParameters param;
-    param.readfile(commBase, "../../parameter/tests/wilsonTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/wilsonTest.param", argc, argv);
     commBase.init(param.nodeDim());
     //const int LatDim[] = {20, 20, 20, 20};
     //const int NodeDim[] = {1, 1, 1, 1};
