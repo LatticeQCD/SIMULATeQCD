@@ -100,6 +100,9 @@ int main(int argc, char *argv[]) {
     /// Initialize gaugefield with unit-matrices.
     gauge.one();
 
+
+////// gauge read in rutine to be replaced with random generated
+/*
     std::string gauge_file;
 
     // load gauge file, 0 start from 1, 1 and 2 load file, 2 will also gauge fix
@@ -146,6 +149,19 @@ int main(int argc, char *argv[]) {
 
         }
     }
+
+*/
+
+
+// random generated gauge file
+
+   grnd_state<false> h_rand;
+   grnd_state<true> d_rand;
+   h_rand.make_rng_state(12345);
+   d_rand = h_rand;
+   gauge.random(d_rand.state);
+
+
 
     /// Exchange Halos
     gauge.updateAll();
@@ -436,15 +452,16 @@ int main(int argc, char *argv[]) {
 
     timer.stop();
     rootLogger.info( "Time for operators: " , timer  );
+    rootLogger.info( "abs(sum) = ",  sum);
 
-    rootLogger.info( "abs(sum)-Known = ",  sum-226.453970794328308);
+    rootLogger.info( "abs(sum)-Known = ",  sum-2356.61222319740476);
 
     delete [] results;
     delete [] results_r2;
     delete [] norm_r2;
 
     bool lerror = false;
-    if(abs(sum-226.453970794328308)> 1e-3){
+    if(abs(sum-2356.61222319740476)> 1e-3){
         lerror = true;
     }
 

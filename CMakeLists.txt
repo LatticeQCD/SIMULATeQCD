@@ -677,6 +677,15 @@ set_SIMULATeQCD_property(wilsonLinesCorrelatorTest PROPERTIES RUNTIME_OUTPUT_DIR
 SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests wilsonLinesCorrelatorTest)
 
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_RFixingTest.cpp)
+add_SIMULATeQCD_executable(RFixingTest src/testing/main_RFixingTest.cpp ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(RFixingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(RFixingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(tests RFixingTest)
+
+
+
 #-------------------------------------------------------------------------------------COMPILATION DEFINITIONS: PROFILING
 
 
