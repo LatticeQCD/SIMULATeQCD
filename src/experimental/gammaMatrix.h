@@ -42,12 +42,12 @@ struct FourMatrix {
 
     // Static method to create an identity matrix
     __host__ __device__ inline static constexpr FourMatrix<floatT> identity() {
-        return {
-            {1, 0, 0, 0},
-            {0, 1, 0, 0},
-            {0, 0, 1, 0},
-            {0, 0, 0, 1}
-        };
+      FourMatrix<floatT> I;
+      I.A[0][0]=1;
+      I.A[1][1]=1;
+      I.A[2][2]=1;
+      I.A[3][3]=1;
+      return I; 
     }
 
     // Static method to create a gamma matrix
@@ -139,6 +139,9 @@ struct FourMatrix {
             }
         }
         return result;
+    }
+    __host__ __device__ const GPUcomplex<floatT> get(const int i, const int j) const {
+      return A[i][j];
     }
 };
 

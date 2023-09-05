@@ -1,0 +1,12 @@
+#
+# wilsonTest.param
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of sublattices per direction
+#
+Lattice    = 16  16  16  32
+Nodes      = 1  1  1  1
+beta       = 1.83 
+use_unit_conf = 0
+Gaugefile  = ../../../RC16x32_B1830Kud013825Ks013710C1761-1-000410
+format     = ildg

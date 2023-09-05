@@ -2,6 +2,7 @@
 
 #include "../base/math/vect3.h"
 #include "../base/math/vectArray.h"
+#include "gammaMatrix.h"
 #include <array>
 
 template <class floatT> 
@@ -33,7 +34,35 @@ __host__ __device__ auto operator*(const SU3<floatT>& ob1, const ColorVect<float
     return res; 
 }
 
+template <class floatT>
+__host__ __device__ auto operator*(const FourMatrix<floatT>& matrix, const ColorVect<floatT>& colVec)->ColorVect<floatT> {
+  ColorVect<floatT> res;
+  for (int i = 0; i < 4; ++i){
+    for (int j = 0 ; j < 4 ; ++j){ 
+        GPUcomplex<floatT> matrix_element=matrix.get(i,j);
+        res[i] += matrix_element * colVec[j];
+      }
+  }
+  return res; 
+}
 
+template <class floatT>
+__host__ __device__ auto operator*(const floatT& scalar, const ColorVect<floatT>& colVec)->ColorVect<floatT> {
+  ColorVect<floatT> res;
+  for (int i = 0; i < 4; ++i){
+    res[i] += scalar * colVec[i];
+  }
+  return res; 
+}
+
+template <class floatT>
+__host__ __device__ auto operator*(const GPUcomplex<floatT>& scalar, const ColorVect<floatT>& colVec)->ColorVect<floatT> {
+  ColorVect<floatT> res;
+  for (int i = 0; i < 4; ++i){
+    res[i] += scalar * colVec[i];
+  }
+  return res; 
+}
 
 
 template<class floatT>
