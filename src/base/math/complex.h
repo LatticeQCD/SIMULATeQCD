@@ -256,13 +256,13 @@ public:
         -left * right.c.y / (right.c.x * right.c.x + right.c.y * right.c.y));
   }
 
-//  template <typename T>
-//  __host__ __device__ friend GPUcomplex operator/(GPUcomplex &left,
-//                                                  GPUcomplex &right) {
-//    return GPUcomplex(
-//        (left.c.x * right.c.x + left.c.y * right.c.y) / (right.c.x * right.c.x + right.c.y * right.c.y),
-//        (-left.c.x * right.c.y + left.c.y * right.c.x) / (right.c.x * right.c.x + right.c.y * right.c.y));
-//  }
+__host__ __device__ friend GPUcomplex operator/(const GPUcomplex &left,
+                                                const GPUcomplex &right) {
+  return GPUcomplex(
+      (left.c.x * right.c.x + left.c.y * right.c.y) / (right.c.x * right.c.x + right.c.y * right.c.y),
+      (-left.c.x * right.c.y + left.c.y * right.c.x) / (right.c.x * right.c.x + right.c.y * right.c.y));
+}
+
   __host__ __device__ inline static GPUcomplex invalid();
 
   // These are needed to make sure that dp_complex may be part in general

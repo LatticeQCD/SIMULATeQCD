@@ -74,18 +74,19 @@ struct WilsonDslashKernel {
 };
 
 //! Abstract base class for all kinds of Dslash operators that shall enter the inversion
-template<typename floatT, bool onDevice, int HaloDepth, typename SpinorLHS_t, typename SpinorRHS_t>
+template<typename floatT, bool onDevice, size_t HaloDepth, typename SpinorLHS_t, typename SpinorRHS_t>
 class WilsonDslash {
   private:
     Gaugefield<floatT, true, HaloDepth>& _gauge;
-    double _kappa, _c_sw;
+    floatT _kappa, _c_sw;
   public:
     //! This shall be a simple call of the Dslash without involving a constant
     WilsonDslash(Gaugefield<floatT, true, HaloDepth>& gauge, floatT kappa, floatT c_sw) : _gauge(gauge),_kappa(kappa),_c_sw(c_sw) {}
 
     //! This shall be a call of the M^\dagger M where M = m + D or similar
-    void apply(SpinorRHS_t & lhs, const SpinorRHS_t & rhs, bool update = true){
-         lhs.template iterateOverBulk(WilsonDslashKernel<floatT, All, All, HaloDepth, HaloDepth>(rhs, _gauge, _kappa, _c_sw));
+    void apply(SpinorRHS_t & lhs, SpinorRHS_t & rhs, bool update = true){
+        auto kernel = WilsonDslashKernel<floatT, All, All, HaloDepth, HaloDepth>(rhs, _gauge, _kappa, _c_sw);
+         lhs.template iterateOverBulk(kernel);
  
     };
 };
@@ -94,84 +95,79 @@ template<class floatT, bool onDevice, int HaloDepth, typename Spinor_t>
 class BiCGStabInverter{
 public:
 
-    void invert(WilsonDslash<floatT, onDevice, HaloDepth, Spinor_t, Spinor_t>& dslash, Spinor_t& x, Spinor_t& rhs, int max_iter, double precision);
+    void invert(WilsonDslash<floatT, onDevice, HaloDepth, Spinor_t, Spinor_t>& dslash, Spinor_t& x, Spinor_t& rhs, int max_iter, double precision)
+    {
+        Spinor_t r0(x.getComm());
+        Spinor_t r(x.getComm());
+        Spinor_t p(x.getComm());
+        
+        //should go to member
+        Spinor_t Ap(x.getComm());
+        Spinor_t As(x.getComm());
+        Spinor_t s(x.getComm());
+        
+        x*=0.0;
+        r0 = rhs;
+        p=rhs;
+        r=rhs;
 
-};
+        floatT rhsinvnorm=1.0/rhs.realdotProduct(rhs);
+        COMPLEX(floatT) rr0 = GPUcomplex<floatT>(r.realdotProduct(r),0.0);
+        floatT resnorm=rr0.cREAL*rhsinvnorm;
 
-template<class floatT, bool onDevice, int HaloDepth, typename Spinor_t>
-void BiCGStabInverter<floatT,onDevice,HaloDepth,Spinor_t>::invert(WilsonDslash<floatT, onDevice, HaloDepth, Spinor_t, Spinor_t>& dslash, Spinor_t& x, Spinor_t& rhs, int max_iter, double precision)
-{
-    Spinor_t r0(x.getComm());
-    Spinor_t r(x.getComm());
-    Spinor_t p(x.getComm());
-    
-    //should go to member
-    Spinor_t Ap(x.getComm());
-    Spinor_t As(x.getComm());
-    Spinor_t s(x.getComm());
-    
-    x*=0.0;
-    r0 = rhs;
-    p=rhs;
-    r=rhs;
+        for (int i = 0; i < max_iter && resnorm > precision; i++) {
+            dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
+            COMPLEX(floatT) beta=Ap.dotProduct(r0);
+            COMPLEX(floatT) alpha=rr0*beta;
 
-    floatT rhsinvnorm=1.0/rhs.realdotProduct(rhs);
-    COMPLEX(floatT) rr0 = GPUcomplex<floatT>(r.realdotProduct(r),0.0);
-    floatT resnorm=rr0.cREAL*rhsinvnorm;
+            floatT eps = abs(beta)/sqrt(Ap.realdotProduct(Ap) * r0.realdotProduct(r0));
+            if(eps < 1e-8) {
+              rootLogger.trace("restarting BICGSTAB. eps = " ,  eps);
+              // r = r0 = p = b-Ax
+              dslash.apply(r0, x);
+              r0=-1.0*r0+rhs;
+              r=r0;
+              p=r0;
+              rr0=r.realdotProduct(r);
+              resnorm = rr0.cREAL * rhsinvnorm;
+              continue;
+            }
 
-    for (int i = 0; i < max_iter && resnorm > precision; i++) {
-        dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
-        COMPLEX(floatT) beta=Ap.dotProduct(r0);
-        COMPLEX(floatT) alpha=rr0*beta;
+            //s = r-alpha*Ap
+            s = r - alpha*Ap;
+            const floatT snorm = s.realdotProduct(s);
+            if (snorm < precision * precision){
+                x = x + alpha*p;
+                r = s;
+                resnorm = snorm * rhsinvnorm;
+                continue;
+            }
+            dslash.apply(As, s);
+            //omega = (As,s)/(As,As)
+            COMPLEX(floatT) omega = As.dotProduct(s) / As.realdotProduct(As);
 
-        floatT eps = abs(beta)/sqrt(Ap.realdotProduct(Ap) * r0.realdotProduct(r0));
-        if(eps < 1e-8) {
-          rootLogger.trace("restarting BICGSTAB. eps = " ,  eps);
-          // r = r0 = p = b-Ax
-          dslash.apply(r0, x);
-          r0=-1.0*r0+rhs;
-          r=r0;
-          p=r0;
-          rr0=r.realdotProduct(r);
-          resnorm = rr0.cREAL * rhsinvnorm;
-          continue;
+            //x=x+alpha*p+pmega*s
+            x = x + (alpha * p) + (omega * s);
+
+            //r = s - omega*As
+            r = s - omega * As;
+            resnorm = r.realdotProduct(r) * rhsinvnorm;
+
+            if (std::isnan(resnorm)){
+              rootLogger.fatal("Nan");
+            }
+
+            if (resnorm > precision || i == max_iter-1 ){// the last steps are not needed if this is the last iteration
+              //beta = alpha/omega * rr'/rr
+              beta = 1.0/rr0; //reuse temporary
+              rr0=r.dotProduct(r0);
+              beta = beta * (alpha/omega) * rr0;
+              
+              p = r + beta*(p - omega*Ap);
+            }
+            rootLogger.trace("iteration ",i);
+
         }
-
-        //s = r-alpha*Ap
-        s = r - alpha*Ap;
-        const floatT snorm = s.realdotProduct(s);
-        if (snorm < precision * precision){
-            x = x + alpha*p;
-            r = s;
-            resnorm = snorm * rhsinvnorm;
-            continue;
-        }
-        dslash.apply(As, s);
-        //omega = (As,s)/(As,As)
-        COMPLEX(floatT) omega = As.dotProduct(s) / As.realdotProduct(As);
-
-        //x=x+alpha*p+pmega*s
-        x = x + (alpha * p) + (omega * s);
-
-        //r = s - omega*As
-        r = s - omega * As;
-        resnorm = r.realdotProduct(r) * rhsinvnorm;
-
-        if (std::isnan(resnorm)){
-          rootLogger.fatal("Nan");
-        }
-
-        if (resnorm > precision || i == max_iter-1 ){// the last steps are not needed if this is the last iteration
-          //beta = alpha/omega * rr'/rr
-          beta = 1.0/rr0; //reuse temporary
-          rr0=r.dotProduct(r0);
-          beta = (beta * (alpha/omega) ) * rr0;
-          
-          p = r + beta*(p - omega*Ap);
-        }
-        rootLogger.trace("iteration ",i);
-
+        rootLogger.info("residue " ,  resnorm);
     }
-    rootLogger.info("residue " ,  resnorm);
-}
-
+};
