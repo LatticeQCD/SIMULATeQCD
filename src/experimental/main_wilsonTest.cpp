@@ -3,6 +3,7 @@
 #include "fullSpinorfield.h"
 #include "gammaMatrix.h"
 #include "../modules/observables/fieldStrengthTensor.h"
+#include "biCG.h"
 
 struct WilsonParameters : LatticeParameters {
     Parameter<double> kappa;
@@ -12,80 +13,6 @@ struct WilsonParameters : LatticeParameters {
     WilsonParameters() {
         addDefault(kappa, "kappa", 0.125);
         addDefault(c_sw, "c_sw", 1.0 );
-    }
-};
-
-
-template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
-struct WilsonQuickDslash {
-
-    //! The functor has to know about all the elements that it needs for computation.
-    //! However, it does not need the Spinor, where the result should go (SpinorOut).
-    SU3Accessor<floatT> gAcc;
-    SpinorColorAcc<floatT> spinorIn;
-    floatT _kappa;
-    floatT _c_sw;
-    FieldStrengthTensor<floatT,HaloDepthGauge,true,R18> FT;
-
-    //! Use the constructor to initialize the members
-    WilsonQuickDslash(
-            Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, 12> &spinorIn,
-            Gaugefield<floatT, true, HaloDepthGauge, R18> &gauge,
-            floatT kappa, floatT c_sw
-        ) :
-      gAcc(gauge.getAccessor()),
-      spinorIn(spinorIn.getAccessor()),
-      _kappa(kappa), _c_sw(c_sw), 
-      FT(gauge.getAccessor())
-  {}
-
-    /*! This is the operator() overload that is called to perform the Dslash. This has to have the following design: It
-     * takes a gSite, and it returns the object that we want to write. In this case, we want to return a Vect3<floatT>
-     * to store it in another spinor.
-     */
-    __device__ __host__ inline auto operator()(gSite site) const
-    {
-      //! We need an indexer to access elements. As the indexer knows about the lattice layout, we do not have to
-      //! care about even/odd here explicitly. All that is done by the indexer.
-      typedef GIndexer<LatLayout, HaloDepthSpin > GInd;
-
-      /// Define temporary spinor that's 0 everywhere
-      ColorVect<floatT> Dirac_psi;
-
-      FourMatrix<floatT> I=FourMatrix<floatT>::identity();
-      FourMatrix<floatT> G[4];
-      for(int mu=0;mu<4;mu++){
-        G[mu]=FourMatrix<floatT>::gamma(mu);
-      }
-      /// loop through all 4 directions and add result to current site
-      for (int mu = 0; mu < 4; mu++) {
-
-        FourMatrix<floatT> P_plus = (I+G[mu]);   
-        FourMatrix<floatT> P_minus = (I-G[mu]); 
-        //! transport spinor psi(x+mu) to psi(x) with link
-        Dirac_psi = Dirac_psi + gAcc.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
-          * (P_minus * spinorIn.getColorVect(GInd::site_up(site, mu)) )
-          //! transport spinor psi(x-mu) to psi(x) with link dagger
-          + gAcc.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu)))
-          * (P_plus * spinorIn.getColorVect(GInd::site_dn(site, mu)) );
-      }
-
-      //mass term
-      floatT M = 1.0/(2.0*_kappa);
-      Dirac_psi = Dirac_psi + M * spinorIn.getColorVect(site);
-
-      ColorVect<floatT> Clover;
-          
-
-      for(int mu = 0 ; mu < 4 ; mu++){
-        for(int nu = 0 ; nu < 4 ; nu++){
-          if(mu==nu) continue;
-            SU3<floatT> Fmunu = FT(site,mu,nu);
-          Clover = Clover + (_c_sw/2.0) * (COMPLEX(floatT)(0, -1)) * ( Fmunu * ((G[mu]*G[nu]) * spinorIn.getColorVect(site) ) );
-        }
-      }
-      Dirac_psi = Dirac_psi + Clover;
-      return convertColorVectToVect12(Dirac_psi);
     }
 };
 
@@ -168,23 +95,55 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC, true,HaloDepth> gauge(commBase);
     //FullSpinorfield<PREC, true,HaloDepth> spinor_res(commBase);
     //FullSpinorfield<PREC, true,HaloDepth> spinor_in(commBase);
-    Spinorfield<PREC, true, Even, HaloDepth, 12> spinor_res(commBase);
-    Spinorfield<PREC, true, Odd, HaloDepth, 12> spinor_in(commBase);
+    using SpinorLHS=Spinorfield<PREC, true, All, HaloDepth, 12>;
+    using SpinorRHS=Spinorfield<PREC, true, All, HaloDepth, 12>;
+    SpinorLHS spinor_lhs(commBase);
+    SpinorRHS spinor_rhs(commBase);
+
+    
+    
+    const std::string& format = param.format();
+    std::string Gaugefile = param.GaugefileName();
+    //Our gaugefield
+    if (format == "nersc") {
+        gauge.readconf_nersc(Gaugefile);
+    } else if (format == "ildg") {
+        gauge.readconf_ildg(Gaugefile);
+    } else if (format == "milc") {
+        gauge.readconf_milc(Gaugefile);
+    } else if (format == "openqcd") {
+        gauge.readconf_openqcd(Gaugefile);
+    } else {
+        throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
+    }
+
+    /*if(param.format=="ildg"){
+      gauge.readconf_ildg(param.GaugefileName());
+    }
+    else if(param.format=="openqcd"){
+      gauge.readconf_openqcd(param.GaugefileName());
+    }*/
+    gauge.updateAll();
+
+    WilsonDslash<PREC, true, HaloDepth, SpinorLHS, SpinorRHS > wDslash(gauge, param.kappa(), param.c_sw());
+
+    BiCGStabInverter<PREC, true, HaloDepth, SpinorLHS> bicg;
 
     grnd_state<true> d_rand;
     initialize_rng(1337, d_rand);
     
 //    gauge.gauss(d_rand.state);
 //    spinor_res.gauss(d_rand.state);
-    spinor_in.gauss(d_rand.state);
+    spinor_rhs.gauss(d_rand.state);
 
 
 
     StopWatch<true> timer;
     timer.start();
     //spinor_res.template iterateOverBulk(TestKernel<PREC, HaloDepth>(gauge, spinor_in));
-    //spinor_res.template iterateOverBulk(WilsonQuickDslash<PREC, All, All, HaloDepth, HaloDepth>(spinor_in, gauge));
-    spinor_res.template iterateOverBulk(WilsonQuickDslash<PREC, Even, Odd, HaloDepth, HaloDepth>(spinor_in, gauge, param.kappa(), param.c_sw()));
+    //spinor_res.template iterateOverBulk(WilsonDslashKernel<PREC, All, All, HaloDepth, HaloDepth>(spinor_in, gauge));
+    //spinor_res.template iterateOverBulk(WilsonDslashKernel<PREC, Even, Odd, HaloDepth, HaloDepth>(spinor_in, gauge, param.kappa(), param.c_sw()));
+    bicg.invert(wDslash, spinor_lhs, spinor_rhs, 1000, 1e-8); 
     timer.stop();
     timer.print("Test Kernel runtime");
     

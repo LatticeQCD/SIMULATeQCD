@@ -27,6 +27,14 @@ __host__ __device__ auto operator+(const ColorVect<floatT>& ob1, const ColorVect
 }
 
 template <class floatT>
+__host__ __device__ auto operator-(const ColorVect<floatT>& ob1, const ColorVect<floatT>& ob2)->ColorVect<floatT> {
+    ColorVect<floatT> res;
+    for (int i = 0; i < 4; ++i)
+        res[i] = ob1[i] - ob2[i];
+    return res; 
+}
+
+template <class floatT>
 __host__ __device__ auto operator*(const SU3<floatT>& ob1, const ColorVect<floatT>& ob2)->ColorVect<floatT> {
     ColorVect<floatT> res;
     for (int i = 0; i < 4; ++i)
