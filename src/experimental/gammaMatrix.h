@@ -19,12 +19,27 @@ struct FourMatrix {
                        GPUcomplex<floatT> a22, GPUcomplex<floatT> a23,
                        GPUcomplex<floatT> a30, GPUcomplex<floatT> a31,
                        GPUcomplex<floatT> a32, GPUcomplex<floatT> a33) 
-             : A{{a00, a01, a02, a03},
-                 {a10, a11, a12, a13},
-                 {a20, a21, a22, a23},
-                 {a30, a31, a32, a33}} 
+    {
+      A[0][0]=a00;
+      A[0][1]=a01;
+      A[0][2]=a02;
+      A[0][3]=a03;
 
-    { }
+      A[1][0]=a10;
+      A[1][1]=a11;
+      A[1][2]=a12;
+      A[1][3]=a13;
+    
+      A[2][0]=a20;
+      A[2][1]=a21;
+      A[2][2]=a22;
+      A[2][3]=a23;
+      
+      A[3][0]=a30;
+      A[3][1]=a31;
+      A[3][2]=a32;
+      A[3][3]=a33;
+    }
 
     // Constructor from an array of complex numbers
     __host__ __device__ FourMatrix<floatT>(GPUcomplex<floatT> ar[16]) {

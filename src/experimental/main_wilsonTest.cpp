@@ -16,58 +16,7 @@ struct WilsonParameters : LatticeParameters {
     }
 };
 
-template<class floatT, size_t HaloDepth>
-struct TestKernel{
-
-    //Gauge accessor to access the gauge field
-    SU3Accessor<floatT> _SU3Accessor;
-    SpinorColorAcc<floatT> _SpinorColorAccessor;
-
-    typedef GIndexer<All, HaloDepth > GInd;
-    //Constructor to initialize all necessary members.
-    TestKernel(Gaugefield<floatT,true,HaloDepth> &gauge, FullSpinorfield<floatT,true,HaloDepth> &spinorIn) 
-                : _SU3Accessor(gauge.getAccessor()), 
-                  _SpinorColorAccessor(spinorIn.getAccessor())
-    { }
-
-    //This is the operator that is called inside the Kernel
-    __device__ __host__ Vect12<floatT> operator()(gSite site) {
-
-        SU3<floatT> link;
-        //Dslash
-        FourMatrix<floatT> I=FourMatrix<floatT>::identity();
-        FourMatrix<floatT> G[4];
-        for(int mu=0;mu<4;mu++){
-          G[mu]=FourMatrix<floatT>::gamma(mu);
-        }
-       
-        ColorVect<floatT> spinCol;
-        for(int mu = 0 ; mu < 4 ; mu++){
-          gSite site_mu_up = GInd::site_up(site, mu);
-          gSite site_mu_dn = GInd::site_dn(site, mu);
-          ColorVect<floatT> spinCol_mu_up = _SpinorColorAccessor.getColorVect(site_mu_up);
-          ColorVect<floatT> spinCol_mu_dn = _SpinorColorAccessor.getColorVect(site_mu_dn);
-          SU3<floatT> U_mu = _SU3Accessor.getLink(GInd::getSiteMu(site, mu));
-          SU3<floatT> U_mu_dag = dagger(_SU3Accessor.getLink(GInd::getSiteMu(site_mu_dn, mu)));
-          FourMatrix<floatT> P_plus = (I+G[mu]);   
-          FourMatrix<floatT> P_minus = (I-G[mu]); 
-          spinCol = spinCol + U_mu * (P_minus * spinCol_mu_up) + U_mu_dag * (P_plus * spinCol_mu_dn); 
-        }
-        //for (int nu = 1; nu < 4; nu++) {
-        //    for (int mu = 0; mu < nu; mu++) {
-        //        link += _SU3Accessor.template getLinkPath<All, HaloDepth>(site, mu, nu, Back(mu), Back(nu));
-        //    }
-        //}
-
-        
-        /* for (auto& s : spinCol){ */
-        /*     s = link*s; */
-        /* } */
-        //spinCol = link * spinCol;
-
-        return convertColorVectToVect12(spinCol);
-    }
-};
+//template<class floatT, size_t HaloDepth>
 
 
 int main(int argc, char *argv[]) {
@@ -117,12 +66,6 @@ int main(int argc, char *argv[]) {
         throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
     }
 
-    /*if(param.format=="ildg"){
-      gauge.readconf_ildg(param.GaugefileName());
-    }
-    else if(param.format=="openqcd"){
-      gauge.readconf_openqcd(param.GaugefileName());
-    }*/
     gauge.updateAll();
 
     WilsonDslash<PREC, true, HaloDepth, SpinorLHS, SpinorRHS > wDslash(gauge, param.kappa(), param.c_sw());
@@ -140,7 +83,7 @@ int main(int argc, char *argv[]) {
 
     StopWatch<true> timer;
     timer.start();
-    //spinor_res.template iterateOverBulk(TestKernel<PREC, HaloDepth>(gauge, spinor_in));
+    //spinor_lhs.template iterateOverBulk(TestKernel<PREC, HaloDepth>(spinor_lhs, spinor_rhs));
     //spinor_res.template iterateOverBulk(WilsonDslashKernel<PREC, All, All, HaloDepth, HaloDepth>(spinor_in, gauge));
     //spinor_res.template iterateOverBulk(WilsonDslashKernel<PREC, Even, Odd, HaloDepth, HaloDepth>(spinor_in, gauge, param.kappa(), param.c_sw()));
     bicg.invert(wDslash, spinor_lhs, spinor_rhs, 1000, 1e-8); 

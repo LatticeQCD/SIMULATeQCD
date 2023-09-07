@@ -4,6 +4,51 @@
 #include "../spinor/spinorfield.h"
 #include "../base/math/simpleArray.h"
 #include "../modules/inverter/inverter.h"
+#include "../base/latticeContainer.h"
+template<class floatT, size_t HaloDepth>
+struct ScalarProductKernel{
+
+    //Gauge accessor to access the gauge field
+    //SU3Accessor<floatT> _SU3Accessor;
+    SpinorColorAcc<floatT> _SpinorColorAccessor_lhs;
+    SpinorColorAcc<floatT> _SpinorColorAccessor_rhs;
+    using SpinorLHS=Spinorfield<floatT, true, All, HaloDepth, 12>;
+    using SpinorRHS=Spinorfield<floatT, true, All, HaloDepth, 12>;
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    ScalarProductKernel(SpinorLHS &spinor_LHS, SpinorRHS &spinor_RHS) 
+                : _SpinorColorAccessor_lhs(spinor_LHS.getAccessor()),
+                  _SpinorColorAccessor_rhs(spinor_RHS.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(floatT) operator()(gSite site) {
+      
+      ColorVect<floatT> spinCol;
+      COMPLEX(floatT) res(0.0,0.0);
+      ColorVect<floatT> spinCol_lhs = _SpinorColorAccessor_lhs.getColorVect(site);
+      ColorVect<floatT> spinCol_rhs = _SpinorColorAccessor_rhs.getColorVect(site);
+      for(int i = 0 ; i < 4 ; i++){
+          res+= re_dot_prod(spinCol_lhs[i], spinCol_rhs[i]);
+      }
+        return res;
+    }
+};
+template<class floatT, size_t HaloDepth>
+COMPLEX(floatT) ScalarProduct(Spinorfield<floatT, true, All, HaloDepth, 12>& spinor_lhs,Spinorfield<floatT, true, All, HaloDepth, 12>& spinor_rhs){
+  LatticeContainer<true,COMPLEX(double)> _redBase(spinor_rhs.getComm());
+
+  _redBase.adjustSize(spinor_lhs.getNumberElements());
+
+  _redBase.template iterateOverBulk<All, HaloDepth>(
+      ScalarProductKernel<floatT, HaloDepth>(spinor_lhs, spinor_rhs));
+
+  COMPLEX(double) result = 0;
+  _redBase.reduce(result, spinor_lhs.getNumberElements());   
+  
+    return result; 
+}
 
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct WilsonDslashKernel {
@@ -40,6 +85,7 @@ struct WilsonDslashKernel {
 
       /// Define temporary spinor that's 0 everywhere
       ColorVect<floatT> Dirac_psi;
+
       FourMatrix<floatT> I=FourMatrix<floatT>::identity();
       FourMatrix<floatT> G[4];
       for(int mu=0;mu<4;mu++){
@@ -48,13 +94,36 @@ struct WilsonDslashKernel {
       /// loop through all 4 directions and add result to current site
       for (int mu = 0; mu < 4; mu++) {
         FourMatrix<floatT> P_plus = (I+G[mu]);   
-        FourMatrix<floatT> P_minus = (I-G[mu]); 
+        FourMatrix<floatT> P_minus = (I-G[mu]);
+
+        SU3<floatT> first_term=(gAcc.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu))));
+        SU3<floatT> second_term=gAcc.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu)));
+/*
+        COMPLEX(floatT) result(0.0,0.0);
+        for(int i = 0 ; i < 3 ; i++){
+        for(int j = 0 ; j < 3 ; j++){
+          result+=first_term(i,j);
+
+        }
+        }
+        printf("%lf %lf\n",result.cREAL,result.cIMAG);*/
+        for(int i = 0 ; i < 4 ; i++){
+          for(int j = 0 ; j < 4 ; j++){
+            printf("(%lf,%lf) ",FourMatrix<floatT>::gamma(0).A[i][j].cREAL,FourMatrix<floatT>::gamma(0).A[i][j].cIMAG);
+          }
+          printf("\n");
+        }
+
+
         //! transport spinor psi(x+mu) to psi(x) with link
-        Dirac_psi = Dirac_psi - 0.5 * (gAcc.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
-          * (P_minus * spinorIn.getColorVect(GInd::site_up(site, mu)) )
+        Dirac_psi = Dirac_psi - 0.5 * ( first_term * (P_minus * spinorIn.getColorVect(GInd::site_up(site, mu)) )
           //! transport spinor psi(x-mu) to psi(x) with link dagger
-          + gAcc.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu)))
-          * (P_plus * spinorIn.getColorVect(GInd::site_dn(site, mu)) ) );
+          + second_term * (P_plus * spinorIn.getColorVect(GInd::site_dn(site, mu)) ) );
+        //COMPLEX(floatT) res(0.0,0.0);
+        //for(int i = 0 ; i < 4 ; i++){
+        //  res+= re_dot_prod(Dirac_psi[i], Dirac_psi[i]);
+       // }
+        //printf("%lf %lf\n",res.cREAL,res.cIMAG);
       }
       //mass term
       floatT M = 1.0/(2.0*_kappa);
@@ -105,37 +174,47 @@ public:
         Spinor_t Ap(x.getComm());
         Spinor_t As(x.getComm());
         Spinor_t s(x.getComm());
-        
-        x*=0.0;
         r0 = rhs;
         p=rhs;
         r=rhs;
+        
+        x*=0.0;
+        Ap=x;
+        As=x;
+        s=x;
 
-        floatT rhsinvnorm=1.0/rhs.realdotProduct(rhs);
-        COMPLEX(floatT) rr0 = GPUcomplex<floatT>(r.realdotProduct(r),0.0);
+        rootLogger.info("invert start");
+        floatT rhsinvnorm=1.0/ScalarProduct(rhs,rhs).cREAL;
+
+        rootLogger.info("rhsinvnorm: ", rhsinvnorm);
+        COMPLEX(floatT) rr0 = GPUcomplex<floatT>(ScalarProduct(r,r).cREAL,0.0);
         floatT resnorm=rr0.cREAL*rhsinvnorm;
 
         for (int i = 0; i < max_iter && resnorm > precision; i++) {
-            dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
-            COMPLEX(floatT) beta=Ap.dotProduct(r0);
-            COMPLEX(floatT) alpha=rr0*beta;
+          dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
+          COMPLEX(floatT) beta=ScalarProduct(Ap,r0);
+          rootLogger.info("beta ", beta.cREAL, beta.cIMAG);
+          COMPLEX(floatT) alpha=rr0*beta;
+          rootLogger.info("alpha ", alpha.cREAL, alpha.cIMAG);
 
-            floatT eps = abs(beta)/sqrt(Ap.realdotProduct(Ap) * r0.realdotProduct(r0));
-            if(eps < 1e-8) {
-              rootLogger.trace("restarting BICGSTAB. eps = " ,  eps);
-              // r = r0 = p = b-Ax
-              dslash.apply(r0, x);
-              r0=-1.0*r0+rhs;
-              r=r0;
-              p=r0;
-              rr0=r.realdotProduct(r);
+          floatT eps = abs(beta)/sqrt(ScalarProduct(Ap,Ap).cREAL * ScalarProduct(r0,r0).cREAL);
+          rootLogger.info("eps ", eps);
+          if(eps < 1e-8) {
+            rootLogger.trace("restarting BICGSTAB. eps = " ,  eps);
+            // r = r0 = p = b-Ax
+            dslash.apply(r0, x);
+            r0=-1.0*r0+rhs;
+            r=r0;
+            p=r0;
+            rr0=ScalarProduct(r,r).cREAL;
               resnorm = rr0.cREAL * rhsinvnorm;
               continue;
             }
 
             //s = r-alpha*Ap
             s = r - alpha*Ap;
-            const floatT snorm = s.realdotProduct(s);
+            const floatT snorm = ScalarProduct(s,s).cREAL;
+            rootLogger.info("snorm ", snorm);
             if (snorm < precision * precision){
                 x = x + alpha*p;
                 r = s;
@@ -144,15 +223,16 @@ public:
             }
             dslash.apply(As, s);
             //omega = (As,s)/(As,As)
-            COMPLEX(floatT) omega = As.dotProduct(s) / As.realdotProduct(As);
+            COMPLEX(floatT) omega = ScalarProduct(As,s) / ScalarProduct(As,As).cREAL;
 
             //x=x+alpha*p+pmega*s
             x = x + (alpha * p) + (omega * s);
 
             //r = s - omega*As
             r = s - omega * As;
-            resnorm = r.realdotProduct(r) * rhsinvnorm;
+            resnorm = ScalarProduct(r,r).cREAL * rhsinvnorm;
 
+            rootLogger.info("ScalarProduct(r,r).cREAL: ", ScalarProduct(r,r).cREAL);
             if (std::isnan(resnorm)){
               rootLogger.fatal("Nan");
             }
@@ -160,7 +240,7 @@ public:
             if (resnorm > precision || i == max_iter-1 ){// the last steps are not needed if this is the last iteration
               //beta = alpha/omega * rr'/rr
               beta = 1.0/rr0; //reuse temporary
-              rr0=r.dotProduct(r0);
+              rr0=ScalarProduct(r,r0);
               beta = beta * (alpha/omega) * rr0;
               
               p = r + beta*(p - omega*Ap);
