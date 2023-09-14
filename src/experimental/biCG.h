@@ -107,12 +107,15 @@ struct WilsonDslashKernel {
         }
         }
         printf("%lf %lf\n",result.cREAL,result.cIMAG);*/
-        for(int i = 0 ; i < 4 ; i++){
-          for(int j = 0 ; j < 4 ; j++){
-            printf("(%lf,%lf) ",FourMatrix<floatT>::gamma(0).A[i][j].cREAL,FourMatrix<floatT>::gamma(0).A[i][j].cIMAG);
-          }
-          printf("\n");
-        }
+
+        //floatT bla = 0;
+        /* for(int i = 0 ; i < 4 ; i++){ */
+        /*   for(int j = 0 ; j < 4 ; j++){ */
+        /*      // bla += FourMatrix<floatT>::gamma(0).A[i][j].cIMAG; */
+        /*        printf("(%.1f,%.1f) ", FourMatrix<floatT>::gamma(1).A[i][j].cREAL, FourMatrix<floatT>::gamma(1).A[i][j].cIMAG ); */
+        /*   } */
+        /*  // printf("\n"); */
+        /* } */
 
 
         //! transport spinor psi(x+mu) to psi(x) with link
@@ -193,7 +196,8 @@ public:
         for (int i = 0; i < max_iter && resnorm > precision; i++) {
           dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
           COMPLEX(floatT) beta=ScalarProduct(Ap,r0);
-          rootLogger.info("beta ", beta.cREAL, beta.cIMAG);
+          /* COMPLEX(floatT) beta=ScalarProduct(p,p); */
+          rootLogger.info("beta ", beta.cREAL, " ", beta.cIMAG);
           COMPLEX(floatT) alpha=rr0*beta;
           rootLogger.info("alpha ", alpha.cREAL, alpha.cIMAG);
 
