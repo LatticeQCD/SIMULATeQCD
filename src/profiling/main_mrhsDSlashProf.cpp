@@ -66,27 +66,14 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         rootLogger.info("Error in gaussian spinors");
 
     rootLogger.info("Initialize DSlash");
-    HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks*NStacks_cached> dslash(gauge_smeared, gauge_Naik, 0.0, NStacks_cached);
+    HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks*NStacks_cached, NStacks_cached> dslash(gauge_smeared, gauge_Naik, 0.0);
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks*NStacks_cached> dslash2(gauge_smeared, gauge_Naik, 0.0);
     gpuErr = gpuGetLastError();
     if (gpuErr)
         rootLogger.info("Error in initialization of DSlash");
 
-    // for (int i = 0; i < 5; ++i) {
-    //     timer.start();
-    //     dslash.Dslash(spinorOut3, spinorIn, false);
-    //     timer.stop();
-    //     // spinorIn=spinorSave;
-    // }
-
-    // rootLogger.info("Time for 5 applications of multiRHS Dslash: " ,  timer);
 
     float EOfactor = ((LatLayout == Even || LatLayout == Odd) ? 0.5 : 1.0);
-
-//     // float TFlops = NStacks * Vol * EOfactor * 5 * 2316 /(timer.milliseconds() * 1e-3)*1e-12;
-//    float TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
-   
-    // rootLogger.info("Achieved TFLOP/s " ,  TFlops);
 
 
     timer.reset();
@@ -114,56 +101,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     for (size_t i = 0; i < NStacks*NStacks_cached; i++) {                                                                                                                                                                      
          rootLogger.info("Testing for correctness: dot prod of difference = ", dot[i]);                                                                                                                           
      }    
-    
-    // timer.reset();
-    // for (int i = 0; i < 5; ++i) {
-    //     timer.start();
-    //     dslash.Dslash_threadRHS(spinorOut3,spinorIn,false);
-    //     timer.stop();
-
-    // }
-
-
-    // rootLogger.info("Time for 5 applications of multiRHS Dslash (pure thread version): ", timer);
-    // TFlops = NStacks * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
-    // rootLogger.info("Achieved TFLOP/s ", TFlops);
-
-    // SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
-    // dslash.Dslash(spinorOut4, spinorIn, false);
-
-
-    // spinorOut4 = spinorOut4 - spinorOut3;
-    // dot2 = spinorOut4.dotProductStacked(spinorOut4);
-
-
-    // for (int i = 0; i < NStacks; i++) {
-    //     rootLogger.info("Tesing for correcting dot(difference) = ", dot2[i]);
-    // }
-
-    // dslash.Dslash(spinorOut2,spinorIn,false);
-    // SimpleArray<COMPLEX(double), NStacks> dot(0.0);
-    // SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
-    
-    // // dslash.Dslash_stackloop(spinorOut3,spinorIn,false);
-    // // dot2 = spinorOut3.dotProductStacked(spinorOut3);
-
-    
-    // spinorOut2 = spinorOut2 - spinorOut3;
-    // dot = spinorOut2.dotProductStacked(spinorOut2);
-
-    //  for (int i = 0; i < NStacks; i++) {
-    //     rootLogger.info("Testing for correctness: dot(difference 1-3) = ", dot[i]);
-    // }   
-
-
-    // dslash.Dslash(spinorOut2,spinorIn,false);
-    // dslash.template Dslash_stacked<NStacks_cached>(spinorOut3,spinorIn,false);
-    // spinorOut2 = spinorOut2 - spinorOut3;
-
-    // dot = spinorOut2.dotProductStacked(spinorOut2);
-    // for (int i = 0; i < NStacks; i++) {
-    //     rootLogger.info("Testing for correctness: dot(difference 1-2) = ", dot[i]);
-    // }  
+   
 
 }
 
@@ -293,7 +231,16 @@ int main(int argc, char **argv) {
     rootLogger.info("--------------------------------------");  
     test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol); 
     test_dslash<float, Even, Odd, 2, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 4, 1, true>(commBase, Vol);
+
+
+    rootLogger.info("--------------------------------------");
+    rootLogger.info("--------Testing 12 STACKS-------------");
+    rootLogger.info("--------------------------------------");
+    test_dslash<float, Even, Odd, 2, 6, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 3, 4, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 4, 3, true>(commBase, Vol);
+    test_dslash<float, Even, Odd, 6, 2, true>(commBase, Vol);
 #endif
 
 }

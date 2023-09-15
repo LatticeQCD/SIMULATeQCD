@@ -50,35 +50,7 @@ struct HisqDslashFunctor {
 };
 
 
-template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-struct HisqDslashThreadRHSFunctor {
-
-    Vect3arrayAcc<floatT> _spinorOut;
-    Vect3arrayAcc<floatT> _spinorIn;
-    SU3Accessor<floatT, R18> _gAcc_smeared;
-    SU3Accessor<floatT, U3R14> _gAcc_Naik;
-    floatT _c_3000;
-
-    template<bool onDevice>
-    HisqDslashThreadRHSFunctor(
-        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorOut,
-        const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
-        Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
-        Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
-        _spinorOut(spinorOut.getAccessor()), 
-        _spinorIn(spinorIn.getAccessor()),
-        _gAcc_smeared(gauge_smeared.getAccessor()),
-        _gAcc_Naik(gauge_Naik.getAccessor()),
-        _c_3000(c_3000) {}
-
-    __device__ __host__ inline void operator()(gSite site);
-
-    auto getAccessor() const {
-        return *this;
-    }  
-};
-
-template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
 struct HisqDslashStackedFunctor {
 
     Vect3arrayAcc<floatT> _spinorOut;
@@ -88,17 +60,15 @@ struct HisqDslashStackedFunctor {
     
     floatT _c_3000;
     
-    const size_t NStacks_blockdim;
-
     HisqDslashStackedFunctor(
         Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorOut,
         const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
-            Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000, size_t nstacks_blockdim) :
+            Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
             _spinorOut(spinorOut.getAccessor()),
             _spinorIn(spinorIn.getAccessor()),
             _gAcc_smeared(gauge_smeared.getAccessor()),
-            _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000), NStacks_blockdim(nstacks_blockdim) {}
+            _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000) {}
 
     __device__ __host__ inline void operator()(gSiteStack site);
 
@@ -137,7 +107,7 @@ struct HisqMdaggMFunctor {
     __device__ __host__ inline auto operator()(gSiteStack site);
 };
 
-template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 1>
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 1, size_t NStacks_blockdim = 1>
 class HisqDSlash : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks>,
         Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> > {
 
@@ -157,14 +127,12 @@ class HisqDSlash : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<La
     double _mass;
     floatT _mass2;
     floatT _c_3000;
-    const size_t NStacks_blockdim;
 
 public:
-    HisqDSlash(Gauge_t<R18> &gaugefield_smeared, Gauge_t<U3R14> &gaugefield_Naik, const double mass, const size_t nstacks_blockdim = 1, floatT naik_epsilon = 0.0,
+    HisqDSlash(Gauge_t<R18> &gaugefield_smeared, Gauge_t<U3R14> &gaugefield_Naik, const double mass, floatT naik_epsilon = 0.0,
                std::string spinorName = "SHARED_HisqDSlashSpinor") :
             _gauge_smeared(gaugefield_smeared), _gauge_Naik(gaugefield_Naik),
-    _tmpSpin(_gauge_smeared.getComm(), spinorName), _mass(mass), _mass2(mass * mass), _c_3000((-1./48.0)*(1.0+(double)naik_epsilon)),
-    NStacks_blockdim(nstacks_blockdim) {}
+    _tmpSpin(_gauge_smeared.getComm(), spinorName), _mass(mass), _mass2(mass * mass), _c_3000((-1./48.0)*(1.0+(double)naik_epsilon)) {}
 
     //! Does not use the mass
     virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
