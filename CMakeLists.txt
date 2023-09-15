@@ -671,6 +671,14 @@ set_SIMULATeQCD_property(cudaAwareMPITest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(cudaAwareMPITest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests cudaAwareMPITest)
 
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_explicitInstantiationTest.cpp src/testing/explicitInstantiationTest.cpp)
+add_SIMULATeQCD_executable(explicitInstantiationTest src/testing/main_explicitInstantiationTest.cpp src/testing/explicitInstantiationTest.cpp)
+set_SIMULATeQCD_property(explicitInstantiationTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(explicitInstantiationTest PRIVATE HALODEPTH_1=1 HALODEPTH_3=1 SINGLEPREC=1)
+add_to_compound_SIMULATeQCD_target(tests explicitInstantiationTest)
+
+
 # This one is special because it does not need the CodeBase
 set_SIMULATeQCD_gpu_backend(src/testing/main_simpleFunctorTest.cpp)
 if (USE_CUDA)
