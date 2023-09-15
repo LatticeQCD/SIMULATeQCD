@@ -66,7 +66,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
         rootLogger.info("Error in gaussian spinors");
 
     rootLogger.info("Initialize DSlash");
-    HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+    HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks*NStacks_cached> dslash(gauge_smeared, gauge_Naik, 0.0, NStacks_cached);
     HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepth, HaloDepthSpin, NStacks*NStacks_cached> dslash2(gauge_smeared, gauge_Naik, 0.0);
     gpuErr = gpuGetLastError();
     if (gpuErr)
@@ -92,7 +92,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     timer.reset();
     for (int i = 0; i < 5; ++i) {
         timer.start();
-        dslash.template Dslash_stacked<NStacks_cached>(spinorOut2,spinorIn2,false);
+        dslash.Dslash(spinorOut2,spinorIn2,false);
         timer.stop();
 
     }
@@ -102,7 +102,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     float TFlops = NStacks * NStacks_cached * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s ", TFlops, " with ", NStacks, " Stacks (thread loop) and ", NStacks_cached, " Stacks (blockDim.y)");
 
-    dslash.template Dslash_stacked<NStacks_cached>(spinorOut2,spinorIn2,false);
+    dslash.Dslash_stacked(spinorOut2,spinorIn2,false);
     SimpleArray<COMPLEX(double),NStacks*NStacks_cached> dot(0.0);
 
     dslash2.Dslash(spinorOut_ref, spinorIn2,false);
