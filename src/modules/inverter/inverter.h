@@ -1,9 +1,5 @@
-/*
- * inverter.h
- *
- */
-
-#pragma once
+#ifndef INVERTER_H
+#define INVERTER_H
 
 #include "../../gauge/gaugefield.h"
 #include "../../spinor/spinorfield.h"
@@ -13,7 +9,12 @@
 template <typename Vector>
 class LinearOperator{
 public:
-    virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
+    virtual void applyMdaggM(Vector&, Vector&, bool update = true) = 0;
+
+    //Revised by ranluo
+    virtual void applyMdaggM_async(Vector&, Vector&, bool update = true) = 0;
+    virtual void applyMdaggM_half(Vector&, Vector&, bool update = true) = 0;
+    virtual void applyMdaggM_single(Vector&, Vector&, bool update = true) = 0;
 };
 
 
@@ -24,30 +25,31 @@ class ConjugateGradient{
 public:
 
     template <typename Spinor_t>
-    void invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, Spinor_t& spinorIn, int max_iter, double precision);
-
+    void invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
+            Spinor_t& spinorIn, int max_iter, double precision);
+    
     template <typename Spinor_t>
-    void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
+    void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
+        const int max_iter, const double precision);
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
                             const int max_iter, const double precision, double delta);
 
     template <typename Spinor_t, typename Spinor_t_half>
-    void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-                      const int max_iter, const double precision, double delta);
-};
+void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta);
 
+
+};
 
 template <typename floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 class MultiShiftCG {
 public:
     void invert(LinearOperator<Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>>& dslash,
                 Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut,
-                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>& spinorIn,
+                Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1>& spinorIn, 
                 SimpleArray<floatT, NStacks> sigma, int max_iter, double precision);
 };
-
 
 /// This is a reimplementation of the old BielefeldGPUcode MultishiftCG, the cool feature here is that parts of the
 /// stack that have already converged are not updated any more in the CGM iterations. Might produce better results for
@@ -56,7 +58,10 @@ template <typename floatT, size_t NStacks = 14>
 class AdvancedMultiShiftCG {
 public:
     template <typename SpinorIn_t, typename SpinorOut_t>
-    void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
+    void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn, 
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
+
+
 };
 
+#endif
