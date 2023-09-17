@@ -493,7 +493,6 @@ template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta)
 {
     rootLogger.info("\n invert_res_replace starts");
-    const floatT sigma = 6.6574712798406069e-9 + 0.000325 * 0.000325;//for check
 
     Spinor_t pi(spinorIn.getComm());
     Spinor_t s(spinorIn.getComm());
@@ -525,7 +524,6 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
         //alpha
         pi.updateAll(COMM_BOTH | Hyperplane);
         dslash.applyMdaggM(s,pi,false);
-        s = sigma * pi - s; //for check
         dot = pi.dotProductStacked(s);
         pAp = real<double>(dot);
         alpha = norm_r2 / pAp;
@@ -553,7 +551,6 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             r = spinorIn;
             spinorOut.updateAll(COMM_BOTH | Hyperplane);
             dslash.applyMdaggM(s,spinorOut, false);
-            s = sigma * spinorOut - s; //for check
             r -= s;
 
             dot = r.dotProductStacked(r);
@@ -587,7 +584,6 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
 
     //compare 2 kinds of residues
     dslash.applyMdaggM_async(s, spinorOut, false);
-    s = sigma * spinorOut - s; //for check
     r = spinorIn;
     r -= s;
     dot = r.dotProductStacked(r);
