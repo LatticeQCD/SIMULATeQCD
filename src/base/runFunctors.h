@@ -1,8 +1,3 @@
-/*
- * runFunctors.h
- *
- */
-
 #ifndef _runFunctors_h_
 
 #define _runFunctors_h_
@@ -11,17 +6,12 @@
 #include "../base/gutils.h"
 #include "math/operators.h"
 #include "../base/communication/communicationBase.h"
-#include "../base/utilities/parseObjectName.h"
-#include "wrapper/marker.h"
 
-#include "../base/indexer/haloIndexer.h"
+#include "../base/indexer/HaloIndexer.h"
 
 #define DEFAULT_NBLOCKS  128
 #define DEFAULT_NBLOCKS_LOOP  128
 #define DEFAULT_NBLOCKS_CONST  256
-
-
-
 
 template<bool onDevice, class Accessor>
 class RunFunctors {
@@ -35,6 +25,17 @@ public:
 
     template<unsigned BlockSize = DEFAULT_NBLOCKS, typename CalcReadInd, typename CalcWriteInd, typename Functor>
     void iterateFunctor(Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd,
+            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr);
+
+
+
+    //ranluo
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename CalcReadInd, typename Functor>
+    void iterateFunctor_half(Functor op, CalcReadInd calcReadInd, 
+            const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr);
+
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename CalcReadInd, typename Functor>
+    void iterateFunctor_single(Functor op, CalcReadInd calcReadInd,
             const size_t elems_x, const size_t elems_y = 1, const size_t elems_z = 1,gpuStream_t stream = (gpuStream_t)nullptr);
 
 
@@ -61,7 +62,6 @@ __host__ __device__ static dim3 GetUint3(dim3 Idx){
 #endif
 
 
-
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
 
@@ -80,9 +80,33 @@ auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(
 }
 
 
+
+
+//ranluo
+template<typename Accessor, typename Functor, typename CalcReadInd>
+__global__ void half_Dslash(Accessor res, Functor op, CalcReadInd calcReadInd, const size_t size_x)
+{
+    if (blockDim.x * blockIdx.x + threadIdx.x >= size_x) {
+        return;
+    }
+    auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+    res.setElement(site, op(site));
+}
+
+template<typename Accessor, typename Functor, typename CalcReadInd>
+__global__ void single_Dslash(Accessor res, Functor op, CalcReadInd calcReadInd, const size_t size_x)
+{
+    if (blockDim.x * blockIdx.x + threadIdx.x >= size_x) {
+        return;
+    }
+    auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+    res.setElement(site, op(site));
+}
+
+
 template<size_t Nloops, typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
 __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
-        CalcWriteInd calcWriteInd, const size_t size_x, __attribute__((unused)) size_t Nmax=Nloops) {
+        CalcWriteInd calcWriteInd, const size_t size_x, size_t Nmax=Nloops) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {
@@ -97,10 +121,11 @@ __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcRea
     auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(threadIdx)));
 #endif
     op.initialize(site);
-// #ifdef USE_CUDA
-#pragma unroll Nloops
-// #endif
+#ifdef USE_CUDA
+#pragma unroll
+#endif
     for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++){
+        if(loopIdx >= Nmax) break;
         res.setElement(calcWriteInd(site, loopIdx), op(site, loopIdx));
     }
 }
@@ -138,7 +163,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize/(elems_y * elems_z);
+    blockDim.x = BlockSize;
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -148,17 +173,16 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     if (onDevice) {
 #ifdef __GPUCC__
-        markerBegin(type_name<Functor>(), "KernelCall");
+
 #ifdef USE_CUDA
         performFunctor<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL(performFunctor, dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #endif
-        markerEnd();
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
-#else
+#else 
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
     } else {
@@ -196,6 +220,82 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
 
 
+
+
+//ranluo
+template<bool onDevice, class Accessor>
+template<unsigned BlockSize, typename CalcReadInd, typename Functor>
+void RunFunctors<onDevice, Accessor>::iterateFunctor_half(Functor op, CalcReadInd calcReadInd,
+                                                                                   const size_t elems_x,
+                                                                                   const size_t elems_y,
+                                                                                   const size_t elems_z,
+                                                                                   __attribute__((unused)) gpuStream_t stream){
+
+    dim3 blockDim;
+
+    blockDim.x = BlockSize;
+    blockDim.y = elems_y;
+    blockDim.z = elems_z;
+
+    //Grid only in x direction!
+    const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
+                / static_cast<float> (blockDim.x)));
+
+    if (onDevice) {
+#ifdef __GPUCC__
+
+#ifdef USE_CUDA
+        half_Dslash<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, elems_x);
+#elif defined USE_HIP
+        hipLaunchKernelGGL(performFunctor, dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
+#endif
+        gpuError_t gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+#else 
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
+#endif
+    }
+}
+
+template<bool onDevice, class Accessor>
+template<unsigned BlockSize, typename CalcReadInd, typename Functor>
+void RunFunctors<onDevice, Accessor>::iterateFunctor_single(Functor op, CalcReadInd calcReadInd,
+                                                                                   const size_t elems_x,
+                                                                                   const size_t elems_y,
+                                                                                   const size_t elems_z,
+                                                                                   __attribute__((unused)) gpuStream_t stream){
+
+    dim3 blockDim;
+
+    blockDim.x = BlockSize;
+    blockDim.y = elems_y;
+    blockDim.z = elems_z;
+
+    //Grid only in x direction!
+    const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
+                / static_cast<float> (blockDim.x)));
+
+    if (onDevice) {
+#ifdef __GPUCC__
+
+#ifdef USE_CUDA
+        single_Dslash<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, elems_x);
+#elif defined USE_HIP
+        hipLaunchKernelGGL(performFunctor, dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
+#endif
+        gpuError_t gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+#else 
+        static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
+#endif
+    }
+}
+
+
+
+
 template<bool onDevice, class Accessor>
 template<size_t Nloops, unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
@@ -203,7 +303,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize/(elems_y * elems_z);
+    blockDim.x = BlockSize;
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -220,13 +320,11 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     if (onDevice) {
 #ifdef __GPUCC__
 
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorLoop<Nloops> <<< gridDim, blockDim, 0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x, Nmax);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorLoop<Nloops>), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x,         Nmax);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -262,7 +360,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
                         op.initialize(site);
 
                         for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++){
-                            if(loopIdx >= Nmax) break;
+                            if(loopIdx >= Nmax) break; 
                                 resAcc.setElement(calcWriteInd(site, loopIdx), op(site, loopIdx));
                         }
                     }
@@ -284,7 +382,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize/(elems_y * elems_z);
+    blockDim.x = BlockSize;
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -294,13 +392,13 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     if (onDevice) {
 #ifdef __GPUCC__
-        markerBegin(type_name<Object>(), "KernelCall (const object)");
+
 #ifdef USE_CUDA
         performCopyConstObject<<< gridDim, blockDim,0, stream >>> (getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performCopyConstObject), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #endif
-        markerEnd();
+
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -372,7 +470,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize/(elems_y * elems_z);
+    blockDim.x = BlockSize;
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -384,13 +482,11 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #ifdef __GPUCC__
 
 
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorNoReturn), dim3(gridDim), dim3(blockDim), 0, stream , op, calcReadInd, elems_x);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -458,7 +554,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
 
     dim3 blockDim;
 
-    blockDim.x = BlockSize/(elems_y * elems_z);
+    blockDim.x = BlockSize;
     blockDim.y = elems_y;
     blockDim.z = elems_z;
 
@@ -469,13 +565,11 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     if (onDevice) {
 #ifdef __GPUCC__
 
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorComm<<< gridDim, blockDim, 0, stream >>> (op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorComm), dim3(gridDim), dim3(blockDim), 0, stream , op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -518,7 +612,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     }
 }
 
-//Simple functions to calculate lattice indices. These functions are usually passed to
+//Simple functions to calculate lattice indices. These functions are usually passed to 
 //constructing Kernels (See spinorfield.h) as argument
 
 template<Layout LatticeLayout, size_t HaloDepth>
@@ -562,10 +656,31 @@ template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteStack {
     template<typename... Args>
     inline __host__ __device__ gSiteStack operator()(Args... args) {
-        gSiteStack site = GIndexer<LatticeLayout, HaloDepth>::getSiteStack(args...);
-        return site;
+        return GIndexer<LatticeLayout, HaloDepth>::getSiteStack(args...);
     }
 };
+
+
+
+//Revised by ranluo
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteStack_Center {
+    template<typename... Args>
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
+        return GIndexer<LatticeLayout, HaloDepth>::getSiteStack_Center(args...);
+    }
+};
+
+//Revised by ranluo
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteStack_InnerHalo {
+    template<typename... Args>
+    inline __host__ __device__ gSiteStack operator()(Args... args) {
+        return GIndexer<LatticeLayout, HaloDepth>::getSiteStack_InnerHalo(args...);
+    }
+};
+
+
 
 template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteStackFull {
