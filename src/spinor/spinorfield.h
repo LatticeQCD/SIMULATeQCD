@@ -2,18 +2,18 @@
 // Created by Lukas Mazur on 08.08.18.
 //
 
-#pragma once
+#ifndef SPINORFIELD_H
+#define SPINORFIELD_H
 
 #include "../base/math/operators.h"
 #include "../define.h"
-#include "../base/math/vect3array.h"
+#include "../base/math/gvect3array.h"
 #include "../base/gutils.h"
-#include "../base/latticeContainer.h"
+#include "../base/LatticeContainer.h"
 #include "../base/IO/misc.h"
 #include "../base/communication/siteComm.h"
 #include "../base/communication/communicationBase.h"
 #include "../base/math/simpleArray.h"
-#include "../base/utilities/static_for_loop.h"
 #include <memory>
 
 template <Layout parity>
@@ -35,15 +35,12 @@ __host__ __device__ constexpr inline Layout LayoutSwitcher<Even>() {
 template<class floatT_source, class floatT_target, bool onDevice, Layout LatLayout, size_t HaloDepthSpin, size_t NStacks>
     struct convert_spinor_precision;
 
-template<typename floatT, bool onDevice, size_t HaloDepth, size_t NStacks>
-    class SpinorfieldAll;
-
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
-class Spinorfield : public siteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class Spinorfield : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 private:
-    Vect3array<floatT, onDevice> _lattice;
-    LatticeContainer<onDevice,COMPLEX(double)> _redBase;
+    gVect3array<floatT, onDevice> _lattice;
+    LatticeContainer<onDevice,GCOMPLEX(double)> _redBase;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
@@ -51,8 +48,8 @@ public:
 typedef floatT floatT_inner;
     //! constructor
     explicit Spinorfield(CommunicationBase &comm, std::string spinorfieldName="Spinorfield") :
-            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
-            Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
+            siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
+            gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _lattice( (int)(NStacks*( (LatticeLayout == All) ? GInd::getLatData().vol4Full : GInd::getLatData().sizehFull )), spinorfieldName ),
             _redBase(comm)
     {
@@ -83,8 +80,8 @@ typedef floatT floatT_inner;
 
     //! move constructor
     Spinorfield(Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&& source) noexcept :
-            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
-                    Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
+            siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
+                    gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
             _lattice(std::move(source._lattice)),
             _redBase(std::move(source._redBase)){}
 
@@ -94,9 +91,6 @@ typedef floatT floatT_inner;
 
     //! destructor
     ~Spinorfield() = default;
-
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &
-            operator=(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &spinorRHS);
 
     template<bool onDevice2, size_t NStacks2>
     void copyFromStackToStack(const Spinorfield<floatT, onDevice2, LatticeLayout, HaloDepth, NStacks2> &spinorRHS, size_t stackSelf, size_t stackSrc){
@@ -110,21 +104,21 @@ typedef floatT floatT_inner;
                 getNumberLatticePointsFull() * stackSrc);
     }
 
-    const Vect3array<floatT, onDevice>& getArray() const {
+    const gVect3array<floatT, onDevice>& getArray() const {
         return _lattice;
     }
 
-    COMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
+    GCOMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     double realdotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
 
-    std::vector<COMPLEX(double)> dotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
+    std::vector<GCOMPLEX(double)> dotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     std::vector<double> realdotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
 
-    void operator*=(const COMPLEX(floatT) &y);
+    void operator*=(const GCOMPLEX(floatT) &y);
     void operator+=(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & S2);
     void operator-=(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & S2);
 
-    void gauss(uint4* rand_state); // generate gaussian spinors.
+    void gauss(uint4* rand_state); // generate gaussian spinors. 
 
     void one();
 
@@ -141,16 +135,16 @@ typedef floatT floatT_inner;
     // TODO MOVE THIS WHERE IT BELONGS
     void setPointSource(const sitexyzt pointsource, const int i_color, const floatT mass){
         //! set whole spinor to zero
-        iterateWithConst(vect3_zero<floatT>()); //TODO change this to just memset to 0 for possible performance gain?
+        iterateWithConst(gvect3_zero<floatT>()); //TODO change this to just memset to 0 for possible performance gain?
 
         //! if we're on the correct GPU, set one entry to one
         if ( GInd::getLatData().isLocal(pointsource) ){
             sitexyzt pointsource_local(GInd::globalCoordToLocalCoord(pointsource));
-            stdLogger.info("Pointsource at " ,  pointsource ,  ": " ,  vect3_unity<double>(i_color)*(double)mass);
+            stdLogger.info("Pointsource at " ,  pointsource ,  ": " ,  gvect3_unity<double>(i_color)*(double)mass);
             //! TODO add support for multiple RHS (stacks)
             sitexyzt pointsource_full = GIndexer<LatticeLayout,HaloDepth>::coordToFullCoord(pointsource_local);
             gSite tmp = GIndexer<LatticeLayout,HaloDepth>::getSiteFull(pointsource_full);
-            setOneSiteToConst(mass*vect3_unity<floatT>(i_color), tmp);
+            setOneSiteToConst(mass*gvect3_unity<floatT>(i_color), tmp);
         }
         this->updateAll();
     }
@@ -187,13 +181,30 @@ typedef floatT floatT_inner;
     template<size_t BlockSize = 128, typename const_T>
     void axupbyThisLoopd(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
-    virtual Vect3arrayAcc<floatT> getAccessor() const;
+    virtual gVect3arrayAcc<floatT> getAccessor() const;
 
     template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
     void iterateOverFull(Functor op, size_t Nmax = NStacks);
 
     template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
     void iterateOverBulk(Functor op, size_t Nmax = NStacks);
+
+
+
+    //Revised by ranluo
+    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    void iterateOverCenter(Functor op, size_t Nmax = NStacks);
+
+    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    void iterateOverInnerHalo(Functor op, size_t Nmax = NStacks);
+
+    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    void iterateOverBulk_half(Functor op, size_t Nmax = NStacks);
+
+    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    void iterateOverBulk_single(Functor op, size_t Nmax = NStacks);
+
+
 
     template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
     void iterateOverFullAtStack(Functor op);
@@ -235,6 +246,33 @@ typedef floatT floatT_inner;
         return elems;
     }
 
+
+
+    //Revised by ranluo. Only suppose nodes=(1,1,2,1) for now.
+    size_t getNumberLatticePoints_Center(){
+        size_t elems;
+        const int HaloDepthSpin = 4;
+        const int center_lz = GInd::getLatData().lz - (HaloDepthSpin<<1);
+        elems = GInd::getLatData().vol2 * center_lz * GInd::getLatData().lt;
+        if (LatticeLayout != All) {
+            elems = elems>>1;
+        }
+        return elems;
+    }
+
+    //Revised by ranluo. Only suppose nodes=(1,1,2,1) for now.
+    size_t getNumberLatticePoints_InnerHalo(){
+        size_t elems;
+        const int HaloDepthSpin = 4;
+        elems = GInd::getLatData().vol2 * (HaloDepthSpin<<1) * GInd::getLatData().lt;
+        if (LatticeLayout != All) {
+            elems = elems>>1;
+        }
+        return elems;
+    }
+
+
+
     size_t getNumberLatticePointsFull(){
         size_t elems;
         if (LatticeLayout == All) {
@@ -256,7 +294,7 @@ typedef floatT floatT_inner;
 };
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-inline Vect3arrayAcc<floatT> Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
+inline gVect3arrayAcc<floatT> Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
     return (_lattice.getAccessor());
 }
 
@@ -299,6 +337,55 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
 
     this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax);
 }
+
+
+
+//ranluo
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverBulk_half(Functor op, size_t Nmax){
+    CalcGSiteStack<LatticeLayout, HaloDepth> calcGSite;
+    size_t elems = getNumberLatticePoints();
+
+    this->template iterateFunctor_half<BlockSize>(op, calcGSite, elems, Nmax);
+}
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverBulk_single(Functor op, size_t Nmax){
+    CalcGSiteStack<LatticeLayout, HaloDepth> calcGSite;
+    size_t elems = getNumberLatticePoints();
+
+    this->template iterateFunctor_single<BlockSize>(op, calcGSite, elems, Nmax);
+}
+
+
+//Revised by ranluo.
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverCenter(Functor op, size_t Nmax){
+    CalcGSiteStack_Center<LatticeLayout, HaloDepth> calcGSite;
+    WriteAtReadStack writeAtRead;
+    size_t elems = getNumberLatticePoints_Center();
+    cudaStream_t stream1;
+    cudaStreamCreate(&stream1);
+    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax, 1, stream1);
+    //cudaStreamSynchronize(stream1);
+    cudaStreamDestroy(stream1);
+}
+
+//Revised by ranluo.
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverInnerHalo(Functor op, size_t Nmax){
+    CalcGSiteStack_InnerHalo<LatticeLayout, HaloDepth> calcGSite;
+    WriteAtReadStack writeAtRead;
+    size_t elems = getNumberLatticePoints_InnerHalo();
+
+    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax);
+}
+
+
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 template<size_t stack, unsigned BlockSize, typename Functor>
@@ -382,65 +469,65 @@ Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::operator=(Func
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator*(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
+auto operator*(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
 {
     return general_mult(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator*(T lhs, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
+auto operator*(T lhs, Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
 {
     return general_mult(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-auto operator*(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs,
-        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
+auto operator*(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs,
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
 {
     return general_mult(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator + (const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
+auto operator + (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
 {
     return general_add(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator + (T lhs, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
+auto operator + (T lhs, Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
 {
     return general_add(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-auto operator + (const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs,
-        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
+auto operator + (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs,
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
 {
     return general_add(lhs, rhs);
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator - (const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
+auto operator - (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
 {
     return general_subtract(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator - (T lhs, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
+auto operator - (T lhs, Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
 {
     return general_subtract(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-auto operator - (const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs,
-        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
+auto operator - (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs,
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& rhs)
 {
     return general_subtract(lhs, rhs);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks, typename T>
-auto operator / (const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
+auto operator / (Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& lhs, T rhs)
 {
     return general_divide(lhs, rhs);
 }
@@ -452,144 +539,16 @@ struct convert_spinor_precision {
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
         //We do not initialize anything
     }
-    Vect3arrayAcc<floatT_source> spinor_source;
+    gVect3arrayAcc<floatT_source> spinor_source;
 
     convert_spinor_precision(Spinorfield<floatT_source, onDevice, LatLayout, HaloDepthSpin, NStacks> &spinorIn) : spinor_source(spinorIn.getAccessor()) {}
 
     __device__ __host__ auto operator()(gSiteStack site) {
-
+        
         return spinor_source.template getElement<floatT_target>(site);
     }
 };
 
 
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
-struct returnSpinor {
-    Vect3arrayAcc<floatT> _gAcc;
+#endif //SPINORFIELD_H
 
-    explicit returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn);
-    __host__ __device__ Vect3<floatT> operator()(gSiteStack site);
-};
-
-template<typename floatT, bool onDevice, size_t HaloDepth, size_t NStacks = 1>
-class SpinorfieldAll
-{
-public:
-    Spinorfield<floatT, onDevice, Even, HaloDepth, NStacks> even;
-    Spinorfield<floatT, onDevice, Odd, HaloDepth, NStacks> odd;
-
-    //! constructor
-    explicit SpinorfieldAll(CommunicationBase &comm, std::string spinorfieldName="Spinorfield") :
-            even(comm, spinorfieldName),
-            odd(comm, spinorfieldName)
-    { }
-
-    explicit SpinorfieldAll(Spinorfield<floatT, onDevice, Even, HaloDepth, NStacks> &even,
-    Spinorfield<floatT, onDevice, Odd, HaloDepth, NStacks> &odd) :
-            even(std::move(even)),
-            odd(std::move(odd))
-    { }
-
-    //! copy constructor
-    SpinorfieldAll(SpinorfieldAll&) = delete;
-
-    //! copy assignment
-    SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &
-            operator=(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &spinorRHS) {
-        even = spinorRHS.even;
-        odd = spinorRHS.odd;
-        return *this;
-    }
-
-    //! copy assignment from a Spinorfield<All> into this SpinorfieldAll
-    SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &
-            operator=(const Spinorfield<floatT, onDevice, All, HaloDepth, NStacks> &spinorRHS) {
-        static_for<0, NStacks>::apply([&](auto i) {
-             even.template iterateOverEvenBulkAtStack<i>(
-                returnSpinor<floatT, onDevice, All, HaloDepth, NStacks>(spinorRHS));
-             odd.template iterateOverOddBulkAtStack<i>(
-                returnSpinor<floatT, onDevice, All, HaloDepth, NStacks>(spinorRHS));
-        });
-        return *this;
-    }
-
-    //! move constructor
-    SpinorfieldAll(SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks>&& source) noexcept :
-            even(std::move(source.even)),
-            odd(std::move(source.odd))
-    { }
-
-    //! move assignment
-    SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &
-    operator=(SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks>&&) = delete;
-
-    //! destructor
-    ~SpinorfieldAll() = default;
-
-    COMPLEX(double) dotProduct(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
-        return even.dotProduct(y.even) + odd.dotProduct(y.odd);
-    }
-    double realdotProduct(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
-        return even.realdotProduct(y.even) + odd.realdotProduct(y.odd);
-    }
-
-    std::vector<COMPLEX(double)> dotProductStacked(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
-        std::vector<COMPLEX(double)> even_res = even.dotProductStacked(y.even);
-        std::vector<COMPLEX(double)> odd_res = odd.dotProductStacked(y.odd);
-        for (std::size_t i = 0, e = even_res.size(); i != e; i++)
-            even_res[i] += odd_res[i];
-        return even_res;
-    }
-    std::vector<double> realdotProductStacked(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &y) {
-        std::vector<double> even_res = even.realdotProductStacked(y.even);
-        std::vector<double> odd_res = odd.realdotProductStacked(y.odd);
-        for (std::size_t i = 0, e = even_res.size(); i != e; i++)
-            even_res[i] += odd_res[i];
-        return even_res;
-    }
-
-    void operator*=(const COMPLEX(floatT) &y) {
-        even *= y;
-        odd *= y;
-    }
-    void operator+=(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> & S2) {
-        even += S2.even;
-        odd += S2.odd;
-    }
-    void operator-=(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> & S2) {
-        even -= S2.even;
-        odd -= S2.odd;
-    }
-
-    // generate gaussian spinors.
-    void gauss(uint4* rand_state) {
-        odd.gauss(rand_state);
-        even.gauss(rand_state);
-    }
-    void one() {
-        even.one();
-        odd.one();
-    }
-
-    void updateAll() {
-        even.updateAll();
-        odd.updateAll();
-    }
-};
-
-template<typename floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &
-Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::operator=(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &spinorRHS) {
-    if (LatticeLayout == All) {
-        static_for<0, NStacks>::apply([&](auto i) {
-            this->template iterateOverEvenBulkAtStack<i>(
-                returnSpinor<floatT, onDevice, Even, HaloDepth, NStacks>(spinorRHS.even));
-            this->template iterateOverOddBulkAtStack<i>(
-                returnSpinor<floatT, onDevice, Odd, HaloDepth, NStacks>(spinorRHS.odd));
-        });
-    }
-    else {
-        throw std::runtime_error(stdLogger.fatal("SpinorfieldAll<> can only be copied into Spinorfield<All>"));
-    }
-    return *this;
-}
