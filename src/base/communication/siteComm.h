@@ -1,21 +1,10 @@
-/*
- * siteComm.h
- *
- * L. Mazur
- *
- * This class glues together all other classes needed to exchange halos. Again loosely speaking,
- * to exchange some information for my stencil calculation between a sublattice and his neighbor,
- * I need to
- *
- *     1. allocate some dynamic memory for the buffer (MemoryManagement);
- *     2. translate the local halo coordinates to buffer coordinates to be able to copy
- *        sites into the buffer (haloOffsetInfo); and
- *     3. communicate these buffers to my neighbors (I know who they are because of neighborInfo)
- *        using the wrappers in the CommunicationBase.
- *
- */
+//
+// Created by Lukas Mazur on 14.11.17.
+//
 
-#pragma once
+#ifndef GPU_LATTICE_GAUGECOMM_H
+#define GPU_LATTICE_GAUGECOMM_H
+
 
 #include "../../define.h"
 #include <iostream>
@@ -24,62 +13,15 @@
 #include "../stopWatch.h"
 #include <unordered_set>
 #include "../runFunctors.h"
+#ifndef USE_HIP_AMD
+    #include "nvToolsExt.h"
+#endif
 #include "deviceEvent.h"
+#include "HaloLoop.h"
 #include "deviceStream.h"
-#include "../wrapper/marker.h"
 
 
-#include "../indexer/haloIndexer.h"
-
-#include "calcGSiteHalo_dynamic.h"
-
-
-template<size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-class HaloSegmentConfig {
-    int _N;
-
-    HaloType _currentHaltype;
-    HaloSegment _hseg;
-    int _subIndex;
-    int _dir;
-    int _leftRight;
-
-    int _index;
-    int _size;
-    int _length;
-
-    public:
-    HaloSegmentConfig(int N) 
-    {
-        typedef HaloIndexer<LatLayout, HaloDepth> HInd;
-        _N = N;
-        
-        HSegSelector HS = HSegSelector(N);
-        _hseg = HS.haloSeg();
-        _dir = HS.dir();
-        _leftRight = HS.leftRight();
-        _subIndex = HS.subIndex();
-        _currentHaltype = HS.haloType();
-
-        _index = haloSegmentCoordToIndex(_hseg, _dir, _leftRight);
-        _length = HInd::get_SubHaloSize(_index);
-        _size = HInd::get_SubHaloSize(_index) * ElemCount;
-    }
-
-    HaloSegment hseg() { return _hseg; }
-    int dir() { return _dir; }
-    int leftRight() { return _leftRight; }
-    int subIndex() { return _subIndex; }
-    HaloType currentHaltype() { return _currentHaltype; }
-
-    int index() {return _index; }
-    int length() {return _length; }
-    int size() { return _size; }
-
-};
-
-
-
+#include "../indexer/HaloIndexer.h"
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 class siteComm : public RunFunctors<onDevice, Accessor> {
@@ -101,17 +43,17 @@ private:
 
     HaloOffsetInfo<onDevice> HaloInfo;
 
-    void _injectHalos(Accessor lattice, COMPLEX(floatT) *HaloBuffer);
+    void _injectHalos(Accessor lattice, GCOMPLEX(floatT) *HaloBuffer);
 
-    void _extractHalos(Accessor lattice, COMPLEX(floatT) *HaloBuffer);
+    void _extractHalos(Accessor lattice, GCOMPLEX(floatT) *HaloBuffer);
 
-    void _extractHalosSeg(Accessor acc, COMPLEX(floatT) *HaloBuffer, unsigned int param);
+    void _extractHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
 
-    void _injectHalosSeg(Accessor acc, COMPLEX(floatT) *HaloBuffer, unsigned int param);
-    
+    //Revised by ranluo
+    void _extractHalosSeg_async(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
+    void _injectHalosSeg_async(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
 
-    std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_send_vec;
-    std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_recv_vec;
+    void _injectHalosSeg(Accessor acc, GCOMPLEX(floatT) *HaloBuffer, unsigned int param);
 
 public:
     //! constructor
@@ -122,7 +64,7 @@ public:
 
         _elems = HInd::getHalData().getBufferSize(LatLayout);
 
-        _halElementSize = (int) ElemCount * sizeof(COMPLEX(floatT)) * EntryCount;
+        _halElementSize = (int) ElemCount * sizeof(GCOMPLEX(floatT)) * EntryCount;
         _bufferLength = ElemCount * _elems;
         _bufferSize = sizeof(AccType) * _bufferLength;
 
@@ -138,7 +80,6 @@ public:
             }
         }
 
-        /// Set the base pointer of our buffer.
         HaloInfo.setSendBase(_haloBuffer_Host);
         HaloInfo.setRecvBase(_haloBuffer_Host_recv);
 
@@ -218,26 +159,6 @@ public:
             GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
         }
 #endif
-        
-        commB.globalBarrier();
-        if (onDevice) {
-            if (commB.gpuAwareMPIAvail() || commB.useGpuP2P()) {
-                for(int N = 0; N < 80; N++){
-                    using HaloSegmentConfig_def = HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>;
-                    
-                    HaloSegmentConfig_def HSegConfig_send = HaloSegmentConfig_def(N);
-                    HaloSegmentConfig_def HSegConfig_recv = HaloSegmentConfig_def(N);
-
-                    if(HSegConfig_send.size() != 0){
-                        HSegConfig_send_vec.push_back(HSegConfig_send);
-                            
-                    }
-                    if(HSegConfig_recv.size() != 0){
-                        HSegConfig_recv_vec.push_back(HSegConfig_recv);
-                    }
-                }
-            }
-        }
         commB.globalBarrier();
     }
 
@@ -259,13 +180,11 @@ public:
     _halElementSize(source._halElementSize),
     _bufferLength(source._bufferLength),
     _bufferSize(source._bufferSize),
-
     //! move the gMemoryPtr's
     _haloBuffer_Host(std::move(source._haloBuffer_Host)),
     _haloBuffer_Host_recv(std::move(source._haloBuffer_Host_recv)),
     _haloBuffer_Device(std::move(source._haloBuffer_Device)),
     _haloBuffer_Device_recv(std::move(source._haloBuffer_Device_recv)),
-
     //! move the HaloInfo
     HaloInfo(std::move(source.HaloInfo))
     {
@@ -275,6 +194,7 @@ public:
         source._bufferSize = 0;
     }
 
+    //! destructor
     virtual ~siteComm() {
     }
 
@@ -284,13 +204,6 @@ public:
 
 
     void updateAll(unsigned int param = AllTypes | COMM_BOTH) {
-        if (_commBase.getNumberProcesses() == 1 && !_commBase.forceHalos())
-        {
-            return;
-        }
-
-        markerBegin("updateAll", "Communication");
-        
         gpuError_t gpuErr;
 
         /// A check that we don't have multiGPU and halosize=0:
@@ -313,20 +226,20 @@ public:
 
             if (onDevice) {
                 if (!(_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P())) {
-                    _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >());
-                    gpuErr = gpuMemcpy(_haloBuffer_Host->template getPointer<COMPLEX(floatT) >(),
-                                         _haloBuffer_Device->template getPointer<COMPLEX(floatT) >(), _bufferSize,
+                    _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
+                    gpuErr = gpuMemcpy(_haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >(),
+                                         _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(), _bufferSize,
                                          gpuMemcpyDeviceToHost);
                     if (gpuErr) {
                         GpuError("_haloBuffer_Device: Failed to copy to host", gpuErr);
                     }
                     _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
                 } else {
-                    _extractHalosSeg(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >(),
+                    _extractHalosSeg(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
                                      param);
                 }
             } else {
-                _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<COMPLEX(floatT) >());
+                _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >());
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
             }
         }
@@ -336,23 +249,88 @@ public:
 
             if (onDevice) {
                 if (_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P()) {
-                    _injectHalosSeg(getAccessor(), _haloBuffer_Device_recv->template getPointer<COMPLEX(floatT) >(),
+                    _injectHalosSeg(getAccessor(), _haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >(),
                                     param);
                 } else {
 		            HaloInfo.syncAllStreamRequests();
-                    gpuErr = gpuMemcpy(_haloBuffer_Device->template getPointer<COMPLEX(floatT) >(),
-                                         _haloBuffer_Host_recv->template getPointer<COMPLEX(floatT) >(), _bufferSize,
+                    gpuErr = gpuMemcpy(_haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
+                                         _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >(), _bufferSize,
                                          gpuMemcpyHostToDevice);
                     if (gpuErr)
                         GpuError("_haloBuffer_Device: Failed to copy to device", gpuErr);
-                    _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >());
+                    _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
                 }
             } else {
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | haltype);
-                _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<COMPLEX(floatT) >());
+                _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
             }
         }
-        markerEnd();
+    }
+
+
+    //Revised by ranluo
+    void updateAll_async(unsigned int param = AllTypes | COMM_BOTH) {
+        gpuError_t gpuErr;
+
+        /// A check that we don't have multiGPU and halosize=0:
+        if (_commBase.getNumberProcesses() != 1 && HaloDepth == 0) {
+            throw std::runtime_error(stdLogger.fatal("Useless call of CommunicationBase.updateAll() with multiGPU and HaloDepth=0!"));
+        }
+
+        unsigned int haltype = param & 15;
+        unsigned int commtype = param & COMM_BOTH;
+        if(haltype == 0) {
+            haltype = AllTypes;
+            param = param | AllTypes;
+        }
+        if(commtype == 0) {
+            commtype = COMM_BOTH;
+            param = param | COMM_BOTH;
+        }
+
+        if (commtype & COMM_START) {
+
+            if (onDevice) {
+                if (!(_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P())) {
+                    _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
+                    gpuErr = gpuMemcpy(_haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >(),
+                                         _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(), _bufferSize,
+                                         gpuMemcpyDeviceToHost);
+                    if (gpuErr) {
+                        GpuError("_haloBuffer_Device: Failed to copy to host", gpuErr);
+                    }
+                    _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
+                } else {
+                    _extractHalosSeg_async(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
+                                     param);
+                }
+            } else {
+                _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<GCOMPLEX(floatT) >());
+                _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
+            }
+        }
+
+        if (commtype & COMM_FINISH) {
+
+
+            if (onDevice) {
+                if (_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P()) {
+                    _injectHalosSeg_async(getAccessor(), _haloBuffer_Device_recv->template getPointer<GCOMPLEX(floatT) >(),
+                                    param);
+                } else {
+		            HaloInfo.syncAllStreamRequests();
+                    gpuErr = gpuMemcpy(_haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >(),
+                                         _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >(), _bufferSize,
+                                         gpuMemcpyHostToDevice);
+                    if (gpuErr)
+                        GpuError("_haloBuffer_Device: Failed to copy to device", gpuErr);
+                    _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<GCOMPLEX(floatT) >());
+                }
+            } else {
+                _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | haltype);
+                _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<GCOMPLEX(floatT) >());
+            }
+        }
     }
 };
 
@@ -361,12 +339,12 @@ template<class floatT, class Accessor, class AccType, size_t EntryCount, size_t 
 struct ExtractInnerHalo {
 
     Accessor _acc;
-    COMPLEX(floatT) *pointer[80];
+    GCOMPLEX(floatT) *pointer[80];
     size_t size[80];
     typedef GIndexer<LatLayout, HaloDepth> GInd;
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
-    ExtractInnerHalo(Accessor acc, COMPLEX(floatT) *HaloBuffer) :
+    ExtractInnerHalo(Accessor acc, GCOMPLEX(floatT) *HaloBuffer) :
             _acc(acc) {
 
         for (int i = 0; i < 80; ++i) {
@@ -390,7 +368,7 @@ struct ExtractInnerHalo {
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalos(
         Accessor acc,
-        COMPLEX(floatT) *HaloBuffer) {
+        GCOMPLEX(floatT) *HaloBuffer) {
 
     size_t size = HaloIndexer<LatLayout, HaloDepth>::getBufferSize();
     if (size == 0) return;
@@ -407,12 +385,12 @@ template<class floatT, class Accessor, class AccType, size_t EntryCount, size_t 
 struct InjectOuterHalo {
 
     Accessor _acc;
-    COMPLEX(floatT) *pointer[80];
+    GCOMPLEX(floatT) *pointer[80];
     size_t size[80];
     typedef GIndexer<LatLayout, HaloDepth> GInd;
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
 
-    InjectOuterHalo(Accessor acc, COMPLEX(floatT) *HaloBuffer) :
+    InjectOuterHalo(Accessor acc, GCOMPLEX(floatT) *HaloBuffer) :
             _acc(acc) {
         for (int i = 0; i < 80; ++i) {
             pointer[i] = HaloBuffer + HInd::get_SubHaloOffset(i) * EntryCount * ElemCount;
@@ -436,7 +414,7 @@ template<class floatT, bool onDevice, class Accessor, class AccType, size_t Entr
 void
 siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalos(
         Accessor acc,
-        COMPLEX(floatT) *HaloBuffer) {
+        GCOMPLEX(floatT) *HaloBuffer) {
 
     size_t size = HaloIndexer<LatLayout, HaloDepth>::getBufferSize();
     if (size == 0) return;
@@ -449,33 +427,10 @@ siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, 
 }
 
 
-
-
-template<class floatT, class Accessor, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-struct ExtractInnerHaloSeg {
-
-    Accessor _acc;
-    Accessor _hal_acc;
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
-
-    ExtractInnerHaloSeg(Accessor acc, Accessor hal_acc) :
-        _acc(acc), _hal_acc(hal_acc) {}
-
-    inline __host__ __device__ void operator()(HaloSite site) {
-
-        for (size_t mu = 0; mu < ElemCount; mu++) {
-            size_t index = _acc.template getIndexComm<LatLayout, HaloDepth>(site.LatticeIndex, mu);
-            _hal_acc.setEntriesComm(_acc, site.LocHalIndex * ElemCount + mu, index);
-        }
-    }
-};
-
-
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalosSeg(
         Accessor acc,
-        COMPLEX(floatT) *HaloBuffer,
+        GCOMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
 
     gpuError_t gpuErr = gpuDeviceSynchronize();
@@ -484,140 +439,71 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
     }
 
     _commBase.globalBarrier();
-
-    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
-    for (auto &HSegConfig : HSegConfig_send_vec){
-
-
-        HaloType currentHaltype = HSegConfig.currentHaltype();
-        if (param & currentHaltype) {
-                HaloSegment hseg = HSegConfig.hseg();
-                int dir = HSegConfig.dir();
-                int leftRight = HSegConfig.leftRight();
-                int subIndex = HSegConfig.subIndex();
-
-                int size = HSegConfig.size();
-                int length = HSegConfig.length();
-                int index = HSegConfig.index();
-
-                HaloSegmentInfo &segmentInfo = HaloInfo.get(hseg, dir, leftRight);
-                NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
-                ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
-
-                COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
-                Accessor hal_acc = Accessor(pointer, size);
-
-                int streamNo = 0;
-                ExtractInnerHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> extractLeft(acc, hal_acc);
-                iterateFunctorNoReturn<onDevice>(extractLeft, CalcInnerHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
-                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
-
-                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
-                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.start.record(segmentInfo.getDeviceStream());
-                }
-
-                if ( (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) ||
-                        (onDevice && _commBase.gpuAwareMPIAvail()) )
-                {
-                    segmentInfo.synchronizeStream(streamNo);
-                }
-
-                _commBase.updateSegment(hseg, dir, leftRight, HaloInfo);
-
-                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
-                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.stop.record(segmentInfo.getDeviceStream());
-                }
-        }
-    }
-
+    extractLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(acc, _commBase, HaloInfo,
+                                                                                              HaloBuffer, param);
     HaloInfo.syncAllStreamRequests();
     _commBase.globalBarrier();
 }
 
 
 
-template<class floatT, class Accessor, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-struct InjectOuterHaloSeg {
+//Revised by ranluo
+template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
+void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalosSeg_async(
+        Accessor acc,
+        GCOMPLEX(floatT) *HaloBuffer,
+        unsigned int param) {
 
-    Accessor _acc;
-    Accessor _hal_acc;
-    typedef GIndexer<LatLayout, HaloDepth> GInd;
-
-    InjectOuterHaloSeg(Accessor acc, Accessor hal_acc) :
-        _acc(acc), _hal_acc(hal_acc) {
-        }
-
-    inline __host__ __device__ void operator()(HaloSite site) {
-
-        for (size_t mu = 0; mu < ElemCount; mu++) {
-            size_t index = _acc.template getIndexComm<LatLayout, HaloDepth>(site.LatticeIndex, mu);
-            _acc.setEntriesComm(_hal_acc, index, site.LocHalIndex * ElemCount + mu);
-        }
+    gpuError_t gpuErr = gpuDeviceSynchronize();
+    if (gpuErr != gpuSuccess) {
+        GpuError("siteComm.h: _extractHalosSeg_async gpuDeviceSynchronize failed:", gpuErr);
     }
-};
+
+    _commBase.globalBarrier();
+    extractLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(acc, _commBase, HaloInfo,
+                                                                                              HaloBuffer, param);
+    /*HaloInfo.syncAllStreamRequests();
+    _commBase.globalBarrier();*/
+}
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalosSeg(
         Accessor acc,
-        COMPLEX(floatT) *HaloBuffer, unsigned int param) {
+        GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
-    typedef HaloIndexer<LatLayout, HaloDepth> HInd;
-
-    for (auto &HSegConfig : HSegConfig_recv_vec){
-        
-
-        HaloType currentHaltype = HSegConfig.currentHaltype();
-
-        if (param & currentHaltype) {
-                HaloSegment hseg = HSegConfig.hseg();
-                int dir = HSegConfig.dir();
-                int leftRight = HSegConfig.leftRight();
-                int subIndex = HSegConfig.subIndex();
-
-                int size = HSegConfig.size();
-                int length = HSegConfig.length();
-
-
-                int index = HSegConfig.index();
-
-
-                HaloSegmentInfo &segmentInfo = HaloInfo.get(hseg, dir, leftRight);
-                NeighborInfo &NInfo = HaloInfo.getNeighborInfo();
-                ProcessInfo &PInfo = NInfo.getNeighborInfo(hseg, dir, leftRight);
-
-
-
-
-                COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
-                Accessor hal_acc = Accessor(pointer, size);
-                int streamNo = 1;
-
-                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
-                    deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
-                    p2pCopyEvent.streamWaitForMe(segmentInfo.getDeviceStream(streamNo));
-                }
-
-                if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {
-                    segmentInfo.synchronizeStream(0);
-                }
-                if (!onDevice || (onDevice && !_commBase.useGpuP2P())) {
-                    segmentInfo.synchronizeRequest();
-                }
-
-                InjectOuterHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> injectLeft(acc, hal_acc);
-
-                iterateFunctorNoReturn<onDevice>(injectLeft, CalcOuterHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
-                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
-        }
-    }
-
+    injectLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(_commBase, HaloInfo,
+                                                                                         acc,
+                                                                                         HaloBuffer,
+                                                                                         param);
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
-        GpuError("siteComm.h: _injectHalosSeg, gpuDeviceSynchronize failed:", gpuErr);
+        GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
     }
     _commBase.globalBarrier();
 
 }
 
+
+
+//Revised by ranluo
+template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
+void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalosSeg_async(
+        Accessor acc,
+        GCOMPLEX(floatT) *HaloBuffer, unsigned int param) {
+    
+    HaloInfo.syncAllStreamRequests();
+    _commBase.globalBarrier();
+    
+    injectLoop<onDevice, floatT, Accessor, ElemCount, EntryCount, LatLayout, HaloDepth> loop(_commBase, HaloInfo,
+                                                                                         acc,
+                                                                                         HaloBuffer,
+                                                                                         param);
+    /*gpuError_t gpuErr = gpuDeviceSynchronize();
+    if (gpuErr != gpuSuccess) {
+        GpuError("siteComm.h: _injectHalosSe, gpuDeviceSynchronize failed:", gpuErr);
+    }*/
+    _commBase.globalBarrier();
+
+}
+
+#endif //GPU_LATTICE_GAUGECOMM_H
