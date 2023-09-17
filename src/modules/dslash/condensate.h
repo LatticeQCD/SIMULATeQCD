@@ -1,28 +1,33 @@
-/*
- * condensate.h
- *
- */
-
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
 #include "../rhmc/rhmcParameters.h"
 #include "../../spinor/spinorfield.h"
 #include "dslash.h"
 #include "../inverter/inverter.h"
-#include "../hisq/hisqSmearing.h"
+#include "../HISQ/hisqSmearing.h"
+
+#define floatT_inner __half
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, size_t NStacks>
-SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, RhmcParameters param, floatT mass,
+SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, RhmcParameters param, bool light, 
     Gaugefield<floatT, onDevice, HaloDepth, R18> &gauge, grnd_state<onDevice> &d_rand) {
 
     typedef GIndexer<All,HaloDepth> GInd;
+    
+    floatT mass;
 
-    Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase);
+    if (light) {
+        mass = param.m_ud();
+    } else {
+        mass = param.m_s();
+    }
+
+    Gaugefield<floatT, onDevice, HaloDepth, U3R14> smeared_X(commBase, "SHARED_GAUGENAIK");
     Gaugefield<floatT, onDevice, HaloDepth, R18> smeared_W(commBase, "SHARED_GAUGELVL2");
-
+    
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> smearing(gauge, smeared_W, smeared_X);
     smearing.SmearAll(param.mu_f());
-
+    
     ConjugateGradient<floatT, NStacks> cg;
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_e(smeared_W, smeared_X, 0.0);
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_e_inv(smeared_W, smeared_X, mass);
@@ -31,7 +36,7 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> eta_e(commBase);
     Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, NStacks> eta_o(commBase);
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> x_e(commBase);
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> w_e(commBase);
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> w_e(commBase);  
     Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, NStacks> w_o(commBase);
 
     eta_o.gauss(d_rand.state);
@@ -43,7 +48,17 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
     dslash_o.Dslash(x_e, eta_o);
     x_e = eta_e * mass - x_e;
 
+    
+    
+    //ranluo
     cg.invert_new(dslash_e_inv, w_e, x_e, param.cgMax_meas(), param.residue_meas());
+    //cg.invert_res_replace(dslash_e_inv, w_e, x_e, param.cgMax_meas(), param.residue_meas(), param.cgMixedPrec_delta());
+    /*Gaugefield<floatT_inner, onDevice, HaloDepth, R18> gauge_smeared_lowprec(commBase);
+    Gaugefield<floatT_inner, onDevice, HaloDepth, U3R14> gauge_naik_lowprec(commBase);
+    HisqDSlash<floatT_inner, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_lowprec(gauge_smeared_lowprec, gauge_naik_lowprec, mass);  
+    gauge_smeared_lowprec.convert_precision(smeared_W);
+    gauge_naik_lowprec.convert_precision(smeared_X);
+    cg.invert_mixed(dslash_e_inv, dslash_lowprec, w_e, x_e, param.cgMax_meas(), param.residue_meas(), param.cgMixedPrec_delta());*/
 
     dslash_e.Dslash(w_o, w_e);
     w_o = floatT(1./mass)*(eta_o - w_o);
@@ -53,4 +68,3 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
 
     return (dot_o + dot_e)/double(GInd::getLatData().globvol4);
 };
-
