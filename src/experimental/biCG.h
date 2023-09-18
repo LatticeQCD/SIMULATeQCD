@@ -5,6 +5,7 @@
 #include "../base/math/simpleArray.h"
 #include "../modules/inverter/inverter.h"
 #include "../base/latticeContainer.h"
+
 template<class floatT, size_t HaloDepth>
 struct ScalarProductKernel{
 
@@ -98,32 +99,35 @@ struct WilsonDslashKernel {
 
         SU3<floatT> first_term=(gAcc.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu))));
         SU3<floatT> second_term=gAcc.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, mu), mu)));
-/*
+        /*
         COMPLEX(floatT) result(0.0,0.0);
         for(int i = 0 ; i < 3 ; i++){
-        for(int j = 0 ; j < 3 ; j++){
-          result+=first_term(i,j);
+          for(int j = 0 ; j < 3 ; j++){
+            result+=first_term(i,j);
 
-        }
-        }
-        printf("%lf %lf\n",result.cREAL,result.cIMAG);*/
-        for(int i = 0 ; i < 4 ; i++){
-          for(int j = 0 ; j < 4 ; j++){
-            printf("(%lf,%lf) ",FourMatrix<floatT>::gamma(0).A[i][j].cREAL,FourMatrix<floatT>::gamma(0).A[i][j].cIMAG);
+            printf("%d %d %lf %lf\n",i,j,result.cREAL,result.cIMAG);
           }
-          printf("\n");
-        }
+          }*/
+  
+//        for(int i = 0 ; i < 4 ; ++i){
+//          for(int j = 0 ; j < 4 ; ++j){
+            //printf("(%lf,%lf) ",FourMatrix<floatT>::gamma(3).A[i][j].cREAL,FourMatrix<floatT>::gamma(3).A[i][j].cIMAG);
+//            printf("%d %d (%lf,%lf) ",i,j,P_plus.A[i][j].cREAL,P_minus.A[i][j].cREAL);
+//          }
+//          printf("\n");
+//        }
 
 
         //! transport spinor psi(x+mu) to psi(x) with link
+//        COMPLEX(floatT) result(0.0,0.0);
+//        for(int i = 0 ; i < 4 ; i++){
+//          result+=re_dot_prod( (P_minus * spinorIn.getColorVect(GInd::site_up(site, mu)))[i],spinorIn.getColorVect(GInd::site_up(site, mu))[i]);
+//
+//          printf("%d %lf %lf\n",i,result.cREAL,result.cIMAG);
+//        }
         Dirac_psi = Dirac_psi - 0.5 * ( first_term * (P_minus * spinorIn.getColorVect(GInd::site_up(site, mu)) )
           //! transport spinor psi(x-mu) to psi(x) with link dagger
           + second_term * (P_plus * spinorIn.getColorVect(GInd::site_dn(site, mu)) ) );
-        //COMPLEX(floatT) res(0.0,0.0);
-        //for(int i = 0 ; i < 4 ; i++){
-        //  res+= re_dot_prod(Dirac_psi[i], Dirac_psi[i]);
-       // }
-        //printf("%lf %lf\n",res.cREAL,res.cIMAG);
       }
       //mass term
       floatT M = 1.0/(2.0*_kappa);
@@ -133,11 +137,39 @@ struct WilsonDslashKernel {
       for(int mu = 0 ; mu < 4 ; mu++){
         for(int nu = 0 ; nu < 4 ; nu++){
           if(mu==nu) continue;
-            SU3<floatT> Fmunu = FT(site,mu,nu);
-            Clover = Clover + (_c_sw/4.0) * (COMPLEX(floatT)(0, -1)) * ( Fmunu * ((G[mu]*G[nu]) * spinorIn.getColorVect(site) ) );
+             SU3<floatT> Fmunu = FT(site,mu,nu);
+          /*
+             COMPLEX(floatT) result(0.0,0.0);
+             for(int i = 0 ; i < 3 ; i++){
+             for(int j = 0 ; j < 3 ; j++){
+             result+=Fmunu(i,j);
+             }
+             }
+             printf("%d %d %d %d %lf %lf\n",mu,nu,result.cREAL,result.cIMAG);
+             */
+          Clover = Clover + (_c_sw/4.0) * (COMPLEX(floatT)(0, -1)) * ( Fmunu * ((G[mu]*G[nu]) * spinorIn.getColorVect(site) ) );
+//        for(int i = 0 ; i < 4 ; ++i){
+//          for(int j = 0 ; j < 4 ; ++j){
+          //printf("(%lf,%lf) ",FourMatrix<floatT>::gamma(3).A[i][j].cREAL,FourMatrix<floatT>::gamma(3).A[i][j].cIMAG);
+//            printf("%d %d (%lf,%lf) ",i,j,(G[mu]*G[nu]).A[i][j].cREAL,(G[mu]*G[nu]).A[i][j].cIMAG);
+//          }
+//          printf("\n");
+//        }
+/*          COMPLEX(floatT) result(0.0,0.0);
+          for(int i = 0 ; i < 4 ; i++){
+            result+=re_dot_prod( ((G[mu]*G[nu])[i],  ((G[mu]*G[nu])[i]);
+
+            printf("%d %lf %lf\n",i, result.cREAL,result.cIMAG);
+          }
+          */
         }
       }
       Dirac_psi = Dirac_psi + Clover;
+      COMPLEX(floatT) res(0.0,0.0);
+      for(int i = 0 ; i < 4 ; i++){
+        res+= re_dot_prod(Dirac_psi[i], Dirac_psi[i]);
+      }
+ //     printf("Dirac %lf %lf\n",res.cREAL,res.cIMAG);
       return convertColorVectToVect12(Dirac_psi);
     }
 };
@@ -167,8 +199,8 @@ public:
     void invert(WilsonDslash<floatT, onDevice, HaloDepth, Spinor_t, Spinor_t>& dslash, Spinor_t& x, Spinor_t& rhs, int max_iter, double precision)
     {
         Spinor_t r0(x.getComm());
-        Spinor_t r(x.getComm());
         Spinor_t p(x.getComm());
+        Spinor_t r(x.getComm());
         
         //should go to member
         Spinor_t Ap(x.getComm());
@@ -194,7 +226,7 @@ public:
           dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
           COMPLEX(floatT) beta=ScalarProduct(Ap,r0);
           rootLogger.info("beta ", beta.cREAL, beta.cIMAG);
-          COMPLEX(floatT) alpha=rr0*beta;
+          COMPLEX(floatT) alpha=rr0/beta;
           rootLogger.info("alpha ", alpha.cREAL, alpha.cIMAG);
 
           floatT eps = abs(beta)/sqrt(ScalarProduct(Ap,Ap).cREAL * ScalarProduct(r0,r0).cREAL);
@@ -207,7 +239,8 @@ public:
             r=r0;
             p=r0;
             rr0=ScalarProduct(r,r).cREAL;
-              resnorm = rr0.cREAL * rhsinvnorm;
+            resnorm = rr0.cREAL * rhsinvnorm;
+            rootLogger.info("resnorm ", resnorm, i);
               continue;
             }
 
@@ -222,6 +255,7 @@ public:
                 continue;
             }
             dslash.apply(As, s);
+
             //omega = (As,s)/(As,As)
             COMPLEX(floatT) omega = ScalarProduct(As,s) / ScalarProduct(As,As).cREAL;
 
@@ -230,6 +264,7 @@ public:
 
             //r = s - omega*As
             r = s - omega * As;
+            
             resnorm = ScalarProduct(r,r).cREAL * rhsinvnorm;
 
             rootLogger.info("ScalarProduct(r,r).cREAL: ", ScalarProduct(r,r).cREAL);

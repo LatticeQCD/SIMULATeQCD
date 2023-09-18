@@ -57,42 +57,42 @@ struct FourMatrix {
 
     // Static method to create an identity matrix
     __host__ __device__ inline static constexpr FourMatrix<floatT> identity() {
-      FourMatrix<floatT> I;
-      I.A[0][0]=1;
-      I.A[1][1]=1;
-      I.A[2][2]=1;
-      I.A[3][3]=1;
-      return I; 
+      return FourMatrix<floatT>(
+          1.0, 0.0, 0.0, 0.0,
+          0.0, 1.0, 0.0, 0.0,
+          0.0, 0.0, 1.0, 0.0,
+          0.0, 0.0, 0.0, 1.0);
+; 
     }
 
     // Static method to create a gamma matrix
     __host__ __device__ static const FourMatrix<floatT> gamma(int mu) {
-        const GPUcomplex<floatT> i(0,1);
+        const GPUcomplex<floatT> i(0.0,1.0);
         switch (mu) {
             case 0:
                 return FourMatrix<floatT>(
-                        0, 0, 0, i,
-                        0, 0, i, 0,
-                        0,-i, 0, 0,
-                        -i, 0, 0, 0);
+                        0.0, 0.0, 0.0, i,
+                        0.0, 0.0, i, 0.0,
+                        0.0,-i, 0.0, 0.0,
+                        -i, 0.0, 0.0, 0.0);
             case 1:
                 return FourMatrix<floatT>(
-                        0, 0, 0, 1,
-                        0, 0,-1, 0,
-                        0,-1, 0, 0,
-                        1, 0, 0, 0);
+                        0.0, 0.0, 0.0, 1.0,
+                        0.0, 0.0,-1.0, 0.0,
+                        0.0,-1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0, 0.0);
             case 2:
                 return FourMatrix<floatT>(
-                        0, 0, i, 0,
-                        0, 0, 0,-i,
-                        -i, 0, 0, 0,
-                        0, i, 0, 0);
+                        0.0, 0.0, i, 0.0,
+                        0.0, 0.0, 0.0,-i,
+                        -i, 0.0, 0.0, 0.0,
+                        0.0, i, 0.0, 0.0);
             case 3:
                 return FourMatrix<floatT>(
-                        1, 0, 0, 0,
-                        0, 1, 0, 0,
-                        0, 0,-1, 0,
-                        0, 0, 0,-1);
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0,-1.0, 0.0,
+                        0.0, 0.0, 0.0,-1.0);
             case 5:
                 return FourMatrix<floatT>(
                         0, 0, 1, 0,
@@ -146,6 +146,11 @@ struct FourMatrix {
     // Multiplication operator
     __host__ __device__ const FourMatrix<floatT> operator*(const FourMatrix<floatT>& b) const {
         FourMatrix<floatT> result;
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+              result.A[i][j]=0.0;
+            }
+        }
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 for (int k = 0; k < 4; k++) {
