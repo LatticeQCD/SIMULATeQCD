@@ -117,6 +117,15 @@ struct WilsonDslashKernel {
 //          printf("\n");
 //        }
 
+        //floatT bla = 0;
+        /* for(int i = 0 ; i < 4 ; i++){ */
+        /*   for(int j = 0 ; j < 4 ; j++){ */
+        /*      // bla += FourMatrix<floatT>::gamma(0).A[i][j].cIMAG; */
+        /*        printf("(%.1f,%.1f) ", FourMatrix<floatT>::gamma(1).A[i][j].cREAL, FourMatrix<floatT>::gamma(1).A[i][j].cIMAG ); */
+        /*   } */
+        /*  // printf("\n"); */
+        /* } */
+
 
         //! transport spinor psi(x+mu) to psi(x) with link
 //        COMPLEX(floatT) result(0.0,0.0);
