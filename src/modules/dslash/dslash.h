@@ -141,8 +141,11 @@ public:
     void Dslash_stacked(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
     //! Includes the mass term
-    virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
+    virtual void applyMdaggM_nostack(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
+    virtual void applyMdaggM_stacked(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
 
+    virtual void applyMdaggM(SpinorRHS_t & spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
+    
     template<Layout LatLayout>
     HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
     getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);

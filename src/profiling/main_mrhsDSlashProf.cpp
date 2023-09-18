@@ -53,7 +53,6 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks * NStacks_cached> spinorOut2(commBase);
     Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks * NStacks_cached> spinorOut_ref(commBase);
     
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> spinorOut3(commBase);
     
     gpuErr = gpuGetLastError();
     if (gpuErr)
@@ -102,6 +101,32 @@ void test_dslash(CommunicationBase &commBase, int Vol){
          rootLogger.info("Testing for correctness: dot prod of difference = ", dot[i]);                                                                                                                           
      }    
    
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorRef(commBase);
+    
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorOut3(commBase);
+    spinorIn.gauss(d_rand.state);
+    timer.reset();
+    for (int i = 0; i < 5; i++) {
+        timer.start();
+        dslash.applyMdaggM(spinorOut3,spinorIn,false);
+        timer.stop();
+    }
+
+
+    rootLogger.info("Time for 5 applications of multiRHS M^{dagger}*M (thread+block version): ", timer);
+    TFlops = NStacks * NStacks_cached * Vol * EOfactor * 5 * 2 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
+    rootLogger.info("Achieved TFLOP/s ", TFlops, " with ", NStacks, " Stacks (thread loop) and ", NStacks_cached, " Stacks (blockDim.y)");
+
+    dslash.applyMdaggM(spinorOut3,spinorIn,false);
+    dslash2.applyMdaggM(spinorRef,spinorIn,false);
+
+    spinorRef = spinorRef - spinorOut3;
+    dot = spinorRef.dotProductStacked(spinorRef);
+
+    for (size_t i = 0; i < NStacks*NStacks_cached; i++) {                                                                                                                                                                      
+         rootLogger.info("Testing for correctness: dot prod of difference = ", dot[i]);                                                                                                                           
+     }  
 
 }
 
