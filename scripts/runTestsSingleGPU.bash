@@ -164,9 +164,9 @@ ${prefix} ./_rhmcTest ../parameter/tests/rhmcTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
+echo Running Test: ./_confReadWriteTest ../parameter/tests/confReadWriteTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
+${prefix} ./_confReadWriteTest ../parameter/tests/confReadWriteTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
