@@ -160,60 +160,60 @@ typedef floatT floatT_inner;
 
     void axpyThis(const floatT &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisB(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisLoop(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisLoopd(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry);
 
-    template<size_t BlockSize = 128>
+    template<size_t Blocksize = DEFAULT_NBLOCKS>
     void axpyThisB(const floatT &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<typename const_T, size_t BlockSize = 128>
+    template<typename const_T, size_t Blocksize = DEFAULT_NBLOCKS>
     void xpayThisB(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<typename const_T, size_t BlockSize = 128>
+    template<typename const_T, size_t Blocksize = DEFAULT_NBLOCKS>
     void xpayThisBd(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisB(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisLoop(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisLoopd(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFull(Functor op, size_t Nmax = NStacks);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulk(Functor op, size_t Nmax = NStacks);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAtStack(Functor op);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkAtStack(Functor op);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverEvenBulkAtStack(Functor op);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverOddBulkAtStack(Functor op);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullLoopStack(Functor op);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkLoopStack(Functor op, size_t Nmax=NStacks);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Object>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Object>
     void iterateWithConst(Object ob);
 
     template<typename Functor>

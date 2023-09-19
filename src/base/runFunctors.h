@@ -16,7 +16,7 @@
 
 #include "../base/indexer/haloIndexer.h"
 
-#define DEFAULT_NBLOCKS  128
+#define DEFAULT_NBLOCKS  64
 #define DEFAULT_NBLOCKS_LOOP  128
 #define DEFAULT_NBLOCKS_CONST  256
 
@@ -63,7 +63,7 @@ __host__ __device__ static dim3 GetUint3(dim3 Idx){
 
 
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
-__global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS) performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {
@@ -81,7 +81,7 @@ auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(
 
 
 template<size_t Nloops, typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
-__global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS_LOOP) performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
         CalcWriteInd calcWriteInd, const size_t size_x, __attribute__((unused)) size_t Nmax=Nloops) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -107,7 +107,7 @@ __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcRea
 
 
 template<typename Accessor, typename Object, typename CalcReadInd, typename CalcWriteInd>
-__global__ void performCopyConstObject(Accessor res, Object ob, CalcReadInd calcReadInd,
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS_CONST) performCopyConstObject(Accessor res, Object ob, CalcReadInd calcReadInd,
         CalcWriteInd calcWriteInd, const size_t size_x) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -345,7 +345,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 #ifdef __GPUCC__
 
 template<typename Functor, typename CalcReadInd>
-__global__ void performFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t size_x) {
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS) performFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t size_x) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {
