@@ -4,9 +4,9 @@
 #    Lattice: Nx Ny Nz Nt
 #      Nodes: Number of sublattices per direction
 #
-Lattice    = 20 20 20 20
+Lattice    = 32 32 32 8
 Nodes      = 1  1  1  1
-beta       = 1.83 
+beta       = 6.285 
 use_unit_conf = 0
-Gaugefile  = ../test_conf/l20t20b06498a_nersc.302500
+Gaugefile  = ../test_conf/l328f21b6285m0009875m0790a_019.995
 format     = nersc

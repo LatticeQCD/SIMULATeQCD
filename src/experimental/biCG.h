@@ -232,6 +232,8 @@ public:
         floatT resnorm=rr0.cREAL*rhsinvnorm;
 
         for (int i = 0; i < max_iter && resnorm > precision; i++) {
+          rootLogger.info("Iteration ", i);
+          
           dslash.apply(Ap, p); // Ap:output, p:input; Dslash p = Ap
           COMPLEX(floatT) beta=ScalarProduct(Ap,r0);
           rootLogger.info("beta ", beta.cREAL, beta.cIMAG);
@@ -241,16 +243,16 @@ public:
           floatT eps = abs(beta)/sqrt(ScalarProduct(Ap,Ap).cREAL * ScalarProduct(r0,r0).cREAL);
           rootLogger.info("eps ", eps);
           if(eps < 1e-8) {
-            rootLogger.trace("restarting BICGSTAB. eps = " ,  eps);
-            // r = r0 = p = b-Ax
-            dslash.apply(r0, x);
-            r0=-1.0*r0+rhs;
-            r=r0;
-            p=r0;
-            rr0=ScalarProduct(r,r).cREAL;
-            resnorm = rr0.cREAL * rhsinvnorm;
-            rootLogger.info("resnorm ", resnorm, i);
-              continue;
+                rootLogger.trace("restarting BICGSTAB. eps = " ,  eps);
+                // r = r0 = p = b-Ax
+                dslash.apply(r0, x);
+                r0=-1.0*r0+rhs;
+                r=r0;
+                p=r0;
+                rr0=ScalarProduct(r,r).cREAL;
+                resnorm = rr0.cREAL * rhsinvnorm;
+                rootLogger.info("resnorm ", resnorm, i);
+                continue;
             }
 
             //s = r-alpha*Ap
@@ -289,7 +291,6 @@ public:
               
               p = r + beta*(p - omega*Ap);
             }
-            rootLogger.trace("iteration ",i);
 
         }
         rootLogger.info("residue " ,  resnorm);
