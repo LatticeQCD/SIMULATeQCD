@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 24.11.18.
 //
 
-#ifndef SU3RUNGEKUTTA3ADSTEPSIZE_H
-#define SU3RUNGEKUTTA3ADSTEPSIZE_H
-
+#pragma once
 #include "su3rungeKutta3.h"
 
 template<class floatT, size_t HaloDepth, typename Zi>
@@ -48,7 +46,7 @@ public:
     }
 };
 
-/*Z1Z0_adStepSize(gaugeAccessor<floatT> , gaugeAccessor<floatT> )
+/*Z1Z0_adStepSize(SU3Accessor<floatT> , SU3Accessor<floatT> )
 	compute 8/9 * Z_1 - 17/36 * Z_0 = 8/9 * this->_gaugeD_device - 17/36 * this->_gaugeA_device
 	store it in this->_gaugeA_device
 
@@ -61,41 +59,41 @@ public:
 template<class floatT, size_t HaloDepth, bool onDevice>
 struct Z1Z0_adStepSize {
     //Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> gaugeAccessorA;
-    gaugeAccessor<floatT> gaugeAccessorB;
+    SU3Accessor<floatT> SU3AccessorA;
+    SU3Accessor<floatT> SU3AccessorB;
 
     typedef GIndexer<All, HaloDepth> GInd;
 
     Z1Z0_adStepSize(Gaugefield<floatT, onDevice, HaloDepth> &gaugeA,
                     Gaugefield<floatT, onDevice, HaloDepth> &gaugeB) :
-            gaugeAccessorA(gaugeA.getAccessor()),
-            gaugeAccessorB(gaugeB.getAccessor()) {}
+            SU3AccessorA(gaugeA.getAccessor()),
+            SU3AccessorB(gaugeB.getAccessor()) {}
 
     //This is the operator that is called inside the Kernel
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
 
-        // define two temporary GSU3 for the summation
-        GSU3<floatT> Z1Z0_adStepSize_1;
-        GSU3<floatT> Z1Z0_adStepSize_2;
+        // define two temporary SU3 for the summation
+        SU3<floatT> Z1Z0_adStepSize_1;
+        SU3<floatT> Z1Z0_adStepSize_2;
 
         Z1Z0_adStepSize_1 =
-                floatT(8./9.) * gaugeAccessorB.getLink(siteMu) - floatT(17./36.) * gaugeAccessorA.getLink(
+                floatT(8./9.) * SU3AccessorB.getLink(siteMu) - floatT(17./36.) * SU3AccessorA.getLink(
                         siteMu);
         Z1Z0_adStepSize_2 =
-                floatT(2.) * gaugeAccessorB.getLink(siteMu) - gaugeAccessorA.getLink(siteMu);
+                floatT(2.) * SU3AccessorB.getLink(siteMu) - SU3AccessorA.getLink(siteMu);
 
         // store 8/9 * Z_1 - 17/36 * Z_0 in this->_gaugeA_device
-        gaugeAccessorA.setLink(siteMu, Z1Z0_adStepSize_1);
+        SU3AccessorA.setLink(siteMu, Z1Z0_adStepSize_1);
 
         // store 2 * Z_1 - Z_0 in this->_gaugeD_device
-        //gaugeAccessorB.setLink(siteMu, Z1Z0_adStepSize_2);
+        //SU3AccessorB.setLink(siteMu, Z1Z0_adStepSize_2);
         return Z1Z0_adStepSize_2;
     }
 };
 
 
-/*distance(gaugeAccessor<floatT>, gaugeAccessor<floatT>, floatT *, const size_t)
-	compute the distance square between two GSU3 matrices:
+/*distance(SU3Accessor<floatT>, SU3Accessor<floatT>, floatT *, const size_t)
+	compute the distance square between two SU3 matrices:
 	 	1/3^2 sum_(i,j=1)^3 |(A - B)_ij|^2
 		= sum_(i,j=1)^3 real((A - B)_ij)^2 +  imag((A - B)_ij)^2
 	pick the max regarding the directions
@@ -103,8 +101,8 @@ struct Z1Z0_adStepSize {
 template<class floatT, size_t HaloDepth, bool onDevice>
 struct distance {
     //Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> Vmu;
-    gaugeAccessor<floatT> W_2;
+    SU3Accessor<floatT> Vmu;
+    SU3Accessor<floatT> W_2;
 
     typedef GIndexer<All, HaloDepth> GInd;
 
@@ -118,7 +116,7 @@ struct distance {
         floatT distOld = 0;
         floatT distNew;
 
-        GSU3<floatT> subGSU3;
+        SU3<floatT> subSU3;
 
         // loopover all directions
         for (int mu = 0; mu < 4; mu++) {
@@ -126,13 +124,13 @@ struct distance {
             distNew = 0;
 
             // compute Vmu - W_2
-            subGSU3 = Vmu.getLink(GInd::getSiteMu(site, mu)) - W_2.getLink(GInd::getSiteMu(site, mu));
+            subSU3 = Vmu.getLink(GInd::getSiteMu(site, mu)) - W_2.getLink(GInd::getSiteMu(site, mu));
 
             // sum over all matrix elements
             for (int i = 0; i < 3; i++) {
                 for (int j = 0; j < 3; j++) {
                     // compute Real^2 + Imag^2 and sum it
-                    distNew += real(subGSU3(i, j)) * real(subGSU3(i, j)) + imag(subGSU3(i, j)) * imag(subGSU3(i, j));
+                    distNew += real(subSU3(i, j)) * real(subSU3(i, j)) + imag(subSU3(i, j)) * imag(subSU3(i, j));
                 }
             }
 
@@ -236,5 +234,4 @@ floatT su3rungeKutta3AdStepSize<floatT, HaloDepth, Zi>::updateFlow() {
 
 
 
-#endif //SU3RUNGEKUTTA3ADSTEPSIZE_H
 

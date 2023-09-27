@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gfixTestMulti.cu
  *
  * D. Clarke
@@ -8,28 +8,28 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/gaugeFixing/gfix.h"
 #include "testing.h"
 
-#define PREC double 
+#define PREC double
 
 /// Get tr U for each link
 template<class floatT,size_t HaloDepth>
 struct CalcTrU{
 
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> SU3Accessor;
 
-    CalcTrU(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
+    CalcTrU(Gaugefield<floatT,true,HaloDepth> &gauge) : SU3Accessor(gauge.getAccessor()){}
 
     __device__ __host__ floatT operator()(gSite site) {
 
         typedef GIndexer<All, HaloDepth> GInd;
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
         floatT result = 0.;
         for (int mu = 0; mu < 4; mu++) {
             gSiteMu siteMu = GInd::getSiteMu(site,mu);
-            result+=tr_d(gaugeAccessor.getLink(siteMu));
+            result+=tr_d(SU3Accessor.getLink(siteMu));
         }
         return result/4;
     }
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     const int  ngfstepMAX = 30;
     const int  nunit      = 20;
     const PREC gtol       = 1e-6;
-    const PREC tolp       = 1e-14; 
+    const PREC tolp       = 1e-14;
     param.latDim.set(LatDim);
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/gfixTestMulti.param", argc, argv);
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]) {
         GFixing.gaugefixOR();
         /// Due to the nature of the update, we have to re-unitarize every so often.
         if ( (ngfstep%nunit) == 0 ) {
-              gauge.su3latunitarize();
+            gauge.su3latunitarize();
         }
         /// Compute GF functional difference, compute theta, and report to user.
         act2   =GFixing.getAction();

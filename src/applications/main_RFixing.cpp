@@ -1,8 +1,8 @@
 
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/observables/PolyakovLoop.h"
-#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
-#include "../modules/observables/WilsonLineCorrelator.h"
+#include "../modules/observables/polyakovLoop.h"
+#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
+#include "../modules/observables/wilsonLineCorrelator.h"
 
 #include "../modules/gradientFlow/gradientFlow.h"
 
@@ -162,7 +162,7 @@ int main(int argc, char *argv[]) {
         gfR=GFixing.getR();
         rootLogger.info("R value " ,  gfR);
 
-        GCOMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
+        COMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
         rootLogger.info("# POLYAKOV LOOP :: " ,  ploop);
 
         if ( (i%nunit) == 0 ) {

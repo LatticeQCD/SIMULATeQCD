@@ -1,21 +1,19 @@
-/* 
- * neighborInfo.h                                                               
- * 
- * L. Mazur 
+/*
+ * neighborInfo.h
+ *
+ * L. Mazur
  *
  * In order to communicate, each sublattice needs to know something about his neighbors,
  * for example their rank or whether they are on the same node. (See ProcessInfo struct.)
  *
  */
 
-#ifndef NEIGHBORINFO_H
-#define NEIGHBORINFO_H
-
+#pragma once
 #include "../../define.h"
 #include <mpi.h>
 
 #include <utility>
-#include "../LatticeDimension.h"
+#include "../latticeDimension.h"
 #include "../wrapper/gpu_wrapper.h"
 
 struct ProcessInfo {
@@ -477,4 +475,3 @@ inline void NeighborInfo::checkP2P() {
 #endif
 }
 
-#endif //NEIGHBORINFO_H

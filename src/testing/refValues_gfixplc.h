@@ -1,13 +1,13 @@
-/* 
- * refValues_gfixplc.h                                                               
- * 
- * Reference values from Olaf's gauge fixing script. 
- * 
+/*
+ * refValues_gfixplc.h
+ *
+ * D. Clarke
+ *
+ * Reference values from Olaf's gauge fixing script.
+ *
  */
 
-#ifndef GFIXPLC_REFVALUES_H
-#define GFIXPLC_REFVALUES_H
-
+#pragma once
 std::vector<double> control_act {3.9531743526e-01,
                                  5.8922010660e-01,
                                  6.7953854799e-01,
@@ -435,4 +435,3 @@ std::vector<double> control_plc8 {-1.1187024938e-04,
                                    2.7376171784e-04};
 
 
-#endif //GFIXPLC_REFVALUES_H

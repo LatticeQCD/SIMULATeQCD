@@ -1,4 +1,4 @@
-/* 
+/*
  * main_createCorrelatorNorm.cpp
  *
  * D. Clarke
@@ -9,9 +9,9 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 
-#define PREC double 
+#define PREC double
 
 struct corrParam : LatticeParameters {
     Parameter<std::string>  domain;
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialization.");
     corrParam param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../test_parameter/correlatorTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/correlatorTest.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;

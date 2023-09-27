@@ -1,5 +1,9 @@
-#ifndef TESTING_H
-#define TESTING_H
+/* 
+ * testing.h                                                               
+ * 
+ */
+
+#pragma once
 
 #include "../base/gutils.h"
 #include "../base/math/floatComparison.h"
@@ -52,6 +56,4 @@ bool compare_fields(Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeL, Gauge
         return true;
     }
 }
-
-#endif
 

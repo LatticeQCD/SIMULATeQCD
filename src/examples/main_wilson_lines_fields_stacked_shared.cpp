@@ -1,11 +1,11 @@
-/* 
+/*
  * main_wilson_lines_fields_stacked_shared.cpp
- * 
+ *
  * Rasmus Larsen, 23 Mar 2021
- * 
+ *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 #include "../modules/gaugeFixing/gfix.h"
 
@@ -13,7 +13,7 @@
 using namespace std;
 
 #define PREC double
-#define STACKS 20 
+#define STACKS 20
 #define MY_BLOCKSIZE 256
 
 #define SHARED 20
@@ -22,7 +22,7 @@ template<class floatT,size_t HaloDepth,Layout LatLayout,size_t direction,bool Up
 struct ShiftVectorOne{
 
     /// Gauge accessor to access the gauge field.
-    gaugeAccessor<floatT> _gaugeIn;
+    SU3Accessor<floatT> _gaugeIn;
 
     /// Constructor to initialize all necessary members.
     ShiftVectorOne(Gaugefield<floatT,true,HaloDepth> &gaugeIn) :
@@ -35,11 +35,11 @@ struct ShiftVectorOne{
     gSite site = GInd::getSite(siteMu.isite);
 
 
-    GSU3<floatT> Stmp;
+    SU3<floatT> Stmp;
 
     // takes vector from mu=1 direction from up or down 1 and saves and returns it
     // needed since A(x).A(x+r) product is done by making a copy of A and then move it around
-    // and takes the dot product between original and moved vector    
+    // and takes the dot product between original and moved vector
     if(Up == true){
         Stmp =  _gaugeIn.getLink(GInd::getSiteMu(GInd::site_up(site, direction),1));
     }
@@ -64,7 +64,7 @@ template<class floatT,size_t HaloDepth,Layout LatLayout,size_t direction>
 struct CopyFromMu{
 
     /// Gauge accessor to access the gauge field.
-    gaugeAccessor<floatT> _gaugeIn;
+    SU3Accessor<floatT> _gaugeIn;
 
     /// Constructor to initialize all necessary members.
     CopyFromMu(Gaugefield<floatT,true,HaloDepth> &gaugeIn) :
@@ -94,17 +94,17 @@ template<class floatT,size_t HaloDepth,Layout LatLayout>
 struct DotAlongXY{
 
     /// Gauge accessor to access the gauge field.
-    gaugeAccessor<floatT> _gaugeIn;
+    SU3Accessor<floatT> _gaugeIn;
     int _shiftx;
     int _shifty;
 
     /// Constructor to initialize all necessary members.
     DotAlongXY(Gaugefield<floatT,true,HaloDepth> &gaugeIn,int shiftx,int shifty) :
-            _gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty) 
+            _gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty)
    {
     }
 
-    /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
+    /// This is the operator that is called inside the Kernel. We set the type to COMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
     __device__ __host__ auto operator()(gSite site) {
 
@@ -133,7 +133,7 @@ struct DotAlongXY{
              iy +=(int)GInd::getLatData().lyFull;
         }
 
-        GCOMPLEX(floatT) results(0.0,0.0);
+        COMPLEX(floatT) results(0.0,0.0);
 
 //        for(int tt = 0; tt < (int)GInd::getLatData().ltFull; tt += 1){
 //                results = results +  tr_c(_gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSiteFull(coords.x,coords.y, coords.z, (size_t)(it+tt)),0))
@@ -153,7 +153,7 @@ template<class floatT,size_t HaloDepth,Layout LatLayout>
 struct DotAlongXYInterval{
 
     /// Gauge accessor to access the gauge field.
-    gaugeAccessor<floatT> _gaugeIn;
+    SU3Accessor<floatT> _gaugeIn;
     int _shiftx;
     int _shifty;
 
@@ -163,7 +163,7 @@ struct DotAlongXYInterval{
    {
     }
 
-    /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
+    /// This is the operator that is called inside the Kernel. We set the type to COMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
     __device__ __host__ auto operator()(gSite site) {
 
@@ -195,7 +195,7 @@ struct DotAlongXYInterval{
              iy +=(int)GInd::getLatData().lyFull;
         }
 
-        GCOMPLEX(floatT) results(0.0,0.0);
+        COMPLEX(floatT) results(0.0,0.0);
 
 
         // loop over all t, was implemented like this, in case not all t should be used
@@ -213,7 +213,7 @@ struct DotAlongXYInterval{
 
 	}
 	else{
-		return GCOMPLEX(floatT) (0.0,0.0);
+		return COMPLEX(floatT) (0.0,0.0);
 	}
 
     }
@@ -222,7 +222,7 @@ struct DotAlongXYInterval{
 
 
 template<class floatT, size_t HaloDepth>
-GCOMPLEX(floatT) gDotAlongXY( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,GCOMPLEX(floatT)> &redBase){
+COMPLEX(floatT) gDotAlongXY( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,COMPLEX(floatT)> &redBase){
 
     typedef GIndexer<All,HaloDepth> GInd;
     /// Since we run the kernel on the spacelike volume only, elems need only be size d_vol3.
@@ -233,7 +233,7 @@ GCOMPLEX(floatT) gDotAlongXY( Gaugefield<floatT,true,HaloDepth> &gauge ,int shif
     redBase.template iterateOverSpatialBulk<All, HaloDepth>(DotAlongXYInterval<floatT,HaloDepth,All>(gauge,shiftx,shifty));
 
     /// Do the final reduction.
-    GCOMPLEX(floatT) val;
+    COMPLEX(floatT) val;
     redBase.reduce(val, elems);
 
     /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
@@ -246,14 +246,14 @@ GCOMPLEX(floatT) gDotAlongXY( Gaugefield<floatT,true,HaloDepth> &gauge ,int shif
 };
 
 template<class floatT,size_t HaloDepth,Layout LatLayout, int sharedX>
-__global__ void DotAlongXYIntervalStackedShared(MemoryAccessor _redBase, gaugeAccessor<floatT> _gaugeIn,int _shifty, const size_t size_x) {
+__global__ void DotAlongXYIntervalStackedShared(MemoryAccessor _redBase, SU3Accessor<floatT> _gaugeIn,int _shifty, const size_t size_x) {
 
     size_t site = blockDim.x * blockIdx.x + threadIdx.x;
     if (site >= size_x) {
         return;
     }
 
-    __shared__ GSU3<floatT> Links_shared[sharedX];
+    __shared__ SU3<floatT> Links_shared[sharedX];
 
     typedef GIndexer<All,HaloDepth> GInd;
 
@@ -270,7 +270,7 @@ __global__ void DotAlongXYIntervalStackedShared(MemoryAccessor _redBase, gaugeAc
         typedef GIndexer<All,HaloDepth> GInd;
 
         int ix_shift[sharedX];
-        GCOMPLEX(floatT) results[sharedX];
+        COMPLEX(floatT) results[sharedX];
 
         /// Get coordinates.
         int iy_shift=iy+_shifty;
@@ -299,10 +299,10 @@ __global__ void DotAlongXYIntervalStackedShared(MemoryAccessor _redBase, gaugeAc
 
 
         for(int tt = 0; tt < (int)GInd::getLatData().ltFull; tt += 1){
-         
 
-               GSU3<floatT> su3Temp = _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it+tt)),0));
-               Links_shared[ix]     = _gaugeIn.getLink(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy_shift, (size_t)iz, (size_t)(it+tt)),1));                     
+
+               SU3<floatT> su3Temp = _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it+tt)),0));
+               Links_shared[ix]     = _gaugeIn.getLink(GInd::getSiteMu(GInd::getSite((size_t)ix,(size_t)iy_shift, (size_t)iz, (size_t)(it+tt)),1));
 
                __syncthreads();
 
@@ -313,14 +313,14 @@ __global__ void DotAlongXYIntervalStackedShared(MemoryAccessor _redBase, gaugeAc
         }
 
         for(int j =0; j < sharedX ; j++){
-            _redBase.setValue<GCOMPLEX(floatT)>(site+j*GInd::getLatData().vol3, results[j]/3.0);
+            _redBase.setValue<COMPLEX(floatT)>(site+j*GInd::getLatData().vol3, results[j]/3.0);
         }
 
 
 }
 
 template<class floatT, size_t HaloDepth,int sharedX>
-std::vector<GCOMPLEX(floatT)> gDotAlongXYStackedShared( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,GCOMPLEX(floatT)> &redBase){
+std::vector<COMPLEX(floatT)> gDotAlongXYStackedShared( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,COMPLEX(floatT)> &redBase){
 
     typedef GIndexer<All,HaloDepth> GInd;
     /// Since we run the kernel on the spacelike volume only, elems need only be size d_vol3.
@@ -347,9 +347,9 @@ std::vector<GCOMPLEX(floatT)> gDotAlongXYStackedShared( Gaugefield<floatT,true,H
     floatT vol=GInd::getLatData().globvol4;
 
 
-    std::vector<GCOMPLEX(floatT)> result_complex;
+    std::vector<COMPLEX(floatT)> result_complex;
     redBase.reduceStacked(result_complex, sharedX, elems,false);
-    std::vector<GCOMPLEX(floatT)> result;
+    std::vector<COMPLEX(floatT)> result;
     result.resize(result_complex.size());
     for (size_t i = 0; i < result.size(); i++){
         result[i] = result_complex[i]/(vol);
@@ -364,17 +364,17 @@ struct DotAlongXYIntervalStacked{
 
     /// Gauge accessor to access the gauge field.
     MemoryAccessor _redBase;
-    gaugeAccessor<floatT> _gaugeIn;
+    SU3Accessor<floatT> _gaugeIn;
     int _shiftx;
     int _shifty;
 
     /// Constructor to initialize all necessary members.
-    DotAlongXYIntervalStacked(LatticeContainer<true,GCOMPLEX(floatT)> & redBase,Gaugefield<floatT,true,HaloDepth> &gaugeIn,int shiftx,int shifty) :
+    DotAlongXYIntervalStacked(LatticeContainer<true,COMPLEX(floatT)> & redBase,Gaugefield<floatT,true,HaloDepth> &gaugeIn,int shiftx,int shifty) :
             _redBase(redBase.getAccessor()),_gaugeIn(gaugeIn.getAccessor()),_shiftx(shiftx),_shifty(shifty)
    {
     }
 
-    /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
+    /// This is the operator that is called inside the Kernel. We set the type to COMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
     __device__ __host__ auto operator()(gSite site) {
 
@@ -385,7 +385,7 @@ struct DotAlongXYIntervalStacked{
         typedef GIndexer<All,HaloDepth> GInd;
 
         int ix[stacks];
-        GCOMPLEX(floatT) results[stacks];
+        COMPLEX(floatT) results[stacks];
 
         /// Get coordinates.
         int iy=(int)coords.y+_shifty;
@@ -419,7 +419,7 @@ struct DotAlongXYIntervalStacked{
 
         // loop over all t, was implemented like this, in case not all t should be used
         for(int tt = 0; tt < (int)GInd::getLatData().ltFull; tt += split){
-                GSU3<floatT> su3Temp = _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSiteFull(coords.x,coords.y, coords.z, (size_t)(it+tt)),0));
+                SU3<floatT> su3Temp = _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSiteFull(coords.x,coords.y, coords.z, (size_t)(it+tt)),0));
 
                for(int i =0; i < stacks ; i++){
                results[i] = results[i] +  tr_c(su3Temp
@@ -443,13 +443,13 @@ struct DotAlongXYIntervalStacked{
         }
 
         for(int i =1; i < stacks ; i++){
-            _redBase.setValue<GCOMPLEX(floatT)>(site.isite+i*GInd::getLatData().vol3, results[i]/3.0);
+            _redBase.setValue<COMPLEX(floatT)>(site.isite+i*GInd::getLatData().vol3, results[i]/3.0);
         }
         return results[0]/3.0;
 
         }
         else{
-                return GCOMPLEX(floatT) (0.0,0.0);
+                return COMPLEX(floatT) (0.0,0.0);
         }
 
     }
@@ -458,7 +458,7 @@ struct DotAlongXYIntervalStacked{
 
 
 template<class floatT, size_t HaloDepth,int stacks>
-std::vector<GCOMPLEX(floatT)> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,GCOMPLEX(floatT)> &redBase){
+std::vector<COMPLEX(floatT)> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,COMPLEX(floatT)> &redBase){
 
     typedef GIndexer<All,HaloDepth> GInd;
     /// Since we run the kernel on the spacelike volume only, elems need only be size d_vol3.
@@ -473,9 +473,9 @@ std::vector<GCOMPLEX(floatT)> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDep
     floatT vol=GInd::getLatData().globvol4;
 
 
-    std::vector<GCOMPLEX(floatT)> result_complex;
+    std::vector<COMPLEX(floatT)> result_complex;
     redBase.reduceStacked(result_complex, stacks, elems,false);
-    std::vector<GCOMPLEX(floatT)> result;
+    std::vector<COMPLEX(floatT)> result;
     result.resize(result_complex.size());
     for (size_t i = 0; i < result.size(); i++){
         result[i] = result_complex[i]/(vol);
@@ -485,22 +485,22 @@ std::vector<GCOMPLEX(floatT)> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDep
 
 
 // calculates 1 wilson line of length length
-// The wilson line is calculated from any spacetime point 
+// The wilson line is calculated from any spacetime point
 template<class floatT,size_t HaloDepth>
 struct CalcWilson{
 
     /// Gauge accessor to access the gauge field.
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> SU3Accessor;
     size_t _length;
 
     /// Constructor to initialize all necessary members.
     CalcWilson(Gaugefield<floatT,true,HaloDepth> &gauge,size_t length) :
-                                                                         gaugeAccessor(gauge.getAccessor())
+                                                                         SU3Accessor(gauge.getAccessor())
                                                                         ,_length(length)
     {
     }
 
-    /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
+    /// This is the operator that is called inside the Kernel. We set the type to COMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
     __device__ __host__ auto operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
@@ -509,8 +509,8 @@ struct CalcWilson{
 
 
         /// Define an SU(3) matrix and initialize result variable.
-        GSU3<floatT> temp;
-        GCOMPLEX(floatT) result;
+        SU3<floatT> temp;
+        COMPLEX(floatT) result;
 
         /// Extension in timelike direction. In general unsigned declarations reduce compiler warnings.
         const size_t Ntau=GInd::getLatData().lt;
@@ -523,8 +523,8 @@ struct CalcWilson{
         size_t it=coords.t;
 
         /// Start off at this site, pointing in N_tau direction.
-   //     temp=gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
-        temp=gaugeAccessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, it), 3));
+   //     temp=SU3Accessor.getLink(GInd::getSiteMu(site, 3));
+        temp=SU3Accessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, it), 3));
 
         /// Loop over N_tau direction.
         for (size_t itp = 1; itp < _length; itp++) {
@@ -532,13 +532,13 @@ struct CalcWilson{
           if(itau >= Ntau){
              itau-=Ntau;
           }
-          temp*=gaugeAccessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau), 3));
+          temp*=SU3Accessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau), 3));
         }
 
         /// tr_c is the complex trace.
 //        result = tr_c(temp);
 
-//        gaugeAccessor.setLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, it), 0));
+//        SU3Accessor.setLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, it), 0));
 
 
         return temp;
@@ -572,7 +572,7 @@ void gMoveOne( Gaugefield<floatT,true,HaloDepth> &gauge , int direction, int up)
         }
         else{
             gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,0,false>(gauge));
-        }            
+        }
     }
 
     if(direction == 1){
@@ -636,7 +636,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim());
 
-    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl; 
+    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl;
 
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
@@ -677,8 +677,8 @@ int main(int argc, char *argv[]) {
 
 
     /// Initialize ReductionBase.
-//    ReductionBase<true,GCOMPLEX(PREC)> redBase(commBase);
-    LatticeContainer<true,GCOMPLEX(PREC)> redBase(commBase);
+//    ReductionBase<true,COMPLEX(PREC)> redBase(commBase);
+    LatticeContainer<true,COMPLEX(PREC)> redBase(commBase);
 
     /// We need to tell the Reductionbase how large our array will be. Again it runs on the spacelike volume only,
     /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
@@ -689,7 +689,7 @@ int main(int argc, char *argv[]) {
  //   rootLogger.info("Read configuration");
 //    gauge.readconf_nersc("../test_conf/l328f21b6285m0009875m0790a_019.995");
 
-    
+
 //    std::string gauge_file;
 //    gauge_file = param.gauge_file() + std::to_string(param.confnumber());
 //    rootLogger.info("Starting from configuration: " ,  gauge_file);
@@ -699,7 +699,7 @@ int main(int argc, char *argv[]) {
 ///////////// gauge fixing
 
     if(param.load_conf() ==2){
-    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge); 
+    GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge);
     int ngfstep=0;
     PREC gftheta=1e10;
     const PREC gtol=1e-6;          /// When theta falls below this number, stop...
@@ -728,25 +728,25 @@ int main(int argc, char *argv[]) {
     /// Exchange Halos
     gauge.updateAll();
 
-    GCOMPLEX(PREC) dot;
+    COMPLEX(PREC) dot;
 
 ///////////////// Structures needed for comparison
 
         CorrelatorTools<PREC,true,HaloDepth> corrTools;
 
-        GCOMPLEX(PREC) corrComplex;
-        GCOMPLEX(PREC) corrComplex2;
-        GCOMPLEX(PREC) corrComplex3;
+        COMPLEX(PREC) corrComplex;
+        COMPLEX(PREC) corrComplex2;
+        COMPLEX(PREC) corrComplex3;
 
         Gaugefield<PREC,false,HaloDepth>  gaugeCPU(commBase);
 
-        gaugeAccessor<PREC> _gaugeCPU(gaugeCPU.getAccessor());
+        SU3Accessor<PREC> _gaugeCPU(gaugeCPU.getAccessor());
 
-        CorrField<false,GSU3<PREC>> CPUfield3(commBase, corrTools.vol4);
-        CorrField<false,GSU3<PREC>> CPUfield4(commBase, corrTools.vol4);
+        CorrField<false,SU3<PREC>> CPUfield3(commBase, corrTools.vol4);
+        CorrField<false,SU3<PREC>> CPUfield4(commBase, corrTools.vol4);
         Correlator<false,PREC> CPUnorm(commBase, corrTools.UAr2max);
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplex(commBase, corrTools.UAr2max);
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplexTemp(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUcorrComplex(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUcorrComplexTemp(commBase, corrTools.UAr2max);
 
         LatticeContainerAccessor _CPUfield3(CPUfield3.getAccessor());
         LatticeContainerAccessor _CPUfield4(CPUfield4.getAccessor());
@@ -754,18 +754,18 @@ int main(int argc, char *argv[]) {
         LatticeContainerAccessor _CPUcorrComplex(CPUcorrComplex.getAccessor());
         LatticeContainerAccessor _CPUcorrComplexTemp(CPUcorrComplexTemp.getAccessor());
 
-        Correlator<false,GCOMPLEX(PREC)> CPUresults(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUresults(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUresults(CPUresults.getAccessor());
-        Correlator<false,GCOMPLEX(PREC)> CPUnormR(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUnormR(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUnormR(CPUnormR.getAccessor());
 
-	
+
 ///////////////
 
-    std::vector<GCOMPLEX(PREC)> dotVector;
-    GCOMPLEX(PREC) * results;
-    results = new GCOMPLEX(PREC)[GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY];
-    ///  
+    std::vector<COMPLEX(PREC)> dotVector;
+    COMPLEX(PREC) * results;
+    results = new COMPLEX(PREC)[GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY];
+    ///
     timer.start();
     //// loop over length of wilson lines
     for(int length = 1; length < 2;length++){
@@ -825,18 +825,18 @@ int main(int argc, char *argv[]) {
                  }
                  else{
                   //   dotVector = gDotAlongXYStacked<PREC,HaloDepth,STACKS>(gauge,x0,y0,redBase);
-                     dotVector = gDotAlongXYStackedShared<PREC,HaloDepth,SHARED>(gauge,x0,y0,redBase);     
+                     dotVector = gDotAlongXYStackedShared<PREC,HaloDepth,SHARED>(gauge,x0,y0,redBase);
                      for(int j = 0;j < STACKS ; j++){
                          results[i+STACKS-1-j] = dotVector[j];
-                     } 
+                     }
                  }
             }
             else{
                  dot = gDotAlongXY(gauge,x0,0,redBase);
             }
 
-            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[0] ,  " " ,  dotVector[1]); 
-    
+            rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[0] ,  " " ,  dotVector[1]);
+
             }
 
         x0 = -1;
@@ -865,7 +865,7 @@ int main(int argc, char *argv[]) {
 
             // save results
             if(length == 1){
-                
+
 
 	        int ir2 = 0;
 	        if(x0 > (int)GInd::getLatData().globLX/2){
@@ -905,15 +905,15 @@ int main(int argc, char *argv[]) {
 		    factor = 0.5*factor;
                 }
 
-                _CPUresults.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUresults.getValue<COMPLEX(PREC)>(ir2,corrComplex);
                 corrComplex += factor*dot;
-	        _CPUresults.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+	        _CPUresults.setValue<COMPLEX(PREC)>(ir2,corrComplex);
 
 //                rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  ir2 ,  " " ,  dot ,  " " ,  corrComplex);
 
-                _CPUnormR.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUnormR.getValue<COMPLEX(PREC)>(ir2,corrComplex);
                 corrComplex += factor;
-                _CPUnormR.setValue<GCOMPLEX(PREC)>(ir2, corrComplex);
+                _CPUnormR.setValue<COMPLEX(PREC)>(ir2, corrComplex);
 
                 rootLogger.info(x0 ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dot ,  " " ,  corrComplex ,  " " ,  factor ,  " " ,  i ,  " r2 " ,  ir2);
 
@@ -940,7 +940,7 @@ int main(int argc, char *argv[]) {
 //    }
 
     for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
-        _CPUcorrComplex.setValue<GCOMPLEX(PREC)>(ir2,0.0);
+        _CPUcorrComplex.setValue<COMPLEX(PREC)>(ir2,0.0);
     }
 
 
@@ -958,13 +958,13 @@ int main(int argc, char *argv[]) {
     }
 
 
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),trAxBt<PREC>>("spatial", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplexTemp, true);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),trAxBt<PREC>>("spatial", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplexTemp, true);
 
     for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
-        _CPUcorrComplex.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-        _CPUcorrComplexTemp.getValue<GCOMPLEX(PREC)>(ir2,corrComplex2);
+        _CPUcorrComplex.getValue<COMPLEX(PREC)>(ir2,corrComplex);
+        _CPUcorrComplexTemp.getValue<COMPLEX(PREC)>(ir2,corrComplex2);
         corrComplex = corrComplex + corrComplex2;
-        _CPUcorrComplex.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+        _CPUcorrComplex.setValue<COMPLEX(PREC)>(ir2,corrComplex);
     }
 
     }
@@ -972,14 +972,14 @@ int main(int argc, char *argv[]) {
     double difference = 0.0;
     for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
 
-        _CPUcorrComplex.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-        _CPUresults.getValue<GCOMPLEX(PREC)>(ir2,corrComplex2);
-        _CPUnormR.getValue<GCOMPLEX(PREC)>(ir2,corrComplex3);
+        _CPUcorrComplex.getValue<COMPLEX(PREC)>(ir2,corrComplex);
+        _CPUresults.getValue<COMPLEX(PREC)>(ir2,corrComplex2);
+        _CPUnormR.getValue<COMPLEX(PREC)>(ir2,corrComplex3);
 	if(real(corrComplex3) > 0.1){
 	    corrComplex2 = corrComplex2/real(corrComplex3);
 	}
 
-    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));            
+    	rootLogger.info(ir2 ,  " " ,  corrComplex/3.0/GInd::getLatData().globLT ,  " , " ,  corrComplex2 ,  "    " ,  real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2) ,  "   Norm " ,  real(corrComplex3));
     difference += abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2));
     if(abs(real(corrComplex/3.0/GInd::getLatData().globLT - corrComplex2)) > 1e-10){
 	   rootLogger.info(" Error, large difference");

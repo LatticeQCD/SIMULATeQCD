@@ -73,17 +73,17 @@ void HypSmearing<floatT, onDevice, HaloDepth, comp>::SmearAll(Gaugefield<floatT,
 
     // now that we have level 2 fields, create level 3 staple
     HypStaple<floatT, HaloDepth, comp, 1> staple3_lvl3(_gauge_lvl2_0.getAccessor(), _gauge_lvl2_1.getAccessor(), _gauge_lvl2_2.getAccessor(), _gauge_lvl2_3.getAccessor());
- 
+
     _dummy.iterateOverBulkAllMu(staple3_lvl3);
 
     // OLD VERSION, (MAYBE) DOES NOT WORK FOR SOME REASON
     //_gauge_lvl2_0 = (1-params.alpha_1) * _gauge_base + params.alpha_1/6 * _dummy; //reused _gauge_lvl2_0
     //Su3Unitarize(_gauge_lvl2_0);
-    
+
     // NEW VERSION, USES EXTRA FIELD RATHER THAN REUSE _gauge_lvl2_0
     gauge_out = (1-params.alpha_1) * _gauge_base + params.alpha_1/6 * _dummy; //reused _gauge_lvl2_0
     Su3Unitarize(gauge_out, _gauge_base);
-    
+
 }
 
 #define CLASS_INIT(floatT,HALO) \

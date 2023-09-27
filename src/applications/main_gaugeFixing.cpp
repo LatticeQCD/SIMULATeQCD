@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gaugeFixing.cpp
  *
  * D. Clarke
@@ -14,11 +14,11 @@
  */
 
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/observables/PolyakovLoop.h"
-#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
-#include "../modules/observables/WilsonLineCorrelator.h"
+#include "../modules/observables/polyakovLoop.h"
+#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
+#include "../modules/observables/wilsonLineCorrelator.h"
 
-#define PREC double 
+#define PREC double
 
 template<class floatT>
 struct gfixParam : LatticeParameters {
@@ -119,14 +119,14 @@ int main(int argc, char *argv[]) {
         wlcresultfile.open(wlcfilename.str());
         rootLogger.info("WilsonLineCorr OUTPUT TO FILE: " ,  wlcfilename.str());
     }
- 
+
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
     rootLogger.info("Read configuration");
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
     /// Measure the Polyakov loop and report to user.
-    GCOMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
+    COMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
     rootLogger.info("# POLYAKOV LOOP :: " ,  ploop);
 
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING

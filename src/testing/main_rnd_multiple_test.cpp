@@ -1,11 +1,11 @@
-/* 
- * main_rnd_multiple_test.cpp                                                               
- * 
+/*
+ * main_rnd_multiple_test.cpp
+ *
  * P. Scior
- * 
+ *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 std::ostream& operator<< (std::ostream &out, const uint4 &rand){
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     int NodeDim[] = {2, 1, 1, 1};
     const int HaloDepth = 0;
     bool lerror=false;
-    
+
     param.latDim.set(LatDim);
     param.nodeDim.set(NodeDim);
 

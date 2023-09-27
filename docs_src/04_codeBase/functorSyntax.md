@@ -8,7 +8,7 @@ iterate an arbitrary operation that depends on arbitrary arguments over an arbit
 For example a common task needed in lattice calculations is to iterate a plaquette
 calculation, which depends on the `Gaugefield`, over all space-time points.
 This operation is a _functor_ and the iterating method is an _iterator_,
-which together comprise _functor syntax_. 
+which together comprise _functor syntax_.
 
 Each functor is implemented as a `struct`. One passes the arguments of the functor
 when initializing the `struct`. The argument over which the functor should
@@ -22,7 +22,7 @@ to the `operator()`. The class also contains several
 these objects to GPU thread indices.
 
 There are many thorough examples on how to use functor syntax in
-`src/testing/main_GeneralFunctorTest.cpp`. One example functor implementation
+`src/testing/main_generalFunctorTest.cpp`. One example functor implementation
 for the plaquette is shown below:
 ```C++
 //! Functor to compute the plaquette given a gSite. It is called in a Kernel that is already defined by templates.
@@ -42,7 +42,7 @@ struct SimplePlaq {
     __host__ __device__ floatT operator()(gSite site) {
         typedef GIndexer<All, HaloDepth> GInd;
 
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
         floatT result = 0;
 
         for (int nu = 1; nu < 4; nu++) {

@@ -10,5 +10,5 @@ quenched.md
 gaugeFixing.md
 gradientFlow.md
 multiLevel.md
-RHMC.md
+rhmc.md
 ```

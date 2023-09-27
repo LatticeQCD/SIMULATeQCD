@@ -2,7 +2,7 @@
  * pure_gauge_hmc.cu
  *
  * P. Scior
- * 
+ *
  */
 
 #include "pure_gauge_hmc.h"
@@ -41,7 +41,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update(bool metro, b
 
     //get oldaction
     floatT old_hamiltonian = get_Hamiltonian(energy_dens_old);
-    
+
     pure_gauge_integrator<floatT, true, HaloDepth, comp> integrator(_rhmc_param, _gaugeField, _p);
 
     //do leapfrog
@@ -102,7 +102,7 @@ void pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::generate_const_mome
 template<class floatT, size_t HaloDepth>
 struct get_momenta
 {
-    gaugeAccessor<floatT> pAccessor;
+    SU3Accessor<floatT> pAccessor;
 
     get_momenta(Gaugefield<floatT,true,HaloDepth> &p) : pAccessor(p.getAccessor()) {
     }
@@ -138,7 +138,7 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
     redBase.template iterateOverBulk<All, HaloDepth>(get_momenta<floatT, HaloDepth>(_p));
     redBase2.template iterateOverBulk<All, HaloDepth>(plaquetteKernel<floatT, true, HaloDepth,comp>(_gaugeField));
     redBase3.template iterateOverBulk<All, HaloDepth>(rectangleKernel<floatT, true, HaloDepth,comp>(_gaugeField));
-    redBase2.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(redBase2, redBase3, 5.0/3.0 , -1.0/12.0)); 
+    redBase2.template iterateOverBulk<All, HaloDepth>(add_f_r_f_r<true, floatT>(redBase2, redBase3, 5.0/3.0 , -1.0/12.0));
 
     floatT beta = _rhmc_param.beta() *3.0/5.0;
 
@@ -148,11 +148,11 @@ floatT pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::get_Hamiltonian(L
 
 
     GaugeAction<floatT, true, HaloDepth, comp> gaugeaction(_gaugeField);
-    gaugeact = - _rhmc_param.beta() * gaugeaction.symanzik(); 
+    gaugeact = - _rhmc_param.beta() * gaugeaction.symanzik();
 
     floatT hamiltonian = 0.5 *momenta;
 
-    hamiltonian+= gaugeact; 
+    hamiltonian+= gaugeact;
 
     rootLogger.info("momenta = " ,  0.5 *momenta ,  " glue = " ,  gaugeact);
 
@@ -197,7 +197,7 @@ int pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::update_test(){
 
     //get oldaction
     floatT old_hamiltonian = get_Hamiltonian(energy_dens_old);
-    
+
     //do leapfrog
     pure_gauge_integrator<floatT,true,HaloDepth, comp> integrator(_rhmc_param, _gaugeField, _p);
 

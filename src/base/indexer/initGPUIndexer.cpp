@@ -1,13 +1,13 @@
-/* 
- * initGPUIndexer.cpp                                                               
- * 
- * L. Mazur 
- * 
+/*
+ * initGPUIndexer.cpp
+ *
+ * L. Mazur
+ *
  */
 
 #include "../../define.h"
-#include "BulkIndexer.h"
-#include "../indexer/HaloIndexer.h"
+#include "bulkIndexer.h"
+#include "../indexer/haloIndexer.h"
 
 
 __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO+1];

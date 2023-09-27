@@ -1,8 +1,8 @@
 
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/observables/PolyakovLoop.h"
-#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
-#include "../modules/observables/WilsonLineCorrelator.h"
+#include "../modules/observables/polyakovLoop.h"
+#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
+#include "../modules/observables/wilsonLineCorrelator.h"
 
 #include "../modules/gradientFlow/gradientFlow.h"
 
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialization");
     CommunicationBase commBase(&argc, &argv);
     gfixParam<PREC> param;
-    param.readfile(commBase, "../parameter/applications/gaugeFixing.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/gaugeRFixing.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;
@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
     PREC gfR=GFixing.getR();
     PREC gfR_old = -10.0;
     rootLogger.info("R value " ,  gfR);
-    GCOMPLEX(PREC) ploop;
+    COMPLEX(PREC) ploop;
     for( int i = 0; i < param.maxgfsteps(); i++){
         GFixing.gaugefixR();
 
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info( "gauge fixed R value = ",  gfR);
     rootLogger.info( "R-Known = ",  gfR -0.55058481056 );
 
-    GCOMPLEX(PREC) knownP(0.00763441102254,-0.00256865111872);
+    COMPLEX(PREC) knownP(0.00763441102254,-0.00256865111872);
     rootLogger.info( "P-Known = ",  ploop - knownP); 
 
     bool lerror = false;

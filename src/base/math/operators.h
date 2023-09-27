@@ -1,13 +1,7 @@
-#ifndef OPERAIndexOR_H
-#define OPERAIndexOR_H
-
-#include <type_traits>
-#include "gcomplex.h"
-#include "gsu3.h"
-#include "gvect3.h"
-#include "../indexer/BulkIndexer.h"
-
-/*! Using the syntax below stuff like this is possible:
+/* 
+ * operators.h
+ *
+ * Using the syntax below stuff like this is possible:
  *   Spinor a, b, c, d
  *   Spinor a = b*c + d;
  * The way this works is the following: Instead of actually performing the operations + and *, they only return an
@@ -16,6 +10,14 @@
  * (=) of the spinor. This is done by calling a kernel, which takes the operator object as right hand side object.
  * Inside this kernel the operation is then executed.
  */
+
+#pragma once
+
+#include <type_traits>
+#include "complex.h"
+#include "su3.h"
+#include "vect3.h"
+#include "../indexer/bulkIndexer.h"
 enum Operation {
     add, subtract, mult, divide
 };
@@ -516,15 +518,15 @@ auto operator/(const GeneralOperator<typeLHS1, typeRHS1, op1> &lhs,
 
 template<typename inputType>
 using isAllowedType = typename std::enable_if<custom_is_scalar<inputType>::value
-                                              || std::is_same<inputType, GCOMPLEX(__half)>::value
-                                              || std::is_same<inputType, GCOMPLEX(float)>::value
-                                              || std::is_same<inputType, GCOMPLEX(double)>::value
-                                              || std::is_same<inputType, GSU3<__half> >::value
-                                              || std::is_same<inputType, GSU3<float> >::value
-                                              || std::is_same<inputType, GSU3<double> >::value
-                                              || std::is_same<inputType, gVect3<__half> >::value
-                                              || std::is_same<inputType, gVect3<float> >::value
-                                              || std::is_same<inputType, gVect3<double> >::value, inputType>::type;
+                                              || std::is_same<inputType, COMPLEX(__half)>::value
+                                              || std::is_same<inputType, COMPLEX(float)>::value
+                                              || std::is_same<inputType, COMPLEX(double)>::value
+                                              || std::is_same<inputType, SU3<__half> >::value
+                                              || std::is_same<inputType, SU3<float> >::value
+                                              || std::is_same<inputType, SU3<double> >::value
+                                              || std::is_same<inputType, Vect3<__half> >::value
+                                              || std::is_same<inputType, Vect3<float> >::value
+                                              || std::is_same<inputType, Vect3<double> >::value, inputType>::type;
 
 
 template<typename typeLHS1, typename typeRHS1, Operation op1, typename typeRHS>
@@ -602,5 +604,3 @@ operator/(const typeLHS lhs, const GeneralOperator<typeLHS1, typeRHS1, op1> &rhs
     return GeneralOperator<typeLHS, GeneralOperator<typeLHS1, typeRHS1, op1>, divide>(lhs, rhs);
 }
 
-
-#endif

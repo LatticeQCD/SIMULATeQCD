@@ -4,14 +4,14 @@
 
 After creating your own executable, maybe you want to use an input file with some parameters.
 In order to to that, create an input file in `SIMULATeQCD/parameter` with the name:
-``` 
+```
 <custom_name>.param
 ```
-Some examples can be find directly in that directory. If you are interested in a very basic input file, you can use 
-the following set: this one uses, for example, a lattice $20^4$ and a test configuration. 
+Some examples can be find directly in that directory. If you are interested in a very basic input file, you can use
+the following set: this one uses, for example, a lattice $20^4$ and a test configuration.
 
 ```shell
-# This is pre-defined in LatticeParameters in src/base/LatticeParameters.h
+# This is pre-defined in LatticeParameters in src/base/latticeParameters.h
 
 #add the lattice dimensions
 Lattice = 20 20 20 20
@@ -39,7 +39,7 @@ endianness = auto
 
 ```
 
-Once you have created your own input file, you have to modify your source code in the following way. 
+Once you have created your own input file, you have to modify your source code in the following way.
 First of all define an object of a parameter class. If you need only basic input parameter you can use, for example:
 ```C++
 LatticeParameters <YourParameterObject>;
@@ -51,24 +51,24 @@ Then, when you need to read the input file use the following command:
 ```
 
 Where `argc` and `argv` are the input parameter of your main function.
-If you write the .param file in the right directory, indeed, when you compile your executable, this is copied 
+If you write the .param file in the right directory, indeed, when you compile your executable, this is copied
 in `<YourBuildDirectory>/parameter`. Then, go in your build directory, create a new run directory and then launch your
-executable, without input parameter. Notice that your executable is in `<YourBuildDirectory>/<MeaningfulDirectory>`. 
+executable, without input parameter. Notice that your executable is in `<YourBuildDirectory>/<MeaningfulDirectory>`.
 Then, the path `../parameter/<YourInputFile>.param` exists and it is always correct.
 
 ## RhmcParameters
 
-There is also a class with all the necessary parameters for the RHMC updates. Generate an object with
+There is also a class with all the necessary parameters for the rhmc updates. Generate an object with
 ```C++
 RhmcParameters <YourRhmcParameterObject>;
 ```
-This class inherits from the `LatticeParameters` class, so basically everything works like for the `LatticeParameters` 
+This class inherits from the `LatticeParameters` class, so basically everything works like for the `LatticeParameters`
 class. A typical .param file should look like this:
 ```shell
 #
 # rhmc.param
 #
-# Parameter file for RHMC runs with HISQ.
+# Parameter file for rhmc runs with HISQ.
 #
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
@@ -89,7 +89,7 @@ class. A typical .param file should look like this:
 #    rand_file: file name for random numbers and infos
 #         seed: myseed
 #    load_conf: flag_load (0=identity, 1=random, 2=getconf)
-#   gauge_file: prefix for the gauge configuration's file name 
+#   gauge_file: prefix for the gauge configuration's file name
 #      conf_nr: configuration number
 #   no_updates: number of updates
 #  write_every: write out configuration every
@@ -141,9 +141,9 @@ or 2) use the syntax for arrays like in the `LatticeParameter` class:
 r_inv_1f_const = 9.17375410974739
 r_inv_1f_num = -1.29980743171857e-05 -5.96418051684967e-05 -1.84191327855302e-04 -5.11036492922649e-04 -1.36684253994444e-03 -3.61063551029741e-03 -9.53178316015436e-03 -2.54008994145594e-02 -6.93286757511966e-02 -1.99112173338843e-01 -6.35953935299528e-01 -2.55301677256660 -17.69834374752580 -797.12863440290698
 ```
-However you like, the file has to contain the following keys: 
+However you like, the file has to contain the following keys:
 ```C++
-r_inv_1f_const, r_inv_1f_num, r_inv_1f_den, 
+r_inv_1f_const, r_inv_1f_num, r_inv_1f_den,
 r_inv_2f_const, r_inv_2f_num, r_inv_2f_den,
 r_1f_const, r_1f_num, r_1f_den,
 r_2f_const, r_2f_num, r_2f_den,
@@ -157,10 +157,10 @@ CAVE: The rhmc class assumes that r_1f, r_2f, r_inv_1f and r_inv_2f are of the s
 ## Using your own Parameter Class
 
 If you need more parameters that they are not in the `LatticeParameters` class, consider to create your own parameter class.
-Some example of how to construct an input parameter class can be found in `main_gradientFlow.cpp`, in particular see 
-the `gradientFlowParam` class. 
+Some example of how to construct an input parameter class can be found in `main_gradientFlow.cpp`, in particular see
+the `gradientFlowParam` class.
 
-In your executable file define something like that, for each parameter that you need (see the example above). Notice that the 
+In your executable file define something like that, for each parameter that you need (see the example above). Notice that the
 capital words are the one that you have to change:
 
 ```C++
@@ -181,15 +181,15 @@ struct YOUROWNCLASS : LatticeParameters {
 };
 ```
 
-Your class should inherit from `LatticeParameters`, where there are the parameters explained in 
-the previous section. In the code above `TYPE` is the variable type of your 
-parameter (`float, std::string`...). If you want to write an array of parameters, 
-than put the `DIMENSION` in the second term of the template input variables. 
-Of course you have to modify accordingly your input file, adding a new line in the 
+Your class should inherit from `LatticeParameters`, where there are the parameters explained in
+the previous section. In the code above `TYPE` is the variable type of your
+parameter (`float, std::string`...). If you want to write an array of parameters,
+than put the `DIMENSION` in the second term of the template input variables.
+Of course you have to modify accordingly your input file, adding a new line in the
 example written in the first section. If you want to add an array of parameters, you
 should separate the elements with a space, as `"Lattice = 20 20 20 20"` in the first example.
-In the constructor of `YOUROWNCLASS` for each new parameter you should call `add` or `addDefault`. 
-This function set the name of the parameter inside the class. If you want to put a default value of 
+In the constructor of `YOUROWNCLASS` for each new parameter you should call `add` or `addDefault`.
+This function set the name of the parameter inside the class. If you want to put a default value of
 the new parameter, just use `addDefault`, with a third argument that is the default value.
 
 Than, in your main function just declare your new parameter object, in the usual way:

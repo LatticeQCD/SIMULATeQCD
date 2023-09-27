@@ -1,8 +1,8 @@
-# 
-# hisqSmearingTest.param                                                               
-# 
-#    Lattice: Nx Ny Nz Nt
-#      Nodes: Number of sublattices per direction 
 #
-Lattice    = 8  8  8  4 
+# hisqSmearingTest.param
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of sublattices per direction
+#
+Lattice    = 8  8  8  4
 Nodes      = 1  1  1  1

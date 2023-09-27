@@ -5,12 +5,13 @@
  * 
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
+#include "../simulateqcd.h"
+#include "../modules/observables/wilsonLineCorrelatorMultiGPU.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 
-#include <iostream>
-using namespace std;
+
+//#include <iostream>
+//using namespace std;
 
 #define PREC double
 #define STACKS 32 

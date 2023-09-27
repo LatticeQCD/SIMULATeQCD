@@ -1,13 +1,13 @@
-/* 
- * main_confReadWriteTest.cu                                                               
- * 
+/*
+ * main_confReadWriteTest.cu
+ *
  * Test to check whether that the NERSC and ILDG read/write as well as the MILC read work correctly.
- * 
- * M. Rodekamp, S. Ali, D. Clarke 
- * 
+ *
+ * M. Rodekamp, S. Ali, D. Clarke
+ *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "testing.h"
 
 #define PREC double
@@ -52,12 +52,15 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Try reading QUDA configuration...");
     gauge.readconf_ildg("../test_conf/ildg.l8t4b3360_QUDA");
 
+    rootLogger.info("Try OPENQCD read...");
+    gauge.readconf_openqcd("../test_conf/openQCD.l4t4b12.0k0.125csw1.13295");
+
     if(!pass) {
 		rootLogger.error("Binaries are not equal.");
         return -1;
 	} else {
 		rootLogger.info(CoutColors::green , "All tests passed!", CoutColors::reset);
     }
-   
+
     return 0;
 }

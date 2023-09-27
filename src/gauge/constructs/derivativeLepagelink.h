@@ -1,15 +1,19 @@
-//created by Dennis on 02.11.18
+/*
+ * derivativeLepagelink.h
+ *
+ * D. Bollweg
+ *
+ */
 
-#ifndef DERIVATIVE_LEPAGE_H
-#define DERIVATIVE_LEPAGE_H
+#pragma once
 
-#include "../../base/indexer/BulkIndexer.h"
-#include "../../base/math/gaugeAccessor.h"
+#include "../../base/indexer/bulkIndexer.h"
+#include "../../base/math/su3Accessor.h"
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-__host__ __device__ GSU3<floatT> linkDerivativeLepage(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, int nu) {
+__host__ __device__ SU3<floatT> linkDerivativeLepage(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    GSU3<floatT> temp;
+    SU3<floatT> temp;
     gSite origin = site;
     gSite up = GInd::site_up(site,nu);
     gSite down = GInd::site_dn(site,nu);
@@ -99,4 +103,3 @@ __host__ __device__ GSU3<floatT> linkDerivativeLepage(gaugeAccessor<floatT,compI
     return temp;
 }
 
-#endif // DERIVATIVE_LEPAGE_H

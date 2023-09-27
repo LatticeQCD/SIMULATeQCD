@@ -1,15 +1,15 @@
-/* 
- * latticeParameters.h                                                               
- * 
- * Contains basic parameters common to all types of lattice calculation. 
- * 
+/*
+ * latticeParameters.h
+ *
+ * Contains basic parameters common to all types of lattice calculation.
+ *
  */
 
 #pragma once
 #include <string>
 #include "../base/communication/communicationBase.h"
 #include "IO/parameterManagement.h"
-#include "LatticeDimension.h"
+#include "latticeDimension.h"
 
 
 class LatticeParameters : virtual public ParameterList {
@@ -58,9 +58,9 @@ public:
 
         addOptional(ILDGconfAuthor,      "ILDGconfAuthor");
         addOptional(ILDGauthorInstitute, "ILDGauthorInstitute");
-        addOptional(ILDGmachineType,     "ILDGmachineType"); 
-        addOptional(ILDGmachineName,     "ILDGmachineName"); 
-        addOptional(ILDGmachineInstitute,"ILDGmachineInstitute"); 
+        addOptional(ILDGmachineType,     "ILDGmachineType");
+        addOptional(ILDGmachineName,     "ILDGmachineName");
+        addOptional(ILDGmachineInstitute,"ILDGmachineInstitute");
         addOptional(ILDGcollaboration,   "ILDGcollaboration");
         addOptional(ILDGprojectName,     "ILDGprojectName");
     }
@@ -87,7 +87,7 @@ public:
     virtual std::string fileExt() const {
         std::stringstream fext;
         fext.fill('0');
-        fext << ensembleExt(); 
+        fext << ensembleExt();
         if (streamName.isSet())
             fext << "_" << streamName();
         if (confnumber.isSet())

@@ -1,11 +1,15 @@
-#ifndef DSLASH_H
-#define DSLASH_H
+/*
+ * dslash.h
+ *
+ */
+
+#pragma once
 
 #include "../inverter/inverter.h"
 
 #define C_1000 (0.5)
 
-//! Abstract base class for all kind of Dslash operators that shall enter the inversion
+//! Abstract base class for all kinds of Dslash operators that shall enter the inversion
 template<typename SpinorLHS_t, typename SpinorRHS_t>
 class DSlash : public LinearOperator<SpinorRHS_t> {
 public:
@@ -17,14 +21,14 @@ public:
     virtual void applyMdaggM(SpinorRHS_t &, const SpinorRHS_t &, bool update = true) = 0;
 };
 
-//! HisqDslash
 
+//! HisqDslash
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct HisqDslashFunctor {
 
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
     floatT _c_3000;
 
     template<bool onDevice, size_t NStacks>
@@ -38,18 +42,81 @@ struct HisqDslashFunctor {
 
     __device__ __host__ inline auto operator()(gSiteStack site) const;
 
+    __host__ __device__ void initialize(__attribute__((unused)) gSite site) {};
+
+    auto getAccessor() const {
+        return *this;
+    }
+};
+
+
+template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+struct HisqDslashThreadRHSFunctor {
+
+    Vect3arrayAcc<floatT> _spinorOut;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
+    floatT _c_3000;
+
+    template<bool onDevice>
+    HisqDslashThreadRHSFunctor(
+        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> &spinorOut,
+        const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+        Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
+        Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
+        _spinorOut(spinorOut.getAccessor()), 
+        _spinorIn(spinorIn.getAccessor()),
+        _gAcc_smeared(gauge_smeared.getAccessor()),
+        _gAcc_Naik(gauge_Naik.getAccessor()),
+        _c_3000(c_3000) {}
+
+    __device__ __host__ inline void operator()(gSite site);
+
+    auto getAccessor() const {
+        return *this;
+    }  
+};
+
+template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_cached>
+struct HisqDslashStackedFunctor {
+
+    Vect3arrayAcc<floatT> _spinorOut;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
+    
+    
+
+    floatT _c_3000;
+
+    HisqDslashStackedFunctor(
+        Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cached> &spinorOut,
+        const Spinorfield<floatT,onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cached> &spinorIn,
+            Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
+            Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, floatT c_3000) :
+            _spinorOut(spinorOut.getAccessor()),
+            _spinorIn(spinorIn.getAccessor()),
+            _gAcc_smeared(gauge_smeared.getAccessor()),
+            _gAcc_Naik(gauge_Naik.getAccessor()), _c_3000(c_3000) {}
+
+    __device__ __host__ inline void operator()(gSiteStack site);
+
+
+    
     auto getAccessor() const {
         return *this;
     }
 
+    
 };
 
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct HisqMdaggMFunctor {
-    gVect3arrayAcc<floatT> _spinorTmp;
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R18> _gAcc_smeared;
-    gaugeAccessor<floatT, U3R14> _gAcc_Naik;
+    Vect3arrayAcc<floatT> _spinorTmp;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R18> _gAcc_smeared;
+    SU3Accessor<floatT, U3R14> _gAcc_Naik;
     floatT _mass2;
     floatT _c_3000;
 
@@ -60,8 +127,8 @@ struct HisqMdaggMFunctor {
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik,
             floatT mass2, floatT c_3000) :
-            _spinorIn(spinorIn.getAccessor()),
             _spinorTmp(spinorTmp.getAccessor()),
+            _spinorIn(spinorIn.getAccessor()),
             _gAcc_smeared(gauge_smeared.getAccessor()),
             _gAcc_Naik(gauge_Naik.getAccessor()),
             _mass2(mass2),
@@ -100,12 +167,18 @@ public:
     //! Does not use the mass
     virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
+    virtual void Dslash_threadRHS(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
+
+    template<size_t NStacks_cached>
+    void Dslash_stacked(Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks*NStacks_cached> &lhs, const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks*NStacks_cached>& rhs, bool update = false);
+
     //! Includes the mass term
     virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
 
     template<Layout LatLayout>
     HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
     getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> &rhs);
+
 
 };
 
@@ -153,8 +226,8 @@ public:
 template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct stdStagDslashFunctor {
 
-    gVect3arrayAcc<floatT> _spinorIn;
-    gaugeAccessor<floatT, R14> _gAcc;
+    Vect3arrayAcc<floatT> _spinorIn;
+    SU3Accessor<floatT, R14> _gAcc;
 
     template<bool onDevice, size_t NStacks>
     stdStagDslashFunctor(
@@ -210,4 +283,3 @@ public:
 
 };
 
-#endif

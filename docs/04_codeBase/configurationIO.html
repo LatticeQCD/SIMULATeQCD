@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Input and output formats for gauge configurations &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,14 +13,17 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -74,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="codeBase.html">Code base</a> &raquo;</li>
-      <li>Input and output formats for gauge configurations</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="codeBase.html">Code base</a></li>
+      <li class="breadcrumb-item active">Input and output formats for gauge configurations</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/configurationIO.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -86,8 +93,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="input-and-output-formats-for-gauge-configurations">
-<h1>Input and output formats for gauge configurations<a class="headerlink" href="#input-and-output-formats-for-gauge-configurations" title="Permalink to this headline"></a></h1>
+  <section id="input-and-output-formats-for-gauge-configurations">
+<h1>Input and output formats for gauge configurations<a class="headerlink" href="#input-and-output-formats-for-gauge-configurations" title="Link to this heading"></a></h1>
 <p>In lattice QCD calculations, there are several popular gauge configuration formats on the market.
 These can differ in several ways, including how their header is implemented and how the to-be-saved
 <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> object is converted to binary. When deciding between ILDG and NERSC, note that
@@ -95,9 +102,9 @@ the ILDG takes up more storage space, since it’s not compressed. The benefit o
 it has more informative metadata and it allows one to store configurations on the Lattice
 Data Grid.</p>
 <section id="ildg">
-<h2>ILDG<a class="headerlink" href="#ildg" title="Permalink to this headline"></a></h2>
+<h2>ILDG<a class="headerlink" href="#ildg" title="Link to this heading"></a></h2>
 <p>The International Lattice Data Grid (ILDG) format has two main advantages, namely:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>The ILDG is the largest attempt by the lattice community to make gauge configurations
 generated by groups around the world publicly available, and we strive to be part of that
 community. If we would like to use their storage, we need to adhere to their format.</p></li>
@@ -108,7 +115,7 @@ lattice community. More information about the ILDG effort can be found
 <a class="reference external" href="https://www.sciencedirect.com/science/article/abs/pii/S0010465511000476">this</a> ILDG publication.</p></li>
 </ol>
 <section id="how-an-ildg-configuration-is-packaged">
-<h3>How an ILDG configuration is packaged<a class="headerlink" href="#how-an-ildg-configuration-is-packaged" title="Permalink to this headline"></a></h3>
+<h3>How an ILDG configuration is packaged<a class="headerlink" href="#how-an-ildg-configuration-is-packaged" title="Link to this heading"></a></h3>
 <p>A file saved in ILDG format format consists of several parts packaged using the
 Lattice QCD Interchange Message
 Encapsulation (LIME) format. (You can learn more about LIME below.)
@@ -122,13 +129,13 @@ LIME files as four records, each containing a single message.</p></li>
 <p>The <code class="docutils literal notranslate"><span class="pre">ildg-format</span></code> record is an XML document with some set of non-mutable parameters needed to
 read the binary. Here is an example:</p>
 <div class="highlight-XML notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
-<span class="nt">&lt;ildgFormat</span> <span class="na">xmlns=</span><span class="s">&quot;http://www.lqcd.org/ildg&quot;</span>
-            <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
-            <span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.lqcd.org/ildg/filefmt.xsd&quot;</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;version&gt;</span> 1.0 <span class="nt">&lt;/version&gt;</span>
-  <span class="nt">&lt;field&gt;</span> su3gauge <span class="nt">&lt;/field&gt;</span>
-  <span class="nt">&lt;precision&gt;</span> 32 <span class="nt">&lt;/precision&gt;</span>
-  <span class="nt">&lt;lx&gt;</span> 20 <span class="nt">&lt;/lx&gt;</span> <span class="nt">&lt;ly&gt;</span> 20 <span class="nt">&lt;/ly&gt;</span> <span class="nt">&lt;lz&gt;</span> 20 <span class="nt">&lt;/lz&gt;</span> <span class="nt">&lt;lt&gt;</span> 64 <span class="nt">&lt;/lt&gt;</span>
+<span class="nt">&lt;ildgFormat</span><span class="w"> </span><span class="na">xmlns=</span><span class="s">&quot;http://www.lqcd.org/ildg&quot;</span>
+<span class="w">            </span><span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+<span class="w">            </span><span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.lqcd.org/ildg/filefmt.xsd&quot;</span><span class="nt">&gt;</span>
+<span class="w">  </span><span class="nt">&lt;version&gt;</span><span class="w"> </span>1.0<span class="w"> </span><span class="nt">&lt;/version&gt;</span>
+<span class="w">  </span><span class="nt">&lt;field&gt;</span><span class="w"> </span>su3gauge<span class="w"> </span><span class="nt">&lt;/field&gt;</span>
+<span class="w">  </span><span class="nt">&lt;precision&gt;</span><span class="w"> </span>32<span class="w"> </span><span class="nt">&lt;/precision&gt;</span>
+<span class="w">  </span><span class="nt">&lt;lx&gt;</span><span class="w"> </span>20<span class="w"> </span><span class="nt">&lt;/lx&gt;</span><span class="w"> </span><span class="nt">&lt;ly&gt;</span><span class="w"> </span>20<span class="w"> </span><span class="nt">&lt;/ly&gt;</span><span class="w"> </span><span class="nt">&lt;lz&gt;</span><span class="w"> </span>20<span class="w"> </span><span class="nt">&lt;/lz&gt;</span><span class="w"> </span><span class="nt">&lt;lt&gt;</span><span class="w"> </span>64<span class="w"> </span><span class="nt">&lt;/lt&gt;</span>
 <span class="nt">&lt;/ildgFormat&gt;</span>
 </pre></div>
 </div>
@@ -136,20 +143,20 @@ read the binary. Here is an example:</p>
 point numbers. The precision is given in the <code class="docutils literal notranslate"><span class="pre">ildg-format</span></code> record. The endianness is big.
 In this format a <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> is stored as an 8 (or 7) dimensional array of floating point
 (or complex) numbers. The dimensions ordered from slowest to fastest running index are</p>
-<ol class="simple">
-<li><p>site index <span class="math notranslate nohighlight">\(t\)</span></p></li>
-<li><p>site index <span class="math notranslate nohighlight">\(z\)</span></p></li>
-<li><p>site index <span class="math notranslate nohighlight">\(y\)</span></p></li>
-<li><p>site index <span class="math notranslate nohighlight">\(x\)</span></p></li>
-<li><p>direction index <span class="math notranslate nohighlight">\(\mu\)</span></p></li>
-<li><p>color index <span class="math notranslate nohighlight">\(a\)</span></p></li>
-<li><p>color index <span class="math notranslate nohighlight">\(b\)</span></p></li>
+<ol class="arabic simple">
+<li><p>site index $t$</p></li>
+<li><p>site index $z$</p></li>
+<li><p>site index $y$</p></li>
+<li><p>site index $x$</p></li>
+<li><p>direction index $\mu$</p></li>
+<li><p>color index $a$</p></li>
+<li><p>color index $b$</p></li>
 <li><p>index indicating real (0) or imaginary (1) part</p></li>
 </ol>
 <p>The next record is a <code class="docutils literal notranslate"><span class="pre">ildg-data-lfn</span></code> record. When the configuration is uploaded somewhere,
 the Logical File Name (LFN) is the string used to identify it. The ILDG standard for
 constructing LFNs is</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LFN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mc://ldg/&quot;</span><span class="o">+</span><span class="n">collaborationName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">projectName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">ensembleName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">fileName</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LFN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mc://ldg/&quot;</span><span class="o">+</span><span class="n">collaborationName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">projectName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">ensembleName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">fileName</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Therefore this is how we construct it automatically in SIMULATeQCD.</p>
@@ -163,7 +170,7 @@ By comparing the expected <code class="docutils literal notranslate"><span class
 calculated <code class="docutils literal notranslate"><span class="pre">checksum</span></code> upon read in, one can tell whether the file has been corrupted.</p>
 </section>
 <section id="the-checksum">
-<h3>The checksum<a class="headerlink" href="#the-checksum" title="Permalink to this headline"></a></h3>
+<h3>The checksum<a class="headerlink" href="#the-checksum" title="Link to this heading"></a></h3>
 <p>What is <code class="docutils literal notranslate"><span class="pre">crc32</span></code>?
 CRC is the abbreviation for Cyclic Redundancy Code, which generates the checksum from
 binary data. If the width of the checksum is a <code class="docutils literal notranslate"><span class="pre">32-bit</span></code> it is renamed as <code class="docutils literal notranslate"><span class="pre">crc32</span></code>. The aim of the
@@ -181,23 +188,23 @@ checksum is computed on each site. All the checksums from sites are combined to 
 performing again some bit-wise operations. To make it stronger one takes a lexicographic rotation
 of the checksum coming from each site. As a result one gets two checksums. The
 function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">checksum_crc32_sitedata</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">checksum_crc32_sitedata</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>computes the checksum <code class="docutils literal notranslate"><span class="pre">crc32</span></code> from the site data (4 links, each link is 3x3 matrix of complex numbers).
 The function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_combine</span><span class="p">(</span><span class="n">Checksum</span><span class="w">  </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="kt">size_t</span><span class="w"> </span><span class="n">global_vol</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cs_crc32_sd</span><span class="p">[])</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_combine</span><span class="p">(</span><span class="n">Checksum</span><span class="w">  </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="kt">size_t</span><span class="w"> </span><span class="n">global_vol</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cs_crc32_sd</span><span class="p">[])</span>
 </pre></div>
 </div>
 <p>combines all checksums from sites and performs the lexicographic rotation.
 The function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_accumulator</span><span class="p">(</span><span class="n">Checksum</span><span class="w"> </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site_index</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">sitedata_bytes</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_accumulator</span><span class="p">(</span><span class="n">Checksum</span><span class="w"> </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site_index</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">sitedata_bytes</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>does the same job as the two above. But it should only be used on single GPU.</p>
 </section>
 <section id="how-a-configuration-is-saved-on-the-lattice-data-grid">
-<h3>How a configuration is saved on the Lattice Data Grid<a class="headerlink" href="#how-a-configuration-is-saved-on-the-lattice-data-grid" title="Permalink to this headline"></a></h3>
+<h3>How a configuration is saved on the Lattice Data Grid<a class="headerlink" href="#how-a-configuration-is-saved-on-the-lattice-data-grid" title="Link to this heading"></a></h3>
 <p>Once the ILDG configuration is packaged as a LIME file in the way specified above,
 it is ready to be stored physically somewhere. This physical location where it
 is stored is called the “Storage Element”. If we want to write a script later to
@@ -216,7 +223,7 @@ the “File Catalogue”. Scripts that search for ILDG configurations will
 interact with the File Catalogue.</p>
 </section>
 <section id="how-ildg-is-implemented-in-simulateqcd">
-<h3>How ILDG is implemented in SIMULATeQCD<a class="headerlink" href="#how-ildg-is-implemented-in-simulateqcd" title="Permalink to this headline"></a></h3>
+<h3>How ILDG is implemented in SIMULATeQCD<a class="headerlink" href="#how-ildg-is-implemented-in-simulateqcd" title="Link to this heading"></a></h3>
 <p>One of the QCDml metadata is the location of the configuration on the Lattice
 Data Grid, which is not known at the time of generation. Therefore there must
 always be some post processing to get an ILDG configuration ready for storage.</p>
@@ -231,68 +238,73 @@ by SIMULATeQCD will in general require
 further processing to be readable by other codes.</p>
 </section>
 <section id="more-about-lime">
-<h3>More about LIME<a class="headerlink" href="#more-about-lime" title="Permalink to this headline"></a></h3>
+<h3>More about LIME<a class="headerlink" href="#more-about-lime" title="Link to this heading"></a></h3>
 <p>For detailed information about LIME, see its GitHub
 project <a class="reference external" href="https://github.com/usqcd-software/c-lime">here</a>.
 A LIME record is packed as follows:</p>
-<ol class="simple">
+<ol class="arabic simple">
 <li><p>A 144-byte header</p></li>
-<li><p>The data (maximum of <span class="math notranslate nohighlight">\(2^{63}\)</span> bytes)</p></li>
+<li><p>The data (maximum of $2^{63}$ bytes)</p></li>
 <li><p>Some null padding (0-7 bytes as needed)</p></li>
 </ol>
 <p>The header is organized into 18 64-bit (8 byte) <em>words</em> as follows:</p>
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-align:center head"><p>word</p></th>
-<th class="text-align:left head"><p>content</p></th>
+<tr class="row-odd"><th class="head text-center"><p>word</p></th>
+<th class="head text-left"><p>content</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td class="text-align:center"><p>0</p></td>
-<td class="text-align:left"><p>subheader</p></td>
+<tr class="row-even"><td class="text-center"><p>0</p></td>
+<td class="text-left"><p>subheader</p></td>
 </tr>
-<tr class="row-odd"><td class="text-align:center"><p>1</p></td>
-<td class="text-align:left"><p>data length in bytes</p></td>
+<tr class="row-odd"><td class="text-center"><p>1</p></td>
+<td class="text-left"><p>data length in bytes</p></td>
 </tr>
-<tr class="row-even"><td class="text-align:center"><p>2-17</p></td>
-<td class="text-align:left"><p>128 byte LIME-type</p></td>
+<tr class="row-even"><td class="text-center"><p>2-17</p></td>
+<td class="text-left"><p>128 byte LIME-type</p></td>
 </tr>
 </tbody>
 </table>
 <p>where the subheader consists of</p>
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-align:center head"><p>bits</p></th>
-<th class="text-align:left head"><p>content</p></th>
+<tr class="row-odd"><th class="head text-center"><p>bits</p></th>
+<th class="head text-left"><p>content</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td class="text-align:center"><p>0-31</p></td>
-<td class="text-align:left"><p>LIME magic number</p></td>
+<tr class="row-even"><td class="text-center"><p>0-31</p></td>
+<td class="text-left"><p>LIME magic number</p></td>
 </tr>
-<tr class="row-odd"><td class="text-align:center"><p>32-47</p></td>
-<td class="text-align:left"><p>LIME file version number</p></td>
+<tr class="row-odd"><td class="text-center"><p>32-47</p></td>
+<td class="text-left"><p>LIME file version number</p></td>
 </tr>
-<tr class="row-even"><td class="text-align:center"><p>48</p></td>
-<td class="text-align:left"><p>message begin bit</p></td>
+<tr class="row-even"><td class="text-center"><p>48</p></td>
+<td class="text-left"><p>message begin bit</p></td>
 </tr>
-<tr class="row-odd"><td class="text-align:center"><p>49</p></td>
-<td class="text-align:left"><p>message end bit</p></td>
+<tr class="row-odd"><td class="text-center"><p>49</p></td>
+<td class="text-left"><p>message end bit</p></td>
 </tr>
-<tr class="row-even"><td class="text-align:center"><p>50-63</p></td>
-<td class="text-align:left"><p>reserved</p></td>
+<tr class="row-even"><td class="text-center"><p>50-63</p></td>
+<td class="text-left"><p>reserved</p></td>
 </tr>
 </tbody>
 </table>
-<p>The <code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">int</span></code> LIME magic number, <span class="math notranslate nohighlight">\(1164413355_{10}=456789ab_{16}\)</span>, is used to identify
+<p>The <code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">int</span></code> LIME magic number, $1164413355_{10}=456789ab_{16}$, is used to identify
 a record in LIME format. The version number is a <code class="docutils literal notranslate"><span class="pre">short</span> <span class="pre">int</span></code>. The three integer numbers in
 the header, i.e. the magic number, version number, and data length, are written in
 IEEE big-endian byte order for their data types, <code class="docutils literal notranslate"><span class="pre">long</span></code>, <code class="docutils literal notranslate"><span class="pre">short</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">long</span> <span class="pre">long</span></code>, respectively.</p>
 </section>
 </section>
+<section id="milc">
+<h2>MILC<a class="headerlink" href="#milc" title="Link to this heading"></a></h2>
+<p>MILC format is the format of the <a class="reference external" href="https://github.com/milc-qcd/milc_qcd">MILC</a> code base.
+As of v7.7.11, these binaries are always in single precision. They save all three rows.</p>
+</section>
 <section id="nersc">
-<h2>NERSC<a class="headerlink" href="#nersc" title="Permalink to this headline"></a></h2>
+<h2>NERSC<a class="headerlink" href="#nersc" title="Link to this heading"></a></h2>
 <p>A NERSC format file consists of a simple header</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BEGIN_HEADER</span>
 <span class="n">DATATYPE</span> <span class="o">=</span> <span class="mi">4</span><span class="n">D_SU3_GAUGE_3x3</span>
@@ -308,12 +320,18 @@ IEEE big-endian byte order for their data types, <code class="docutils literal n
 </pre></div>
 </div>
 <p>followed by the binary. The NERSC <code class="docutils literal notranslate"><span class="pre">checksum</span></code> is essentially a sum over all elements of
-all links in the lattice. This <code class="docutils literal notranslate"><span class="pre">checksum</span></code> is not as sensitive as the ILDG checksum.</p>
+all links in the lattice. This <code class="docutils literal notranslate"><span class="pre">checksum</span></code> is not as sensitive as the ILDG checksum.
+An advantage of NERSC format is that one has the option of saving two rows, then
+reconstructing the third row on the read in. Such compressed gauge configurations
+save a good deal of storage space.</p>
 </section>
-<section id="milc">
-<h2>MILC<a class="headerlink" href="#milc" title="Permalink to this headline"></a></h2>
-<p>MILC format is the format of the <a class="reference external" href="https://github.com/milc-qcd/milc_qcd">MILC</a> code base.
-As of v7.7.11, these binaries are always in single-precision.</p>
+<section id="openqcd">
+<h2>OPENQCD<a class="headerlink" href="#openqcd" title="Link to this heading"></a></h2>
+<p>OPENQCD format is the format of the <a class="reference external" href="https://luscher.web.cern.ch/luscher/openQCD/">openQCD</a> library.
+OPENQCD has a bit of an unconventional set up: It stores the spatial and time dimensions
+in two integers, the plaquette as a double, and then all the links as $3\times 3$ complex matrices.
+However, they only store links for odd sites, with links going both forward and backward from the sites.
+One needs to read them in and get the conjugate for the even sites.</p>
 </section>
 </section>
 

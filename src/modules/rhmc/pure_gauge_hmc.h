@@ -2,20 +2,20 @@
  * pure_gauge_hmc.h
  *
  * P. Scior
- * 
+ *
  */
 
 #ifndef PURE_GAUGE_HMC
 #define PURE_GAUGE_HMC
 
-#include "../../base/math/gsu3.h"
-#include "../../base/math/grnd.h"
+#include "../../base/math/su3.h"
+#include "../../base/math/random.h"
 #include "../../gauge/gaugefield.h"
 #include "../../base/latticeParameters.h"
 #include "../../base/memoryManagement.h"
 #include "../../base/stopWatch.h"
-#include "../../base/LatticeContainer.h"
-#include "../../gauge/GaugeAction.h"
+#include "../../base/latticeContainer.h"
+#include "../../gauge/gaugeAction.h"
 #include "../../gauge/gaugeActionDeriv.h"
 #include "integrator.h"
 #include <random>
@@ -30,8 +30,8 @@ public:
     pure_gauge_hmc(RhmcParameters rhmc_param, Gaugefield<floatT, true, HaloDepth, comp> &gaugeField, uint4 *rand_state)
             : _rhmc_param(rhmc_param), _gaugeField(gaugeField),
               gAcc(gaugeField.getAccessor()), _savedField(gaugeField.getComm()), elems(GInd::getLatData().vol4),
-              _p(gaugeField.getComm()), _rand_state(rand_state), energy_dens_old(gaugeField.getComm(), "old_energy_density"), 
-              energy_dens_new(gaugeField.getComm(), "new_energy_density"), dens_delta(gaugeField.getComm(), "energy_density_difference") 
+              _p(gaugeField.getComm()), _rand_state(rand_state), energy_dens_old(gaugeField.getComm(), "old_energy_density"),
+              energy_dens_new(gaugeField.getComm(), "new_energy_density"), dens_delta(gaugeField.getComm(), "energy_density_difference")
               {
                 energy_dens_old.adjustSize(elems);
                 energy_dens_new.adjustSize(elems);
@@ -60,7 +60,7 @@ private:
 
     uint4 *_rand_state;
 
-    gaugeAccessor<floatT, comp> gAcc;
+    SU3Accessor<floatT, comp> gAcc;
 
     void generate_momenta();
 

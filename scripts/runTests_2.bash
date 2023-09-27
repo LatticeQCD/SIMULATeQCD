@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# 
-# runTests.bash                                                               
-# 
+#
+# runTests.bash
+#
 # D. Clarke
-# 
-# The runTests scripts break all the test routines down into < 30 min chunks (at least on Pascal GPUs), 
-# so that these can easily be run interactively or in a a cluster's debug queue, where the time limit is 
-# commonly only 30 min. 
-# 
+#
+# The runTests scripts break all the test routines down into < 30 min chunks (at least on Pascal GPUs),
+# so that these can easily be run interactively or in a a cluster's debug queue, where the time limit is
+# commonly only 30 min.
+#
 
 source "../scripts/testingTools.bash"
 
@@ -18,19 +18,28 @@ source "../scripts/testingTools.bash"
 declare -A testRoutinesNoParam
 testRoutinesNoParam[_condensateTest]="1"
 testRoutinesNoParam[_dotProductTest]="1"
-testRoutinesNoParam[_DslashImagmuTest]="1"
+testRoutinesNoParam[_dslashImagmuTest]="1"
 testRoutinesNoParam[_gfixTestSingle]="1"
 testRoutinesNoParam[_halfPrecMathTest]="1"
-testRoutinesNoParam[_HBOR_single_test]="1"
+testRoutinesNoParam[_hBOR_single_test]="1"
 testRoutinesNoParam[_hisqForce]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
 testRoutinesNoParam[_memManTest]="1"
-testRoutinesNoParam[_RndSingleTest]="1"
-testRoutinesNoParam[_SimpleFunctorTest]="1"
-testRoutinesNoParam[_UtimesUdaggerTest]="1"
-testRoutinesNoParam[_wilsonLinesCorrelatorTest]="1"
-testRoutinesNoParam[_TaylorMeasurementTest]="4"
+#<<<<<<< HEAD
+#testRoutinesNoParam[_RndSingleTest]="1"
+#testRoutinesNoParam[_SimpleFunctorTest]="1"
+#testRoutinesNoParam[_UtimesUdaggerTest]="1"
+#testRoutinesNoParam[_wilsonLinesCorrelatorTest]="1"
+#testRoutinesNoParam[_TaylorMeasurementTest]="4"
+#testRoutinesNoParam[_hypSmearingTest]="1"
+#=======
+testRoutinesNoParam[_rndSingleTest]="1"
+testRoutinesNoParam[_simpleFunctorTest]="1"
+testRoutinesNoParam[_utimesUdaggerTest]="1"
+testRoutinesNoParam[_taylorMeasurementTest]="4"
+testRoutinesNoParam[_weinbergTopTest]="1"
+#>>>>>>> origin/main
 testRoutinesNoParam[_hypSmearingTest]="1"
 
 # Counting the number of test sets lets us give the user some indication of progress.

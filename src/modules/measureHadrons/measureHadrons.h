@@ -3,13 +3,11 @@
 //
 
 #include "../../gauge/gaugefield.h"
-#include "../../base/LatticeContainer.h"
-#include "../HISQ/hisqSmearing.h"
+#include "../../base/latticeContainer.h"
+#include "../hisq/hisqSmearing.h"
 #include "../dslash/dslash.h"
 
-#ifndef MEASUREHADRONS_H
-#define MEASUREHADRONS_H
-
+#pragma once
 enum source_type {
     POINT
 };
@@ -275,4 +273,3 @@ private:
 };
 
 
-#endif //MEASUREHADRONS_H

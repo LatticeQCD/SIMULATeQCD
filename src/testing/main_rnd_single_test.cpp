@@ -1,11 +1,11 @@
-/* 
- * main_rnd_single_test.cpp                                                               
- * 
+/*
+ * main_rnd_single_test.cpp
+ *
  * Philipp Scior, 12 Nov 2018
- * 
+ *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 
@@ -40,7 +40,7 @@ struct draw_rand
 
         floatT rand;
         rand = get_rand<floatT>(&_state[site.isite]);
-        _rand_array[site.isite] = rand;   
+        _rand_array[site.isite] = rand;
     }
 };
 
@@ -111,7 +111,7 @@ bool test_old_new_host_dev(CommunicationBase &commBase){
         if ((h_rand[i]-h_rand2[i]) != 0.0) {
             rootLogger.error("At index " ,  i ,  ": host neq device rnd number!");
             host_dev = host_dev && false;
-        
+
         }
     }
 
@@ -141,12 +141,12 @@ bool test_old_new_host_dev(CommunicationBase &commBase){
         filename = "output_one_gpu_float.out";
     else
         filename = "output_one_gpu_double.out";
-                                            
+
     host_state.write_to_file(filename, commBase, ENDIAN_LITTLE);
 
     if (host_dev) {
         rootLogger.info(CoutColors::green ,  "Host and device random numbers match",  CoutColors::reset);
-    } else { 
+    } else {
         rootLogger.error("Host and device random numbers do not match");
         return true;
     }
@@ -178,10 +178,10 @@ void test_for_zeros(){
     rootLogger.info("Draw random numbers twice:");
 
     for (int i = 0; i < 25000; ++i) {
-        printf("\033[0;31m"); 
+        printf("\033[0;31m");
         iterateFunctorNoReturn<true>(is_rand_zero<floatT>(dev_state.state), index, elems);
         printf("\033[0m");
-        rootLogger.info("completed # " ,  i ,  "sweeps"); 
+        rootLogger.info("completed # " ,  i ,  "sweeps");
     }
 }
 
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
     int NodeDim[] = {1, 1, 1, 1};
     const int HaloDepth = 0;
     bool lerror=false;
-    
+
     param.latDim.set(LatDim);
     param.nodeDim.set(NodeDim);
 

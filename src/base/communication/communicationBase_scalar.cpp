@@ -1,8 +1,8 @@
-/* 
- * communicationBase_scalar.cpp                                                               
- * 
- * Scalar implementation with no communication. 
- * 
+/*
+ * communicationBase_scalar.cpp
+ *
+ * Scalar implementation with no communication.
+ *
  */
 
 #include "../../define.h"
@@ -14,7 +14,7 @@ Logger stdLogger;
 
 
 //! if compiling scalar, this sets matching default values
-CommunicationBase::CommunicationBase( int *argc, char ***argv) {
+CommunicationBase::CommunicationBase( int *argc, char ***argv, bool forceHalos) : _forceHalos(forceHalos) {
     myrank = 0;
     num_proc_world = 1;
     _nodes = LatticeDimensions(1,1,1,1);
@@ -27,6 +27,6 @@ void CommunicationBase::init(const LatticeParameters &lp ) {
         throw std::runtime_error(stdLogger.fatal("Running scalar code, but more than one node set."));
     }
 
-}; 
+};
 
 #endif

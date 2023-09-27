@@ -1,10 +1,10 @@
-/* 
- * fileWriter.cpp                                                               
- * 
+/*
+ * fileWriter.cpp
+ *
  * L. Mazur
- * 
+ *
  * Implementation of some methods in fileWriter.h
- * 
+ *
  */
 
 #include "fileWriter.h"

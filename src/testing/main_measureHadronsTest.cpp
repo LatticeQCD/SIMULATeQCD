@@ -1,13 +1,13 @@
-/* 
- * main_measureHadronsTest.cpp                                                               
- * 
+/*
+ * main_measureHadronsTest.cpp
+ *
  * Luis Altenkort, 6 Jan 2021
- * 
+ *
  * Routine to measure hadronic correlators.
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/measureHadrons/measureHadrons.h"
 
 #define USE_GPU true

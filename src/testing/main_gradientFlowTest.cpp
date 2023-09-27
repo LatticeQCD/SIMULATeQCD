@@ -1,14 +1,14 @@
-/* 
- * main_gradientFlowTest.cpp                                                               
- * 
+/*
+ * main_gradientFlowTest.cpp
+ *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/Topology.h"
+#include "../simulateqcd.h"
+#include "../modules/observables/topology.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include <cstdio>
 #include "refValues_gradFlow.h"
-#include "../modules/gauge_updates/PureGaugeUpdates.h"
+#include "../modules/gauge_updates/pureGaugeUpdates.h"
 
 #define USE_GPU true
 
@@ -136,23 +136,23 @@ bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT 
     unsigned int flow_time_count = 0;  // running index for the reference values
 
     //! loop over RK methods and forces.
-     static_for<0, 3>::apply([&](auto i){
-         const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
-         static_for<0, 2>::apply([&](auto j){
-             ///Reset Gaugefield to reference.
-             gaugeUpdate.set_gauge_to_reference();
-             gauge.updateAll();
-             rootLogger.info("Plaquette = ", gAction.plaquette());
+    static_for<0, 3>::apply([&](auto i){
+        const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
+        static_for<0, 2>::apply([&](auto j){
+            ///Reset Gaugefield to reference.
+            gaugeUpdate.set_gauge_to_reference();
+            gauge.updateAll();
+            rootLogger.info("Plaquette = ", gAction.plaquette());
 
-             ///Run test
-             rootLogger.info(">>>>>>>>>>> RK_method=", RungeKuttaMethods[i], ", Force=", Forces[j], " <<<<<<<<<<<");
-             const auto force = static_cast<Force>(static_cast<int>(j));
-             bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
-                     (gauge, gAction, topology, lp, refValues_gradFlow, tolerance, flow_time_count);
-             failed = failed || tmpfailed;
-         });
-     });
-     return failed;
+            ///Run test
+            rootLogger.info(">>>>>>>>>>> RK_method=", RungeKuttaMethods[i], ", Force=", Forces[j], " <<<<<<<<<<<");
+            const auto force = static_cast<Force>(static_cast<int>(j));
+            bool tmpfailed = run<floatT, HaloDepth, RK_method, force>
+                    (gauge, gAction, topology, lp, refValues_gradFlow, tolerance, flow_time_count);
+            failed = failed || tmpfailed;
+        });
+    });
+    return failed;
 }
 
 int main(int argc, char *argv[]) {
@@ -166,8 +166,7 @@ int main(int argc, char *argv[]) {
     stdLogger.info("TEST DOUBLE PRECISION");
     bool passfail_double = run_test<double>(argc, argv, commBase, double_tolerance);
 
-    rootLogger.info(CoutColors::green ,  "           ");
-    if (passfail_double) { // || passfail_float
+    if (passfail_double) { 
         rootLogger.error("At least one test failed!");
         return 1;
     } else {

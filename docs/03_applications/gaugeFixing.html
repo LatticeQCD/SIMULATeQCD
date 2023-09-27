@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gauge Fixing &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,14 +13,17 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -51,7 +58,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Gauge Fixing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gradientFlow.html">Gradient Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="multiLevel.html">Multi-level algorithm</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RHMC.html">Rational Hybrid Monte Carlo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rhmc.html">Rational Hybrid Monte Carlo</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
@@ -71,9 +78,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="applications.html">Applications</a> &raquo;</li>
-      <li>Gauge Fixing</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="applications.html">Applications</a></li>
+      <li class="breadcrumb-item active">Gauge Fixing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/03_applications/gaugeFixing.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -83,110 +90,110 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="gauge-fixing">
-<h1>Gauge Fixing<a class="headerlink" href="#gauge-fixing" title="Permalink to this headline"></a></h1>
+  <section id="gauge-fixing">
+<h1>Gauge Fixing<a class="headerlink" href="#gauge-fixing" title="Link to this heading"></a></h1>
 <p>The gauge fixing class allows one to gauge fix using <a class="reference external" href="https://doi.org/10.1016/0370-2693(90)90031-Z">over-relaxation (GFOR)</a>.
 A more recent and detailed discussion especially with respect to multi GPUs can be found <a class="reference external" href="https://doi.org/10.1016/j.cpc.2013.03.021">here</a>.
-The over-relaxation proceeds by updating SU(2) subgroups of SU(3) matrices. We use over-relaxation parameter <span class="math notranslate nohighlight">\(\omega=1.3\)</span>.
+The over-relaxation proceeds by updating SU(2) subgroups of SU(3) matrices. We use over-relaxation parameter $\omega=1.3$.
 These gauges are defined by
-<span class="math notranslate nohighlight">\(\partial_\mu A_\mu=0\)</span>,
-where <span class="math notranslate nohighlight">\(\mu\in\{1,2,3\}\)</span> for the Coulomb gauge and <span class="math notranslate nohighlight">\(\mu\in\{1,2,3,4\}\)</span> for the Landau. The gauge can be specified in the code
+$\partial_\mu A_\mu=0$,
+where $\mu\in{1,2,3}$ for the Coulomb gauge and $\mu\in{1,2,3,4}$ for the Landau. The gauge can be specified in the code
 by setting the <code class="docutils literal notranslate"><span class="pre">D_FIX</span></code> and <code class="docutils literal notranslate"><span class="pre">I_FIX</span></code> parameters in <code class="docutils literal notranslate"><span class="pre">gfix.h</span></code>.</p>
 <p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.cpp</span></code> as a source file for your
 program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The gauge fixing class is initialized with, for example,</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"> </span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>and one GFOR gauge fixing step for the entire lattice can be performed with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>Gauge fixing on the lattice is generally implemented as follows: There is a functional <span class="math notranslate nohighlight">\(F\)</span> of the gauge field that is
-extremized if and only if the gauge fixing condition is satisfied. So, the idea is to evolve the lattice toward the minimum of <span class="math notranslate nohighlight">\(F\)</span>
-using GFOR sweep. The value of <span class="math notranslate nohighlight">\(F\)</span> can be obtained by</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getAction</span><span class="p">();</span><span class="w"></span>
+<p>Gauge fixing on the lattice is generally implemented as follows: There is a functional $F$ of the gauge field that is
+extremized if and only if the gauge fixing condition is satisfied. So, the idea is to evolve the lattice toward the minimum of $F$
+using GFOR sweep. The value of $F$ can be obtained by</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getAction</span><span class="p">();</span>
 </pre></div>
 </div>
-<p>The closeness of the configuration to the desired gauge is measured with a gauge fixing quality <span class="math notranslate nohighlight">\(\theta\)</span>. One iterates
-the GFOR sweep until <span class="math notranslate nohighlight">\(\theta\)</span> falls below some desired threshold. To obtain the value of <span class="math notranslate nohighlight">\(\theta\)</span>, use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span><span class="w"></span>
+<p>The closeness of the configuration to the desired gauge is measured with a gauge fixing quality $\theta$. One iterates
+the GFOR sweep until $\theta$ falls below some desired threshold. To obtain the value of $\theta$, use</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>You can decide a good threshold for your purposes looking out for a window where the results for your observable of interest
 become relatively stable under GFOR sweeps. An undesirable artifact of this GFOR implementation is that the links lose their
 unitarity as time goes on. Therefore one should re-unitarize the lattice every so often; for instance one can re-unitarize every
 20 sweeps. To re-unitarize the lattice, call</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span>
 </pre></div>
 </div>
 <p>Don’t forget to do one final unitarization before making any measurements! The gauge fixing is tested in
 <code class="docutils literal notranslate"><span class="pre">src/testing/main_gfixplcTest.cpp</span></code>.</p>
 <section id="minimal-working-example">
-<h2>Minimal working example<a class="headerlink" href="#minimal-working-example" title="Permalink to this headline"></a></h2>
+<h2>Minimal working example<a class="headerlink" href="#minimal-working-example" title="Link to this heading"></a></h2>
 <p>Here’s a short snippet of code that will fix the gauge, assuming you’ve already initialized everything else like the Gaugefield.
 This snippet contains the main features needed for gauge fixing.</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">   </span><span class="n">gauge</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span><span class="w"></span>
-<span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"> </span>
-<span class="kt">int</span><span class="w"> </span><span class="n">ngfstep</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
-<span class="n">PREC</span><span class="w"> </span><span class="n">gftheta</span><span class="o">=</span><span class="mf">1e10</span><span class="p">;</span><span class="w"></span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">   </span><span class="n">gauge</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span>
+<span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span>
+<span class="kt">int</span><span class="w"> </span><span class="n">ngfstep</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+<span class="n">PREC</span><span class="w"> </span><span class="n">gftheta</span><span class="o">=</span><span class="mf">1e10</span><span class="p">;</span>
 <span class="k">const</span><span class="w"> </span><span class="n">PREC</span><span class="w"> </span><span class="n">gtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">;</span><span class="w">          </span><span class="c1">/// When theta falls below this number, stop...</span>
 <span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ngfstepMAX</span><span class="o">=</span><span class="mi">9000</span><span class="p">;</span><span class="w">     </span><span class="c1">/// ...or stop after a fixed number of steps; this way the program doesn&#39;t get stuck.</span>
 <span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nunit</span><span class="o">=</span><span class="mi">20</span><span class="p">;</span><span class="w">            </span><span class="c1">/// Re-unitarize every 20 steps.</span>
-<span class="n">gauge</span><span class="p">.</span><span class="n">updateAll</span><span class="p">();</span><span class="w"></span>
-<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">&lt;</span><span class="n">ngfstepMAX</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">gftheta</span><span class="o">&gt;</span><span class="n">gtol</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="n">gauge</span><span class="p">.</span><span class="n">updateAll</span><span class="p">();</span>
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">&lt;</span><span class="n">ngfstepMAX</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">gftheta</span><span class="o">&gt;</span><span class="n">gtol</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">/// Compute starting GF functional and update the lattice.</span>
-<span class="w">    </span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span>
 <span class="w">    </span><span class="c1">/// Due to the nature of the update, we have to re-unitarize every so often.</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">%</span><span class="n">nunit</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">%</span><span class="n">nunit</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="c1">/// Re-calculate theta to determine whether we are sufficiently fixed.</span>
-<span class="w">    </span><span class="n">gftheta</span><span class="o">=</span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span><span class="w"></span>
-<span class="w">    </span><span class="n">ngfstep</span><span class="o">+=</span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="n">gftheta</span><span class="o">=</span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span>
+<span class="w">    </span><span class="n">ngfstep</span><span class="o">+=</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
 <span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"> </span><span class="c1">/// One final re-unitarization.</span>
 </pre></div>
 </div>
 </section>
 <section id="gauge-fixing-application">
-<h2>Gauge fixing application<a class="headerlink" href="#gauge-fixing-application" title="Permalink to this headline"></a></h2>
+<h2>Gauge fixing application<a class="headerlink" href="#gauge-fixing-application" title="Link to this heading"></a></h2>
 <p>Under <code class="docutils literal notranslate"><span class="pre">src/applications/main_gaugeFixing.cpp</span></code> you find our main program for gauge fixing. There are already implemented some
 observables that depend on the gauge, in particular Polyakov loop and Wilson line correlators. (You can learn a bit more
-about the implementation of Polyakov loop correlators <a class="reference internal" href="../05_modules/correlator.html"><span class="doc std std-doc">here</span></a>.) The available options are
+about the implementation of Polyakov loop correlators <a class="reference internal" href="../05_modules/correlator.html"><span class="std std-doc">here</span></a>.) The available options are
 given under <code class="docutils literal notranslate"><span class="pre">parameter/applications/gaugeFixing.param</span></code>, which has options like</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">gtolerance</span>       <span class="o">=</span> 1e-6  <span class="c1"># stop gauge fixing below this theta</span>
-<span class="nv">maxgfsteps</span>       <span class="o">=</span> <span class="m">3000</span>  <span class="c1"># or after this many steps</span>
-<span class="nv">numunit</span>          <span class="o">=</span> <span class="m">20</span>    <span class="c1"># re-unitarize every 20 steps</span>
-<span class="nv">PolyakovLoopCorr</span> <span class="o">=</span> <span class="m">1</span>     <span class="c1"># measure Polyakov loop correlators</span>
-<span class="nv">WilsonLineCorr</span>   <span class="o">=</span> <span class="m">0</span>     <span class="c1"># don&#39;t measure Wilson lines</span>
-<span class="nv">SaveConfig</span>       <span class="o">=</span> <span class="m">0</span>     <span class="c1"># don&#39;t saved the gauge-fixed configuration</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">gtolerance</span><span class="w">       </span><span class="o">=</span><span class="w"> </span>1e-6<span class="w">  </span><span class="c1"># stop gauge fixing below this theta</span>
+<span class="nv">maxgfsteps</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="m">3000</span><span class="w">  </span><span class="c1"># or after this many steps</span>
+<span class="nv">numunit</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="m">20</span><span class="w">    </span><span class="c1"># re-unitarize every 20 steps</span>
+<span class="nv">polyakovLoopCorr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w">     </span><span class="c1"># measure Polyakov loop correlators</span>
+<span class="nv">WilsonLineCorr</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w">     </span><span class="c1"># don&#39;t measure Wilson lines</span>
+<span class="nv">SaveConfig</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w">     </span><span class="c1"># don&#39;t saved the gauge-fixed configuration</span>
 </pre></div>
 </div>
 <p>If you would like to implement your own observable in this application, please follow the examples of the Wilson line
 and Polyakov loop correlators.</p>
 </section>
 <section id="polyakov-loop-correlators">
-<h2>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Permalink to this headline"></a></h2>
+<h2>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Link to this heading"></a></h2>
 <p>The Polyakov loop is gauge-invarant, but several correlators related to the Polyakov loop are not, and are of
 interest to renormalize the Polyakov loop or extract the Debye mass.
 The gauge invariant color-averaged Polyakov loop correlator can be decomposed
-into color singlet <span class="math notranslate nohighlight">\(F_1\)</span> and color octet <span class="math notranslate nohighlight">\(F_8\)</span>
+into color singlet $F_1$ and color octet $F_8$
 contributions. In particular</p>
-<p><span class="math notranslate nohighlight">\(
-  \exp\left[-\frac{F_{q\bar{q}}(r,T)}{T}\right]
-  =\frac{1}{9}\exp\left[-\frac{F_1(r,T)}{T}\right]
-   +\frac{8}{9}\exp\left[-\frac{F_8(r,T)}{T}\right],
-\)</span></p>
+<p>$
+\exp\left[-\frac{F_{q\bar{q}}(r,T)}{T}\right]
+=\frac{1}{9}\exp\left[-\frac{F_1(r,T)}{T}\right]
++\frac{8}{9}\exp\left[-\frac{F_8(r,T)}{T}\right],
+$</p>
 <p>where</p>
-<p><span class="math notranslate nohighlight">\(
- \exp\left[-F_1(r,T)/T\right]
-   =\frac{1}{3}\left&lt;\text{tr}\; L_{\vec{x}}L^\dagger_{\vec{y}}\right&gt;
-  \exp\left[-F_8(r,T)/T\right]
-    =\frac{9}{8}\left&lt; P_{\vec{x}}P^\dagger_{\vec{y}}\right&gt;
-     -\frac{1}{24}\left&lt; \text{tr}\; L_{\vec{x}}L^\dagger_{\vec{y}}\right&gt;,
-\)</span></p>
+<p>$
+\exp\left[-F_1(r,T)/T\right]
+=\frac{1}{3}\left&lt;\text{tr}; L_{\vec{x}}L^\dagger_{\vec{y}}\right&gt;
+\exp\left[-F_8(r,T)/T\right]
+=\frac{9}{8}\left&lt; P_{\vec{x}}P^\dagger_{\vec{y}}\right&gt;
+-\frac{1}{24}\left&lt; \text{tr}; L_{\vec{x}}L^\dagger_{\vec{y}}\right&gt;,
+$</p>
 <p>which clearly depends on the gauge. More information about the implementation of these
-observables can be found <a class="reference internal" href="../05_modules/correlator.html"><span class="doc std std-doc">here</span></a>.</p>
+observables can be found <a class="reference internal" href="../05_modules/correlator.html"><span class="std std-doc">here</span></a>.</p>
 </section>
 </section>
 

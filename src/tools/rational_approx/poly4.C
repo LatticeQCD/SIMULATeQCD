@@ -126,7 +126,7 @@ int main (int argc, char* argv[]) {
 if(argc != 2)
 {
 fprintf(stderr,"usage:\n");
-fprintf(stderr,"./poly4 input.dat\n");
+fprintf(stderr,"./ratApprox input.dat\n");
 fprintf(stderr,"Please read the README to get the format of the input file\n");
 exit(0);
 }

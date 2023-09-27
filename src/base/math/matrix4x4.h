@@ -2,9 +2,7 @@
 // Created by Lukas Mazur on 29.11.18.
 //
 
-#ifndef MATRIX4X4_H
-#define MATRIX4X4_H
-
+#pragma once
 #include "../../define.h"
 
 
@@ -116,4 +114,3 @@ __device__ __host__ inline Matrix4x4Sym<floatT> operator+(const Matrix4x4Sym<flo
                                 x.elems[4]+y.elems[4], x.elems[5]+y.elems[5], x.elems[6]+y.elems[6],
                                 x.elems[7]+y.elems[7], x.elems[8]+y.elems[8], x.elems[9]+y.elems[9]);
 }
-#endif //MATRIX4X4_H

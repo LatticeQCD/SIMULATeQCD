@@ -1,0 +1,8 @@
+#
+# bulkIndexerTest.param
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of sublattices per direction
+#
+Lattice    = 20 20 20 24
+Nodes      = 1  2  2  1

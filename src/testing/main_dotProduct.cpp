@@ -1,11 +1,11 @@
-/* 
- * main_dotProduct.cpp                                                               
- * 
+/*
+ * main_dotProduct.cpp
+ *
  * D. Bollweg
- * 
+ *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 template<class floatT, Layout LatLayout, bool onDevice>
@@ -22,8 +22,8 @@ void run_func_nostacks(CommunicationBase &commBase) {
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
-    GCOMPLEX(double) dot(0.0,0.0);
-    
+    COMPLEX(double) dot(0.0,0.0);
+
     timer.start();
     dot = spinorIn.dotProduct(spinorIn);
 
@@ -39,7 +39,7 @@ template<class floatT, Layout LatLayout, size_t NStacks, bool onDevice>
 void run_func(CommunicationBase &commBase) {
 
     const int HaloDepthSpin = 4;
-    
+
     StopWatch<true> timer;
 
     grnd_state<onDevice> d_rand;
@@ -49,8 +49,8 @@ void run_func(CommunicationBase &commBase) {
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
-    
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+
     timer.start();
     dot = spinorIn.dotProductStacked(spinorIn);
     timer.stop();
@@ -65,24 +65,24 @@ void run_func(CommunicationBase &commBase) {
 int main(int argc, char **argv) {
     try {
         stdLogger.setVerbosity(DEBUG);
-        
+
         CommunicationBase commBase(&argc, &argv);
         RhmcParameters param;
-    
-        param.readfile(commBase, "../parameter/tests/MixedPrecInverterTest.param", argc, argv);
-        
+
+        param.readfile(commBase, "../parameter/tests/mixedPrecInverterTest.param", argc, argv);
+
         RationalCoeff rat;
-        
+
         rat.readfile(commBase, param.rat_file());
-        
+
         commBase.init(param.nodeDim(), param.gpuTopo());
 
         const int HaloDepthSpin = 4;
         initIndexer(HaloDepthSpin, param, commBase);
-        
+
         run_func_nostacks<float, Even, true>(commBase);
         run_func_nostacks<double, Even, true>(commBase);
-        
+
         run_func<float, Even, 1, true>(commBase);
         run_func<double, Even, 1, true>(commBase);
         run_func<float, Even, 2, true>(commBase);
@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
         run_func<double, Even, 8, true>(commBase);
         run_func<float, Even, 10, true>(commBase);
         run_func<double, Even, 10, true>(commBase);
-        
+
         return 0;
     }
     catch (const std::runtime_error &error){

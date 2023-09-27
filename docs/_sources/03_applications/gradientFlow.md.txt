@@ -13,7 +13,7 @@ make gradientFlow -j<NumberOfCores>
 This can take up to 60+ minutes (depending on the Hardware). If you only
 want to use the zeuthen force and the adaptive step size Runge-Kutta, you
 can also compile `gradientFlow_zeuthen`, which will only take 20 minutes
-to compile. (The most compile time is consumed by `Topology.cpp`.)
+to compile. (The most compile time is consumed by `topology.cpp`.)
 
 To run the program, one needs a parameter file. It should take these
 parameters:
@@ -32,12 +32,12 @@ endianness = auto                                    # Endianness of input confi
 conf_nr = 302500                                     # Configuration number (optional).
 force = zeuthen                                      # specify if you want to have the Wilson flow ("wilson") or Zeuthen flow ("zeuthen").
 start_step_size = 0.01                               # The (start) step size of the Runge Kutta integration.
-RK_method = adaptive_stepsize                        # Set to fixed_stepsize, adaptive_stepsize or adaptive_stepsize_allgpu (see below).  
+RK_method = adaptive_stepsize                        # Set to fixed_stepsize, adaptive_stepsize or adaptive_stepsize_allgpu (see below).
 accuracy = 0.01                                      # Specify the accuracy of the adaptive step size method.
 
 measurements_dir = ./                                # Measurement output directory
 measurement_intervall = 0 1                          # Flow time Interval which should be iterated.
-necessary_flow_times=0.25 0.5                        # Set the flow-times which shouldn't be skipped by the fixed or adaptive step size 
+necessary_flow_times=0.25 0.5                        # Set the flow-times which shouldn't be skipped by the fixed or adaptive step size
 
 ignore_fixed_startstepsize = 0                       # ignore the fixed step size and infer steps izes from necessary_flow_times
 save_configuration = 0                               # Save the flowed configuration at each step? (0=no, 1=yes)
@@ -56,10 +56,10 @@ energyMomentumTensor = 0
 ColorElectricCorrTimeSlices = 0
 ColorMagneticCorrTimeSlices = 0
 
-PolyakovLoopCorrelator = 0
-GaugeFixTol = 1e-6 
+polyakovLoopCorrelator = 0
+GaugeFixTol = 1e-6
 GaugeFixNMax = 9000
-GaugeFixNUnitarize = 20 
+GaugeFixNUnitarize = 20
 
 ```
 

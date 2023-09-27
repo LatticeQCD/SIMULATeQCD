@@ -1,11 +1,11 @@
-/* 
- * configConverter.cu                                                               
- * 
+/*
+ * configConverter.cu
+ *
  * R. Larsen, S. Ali, D. Clarke
- * 
+ *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 
 #define PREC double
 
@@ -24,7 +24,7 @@ struct ConvertParameters : LatticeParameters {
 int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
-    const size_t HaloDepth = 0;
+    const size_t HaloDepth = 2;
 
     ConvertParameters param;
     CommunicationBase commBase(&argc, &argv);
@@ -46,6 +46,8 @@ int main(int argc, char *argv[]) {
         gauge.readconf_ildg(param.GaugefileName());
     } else if(param.format()=="milc"){
         gauge.readconf_milc(param.GaugefileName());
+    } else if(param.format()=="openqcd"){
+        gauge.readconf_openqcd(param.GaugefileName());
     } else {
         throw(rootLogger.fatal("Invalid specification for format ",param.format()));
     }
@@ -54,7 +56,7 @@ int main(int argc, char *argv[]) {
     if(param.format_out()=="nersc") {
         if(param.compress_out()) {
             gauge.writeconf_nersc(param.GaugefileName_out(), 2, param.prec_out());
-        } else { 
+        } else {
             gauge.writeconf_nersc(param.GaugefileName_out(), 3, param.prec_out());
         }
     } else if(param.format_out()=="ildg") {

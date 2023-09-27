@@ -1,4 +1,4 @@
-/* 
+/*
  * main_gfixplcTest.cpp
  *
  * D. Clarke
@@ -8,13 +8,13 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
+#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
 
 #include "refValues_gfixplc.h"
 
-#define PREC double 
+#define PREC double
 
 /// Create our own parameter structure, which inherits from LatticeParameters.
 template<class floatT>

@@ -1,6 +1,6 @@
-/* 
- * memoryManagement.h                                                               
- * 
+/*
+ * memoryManagement.h
+ *
  * L. Mazur, D. Clarke, L. Altenkort
  *
  * This header file includes everything needed to manage dynamically allocated memory in the code. The idea is as
@@ -27,9 +27,7 @@
  *
  */
 
-#ifndef MEMORYMANAGEMENT_H
-#define MEMORYMANAGEMENT_H
-
+#pragma once
 #include "wrapper/gpu_wrapper.h"
 #include "../define.h"
 #include "gutils.h"
@@ -140,7 +138,7 @@ private:
                     std::free(_rawPointer);
 #endif
                 }
-                rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " , 
+                rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " ,
                                    _current_size/1000000000. ,  " GB");
             }
             _rawPointer = nullptr;
@@ -210,7 +208,7 @@ private:
             bool resize = _current_size < sizeBytes;
             if (resize) {
                 if (_current_size > 0){
-                    rootLogger.alloc("Increasing mem (" ,  (onDevice ? "Device" : "Host") ,  ") from " , 
+                    rootLogger.alloc("Increasing mem (" ,  (onDevice ? "Device" : "Host") ,  ") from " ,
                                        _current_size/1000000000. ,  " GB to " ,  sizeBytes/1000000000. ,  " GB:");
                 }
                 free();
@@ -224,7 +222,7 @@ private:
             bool resize = _current_size < sizeBytes;
             if (resize) {
                 if (_current_size > 0){
-                    rootLogger.alloc(">> Increase mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host") ,  ") from " , 
+                    rootLogger.alloc(">> Increase mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host") ,  ") from " ,
                                        _current_size/1000000000. ,  " GB to " ,  sizeBytes/1000000000. ,  " GB.");
                 }
                 free();
@@ -567,4 +565,3 @@ public:
     }
 };
 
-#endif //MEMORYMANAGEMENT_H

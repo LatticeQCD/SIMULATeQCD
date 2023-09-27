@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Functor syntax &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,11 +13,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=48f8e935"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script>let toggleHintShow = 'Click to show';</script>
+        <script>let toggleHintHide = 'Click to hide';</script>
+        <script>let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -31,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -72,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="codeBase.html">Code base</a> &raquo;</li>
-      <li>Functor syntax</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="codeBase.html">Code base</a></li>
+      <li class="breadcrumb-item active">Functor syntax</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/functorSyntax.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,8 +93,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section class="tex2jax_ignore mathjax_ignore" id="functor-syntax">
-<h1>Functor syntax<a class="headerlink" href="#functor-syntax" title="Permalink to this headline"></a></h1>
+  <section id="functor-syntax">
+<h1>Functor syntax<a class="headerlink" href="#functor-syntax" title="Link to this heading"></a></h1>
 <p>In SIMULATeQCD we try to abstract away highly complex parallelization, which
 depends on the API, whether GPUs or CPUs are used, the number of processes,
 the node layout being used, and so on.
@@ -106,46 +115,46 @@ to the <code class="docutils literal notranslate"><span class="pre">operator()</
 <code class="docutils literal notranslate"><span class="pre">CalcGSite</span></code> methods that tell the iterator how to translate from
 these objects to GPU thread indices.</p>
 <p>There are many thorough examples on how to use functor syntax in
-<code class="docutils literal notranslate"><span class="pre">src/testing/main_GeneralFunctorTest.cpp</span></code>. One example functor implementation
+<code class="docutils literal notranslate"><span class="pre">src/testing/main_generalFunctorTest.cpp</span></code>. One example functor implementation
 for the plaquette is shown below:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">//! Functor to compute the plaquette given a gSite. It is called in a Kernel that is already defined by templates.</span>
 <span class="c1">//! You do not need to write a custom Kernel. See below.</span>
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
-<span class="k">struct</span> <span class="nc">SimplePlaq</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">SimplePlaq</span><span class="w"> </span><span class="p">{</span>
 
 <span class="w">    </span><span class="c1">//! Functors can have member variables. Here we just need the accessor from the gaugefield reference.</span>
-<span class="w">    </span><span class="n">gaugeAccessor</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">gAcc</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">gaugeAccessor</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">gAcc</span><span class="p">;</span>
 
 <span class="w">    </span><span class="c1">//! Constructor that initializes those members:</span>
-<span class="w">    </span><span class="k">explicit</span><span class="w"> </span><span class="n">SimplePlaq</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeIn</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">gAcc</span><span class="p">(</span><span class="n">gaugeIn</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">())</span><span class="w"> </span><span class="p">{}</span><span class="w"></span>
+<span class="w">    </span><span class="k">explicit</span><span class="w"> </span><span class="n">SimplePlaq</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeIn</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">gAcc</span><span class="p">(</span><span class="n">gaugeIn</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">())</span><span class="w"> </span><span class="p">{}</span>
 
 <span class="w">    </span><span class="cm">/* This is the operator() overload that is called to perform the local plaquette computation. This function has to</span>
 <span class="cm">     * have the following design: It takes a gSite, and it returns the computed object corresponding to that site.</span>
-<span class="cm">     * In this case, we want to return a float and store it in a LatticeContainer object. */</span><span class="w"></span>
-<span class="w">    </span><span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="n">floatT</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">gSite</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">        </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span><span class="w"></span>
+<span class="cm">     * In this case, we want to return a float and store it in a LatticeContainer object. */</span>
+<span class="w">    </span><span class="n">__host__</span><span class="w"> </span><span class="n">__device__</span><span class="w"> </span><span class="n">floatT</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="n">gSite</span><span class="w"> </span><span class="n">site</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span>
 
-<span class="w">        </span><span class="n">GSU3</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span><span class="w"></span>
-<span class="w">        </span><span class="n">floatT</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="n">temp</span><span class="p">;</span>
+<span class="w">        </span><span class="n">floatT</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 
-<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
-<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nu</span><span class="p">;</span><span class="w"> </span><span class="n">mu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="n">nu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">mu</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">nu</span><span class="p">;</span><span class="w"> </span><span class="n">mu</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">                </span><span class="c1">//! Notice here that site is changed implicitly by this; that is, it ends up at the last point of the</span>
 <span class="w">                </span><span class="c1">//! path (in this case, it is the origin again)</span>
-<span class="w">                </span><span class="n">result</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">tr_d</span><span class="p">(</span><span class="n">gAcc</span><span class="p">.</span><span class="k">template</span><span class="w"> </span><span class="n">getLinkPath</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="n">nu</span><span class="p">,</span><span class="w"> </span><span class="n">Back</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span><span class="w"> </span><span class="n">Back</span><span class="p">(</span><span class="n">nu</span><span class="p">)));</span><span class="w"></span>
-<span class="w">            </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="p">}</span><span class="w"></span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="p">}</span><span class="w"></span>
-<span class="p">};</span><span class="w"></span>
+<span class="w">                </span><span class="n">result</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">tr_d</span><span class="p">(</span><span class="n">gAcc</span><span class="p">.</span><span class="k">template</span><span class="w"> </span><span class="n">getLinkPath</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">site</span><span class="p">,</span><span class="w"> </span><span class="n">mu</span><span class="p">,</span><span class="w"> </span><span class="n">nu</span><span class="p">,</span><span class="w"> </span><span class="n">Back</span><span class="p">(</span><span class="n">mu</span><span class="p">),</span><span class="w"> </span><span class="n">Back</span><span class="p">(</span><span class="n">nu</span><span class="p">)));</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">};</span>
 
 
 <span class="c1">//! Wrapper to compute the plaquette using the functor &quot;SimplePlaq&quot;</span>
-<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span> <span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"></span>
-<span class="n">floatT</span><span class="w"> </span><span class="n">compute_plaquette</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gauge</span><span class="p">,</span><span class="w"> </span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">latContainer</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">floatT</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span>
+<span class="n">floatT</span><span class="w"> </span><span class="n">compute_plaquette</span><span class="p">(</span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gauge</span><span class="p">,</span><span class="w"> </span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">floatT</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">latContainer</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 
-<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span><span class="w"></span>
-<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">elems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GInd</span><span class="o">::</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol4</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">typedef</span><span class="w"> </span><span class="n">GIndexer</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GInd</span><span class="p">;</span>
+<span class="w">    </span><span class="k">const</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">elems</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GInd</span><span class="o">::</span><span class="n">getLatData</span><span class="p">().</span><span class="n">vol4</span><span class="p">;</span>
 
 <span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="n">adjustSize</span><span class="p">(</span><span class="n">elems</span><span class="p">);</span><span class="w"> </span><span class="c1">//! Make sure container is large enough to hold one float for each site</span>
 
@@ -155,13 +164,13 @@ for the plaquette is shown below:</p>
 <span class="w">    </span><span class="c1">//! the LatticeContainer (and not gaugefield) is used here, since we want to store the results from the computation</span>
 <span class="w">    </span><span class="c1">//! inside of this LatticeContainer and not inside of the gaugefield (the result at each site is simply a float and</span>
 <span class="w">    </span><span class="c1">//! not an SU3 matrix). The Gaugefield is passed to the functor by reference.</span>
-<span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="k">template</span><span class="w"> </span><span class="n">iterateOverBulk</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">SimplePlaq</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">gauge</span><span class="p">));</span><span class="w"></span>
+<span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="k">template</span><span class="w"> </span><span class="n">iterateOverBulk</span><span class="o">&lt;</span><span class="n">All</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">SimplePlaq</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="w"> </span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="p">(</span><span class="n">gauge</span><span class="p">));</span>
 
-<span class="w">    </span><span class="n">floatT</span><span class="w"> </span><span class="n">plaq</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="n">floatT</span><span class="w"> </span><span class="n">plaq</span><span class="p">;</span>
 <span class="w">    </span><span class="n">latContainer</span><span class="p">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">plaq</span><span class="p">,</span><span class="w"> </span><span class="n">elems</span><span class="p">);</span><span class="w">                         </span><span class="c1">//! Sum up all contributions</span>
 <span class="w">    </span><span class="n">plaq</span><span class="w"> </span><span class="o">/=</span><span class="w"> </span><span class="p">(</span><span class="n">GInd</span><span class="o">::</span><span class="n">getLatData</span><span class="p">().</span><span class="n">globalLattice</span><span class="p">().</span><span class="n">mult</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">18</span><span class="p">);</span><span class="w"> </span><span class="c1">//! Normalize</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">plaq</span><span class="p">;</span><span class="w"></span>
-<span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">plaq</span><span class="p">;</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 </section>

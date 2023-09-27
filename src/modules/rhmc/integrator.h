@@ -2,7 +2,7 @@
  * integrator.h
  *
  * P. Scior
- * 
+ *
  */
 
 #ifndef INTEGRATOR
@@ -10,30 +10,40 @@
 
 #include "../../gauge/gaugefield.h"
 #include "./rhmcParameters.h"
-#include "../../base/math/gsu3.h"
+#include "../../base/math/su3.h"
 #include "../../gauge/gaugeActionDeriv.h"
-#include "../../base/LatticeContainer.h"
+#include "../../base/latticeContainer.h"
 #include <iostream>
 #include "../../spinor/spinorfield.h"
 #include "../dslash/dslash.h"
 #include "../../base/gutils.h"
-#include "../HISQ/hisqForce.h"
-#include "Spinorfield_container.h"
+#include "../hisq/hisqForce.h"
+#include "spinorfield_container.h"
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 class integrator {
 public:
     integrator(RhmcParameters rhmc_param, Gaugefield<floatT, onDevice, HaloDepth, R18> &gaugeField,
-               Gaugefield<floatT, onDevice, HaloDepth> &p, Gaugefield<floatT, onDevice, HaloDepth, U3R14> &X,
+               Gaugefield<floatT, onDevice, HaloDepth> &p,
+               Gaugefield<floatT, onDevice, HaloDepth, U3R14> &X,
                Gaugefield<floatT, onDevice, HaloDepth> &W,
                HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
                RationalCoeff rat, HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
-            : _gaugeField(gaugeField), _p(p), _X(X), _W(W), _rhmc_param(rhmc_param), gAcc(gaugeField.getAccessor()),
-              pAccessor(p.getAccessor()), _dslash(dslash), ipdot(gaugeField.getComm()),
-              ipdotAccessor(ipdot.getAccessor()), _rat(rat),
-    _smearing(smearing), _dslashM(_W, _X, 0.0),
-    ip_dot_f2_hisq(_gaugeField, ipdot, cgM, _dslash, _dslashM, _rhmc_param, _rat, _smearing) {};
+        : _gaugeField(gaugeField),
+          _p(p),
+          _X(X),
+          _W(W),
+          _rhmc_param(rhmc_param),
+          gAcc(gaugeField.getAccessor()),
+          pAccessor(p.getAccessor()),
+          _dslash(dslash),
+          ipdot(gaugeField.getComm()),         // "force" gaugeField object, p-dot
+          ipdotAccessor(ipdot.getAccessor()),
+          _rat(rat),
+          _smearing(smearing),
+          _dslashM(_W, _X, 0.0), // ip_dot_f2_hisq is the hisq force object, used to calculate stuff
+          ip_dot_f2_hisq(_gaugeField, ipdot, cgM, _dslash, _dslashM, _rhmc_param, _rat, _smearing) {};
 
     ~integrator() {};
 
@@ -43,8 +53,7 @@ private:
     // methods to evolve P and Q
     void updateP_gaugeforce(floatT stepsize);
 
-    void updateP_fermforce(floatT stepsize, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi,
-                           bool light/*std::vector<floatT> rat_coeff*/);
+    void updateP_fermforce(floatT stepsize, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &phi, bool light);
 
     void evolveQ(floatT stepsize);
 
@@ -61,7 +70,7 @@ private:
     // The different integration schemes
     void SWleapfrog(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
     void PQPQP2MN(Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_lf_container, Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> &_phi_sf_container);
-    
+
     void PureGaugeleapfrog();
 
     Gaugefield<floatT, onDevice, HaloDepth, R18> &_gaugeField;
@@ -82,16 +91,15 @@ private:
 
     HisqForce<floatT, onDevice, HaloDepth, 4> ip_dot_f2_hisq;
 
-    gaugeAccessor<floatT, R18> gAcc;
-    gaugeAccessor<floatT> pAccessor;
-    gaugeAccessor<floatT> ipdotAccessor;
+    SU3Accessor<floatT, R18> gAcc;
+    SU3Accessor<floatT> pAccessor;
+    SU3Accessor<floatT> ipdotAccessor;
 };
 
 
 
 
 //Pure gauge Leapfrogger
-
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 class pure_gauge_integrator {
 
@@ -126,9 +134,9 @@ private:
 
     Gaugefield<floatT, onDevice, HaloDepth> ipdot;
 
-    gaugeAccessor<floatT, comp> gAcc;
-    gaugeAccessor<floatT> pAccessor;
-    gaugeAccessor<floatT> ipdotAccessor;
+    SU3Accessor<floatT, comp> gAcc;
+    SU3Accessor<floatT> pAccessor;
+    SU3Accessor<floatT> ipdotAccessor;
 
 };
 

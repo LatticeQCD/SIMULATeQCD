@@ -1,6 +1,0 @@
-# 
-# HBOR_multiple_test.param                                                               
-# 
-#      Nodes: Number of sublattices per direction 
-#
-Nodes      = 2  1  2  1

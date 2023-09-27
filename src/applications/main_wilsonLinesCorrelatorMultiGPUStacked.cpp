@@ -1,21 +1,31 @@
-/* 
- * main_wilson_lines_correlator_stacked.cu                                                               
- * 
+/*
+ * main_wilson_lines_correlator_stacked.cu
+ *
  * Rasmus Larsen, 25 Feb 2021
- * 
+ *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
+//<<<<<<< HEAD
+//#include "../SIMULATeQCD.h"
+//#include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
+//#include "../modules/gradientFlow/gradientFlow.h"
+//#include "../modules/hyp/hypSmearing.h"
+
+
+//#include <iostream>
+//using namespace std;
+
+//#define PREC double
+//#define STACKS 64 
+//=======
+#include "../simulateqcd.h"
+#include "../modules/observables/wilsonLineCorrelatorMultiGPU.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/hyp/hypSmearing.h"
 
-
-#include <iostream>
-using namespace std;
-
 #define PREC double
-#define STACKS 64 
+#define STACKS 96
+//>>>>>>> origin/main
 
 
 template<class floatT>
@@ -88,7 +98,7 @@ int main(int argc, char *argv[]) {
 
     commBase.init(param.nodeDim());
 
-//    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl; 
+//    cout << param.nodeDim[0] << " param 0 " <<  param.nodeDim[1] << " param 1 " << param.nodeDim[2] << " param 2 " << param.nodeDim[3] << " param 3 " <<endl;
 
     /// Set the HaloDepth.
     const size_t HaloDepth = 2;
@@ -116,16 +126,22 @@ int main(int argc, char *argv[]) {
     else if(param.load_conf() == 2 || param.load_conf() == 1)
     {
         std::string file_path = param.directory();
+//<<<<<<< HEAD
         file_path.append(param.gauge_file()); 
         rootLogger.info("Starting from configuration: ", file_path);
 //	rootLogger.info() << param.gauge_file() << endl;
+//=======
+//        file_path.append(param.gauge_file());
+//        rootLogger.info("Starting from configuration: " ,  file_path);
+//	rootLogger.info(param.gauge_file() ,  endl);
+//>>>>>>> origin/main
         if(param.file_type() == "nersc"){
             gauge.readconf_nersc(file_path);
         }
         else if(param.file_type() == "milc"){
             gauge.readconf_milc(file_path);
 
-            gauge.updateAll();         
+            gauge.updateAll();
             GaugeAction<PREC,true,HaloDepth> enDensity(gauge);
             PREC SpatialPlaq  = enDensity.plaquetteSS();
             PREC TemporalPlaq = enDensity.plaquette()*2.0-SpatialPlaq;
@@ -155,7 +171,7 @@ int main(int argc, char *argv[]) {
     /// Exchange Halos
     gauge.updateAll();
 
-   
+
 
     /// Initialize ReductionBase.
     LatticeContainer<true,PREC> redBase(commBase);
@@ -237,7 +253,7 @@ int main(int argc, char *argv[]) {
 ///////////// gauge fixing
 
     if(param.load_conf() ==2){
-        GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge); 
+        GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge);
         int ngfstep=0;
         PREC gftheta=1e10;
         const PREC gtol = param.gtolerance();        //1e-6;          /// When theta falls below this number, stop...
@@ -259,7 +275,7 @@ int main(int argc, char *argv[]) {
 
         rootLogger.info( "Gauge fixing finished in " , ngfstep , " steps, with gftheta = " , gftheta );
     }
-   
+
 
 
     std::string Name = "WLine_";
@@ -267,6 +283,7 @@ int main(int argc, char *argv[]) {
     if(param.load_conf() == 2 || param.load_conf() == 1){
         Name.append(param.gauge_file());
         Name_r2.append(param.gauge_file());
+//<<<<<<< HEAD
   	if(param.use_wilson()){
 	    Name.append("_");
 	    Name_r2.append("_");
@@ -274,6 +291,8 @@ int main(int argc, char *argv[]) {
             Name.append(s);
 	    Name_r2.append(s);
 	}	
+//=======
+//>>>>>>> origin/main
     }
     else{
         Name.append("one");
@@ -300,7 +319,7 @@ int main(int argc, char *argv[]) {
     std::vector<PREC> dotVector;
     PREC * results;
     results = new PREC[(GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY)*GInd::getLatData().globLT];
-    ///  
+    ///
     timer.start();
     //// loop over length of wilson lines
     for(int length = 1; length<GInd::getLatData().globLT+1;length++){
@@ -360,6 +379,7 @@ int main(int argc, char *argv[]) {
                 ir2 += z0*z0;
             }
 
+//<<<<<<< HEAD
 
             if(ir2 < (param.cutRadius()*param.cutRadius() +1) ){
 
@@ -389,6 +409,13 @@ int main(int argc, char *argv[]) {
 //                    rootLogger.info() << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j]; 
                     file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
                 }
+//=======
+
+
+//            for(int j = 0;j < STACKS ; j++){
+////                rootLogger.info(x0+j ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[j]);
+//                file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
+//>>>>>>> origin/main
             }
 ////////////////////
         }
@@ -442,7 +469,7 @@ int main(int argc, char *argv[]) {
             dot = results[i+entries*(length-1)];
 
             // save results
-           
+
 
                 int ir2 = 0;
                 if(x0 > (int)GInd::getLatData().globLX/2){
@@ -491,7 +518,7 @@ int main(int argc, char *argv[]) {
         }
 /////// write to file
 
-       
+
         for(int ir2=0; ir2<r2max+1; ir2++) {
             if(norm_r2[ir2] > 0.1 && ir2 < (param.cutRadius()*param.cutRadius() +1)){
                 file_r2 << length << " " << ir2 << " " << results_r2[ir2]/norm_r2[ir2] << "\n";

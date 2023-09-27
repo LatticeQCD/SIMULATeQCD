@@ -1,4 +1,4 @@
-/* 
+/*
  * gfix.cpp
  *
  * D. Clarke
@@ -12,15 +12,15 @@
 /// Kernel to compute local contribution to GF functional.
 template<class floatT,size_t HaloDepth>
 struct GFActionKernel{
-    gaugeAccessor<floatT> gaugeAccessor;
-    GFActionKernel(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){
+    SU3Accessor<floatT> SU3Accessor;
+    GFActionKernel(Gaugefield<floatT,true,HaloDepth> &gauge) : SU3Accessor(gauge.getAccessor()){
     }
     __device__ __host__ floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         floatT gfa=0.0;
         /// For Coulomb and Landau gauge fixing, the functional to be maximized is ~sum_{x,mu} Re tr U.
         for ( int mu = 0; mu < I_FIX; mu++) {
-            gfa+=tr_d(gaugeAccessor.getLink(GInd::getSiteMu(site, mu)));
+            gfa+=tr_d(SU3Accessor.getLink(GInd::getSiteMu(site, mu)));
         }
         return gfa;
     }
@@ -29,20 +29,20 @@ struct GFActionKernel{
 /// Kernel to compute local contribution to GF theta.
 template<class floatT,size_t HaloDepth>
 struct GFThetaKernel{
-    gaugeAccessor<floatT> gaugeAccessor;
-    GFThetaKernel(Gaugefield<floatT,true,HaloDepth>&gauge):gaugeAccessor(gauge.getAccessor()){
+    SU3Accessor<floatT> SU3Accessor;
+    GFThetaKernel(Gaugefield<floatT,true,HaloDepth>&gauge):SU3Accessor(gauge.getAccessor()){
     }
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
         floatT theta=0.0;
-        GSU3<floatT> delta,temp;
-        delta=gsu3_zero<floatT>();
+        SU3<floatT> delta,temp;
+        delta=su3_zero<floatT>();
         for(int mu=0;mu<I_FIX;mu++){
-            temp=       gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
-                 -gaugeAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
-                 -      gaugeAccessor.getLink(GInd::getSiteMu(site, mu))
-                 +gaugeAccessor.getLinkDagger(GInd::getSiteMu(site, mu));
-            temp=temp-1./3.*tr_c(temp)*gsu3_one<floatT>();
+            temp=       SU3Accessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
+                 -SU3Accessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site, mu), mu))
+                 -      SU3Accessor.getLink(GInd::getSiteMu(site, mu))
+                 +SU3Accessor.getLinkDagger(GInd::getSiteMu(site, mu));
+            temp=temp-1./3.*tr_c(temp)*su3_one<floatT>();
             delta+=temp;
         }
         theta=tr_d(delta,dagger(delta));
@@ -53,22 +53,22 @@ struct GFThetaKernel{
 /// Kernel to gauge fix via over-relaxation.
 template<class floatT,Layout LatLayout,size_t HaloDepth>
 struct GFORKernel{
-    gaugeAccessor<floatT> gaugeAccessor;
-    GFORKernel(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
+    SU3Accessor<floatT> SU3Accessor;
+    GFORKernel(Gaugefield<floatT,true,HaloDepth> &gauge) : SU3Accessor(gauge.getAccessor()){}
 
     __device__ __host__ void operator()(gSite site) {
 
         typedef GIndexer<LatLayout,HaloDepth> GInd;
-        GSU3<floatT> v,g;
-        GSU2<floatT> z1,z2,z3;
+        SU3<floatT> v,g;
+        SU2<floatT> z1,z2,z3;
         floatT a0,a1,a2,a3,asq,a0sq,x,r,xdr;
         const floatT relax=1.3;
-        GCOMPLEX(floatT) x00,x01;
+        COMPLEX(floatT) x00,x01;
 
-        v=gsu3_one<floatT>();
+        v=su3_one<floatT>();
         for( int mu = 0; mu < I_FIX; mu++){
-            v+=gaugeAccessor.getLinkDagger(GInd::getSiteMu(site, mu));              /// w += U_{mu}(site)^{dagger}
-            v+=gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu)); /// w += U_{mu}(site-hat{mu})
+            v+=SU3Accessor.getLinkDagger(GInd::getSiteMu(site, mu));              /// w += U_{mu}(site)^{dagger}
+            v+=SU3Accessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu)); /// w += U_{mu}(site-hat{mu})
         }
 
         /// FIRST SU(2) SUBGROUP: COMPUTE LOCAL MAX
@@ -95,9 +95,9 @@ struct GFORKernel{
         ///     c   d,
         /// with a,b,c,d complex. In the fundamental representation, d=conj(a) and c=-conj(b); therefore an SU(2) matrix
         /// can be specified by 2 complex numbers.
-        x00=GCOMPLEX(floatT)(a0,a3);
-        x01=GCOMPLEX(floatT)(a2,a1);
-        z1 =GSU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(a0,a3);
+        x01=COMPLEX(floatT)(a2,a1);
+        z1 =SU2<floatT>(x00,x01);
 
         /// SECOND SU(2) SUBGROUP: COMPUTE LOCAL MAX
         a0 =  real(v.getLink00()) + real(v.getLink22());
@@ -117,9 +117,9 @@ struct GFORKernel{
         a2*=xdr;
         a3*=xdr;
 
-        x00=GCOMPLEX(floatT)(a0,a3);
-        x01=GCOMPLEX(floatT)(a2,a1);
-        z2 =GSU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(a0,a3);
+        x01=COMPLEX(floatT)(a2,a1);
+        z2 =SU2<floatT>(x00,x01);
 
         /// THIRD SU(2) SUBGROUP: COMPUTE LOCAL MAX
         a0 =  real(v.getLink11()) + real(v.getLink22());
@@ -139,22 +139,22 @@ struct GFORKernel{
         a2*=xdr;
         a3*=xdr;
 
-        x00=GCOMPLEX(floatT)(a0,a3);
-        x01=GCOMPLEX(floatT)(a2,a1);
-        z3=GSU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(a0,a3);
+        x01=COMPLEX(floatT)(a2,a1);
+        z3=SU2<floatT>(x00,x01);
 
         /// Recover the OR SU(3) matrix
-        g=gsu3_one<floatT>();
+        g=su3_one<floatT>();
         g=sub12(z1,g);
         g=sub13(z2,g);
         g=sub23(z3,g);
 
         /// OR update: Apply g to U_{mu}(site) and U_{mu}(site-hat{mu})
         for( int mu=0; mu<4; mu++){
-            gaugeAccessor.setLink(GInd::getSiteMu(site, mu),
-                                  g*gaugeAccessor.getLink(GInd::getSiteMu(site, mu)));
-            gaugeAccessor.setLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu),
-                                gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))*dagger(g));
+            SU3Accessor.setLink(GInd::getSiteMu(site, mu),
+                                  g*SU3Accessor.getLink(GInd::getSiteMu(site, mu)));
+            SU3Accessor.setLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu),
+                                SU3Accessor.getLink(GInd::getSiteMu(GInd::site_dn(site, mu), mu))*dagger(g));
         }
     }
 };
@@ -204,13 +204,13 @@ void GaugeFixing<floatT,onDevice,HaloDepth>::gaugefixOR() {
 /// Kernel to compute local contribution to GF R.
 template<class floatT,size_t HaloDepth>
 struct GFRKernel{
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> gaugeAccessor;
     GFRKernel(Gaugefield<floatT,true,HaloDepth>&gauge):gaugeAccessor(gauge.getAccessor()){
     }
     __device__ __host__ floatT operator()(gSite site){
         typedef GIndexer<All,HaloDepth> GInd;
         floatT RVal=0.0;
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
         for(int mu=0;mu<4;mu++){
             temp=gaugeAccessor.getLink(GInd::getSiteMu(site, mu));
             floatT val = abs(tr_c(temp));
@@ -224,8 +224,8 @@ struct GFRKernel{
 template<class floatT,Layout LatLayout,size_t HaloDepth>
 struct ProjectZ{
 
-   gaugeAccessor<floatT> gAcc;
-   gaugeAccessor<floatT> gAcc2;
+   SU3Accessor<floatT> gAcc;
+   SU3Accessor<floatT> gAcc2;
 
    ProjectZ(Gaugefield<floatT,true,HaloDepth> &gauge,Gaugefield<floatT,true,HaloDepth> &gauge2) : gAcc(gauge.getAccessor()), gAcc2(gauge2.getAccessor()){}
 
@@ -233,11 +233,11 @@ struct ProjectZ{
       typedef GIndexer<LatLayout,HaloDepth> GInd;
 
 
-      GSU3<floatT> link = gsu3_one<floatT>();
+      SU3<floatT> link = su3_one<floatT>();
 
 
       for( int mu=0; mu<4; mu++){
-         GCOMPLEX(floatT) val = tr_c(gAcc.getLink(GInd::getSiteMu(site, mu)))/3.0;
+         COMPLEX(floatT) val = tr_c(gAcc.getLink(GInd::getSiteMu(site, mu)))/3.0;
          floatT angle = asin(val.cIMAG/sqrt(val.cIMAG*val.cIMAG+val.cREAL*val.cREAL));
          //printf("%f \n", angle);
          if(val.cREAL < 0.0 && val.cIMAG > 0.0){
@@ -249,13 +249,13 @@ struct ProjectZ{
          //printf("2 %f \n", angle);
 
          if(angle < - 1.0472){
-            val = GCOMPLEX(floatT)(-0.5, -0.866025);
+            val = COMPLEX(floatT)(-0.5, -0.866025);
          }
          else if(angle >  1.0472){
-            val = GCOMPLEX(floatT)(-0.5, 0.866025);
+            val = COMPLEX(floatT)(-0.5, 0.866025);
          }
          else{
-            val = GCOMPLEX(floatT)(1.0, 0.0);
+            val = COMPLEX(floatT)(1.0, 0.0);
          }
 
          gAcc2.setLink(GInd::getSiteMu(site, mu), val*link);
@@ -279,34 +279,34 @@ void GaugeFixing<floatT,onDevice,HaloDepth>::projectZ(Gaugefield<floatT,onDevice
 /// Kernel to gauge fix R
 template<class floatT,Layout LatLayout,size_t HaloDepth, size_t nu>
 struct GFRORKernel{
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> gaugeAccessor;
     GFRORKernel(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
 
     __device__ __host__ void operator()(gSite site) {
 
         typedef GIndexer<LatLayout,HaloDepth> GInd;
-        GSU3<floatT> v,g, g0,g1,g2,g3;
-        GSU2<floatT> z1,z2,z3, z0;
-        GCOMPLEX(floatT) d0[4*8], e0[8];
-        GCOMPLEX(floatT) x00,x01;
-        GCOMPLEX(floatT) im1(0.0,1.0);
+        SU3<floatT> v,g, g0,g1,g2,g3;
+        SU2<floatT> z1,z2,z3, z0;
+        COMPLEX(floatT) d0[4*8], e0[8];
+        COMPLEX(floatT) x00,x01;
+        COMPLEX(floatT) im1(0.0,1.0);
 
-        x00=GCOMPLEX(floatT)(1.0,-0.0);
-        x01=GCOMPLEX(floatT)(-0.0,-0.0);
-        z0 =GSU2<floatT>(x00,x01);
-        x00=GCOMPLEX(floatT)(0.0,-0.0);
-        x01=GCOMPLEX(floatT)(-0.0,-1.0);
-        z1 =GSU2<floatT>(x00,x01);
-        x00=GCOMPLEX(floatT)(0.0,-0.0);
-        x01=GCOMPLEX(floatT)(-1.0,-0.0);
-        z2 =GSU2<floatT>(x00,x01);
-        x00=GCOMPLEX(floatT)(0.0,-1.0);
-        x01=GCOMPLEX(floatT)(-0.0,-0.0);
-        z3 =GSU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(1.0,-0.0);
+        x01=COMPLEX(floatT)(-0.0,-0.0);
+        z0 =SU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(0.0,-0.0);
+        x01=COMPLEX(floatT)(-0.0,-1.0);
+        z1 =SU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(0.0,-0.0);
+        x01=COMPLEX(floatT)(-1.0,-0.0);
+        z2 =SU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(0.0,-1.0);
+        x01=COMPLEX(floatT)(-0.0,-0.0);
+        z3 =SU2<floatT>(x00,x01);
 
 
 
-        g=gsu3_one<floatT>();
+        g=su3_one<floatT>();
 
         if(nu==0){
             g.setLink22(0.0);
@@ -512,12 +512,12 @@ struct GFRORKernel{
         //printf("vecg %lu  %f %f %f %f \n",site.isiteFull ,vecg[0], vecg[1], vecg[2], vecg[3]);
 
 
-        x00=GCOMPLEX(floatT)(vecg[0],-vecg[3]);
-        x01=GCOMPLEX(floatT)(-vecg[2],-vecg[1]);
-        z1 =GSU2<floatT>(x00,x01);
+        x00=COMPLEX(floatT)(vecg[0],-vecg[3]);
+        x01=COMPLEX(floatT)(-vecg[2],-vecg[1]);
+        z1 =SU2<floatT>(x00,x01);
 
         /// Recover the OR SU(3) matrix
-        g=gsu3_one<floatT>();
+        g=su3_one<floatT>();
         if(nu==0){
             g=sub12(z1,g);
         }

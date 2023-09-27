@@ -29,7 +29,7 @@
 #
 Lattice     = 32 32 32 8
 Nodes       = 1 1 1 1
-beta        = 6.285 
+beta        = 6.285
 mass_s      = 0.0790
 mass_ud     = 0.0009875
 mu0         = 0.4
@@ -39,7 +39,7 @@ no_step_sf  = 5
 no_sw       = 15
 cgMax       = 6500
 always_acc  = 0
-rat_file    = /work/data/dclarke/imaginaryMu/in.rational_l244f21b5980m004346m1173 
+rat_file    = /work/data/dclarke/imaginaryMu/in.rational_l244f21b5980m004346m1173
 rand_flag   = 0
 rand_file   = rand
 seed        = 20214
