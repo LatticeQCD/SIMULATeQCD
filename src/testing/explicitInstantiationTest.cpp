@@ -42,5 +42,5 @@ struct CustomInstantiation {
 
 };
 
-template struct Instantiate<CustomInstantiation,PRECISION_VARIANTS,HALO_VARIANTS>; 
 
+static constexpr auto function_templates __attribute__((used)) = Instantiate<CustomInstantiation,PRECISION_VARIANTS,HALO_VARIANTS>;

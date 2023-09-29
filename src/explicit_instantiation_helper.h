@@ -34,9 +34,7 @@ using PRECISION_VARIANTS = std::variant< ENABLED_PRECISIONS >;
 
 
 template<class FUNCTOR, typename... Args>
-struct Instantiate {
-    Instantiate( Args&& ... args  ) {
+constexpr auto Instantiate( Args&& ... args  ) {
 
-        std::visit(FUNCTOR{}, args...);
-    }
-};
+    return std::visit(FUNCTOR{}, args...);
+}
