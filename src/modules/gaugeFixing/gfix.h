@@ -13,15 +13,9 @@
 
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
-//<<<<<<< HEAD
-//#include "../../base/LatticeContainer.h"
-//#include "../../base/math/gsu2.h"
-//#include "../../base/math/matrix4x4_notSym.h"
-//=======
 #include "../../base/latticeContainer.h"
 #include "../../base/math/su2.h"
 #include "../../base/math/matrix4x4_notSym.h"
-//>>>>>>> origin/main
 
 /// Class for gauge fixing functions. For now this only includes simple functions that calculate the gauge fixing
 /// action and theta, but will include everything else at some later point. Specify whether it is Coulomb or

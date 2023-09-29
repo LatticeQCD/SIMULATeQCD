@@ -41,13 +41,10 @@ class WilsonLineCorrelatorMultiGPU{
     std::vector<floatT> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,floatT> &redBase);
 
     std::vector<floatT> gDotAlongXYStackedShared( Gaugefield<floatT,true,HaloDepth> &gauge , int shifty,  LatticeContainer<true,floatT> &redBase);
-//<<<<<<< HEAD:src/modules/observables/WilsonLineCorrelatorMultiGPU.h
 
 
     std::vector<floatT> gWilsonLoop( Gaugefield<floatT,true,HaloDepth> &gauge , Gaugefield<floatT,true,HaloDepth> &gaugeX ,int wlt,  LatticeContainer<true,floatT> &redBase);
 
-//=======
-//>>>>>>> origin/main:src/modules/observables/wilsonLineCorrelatorMultiGPU.h
 };
 
 template<class floatT,size_t HaloDepth,Layout LatLayout,size_t direction,bool Up>
@@ -376,7 +373,6 @@ struct DotAlongXYIntervalStacked{
     }
 };
 
-//<<<<<<< HEAD:src/modules/observables/WilsonLineCorrelatorMultiGPU.h
 //////////wilson loop
 
 template<class floatT,size_t HaloDepth,Layout LatLayout, int stacks>
@@ -510,7 +506,3 @@ struct WilsonLoop{
 };
 
 
-//#endif
-
-//=======
-//>>>>>>> origin/main:src/modules/observables/wilsonLineCorrelatorMultiGPU.h

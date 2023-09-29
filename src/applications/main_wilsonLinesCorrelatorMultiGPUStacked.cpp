@@ -5,19 +5,6 @@
  *
  */
 
-//<<<<<<< HEAD
-//#include "../SIMULATeQCD.h"
-//#include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
-//#include "../modules/gradientFlow/gradientFlow.h"
-//#include "../modules/hyp/hypSmearing.h"
-
-
-//#include <iostream>
-//using namespace std;
-
-//#define PREC double
-//#define STACKS 64 
-//=======
 #include "../simulateqcd.h"
 #include "../modules/observables/wilsonLineCorrelatorMultiGPU.h"
 #include "../modules/gradientFlow/gradientFlow.h"
@@ -25,7 +12,6 @@
 
 #define PREC double
 #define STACKS 96
-//>>>>>>> origin/main
 
 
 template<class floatT>
@@ -126,15 +112,9 @@ int main(int argc, char *argv[]) {
     else if(param.load_conf() == 2 || param.load_conf() == 1)
     {
         std::string file_path = param.directory();
-//<<<<<<< HEAD
         file_path.append(param.gauge_file()); 
         rootLogger.info("Starting from configuration: ", file_path);
-//	rootLogger.info() << param.gauge_file() << endl;
-//=======
-//        file_path.append(param.gauge_file());
-//        rootLogger.info("Starting from configuration: " ,  file_path);
 //	rootLogger.info(param.gauge_file() ,  endl);
-//>>>>>>> origin/main
         if(param.file_type() == "nersc"){
             gauge.readconf_nersc(file_path);
         }
@@ -283,7 +263,6 @@ int main(int argc, char *argv[]) {
     if(param.load_conf() == 2 || param.load_conf() == 1){
         Name.append(param.gauge_file());
         Name_r2.append(param.gauge_file());
-//<<<<<<< HEAD
   	if(param.use_wilson()){
 	    Name.append("_");
 	    Name_r2.append("_");
@@ -291,8 +270,6 @@ int main(int argc, char *argv[]) {
             Name.append(s);
 	    Name_r2.append(s);
 	}	
-//=======
-//>>>>>>> origin/main
     }
     else{
         Name.append("one");
@@ -379,7 +356,6 @@ int main(int argc, char *argv[]) {
                 ir2 += z0*z0;
             }
 
-//<<<<<<< HEAD
 
             if(ir2 < (param.cutRadius()*param.cutRadius() +1) ){
 
@@ -409,13 +385,8 @@ int main(int argc, char *argv[]) {
 //                    rootLogger.info() << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j]; 
                     file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
                 }
-//=======
 
 
-//            for(int j = 0;j < STACKS ; j++){
-////                rootLogger.info(x0+j ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[j]);
-//                file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
-//>>>>>>> origin/main
             }
 ////////////////////
         }

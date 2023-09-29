@@ -26,21 +26,15 @@ testRoutinesNoParam[_hisqForce]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
 testRoutinesNoParam[_memManTest]="1"
-#<<<<<<< HEAD
-#testRoutinesNoParam[_RndSingleTest]="1"
-#testRoutinesNoParam[_SimpleFunctorTest]="1"
-#testRoutinesNoParam[_UtimesUdaggerTest]="1"
-#testRoutinesNoParam[_wilsonLinesCorrelatorTest]="1"
-#testRoutinesNoParam[_TaylorMeasurementTest]="4"
-#testRoutinesNoParam[_hypSmearingTest]="1"
-#=======
+testRoutinesNoParam[_hypSmearingTest]="1"
 testRoutinesNoParam[_rndSingleTest]="1"
 testRoutinesNoParam[_simpleFunctorTest]="1"
 testRoutinesNoParam[_utimesUdaggerTest]="1"
 testRoutinesNoParam[_taylorMeasurementTest]="4"
 testRoutinesNoParam[_weinbergTopTest]="1"
-#>>>>>>> origin/main
-testRoutinesNoParam[_hypSmearingTest]="1"
+
+testRoutinesNoParam[_wilsonLinesCorrelatorTest]="1"
+testRoutinesNoParam[_RFixingTest]="1"
 
 # Counting the number of test sets lets us give the user some indication of progress.
 numberOfTestRoutines="$((${#testRoutinesNoParam[@]}))"

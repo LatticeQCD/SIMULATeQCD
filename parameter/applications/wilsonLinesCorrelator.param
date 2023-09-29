@@ -17,7 +17,7 @@
 #         load_conf: 0 is set gauge to idendity matrix, 1 is load configuration, 2 is load configuration and gauge gix
 #       useInfoFile: If using info file for milc configuration put to 1, otherwise 0
 #
-
+#   #define STACKS 64 in src/applications/main_wilsonloop.cpp needs to be equal to Nx at compile time
 Lattice    = 96 96 96 32
 Nodes      = 1  1  2  1
 
