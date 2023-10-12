@@ -249,13 +249,6 @@ int main(int argc, char **argv) {
     test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol); 
     test_dslash<float, Even, Odd, 2, 2, true>(commBase, Vol);
     test_dslash<float, Even, Odd, 4, 1, true>(commBase, Vol);
-
-
-    rootLogger.info("--------------------------------------");
-    rootLogger.info("--------Testing 12 STACKS-------------");
-    rootLogger.info("--------------------------------------");
-    test_dslash<float, Even, Odd, 3, 4, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 4, 3, true>(commBase, Vol);
 #endif
 
 }

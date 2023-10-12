@@ -781,7 +781,7 @@ src/base/math/random.cpp
 src/gauge/gaugefield_device.cpp
 src/base/latticeContainer.cpp) 
 set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} ${ALL_LAYOUTS} GIT_HASH="${GIT_HASH}")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
 add_dependencies(profilers multiRHSProf)
 else()
 #set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
@@ -795,7 +795,7 @@ src/base/math/random.cpp
 src/gauge/gaugefield_device.cpp
 src/base/latticeContainer.cpp) 
 set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_3=1 NSTACKS_BLOCK_4=1 ${ALL_LAYOUTS} GIT_HASH="${GIT_HASH}")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_4=1 LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
 add_dependencies(profilers multiRHSProf)
 endif()
 
