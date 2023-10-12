@@ -30,12 +30,12 @@ int main(int argc, char *argv[]) {
     rat.readfile(commBase, rhmc_param.rat_file());
 
     Gaugefield<PREC, true, HaloDepth, R18> gauge(commBase);
-    Gaugefield<PREC, true, HaloDepth> gaugeLvl2(commBase,"SHARED_GAUGELVL2");
-    Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase, "SHARED_GAUGENAIK");
+    Gaugefield<PREC, true, HaloDepth> gaugeLvl2(commBase);
+    Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase);
     Gaugefield<PREC, true, HaloDepth> force(commBase);
     Gaugefield<PREC, false, HaloDepth> force_host(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin> SpinorIn(commBase);
-    Spinorfield<PREC, true, Even, HaloDepthSpin, 14> SpinorOutMulti(commBase,"SHARED_tmp");
+    Spinorfield<PREC, true, Even, HaloDepthSpin, 14> SpinorOutMulti(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin> spinortmp(commBase);
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
@@ -74,8 +74,6 @@ int main(int argc, char *argv[]) {
     }
     SpinorIn.updateAll();
 
-
-    MemoryManagement::memorySummary();
 
     StopWatch<true> timer;
     timer.start();

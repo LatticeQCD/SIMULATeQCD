@@ -161,7 +161,7 @@ elseif (USE_HIP_AMD)
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps")
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
@@ -357,7 +357,34 @@ if (USE_CUDA)
 endif()
 
 #---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
+FUNCTION(add_standalone_executable TARGET)
+if (USE_CUDA)
+        add_executable(${TARGET} ${ARGN}) # single target
 
+        target_link_libraries("_${TARGET}")
+        set_target_properties(${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+    elseif (USE_HIP_AMD)
+        add_executable(${TARGET} ${ARGN}) # single target
+        
+# This might work in the future
+#        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON PUBLIC "-L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
+
+    elseif (USE_HIP_NVIDIA)
+        add_executable(${TARGET} ${ARGN}) # single target
+        
+# This might work in the future
+#        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET} PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+    endif()
+ENDFUNCTION()
 
 FUNCTION(add_SIMULATeQCD_executable TARGET)
     if (USE_CUDA)
@@ -735,18 +762,41 @@ set_SIMULATeQCD_property(inverterProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profi
 SIMULATeQCD_target_compile_definitions(inverterProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers inverterProf)
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_cgprofiling.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp) 
+add_SIMULATeQCD_executable(cgProf src/profiling/main_cgprofiling.cpp  src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp) 
+set_SIMULATeQCD_property(cgProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(cgProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers cgProf)
+
+
 if (USE_TILED_MULTIRHS)
-set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-set_SIMULATeQCD_property(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(profilers multiRHSProf)
+#set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
+add_standalone_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp src/base/gutils.cpp
+src/base/memoryManagement.cpp
+src/base/indexer/initGPUIndexer.cpp
+src/base/indexer/initCPUIndexer.cpp
+src/base/communication/communicationBase_mpi.cpp
+src/base/IO/parameterManagement.cpp
+src/base/math/random.cpp
+src/gauge/gaugefield_device.cpp
+src/base/latticeContainer.cpp) 
+set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} ${ALL_LAYOUTS} GIT_HASH="${GIT_HASH}")
+add_dependencies(profilers multiRHSProf)
 else()
-set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-set_SIMULATeQCD_property(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_3=1 NSTACKS_BLOCK_4=1 NSTACKS_BLOCK_6=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(profilers multiRHSProf)
+#set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
+add_standalone_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp src/base/gutils.cpp
+src/base/memoryManagement.cpp
+src/base/indexer/initGPUIndexer.cpp
+src/base/indexer/initCPUIndexer.cpp
+src/base/communication/communicationBase_mpi.cpp
+src/base/IO/parameterManagement.cpp
+src/base/math/random.cpp
+src/gauge/gaugefield_device.cpp
+src/base/latticeContainer.cpp) 
+set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_3=1 NSTACKS_BLOCK_4=1 ${ALL_LAYOUTS} GIT_HASH="${GIT_HASH}")
+add_dependencies(profilers multiRHSProf)
 endif()
 
 

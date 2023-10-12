@@ -565,6 +565,7 @@ template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axupbyThisLoopd<6
 template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axpyThisLoop<64>(const SimpleArray<floatT, STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS> &y, size_t stack_entry);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::xpayThisBd<SimpleArray<double,STACKS>,64>(const SimpleArray<double, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&); \
 template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axpyThisLoopd<32>(const SimpleArray<double, STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS> &y, size_t stack_entry);\
+template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axpyThisLoopd<64>(const SimpleArray<double, STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS> &y, size_t stack_entry);\
 template struct returnSpinor<floatT,true,LO,HALOSPIN,STACKS>;\
 
 INIT_PLHSN_HALF(SPINOR_INIT_PLHSN_HALF)

@@ -167,7 +167,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
 
         B[0] = - norm_r2 / pAp;
 
-        r.template axpyThisB<64>(B[0], s);
+        r.axpyThisB(B[0], s);
 
 
         for (int j=1; j<max_term; j++) {
@@ -183,7 +183,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         norm_r2 = lambda2;
 
 
-        spinorOut.template axpyThisLoop<64>(((floatT)(-1.0))*B, pi,max_term);
+        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term);
         //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
 
 
@@ -194,7 +194,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         //################################
 
 
-        pi.template axupbyThisLoop<64>(Z, a, r, max_term);
+        pi.template axupbyThisLoop(Z, a, r, max_term);
         //     pi[i] = Z[i] * r + a[i] * pi[i];
 
 
@@ -270,7 +270,7 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
         B = -1.0* norm_r2 / pAp;
 
-        r.template axpyThisLoopd<32>(B, s, NStacks);
+        r.axpyThisLoopd(B, s, NStacks);
 
         dot2 = r.dotProductStacked(r);
 
@@ -278,7 +278,7 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
         a = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        spinorOut.template axpyThisLoopd<32>(-1.0*B, pi,NStacks);
+        spinorOut.axpyThisLoopd(-1.0*B, pi,NStacks);
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
@@ -348,7 +348,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
         alpha = -1.0 * norm_r2 / pAp;
 
         //r_k+1 = r_k - |r|^2/pAp * Ap_k+1
-        r.template axpyThisLoopd<32>(alpha, s, NStacks);
+        r.axpyThisLoopd(alpha, s, NStacks);
 
         dot = r.dotProductStacked(r);
         lambda2 = real<double>(dot);
@@ -359,7 +359,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
         }
 
         //x_k+1 = x_k + |r|^2/pAp * p_k+1
-        accum.template axpyThisLoopd<32>(-1.0*alpha, pi, NStacks);
+        accum.axpyThisLoopd(-1.0*alpha, pi, NStacks);
         norm_r2 = lambda2;
         if ((max(lambda2) < delta*max(norm_restart)) && (max(norm_restart) <= max(norm_comp))) {
             //reliable update
@@ -372,7 +372,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             SimpleArray<double, NStacks> tmp_arr(-1.0);
             spinorOut.updateAll();
             dslash.applyMdaggM(s,spinorOut, false);
-            r.template axpyThisLoopd<32>(tmp_arr,s,NStacks);
+            r.axpyThisLoopd(tmp_arr,s,NStacks);
 
             dot = r.dotProductStacked(r);
             lambda2 = real<double>(dot);
@@ -388,7 +388,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
 
             SimpleArray<double,NStacks> proj(-1.0*pdotr/norm_restart);
             //pi = pi - <p,r>/|r|^2 * r
-            pi.template axpyThisLoopd<32>(proj,r,NStacks);
+            pi.axpyThisLoopd(proj,r,NStacks);
 
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             norm_r2 = lambda2;
@@ -473,7 +473,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
         alpha = -1.0 * norm_r2 / pAp;
 
         //r_k+1 = r_k - |r|^2/pAp * Ap_k+1
-        r_inner.template axpyThisLoopd<32>(alpha, s_inner, NStacks);
+        r_inner.axpyThisLoopd(alpha, s_inner, NStacks);
 
         dot = r_inner.dotProductStacked(r_inner);
         lambda2 = real<double>(dot);
@@ -486,7 +486,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
         }
 
         //x_k+1 = x_k + |r|^2/pAp * p_k+1
-        accum.template axpyThisLoopd<32>(-1.0*alpha, pi, NStacks);
+        accum.axpyThisLoopd(-1.0*alpha, pi, NStacks);
         norm_r2 = lambda2;
         if ((max(lambda2) < delta*max(norm_restart)) && (max(norm_restart) <= max(norm_comp))) {
             //reliable update
@@ -501,7 +501,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             //reuse accum to save dslash result.
             spinorOut.updateAll();
             dslash.applyMdaggM(accum,spinorOut, false);
-            r.template axpyThisLoopd<32>(tmp_arr,accum,NStacks);
+            r.axpyThisLoopd(tmp_arr,accum,NStacks);
             r_inner.convert_precision(r);
 
             dot = r.dotProductStacked(r);
@@ -519,7 +519,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             SimpleArray<double,NStacks> proj(-1.0*pdotr/norm_restart);
 
             //pi = pi - <p,r>/|r|^2 * r
-            pi.template axpyThisLoopd<32>(proj,r,NStacks);
+            pi.axpyThisLoopd(proj,r,NStacks);
             //beta = norm_restart / norm_r2;
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             pi_inner.convert_precision(pi);
