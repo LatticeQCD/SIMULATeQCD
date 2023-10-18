@@ -186,6 +186,32 @@ struct SpinorPlusConstTTimesSpinor{
 };
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
+struct SpinorPlusConstTTimesSpinorNoReturn{
+
+    Vect3arrayAcc<floatT> spinor1;
+    Vect3arrayAcc<floatT> spinor2;
+    const_T val;
+    size_t MaxStack;
+    SpinorPlusConstTTimesSpinorNoReturn(Vect3arrayAcc<floatT> spinor1,
+                                  Vect3arrayAcc<floatT> spinor2,
+                                  const_T val, size_t maxStack) : spinor1(spinor1), spinor2(spinor2), val(val), MaxStack(maxStack){}
+
+    __device__ __host__ void operator()(gSiteStack& site) {
+        typedef GIndexer<LatLayout, HaloDepth> GInd;
+
+        static_for<0,NStacks>::apply([&] (auto stack) {
+            if (stack < MaxStack) {
+                Vect3<floatT> Stmp;
+                Stmp = spinor1.getElement(GInd::getSiteStack(site,stack));
+                Stmp += val(GInd::getSiteStack(site,stack)) * spinor2.getElement(GInd::getSiteStack(site,stack));
+                spinor1.setElement(GInd::getSiteStack(site,stack),Stmp);
+            }
+        });
+    }
+};
+
+
+template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinord{
 
     Vect3arrayAcc<floatT> spinor1;
@@ -394,18 +420,22 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axpyThisB(con
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 template<size_t BlockSize, typename const_T>
 void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axpyThisLoop(const const_T &x,
-        const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y, size_t stack_entry) {
+        const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y, const size_t stack_entry) {
 
-    static_for<0, NStacks>::apply([&](auto i) {
-         // change this to include a vector of bools, to see wether one needs to modify the vector, or if it has converged
+    // static_for<0, NStacks>::apply([&](auto i) {
+    //      // change this to include a vector of bools, to see wether one needs to modify the vector, or if it has converged
 
-            if(stack_entry >= i+1 ) {
-                iterateOverBulkAtStack<i, BlockSize>(
-                        SpinorPlusConstTTimesSpinor<floatT, LatLayout, HaloDepth, const_T, NStacks>(
-                                this->getAccessor(), y.getAccessor(), x));
-            }
-            });
+    //         if(stack_entry >= i+1 ) {
+    //             iterateOverBulkAtStack<i, BlockSize>(
+    //                     SpinorPlusConstTTimesSpinor<floatT, LatLayout, HaloDepth, const_T, NStacks>(
+    //                             this->getAccessor(), y.getAccessor(), x));
+    //         }
+    //         });
+        CalcGSiteStack<LatLayout, HaloDepth> calcGSite;
+        iterateFunctorNoReturn<onDevice, BlockSize>(SpinorPlusConstTTimesSpinorNoReturn<floatT, LatLayout, HaloDepth, const_T, NStacks>(
+            this->getAccessor(), y.getAccessor(), x, stack_entry), calcGSite,this->getNumberLatticePoints(), 1);
 }
+
 
 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
