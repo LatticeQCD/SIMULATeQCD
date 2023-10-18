@@ -334,6 +334,41 @@ struct StackTimesFloatPlusFloatTimesNoStackLoop
     }
 };
 
+template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
+struct StackTimesFloatPlusFloatTimesNoStackNoReturn
+{
+    Vect3arrayAcc<floatT> spinorIn1;
+    Vect3arrayAcc<floatT> spinorIn2;
+    const_T _a;
+    const_T _b;
+    size_t MaxStack;
+    typedef GIndexer<LatLayout, HaloDepth> GInd;
+
+    StackTimesFloatPlusFloatTimesNoStackNoReturn(Vect3arrayAcc<floatT> spinorIn1,
+            SimpleArray<floatT, NStacks> a,
+            Vect3arrayAcc<floatT> spinorIn2,
+            SimpleArray<floatT, NStacks> b, size_t maxStack) :
+        spinorIn1(spinorIn1), spinorIn2(spinorIn2), _a(a), _b(b), MaxStack(maxStack) {}
+
+    __host__ __device__ void initialize(__attribute__((unused)) gSite& site){
+    }
+
+
+    __host__ __device__ void operator()(gSiteStack& site){
+        static_for<0,NStacks>::apply([&] (auto stack){ 
+            if (stack < MaxStack) {
+                gSiteStack siteUnStack = GInd::getSiteStack(site, 0);
+                gSiteStack siteStack = GInd::getSiteStack(site, stack);
+                Vect3<floatT> my_vec;
+
+                my_vec = spinorIn1.getElement(siteStack)*_a(siteStack) + spinorIn2.getElement(siteUnStack)*_b(siteStack);
+                spinorIn1.setElement(siteStack,my_vec);
+            }
+        });
+    }
+};
+
+
 
 template<class floatT, Layout LatLayout, int HaloDepth, typename const_T, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStackLoop_d
@@ -483,8 +518,9 @@ template<size_t BlockSize, typename const_T>
 void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axupbyThisLoop(const const_T &a, const const_T &b,
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> &y, size_t stack_entry) {
 
-    iterateOverBulkLoopStack<BlockSize>(StackTimesFloatPlusFloatTimesNoStackLoop<floatT, LatLayout, HaloDepth, const_T, NStacks>(
-                this->getAccessor(), b, y.getAccessor(), a), stack_entry);
+    CalcGSiteStack<LatLayout, HaloDepth> calcGSite;
+    iterateFunctorNoReturn<onDevice, BlockSize>(StackTimesFloatPlusFloatTimesNoStackNoReturn<floatT, LatLayout, HaloDepth, const_T, NStacks>(
+                this->getAccessor(), b, y.getAccessor(), a, stack_entry), calcGSite, this->getNumberLatticePoints(), 1);
 
 
     // iterateOverBulkAtStack<0,BlockSize>(StackTimesFloatPlusFloatTimesNoStack<floatT, LatLayout, HaloDepth, const_T, NStacks>(
