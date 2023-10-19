@@ -24,7 +24,7 @@
 #include "wrapper/marker.h"
 
 template<class floatT>
-gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size);
+gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size, gpuStream_t stream);
 
 template<class floatT>
 gpuError_t CubReduceMax(void *helpArr, size_t *temp_storage_bytes, void *Arr, floatT *out, size_t size);
@@ -88,7 +88,7 @@ private:
     gMemoryPtr<onDevice> d_out;
     gMemoryPtr<false>    StackOffsetsHostTemp;
     gMemoryPtr<onDevice> StackOffsetsTemp;
-
+    gpuStream_t redStream;
 public:
 
     //! constructor
@@ -107,6 +107,10 @@ public:
             StackOffsetsTemp(MemoryManagement::getMemAt<onDevice>("StackOffSetsTemp"))
             {
                 d_out->template adjustSize<elemType>(1);
+               gpuError_t streamErr = gpuStreamCreate(&redStream);
+                if (streamErr) {
+                    GpuError("LatticeContainer: gpuStreamCreate", streamErr);
+                }
             }
 
     //! copy constructor
@@ -132,7 +136,12 @@ public:
     LatticeContainer<onDevice, elemType>& operator=(LatticeContainer<onDevice, elemType>&&) = delete;
 
     //! destructor
-    ~LatticeContainer() = default;
+    ~LatticeContainer() {
+        gpuError_t gpuErr = gpuStreamDestroy(redStream);
+        if (gpuErr) {
+            GpuError("LatticeContainer: gpuStreamDestroy", gpuErr);
+        }
+    };
 
     void adjustSize(size_t size) {
 
@@ -171,21 +180,21 @@ public:
         if (onDevice) {
             ReductionResult->template adjustSize<elemType>(NStacks);
             ReductionResultHost->template adjustSize<elemType>(NStacks);
-
+            
             if (sequentialLoop) {
 
                 for (size_t i = 0; i < NStacks; i++) {
                     /// Determine temporary device storage requirements
                     size_t temp_storage_bytes = 0;
                     gpuError_t gpuErr = CubReduce<elemType>(NULL, &temp_storage_bytes,
-                                                            ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
+                                                            ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize, redStream);
 
                     if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (1)", gpuErr);
 
                     HelperArray->template adjustSize<void *>(temp_storage_bytes);
 
                     gpuErr = CubReduce<elemType>(HelperArray->getPointer(), &temp_storage_bytes,
-                                                 ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize);
+                                                 ContainerArray->template getPointer<elemType>(i*stackSize), ReductionResult->template getPointer<elemType>(i), stackSize, redStream);
 
                     if (gpuErr) GpuError("LatticeContainer::reduceStackedLocal: gpucub::DeviceReduce::Sum (2)", gpuErr);
                 }
@@ -227,7 +236,7 @@ public:
                 accRes.getValue((size_t) i, tmp);
                 values[i] = tmp;
             }
-
+            
         } else {
             LatticeContainerAccessor acc = getAccessor();
             for (size_t stack = 0; stack < NStacks; stack++) {
@@ -255,21 +264,22 @@ public:
         if (onDevice) {
             // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
+            
 
             gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
-                                    d_out->template getPointer<elemType>(), size);
+                                    d_out->template getPointer<elemType>(), size, redStream);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
 
             HelperArray->template adjustSize<void *>(temp_storage_bytes);
 
             gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
-                            d_out->template getPointer<elemType>(), size);
+                            d_out->template getPointer<elemType>(), size, redStream);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
 
             gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
             if (gpuErr)
                 GpuError("Reductionbase.h: Failed to copy data", gpuErr);
-
+           
         } else{
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
@@ -278,6 +288,7 @@ public:
         }
         value = comm.reduce(result);
         if (rootToAll) comm.root2all(result);
+        
         markerEnd();
     }
 
@@ -366,7 +377,7 @@ void LatticeContainer<onDevice, elemType>::iterateOverBulk(Functor op) {
     } else {
         elems = GInd::getLatData().vol4 / 2;
     }
-    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, 1, 1, redStream);
 }
 
 
@@ -382,7 +393,7 @@ void LatticeContainer<onDevice, elemType>::iterateOverBulkStacked(Functor op) {
     } else {
         elems = GInd::getLatData().sizeh;
     }
-    this->template iterateFunctor<BlockSize>(op, calcGSiteStack, writeAtReadStack, elems, NStacks);
+    this->template iterateFunctor<BlockSize>(op, calcGSiteStack, writeAtReadStack, elems, NStacks, 1, redStream);
     if(!onDevice){
         LatticeContainerAccessor acc = getAccessor();
     }

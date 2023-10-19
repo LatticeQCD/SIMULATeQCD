@@ -46,7 +46,7 @@ private:
     LatticeContainer<onDevice,COMPLEX(double)> _redBase;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
-
+    gpuStream_t runStream;
 public:
 typedef floatT floatT_inner;
     //! constructor
@@ -61,6 +61,9 @@ typedef floatT floatT_inner;
         }else{
             _redBase.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
         }
+        gpuError_t gpuErr = gpuStreamCreate(&runStream);
+        if (gpuErr)
+            GpuError("Spinorfield constructor: Failed to create runStream", gpuErr);
     }
 
     //! copy constructor
@@ -93,7 +96,9 @@ typedef floatT floatT_inner;
             operator=(Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&&) = delete;
 
     //! destructor
-    ~Spinorfield() = default;
+    ~Spinorfield() {
+        gpuError_t gpuErr = gpuStreamDestroy(runStream);
+    };
 
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &
             operator=(const SpinorfieldAll<floatT, onDevice, HaloDepth, NStacks> &spinorRHS);
@@ -164,7 +169,7 @@ typedef floatT floatT_inner;
     void axpyThisB(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
     template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
-    void axpyThisLoop(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry);
+    void axpyThisLoop(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry, gpuStream_t &stream);
 
     template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisLoopd(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry);
@@ -182,7 +187,7 @@ typedef floatT floatT_inner;
     void axupbyThisB(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y);
 
     template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
-    void axupbyThisLoop(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
+    void axupbyThisLoop(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry,gpuStream_t &stream);
 
     template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisLoopd(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
@@ -267,7 +272,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     CalcGSiteStackFull<LatticeLayout, HaloDepth> calcGSiteFull;
     WriteAtReadStack writeAtRead;
     size_t elems = getNumberLatticePointsFull();
-    this->template iterateFunctor<BlockSize>(op, calcGSiteFull, writeAtRead, elems, Nmax);
+    this->template iterateFunctor<BlockSize>(op, calcGSiteFull, writeAtRead, elems, Nmax, 1, runStream);
+  gpuError_t   gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -276,7 +284,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     CalcGSiteLoopStackFull<LatticeLayout, HaloDepth> calcGSiteFull;
     WriteAtLoopStack<LatticeLayout, HaloDepth> writeAtRead;
     size_t elems = getNumberLatticePointsFull();
-    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSiteFull, writeAtRead, elems);
+    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSiteFull, writeAtRead, elems, 1, 1, runStream);
+   gpuError_t  gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -285,7 +296,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateWi
     CalcGSiteStackFull<LatticeLayout, HaloDepth> calcGSiteFull;
     WriteAtReadStack writeAtRead;
     size_t elems = getNumberLatticePointsFull();
-    this->template iterateWithConstObject<BlockSize>(ob, calcGSiteFull, writeAtRead, elems, NStacks);
+    this->template iterateWithConstObject<BlockSize>(ob, calcGSiteFull, writeAtRead, elems, NStacks, 1, runStream);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 
@@ -297,7 +311,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     WriteAtReadStack writeAtRead;
     size_t elems = getNumberLatticePoints();
 
-    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax);
+    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax, 1, runStream);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -310,7 +327,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     WriteAtReadStack writeAtRead;
     size_t elems = getNumberLatticePoints();
 
-    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, 1, 1, runStream);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -322,7 +342,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     CalcGSiteAtStack<stack, LatticeLayout, HaloDepth> calcGSite;
     WriteAtReadStack writeAtRead;
     size_t elems = GInd::getLatData().sizeh;
-    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+    this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, 1, 1, runStream);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -338,11 +361,17 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     size_t elems = GInd::getLatData().sizeh;
     if(LatticeLayout == Odd){
         CalcGSiteAtStack<stack, LatticeLayout, HaloDepth> calcGSite;
-        this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+        this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, 1, 1, runStream);
+   gpuError_t  gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
     }
     if(LatticeLayout == All){
         CalcOddGSiteAtStack<stack, LatticeLayout, HaloDepth> calcGSite;
-        this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+        this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, 1, 1, runStream);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
     }
 
 }
@@ -359,7 +388,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     WriteAtReadStack writeAtRead;
     size_t elems = getNumberLatticePoints();
 
-    this->template iterateFunctor<BlockSize>(op, calcGSiteFull, writeAtRead, elems);
+    this->template iterateFunctor<BlockSize>(op, calcGSiteFull, writeAtRead, elems, 1,1,runStream);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 
@@ -370,7 +402,10 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     WriteAtLoopStack<LatticeLayout, HaloDepth> writeAtRead;
     size_t elems = getNumberLatticePoints();
 
-    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSite, writeAtRead, elems, 1 ,1 , (gpuStream_t)nullptr, Nmax);
+    this->template iterateFunctorLoop<NStacks, BlockSize>(op, calcGSite, writeAtRead, elems, 1 ,1 , runStream, Nmax);
+    gpuError_t gpuErr = gpuStreamSynchronize(runStream);
+    if (gpuErr)
+            GpuError("Spinorfield: Failed to synchronize runStream", gpuErr);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>

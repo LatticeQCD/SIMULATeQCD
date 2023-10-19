@@ -128,6 +128,9 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     SpinorIn_t s(spinorIn.getComm());
     SpinorIn_t r(spinorIn.getComm());
     SpinorIn_t pi0(spinorIn.getComm());
+    gpuStream_t _axpyStream;
+    gpuError_t gpuErr =  gpuStreamCreate(&_axpyStream);
+    
 
     int max_term = NStacks;
 
@@ -183,7 +186,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         norm_r2 = lambda2;
 
 
-        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term);
+        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term, _axpyStream);
         //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
 
 
@@ -194,9 +197,9 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         //################################
 
 
-        pi.template axupbyThisLoop(Z, a, r, max_term);
+        pi.template axupbyThisLoop(Z, a, r, max_term, _axpyStream);
         //     pi[i] = Z[i] * r + a[i] * pi[i];
-
+        gpuErr = gpuStreamSynchronize(_axpyStream);
 
         //################################
 
@@ -214,7 +217,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     } else {
         rootLogger.info("CG: # iterations " ,  cg);
     }
-
+    gpuErr = gpuStreamDestroy(_axpyStream);
     spinorOut.updateAll();
 }
 
