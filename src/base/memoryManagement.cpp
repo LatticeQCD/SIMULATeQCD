@@ -106,10 +106,14 @@ void MemoryManagement::gMemory<onDevice>::copyFrom(const gMemoryPtr<onDeviceSrc>
         /// Device to device
         if (onDeviceSrc) {
             /// Arithmetic on void pointers is not allowed. Therefore convert to char.
-            gpuErr = gpuMemcpy(static_cast<char*>(_rawPointer) + offsetSelf,src->getPointer(offsetSrc),
-                                 sizeInBytes, gpuMemcpyDeviceToDevice);
+            gpuErr = gpuMemcpyAsync(static_cast<char*>(_rawPointer) + offsetSelf,src->getPointer(offsetSrc),
+                                 sizeInBytes, gpuMemcpyDeviceToDevice, _copyStream);
             if (gpuErr)
                 GpuError("memoryManagement.h: Failed to copy data (DeviceToDevice)", gpuErr);
+
+            gpuErr = gpuStreamSynchronize(_copyStream);
+            if (gpuErr)
+                GpuError("memoryManagement.h: Failed to synchronize copyStream", gpuErr);
             /// Host to device
         } else {
             gpuErr = gpuMemcpy(static_cast<char*>(_rawPointer) + offsetSelf, src->getPointer(offsetSrc),

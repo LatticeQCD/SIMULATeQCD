@@ -67,7 +67,7 @@ private:
         void *_rawPointer;    /// Declare a rawPointer pointer of type void, which we want to do because void type pointers
         /// can point to an object of any type. A goal of the new memory management is that this
         /// will be the only raw pointer.
-
+        gpuStream_t _copyStream;
         /// Wrapper for allocating memory using CUDA built-in functions. For some reason, gpuMalloc takes a pointer to
         /// a pointer as an argument; hence the strange syntax.
         void alloc(size_t size) {
@@ -152,6 +152,9 @@ private:
         //! We should figure out how to make this private. Problem: befriending std::map or std::pair doesn't work.
         explicit gMemory(size_t size) : _current_size(size), _rawPointer(nullptr), P2Ppaired(false) {
             adjustSize(size);
+            gpuError_t gpuErr = gpuStreamCreate(&_copyStream);
+            if (gpuErr)
+                GpuError("gMemory: Failed to create _copyStream", gpuErr);
         }
 
         /// First we remove the default copy constructors. We want to disallow any copies of a gMemory object, because if
@@ -172,6 +175,9 @@ private:
         /// memory we don't have to worry about it, because memory allocation is handled automatically by the stack.
         ~gMemory() {
             free(); /// Remember that this was defined above
+            gpuError_t gpuErr = gpuStreamDestroy(_copyStream);
+            if (gpuErr)
+                GpuError("gMemory: Failed to destroy copyStream", gpuErr);
         }
 
         void swap(gMemoryPtr<onDevice> &src);
