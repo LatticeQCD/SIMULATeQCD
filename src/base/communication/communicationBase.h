@@ -134,7 +134,6 @@ private:
 
     void _MPI_fail(int ret, const std::string& func);
 
-
     MPI_File fh;
     MPI_Datatype basetype;
     MPI_Datatype fvtype;

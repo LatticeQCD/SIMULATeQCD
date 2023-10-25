@@ -137,7 +137,6 @@ public:
                 _haloBuffer_Device_recv->adjustSize(_bufferSize);
             }
         }
-
         /// Set the base pointer of our buffer.
         HaloInfo.setSendBase(_haloBuffer_Host);
         HaloInfo.setRecvBase(_haloBuffer_Host_recv);
@@ -152,7 +151,7 @@ public:
         HaloData haldat = HInd::getHalData();
 
         if (commB.getNumberProcesses() > 1 && onDevice) HaloInfo.initP2P();
-
+        
         for (const auto &hypPlane : HaloHypPlanes) {
             size_t pos_l = 0, pos_r = 0;
             size_t off_l = 0, off_r = 0;
@@ -164,7 +163,7 @@ public:
                             off_l, haldat.get_SubHaloSize(pos_l, LatLayout) * _halElementSize,
                             off_r, haldat.get_SubHaloSize(pos_r, LatLayout) * _halElementSize);
         }
-
+        
         for (const auto &plane : HaloPlanes) {
             for (size_t dir = 0; dir < 2; dir++) {
 
@@ -180,7 +179,7 @@ public:
                                 off_r, haldat.get_SubHaloSize(pos_r, LatLayout) * _halElementSize);
             }
         }
-
+        
         for (const auto &stripe : HaloStripes) {
             for (size_t dir = 0; dir < 4; dir++) {
 
@@ -195,7 +194,7 @@ public:
                                 off_r, haldat.get_SubHaloSize(pos_r, LatLayout) * _halElementSize);
             }
         }
-
+         
         for (const auto &corner : HaloCorners) {
             for (size_t dir = 0; dir < 8; dir++) {
 
@@ -507,27 +506,27 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
                 Accessor hal_acc = Accessor(pointer, size);
 
-                int streamNo = 0;
+                //int streamNo = 0;
                 ExtractInnerHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> extractLeft(acc, hal_acc);
                 iterateFunctorNoReturn<onDevice>(extractLeft, CalcInnerHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
-                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+                        length, 1, 1, segmentInfo.getSendStream());
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
                     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.start.record(segmentInfo.getDeviceStream());
+                    p2pCopyEvent.start.record(segmentInfo.getSendStream());
                 }
 
                 if ( (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) ||
                         (onDevice && _commBase.gpuAwareMPIAvail()) )
                 {
-                    segmentInfo.synchronizeStream(streamNo);
+                    segmentInfo.synchronizeSendStream();
                 }
 
                 _commBase.updateSegment(hseg, dir, leftRight, HaloInfo);
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
                     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.stop.record(segmentInfo.getDeviceStream());
+                    p2pCopyEvent.stop.record(segmentInfo.getSendStream());
                 }
         }
     }
@@ -592,15 +591,16 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
                 COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
                 Accessor hal_acc = Accessor(pointer, size);
-                int streamNo = 1;
+                // int streamNo = 1;
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
                     deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
-                    p2pCopyEvent.streamWaitForMe(segmentInfo.getDeviceStream(streamNo));
+                    p2pCopyEvent.streamWaitForMe(segmentInfo.getReceiveStream());
                 }
 
                 if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {
-                    segmentInfo.synchronizeStream(0);
+                    // segmentInfo.synchronizeStream(0);
+                    segmentInfo.synchronizeReceiveStream();
                 }
                 if (!onDevice || (onDevice && !_commBase.useGpuP2P())) {
                     segmentInfo.synchronizeRequest();
@@ -609,7 +609,7 @@ void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 InjectOuterHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> injectLeft(acc, hal_acc);
 
                 iterateFunctorNoReturn<onDevice>(injectLeft, CalcOuterHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
-                        length, 1, 1, segmentInfo.getDeviceStream(streamNo));
+                        length, 1, 1, segmentInfo.getReceiveStream());
         }
     }
 

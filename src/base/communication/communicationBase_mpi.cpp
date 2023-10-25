@@ -15,7 +15,6 @@
 #include <cstring>
 #include "communicationBase.h"
 
-
 Logger rootLogger(OFF);
 Logger stdLogger(ALL);
 
@@ -562,7 +561,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
                                  " bytes from rank ", MyRank(), " to rank ", info.world_rank);)
 
                 gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
-                        seg.getDeviceStream());
+                        seg.getSendStream());
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1a)", gpuErr);
 
@@ -574,7 +573,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
                                  " bytes on rank ", MyRank());)
 
                 gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
-                        seg.getDeviceStream(0));
+                        seg.getSendStream());
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1b)", gpuErr);
 
