@@ -58,6 +58,11 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) :
 
     myInfo.nodeName = nodeName;
 
+    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
+        gpuError_t gpuErr =  gpuStreamCreate(&commStreams[i]);
+            if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamCreate", gpuErr);
+    }
+
 }
 
 void CommunicationBase::initNodeComm() {
@@ -200,6 +205,12 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
 
 
 CommunicationBase::~CommunicationBase() {
+
+    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
+            gpuError_t gpuErr =  gpuStreamDestroy(commStreams[i]);
+                if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamDestroy", gpuErr);
+    }
+
     rootLogger.info("Finalizing MPI");
     int ret;
     if (_initialized) {

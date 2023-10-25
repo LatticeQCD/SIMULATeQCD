@@ -20,6 +20,8 @@
 #include "../memoryManagement.h"
 #include <array>
 const size_t MAX_NUM_STREAMS = 160;
+typedef std::array<gpuStream_t, MAX_NUM_STREAMS> commStreams_t;
+
 
 struct HaloSegmentInfo {
 private:
@@ -288,7 +290,7 @@ private:
     std::vector<HaloSegmentInfo> _stripeInfo;
     std::vector<HaloSegmentInfo> _cornerInfo;
     
-    std::array<gpuStream_t, MAX_NUM_STREAMS> commStreams;
+    commStreams_t& commStreams;
     
     gpuIPCEvent _cIPCEvent;
 
@@ -298,10 +300,12 @@ public:
     std::map<HaloSegment, HaloSegmentInfo *> _HalSegMapLeft;
     std::map<HaloSegment, HaloSegmentInfo *> _HalSegMapRight;
 
+    
+
     HaloOffsetInfo() = delete;
 
     //! constructor
-    HaloOffsetInfo(NeighborInfo &NInfo, MPI_Comm comm, int myRank, bool gpuAwareMPI = false, bool gpuP2P = false) :
+    HaloOffsetInfo(commStreams_t &cstreams, NeighborInfo &NInfo, MPI_Comm comm, int myRank, bool gpuAwareMPI = false, bool gpuP2P = false) :
             neighbor_info(NInfo),
             cart_comm(comm), _myRank(myRank),
             sendBase(MemoryManagement::getMemAt<false>("sendBase")),
@@ -310,12 +314,10 @@ public:
             recvBaseP2P(MemoryManagement::getMemAt<true>("recvBaseP2P")),
             _gpuAwareMPI(gpuAwareMPI),
             _gpuP2P(gpuP2P),
+            commStreams(cstreams),
             _cIPCEvent(cart_comm, _myRank) {
 
-        for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
-            gpuError_t gpuErr =  gpuStreamCreate(&commStreams[i]);
-                if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamCreate", gpuErr);
-        }
+       
         for (size_t i = 0; i < MAX_NUM_STREAMS; i+=2) {
             if (i < 16) {
                 _hypPlaneInfo.push_back(HaloSegmentInfo(commStreams[i],commStreams[i+1]));
@@ -374,7 +376,7 @@ public:
         _planeInfo(std::move(source._planeInfo)),
         _stripeInfo(std::move(source._stripeInfo)),
         _cornerInfo(std::move(source._cornerInfo)),
-
+        commStreams(source.commStreams),
         _cIPCEvent(std::move(source._cIPCEvent))
     {
         //! reset other object somewhat
@@ -404,12 +406,7 @@ public:
     }
 
 
-    ~HaloOffsetInfo() {
-        for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
-            gpuError_t gpuErr =  gpuStreamDestroy(commStreams[i]);
-                if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamDestroy", gpuErr);
-            }
-    }
+    ~HaloOffsetInfo() = default;
 
     void syncAllStreamRequests() {
         IF(COMBASE_DEBUG) (stdLogger.debug("Synchronize all");)

@@ -117,7 +117,7 @@ public:
     //! constructor
     explicit siteComm(CommunicationBase &commB) :
             _commBase(commB),
-            HaloInfo(HaloOffsetInfo<onDevice>(commB.getNeighborInfo(), _commBase.getCart_comm(), _commBase.MyRank(),
+            HaloInfo(HaloOffsetInfo<onDevice>(commB.getCommStreams() ,commB.getNeighborInfo(), _commBase.getCart_comm(), _commBase.MyRank(),
                                               _commBase.gpuAwareMPIAvail(), _commBase.useGpuP2P())) {
 
         _elems = HInd::getHalData().getBufferSize(LatLayout);

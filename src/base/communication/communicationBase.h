@@ -137,7 +137,7 @@ private:
     MPI_File fh;
     MPI_Datatype basetype;
     MPI_Datatype fvtype;
-
+    commStreams_t commStreams;
     void initNodeComm();
 
 public:
@@ -175,6 +175,10 @@ public:
 
     int getNumberProcesses() { return world_size; }
 
+
+    commStreams_t& getCommStreams() {
+        return commStreams;
+    }
     /// Return rank of process with given coordinates
     int getRank(LatticeDimensions) const RET0_IF_SCALAR;
 
