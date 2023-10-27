@@ -19,9 +19,16 @@
 #include "neighborInfo.h"
 #include "../memoryManagement.h"
 #include <array>
-const size_t MAX_NUM_STREAMS = 160;
-typedef std::array<gpuStream_t, MAX_NUM_STREAMS> commStreams_t;
 
+const size_t MAX_NUM_HALOSEGMENTS = 80;
+
+#ifdef COMMS_STREAMS
+const size_t MAX_NUM_STREAMS = 160;
+#else
+const size_t MAX_NUM_STREAMS = 2;
+#endif
+
+typedef std::array<gpuStream_t, MAX_NUM_STREAMS> commStreams_t;
 
 struct HaloSegmentInfo {
 private:
@@ -317,8 +324,8 @@ public:
             commStreams(cstreams),
             _cIPCEvent(cart_comm, _myRank) {
 
-       
-        for (size_t i = 0; i < MAX_NUM_STREAMS; i+=2) {
+#ifdef COMMS_STREAMS       
+        for (size_t i = 0; i < 2*MAX_NUM_HALOSEGMENTS; i+=2) {
             if (i < 16) {
                 _hypPlaneInfo.push_back(HaloSegmentInfo(commStreams[i],commStreams[i+1]));
             }
@@ -333,8 +340,23 @@ public:
             }
 
         }
+#else
+        for (size_t i = 0; i < 2*MAX_NUM_HALOSEGMENTS; i+=2) {
+            if (i < 16) {
+                _hypPlaneInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+            else if (i < 64) {
+                _planeInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+            else if (i < 128) {
+                _stripeInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+            else {
+                _cornerInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
 
-
+        }
+#endif
         for (auto &HypPlane : HaloHypPlanes) {
             _HalSegMapLeft[HypPlane] = _hypPlaneInfo.data();
             _HalSegMapRight[HypPlane] = _hypPlaneInfo.data();

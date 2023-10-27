@@ -149,6 +149,10 @@ if(USE_TILED_MULTIRHS)
     add_definitions(-DUSE_TILED_MULTIRHS)
 endif()
 
+set(COMMS_STREAMS ON CACHE BOOL "Set to ON to build with 160 streams for communications, OFF for 2 streams (default = ON)")
+if (COMMS_STREAMS)
+    add_definitions(-DCOMMS_STREAMS)
+endif()
 
 # Additional compiler flags
 if (USE_CUDA)

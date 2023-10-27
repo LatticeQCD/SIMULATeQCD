@@ -63,9 +63,12 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i <rat.r_lf_den.get().size(); ++i) {
         shifts[i] = rat.r_lf_den[i] + rhmc_param.m_ud()*rhmc_param.m_ud();;
     }
-
+    StopWatch<true> timer;
+    timer.start();
     CG14.invert(dslash,SpinorOutMulti,SpinorIn,shifts,rhmc_param.cgMax(), rhmc_param.residue());
-
+    timer.stop();
+    rootLogger.info("Time (Inversion outside of Force): ", timer);
+    timer.reset();
     SpinorIn = (PREC)rat.r_lf_const() * SpinorIn;
 
     for (size_t i = 0; i < rat.r_lf_den.get().size(); ++i) {
@@ -75,7 +78,7 @@ int main(int argc, char *argv[]) {
     SpinorIn.updateAll();
 
 
-    StopWatch<true> timer;
+
     timer.start();
 
     ip_dot_f2_hisq.updateForce(SpinorIn,force,true);

@@ -253,31 +253,39 @@ public:
         elemType result = 0;
 
         if (onDevice) {
+            ReductionResultHost->template adjustSize<elemType>(1);
+            markerBegin("DeviceReduce::Sum (1)", "Reduction");
             // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
 
             gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                                     d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
-
+            markerEnd();
             HelperArray->template adjustSize<void *>(temp_storage_bytes);
-
+            markerBegin("DeviceReduce::Sum (2)", "Reduction");
             gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                             d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
-
-            gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
-            if (gpuErr)
-                GpuError("Reductionbase.h: Failed to copy data", gpuErr);
-
+            markerEnd();
+            markerBegin("DtH copy result", "Reduction");
+            ReductionResultHost->copyFrom(d_out, sizeof(elemType));
+            LatticeContainerAccessor accRes(ReductionResultHost->getPointer());
+            accRes.getValue((size_t) 0, result);
+            // gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
+            // if (gpuErr)
+            //     GpuError("Reductionbase.h: Failed to copy data", gpuErr);
+            markerEnd();
         } else{
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
                 result += acc.getElement<elemType>(i);
             }
         }
+        markerBegin("MPI reduce", "Reduction");
         value = comm.reduce(result);
         if (rootToAll) comm.root2all(result);
+        markerEnd();
         markerEnd();
     }
 
