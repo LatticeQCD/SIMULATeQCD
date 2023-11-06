@@ -95,6 +95,7 @@ if (USE_HIP)
 
     if(USE_HIP_AMD)
         find_package(rocprim REQUIRED CONFIG PATHS "${HIP_PATH}/rocprim")
+        find_package(rccl REQUIRED CONFIG PATHS "${HIP_PATH}/rccl")
     endif()
     set(HIP_INCLUDE_DIRS "${HIP_PATH}/include")
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_INCLUDE_DIRS}")
@@ -165,7 +166,7 @@ elseif (USE_HIP_AMD)
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps -lrccl")
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")

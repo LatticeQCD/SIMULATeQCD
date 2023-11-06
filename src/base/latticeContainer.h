@@ -24,7 +24,7 @@
 #include "wrapper/marker.h"
 
 template<class floatT>
-gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size);
+gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size, gpuStream_t stream = NULL);
 
 template<class floatT>
 gpuError_t CubReduceMax(void *helpArr, size_t *temp_storage_bytes, void *Arr, floatT *out, size_t size);
@@ -88,6 +88,7 @@ private:
     gMemoryPtr<onDevice> d_out;
     gMemoryPtr<false>    StackOffsetsHostTemp;
     gMemoryPtr<onDevice> StackOffsetsTemp;
+    gpuStream_t reductionStream;
 
 public:
 
@@ -107,6 +108,8 @@ public:
             StackOffsetsTemp(MemoryManagement::getMemAt<onDevice>("StackOffSetsTemp"))
             {
                 d_out->template adjustSize<elemType>(1);
+                gpuError_t gpuErr = gpuStreamCreate(&reductionStream);
+                if (gpuErr != gpuSuccess) GpuError("latticeContainer.h: gpuStreamCreate", gpuErr);
             }
 
     //! copy constructor
@@ -126,13 +129,16 @@ public:
     ReductionResultHost(std::move(source.ReductionResultHost)),
     d_out(std::move(source.d_out)),
     StackOffsetsHostTemp(std::move(source.StackOffsetsHostTemp)),
-    StackOffsetsTemp(std::move(source.StackOffsetsTemp)){}
-
+    StackOffsetsTemp(std::move(source.StackOffsetsTemp)),
+    reductionStream(std::move(source.reductionStream)){}
     //! move assignment
     LatticeContainer<onDevice, elemType>& operator=(LatticeContainer<onDevice, elemType>&&) = delete;
 
     //! destructor
-    ~LatticeContainer() = default;
+    ~LatticeContainer(){
+        gpuError_t gpuErr =  gpuStreamDestroy(reductionStream);
+        if (gpuErr != gpuSuccess) GpuError("latticeContainer.h: gpuStreamDestroy", gpuErr);
+    }
 
     void adjustSize(size_t size) {
 
@@ -251,9 +257,11 @@ public:
     void reduce(elemType &value, size_t size, bool rootToAll = false) {
         markerBegin("reduce", "Reduction");
         elemType result = 0;
+        
 
         if (onDevice) {
             ReductionResultHost->template adjustSize<elemType>(1);
+            
             markerBegin("DeviceReduce::Sum (1)", "Reduction");
             // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
@@ -262,19 +270,21 @@ public:
                                     d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
             markerEnd();
+
             HelperArray->template adjustSize<void *>(temp_storage_bytes);
+
             markerBegin("DeviceReduce::Sum (2)", "Reduction");
             gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                             d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
             markerEnd();
+
             markerBegin("DtH copy result", "Reduction");
             ReductionResultHost->copyFrom(d_out, sizeof(elemType));
-            LatticeContainerAccessor accRes(ReductionResultHost->getPointer());
-            accRes.getValue((size_t) 0, result);
-            // gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
-            // if (gpuErr)
-            //     GpuError("Reductionbase.h: Failed to copy data", gpuErr);
+    
+            // LatticeContainerAccessor accRes(ReductionResultHost->getPointer());
+            // accRes.getValue((size_t) 0, result);
+            result = *(ReductionResultHost->template getPointer<elemType>());
             markerEnd();
         } else{
             LatticeContainerAccessor acc = getAccessor();
@@ -289,6 +299,49 @@ public:
         markerEnd();
     }
 
+
+    void reduce_nccl(gMemoryPtr<onDevice> value, size_t size, bool rootToAll = false) {
+        markerBegin("reduce", "Reduction");
+        auto dcount = d_out->getSize()/sizeof(elemType);
+        value->template adjustSize<elemType*>(dcount);
+
+        markerBegin("DeviceReduce::Sum (1)", "Reduction");
+        // Determine temporary device storage requirements
+        size_t temp_storage_bytes = 0;
+
+        gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
+                                d_out->template getPointer<elemType>(), size);
+        if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
+        markerEnd();
+
+        HelperArray->template adjustSize<void *>(temp_storage_bytes);
+
+        markerBegin("DeviceReduce::Sum (2)", "Reduction");
+        gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
+                        d_out->template getPointer<elemType>(), size);
+        if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
+        markerEnd();
+
+        // markerBegin("DtH copy result", "Reduction");
+        // ReductionResultHost->copyFrom(d_out, sizeof(elemType));
+
+        // // LatticeContainerAccessor accRes(ReductionResultHost->getPointer());
+        // // accRes.getValue((size_t) 0, result);
+        // result = *(ReductionResultHost->template getPointer<elemType>());
+        // markerEnd();
+        
+        ncclResult_t r = ncclAllReduce(static_cast<const void*>(d_out->getPointer()), static_cast<void*>(value->getPointer()),
+         comm.getNumberProcesses(), ncclDouble, ncclSum, comm.getNccl_communicator(), reductionStream);
+        if (r != ncclSuccess) {
+            NcclError("LatticeContainer::reduce_nccl: ncclAllReduce failed ", r);
+        }
+
+        gpuErr = gpuStreamSynchronize(reductionStream);
+        if (gpuErr) GpuError("LatticeContainer::reduce: gpuStreamSynchronize", gpuErr);
+        markerEnd();
+        markerEnd();
+    }
+    
     void reduceMax(elemType &value, size_t size, bool rootToAll = false) {
         markerBegin("reduceMax", "Reduction");
         elemType result = 0;

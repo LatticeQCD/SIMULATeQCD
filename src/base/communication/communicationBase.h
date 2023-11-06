@@ -35,6 +35,7 @@
 #include "../IO/misc.h"
 #include "haloOffsetInfo.h"
 #include "../math/matrix4x4.h"
+#include <rccl.h>
 
 template<class floatT>
 class SU3;
@@ -138,6 +139,11 @@ private:
     MPI_Datatype basetype;
     MPI_Datatype fvtype;
     commStreams_t commStreams;
+
+    ncclUniqueId nccl_uid;
+    ncclComm_t nccl_comm;
+
+
     void initNodeComm();
 
 public:
@@ -145,6 +151,7 @@ public:
 
     void init(const LatticeDimensions &Dim, const LatticeDimensions &Topo = LatticeDimensions());
 
+    void ncclinit();
     ~CommunicationBase();
 
     bool gpuAwareMPIAvail() const {
@@ -184,6 +191,7 @@ public:
 
     MPI_Comm getCart_comm() const { return cart_comm; }
 
+    ncclComm_t getNccl_communicator() const { return nccl_comm;}
     /// Return if only a single process is running
     bool single() const { return (world_size == 1); }
 

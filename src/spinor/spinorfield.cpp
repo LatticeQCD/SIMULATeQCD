@@ -50,8 +50,21 @@ struct SpinorrealDotProduct{
             const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorOut)
         : spinorAccOut(spinorOut.getAccessor()), spinorAccIn(spinorIn.getAccessor()) {}
 
-    __device__ __host__ COMPLEX(double)  operator()(gSiteStack& site){
+    __device__ __host__ double  operator()(gSiteStack& site){
         return re_dot_prod(spinorAccIn.template getElement<double>(site), spinorAccOut.template getElement<double>(site));
+    }
+};
+
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+struct SpinorReadFromStack{
+    Vect3arrayAcc<floatT> spinorAccIn;
+    const size_t _readFromStack;
+    SpinorReadFromStack(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>& spinorIn, const size_t readFromStack) : spinorAccIn(spinorIn.getAccessor()), _readFromStack(readFromStack) {}
+
+    __host__ __device__ Vect3<floatT> operator()(gSiteStack& site) {
+        typedef GIndexer<LatLayout, HaloDepth> GInd;
+        
+        return spinorAccIn.getElement(GInd::getSiteStack(site,_readFromStack));
     }
 };
 
@@ -63,17 +76,17 @@ double Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realdotProd
         throw std::runtime_error(stdLogger.fatal("realDotProduct only possible for non stacked spinors"));
     }else{
 
-        COMPLEX(double) result = 0;
+        double result;
 
         size_t elems = getNumberElements();
 
-        _redBase.adjustSize(elems);
+        _redBase_real.adjustSize(elems);
 
-        _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, 1>(
+        _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, 1>(
                 SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
 
-        _redBase.reduce(result, elems);
-        return result.cREAL;
+        _redBase_real.reduce(result, elems);
+        return result;
     }
 }
 
@@ -118,6 +131,18 @@ struct SpinorDotProduct{
     }
 };
 
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+template<size_t NStacks2, size_t stackSelf, size_t stackSrc>
+    void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::copyFromStackToStackDevice(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks2> &spinorRHS){
+        if (stackSelf >= NStacks){
+            throw std::runtime_error(stdLogger.fatal("stackSelf larger than NStacks"));
+        }
+        if (stackSrc >= NStacks2){
+            throw std::runtime_error(stdLogger.fatal("stackSrc larger than NStacks"));
+        }
+        this->template iterateOverBulkAtStack<stackSelf>(SpinorReadFromStack<floatT, onDevice, LatLayout, HaloDepth, NStacks2>(spinorRHS,stackSrc));
+    }
+
 /// val = S_in * S_out
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 COMPLEX(double) Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::dotProduct(
@@ -160,11 +185,6 @@ std::vector<COMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth,
 
 }
 
-/// S_out *= val
-template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::operator*=(const COMPLEX(floatT) &y) {
-    iterateOverFull(general_mult(*this, y));
-}
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinor{
@@ -184,6 +204,73 @@ struct SpinorPlusConstTTimesSpinor{
         return Stmp;
     }
 };
+
+
+// template<class floatT, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+// struct SpinorPlusDoubleTimesSpinor{
+
+//     Vect3arrayAcc<floatT> spinor1;
+//     Vect3arrayAcc<floatT> spinor2;
+//     double val;
+//     SimpleArray<double,NStacks> tmp;
+//     SpinorPlusDoubleTimesSpinor(Vect3arrayAcc<floatT> spinor1,
+//                                   Vect3arrayAcc<floatT> spinor2,
+//                                   double val) : spinor1(spinor1), spinor2(spinor2), val(val) {
+//                                     tmp[0] = val;
+//                                     }
+
+//     __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
+//         Vect3<floatT> Stmp;
+//         Stmp = spinor1.getElement(site);
+//         Stmp += tmp(site) * spinor2.getElement(site);
+
+//         return Stmp;
+//     }
+// };
+
+
+        // pAp = pi0.realdotProduct(s); //Optimization: do dot product but dont copy result to host
+
+        // B[0] = - norm_r2 / pAp; //use device-resident result to do this on the gpu
+
+        // r.axpyThisB(B[0], s); //fuse with this kernel call
+
+
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realDotProductNoCopy(const spin_t &y, gMemoryPtr<onDevice> pAp) {
+    size_t elems = getNumberElements();
+    _redBase_real.adjustSize(elems);
+
+    // _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
+
+    _redBase_real.reduce_nccl(pAp, elems);
+}
+
+
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axpyThisPtr(const gMemoryPtr<onDevice> a,
+        const gMemoryPtr<onDevice> b, const spin_t &y) {
+        
+        // iterateOverBulk<DEFAULT_NBLOCKS>(SpinorPlusDoubleTimesSpinor<floatT, LatLayout, HaloDepth, NStacks>(
+                // this->getAccessor(), y.getAccessor(), *(a->template getPointer<double>())/(*(b->template getPointer<double>())) ));
+        
+}
+
+
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::fusedDotProdAndaxpy(spin_t &pi, const spin_t &s,
+    gMemoryPtr<onDevice> pAp, gMemoryPtr<onDevice> norm_r2) {
+    pi.realDotProductNoCopy(s,pAp);
+
+    this->axpyThisPtr(norm_r2, pAp, s);
+}
+
+/// S_out *= val
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::operator*=(const COMPLEX(floatT) &y) {
+    iterateOverFull(general_mult(*this, y));
+}
+
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T ,size_t NStacks>
 struct SpinorPlusConstTTimesSpinorNoReturn{
@@ -601,6 +688,9 @@ __host__ __device__ Vect3<floatT> returnSpinor<floatT, onDevice, LatLayout, Halo
 
 #define SPINOR_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
 template class Spinorfield<floatT,false,LO,HALOSPIN,STACKS>;\
+template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<1,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,1>&);\
+template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<12,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,12>&);\
+template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<14,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,14>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThis(const COMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThisB(const COMPLEX(floatT)&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::axpyThisB<64>(const floatT&, const Spinorfield<floatT,false,LO,HALOSPIN,STACKS>&);\
@@ -618,6 +708,9 @@ INIT_PLHSN(SPINOR_INIT_PLHSN)
 
 #define SPINOR_INIT_PLHSN_HALF(floatT,LO,HALOSPIN,STACKS)\
 template class Spinorfield<floatT,true,LO,HALOSPIN,STACKS>;\
+template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<1,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,1>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<12,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<14,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,14>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThis(const COMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThisB(const COMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::axpyThisB<64>(const floatT&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\

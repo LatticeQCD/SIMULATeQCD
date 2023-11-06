@@ -143,7 +143,10 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     double norm_r2 = r.realdotProduct(r);
 
     double  pAp,lambda, lambda2, rr_1, Bm1;
+    gMemoryPtr<true> pAp_ptr(MemoryManagement::getMemAt<true>("SHARED_pAp_ptr"));
+    gMemoryPtr<true> norm_r2_ptr(MemoryManagement::getMemAt<true>("SHARED_r2_ptr"));
 
+    
     Bm1 = 1.0;
 
     for (size_t i = 0; i < NStacks; i++) {
@@ -156,18 +159,21 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     do {
         cg++;
 
-        pi0.copyFromStackToStack(pi, 0, 0);
+        pi0.template copyFromStackToStackDevice<NStacks,0,0>(pi);
         pi0.updateAll(COMM_BOTH | Hyperplane);
 
         dslash.applyMdaggM(s, pi0, false);
 
         s = sigma[0] * pi0 - s;
 
-        pAp = pi0.realdotProduct(s);
+        pAp = pi0.realdotProduct(s); //Optimization: do dot product but dont copy result to host
 
-        B[0] = - norm_r2 / pAp;
+        B[0] = - norm_r2 / pAp; //use device-resident result to do this on the gpu
 
-        r.axpyThisB(B[0], s);
+        r.axpyThisB(B[0], s); //fuse with this kernel call
+
+        // r.fusedDotProdAndaxpy(pi0, s, pAp_ptr, norm_r2_ptr);
+
 
 
         for (int j=1; j<max_term; j++) {
@@ -178,23 +184,23 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
             B[j]   = B[0] * rr_1;
         }
         Bm1 = B[0];
-        lambda2 = r.realdotProduct(r);
+        lambda2 = r.realdotProduct(r); //Optimization: do dot product but dont copy result to host
         a[0]  = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
 
-        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term);
+        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term); // move this up
         //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
 
 
         //################################
         for (int j=1; j<max_term; j++) {
-            a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]);
+            a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]); //move to gpu
         }
         //################################
 
 
-        pi.template axupbyThisLoop(Z, a, r, max_term);
+        pi.template axupbyThisLoop(Z, a, r, max_term); //fuse with dot product
         //     pi[i] = Z[i] * r + a[i] * pi[i];
 
 

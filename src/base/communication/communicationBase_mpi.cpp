@@ -201,8 +201,19 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
 #endif
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
+    ncclinit();
 }
 
+void CommunicationBase::ncclinit() {
+
+    if (myInfo.world_rank == 0) {
+        ncclGetUniqueId(&nccl_uid);
+    }
+
+    MPI_Bcast(&nccl_uid, sizeof(nccl_uid), MPI_BYTE, 0, MPI_COMM_WORLD);
+    ncclCommInitRank(&nccl_comm, world_size, nccl_uid, myInfo.world_rank);
+    
+}
 
 CommunicationBase::~CommunicationBase() {
 
@@ -222,6 +233,8 @@ CommunicationBase::~CommunicationBase() {
     }
     ret = MPI_Finalize();
     _MPI_fail(ret, "MPI_Finalize");
+    //ncclCommFinalize(nccl_comm); Use in future rccl versions before calling ncclCommDestroy
+    ncclCommDestroy(nccl_comm);
 }
 
 void CommunicationBase::_MPI_fail(int ret, const std::string &func) {

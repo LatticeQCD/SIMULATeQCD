@@ -11,6 +11,7 @@
 #include "wrapper/gpu_wrapper.h"
 #include <iostream>
 #include <math.h>
+#include <rccl.h>
 
 /**
  * Utility function to calculate quotient and remainder of
@@ -48,6 +49,19 @@ public:
 
 private:
     gpuError_t gpuErr;
+};
+
+class NcclError {
+public: 
+    explicit NcclError(ncclResult_t err);
+    NcclError(const char *warn, ncclResult_t err);
+
+    ncclResult_t getError();
+
+    const std::string getErrorMessage();
+
+private:
+    ncclResult_t ncclErr;
 };
 
 /**

@@ -44,9 +44,10 @@ class Spinorfield : public siteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vec
 private:
     Vect3array<floatT, onDevice> _lattice;
     LatticeContainer<onDevice,COMPLEX(double)> _redBase;
+    LatticeContainer<onDevice,double> _redBase_real;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
-
+    typedef Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> spin_t;
 public:
 typedef floatT floatT_inner;
     //! constructor
@@ -54,12 +55,14 @@ typedef floatT floatT_inner;
             siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
             Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _lattice( (int)(NStacks*( (LatticeLayout == All) ? GInd::getLatData().vol4Full : GInd::getLatData().sizehFull )), spinorfieldName ),
-            _redBase(comm)
+            _redBase(comm), _redBase_real(comm)
     {
         if (LatticeLayout == All){
             _redBase.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
+            _redBase_real.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
         }else{
             _redBase.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
+            _redBase_real.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
         }
     }
 
@@ -86,7 +89,8 @@ typedef floatT floatT_inner;
             siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
                     Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
             _lattice(std::move(source._lattice)),
-            _redBase(std::move(source._redBase)){}
+            _redBase(std::move(source._redBase)),
+            _redBase_real(std::move(source._redBase_real)){}
 
     //! move assignment
     Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&
@@ -110,12 +114,17 @@ typedef floatT floatT_inner;
                 getNumberLatticePointsFull() * stackSrc);
     }
 
+    template<size_t NStacks2, size_t stackSelf, size_t stackSrc>
+    void copyFromStackToStackDevice(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks2> &spinorRHS);
+
     const Vect3array<floatT, onDevice>& getArray() const {
         return _lattice;
     }
 
     COMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     double realdotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
+    void realDotProductNoCopy(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, gMemoryPtr<onDevice> pAp);
+
 
     std::vector<COMPLEX(double)> dotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     std::vector<double> realdotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
@@ -127,6 +136,8 @@ typedef floatT floatT_inner;
     void gauss(uint4* rand_state); // generate gaussian spinors.
 
     void one();
+   
+    void fusedDotProdAndaxpy(spin_t &pi, const spin_t &s, gMemoryPtr<onDevice> pAp, gMemoryPtr<onDevice> norm_r2);
 
     // TODO MOVE THIS WHERE IT BELONGS
     //! this takes a gSite that involves halos!
@@ -154,6 +165,8 @@ typedef floatT floatT_inner;
         }
         this->updateAll();
     }
+
+    void axpyThisPtr(const gMemoryPtr<onDevice> a, const gMemoryPtr<onDevice> b, const spin_t &y);
 
     template<typename const_T>
     void axpyThis(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
