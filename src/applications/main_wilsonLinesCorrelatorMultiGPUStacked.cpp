@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     /// Initialize the CommunicationBase.
     CommunicationBase commBase(&argc, &argv);
 
-    param.readfile(commBase, "../parameter/test.param", argc, argv);
+    param.readfile(commBase, "../parameter/applications/wilsonLinesCorrelator.param", argc, argv);
 
 
     commBase.init(param.nodeDim());

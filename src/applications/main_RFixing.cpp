@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialization");
     CommunicationBase commBase(&argc, &argv);
     gfixParam<PREC> param;
-    param.readfile(commBase, "../parameter/applications/gaugeFixing.param", argc, argv);
+    param.readfile(commBase, "../parameter/applications/gaugeRFixing.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;
