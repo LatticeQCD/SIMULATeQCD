@@ -300,7 +300,7 @@ public:
     }
 
 
-    void reduce_nccl(gMemoryPtr<onDevice> value, size_t size, bool rootToAll = false) {
+    void reduce_nccl(gMemoryPtr<onDevice> value, size_t size) {
         markerBegin("reduce", "Reduction");
         auto dcount = d_out->getSize()/sizeof(elemType);
         value->template adjustSize<elemType*>(dcount);

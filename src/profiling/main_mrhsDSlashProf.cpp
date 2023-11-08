@@ -151,104 +151,106 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
+    typedef float prec;
 #ifdef USE_TILED_MULTIRHS
+    
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------TESTING 1 STACK---------------");
     rootLogger.info("--------------------------------------");    
-    test_dslash<float, Even, Odd, 1, 1, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 1, 1, true>(commBase, Vol);
 
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 2 STACKS--------------");
     rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 1, 2, true>(commBase, Vol); 
-    test_dslash<float, Even, Odd, 2, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 1, 2, true>(commBase, Vol); 
+    test_dslash<prec, Even, Odd, 2, 1, true>(commBase, Vol);
 
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 3 STACKS--------------");
     rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 1, 3, true>(commBase, Vol); 
-    test_dslash<float, Even, Odd, 3, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 1, 3, true>(commBase, Vol); 
+    test_dslash<prec, Even, Odd, 3, 1, true>(commBase, Vol);
     
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 4 STACKS--------------");
     rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol); 
-    // test_dslash<float, Even, Odd, 2, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 4, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 1, 4, true>(commBase, Vol); 
+    // test_dslash<prec, Even, Odd, 2, 2, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 4, 1, true>(commBase, Vol);
 
 
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 5 STACKS--------------");
     rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 1, 5, true>(commBase, Vol); 
-    test_dslash<float, Even, Odd, 5, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 1, 5, true>(commBase, Vol); 
+    test_dslash<prec, Even, Odd, 5, 1, true>(commBase, Vol);
     
 
 
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 6 STACKS--------------");
     rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 1, 6, true>(commBase, Vol); 
-    // test_dslash<float, Even, Odd, 2, 3, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 3, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 6, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 1, 6, true>(commBase, Vol); 
+    // test_dslash<prec, Even, Odd, 2, 3, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 3, 2, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 6, 1, true>(commBase, Vol);
 
 
 
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 8 STACKS--------------");
     // rootLogger.info("--------------------------------------");
-    // test_dslash<float, Even, Odd, 2, 4, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 4, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 8, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 2, 4, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 4, 2, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 8, 1, true>(commBase, Vol);
 
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 10 STACKS-------------");
     // rootLogger.info("--------------------------------------");
-    // test_dslash<float, Even, Odd, 2, 5, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 5, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 10, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 2, 5, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 5, 2, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 10, 1, true>(commBase, Vol);
     
 
 
-    // rootLogger.info("--------------------------------------");
-    // rootLogger.info("--------Testing 12 STACKS-------------");
-    // rootLogger.info("--------------------------------------");
-    // test_dslash<float, Even, Odd, 2, 6, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 3, 4, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 4, 3, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 6, 2, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 12, 1, true>(commBase, Vol);
+    rootLogger.info("--------------------------------------");
+    rootLogger.info("--------Testing 12 STACKS-------------");
+    rootLogger.info("--------------------------------------");
+    // test_dslash<prec, Even, Odd, 2, 6, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 3, 4, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 4, 3, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 6, 2, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 12, 1, true>(commBase, Vol);
 
 
 
     // rootLogger.info("--------------------------------------");
     // rootLogger.info("--------Testing 15 STACKS-------------");
     // rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 3, 5, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 5, 3, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 15, 1, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 3, 5, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 5, 3, true>(commBase, Vol);
+    // test_dslash<prec, Even, Odd, 15, 1, true>(commBase, Vol);
 
-    // rootLogger.info("--------------------------------------");
-    // rootLogger.info("--------Testing 16 STACKS-------------");
-    // rootLogger.info("--------------------------------------");  
-    // test_dslash<float, Even, Odd, 2, 8, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 4, 4, true>(commBase, Vol);
-    // test_dslash<float, Even, Odd, 16, 1, true>(commBase, Vol);
+    rootLogger.info("--------------------------------------");
+    rootLogger.info("--------Testing 16 STACKS-------------");
+    rootLogger.info("--------------------------------------");  
+    test_dslash<prec, Even, Odd, 2, 8, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 4, 4, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 16, 1, true>(commBase, Vol);
 
 
 #else
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------TESTING 1 STACK---------------");
     rootLogger.info("--------------------------------------");    
-    test_dslash<float, Even, Odd, 1, 1, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 1, 1, true>(commBase, Vol);
     
     rootLogger.info("--------------------------------------");
     rootLogger.info("--------Testing 4 STACKS--------------");
     rootLogger.info("--------------------------------------");  
-    test_dslash<float, Even, Odd, 1, 4, true>(commBase, Vol); 
-    test_dslash<float, Even, Odd, 2, 2, true>(commBase, Vol);
-    test_dslash<float, Even, Odd, 4, 1, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 1, 4, true>(commBase, Vol); 
+    test_dslash<prec, Even, Odd, 2, 2, true>(commBase, Vol);
+    test_dslash<prec, Even, Odd, 4, 1, true>(commBase, Vol);
 #endif
 
 }

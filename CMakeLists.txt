@@ -755,6 +755,13 @@ set_SIMULATeQCD_property(forceProfiling PROPERTIES RUNTIME_OUTPUT_DIRECTORY "pro
 SIMULATeQCD_target_compile_definitions(forceProfiling PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers forceProfiling)
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_7linkprof.cpp ${SOURCE_FILES_DSLASH})
+add_SIMULATeQCD_executable(7linkprof src/profiling/main_7linkprof.cpp ${SOURCE_FILES_DSLASH})
+set_SIMULATeQCD_property(7linkprof PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(7linkprof PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers 7linkprof)
+
+
 set_SIMULATeQCD_gpu_backend(src/profiling/main_hbor_benchmark.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
 add_SIMULATeQCD_executable(hbor_benchmark src/profiling/main_hbor_benchmark.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
 set_SIMULATeQCD_property(hbor_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")

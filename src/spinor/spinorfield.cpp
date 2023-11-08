@@ -235,13 +235,40 @@ struct SpinorPlusConstTTimesSpinor{
 
         // r.axpyThisB(B[0], s); //fuse with this kernel call
 
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth ,size_t NStacks>
+struct SpinorPlusFloatRatioTimesSpinor{
+
+    Vect3arrayAcc<floatT> spinor1;
+    Vect3arrayAcc<floatT> spinor2;
+    MemoryAccessor val1_acc;
+    MemoryAccessor val2_acc;
+
+    SpinorPlusFloatRatioTimesSpinor(Vect3arrayAcc<floatT> spinor1,
+                                  Vect3arrayAcc<floatT> spinor2,
+                                  gMemoryPtr<onDevice> val1, gMemoryPtr<onDevice> val2) : spinor1(spinor1), spinor2(spinor2), 
+                                  val1_acc(val1->template getPointer<double>()), val2_acc(val2->template getPointer<double>()){}
+
+    __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
+        double v1,v2,val;
+        val1_acc.getScalar(v1);
+        val2_acc.getScalar(v2); 
+        val = -v1/v2;           
+        Vect3<floatT> Stmp;
+        Stmp = spinor1.template getElement<double>(site);
+        Stmp += val * spinor2.template getElement<double>(site);
+
+        return Stmp;
+    }
+};
+
 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
 void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realDotProductNoCopy(const spin_t &y, gMemoryPtr<onDevice> pAp) {
     size_t elems = getNumberElements();
     _redBase_real.adjustSize(elems);
 
-    // _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
+    _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
+        SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
 
     _redBase_real.reduce_nccl(pAp, elems);
 }
@@ -251,8 +278,8 @@ template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t
 void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axpyThisPtr(const gMemoryPtr<onDevice> a,
         const gMemoryPtr<onDevice> b, const spin_t &y) {
         
-        // iterateOverBulk<DEFAULT_NBLOCKS>(SpinorPlusDoubleTimesSpinor<floatT, LatLayout, HaloDepth, NStacks>(
-                // this->getAccessor(), y.getAccessor(), *(a->template getPointer<double>())/(*(b->template getPointer<double>())) ));
+          iterateOverBulk<DEFAULT_NBLOCKS>(SpinorPlusFloatRatioTimesSpinor<floatT, onDevice, LatLayout, HaloDepth, NStacks>(
+                  this->getAccessor(), y.getAccessor(), a,b ));
         
 }
 
