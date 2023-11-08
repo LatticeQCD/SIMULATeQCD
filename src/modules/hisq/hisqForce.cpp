@@ -132,7 +132,6 @@ finalizeForce<floatT, onDevice, HaloDepth, comp>::finalizeForce(Gaugefield<float
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 __host__ __device__ SU3<floatT> finalizeForce<floatT, onDevice, HaloDepth, comp>::operator()(gSiteMu siteMu) {
-    typedef GIndexer<All, HaloDepth> GInd;
     SU3<floatT> tmp = floatT(2.0)*_SU3Accessor.getLink(siteMu)*_forceAccessor.getLink(siteMu);
     tmp.TA();
 
@@ -177,7 +176,6 @@ tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, steps, runTesting,rde
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, int steps, bool runTesting, const int rdeg>
 __host__ __device__ SU3<floatT> tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, steps, runTesting,rdeg>::operator()(gSiteMu site) {
-    typedef GIndexer<All, HaloDepthSpin> GInd_All;
     typedef GIndexer<Even,HaloDepthSpin> GInd_even;
     typedef GIndexer<Odd, HaloDepthSpin> GInd_odd;
 
@@ -226,18 +224,12 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
       _GaugeLvl1(GaugeBase.getComm(),"SHARED_GAUGENAIK"),
       _TmpForce(GaugeBase.getComm()),
       _GaugeBase(GaugeBase),
+      _Dummy(GaugeBase.getComm(), "SHARED_DUMMY"),
       _spinor_x(GaugeBase.getComm()),
       _spinor_y(GaugeBase.getComm(), "SHARED_tmp"),
-      _Dummy(GaugeBase.getComm(), "SHARED_DUMMY"),
       _createF2(_GaugeLvl1,_TmpForce),
-      _createNaikF1(_GaugeU3P,_TmpForce),
       _finalizeF3(_GaugeU3P,_TmpForce),
-      _cg(cg),
-      _dslash(dslash),
-      _dslash_multi(dslash_multi),
-      _smearing(smearing),
-      _rhmc_param(rhmc_param),
-      _rat(rat),
+      _createNaikF1(_GaugeU3P,_TmpForce),
       F1_create_3Link(_GaugeU3P,Force),
       F1_5link_part11(_GaugeU3P,Force),
       F1_5link_part12(_GaugeU3P,Force),
@@ -252,7 +244,13 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
       F3_5link_part13(_GaugeU3P,Force),
       F3_5link_part14(_GaugeU3P,Force),
       F3_5link_part20(_GaugeU3P,Force),
-      F3_5link_part30(_GaugeU3P,Force)  {}
+      F3_5link_part30(_GaugeU3P,Force),
+      _smearing(smearing),
+      _cg(cg),
+      _dslash(dslash),
+      _dslash_multi(dslash_multi),
+      _rhmc_param(rhmc_param),
+      _rat(rat)  {}
 
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
