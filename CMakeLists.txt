@@ -95,7 +95,7 @@ if (USE_HIP)
 
     if(USE_HIP_AMD)
         find_package(rocprim REQUIRED CONFIG PATHS "${HIP_PATH}/rocprim")
-        find_package(rccl REQUIRED CONFIG PATHS "${HIP_PATH}/rccl")
+        #find_package(rccl REQUIRED CONFIG PATHS "${HIP_PATH}/rccl")
     endif()
     set(HIP_INCLUDE_DIRS "${HIP_PATH}/include")
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_INCLUDE_DIRS}")

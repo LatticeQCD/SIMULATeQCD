@@ -361,8 +361,8 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     _Dummy.iterateOverBulkAllMu(F1_lepagelink);
     _TmpForce = _TmpForce + _Dummy;
 
-    static_for<1,7>::apply([&] (auto part) {
-        static_for<0,7>::apply([&](auto term) {
+    static_for<1,8>::apply([&] (auto part) {
+        static_for<0,8>::apply([&](auto term) {
         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
         });
@@ -411,8 +411,8 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     _Dummy.iterateOverBulkAllMu(F3_5link_part30);
     _TmpForce = _TmpForce + _Dummy;
 
-    static_for<1,7>::apply([&] (auto part) {
-        static_for<0,7>::apply([&](auto term) {
+    static_for<1,8>::apply([&] (auto part) {
+        static_for<0,8>::apply([&](auto term) {
         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
         });
@@ -480,8 +480,8 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
     _Dummy.iterateOverBulkAllMu(F1_lepagelink);
     _TmpForce = _TmpForce + _Dummy;
 
-    static_for<1,7>::apply([&] (auto part) {
-        static_for<0,7>::apply([&](auto term) {
+    static_for<1,8>::apply([&] (auto part) {
+        static_for<0,8>::apply([&](auto term) {
         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
         });
@@ -528,8 +528,8 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
     _Dummy.iterateOverBulkAllMu(F3_5link_part30);
     _TmpForce = _TmpForce + _Dummy;
 
-    static_for<1,7>::apply([&] (auto part) {
-        static_for<0,7>::apply([&](auto term) {
+    static_for<1,8>::apply([&] (auto part) {
+        static_for<0,8>::apply([&](auto term) {
         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
         });

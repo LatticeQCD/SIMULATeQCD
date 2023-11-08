@@ -381,16 +381,16 @@ public:
 
     gMemoryPtr<onDevice> getMemPointer() { return ContainerArray; }
 
-    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = 256, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulk(Functor op);
 
-    template<Layout LatticeLayout, size_t HaloDepth, size_t NStacks, unsigned BlockSize = 64, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, size_t NStacks, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkStacked(Functor op);
 
-    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = 256, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverTimeslices(Functor op);
 
-    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = 256, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
 
     void iterateOverSpatialBulk(Functor op);
 
