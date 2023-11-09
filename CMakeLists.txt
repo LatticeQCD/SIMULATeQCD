@@ -150,6 +150,14 @@ if(USE_TILED_MULTIRHS)
     add_definitions(-DUSE_TILED_MULTIRHS)
 endif()
 
+set(USE_NCCL OFF CACHE BOOL "Set to ON to build with NCCL/RCCL support (default = OFF)")
+if (USE_NCCL)
+    add_definitions(-DUSE_NCCL)
+    if (USE_HIP)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lrccl")
+    endif()
+endif()
+
 set(COMMS_STREAMS ON CACHE BOOL "Set to ON to build with 160 streams for communications, OFF for 2 streams (default = ON)")
 if (COMMS_STREAMS)
     add_definitions(-DCOMMS_STREAMS)
@@ -166,7 +174,7 @@ elseif (USE_HIP_AMD)
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps -lrccl")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps")
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")

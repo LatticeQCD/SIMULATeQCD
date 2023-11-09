@@ -299,7 +299,7 @@ public:
         markerEnd();
     }
 
-
+#ifdef USE_NCCL
     void reduce_nccl(gMemoryPtr<onDevice> value, size_t size) {
         markerBegin("reduce", "Reduction");
         auto dcount = d_out->getSize()/sizeof(elemType);
@@ -341,7 +341,8 @@ public:
         markerEnd();
         markerEnd();
     }
-    
+#endif
+
     void reduceMax(elemType &value, size_t size, bool rootToAll = false) {
         markerBegin("reduceMax", "Reduction");
         elemType result = 0;

@@ -11,8 +11,9 @@
 #include "wrapper/gpu_wrapper.h"
 #include <iostream>
 #include <math.h>
+#ifdef USE_NCCL
 #include <rccl.h>
-
+#endif
 /**
  * Utility function to calculate quotient and remainder of
  * nominator / denominator.
@@ -51,6 +52,7 @@ private:
     gpuError_t gpuErr;
 };
 
+#ifdef USE_NCCL
 class NcclError {
 public: 
     explicit NcclError(ncclResult_t err);
@@ -63,7 +65,7 @@ public:
 private:
     ncclResult_t ncclErr;
 };
-
+#endif
 /**
  * Utility method for speedy testing of whether a number is odd
  */

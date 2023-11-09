@@ -263,14 +263,17 @@ struct SpinorPlusFloatRatioTimesSpinor{
 
 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
-void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realDotProductNoCopy(const spin_t &y, gMemoryPtr<onDevice> pAp) {
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realDotProductNoCopy(const spin_t &y, __attribute__((unused)) gMemoryPtr<onDevice> pAp) {
     size_t elems = getNumberElements();
     _redBase_real.adjustSize(elems);
 
     _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
         SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
-
+#ifdef USE_NCCL
     _redBase_real.reduce_nccl(pAp, elems);
+#else
+    rootLogger.fatal("Cannot use realDotProductNoCopy when compiling without NCCL/RCCL!");
+#endif
 }
 
 
