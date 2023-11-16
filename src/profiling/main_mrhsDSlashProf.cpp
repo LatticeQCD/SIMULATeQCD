@@ -72,13 +72,13 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     timer.reset();
     timer.start();
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 50; ++i) {
         dslash.Dslash(spinorOut2,spinorIn2,false);
     }
     timer.stop();
 
-    rootLogger.info("Time for 5 applications of multiRHS Dslash (thread+block version): ", timer);
-    float TFlops = NStacks * NStacks_cached * Vol * EOfactor * 5 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
+    rootLogger.info("Time for 50 applications of multiRHS Dslash (thread+block version): ", timer);
+    float TFlops = NStacks * NStacks_cached * Vol * EOfactor * 50 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s ", TFlops, " with ", NStacks, " Stacks (thread loop) and ", NStacks_cached, " Stacks (blockDim.y)");
 
     dslash.Dslash_stacked(spinorOut2,spinorIn2,false);
@@ -101,14 +101,14 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     spinorIn.gauss(d_rand.state);
     timer.reset();        
     timer.start();
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 50; i++) {
         dslash.applyMdaggM(spinorOut3,spinorIn,false);
     }
     timer.stop();
 
 
-    rootLogger.info("Time for 5 applications of multiRHS M^{dagger}*M (thread+block version): ", timer);
-    TFlops = NStacks * NStacks_cached * Vol * EOfactor * 5 * 2 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
+    rootLogger.info("Time for 50 applications of multiRHS M^{dagger}*M (thread+block version): ", timer);
+    TFlops = NStacks * NStacks_cached * Vol * EOfactor * 50 * 2 * 1146 /(timer.milliseconds() * 1e-3)*1e-12;
     rootLogger.info("Achieved TFLOP/s ", TFlops, " with ", NStacks, " Stacks (thread loop) and ", NStacks_cached, " Stacks (blockDim.y)");
 
     dslash.applyMdaggM(spinorOut3,spinorIn,false);
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    typedef float prec;
+    typedef double prec;
 #ifdef USE_TILED_MULTIRHS
     
     rootLogger.info("--------------------------------------");

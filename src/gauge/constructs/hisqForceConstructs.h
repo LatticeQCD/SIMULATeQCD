@@ -244,7 +244,7 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_14(SU3Accessor<floatT, comp
 };
 
 
-template<class floatT, size_t HaloDepth, CompressionType comp>
+template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
 __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
     SU3<floatT> fivelinkCont = su3_zero<floatT>();
@@ -253,8 +253,8 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
 
-            fivelinkCont += (
-                  ( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
+          if constexpr (term == 0) {
+            fivelinkCont += (finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu), mu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu), rho))
 
@@ -263,8 +263,12 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu), mu))
                   )
                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu), nu))
+                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
+          }
 
-                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
+          if constexpr (term == 1) {
+
+                 fivelinkCont += ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                    *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu), rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,rho), nu))
 
@@ -273,8 +277,12 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu), nu))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho), mu))
+                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
+          }
 
-                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
+          if constexpr (term == 2) {
+
+                 fivelinkCont += ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho), nu))
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho), mu))
 
@@ -283,16 +291,15 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu), rho))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho), nu))
-
-                )
                 *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
+          }
         }
     }
     return c5*fivelinkCont;
 };
 
 
-template<class floatT, size_t HaloDepth, CompressionType comp>
+template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
 __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
     SU3<floatT> fivelinkCont = su3_zero<floatT>();
@@ -301,8 +308,9 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
 
-            fivelinkCont += (
-                  ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu), nu))
+
+          if constexpr (term == 0) {
+            fivelinkCont += ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu), mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho), rho))
 
@@ -311,8 +319,12 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho), mu))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho), nu))
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
+          }
 
-                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
+          if constexpr (term == 1) {
+
+                 fivelinkCont += ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho), rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), nu))
 
@@ -321,8 +333,11 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
                    *gAcc.getLink(GInd::getSiteMu( GInd::site_up_dn_dn(site,mu,nu,rho), nu))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho), mu))
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
+          }
 
-                 +( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
+          if constexpr (term == 2) {
+                 fivelinkCont += ( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu), mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), rho))
 
@@ -331,8 +346,8 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), mu))
                   )
                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), nu))
-                )
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
+          }
         }
     }
     return c5*fivelinkCont;

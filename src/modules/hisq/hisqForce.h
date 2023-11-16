@@ -64,6 +64,19 @@ public:
     __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
 };
 
+
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int part, size_t term>
+class contribution_5link_large {
+private:
+    SU3Accessor<floatT,comp> _SU3Accessor;
+    SU3Accessor<floatT> _forceAccessor;
+    floatT _c5=1/8./8.;
+public:
+    contribution_5link_large(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &ForceIn);
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+};
+
+
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int part, size_t term>
 class contribution_7link {
 private:
@@ -136,12 +149,12 @@ private:
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 6> F1_7link_part_6;
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 7> F1_7link_part_7;
 
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 11> F1_5link_part11;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 12> F1_5link_part12;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 13> F1_5link_part13;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 14> F1_5link_part14;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 20> F1_5link_part20;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 30> F1_5link_part30;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 11> F1_5link_part11;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 12> F1_5link_part12;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 13> F1_5link_part13;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 14> F1_5link_part14;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 20> F1_5link_part20;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 30> F1_5link_part30;
 
     contribution_lepagelink<floatT, onDevice, HaloDepth, comp> F1_lepagelink;
 
@@ -157,12 +170,12 @@ private:
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 6> F3_7link_part_6;
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 7> F3_7link_part_7;
 
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 11> F3_5link_part11;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 12> F3_5link_part12;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 13> F3_5link_part13;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 14> F3_5link_part14;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 20> F3_5link_part20;
-    contribution_5link<floatT, onDevice, HaloDepth, comp, 30> F3_5link_part30;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 11> F3_5link_part11;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 12> F3_5link_part12;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 13> F3_5link_part13;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 14> F3_5link_part14;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 20> F3_5link_part20;
+    // contribution_5link<floatT, onDevice, HaloDepth, comp, 30> F3_5link_part30;
 
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &_smearing;
     AdvancedMultiShiftCG<floatT, rdeg> &_cg;

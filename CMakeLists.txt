@@ -766,7 +766,7 @@ add_to_compound_SIMULATeQCD_target(profilers forceProfiling)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_7linkprof.cpp ${SOURCE_FILES_DSLASH})
 add_SIMULATeQCD_executable(7linkprof src/profiling/main_7linkprof.cpp ${SOURCE_FILES_DSLASH})
 set_SIMULATeQCD_property(7linkprof PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(7linkprof PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(7linkprof PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers 7linkprof)
 
 
@@ -801,7 +801,7 @@ src/base/math/random.cpp
 src/gauge/gaugefield_device.cpp
 src/base/latticeContainer.cpp) 
 set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 DOUBLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
 add_dependencies(profilers multiRHSProf)
 else()
 #set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
