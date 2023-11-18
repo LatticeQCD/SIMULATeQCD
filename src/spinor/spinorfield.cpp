@@ -583,9 +583,9 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axpyThisLoop(
     //                             this->getAccessor(), y.getAccessor(), x));
     //         }
     //         });
-        CalcGSiteStack<LatLayout, HaloDepth> calcGSite;
+        CalcGSiteStackFull<LatLayout, HaloDepth> calcGSite;
         iterateFunctorNoReturn<onDevice, BlockSize>(SpinorPlusConstTTimesSpinorNoReturn<floatT, LatLayout, HaloDepth, const_T, NStacks>(
-            this->getAccessor(), y.getAccessor(), x, stack_entry), calcGSite,this->getNumberLatticePoints(), 1);
+            this->getAccessor(), y.getAccessor(), x, stack_entry), calcGSite,this->getNumberLatticePointsFull(), 1);
 }
 
 
@@ -635,9 +635,9 @@ template<size_t BlockSize, typename const_T>
 void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::axupbyThisLoop(const const_T &a, const const_T &b,
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> &y, size_t stack_entry) {
 
-    CalcGSiteStack<LatLayout, HaloDepth> calcGSite;
+    CalcGSiteStackFull<LatLayout, HaloDepth> calcGSite;
     iterateFunctorNoReturn<onDevice, BlockSize>(StackTimesFloatPlusFloatTimesNoStackNoReturn<floatT, LatLayout, HaloDepth, const_T, NStacks>(
-                this->getAccessor(), b, y.getAccessor(), a, stack_entry), calcGSite, this->getNumberLatticePoints(), 1);
+                this->getAccessor(), b, y.getAccessor(), a, stack_entry), calcGSite, this->getNumberLatticePointsFull(), 1);
 
 
     // iterateOverBulkAtStack<0,BlockSize>(StackTimesFloatPlusFloatTimesNoStack<floatT, LatLayout, HaloDepth, const_T, NStacks>(

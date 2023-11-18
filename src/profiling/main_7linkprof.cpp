@@ -22,19 +22,19 @@ __host__ __device__ SU3<floatT> contribution_7link<floatT, onDevice, HaloDepth, 
     gSite site = GInd::getSite(siteMu.isite);
     switch (Part) {
     case 1:
-        return sevenLinkContribution_1<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_1_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     case 2:
-        return sevenLinkContribution_2<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_2_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     case 3:
-        return sevenLinkContribution_3<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_3_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     case 4:
-        return sevenLinkContribution_4<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_4_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     case 5:
-        return sevenLinkContribution_5<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_5_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     case 6:
-        return sevenLinkContribution_6<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_6_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     case 7:
-        return sevenLinkContribution_7<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
+        return sevenLinkContribution_7_alt<floatT, HaloDepth, comp, term>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c7);
     default:
         return su3_zero<floatT>();
     }
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
     const size_t HaloDepth = 2;
     initIndexer(HaloDepth, rhmc_param,commBase);
 
-#if false
+#if true
     rootLogger.info("Running test in single precision");
     run_shortforce<float, HaloDepth>(commBase);
 

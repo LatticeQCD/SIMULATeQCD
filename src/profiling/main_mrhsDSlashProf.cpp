@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    typedef double prec;
+    typedef float prec;
 #ifdef USE_TILED_MULTIRHS
     
     rootLogger.info("--------------------------------------");

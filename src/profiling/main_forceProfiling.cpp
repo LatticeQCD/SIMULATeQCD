@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     rhmc_param.readfile(commBase,"../parameter/profiling/force_profiling.param", argc, argv);
 
     commBase.init(rhmc_param.nodeDim());
-
+    // commBase.forceHalos(true);
     const size_t HaloDepth = 2;
     const size_t HaloDepthSpin = 4;
     initIndexer(HaloDepth,rhmc_param,commBase);

@@ -130,7 +130,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     SpinorIn_t pi0(spinorIn.getComm());
 
     int max_term = NStacks;
-
+    StopWatch<true> timer;
     int cg = 0;
 
     SimpleArray<floatT, NStacks> a(0.0);
