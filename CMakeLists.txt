@@ -791,6 +791,12 @@ set_SIMULATeQCD_property(plaquette PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples
 SIMULATeQCD_target_compile_definitions(plaquette PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(examples plaquette)
 
+set_SIMULATeQCD_gpu_backend(src/examples/main_polyakovloop.cpp)
+add_SIMULATeQCD_executable(polyakovLoop src/examples/main_polyakovloop.cpp)
+set_SIMULATeQCD_property(polyakovLoop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples")
+SIMULATeQCD_target_compile_definitions(polyakovLoop PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(examples polyakovLoop)
+
 set_SIMULATeQCD_gpu_backend(src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp)
 add_SIMULATeQCD_executable(wilsonLinesFields src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp)
 set_SIMULATeQCD_property(wilsonLinesFields PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples")
@@ -803,19 +809,13 @@ set_SIMULATeQCD_property(wilsonLinesFieldsShared PROPERTIES RUNTIME_OUTPUT_DIREC
 SIMULATeQCD_target_compile_definitions(wilsonLinesFieldsShared PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(examples wilsonLinesFieldsShared)
 
-set_SIMULATeQCD_gpu_backend(src/examples/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
-add_SIMULATeQCD_executable(wilsonloop src/examples/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp )
-set_SIMULATeQCD_property(wilsonloop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples")
-SIMULATeQCD_target_compile_definitions(wilsonloop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
-add_to_compound_SIMULATeQCD_target(examples wilsonloop)
-
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: EXPERIMENTAL
 
-set_SIMULATeQCD_gpu_backend(src/experimental/main_polyakovloop.cpp)
-add_SIMULATeQCD_executable(polyakovLoop src/experimental/main_polyakovloop.cpp)
-set_SIMULATeQCD_property(polyakovLoop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
-SIMULATeQCD_target_compile_definitions(polyakovLoop PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(experimental polyakovLoop)
+set_SIMULATeQCD_gpu_backend(src/experimental/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
+add_SIMULATeQCD_executable(wilsonloop src/experimental/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp )
+set_SIMULATeQCD_property(wilsonloop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
+SIMULATeQCD_target_compile_definitions(wilsonloop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(experimental wilsonloop)
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
