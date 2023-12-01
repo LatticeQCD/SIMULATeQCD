@@ -16,6 +16,7 @@
 #         file_type: nersc or milc
 #         load_conf: 0 is set gauge to idendity matrix, 1 is load configuration, 2 is load configuration and gauge gix
 #       useInfoFile: If using info file for milc configuration put to 1, otherwise 0
+#           use_hyp: how many times will hyp smearing be applied
 #
 #   #define STACKS 64 in src/applications/main_wilsonloop.cpp needs to be equal to Nx at compile time
 Lattice    = 96 96 96 32
@@ -38,4 +39,4 @@ wilson_stop=0.125
 
 cutRadius=10
 useInfoFile=0
-
+use_hyp = 0

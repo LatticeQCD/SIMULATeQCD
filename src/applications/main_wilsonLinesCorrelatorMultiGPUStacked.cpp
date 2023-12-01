@@ -162,7 +162,8 @@ int main(int argc, char *argv[]) {
     redBase.adjustSize(GInd::getLatData().vol4);
     rootLogger.info( "volume size " , GInd::getLatData().globvol4  );
 
-///////////// gauge fixing
+///////////// gauge fixing 
+// left the commented part in case one wants to change the order of gauge fixing and smearing
 /*
     if(param.load_conf() ==2){
         GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge);
@@ -220,14 +221,16 @@ int main(int argc, char *argv[]) {
 
 ////////////   hyp smearing
 
-    if(param.use_hyp()){
-        rootLogger.info( "Start hyp smearing"  );
-        Gaugefield<PREC, true, HaloDepth> gauge_out(commBase);
-        HypSmearing<PREC, true, HaloDepth ,R18> smearing(gauge);
-        smearing.SmearAll(gauge_out);
-        gauge = gauge_out;
+    if(param.use_hyp() > 0){
+        for(int i = 0; i<param.use_hyp();i++){
+            rootLogger.info( "Start hyp smearing"  );
+            Gaugefield<PREC, true, HaloDepth> gauge_out(commBase);
+            HypSmearing<PREC, true, HaloDepth ,R18> smearing(gauge);
+            smearing.SmearAll(gauge_out);
+            gauge = gauge_out;
     
-        rootLogger.info( "end hyp smearing"  );
+       }
+       rootLogger.info( "end hyp smearing"  );
     }
 
 ///////////// gauge fixing

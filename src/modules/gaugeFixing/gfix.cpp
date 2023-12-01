@@ -196,7 +196,7 @@ void GaugeFixing<floatT,onDevice,HaloDepth>::gaugefixOR() {
 
 
 ////////////////////////
-// Rasmus Larsen 10 2020
+// Rasmus Larsen
 //Maximal center group gauge implemented using 
 //https://arxiv.org/pdf/hep-lat/9906010v1.pdf
 ///////
