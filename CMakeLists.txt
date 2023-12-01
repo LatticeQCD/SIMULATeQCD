@@ -413,6 +413,7 @@ ENDFUNCTION()
 # things at once!) Executables will have a leading "_" in their name if compiled as part of these targets
 add_custom_target(applications)
 add_custom_target(examples)
+add_custom_target(experimental)
 add_custom_target(profilers)
 add_custom_target(tests)
 add_custom_target(tools)
@@ -420,6 +421,7 @@ add_custom_target(everything)
 add_dependencies(everything
     applications
     examples
+    experimental
     profilers
     tests
     tools
@@ -708,11 +710,11 @@ SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorTest PRIVATE HALODEP
 add_to_compound_SIMULATeQCD_target(tests wilsonLinesCorrelatorTest)
 
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_RFixingTest.cpp)
-add_SIMULATeQCD_executable(RFixingTest src/testing/main_RFixingTest.cpp ${SOURCE_FILES_GFIX})
-set_SIMULATeQCD_property(RFixingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(RFixingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
-add_to_compound_SIMULATeQCD_target(tests RFixingTest)
+set_SIMULATeQCD_gpu_backend(src/testing/main_maximalCenterGaugeFixingTest.cpp)
+add_SIMULATeQCD_executable(maximalCenterGaugeFixingTest src/testing/main_maximalCenterGaugeFixingTest.cpp ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(maximalCenterGaugeFixingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(tests maximalCenterGaugeFixingTest)
 
 
 
@@ -789,12 +791,6 @@ set_SIMULATeQCD_property(plaquette PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples
 SIMULATeQCD_target_compile_definitions(plaquette PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(examples plaquette)
 
-set_SIMULATeQCD_gpu_backend(src/examples/main_polyakovloop.cpp)
-add_SIMULATeQCD_executable(polyakovLoop src/examples/main_polyakovloop.cpp)
-set_SIMULATeQCD_property(polyakovLoop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples")
-SIMULATeQCD_target_compile_definitions(polyakovLoop PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(examples polyakovLoop)
-
 set_SIMULATeQCD_gpu_backend(src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp)
 add_SIMULATeQCD_executable(wilsonLinesFields src/examples/main_wilson_lines_fields.cpp src/modules/gaugeFixing/gfix.cpp)
 set_SIMULATeQCD_property(wilsonLinesFields PROPERTIES RUNTIME_OUTPUT_DIRECTORY "examples")
@@ -813,6 +809,13 @@ set_SIMULATeQCD_property(wilsonloop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "example
 SIMULATeQCD_target_compile_definitions(wilsonloop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(examples wilsonloop)
 
+#---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: EXPERIMENTAL
+
+set_SIMULATeQCD_gpu_backend(src/experimental/main_polyakovloop.cpp)
+add_SIMULATeQCD_executable(polyakovLoop src/experimental/main_polyakovloop.cpp)
+set_SIMULATeQCD_property(polyakovLoop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
+SIMULATeQCD_target_compile_definitions(polyakovLoop PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
+add_to_compound_SIMULATeQCD_target(experimental polyakovLoop)
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
@@ -887,11 +890,11 @@ SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorMultiGPUStacked PRIV
 add_to_compound_SIMULATeQCD_target(applications wilsonLinesCorrelatorMultiGPUStacked)
 
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_RFixing.cpp)
-add_SIMULATeQCD_executable(RFixing src/applications/main_RFixing.cpp ${SOURCE_FILES_GFIX})
-set_SIMULATeQCD_property(RFixing PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(RFixing PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
-add_to_compound_SIMULATeQCD_target(applications RFixing)
+set_SIMULATeQCD_gpu_backend(src/applications/main_maximalCenterGaugeFixing.cpp)
+add_SIMULATeQCD_executable(maximalCenterGaugeFixing src/applications/main_maximalCenterGaugeFixing.cpp ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(maximalCenterGaugeFixing PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixing PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(applications maximalCenterGaugeFixing)
 
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS

@@ -34,7 +34,7 @@ testRoutinesNoParam[_taylorMeasurementTest]="4"
 testRoutinesNoParam[_weinbergTopTest]="1"
 
 testRoutinesNoParam[_wilsonLinesCorrelatorTest]="1"
-testRoutinesNoParam[_RFixingTest]="1"
+testRoutinesNoParam[_maximalCenterGaugeFixingTest]="1"
 
 # Counting the number of test sets lets us give the user some indication of progress.
 numberOfTestRoutines="$((${#testRoutinesNoParam[@]}))"

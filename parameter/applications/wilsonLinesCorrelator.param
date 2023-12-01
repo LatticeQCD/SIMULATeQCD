@@ -2,7 +2,7 @@
 # Example parameter file for main_wilsonLinesCorrelatorMultiGPUStacked.cpp
 # 
 #           Lattice: Nx Ny Nz Nt
-#             Nodes: Number of nodes per direction
+#             Nodes: Number of nodes per direction (x direction has to be 1)
 #        gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
 #        maxgfsteps: Maximum number of OR gauge fixing steps (DEFAULT = 1000)
 #           numunit: Reunitarize after this many OR gauge fixing steps (DEFAULT = 20)

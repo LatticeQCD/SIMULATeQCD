@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialization");
     CommunicationBase commBase(&argc, &argv);
     gfixParam<PREC> param;
-    param.readfile(commBase, "../parameter/applications/gaugeRFixing.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/maximalCenterGaugeFixing.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;
@@ -121,7 +121,17 @@ int main(int argc, char *argv[]) {
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
     rootLogger.info("Read configuration");
-    gauge.readconf_nersc(param.GaugefileName());
+    //gauge.readconf_nersc(param.GaugefileName());
+
+    // random generated gauge file
+    
+    grnd_state<false> h_rand;
+    grnd_state<true> d_rand;
+    h_rand.make_rng_state(12345);
+    d_rand = h_rand;
+    gauge.random(d_rand.state);
+                    
+
     gauge.updateAll();
 
     //////////// wilson smearing
@@ -156,13 +166,14 @@ int main(int argc, char *argv[]) {
     PREC gfR=GFixing.getR();
     PREC gfR_old = -10.0;
     rootLogger.info("R value " ,  gfR);
+    COMPLEX(PREC) ploop;
     for( int i = 0; i < param.maxgfsteps(); i++){
         GFixing.gaugefixR();
 
         gfR=GFixing.getR();
         rootLogger.info("R value " ,  gfR);
 
-        COMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
+        ploop = ploopClass.getPolyakovLoop();
         rootLogger.info("# POLYAKOV LOOP :: " ,  ploop);
 
         if ( (i%nunit) == 0 ) {
@@ -186,6 +197,34 @@ int main(int argc, char *argv[]) {
 
     if(param.SaveConfigZ()){    
         gaugeZ.writeconf_nersc(param.SavedConfName()+"Z", param.SaveRows(), 1);
+    }
+
+ ////////////// compare to known result
+ 
+    rootLogger.info( "gauge fixed R value = ",  gfR);
+    rootLogger.info( "R-Known = ",  gfR -0.55058481056 );
+
+    COMPLEX(PREC) knownP(0.00763441102254,-0.00256865111872);
+    rootLogger.info( "P-Known = ",  ploop - knownP); 
+
+    bool lerror = false;
+    if(abs(gfR-0.55058481056)> 1e-5){
+        lerror = true;
+    }
+
+    bool lerrorP = false;
+    if(abs(ploop-knownP)> 1e-5){
+        lerrorP = true;
+    }
+
+     
+
+
+    if(lerror && lerrorP ) {
+        rootLogger.error("At least one test failed!");
+        return -1;
+    } else {
+        rootLogger.info("test passed!" );
     }
 
 
