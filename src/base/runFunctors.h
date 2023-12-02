@@ -541,6 +541,72 @@ struct CalcGSite {
 };
 
 template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteInnerBulk {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSite operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getCenterCoord(index);
+        gSite site = GInd::getSite(coord.x, coord.y, coord.z, coord.t);
+        return site;
+    }
+};
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteInnerBulkStack {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSiteStack operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getCenterCoord(index);
+        gSiteStack site = GInd::getSiteStack(coord.x, coord.y, coord.z, coord.t, threadidx.y);
+        return site;
+    }
+};
+
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteHalo {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSite operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getInnerCoord(index);
+        gSite site = GInd::getSite(coord.x, coord.y, coord.z, coord.t);
+        return site;
+    }
+};
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteHaloStack {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSiteStack operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getInnerCoord(index);
+        gSiteStack site = GInd::getSiteStack(coord.x, coord.y, coord.z, coord.t, threadidx.y);
+        return site;
+    }
+};
+
+
+struct CalcGSiteHaloLookup {
+    gSite* HaloSites;
+
+    CalcGSiteHaloLookup(gSite* HalSites) : HaloSites(HalSites) {}
+
+    inline __host__ __device__ gSite operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        gSite site = HaloSites[index];
+        return site;
+    }
+};
+
+template<Layout LatticeLayout, size_t HaloDepth>
 struct CalcGSiteSpatialFull {
     template<typename... Args>
     inline __host__ __device__ gSite operator()(Args... args) {

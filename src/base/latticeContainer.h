@@ -385,6 +385,15 @@ public:
     template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulk(Functor op);
 
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverCenter(Functor op);
+
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverHalo(Functor op);
+    
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverHaloLookup(gSite* Halsites, Functor op);
+
     template<Layout LatticeLayout, size_t HaloDepth, size_t NStacks, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkStacked(Functor op);
 
@@ -429,6 +438,52 @@ void LatticeContainer<onDevice, elemType>::iterateOverBulk(Functor op) {
         elems = GInd::getLatData().vol4 / 2;
     }
     this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+}
+
+template<bool onDevice, typename elemType>
+template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize, typename Functor>
+void LatticeContainer<onDevice, elemType>::iterateOverCenter(Functor op) {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    CalcGSiteInnerBulk<LatticeLayout,HaloDepth> calcCenterSite;
+    WriteAtRead writeAtRead;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getCenterSize();
+    } else {
+        elems = HInd::getCenterSize()/2;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcCenterSite, writeAtRead, elems);    
+}
+
+
+template<bool onDevice, typename elemType>
+template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize, typename Functor>
+void LatticeContainer<onDevice, elemType>::iterateOverHalo(Functor op) {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    CalcGSiteHalo<LatticeLayout,HaloDepth> calcHaloSite;
+    WriteAtRead writeAtRead;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getInnerHaloSize();
+    } else {
+        elems = HInd::getInnerHaloSize()/2;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcHaloSite, writeAtRead, elems);    
+}
+
+template<bool onDevice, typename elemType>
+template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize, typename Functor>
+void LatticeContainer<onDevice, elemType>::iterateOverHaloLookup(gSite* Halsites, Functor op) {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    CalcGSiteHaloLookup calcHaloSite(Halsites);
+    WriteAtRead writeAtRead;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getInnerHaloSize();
+    } else {
+        elems = HInd::getInnerHaloSize()/2;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcHaloSite, writeAtRead, elems);    
 }
 
 

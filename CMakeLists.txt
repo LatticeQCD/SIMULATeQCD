@@ -777,6 +777,11 @@ add_to_compound_SIMULATeQCD_target(profilers axpy)
 
 
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_triad.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(triad src/profiling/main_triad.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(triad PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(triad PRIVATE HALODEPTHSPIN_2=1 HALODEPTH_2=1  SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers triad)
 
 set_SIMULATeQCD_gpu_backend(src/profiling/main_hbor_benchmark.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
 add_SIMULATeQCD_executable(hbor_benchmark src/profiling/main_hbor_benchmark.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)

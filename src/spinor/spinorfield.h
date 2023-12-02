@@ -208,6 +208,12 @@ typedef floatT floatT_inner;
     template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulk(Functor op, size_t Nmax = NStacks);
 
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverCenter(Functor op, size_t Nmax = NStacks);
+
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverHalo(Functor op, size_t Nmax = NStacks);
+
     template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAtStack(Functor op);
 
@@ -312,6 +318,39 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
 
     this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax);
 }
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverCenter(Functor op, size_t Nmax) {
+    CalcGSiteInnerBulkStack<LatticeLayout, HaloDepth> calcSite;
+    WriteAtReadStack writeAtRead;
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    size_t elems; 
+    if (LatticeLayout == All) {
+        elems = HInd::getCenterSize()*Nmax;
+    } else {
+        elems = HInd::getCenterSize()/2*Nmax;
+    }
+
+    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax);
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverHalo(Functor op, size_t Nmax) {
+    CalcGSiteHaloStack<LatticeLayout, HaloDepth> calcSite;
+    WriteAtReadStack writeAtRead;
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getInnerHaloSize()*Nmax;
+    } else {
+        elems = HInd::getInnerHaloSize()/2*Nmax;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax);
+}
+
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 template<size_t stack, unsigned BlockSize, typename Functor>

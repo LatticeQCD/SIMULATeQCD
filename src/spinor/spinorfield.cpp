@@ -319,9 +319,10 @@ struct SpinorPlusConstTTimesSpinorNoReturn{
         static_for<0,NStacks>::apply([&] (auto stack) {
             if (stack < MaxStack) {
                 Vect3<floatT> Stmp;
-                Stmp = spinor1.getElement(GInd::getSiteStack(site,stack));
-                Stmp += val(GInd::getSiteStack(site,stack)) * spinor2.getElement(GInd::getSiteStack(site,stack));
-                spinor1.setElement(GInd::getSiteStack(site,stack),Stmp);
+                gSiteStack sitestack = GInd::getSiteStack(site,stack);
+                Stmp = spinor1.getElement(sitestack);
+                Stmp += val(sitestack) * spinor2.getElement(sitestack);
+                spinor1.setElement(sitestack,Stmp);
             }
         });
     }
