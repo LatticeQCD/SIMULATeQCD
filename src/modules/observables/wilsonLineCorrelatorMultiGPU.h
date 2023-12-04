@@ -41,6 +41,10 @@ class WilsonLineCorrelatorMultiGPU{
     std::vector<floatT> gDotAlongXYStacked( Gaugefield<floatT,true,HaloDepth> &gauge ,int shiftx, int shifty,  LatticeContainer<true,floatT> &redBase);
 
     std::vector<floatT> gDotAlongXYStackedShared( Gaugefield<floatT,true,HaloDepth> &gauge , int shifty,  LatticeContainer<true,floatT> &redBase);
+
+
+    std::vector<floatT> gWilsonLoop( Gaugefield<floatT,true,HaloDepth> &gauge , Gaugefield<floatT,true,HaloDepth> &gaugeX ,int wlt,  LatticeContainer<true,floatT> &redBase);
+
 };
 
 template<class floatT,size_t HaloDepth,Layout LatLayout,size_t direction,bool Up>
@@ -368,4 +372,137 @@ struct DotAlongXYIntervalStacked{
 
     }
 };
+
+//////////wilson loop
+
+template<class floatT,size_t HaloDepth,Layout LatLayout, int stacks>
+struct WilsonLoop{
+
+    /// Gauge accessor to access the gauge field.
+    MemoryAccessor _redBase;
+    SU3Accessor<floatT> _gaugeIn;
+    SU3Accessor<floatT> _gaugeInX;
+    int _wlt;
+
+    /// Constructor to initialize all necessary members.
+    WilsonLoop(LatticeContainer<true,floatT> & redBase,Gaugefield<floatT,true,HaloDepth> &gaugeIn,Gaugefield<floatT,true,HaloDepth> &gaugeInX, int wlt) :
+            _redBase(redBase.getAccessor()),_gaugeIn(gaugeIn.getAccessor()),_gaugeInX(gaugeInX.getAccessor()),_wlt(wlt)
+   {
+    }
+
+    __device__ __host__ auto operator()(gSite site) {
+
+        sitexyzt coords=site.coordFull;
+        const int split = 1;
+
+        typedef GIndexer<All,HaloDepth> GInd;
+
+        floatT results[stacks];
+
+        for(int xx = 0; xx < (int)GInd::getLatData().lxFull; xx += 1){
+             results[xx] = 0.0;
+	}
+
+
+        // loop over all t, was implemented like this, in case not all t should be used
+        for(int tt = 0; tt < (int)GInd::getLatData().ltFull; tt += split){
+              int tend = tt+_wlt;
+	      if(tend >= GInd::getLatData().ltFull){
+	           tend -= GInd::getLatData().ltFull;
+	      }
+
+///////////////x direction
+	      SU3<floatT> su3Temp = _gaugeIn.getLink(GInd::getSiteMu(GInd::getSiteFull(coords.x,coords.y, coords.z, (size_t)(tt)),0));
+	      SU3<floatT> su3TempXend   = su3_one<floatT>();
+	      SU3<floatT> su3TempXstart = su3_one<floatT>();
+
+
+              for(int xx = 1; xx < (int)GInd::getLatData().lxFull; xx += 1){
+                   int xend = coords.x+xx;
+                   if(xend >= GInd::getLatData().lxFull){
+                       xend -= GInd::getLatData().lxFull;
+                   }
+                   int xm1 = xend-1;
+                   if(xm1 < 0){
+                       xm1 += GInd::getLatData().lxFull;
+                   } 
+
+                   su3TempXend   *= _gaugeInX.getLink(GInd::getSiteMu(GInd::getSiteFull(xm1,coords.y, coords.z, (size_t)(tend)),0));
+		   su3TempXstart *= _gaugeInX.getLink(GInd::getSiteMu(GInd::getSiteFull(xm1,coords.y, coords.z, (size_t)(tt)),0));
+
+                   
+                   results[xx] = results[xx] +  tr_c(su3Temp*
+				                   su3TempXend*
+						   _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSiteFull(xend, coords.y, coords.z, (size_t)(tt)),0))*
+						   dagger(su3TempXstart)).cREAL;
+                   
+
+	      }
+	      
+///////////////y direction
+              su3TempXend   = su3_one<floatT>();
+              su3TempXstart = su3_one<floatT>();
+
+
+              for(int yy = 1; yy < (int)GInd::getLatData().lyFull; yy += 1){
+                   int yend = coords.y+yy;
+                   if(yend >= GInd::getLatData().lyFull){
+                       yend -= GInd::getLatData().lyFull;
+                   }
+                   int ym1 = yend-1;
+                   if(ym1 < 0){
+                       ym1 += GInd::getLatData().lyFull;
+                   }
+
+                   su3TempXend   *= _gaugeInX.getLink(GInd::getSiteMu(GInd::getSiteFull(coords.x,ym1, coords.z, (size_t)(tend)),1));
+                   su3TempXstart *= _gaugeInX.getLink(GInd::getSiteMu(GInd::getSiteFull(coords.x,ym1, coords.z, (size_t)(tt)),1));
+
+
+                   results[yy] = results[yy] +  tr_c(su3Temp*
+                                                   su3TempXend*
+                                                   _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSiteFull(coords.x, yend, coords.z, (size_t)(tt)),0))*
+                                                   dagger(su3TempXstart)).cREAL;
+
+
+              }
+	      
+///////////////z direction
+              su3TempXend   = su3_one<floatT>();
+              su3TempXstart = su3_one<floatT>();
+
+
+              for(int zz = 1; zz < (int)GInd::getLatData().lzFull; zz += 1){
+                   int zend = coords.z+zz;
+                   if(zend >= GInd::getLatData().lzFull){
+                       zend -= GInd::getLatData().lzFull;
+                   }
+		   int zm1 = zend-1;
+                   if(zm1 < 0){
+                       zm1 += GInd::getLatData().lzFull;
+                   }
+
+                   su3TempXend   *= _gaugeInX.getLink(GInd::getSiteMu(GInd::getSiteFull(coords.x,coords.y, zm1, (size_t)(tend)),2));
+                   su3TempXstart *= _gaugeInX.getLink(GInd::getSiteMu(GInd::getSiteFull(coords.x,coords.y, zm1, (size_t)(tt)),2));
+
+
+                   results[zz] = results[zz] +  tr_c(su3Temp*
+                                                   su3TempXend*
+                                                   _gaugeIn.getLinkDagger(GInd::getSiteMu(GInd::getSiteFull( coords.x, coords.y, zend, (size_t)(tt)),0))*
+                                                   dagger(su3TempXstart)).cREAL;
+
+
+              }
+	      
+        }
+
+        for(int i =1; i < stacks ; i++){
+            _redBase.setValue<floatT>(site.isite+i*GInd::getLatData().vol3, results[i]/9.0);
+        }
+        return (floatT)GInd::getLatData().ltFull;
+
+
+    }
+
+};
+
 

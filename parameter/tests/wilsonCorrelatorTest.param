@@ -1,0 +1,21 @@
+Lattice    = 32 32 32 8
+Nodes      = 1  1  1  1
+
+gauge_file = ../test_conf/l328f21b6285m0009875m0790a_019.995
+directory  = ./
+file_type  = nersc
+
+load_conf  = 2  #load( 0 = integer), (1=configuration) (2=configuration+ gauge fixing)
+
+gtolerance       = 1e-6  #tolerance for gauge fixing
+maxgfsteps       = 100000 #maximum amount of gauge fixing steps
+numunit          = 20    # how often to unitarize
+
+use_wilson=0
+wilson_step=0.0001
+wilson_start=0.0
+wilson_stop=0.125
+
+cutRadius=100
+useInfoFile=0
+

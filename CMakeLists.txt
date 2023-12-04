@@ -413,6 +413,7 @@ ENDFUNCTION()
 # things at once!) Executables will have a leading "_" in their name if compiled as part of these targets
 add_custom_target(applications)
 add_custom_target(examples)
+add_custom_target(experimental)
 add_custom_target(profilers)
 add_custom_target(tests)
 add_custom_target(tools)
@@ -420,6 +421,7 @@ add_custom_target(everything)
 add_dependencies(everything
     applications
     examples
+    experimental
     profilers
     tests
     tools
@@ -701,6 +703,20 @@ set_SIMULATeQCD_property(weinbergTopTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "te
 SIMULATeQCD_target_compile_definitions(weinbergTopTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=0 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=0)
 add_to_compound_SIMULATeQCD_target(tests weinbergTopTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_wilsonLinesCorrelatorTest.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
+add_SIMULATeQCD_executable(wilsonLinesCorrelatorTest src/testing/main_wilsonLinesCorrelatorTest.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp )
+set_SIMULATeQCD_property(wilsonLinesCorrelatorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(tests wilsonLinesCorrelatorTest)
+
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_maximalCenterGaugeFixingTest.cpp)
+add_SIMULATeQCD_executable(maximalCenterGaugeFixingTest src/testing/main_maximalCenterGaugeFixingTest.cpp ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(maximalCenterGaugeFixingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(tests maximalCenterGaugeFixingTest)
+
+
 
 #-------------------------------------------------------------------------------------COMPILATION DEFINITIONS: PROFILING
 
@@ -793,6 +809,13 @@ set_SIMULATeQCD_property(wilsonLinesFieldsShared PROPERTIES RUNTIME_OUTPUT_DIREC
 SIMULATeQCD_target_compile_definitions(wilsonLinesFieldsShared PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(examples wilsonLinesFieldsShared)
 
+#---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: EXPERIMENTAL
+
+set_SIMULATeQCD_gpu_backend(src/experimental/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
+add_SIMULATeQCD_executable(wilsonloop src/experimental/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp )
+set_SIMULATeQCD_property(wilsonloop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
+SIMULATeQCD_target_compile_definitions(wilsonloop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(experimental wilsonloop)
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 
@@ -860,11 +883,18 @@ set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
-add_SIMULATeQCD_executable(wilsonLinesCorrelatorMultiGPUStacked src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
+set_SIMULATeQCD_gpu_backend(src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp src/modules/hyp/hypSmearing.cpp)
+add_SIMULATeQCD_executable(wilsonLinesCorrelatorMultiGPUStacked src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp src/modules/hyp/hypSmearing.cpp)
 set_SIMULATeQCD_property(wilsonLinesCorrelatorMultiGPUStacked PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorMultiGPUStacked PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
+SIMULATeQCD_target_compile_definitions(wilsonLinesCorrelatorMultiGPUStacked PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications wilsonLinesCorrelatorMultiGPUStacked)
+
+
+set_SIMULATeQCD_gpu_backend(src/applications/main_maximalCenterGaugeFixing.cpp)
+add_SIMULATeQCD_executable(maximalCenterGaugeFixing src/applications/main_maximalCenterGaugeFixing.cpp ${SOURCE_FILES_GFIX})
+set_SIMULATeQCD_property(maximalCenterGaugeFixing PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixing PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(applications maximalCenterGaugeFixing)
 
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS
