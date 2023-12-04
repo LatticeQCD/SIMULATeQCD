@@ -387,6 +387,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::readconf_milc_host(SU3Access
 //    if (!milc.checksums_match()) {
 //        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
 //    }
+   rootLogger.info("WARNING: milc checksum not implemented, use with caution");
 
 }
 
