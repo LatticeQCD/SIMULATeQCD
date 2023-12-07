@@ -36,13 +36,13 @@ struct triad_op{
 };
 template<class spin>
 struct triad_op_vector{
-    Vect3arrayAcc<float> b_acc;
-    Vect3arrayAcc<float> c_acc;
-    SimpleArray<float,1> scalar;
+    Vect3arrayAcc<double> b_acc;
+    Vect3arrayAcc<double> c_acc;
+    SimpleArray<double,1> scalar;
 
-    triad_op_vector<spin>(spin &b, spin &c, SimpleArray<float,1> s) : b_acc(b.getAccessor()), c_acc(c.getAccessor()), scalar(s) {}
+    triad_op_vector<spin>(spin &b, spin &c, SimpleArray<double,1> s) : b_acc(b.getAccessor()), c_acc(c.getAccessor()), scalar(s) {}
 
-    __host__ __device__ Vect3<float> operator()(gSiteStack site) {
+    __host__ __device__ Vect3<double> operator()(gSiteStack site) {
         Vect3 result = b_acc.template getElement(site)+scalar(site)*c_acc.template getElement(site);
         return result;
     }
@@ -93,8 +93,8 @@ void iterateFillHaloSites(CalcReadInd calcReadInd, gSite* HalSites, const size_t
     blockDim.z = elems_z;
 
     //Grid only in x direction!
-    const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
-                / static_cast<float> (blockDim.x)));
+    const dim3 gridDim = static_cast<int> (ceilf(static_cast<double> (elems_x)
+                / static_cast<double> (blockDim.x)));
 
     hipLaunchKernelGGL((fillHaloSites), dim3(gridDim), dim3(blockDim), 0, stream , calcReadInd, HalSites, elems_x);
 
@@ -117,11 +117,11 @@ int main(int argc, char *argv[]) {
     initialize_rng(1337,rand);
     
     StopWatch<true> timer;
-    Spinorfield<float, true, Even, HaloDepth, 1> a(commBase);
-    SimpleArray<float,1> scal = 2.5;
+    Spinorfield<double, true, Even, HaloDepth, 1> a(commBase);
+    SimpleArray<double,1> scal = 2.5;
     double sc = 2.5;
-    Spinorfield<float, true, Even, HaloDepth, 1> b(commBase);
-    Spinorfield<float, true, Even, HaloDepth, 1> c(commBase);
+    Spinorfield<double, true, Even, HaloDepth, 1> b(commBase);
+    Spinorfield<double, true, Even, HaloDepth, 1> c(commBase);
     
 
     const int LatDim[] = {param.latDim[0],param.latDim[1],param.latDim[2],param.latDim[3]};
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
     a.gauss(rand.state);
     b.gauss(rand.state);
     c.gauss(rand.state);
-    size_t triad_bytes = 3.0*3.0*2*sizeof(float)*volume/2.0;
+    size_t triad_bytes = 3.0*3.0*2*sizeof(double)*volume/2.0;
 
     timer.setBytes(50*triad_bytes);
 
@@ -154,21 +154,22 @@ int main(int argc, char *argv[]) {
     timer.reset();
     timer.start();
     for (int i = 0; i < 50; i++) {
-        a.iterateOverCenter(SpinorPlusConstTTimesSpinor<float,Even,HaloDepth,SimpleArray<float,1>,1>(b.getAccessor(),c.getAccessor(),scal));
+        a.iterateOverCenter(SpinorPlusConstTTimesSpinor<double,Even,HaloDepth,SimpleArray<double,1>,1>(b.getAccessor(),c.getAccessor(),scal));
     }
     timer.stop();
     rootLogger.info("50x Spinor triad inner bulk timing: ", timer);
     timer.reset();
+    if (param.nodeDim[0]*param.nodeDim[1]*param.nodeDim[2]*param.nodeDim[3] > 1) {
     timer.start();
     for (int i = 0; i < 50; i++) {
-        a.iterateOverHalo(SpinorPlusConstTTimesSpinor<float,Even,HaloDepth,SimpleArray<float,1>,1>(b.getAccessor(),c.getAccessor(),scal));
+        a.iterateOverHalo(SpinorPlusConstTTimesSpinor<double,Even,HaloDepth,SimpleArray<double,1>,1>(b.getAccessor(),c.getAccessor(),scal));
     }
     timer.stop();
     rootLogger.info("50x Spinor triad inner halo timing: ", timer);
     rootLogger.info("Check result: ", dot/(0.5*volume));
     dot = a.realdotProduct(a);
 
-
+    }
 
     triad_bytes = 3.0*sizeof(double)*volume;
     bc.iterateOverBulk<All, HaloDepth>(fill_with_double(1.0));
@@ -211,6 +212,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("50x LatticeContainer triad inner Bulk timing: ", timer);
     rootLogger.info("Check result: ", ac_red/volume);
     timer.reset();
+    if (param.nodeDim[0]*param.nodeDim[1]*param.nodeDim[2]*param.nodeDim[3] > 1) {
     timer.start();
     for (int i = 0; i < 50; i++) {
         // CalcGSiteHalo<All,HaloDepth> calcsite;
@@ -225,5 +227,6 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Inner Bulk Size: ", HaloIndexer<All, HaloDepth>::getCenterSize());
     rootLogger.info("Inner Halo Size: ", HaloIndexer<All,HaloDepth>::getInnerHaloSize());
     rootLogger.info("Lattice Size: ", GIndexer<All, HaloDepth>::getLatData().vol4);
+    }
     return 0;
 }
