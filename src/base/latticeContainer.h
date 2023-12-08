@@ -126,8 +126,8 @@ public:
     ReductionResultHost(std::move(source.ReductionResultHost)),
     d_out(std::move(source.d_out)),
     StackOffsetsHostTemp(std::move(source.StackOffsetsHostTemp)),
-    StackOffsetsTemp(std::move(source.StackOffsetsTemp)),
-    reductionStream(std::move(source.reductionStream)){}
+    StackOffsetsTemp(std::move(source.StackOffsetsTemp)){}
+    // reductionStream(std::move(source.reductionStream)){}
     //! move assignment
     LatticeContainer<onDevice, elemType>& operator=(LatticeContainer<onDevice, elemType>&&) = delete;
 
