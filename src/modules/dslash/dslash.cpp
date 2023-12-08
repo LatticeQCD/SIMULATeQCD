@@ -53,7 +53,7 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
 __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::operator()(gSiteStack site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
-    constexpr size_t Ntiles = NStacks/NStacks_blockdim;
+    // constexpr size_t Ntiles = NStacks/NStacks_blockdim;
     size_t stack_offset = GInd::getStack(site);
         SimpleArray<Vect3<floatT>, NStacks> Stmp((floatT)0.0);
         
@@ -83,7 +83,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         for (int mu = 0; mu < 4; mu++) {
             size_t i = 0;
             #pragma unroll
-            for (size_t stack = stack_offset; i < Ntiles; stack+=NStacks_blockdim, i++) {
+            for (size_t stack = stack_offset; stack-stack_offset < NStacks; stack+=NStacks_blockdim, i++) {
 
                 Stmp[i] += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
                                                     * _spinorIn.getElement(GInd::site_up(GInd::getSiteStack(site,stack), mu));
@@ -116,7 +116,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
     #else
     size_t i = 0;
     #pragma unroll NStacks
-    for (size_t stack = stack_offset; i < Ntiles; stack+=NStacks_blockdim, i++) {
+    for (size_t stack = stack_offset; stack-stack_offset < NStacks; stack+=NStacks_blockdim, i++) {
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[i]);
     }   

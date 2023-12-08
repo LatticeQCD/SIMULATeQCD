@@ -90,32 +90,32 @@ public:
 
     SU3Accessor<floatT, comp> getAccessor() const;
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAllMu(Functor op);
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     deviceStream<onDevice> iterateOverBulkAllMu(Functor op, bool useStream = false);
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullLoopMu(Functor op);
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkLoopMu(Functor op);
 
-    template<uint8_t mu, unsigned BlockSize = 256, typename Functor>
+    template<uint8_t mu, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAtMu(Functor op);
 
-    template<uint8_t mu, unsigned BlockSize = 256, typename Functor>
+    template<uint8_t mu, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkAtMu(Functor op);
 
     template<typename Functor>
     Gaugefield &operator=(Functor op);
 
-    template<unsigned BlockSize = 256, typename Object>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Object>
     void iterateWithConst(Object ob);
 
     /// THIS IS EXPERIMENTAL!!
-    template<unsigned BlockSize = 256, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void constructWithHaloUpdateAllMu(Functor op);
 
     void su3latunitarize();

@@ -362,22 +362,55 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
             _TmpForce = _TmpForce + _Dummy;
         });
 
-        static_for<5,7>::apply([&] (auto part) {
-            static_for<0,4>::apply([&](auto term) {
-            _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
-            _TmpForce = _TmpForce + _Dummy;
-            });
-        });
+    static_for<5,7>::apply([&] (auto part) {
+        // static_for<0,4>::apply([&](auto term) {
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        // });
+    });
+
     _Dummy.iterateOverBulkAllMu(F1_lepagelink);
     _TmpForce = _TmpForce + _Dummy;
 
+
     static_for<1,8>::apply([&] (auto part) {
-        static_for<0,8>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+        // static_for<0,8>::apply([&](auto term) {
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 4>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 5>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 6>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 7>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        // });
     });
-    // _Dummy.template iterateOverBulkAllMu<64>(F1_7link_part_2);
+    
+    // // _Dummy.template iterateOverBulkAllMu<64>(F1_7link_part_2);
     // _TmpForce = _TmpForce + _Dummy;
     // _Dummy.template iterateOverBulkAllMu<64>(F1_7link_part_3);
     // _TmpForce = _TmpForce + _Dummy;
@@ -429,17 +462,47 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     });
 
     static_for<5,7>::apply([&] (auto part) {
-        static_for<0,4>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+        // static_for<0,4>::apply([&](auto term) {
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+        
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        // });
     });
 
     static_for<1,8>::apply([&] (auto part) {
-        static_for<0,8>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+        // static_for<0,8>::apply([&](auto term) {
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 4>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 5>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 6>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        
+         _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 7>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        // });
     });
 
     // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_1);
@@ -510,20 +573,51 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
     });
 
     static_for<5,7>::apply([&] (auto part) {
-        static_for<0,4>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+        // static_for<0,4>::apply([&](auto term) { //nvidia compiler cannot handle nested static_for...
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        // });
     });
 
     _Dummy.iterateOverBulkAllMu(F1_lepagelink);
     _TmpForce = _TmpForce + _Dummy;
 
-    static_for<1,8>::apply([&] (auto part) {
-        static_for<0,8>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+   static_for<1,8>::apply([&] (auto part) {
+        // static_for<0,8>::apply([&](auto term) {
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 4>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 5>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 6>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 7>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        // });
     });
     // _Dummy.template iterateOverBulkAllMu<64>(F1_7link_part_1);
     // _TmpForce = _TmpForce + _Dummy;
@@ -574,18 +668,49 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg
     });
 
     static_for<5,7>::apply([&] (auto part) {
-        static_for<0,4>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+        // static_for<0,4>::apply([&](auto term) { //nvidia compiler cannot handle nested static_for...
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        // });
     });
 
 
     static_for<1,8>::apply([&] (auto part) {
-        static_for<0,8>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, term>(_GaugeU3P,Force));
+        // static_for<0,8>::apply([&](auto term) {
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P,Force));
         _TmpForce = _TmpForce + _Dummy;
-        });
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 4>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 5>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 6>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+
+        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 7>(_GaugeU3P,Force));
+        _TmpForce = _TmpForce + _Dummy;
+        // });
     });
     // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_1);
     // _TmpForce = _TmpForce + _Dummy;
