@@ -59,7 +59,6 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
         
         #ifdef USE_HIP
         static_for<0,4>::apply([&](auto mu) {
-            // size_t i = 0;
             size_t stack = stack_offset;
             static_for<0,Ntiles>::apply([&](auto i) {
 
@@ -79,8 +78,10 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
             });
         });
         #else
+ 
         #pragma unroll
         for (int mu = 0; mu < 4; mu++) {
+            size_t i = 0;
             #pragma unroll
             for (size_t stack = stack_offset; i < Ntiles; stack+=NStacks_blockdim, i++) {
 
@@ -97,7 +98,7 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
                                                     * _spinorIn.getElement(GInd::site_dn_dn_dn(GInd::getSiteStack(site,stack), mu, mu, mu));
             }
         #endif
- 
+        }
         
     
 
@@ -115,10 +116,9 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
     #else
     size_t i = 0;
     #pragma unroll NStacks
-    for (size_t stack = stack_offset; i < Ntiles; stack+=Nstacks_blockdim, i++) {
+    for (size_t stack = stack_offset; i < Ntiles; stack+=NStacks_blockdim, i++) {
         const gSiteStack writeSite = GInd::getSiteStack(site,stack);
         _spinorOut.setElement(writeSite,Stmp[i]);
-        stack += NStacks_blockdim;
     }   
     #endif
 }
