@@ -88,7 +88,6 @@ private:
     gMemoryPtr<onDevice> d_out;
     gMemoryPtr<false>    StackOffsetsHostTemp;
     gMemoryPtr<onDevice> StackOffsetsTemp;
-    gpuStream_t reductionStream;
 
 public:
 
@@ -108,8 +107,6 @@ public:
             StackOffsetsTemp(MemoryManagement::getMemAt<onDevice>("StackOffSetsTemp"))
             {
                 d_out->template adjustSize<elemType>(1);
-                gpuError_t gpuErr = gpuStreamCreate(&reductionStream);
-                if (gpuErr != gpuSuccess) GpuError("latticeContainer.h: gpuStreamCreate", gpuErr);
             }
 
     //! copy constructor
@@ -136,8 +133,8 @@ public:
 
     //! destructor
     ~LatticeContainer(){
-        gpuError_t gpuErr =  gpuStreamDestroy(reductionStream);
-        if (gpuErr != gpuSuccess) GpuError("latticeContainer.h: gpuStreamDestroy", gpuErr);
+        // gpuError_t gpuErr =  gpuStreamDestroy(reductionStream);
+        // if (gpuErr != gpuSuccess) GpuError("latticeContainer.h: gpuStreamDestroy", gpuErr);
     }
 
     void adjustSize(size_t size) {
@@ -331,13 +328,13 @@ public:
         // markerEnd();
         
         ncclResult_t r = ncclAllReduce(static_cast<const void*>(d_out->getPointer()), static_cast<void*>(value->getPointer()),
-         comm.getNumberProcesses(), ncclDouble, ncclSum, comm.getNccl_communicator(), reductionStream);
+         comm.getNumberProcesses(), ncclDouble, ncclSum, comm.getNccl_communicator(), NULL);
         if (r != ncclSuccess) {
             NcclError("LatticeContainer::reduce_nccl: ncclAllReduce failed ", r);
         }
 
-        gpuErr = gpuStreamSynchronize(reductionStream);
-        if (gpuErr) GpuError("LatticeContainer::reduce: gpuStreamSynchronize", gpuErr);
+        // gpuErr = gpuStreamSynchronize(reductionStream);
+        // if (gpuErr) GpuError("LatticeContainer::reduce: gpuStreamSynchronize", gpuErr);
         markerEnd();
         markerEnd();
     }

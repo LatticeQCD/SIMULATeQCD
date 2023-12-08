@@ -53,11 +53,11 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
 template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
 __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::operator()(gSiteStack site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
-    // constexpr size_t Ntiles = NStacks/NStacks_blockdim;
     size_t stack_offset = GInd::getStack(site);
         SimpleArray<Vect3<floatT>, NStacks> Stmp((floatT)0.0);
         
         #ifdef USE_HIP
+        constexpr size_t Ntiles = NStacks/NStacks_blockdim;
         static_for<0,4>::apply([&](auto mu) {
             size_t stack = stack_offset;
             static_for<0,Ntiles>::apply([&](auto i) {
@@ -97,9 +97,9 @@ __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS
                 Stmp[i] -= static_cast<floatT>(_c_3000) * _gAcc_Naik.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn_dn(site, mu, mu), mu)))
                                                     * _spinorIn.getElement(GInd::site_dn_dn_dn(GInd::getSiteStack(site,stack), mu, mu, mu));
             }
-        #endif
+       
         }
-        
+        #endif
     
 
     // size_t i = 0;
