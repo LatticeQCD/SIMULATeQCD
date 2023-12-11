@@ -73,7 +73,7 @@ struct fill_with_double{
     }
 };
 
-template<typename CalcReadInd>
+/*template<typename CalcReadInd>
 __global__ void fillHaloSites(CalcReadInd calcReadInd, gSite* HalSites, const size_t size_x) {
     size_t index = blockDim.x * blockIdx.x + threadIdx.x;
      if (index >= size_x) {
@@ -98,7 +98,7 @@ void iterateFillHaloSites(CalcReadInd calcReadInd, gSite* HalSites, const size_t
 
     hipLaunchKernelGGL((fillHaloSites), dim3(gridDim), dim3(blockDim), 0, stream , calcReadInd, HalSites, elems_x);
 
-};
+    };*/
 
 int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);

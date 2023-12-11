@@ -45,12 +45,12 @@ int main(int argc, char **argv) {
     HisqDSlash<float, true, Even, HaloDepth, HaloDepthSpin, 1> dslash(gauge_smeared, gauge_naik, param.m_ud());
     
     StopWatch<true> timer;
-    roctracer_start();
+    //roctracer_start();
     timer.start();
 
     cg.invert_res_replace(dslash, spinorOut, spinorIn, param.cgMax(), param.residue(), 0.1);
     timer.stop();
-    roctracer_stop();
+    //roctracer_stop();
     dslash.applyMdaggM(spinorCheck, spinorOut);
 
     spinorOut = spinorCheck - spinorIn;

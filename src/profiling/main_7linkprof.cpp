@@ -154,10 +154,14 @@ void run_force(CommunicationBase &commBase) {
         });
 
         static_for<5,7>::apply([&] (auto part) {
-            static_for<0,4>::apply([&](auto term) {
-            dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<PREC,true, HaloDepth, R18, part, term>(gauge,force));
+            dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<PREC,true, HaloDepth, R18, part, 0>(gauge,force));
             forceOut = forceOut + dummy;
-            });
+
+            dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<PREC,true, HaloDepth, R18, part, 1>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<PREC,true, HaloDepth, R18, part, 2>(gauge,force));
+            forceOut = forceOut + dummy;
         });
 
         timer.stop();
@@ -165,10 +169,30 @@ void run_force(CommunicationBase &commBase) {
         timer.reset();
         timer.start();
         static_for<1,8>::apply([&] (auto part) {
-            static_for<0,8>::apply([&](auto term) {
-            dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, term>(gauge,force));
+            dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 0>(gauge,force));
             forceOut = forceOut + dummy;
-            });
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 1>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 2>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 3>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 4>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 5>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 6>(gauge,force));
+            forceOut = forceOut + dummy;
+
+	    dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 7>(gauge,force));
+            forceOut = forceOut + dummy;
+
         });
         
     
@@ -209,10 +233,10 @@ void run_shortforce(CommunicationBase &commBase) {
         timer.reset();
         timer.start();
         static_for<1,2>::apply([&] (auto part) {
-            static_for<0,1>::apply([&](auto term) {
-            dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, term>(gauge,force));
+
+            dummy.template iterateOverBulkAllMu<64>(contribution_7link<PREC, true, HaloDepth, R18, part, 0>(gauge,force));
             forceOut = forceOut + dummy;
-            });
+
         });
         
     
