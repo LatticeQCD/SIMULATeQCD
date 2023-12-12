@@ -112,11 +112,11 @@ int main(int argc, char *argv[]) {
         rootLogger.info("Rectangle = ",  gaugeaction.rectangle());
 
         SimpleArray<double,Nmeas> chi_l = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, param.m_ud(),  gauge, d_rand);
-        for (int j = 0; j < Nmeas; ++j) {
+        for (size_t j = 0; j < Nmeas; ++j) {
             rootLogger.info("CHI_UD = ", chi_l[j]);
         }
         SimpleArray<double,Nmeas> chi_s = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, param.m_s(), gauge, d_rand);
-        for (int j = 0; j < Nmeas; ++j) {
+        for (size_t j = 0; j < Nmeas; ++j) {
             rootLogger.info("CHI_S = ", chi_s[j]);
         }
 

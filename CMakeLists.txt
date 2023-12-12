@@ -95,6 +95,7 @@ if (USE_HIP)
 
     if(USE_HIP_AMD)
         find_package(rocprim REQUIRED CONFIG PATHS "${HIP_PATH}/rocprim")
+        #find_package(rccl REQUIRED CONFIG PATHS "${HIP_PATH}/rccl")
     endif()
     set(HIP_INCLUDE_DIRS "${HIP_PATH}/include")
     set(SIMULATEQCD_INCLUDE_DIRS "${SIMULATEQCD_INCLUDE_DIRS};${HIP_INCLUDE_DIRS}")
@@ -149,6 +150,18 @@ if(USE_TILED_MULTIRHS)
     add_definitions(-DUSE_TILED_MULTIRHS)
 endif()
 
+set(USE_NCCL OFF CACHE BOOL "Set to ON to build with NCCL/RCCL support (default = OFF)")
+if (USE_NCCL)
+    add_definitions(-DUSE_NCCL)
+    if (USE_HIP)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lrccl")
+    endif()
+endif()
+
+set(COMMS_STREAMS ON CACHE BOOL "Set to ON to build with 160 streams for communications, OFF for 2 streams (default = ON)")
+if (COMMS_STREAMS)
+    add_definitions(-DCOMMS_STREAMS)
+endif()
 
 # Additional compiler flags
 if (USE_CUDA)
@@ -161,7 +174,7 @@ elseif (USE_HIP_AMD)
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps")
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
@@ -357,7 +370,34 @@ if (USE_CUDA)
 endif()
 
 #---------------------------------------------------------------------------------------TARGET FUNCTIONS WITH PROPERTIES
+FUNCTION(add_standalone_executable TARGET)
+if (USE_CUDA)
+        add_executable(${TARGET} ${ARGN}) # single target
 
+        target_link_libraries("_${TARGET}")
+        set_target_properties(${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" CUDA_SEPARABLE_COMPILATION ON)
+    elseif (USE_HIP_AMD)
+        add_executable(${TARGET} ${ARGN}) # single target
+        
+# This might work in the future
+#        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET}
+            PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CXX HIP_RESOLVE_DEVICE_SYMBOLS ON PUBLIC "-L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
+
+    elseif (USE_HIP_NVIDIA)
+        add_executable(${TARGET} ${ARGN}) # single target
+        
+# This might work in the future
+#        add_executable(_${TARGET} ${ARGN}) # compound target (e.g. in "tests", "applications")
+#        target_link_libraries("_${TARGET}" CodeBase hip::hipcub)
+        set_target_properties(${TARGET} PROPERTIES
+            COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+    endif()
+ENDFUNCTION()
 
 FUNCTION(add_SIMULATeQCD_executable TARGET)
     if (USE_CUDA)
@@ -739,6 +779,26 @@ set_SIMULATeQCD_property(forceProfiling PROPERTIES RUNTIME_OUTPUT_DIRECTORY "pro
 SIMULATeQCD_target_compile_definitions(forceProfiling PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers forceProfiling)
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_7linkprof.cpp ${SOURCE_FILES_DSLASH})
+add_SIMULATeQCD_executable(7linkprof src/profiling/main_7linkprof.cpp ${SOURCE_FILES_DSLASH})
+set_SIMULATeQCD_property(7linkprof PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(7linkprof PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers 7linkprof)
+
+set_SIMULATeQCD_gpu_backend(src/profiling/main_axpy.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(axpy src/profiling/main_axpy.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(axpy PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(axpy PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_2=1  SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers axpy)
+
+
+
+set_SIMULATeQCD_gpu_backend(src/profiling/main_triad.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(triad src/profiling/main_triad.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(triad PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(triad PRIVATE HALODEPTHSPIN_2=1 HALODEPTH_2=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers triad)
+
 set_SIMULATeQCD_gpu_backend(src/profiling/main_hbor_benchmark.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
 add_SIMULATeQCD_executable(hbor_benchmark src/profiling/main_hbor_benchmark.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
 set_SIMULATeQCD_property(hbor_benchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
@@ -751,18 +811,25 @@ set_SIMULATeQCD_property(inverterProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profi
 SIMULATeQCD_target_compile_definitions(inverterProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(profilers inverterProf)
 
+set_SIMULATeQCD_gpu_backend(src/profiling/main_cgprofiling.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp) 
+add_SIMULATeQCD_executable(cgProf src/profiling/main_cgprofiling.cpp  src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp) 
+set_SIMULATeQCD_property(cgProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+SIMULATeQCD_target_compile_definitions(cgProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(profilers cgProf)
+
+
 if (USE_TILED_MULTIRHS)
-set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-set_SIMULATeQCD_property(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(profilers multiRHSProf)
+set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
+add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
+set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 DOUBLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_3=1 NSTACKS_4=1 NSTACKS_5=1 NSTACKS_6=1 NSTACKS_8=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_15=1 NSTACKS_16=1 ${ALL_NSTACK_BLOCK} LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
+add_dependencies(profilers multiRHSProf)
 else()
-set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp ${SOURCE_FILES_DSLASH}) 
-set_SIMULATeQCD_property(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_2=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_3=1 NSTACKS_BLOCK_4=1 NSTACKS_BLOCK_6=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(profilers multiRHSProf)
+set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
+add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
+set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_4=1 LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
+add_dependencies(profilers multiRHSProf)
 endif()
 
 
@@ -868,7 +935,7 @@ add_to_compound_SIMULATeQCD_target(applications polSuscRenorm)
 set_SIMULATeQCD_gpu_backend(src/applications/main_rhmc.cpp)
 add_SIMULATeQCD_executable(rhmc src/applications/main_rhmc.cpp ${SOURCE_FILES_RHMC})
 set_SIMULATeQCD_property(rhmc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(rhmc PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_14=1 NSTACKS_15=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(rhmc PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications rhmc)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sampleTopology.cpp)

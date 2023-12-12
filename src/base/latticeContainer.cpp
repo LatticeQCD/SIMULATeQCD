@@ -14,10 +14,10 @@
 
 
 template<class floatT>
-gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size) {
+gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size, gpuStream_t stream) {
 
     return gpucub::DeviceReduce::Sum(helpArr, *temp_storage_bytes, static_cast<floatT *>(Arr), out,
-                                  size);
+                                  size, stream);
 }
 
 template<class floatT>
@@ -37,7 +37,7 @@ CubReduceStacked(void *helpArr, size_t *temp_storage_bytes, void *Arr, void *out
 }
 
 #define CLASS_INIT(floatT) \
-template gpuError_t CubReduce<floatT>(void * helpArr, size_t *temp_storage_bytes, floatT* Arr, floatT* out, size_t size); \
+template gpuError_t CubReduce<floatT>(void * helpArr, size_t *temp_storage_bytes, floatT* Arr, floatT* out, size_t size, gpuStream_t stream); \
 template gpuError_t CubReduceStacked<floatT>(void * helpArr, size_t *temp_storage_bytes, void * Arr, void* out, int Nt, void *StackOffsets); \
 
 

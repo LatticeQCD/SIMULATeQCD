@@ -18,7 +18,7 @@ template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDep
 struct convert_prec;
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R18>
-class Gaugefield : public siteComm<floatT, onDevice, SU3Accessor<floatT, comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
+class Gaugefield : public SiteComm<floatT, onDevice, SU3Accessor<floatT, comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
 {
 protected:
     SU3array<floatT, onDevice, comp> _lattice;
@@ -30,7 +30,7 @@ public:
     typedef GIndexer<All, HaloDepth> GInd;
 
     explicit Gaugefield(CommunicationBase &comm, std::string gaugefieldName="Gaugefield")
-            : siteComm<floatT, onDevice, SU3Accessor<floatT,comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>(comm),
+            : SiteComm<floatT, onDevice, SU3Accessor<floatT,comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>(comm),
               _lattice(GInd::getLatData().vol4Full * 4, gaugefieldName) {
     }
 
@@ -90,32 +90,32 @@ public:
 
     SU3Accessor<floatT, comp> getAccessor() const;
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAllMu(Functor op);
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     deviceStream<onDevice> iterateOverBulkAllMu(Functor op, bool useStream = false);
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullLoopMu(Functor op);
 
-    template<unsigned BlockSize = 64, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkLoopMu(Functor op);
 
-    template<uint8_t mu, unsigned BlockSize = 256, typename Functor>
+    template<uint8_t mu, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAtMu(Functor op);
 
-    template<uint8_t mu, unsigned BlockSize = 256, typename Functor>
+    template<uint8_t mu, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkAtMu(Functor op);
 
     template<typename Functor>
     Gaugefield &operator=(Functor op);
 
-    template<unsigned BlockSize = 256, typename Object>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Object>
     void iterateWithConst(Object ob);
 
     /// THIS IS EXPERIMENTAL!!
-    template<unsigned BlockSize = 256, typename Functor>
+    template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void constructWithHaloUpdateAllMu(Functor op);
 
     void su3latunitarize();

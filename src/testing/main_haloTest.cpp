@@ -174,8 +174,9 @@ int main(int argc, char *argv[]) {
 
     CommunicationBase commBase(&argc, &argv);
     param.readfile(commBase, "../parameter/tests/haloTest.param", argc, argv);
+    rootLogger.info("Initialize commBase");
     commBase.init(param.nodeDim());
-    
+
     commBase.forceHalos(param.forceHalos());
     const int HaloDepth = 4;
 

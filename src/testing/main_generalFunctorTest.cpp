@@ -458,7 +458,8 @@ void run_func(CommunicationBase &commBase) {
     gauge.template iterateOverFullAtMu<1>(2.0 * gauge);
 
     //! Wait, what is the 512 here? That is an optional template parameter to define the blocksize of the GPU kernel call
-    gauge.template iterateOverFullAtMu<2, 512>(2.0 * gauge);
+    //gauge.template iterateOverFullAtMu<2,512>(2.0 * gauge); //NOTE: newly introduced launch bounds interfere with this, disabling for now
+    gauge.template iterateOverFullAtMu<2>(2.0 * gauge);
 
     plaq_ref = 16.0;
     plaq = compute_plaquette(gauge, latContainer);
@@ -638,8 +639,8 @@ void run_func(CommunicationBase &commBase) {
     //! Finally, we perform a whole Dslash using a custom functor called "QuickDslash" (see above)
     timer.reset();
     timer.start();
-    //! Template parameter is block size.
-    res_spinor.template iterateOverBulk<256>(
+    
+    res_spinor.iterateOverBulk(
             QuickDslash<floatT, LatLayout, LatLayoutRHS, HaloDepth, HaloDepthSpin>(rhs_spinor, gauge, gauge_Naik));
     timer.stop();
     timer.print("Dslash by custom functor");

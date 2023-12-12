@@ -37,23 +37,23 @@ public:
     rhmc(RhmcParameters rhmc_param, RationalCoeff rat, Gaugefield<floatT,onDevice,HaloDepth> &gaugeField, uint4* rand_state)
         : _rhmc_param(rhmc_param),
           _rat(rat),
+          elems_full(GInd::getLatData().vol4),
           _gaugeField(gaugeField),
-          gAcc(gaugeField.getAccessor()),
-          _savedField(gaugeField.getComm()),
+           _smeared_W(gaugeField.getComm()),
+           _smeared_X(gaugeField.getComm()),
+           _savedField(gaugeField.getComm()),
+           _smearing(_gaugeField, _smeared_W, _smeared_X),
           _p(gaugeField.getComm()),
-          _rand_state(rand_state),
-          _smeared_W(gaugeField.getComm()),
-          _smeared_X(gaugeField.getComm()),
-          phi_lf_container(gaugeField.getComm(), rhmc_param.no_pf()),
+          energy_dens_old(gaugeField.getComm(), "old_energy_density"),
+          energy_dens_new(gaugeField.getComm(), "new_energy_density"),
+          dens_delta(gaugeField.getComm(), "energy_density_difference"),
           phi_sf_container(gaugeField.getComm(), rhmc_param.no_pf()),
+          phi_lf_container(gaugeField.getComm(), rhmc_param.no_pf()),
           chi(gaugeField.getComm()),
           dslash(_smeared_W, _smeared_X, 0.0),
           integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, dslash, _rat, _smearing),
-          _smearing(_gaugeField, _smeared_W, _smeared_X),
-          elems_full(GInd::getLatData().vol4),
-          energy_dens_old(gaugeField.getComm(), "old_energy_density"),
-          energy_dens_new(gaugeField.getComm(), "new_energy_density"),
-          dens_delta(gaugeField.getComm(), "energy_density_difference")
+          _rand_state(rand_state),
+          gAcc(gaugeField.getAccessor())          
     {
         energy_dens_old.adjustSize(elems_full);
         energy_dens_new.adjustSize(elems_full);
@@ -96,6 +96,7 @@ private:
     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_lf_container;
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> chi;
 
+    HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> dslash;
     integrator<floatT,onDevice,All,HaloDepth,HaloDepthSpin> integrator;
 
     // the rng state
@@ -110,7 +111,6 @@ private:
     std::vector<floatT> rat_bar_lf;
 
     AdvancedMultiShiftCG<floatT, 14> cgM;
-    HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> dslash;
 
     SU3Accessor<floatT, R18> gAcc;
 

@@ -49,6 +49,7 @@
 #define gpuIpcOpenMemHandle              cudaIpcOpenMemHandle
 #define gpuMalloc                        cudaMalloc
 #define gpuMallocHost                    cudaMallocHost
+#define gpuMallocManaged                 cudaMallocManaged
 #define gpuMemGetInfo                    cudaMemGetInfo
 #define gpuMemcpy                        cudaMemcpy
 #define gpuMemcpyToSymbol                cudaMemcpyToSymbol
@@ -125,6 +126,7 @@
 #define gpuIpcOpenMemHandle              hipIpcOpenMemHandle
 #define gpuMalloc                        hipMalloc
 #define gpuMallocHost                    hipHostMalloc
+#define gpuMallocManaged                 hipMallocManaged
 #define gpuMemGetInfo                    hipMemGetInfo
 #define gpuMemcpy                        hipMemcpy
 #define gpuMemcpyToSymbol                hipMemcpyToSymbol
@@ -132,6 +134,7 @@
 #define gpuMemcpyDefault                 hipMemcpyDefault
 #define gpuMemcpyDeviceToDevice          hipMemcpyDeviceToDevice
 #define gpuMemcpyDeviceToHost            hipMemcpyDeviceToHost
+#define gpuMemcpyDtoHAsync               hipMemcpyDtoHAsync
 #define gpuMemcpyHostToDevice            hipMemcpyHostToDevice
 #define gpuMemcpyHostToHost              hipMemcpyHostToHost
 #define gpuMemset                        hipMemset

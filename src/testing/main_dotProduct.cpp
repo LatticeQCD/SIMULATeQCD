@@ -59,7 +59,7 @@ void run_func(CommunicationBase &commBase) {
         rootLogger.info("dot " ,  dot[i]);
     }
 
-    rootLogger.info("Time for dot-product: " , timer);
+    rootLogger.info("Time for dot-product: " , timer, "with precision ", sizeof(floatT), " Bytes");
 }
 
 int main(int argc, char **argv) {
@@ -93,6 +93,12 @@ int main(int argc, char **argv) {
         run_func<double, Even, 8, true>(commBase);
         run_func<float, Even, 10, true>(commBase);
         run_func<double, Even, 10, true>(commBase);
+        
+        run_func<float, Even, 12, true>(commBase);
+        run_func<double, Even, 12, true>(commBase);
+        
+        run_func<float, Even, 14, true>(commBase);
+        run_func<double, Even, 14, true>(commBase);
 
         return 0;
     }

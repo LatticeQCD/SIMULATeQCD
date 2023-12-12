@@ -15,7 +15,6 @@
 #include <cstring>
 #include "communicationBase.h"
 
-
 Logger rootLogger(OFF);
 Logger stdLogger(ALL);
 
@@ -58,6 +57,7 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) :
     //! end clean up
 
     myInfo.nodeName = nodeName;
+
 
 }
 
@@ -195,12 +195,35 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
 #endif
+
+    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
+        gpuError_t gpuErr =  gpuStreamCreate(&commStreams[i]);
+            if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamCreate", gpuErr);
+    }
+
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
+    // ncclinit();
 }
 
+// void CommunicationBase::ncclinit() {
+
+//     if (myInfo.world_rank == 0) {
+//         ncclGetUniqueId(&nccl_uid);
+//     }
+
+//     MPI_Bcast(&nccl_uid, sizeof(nccl_uid), MPI_BYTE, 0, MPI_COMM_WORLD);
+//     ncclCommInitRank(&nccl_comm, world_size, nccl_uid, myInfo.world_rank);
+    
+// }
 
 CommunicationBase::~CommunicationBase() {
+
+    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
+            gpuError_t gpuErr =  gpuStreamDestroy(commStreams[i]);
+                if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamDestroy", gpuErr);
+    }
+
     rootLogger.info("Finalizing MPI");
     int ret;
     if (_initialized) {
@@ -212,6 +235,10 @@ CommunicationBase::~CommunicationBase() {
     }
     ret = MPI_Finalize();
     _MPI_fail(ret, "MPI_Finalize");
+    //ncclCommFinalize(nccl_comm); Use in future rccl versions before calling ncclCommDestroy
+#ifdef USE_NCCL
+    ncclCommDestroy(nccl_comm);
+#endif
 }
 
 void CommunicationBase::_MPI_fail(int ret, const std::string &func) {
@@ -562,7 +589,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
                                  " bytes from rank ", MyRank(), " to rank ", info.world_rank);)
 
                 gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
-                        seg.getDeviceStream());
+                        seg.getSendStream());
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1a)", gpuErr);
 
@@ -574,7 +601,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
                                  " bytes on rank ", MyRank());)
 
                 gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
-                        seg.getDeviceStream(0));
+                        seg.getSendStream());
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1b)", gpuErr);
 

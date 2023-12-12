@@ -39,27 +39,30 @@ template<typename floatT, bool onDevice, size_t HaloDepth, size_t NStacks>
     class SpinorfieldAll;
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
-class Spinorfield : public siteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class Spinorfield : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 private:
     Vect3array<floatT, onDevice> _lattice;
     LatticeContainer<onDevice,COMPLEX(double)> _redBase;
+    LatticeContainer<onDevice,double> _redBase_real;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
-
+    typedef Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> spin_t;
 public:
 typedef floatT floatT_inner;
     //! constructor
     explicit Spinorfield(CommunicationBase &comm, std::string spinorfieldName="Spinorfield") :
-            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
+            SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
             Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _lattice( (int)(NStacks*( (LatticeLayout == All) ? GInd::getLatData().vol4Full : GInd::getLatData().sizehFull )), spinorfieldName ),
-            _redBase(comm)
+            _redBase(comm), _redBase_real(comm)
     {
         if (LatticeLayout == All){
             _redBase.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
+            _redBase_real.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
         }else{
             _redBase.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
+            _redBase_real.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
         }
     }
 
@@ -83,10 +86,11 @@ typedef floatT floatT_inner;
 
     //! move constructor
     Spinorfield(Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&& source) noexcept :
-            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
+            SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
                     Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
             _lattice(std::move(source._lattice)),
-            _redBase(std::move(source._redBase)){}
+            _redBase(std::move(source._redBase)),
+            _redBase_real(std::move(source._redBase_real)){}
 
     //! move assignment
     Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&
@@ -110,12 +114,17 @@ typedef floatT floatT_inner;
                 getNumberLatticePointsFull() * stackSrc);
     }
 
+    template<size_t NStacks2, size_t stackSelf, size_t stackSrc>
+    void copyFromStackToStackDevice(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks2> &spinorRHS);
+
     const Vect3array<floatT, onDevice>& getArray() const {
         return _lattice;
     }
 
     COMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     double realdotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
+    void realDotProductNoCopy(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, gMemoryPtr<onDevice> pAp);
+
 
     std::vector<COMPLEX(double)> dotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     std::vector<double> realdotProductStacked(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
@@ -127,6 +136,8 @@ typedef floatT floatT_inner;
     void gauss(uint4* rand_state); // generate gaussian spinors.
 
     void one();
+   
+    void fusedDotProdAndaxpy(spin_t &pi, const spin_t &s, gMemoryPtr<onDevice> pAp, gMemoryPtr<onDevice> norm_r2);
 
     // TODO MOVE THIS WHERE IT BELONGS
     //! this takes a gSite that involves halos!
@@ -155,65 +166,73 @@ typedef floatT floatT_inner;
         this->updateAll();
     }
 
+    void axpyThisPtr(const gMemoryPtr<onDevice> a, const gMemoryPtr<onDevice> b, const spin_t &y);
+
     template<typename const_T>
     void axpyThis(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
     void axpyThis(const floatT &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisB(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisLoop(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axpyThisLoopd(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, size_t stack_entry);
 
-    template<size_t BlockSize = 128>
+    template<size_t Blocksize = DEFAULT_NBLOCKS>
     void axpyThisB(const floatT &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<typename const_T, size_t BlockSize = 128>
+    template<typename const_T, size_t Blocksize = DEFAULT_NBLOCKS>
     void xpayThisB(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<typename const_T, size_t BlockSize = 128>
+    template<typename const_T, size_t Blocksize = DEFAULT_NBLOCKS>
     void xpayThisBd(const const_T &x, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> & y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisB(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisLoop(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
-    template<size_t BlockSize = 128, typename const_T>
+    template<size_t Blocksize = DEFAULT_NBLOCKS, typename const_T>
     void axupbyThisLoopd(const const_T &a, const const_T &b, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, 1> &y, size_t stack_entry);
 
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFull(Functor op, size_t Nmax = NStacks);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulk(Functor op, size_t Nmax = NStacks);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverCenter(Functor op, size_t Nmax = NStacks);
+
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverHalo(Functor op, size_t Nmax = NStacks);
+
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAtStack(Functor op);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkAtStack(Functor op);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverEvenBulkAtStack(Functor op);
 
-    template<size_t stack, unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<size_t stack, unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverOddBulkAtStack(Functor op);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullLoopStack(Functor op);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Functor>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkLoopStack(Functor op, size_t Nmax=NStacks);
 
-    template<unsigned BlockSize = (NStacks < 9 ? 128 : 64), typename Object>
+    template<unsigned Blocksize = DEFAULT_NBLOCKS, typename Object>
     void iterateWithConst(Object ob);
 
     template<typename Functor>
@@ -299,6 +318,39 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
 
     this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems, Nmax);
 }
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverCenter(Functor op, size_t Nmax) {
+    CalcGSiteInnerBulkStack<LatticeLayout, HaloDepth> calcSite;
+    WriteAtReadStack writeAtRead;
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    size_t elems; 
+    if (LatticeLayout == All) {
+        elems = HInd::getCenterSize()*Nmax;
+    } else {
+        elems = HInd::getCenterSize()/2*Nmax;
+    }
+
+    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax);
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<unsigned BlockSize, typename Functor>
+void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOverHalo(Functor op, size_t Nmax) {
+    CalcGSiteHaloStack<LatticeLayout, HaloDepth> calcSite;
+    WriteAtReadStack writeAtRead;
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getInnerHaloSize()*Nmax;
+    } else {
+        elems = HInd::getInnerHaloSize()/2*Nmax;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax);
+}
+
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 template<size_t stack, unsigned BlockSize, typename Functor>
