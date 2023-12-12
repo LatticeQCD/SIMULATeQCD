@@ -82,7 +82,7 @@ class HaloSegmentConfig {
 
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-class siteComm : public RunFunctors<onDevice, Accessor> {
+class SiteComm : public RunFunctors<onDevice, Accessor> {
 private:
     CommunicationBase &_commBase;
 
@@ -115,7 +115,7 @@ private:
 
 public:
     //! constructor
-    explicit siteComm(CommunicationBase &commB) :
+    explicit SiteComm(CommunicationBase &commB) :
             _commBase(commB),
             HaloInfo(HaloOffsetInfo<onDevice>(commB.getCommStreams() ,commB.getNeighborInfo(), _commBase.getCart_comm(), _commBase.MyRank(),
                                               _commBase.gpuAwareMPIAvail(), _commBase.useGpuP2P())) {
@@ -214,7 +214,7 @@ public:
 #ifndef CPUONLY
         gpuError_t gpuErr = gpuDeviceSynchronize();
         if (gpuErr != gpuSuccess) {
-            GpuError("siteComm.h: siteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
+            GpuError("siteComm.h: SiteComm constructor, gpuDeviceSynchronize failed:", gpuErr);
         }
 #endif
         
@@ -241,18 +241,18 @@ public:
     }
 
     //! copy constructor
-    siteComm(siteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&) = delete;
+    SiteComm(SiteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&) = delete;
 
     //! copy assignment
-    siteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&
-            operator=(siteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&) = delete;
+    SiteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&
+            operator=(SiteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&) = delete;
 
     //! move assignment
-    siteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&
-            operator=(siteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&&) = delete;
+    SiteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&
+            operator=(SiteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&&) = delete;
 
     //! move constructor
-    siteComm(siteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&& source) noexcept :
+    SiteComm(SiteComm<floatT,onDevice,Accessor,AccType,EntryCount,ElemCount,LatLayout,HaloDepth>&& source) noexcept :
     _commBase(source._commBase), //! this is a reference and shouldn't be moved
     _elems(source._elems),
     _halElementSize(source._halElementSize),
@@ -274,7 +274,7 @@ public:
         source._bufferSize = 0;
     }
 
-    virtual ~siteComm() {
+    virtual ~SiteComm() {
     }
 
     virtual Accessor getAccessor() const = 0;
@@ -387,7 +387,7 @@ struct ExtractInnerHalo {
 };
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalos(
+void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalos(
         Accessor acc,
         COMPLEX(floatT) *HaloBuffer) {
 
@@ -433,7 +433,7 @@ struct InjectOuterHalo {
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
 void
-siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalos(
+SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalos(
         Accessor acc,
         COMPLEX(floatT) *HaloBuffer) {
 
@@ -472,7 +472,7 @@ struct ExtractInnerHaloSeg {
 
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalosSeg(
+void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_extractHalosSeg(
         Accessor acc,
         COMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
@@ -558,7 +558,7 @@ struct InjectOuterHaloSeg {
 };
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-void siteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalosSeg(
+void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>::_injectHalosSeg(
         Accessor acc,
         COMPLEX(floatT) *HaloBuffer, unsigned int param) {
 

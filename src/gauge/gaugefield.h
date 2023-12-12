@@ -18,7 +18,7 @@ template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDep
 struct convert_prec;
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp = R18>
-class Gaugefield : public siteComm<floatT, onDevice, SU3Accessor<floatT, comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
+class Gaugefield : public SiteComm<floatT, onDevice, SU3Accessor<floatT, comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>
 {
 protected:
     SU3array<floatT, onDevice, comp> _lattice;
@@ -30,7 +30,7 @@ public:
     typedef GIndexer<All, HaloDepth> GInd;
 
     explicit Gaugefield(CommunicationBase &comm, std::string gaugefieldName="Gaugefield")
-            : siteComm<floatT, onDevice, SU3Accessor<floatT,comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>(comm),
+            : SiteComm<floatT, onDevice, SU3Accessor<floatT,comp>, SU3<floatT>,EntryCount<comp>::count, 4, All, HaloDepth>(comm),
               _lattice(GInd::getLatData().vol4Full * 4, gaugefieldName) {
     }
 

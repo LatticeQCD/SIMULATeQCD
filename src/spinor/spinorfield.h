@@ -39,7 +39,7 @@ template<typename floatT, bool onDevice, size_t HaloDepth, size_t NStacks>
     class SpinorfieldAll;
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
-class Spinorfield : public siteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class Spinorfield : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 private:
     Vect3array<floatT, onDevice> _lattice;
@@ -52,7 +52,7 @@ public:
 typedef floatT floatT_inner;
     //! constructor
     explicit Spinorfield(CommunicationBase &comm, std::string spinorfieldName="Spinorfield") :
-            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
+            SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
             Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _lattice( (int)(NStacks*( (LatticeLayout == All) ? GInd::getLatData().vol4Full : GInd::getLatData().sizehFull )), spinorfieldName ),
             _redBase(comm), _redBase_real(comm)
@@ -86,7 +86,7 @@ typedef floatT floatT_inner;
 
     //! move constructor
     Spinorfield(Spinorfield<floatT,onDevice,LatticeLayout,HaloDepth,NStacks>&& source) noexcept :
-            siteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
+            SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>,
                     Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(std::move(source)),
             _lattice(std::move(source._lattice)),
             _redBase(std::move(source._redBase)),
