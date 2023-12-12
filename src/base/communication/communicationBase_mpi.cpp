@@ -58,10 +58,6 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) :
 
     myInfo.nodeName = nodeName;
 
-    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
-        gpuError_t gpuErr =  gpuStreamCreate(&commStreams[i]);
-            if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamCreate", gpuErr);
-    }
 
 }
 
@@ -199,6 +195,12 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
 #endif
+
+    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
+        gpuError_t gpuErr =  gpuStreamCreate(&commStreams[i]);
+            if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamCreate", gpuErr);
+    }
+
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
     // ncclinit();
