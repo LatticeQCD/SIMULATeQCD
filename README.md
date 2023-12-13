@@ -165,4 +165,4 @@ If you are using this code in your research please cite:
 - This work was partly performed in the framework of the PUNCH4NFDI consortium supported by DFG fund "NFDI 39/1", Germany.
 - This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance
 - We would also like to acknowedge enlightening technical discussions with the ILDG team, in particular H. Simma.
-
+- The authors gratefully acknowledge computing time provided to them on the high-performance computers Noctua2 at the NHR Center PC2. These are funded by the Federal Ministry of Education and Research and the state governments participating on the basis of the resolutions of the GWK for the national highperformance computing at universities (www.nhr-verein.de/unsere-partner).
