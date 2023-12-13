@@ -141,7 +141,6 @@ or clarke(dot)davida(at)gmail.com.
 [G. Curell](https://github.com/grantcurell/),
 [H. Dick](https://github.com/redweasel),
 [J. Goswami](https://github.com/jishnuxx),
-[D. Hoying](https://github.com/goracle),
 [O. Kaczmarek](https://github.com/olaf-kaczmarek),
 [J. Kim](https://github.com/kimjangho1120),
 [R. Larsen](https://github.com/RasmusNL),
