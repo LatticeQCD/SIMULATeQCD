@@ -28,6 +28,7 @@
 
     "related_identifiers": [
         {
+            "resource_type": "publication-preprint",
             "relation": "isDocumentedBy",
             "identifier": "https://arxiv.org/abs/2306.01098"
         }
