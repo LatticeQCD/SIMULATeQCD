@@ -1,0 +1,43 @@
+{
+
+    "title": "SIMULATeQCD: A simple multi-GPU lattice code for QCD calculations",
+    "description": "SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it easy for physicists to implement lattice QCD formulas while still providing competetive performance.",
+
+    "creators": [
+        {"name": "Mazur, Lukas",           "orcid":  "0000-0001-6304-7082",  "affiliation": "Paderborn Center for Parallel Computing, Paderborn University, Paderborn, Germany" },
+        {"name": "Bollweg, Dennis",        "orcid":  "0000-0001-7398-9567",  "affiliation": "Physics Department, Brookhaven National Laboratory, Upton, New York, United States" },
+        {"name": "Clarke, David A.",       "orcid":  "0000-0002-5570-0894",  "affiliation": "Department of Physics and Astronomy, University of Utah, Salt Lake City, Utah, United States"},
+        {"name": "Altenkort, Luis",        "orcid":  "0000-0001-9382-0208",  "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Kaczmarek, Olaf",        "orcid":  "0000-0002-6986-2341",  "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Larsen, Rasmus",                                           "affiliation": "Department of Mathematics and Physics, University of Stavanger, Stavanger, Norway"},
+        {"name": "Shu, Hai-Tao",           "orcid":  "0000-0001-7197-4281",  "affiliation": "Institut für Theoretische Physik, Universität Regensburg, Regensburg, Germany"},
+        {"name": "Goswami, Jishnu",        "orcid":  "0000-0002-7877-3033",  "affiliation": "RIKEN Center for Computational Science, Kobe 650-0047, Japan"},
+        {"name": "Scior, Philipp",                                           "affiliation": "Physics Department, Brookhaven National Laboratory, Upton, New York, United States"},
+        {"name": "Sandmeyer, Hauke",                                         "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Neumann, Marius",                                          "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Dick, Henrik",                                             "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Ali, Sajid",             "orcid":  "0000-0002-6851-8952",  "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Kim, Jangho",            "orcid":  "0000-0002-4670-0390",  "affiliation": "Institute for Advanced Simulation (IAS-4), Forschungszentrum Jülich, Wilhelm-Johnen-Straße, 52428 Jülich, Germany"},
+        {"name": "Schmidt, Christian",     "orcid":  "0000-0002-9071-4757",  "affiliation": "Fakultät für Physik, Universität Bielefeld, Bielefeld, Germany"},
+        {"name": "Petreczky, Peter",       "orcid":  "0000-0003-0285-2066",  "affiliation": "Physics Department, Brookhaven National Laboratory, Upton, New York, United States"},
+        {"name": "Mukherjee, Swagato",     "orcid":  "0000-0002-3824-1008",  "affiliation": "Physics Department, Brookhaven National Laboratory, Upton, New York, United States"}
+    ],
+
+
+    "license": "MIT",
+
+    "related_identifiers": [
+        {
+            "resource_type": "publication-preprint",
+            "relation": "isDocumentedBy",
+            "identifier": "https://arxiv.org/abs/2306.01098"
+        }
+    ],
+
+    "keywords": ["lattice QCD", "CUDA", "HIP", "GPU"],
+
+    "communities": [
+        {"identifier": "PUNCH4NFDI"}
+    ]
+
+}
