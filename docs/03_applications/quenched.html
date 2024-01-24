@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Generate quenched gauge configurations &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,22 +13,17 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Gauge Fixing" href="gaugeFixing.html" />
-    <link rel="prev" title="Applications" href="applications.html" /> 
+    <link rel="next" title="Gradient Flow" href="gradientFlow.html" />
+    <link rel="prev" title="Gauge Fixing" href="gaugeFixing.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -36,15 +31,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -54,8 +45,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Generate quenched gauge configurations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Generate quenched gauge configurations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gradientFlow.html">Gradient Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="multiLevel.html">Multi-level algorithm</a></li>
 <li class="toctree-l2"><a class="reference internal" href="rhmc.html">Rational Hybrid Monte Carlo</a></li>
@@ -78,9 +69,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="applications.html">Applications</a></li>
-      <li class="breadcrumb-item active">Generate quenched gauge configurations</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="applications.html">Applications</a> &raquo;</li>
+      <li>Generate quenched gauge configurations</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/03_applications/quenched.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,28 +81,28 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="generate-quenched-gauge-configurations">
-<h1>Generate quenched gauge configurations<a class="headerlink" href="#generate-quenched-gauge-configurations" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="generate-quenched-gauge-configurations">
+<h1>Generate quenched gauge configurations<a class="headerlink" href="#generate-quenched-gauge-configurations" title="Permalink to this headline"></a></h1>
 <p>To learn more about the specifics of the gauge updates, take a look at
-<a class="reference internal" href="../05_modules/gaugeUpdates.html"><span class="std std-doc">Gauge Updates (HB and OR)</span></a>.
+<a class="reference internal" href="../05_modules/gaugeUpdates.html"><span class="doc std std-doc">Gauge Updates (HB and OR)</span></a>.
 To generate quenched gauge configurations, <code class="docutils literal notranslate"><span class="pre">make</span></code> the executable <code class="docutils literal notranslate"><span class="pre">generateQuenched</span></code>.
 You can then find it under <code class="docutils literal notranslate"><span class="pre">applications/generateQuenched</span></code>. The example parameter file is
 found under <code class="docutils literal notranslate"><span class="pre">parameter/generateQuenched.param</span></code> and looks like this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#parameter file for generateQuenched</span>
-<span class="nv">Lattice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">64</span><span class="w"> </span><span class="m">16</span>
-<span class="nv">Nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span>
-<span class="nv">beta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6</span>.87361
-<span class="nv">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>nersc
-<span class="nv">endianness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>auto
-<span class="nv">stream</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>a
-<span class="nv">output_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>.
-<span class="nv">nconfs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1000</span>
-<span class="nv">nsweeps_ORperHB</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">4</span>
-<span class="nv">nsweeps_HBwithOR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span>
+<span class="nv">Lattice</span> <span class="o">=</span> <span class="m">64</span> <span class="m">64</span> <span class="m">64</span> <span class="m">16</span>
+<span class="nv">Nodes</span> <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
+<span class="nv">beta</span> <span class="o">=</span> <span class="m">6</span>.87361
+<span class="nv">format</span> <span class="o">=</span> nersc
+<span class="nv">endianness</span> <span class="o">=</span> auto
+<span class="nv">stream</span> <span class="o">=</span> a
+<span class="nv">output_dir</span> <span class="o">=</span> .
+<span class="nv">nconfs</span> <span class="o">=</span> <span class="m">1000</span>
+<span class="nv">nsweeps_ORperHB</span> <span class="o">=</span> <span class="m">4</span>
+<span class="nv">nsweeps_HBwithOR</span> <span class="o">=</span> <span class="m">500</span>
 
-<span class="nv">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>one
-<span class="nv">nsweeps_thermal_HB_only</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span>
-<span class="nv">nsweeps_thermal_HBwithOR</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">4000</span>
+<span class="nv">start</span> <span class="o">=</span> one
+<span class="nv">nsweeps_thermal_HB_only</span> <span class="o">=</span> <span class="m">500</span>
+<span class="nv">nsweeps_thermal_HBwithOR</span> <span class="o">=</span> <span class="m">4000</span>
 
 <span class="c1">#conf_nr = 500</span>
 <span class="c1">#prev_conf = conf_s064t16_b0687361_a_U000500</span>
@@ -131,7 +122,7 @@ rand_s064t16_b0687361_a_U001000
 With <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> you can specify how many OR updates should be done for each HeatBath update.
 With <code class="docutils literal notranslate"><span class="pre">nsweeps_HBwithOR</span></code> you can specify how many HB updates (with <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> OR updates per HB) should be done between each saved configuration.</p>
 <section id="thermalization-parameters">
-<h2>Thermalization parameters<a class="headerlink" href="#thermalization-parameters" title="Link to this heading"></a></h2>
+<h2>Thermalization parameters<a class="headerlink" href="#thermalization-parameters" title="Permalink to this headline"></a></h2>
 <p>These are required when starting a new stream.
 With <code class="docutils literal notranslate"><span class="pre">start</span></code> you can specify with which kind of configuration the thermalization should start.
 The options are <code class="docutils literal notranslate"><span class="pre">one</span></code> (all links = unity matrix), <code class="docutils literal notranslate"><span class="pre">fixed_random</span></code> (all links = same random SU3 matrix) and <code class="docutils literal notranslate"><span class="pre">all_random</span></code>
@@ -141,7 +132,7 @@ With <code class="docutils literal notranslate"><span class="pre">nsweeps_therma
 The seed for the random number generator is the time since Unix epoch in milliseconds and is output to stdout.</p>
 </section>
 <section id="parameters-for-resuming-a-previous-run">
-<h2>Parameters for resuming a previous run<a class="headerlink" href="#parameters-for-resuming-a-previous-run" title="Link to this heading"></a></h2>
+<h2>Parameters for resuming a previous run<a class="headerlink" href="#parameters-for-resuming-a-previous-run" title="Permalink to this headline"></a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">prev_conf</span></code> you can specify the path of the last configuration you generated.
 With <code class="docutils literal notranslate"><span class="pre">conf_nr</span></code> you can specify the number of this last configuration, so that the next configuration’s number will be ( previous_number + <code class="docutils literal notranslate"><span class="pre">nsweeps_ORperHB</span></code> ). Don’t forget to set <code class="docutils literal notranslate"><span class="pre">stream</span></code> to the correct value.
 With <code class="docutils literal notranslate"><span class="pre">prev_rand</span></code> you can specify the path of the according random number state of that configuration. If you don’t specify this then a new random number state will be generated (The seed for this is also time since Unix epoch in milliseconds and is output to stdout.)</p>

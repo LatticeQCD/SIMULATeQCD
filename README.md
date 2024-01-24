@@ -11,7 +11,7 @@
 
 
 SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it easy for physicists to implement lattice QCD formulas while still providing
-competetive performance. 
+competitive performance. 
 
 ## How to Build 
 
@@ -33,7 +33,7 @@ git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.2.0
 ### Compile Using Container
 
 To build using the container, you need to have `podman` properly configured on your system.  
-More information on that you may find in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
+You can find more detailed instructions about the container in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
 To run the container you need an NVIDIA GPU.
 
 To build the code, you then simply
@@ -47,7 +47,7 @@ To build the code, you then simply
 
 The following software is required to manually compile SIMULATeQCD:
 
-- `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
+- `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or [3.19.2](https://gitlab.kitware.com/cmake/cmake/-/tree/v3.19.2?ref_type=tags).)
 - `C++` compiler with `C++17` support.
 - `MPI` (e.g. `openmpi-4.0.4`).
 - `CUDA Toolkit` version 11+. 
@@ -62,7 +62,7 @@ cmake ../SIMULATeQCD/ \
 ```
 Here, it is assumed that your source code folder is called `SIMULATeQCD`. 
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
-`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "70" for Volta or "80" for Ampere.
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example use "70" for Volta or "80" for Ampere.
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
 ```shell
 make NameOfExecutable
@@ -71,15 +71,12 @@ If you would like to speed up the compiling process, add the option `-j`, which 
 
 Popular production-ready executables are:
 ```Shell
-# generate HISQ configurations
-rhmc                 # Example Parameter-file: parameter/applications/rhmc.param
-# generate quenched gauge configurations using HB and OR
-generateQuenched     # Example Parameter-file: parameter/applications/generateQuenched.param
-# Apply Wilson/Zeuthen flow and measure various observables
-gradientFlow         # Example Parameter-file: parameter/applications/gradientFlow.param
-# Gauge fixing
-gaugeFixing          # Example Parameter-file: parameter/applications/gaugeFixing.param
+rhmc             # generate HISQ configurations
+generateQuenched # generate quenched gauge configurations using HB and OR
+gradientFlow     # Apply Wilson/Zeuthen flow and measure various observables
+gaugeFixing      # Gauge fixing
 ```
+Example parameter files for the above executables can be found in `parameter/applications/`.
 In the [documentation](https://latticeqcd.github.io/SIMULATeQCD/03_applications/applications.html) you will find more information on how to execute these programs.
 
 ## Example: Plaquette action computation

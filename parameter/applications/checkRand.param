@@ -1,2 +1,8 @@
-Lattice       = 8 8 8 4
-# Randfile     =
+# 
+# checkRand.param
+# 
+# Example parameter file for main_checkConf.cpp
+#
+#   Lattice: Nx Ny Nz Nt
+# 
+Lattice = 8 8 8 4

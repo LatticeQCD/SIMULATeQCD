@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Correlator Class &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,17 +13,14 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -36,15 +33,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -80,9 +73,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
-      <li class="breadcrumb-item active">Correlator Class</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">Modules</a> &raquo;</li>
+      <li>Correlator Class</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/05_modules/correlator.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -92,8 +85,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="correlator-class">
-<h1>Correlator Class<a class="headerlink" href="#correlator-class" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="correlator-class">
+<h1>Correlator Class<a class="headerlink" href="#correlator-class" title="Permalink to this headline"></a></h1>
 <p>Here we explain the ideas behind and methods contained in the <code class="docutils literal notranslate"><span class="pre">Correlator</span></code> header file. The classes described here can be found
 in <code class="docutils literal notranslate"><span class="pre">src/math/correlators.h</span></code>. If you have further questions after reading this wiki article, I suggest you have a look
 at this class yourself, which is thoroughly commented, and will explain in more detail some things that are not fully explained here.</p>
@@ -106,48 +99,48 @@ called <code class="docutils literal notranslate"><span class="pre">Correlator</
 hadron interpolators. In order to give the user maximum flexibility, I tried to make the calculation of <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> separate
 from the correlator class. Therefore the general idea of a correlation calculation is to calculate <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> ahead
 of time yourself, then copy <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span></code> into <code class="docutils literal notranslate"><span class="pre">CorrField</span></code> objects. What is meant by “correlate”? Well, that is up to you.
-This framework will allow one to calculate any function $\langle f(A_x, B_y)\rangle$, where $f$ is a function that you
-can design yourself, and $x$ and $y$ run over one of a few possible <code class="docutils literal notranslate"><span class="pre">domains</span></code>. The method</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">corrTools</span><span class="p">.</span><span class="n">correlateAt</span><span class="o">&lt;</span><span class="w"> </span><span class="n">fieldType</span><span class="p">,</span><span class="w"> </span><span class="n">corrType</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;domain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield1</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield2</span><span class="p">,</span><span class="w"> </span><span class="n">CPUnorm</span><span class="p">,</span><span class="w"> </span><span class="n">CPUcorr</span><span class="p">);</span>
+This framework will allow one to calculate any function <span class="math notranslate nohighlight">\(\langle f(A_x, B_y)\rangle\)</span>, where <span class="math notranslate nohighlight">\(f\)</span> is a function that you
+can design yourself, and <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> run over one of a few possible <code class="docutils literal notranslate"><span class="pre">domains</span></code>. The method</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">corrTools</span><span class="p">.</span><span class="n">correlateAt</span><span class="o">&lt;</span><span class="w"> </span><span class="n">fieldType</span><span class="p">,</span><span class="w"> </span><span class="n">corrType</span><span class="p">,</span><span class="w"> </span><span class="n">f</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="s">&quot;domain&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield1</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield2</span><span class="p">,</span><span class="w"> </span><span class="n">CPUnorm</span><span class="p">,</span><span class="w"> </span><span class="n">CPUcorr</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>will carry out this correlator calculation. Here <code class="docutils literal notranslate"><span class="pre">fieldType</span></code> and <code class="docutils literal notranslate"><span class="pre">corrType</span></code> are the types of the <code class="docutils literal notranslate"><span class="pre">CorrField</span></code> and <code class="docutils literal notranslate"><span class="pre">Correlator</span></code>,
-respectively. Note that your function $f$ is implemented as a template parameter. Inside the <code class="docutils literal notranslate"><span class="pre">correlateAt</span></code> method, a kernel
+respectively. Note that your function <span class="math notranslate nohighlight">\(f\)</span> is implemented as a template parameter. Inside the <code class="docutils literal notranslate"><span class="pre">correlateAt</span></code> method, a kernel
 is called depending on the <code class="docutils literal notranslate"><span class="pre">domain</span></code> you chose. In this method, GPU copies of these CPU arrays will be made and passed to the kernel.
 The result will be stored in <code class="docutils literal notranslate"><span class="pre">CPUcorr</span></code>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">CPUnorm</span></code> vector is a <code class="docutils literal notranslate"><span class="pre">Correlator</span></code>-type object that keeps track of how many times a correlator at distance $r$ was calculated.
+<p>The <code class="docutils literal notranslate"><span class="pre">CPUnorm</span></code> vector is a <code class="docutils literal notranslate"><span class="pre">Correlator</span></code>-type object that keeps track of how many times a correlator at distance <span class="math notranslate nohighlight">\(r\)</span> was calculated.
 This is something that you should pre-calculate ahead of time using <code class="docutils literal notranslate"><span class="pre">corrTools.createNorm</span></code>; the result will be saved in a normalization
 file that you can load later in your production runs. This is not particularly elegant, and <code class="docutils literal notranslate"><span class="pre">createNorm</span></code> runs on the CPU only so it’s
 rather slow. One can think of a more elegant way to implement this or a way to speed it up. Nevertheless this procedure works, and after
 reading in with <code class="docutils literal notranslate"><span class="pre">corrTools.readNorm</span></code>, the correlator calculation seems to be rather fast. (See the benchmarking below for details.)</p>
 <section id="example-correlator-calculation">
-<h2>Example correlator calculation<a class="headerlink" href="#example-correlator-calculation" title="Link to this heading"></a></h2>
-<p>Here is an example taken from <code class="docutils literal notranslate"><span class="pre">src/testing/main_correlatorTest.cpp</span></code>. In this example we will correlate the $\mu=2$ component of a
-gauge field with itself using the 4d all-to-all domain. Here $f(A,B)={\rm tr}~(AB)$.</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gaugeAccessor</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">_gauge</span><span class="p">(</span><span class="n">gauge</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">());</span>
+<h2>Example correlator calculation<a class="headerlink" href="#example-correlator-calculation" title="Permalink to this headline"></a></h2>
+<p>Here is an example taken from <code class="docutils literal notranslate"><span class="pre">src/testing/main_correlatorTest.cpp</span></code>. In this example we will correlate the <span class="math notranslate nohighlight">\(\mu=2\)</span> component of a
+gauge field with itself using the 4d all-to-all domain. Here <span class="math notranslate nohighlight">\(f(A,B)={\rm tr}~(AB)\)</span>.</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gaugeAccessor</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">_gauge</span><span class="p">(</span><span class="n">gauge</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">());</span><span class="w"></span>
 
-<span class="n">CorrField</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">CPUfield1</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">vol4</span><span class="p">);</span>
-<span class="n">CorrField</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">CPUfield2</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">vol4</span><span class="p">);</span>
-<span class="n">Correlator</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CPUnorm</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">UAr2max</span><span class="p">);</span>
-<span class="n">Correlator</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">COMPLEX</span><span class="p">(</span><span class="n">PREC</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CPUcorrComplex</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">UAr2max</span><span class="p">);</span>
+<span class="n">CorrField</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">CPUfield1</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">vol4</span><span class="p">);</span><span class="w"></span>
+<span class="n">CorrField</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">CPUfield2</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">vol4</span><span class="p">);</span><span class="w"></span>
+<span class="n">Correlator</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CPUnorm</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">UAr2max</span><span class="p">);</span><span class="w"></span>
+<span class="n">Correlator</span><span class="o">&lt;</span><span class="nb">false</span><span class="p">,</span><span class="n">COMPLEX</span><span class="p">(</span><span class="n">PREC</span><span class="p">)</span><span class="o">&gt;</span><span class="w"> </span><span class="n">CPUcorrComplex</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">corrTools</span><span class="p">.</span><span class="n">UAr2max</span><span class="p">);</span><span class="w"></span>
 
-<span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">m</span><span class="o">&lt;</span><span class="n">corrTools</span><span class="p">.</span><span class="n">vol4</span><span class="p">;</span><span class="w"> </span><span class="n">m</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">_CPUfield3</span><span class="p">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">_gauge</span><span class="p">.</span><span class="n">getLink</span><span class="p">(</span><span class="n">GInd</span><span class="o">::</span><span class="n">getSiteMu</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>
-<span class="w">    </span><span class="n">_CPUfield4</span><span class="p">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">_gauge</span><span class="p">.</span><span class="n">getLink</span><span class="p">(</span><span class="n">GInd</span><span class="o">::</span><span class="n">getSiteMu</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span>
-<span class="p">}</span>
+<span class="k">for</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">m</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="n">m</span><span class="o">&lt;</span><span class="n">corrTools</span><span class="p">.</span><span class="n">vol4</span><span class="p">;</span><span class="w"> </span><span class="n">m</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">_CPUfield3</span><span class="p">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">_gauge</span><span class="p">.</span><span class="n">getLink</span><span class="p">(</span><span class="n">GInd</span><span class="o">::</span><span class="n">getSiteMu</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span><span class="w"></span>
+<span class="w">    </span><span class="n">_CPUfield4</span><span class="p">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="n">_gauge</span><span class="p">.</span><span class="n">getLink</span><span class="p">(</span><span class="n">GInd</span><span class="o">::</span><span class="n">getSiteMu</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="mi">2</span><span class="p">)));</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 
-<span class="n">corrTools</span><span class="p">.</span><span class="n">correlateAt</span><span class="o">&lt;</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="p">,</span><span class="n">COMPLEX</span><span class="p">(</span><span class="n">PREC</span><span class="p">),</span><span class="n">AxB</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="s">&quot;spacetime&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield1</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield2</span><span class="p">,</span><span class="w"> </span><span class="n">CPUnorm</span><span class="p">,</span><span class="w"> </span><span class="n">CPUcorrComplex</span><span class="p">,</span><span class="w"> </span><span class="n">XYswapSymmetry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span>
+<span class="n">corrTools</span><span class="p">.</span><span class="n">correlateAt</span><span class="o">&lt;</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="p">,</span><span class="n">COMPLEX</span><span class="p">(</span><span class="n">PREC</span><span class="p">),</span><span class="n">AxB</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="p">(</span><span class="s">&quot;spacetime&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield1</span><span class="p">,</span><span class="w"> </span><span class="n">CPUfield2</span><span class="p">,</span><span class="w"> </span><span class="n">CPUnorm</span><span class="p">,</span><span class="w"> </span><span class="n">CPUcorrComplex</span><span class="p">,</span><span class="w"> </span><span class="n">XYswapSymmetry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Here, we have set sizes with <code class="docutils literal notranslate"><span class="pre">vol4</span></code>, i.e. $N_s^3\times N_\tau$, and <code class="docutils literal notranslate"><span class="pre">UAr2max</span></code>, which is the largest 4d squared separation possible,
+<p>Here, we have set sizes with <code class="docutils literal notranslate"><span class="pre">vol4</span></code>, i.e. <span class="math notranslate nohighlight">\(N_s^3\times N_\tau\)</span>, and <code class="docutils literal notranslate"><span class="pre">UAr2max</span></code>, which is the largest 4d squared separation possible,
 given periodic BCs. <code class="docutils literal notranslate"><span class="pre">UA</span></code> stands for “unrestricted all”; this is opposed to “restricted” (<code class="docutils literal notranslate"><span class="pre">R</span></code>) domains that do not include all possible
 spacetime pairs, and “spatial” (<code class="docutils literal notranslate"><span class="pre">S</span></code>) domains, which only compute spatial pairs. The <code class="docutils literal notranslate"><span class="pre">XYswapSymmetry</span></code> flag is <code class="docutils literal notranslate"><span class="pre">true</span></code> if the correlator
-is insensitive to interchange of $x$ and $y$, which can happen for example for some Polyakov loop correlators. Setting this
+is insensitive to interchange of <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>, which can happen for example for some Polyakov loop correlators. Setting this
 flag to <code class="docutils literal notranslate"><span class="pre">true</span></code> may decrease computation time by as much as 70% (see the benchmarking below for details). If you aren’t sure what to do,
 just leave it as <code class="docutils literal notranslate"><span class="pre">false</span></code>.</p>
 </section>
 <section id="singlet-octet-and-average-polyakov-loop-correlators">
-<h2>Singlet, octet, and average Polyakov loop correlators<a class="headerlink" href="#singlet-octet-and-average-polyakov-loop-correlators" title="Link to this heading"></a></h2>
+<h2>Singlet, octet, and average Polyakov loop correlators<a class="headerlink" href="#singlet-octet-and-average-polyakov-loop-correlators" title="Permalink to this headline"></a></h2>
 <p>This section contains code meant only for constructing certain Polyakov loop correlators. It was implemented by porting C code written
 by Olaf Kaczmarek into SIMULATeQCD and therefore is not utilizing the <code class="docutils literal notranslate"><span class="pre">Correlator</span></code> class fully. In principle these could be implemented
 in the future with the <code class="docutils literal notranslate"><span class="pre">Correlator</span></code> class. Instead, the following methods, part of the more specific <code class="docutils literal notranslate"><span class="pre">polyakovLoopCorrelator</span></code> class,
@@ -157,180 +150,180 @@ loops. Three examples include the singlet, octet, and average. Some useful infor
 found <a class="reference external" href="https://doi.org/10.1103/PhysRevD.24.450">here</a>, <a class="reference external" href="https://doi.org/10.1103/PhysRevD.33.3738">here</a>,
 and <a class="reference external" href="https://doi.org/10.1103/PhysRevD.34.3904">here</a>. The <code class="docutils literal notranslate"><span class="pre">polyakovLoopCorrelator</span></code> class includes a function to
 compute these correlators, which can be obtained with the following snippet of code:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">distmax</span><span class="o">=</span><span class="n">corrTools</span><span class="p">.</span><span class="n">distmax</span><span class="p">;</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_plca</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_plc8</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span>
-<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w">  </span><span class="n">vec_factor</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span>
-<span class="n">vec_factor</span><span class="o">=</span><span class="n">corrTools</span><span class="p">.</span><span class="n">getFactorArray</span><span class="p">();</span>
-<span class="n">corrTools</span><span class="p">.</span><span class="n">PLCtoArrays</span><span class="p">(</span><span class="n">vec_plca</span><span class="p">,</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">,</span><span class="w"> </span><span class="n">vec_plc8</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">distmax</span><span class="o">=</span><span class="n">corrTools</span><span class="p">.</span><span class="n">distmax</span><span class="p">;</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_plca</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;</span><span class="w"> </span><span class="n">vec_plc8</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span><span class="w"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w">  </span><span class="n">vec_factor</span><span class="p">(</span><span class="n">distmax</span><span class="p">);</span><span class="w"></span>
+<span class="n">vec_factor</span><span class="o">=</span><span class="n">corrTools</span><span class="p">.</span><span class="n">getFactorArray</span><span class="p">();</span><span class="w"></span>
+<span class="n">corrTools</span><span class="p">.</span><span class="n">PLCtoArrays</span><span class="p">(</span><span class="n">vec_plca</span><span class="p">,</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">,</span><span class="w"> </span><span class="n">vec_plc8</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
-<p>The first line grabs <code class="docutils literal notranslate"><span class="pre">distmax</span></code>$=N_s^2/4+1$ so that the resultant vectors <code class="docutils literal notranslate"><span class="pre">vec_*</span></code> have the correct size. The vectors are indexed by
-squared distance $r^2$. Some squared separations are not possible on a lattice in 3D; for example $r^2=7$ is not allowed. Therefore several
+<p>The first line grabs <code class="docutils literal notranslate"><span class="pre">distmax</span></code><span class="math notranslate nohighlight">\(=N_s^2/4+1\)</span> so that the resultant vectors <code class="docutils literal notranslate"><span class="pre">vec_*</span></code> have the correct size. The vectors are indexed by
+squared distance <span class="math notranslate nohighlight">\(r^2\)</span>. Some squared separations are not possible on a lattice in 3D; for example <span class="math notranslate nohighlight">\(r^2=7\)</span> is not allowed. Therefore several
 of the entries will be zero. The resultant vectors are normalized inside <code class="docutils literal notranslate"><span class="pre">PLCtoArrays</span></code> by <code class="docutils literal notranslate"><span class="pre">vec_factor</span></code>, which counts the number of contributions
-to each correlator at a particular $r^2$. Hence, <code class="docutils literal notranslate"><span class="pre">vec_factor[r2]==0</span></code> for every disallowed distance. <em>NOTE:</em> <code class="docutils literal notranslate"><span class="pre">getFactorArray</span></code> must be called
+to each correlator at a particular <span class="math notranslate nohighlight">\(r^2\)</span>. Hence, <code class="docutils literal notranslate"><span class="pre">vec_factor[r2]==0</span></code> for every disallowed distance. <em>NOTE:</em> <code class="docutils literal notranslate"><span class="pre">getFactorArray</span></code> must be called
 before <code class="docutils literal notranslate"><span class="pre">PLCtoArrays</span></code>, as <code class="docutils literal notranslate"><span class="pre">getFactorArray</span></code> also initializes the factor array. This initialization routine gives back <code class="docutils literal notranslate"><span class="pre">vec_factor</span></code> because it
 can be used, for example, if you want to write to file the correlators at allowed distances only. For instance one accomplishes this for
 the average channel with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">r2</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">r2</span><span class="o">&lt;</span><span class="n">distmax</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">r2</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">vec_factor</span><span class="p">[</span><span class="n">r2</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">commBase</span><span class="p">.</span><span class="n">MyRank</span><span class="p">()</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">            </span><span class="n">plcresultfile</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dx</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec_plca</span><span class="p">[</span><span class="n">r2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
-<span class="w">        </span><span class="p">}</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="p">}</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">r2</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">r2</span><span class="o">&lt;</span><span class="n">distmax</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">r2</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">vec_factor</span><span class="p">[</span><span class="n">r2</span><span class="p">]</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">commBase</span><span class="p">.</span><span class="n">MyRank</span><span class="p">()</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">            </span><span class="n">plcresultfile</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">7</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">dx</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;  &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">scientific</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec_plca</span><span class="p">[</span><span class="n">r2</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="p">}</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 <p><strong>NOTE:</strong> The singlet and octet Polyakov loop correlations depend on the gauge, and in particular, they should be measured in the Coulomb gauge.
-This means you must fix the gauge before measuring these quantities! Do learn how to do this, please have a look at the <a class="reference internal" href="../03_applications/gaugeFixing.html"><span class="std std-doc">gauge fixing</span></a>
+This means you must fix the gauge before measuring these quantities! Do learn how to do this, please have a look at the <a class="reference internal" href="../03_applications/gaugeFixing.html"><span class="doc std std-doc">gauge fixing</span></a>
 page. Don’t forget to re-unitarize before taking your measurements! The singlet, octet, and average correlators are tested in <code class="docutils literal notranslate"><span class="pre">src/testing/main_gfixplcTest.cpp</span></code>.</p>
 </section>
 <section id="some-benchmarks">
-<h2>Some benchmarks:<a class="headerlink" href="#some-benchmarks" title="Link to this heading"></a></h2>
+<h2>Some benchmarks:<a class="headerlink" href="#some-benchmarks" title="Permalink to this headline"></a></h2>
 <p>This table shows results for the 4d all-to-all tested on NVIDIA Pascal GPUs. This is the time it takes to multiply two <code class="docutils literal notranslate"><span class="pre">SU3</span></code> identity matrices with themselves,
 which is a good estimate for how long it takes to correlate two <code class="docutils literal notranslate"><span class="pre">CorrFields</span></code> of type <code class="docutils literal notranslate"><span class="pre">SU3</span></code> on the lattices of the given size. For reference, 1 minute is 60 000 ms.</p>
 <p><strong>Symmetric Results:</strong></p>
-<table class="docutils align-default">
+<table class="colwidths-auto docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head text-left"><p>$N_s$</p></th>
-<th class="head"><p>$N_\tau$</p></th>
+<tr class="row-odd"><th class="text-align:left head"><p><span class="math notranslate nohighlight">\(N_s\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(N_\tau\)</span></p></th>
 <th class="head"><p>UA id3 x id3 [ms]</p></th>
-<th class="head text-right"><p>US id3 x id3 [ms]</p></th>
+<th class="text-align:right head"><p>US id3 x id3 [ms]</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td class="text-left"><p>8</p></td>
+<tr class="row-even"><td class="text-align:left"><p>8</p></td>
 <td><p>4</p></td>
 <td><p>12</p></td>
-<td class="text-right"><p>5</p></td>
+<td class="text-align:right"><p>5</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>24</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>24</p></td>
 <td><p>6</p></td>
 <td><p>3240</p></td>
-<td class="text-right"><p>78</p></td>
+<td class="text-align:right"><p>78</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>24</p></td>
+<tr class="row-even"><td class="text-align:left"><p>24</p></td>
 <td><p>8</p></td>
 <td><p>5474</p></td>
-<td class="text-right"><p>78</p></td>
+<td class="text-align:right"><p>78</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>20</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>20</p></td>
 <td><p>20</p></td>
 <td><p>9708</p></td>
-<td class="text-right"><p>48</p></td>
+<td class="text-align:right"><p>48</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>32</p></td>
+<tr class="row-even"><td class="text-align:left"><p>32</p></td>
 <td><p>6</p></td>
 <td><p>15306</p></td>
-<td class="text-right"><p>470</p></td>
+<td class="text-align:right"><p>470</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>32</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>32</p></td>
 <td><p>8</p></td>
 <td><p>25473</p></td>
-<td class="text-right"><p>469</p></td>
+<td class="text-align:right"><p>469</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>40</p></td>
+<tr class="row-even"><td class="text-align:left"><p>40</p></td>
 <td><p>8</p></td>
 <td><p>96564</p></td>
-<td class="text-right"><p>1901</p></td>
+<td class="text-align:right"><p>1901</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>48</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>48</p></td>
 <td><p>6</p></td>
 <td><p>172147</p></td>
-<td class="text-right"><p>5170</p></td>
+<td class="text-align:right"><p>5170</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>48</p></td>
+<tr class="row-even"><td class="text-align:left"><p>48</p></td>
 <td><p>8</p></td>
 <td><p>285101</p></td>
-<td class="text-right"><p>5174</p></td>
+<td class="text-align:right"><p>5174</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>42</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>42</p></td>
 <td><p>12</p></td>
 <td><p>270474</p></td>
-<td class="text-right"><p>2420</p></td>
+<td class="text-align:right"><p>2420</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>48</p></td>
+<tr class="row-even"><td class="text-align:left"><p>48</p></td>
 <td><p>12</p></td>
 <td><p>594554</p></td>
-<td class="text-right"><p>5183</p></td>
+<td class="text-align:right"><p>5183</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>56</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>56</p></td>
 <td><p>8</p></td>
 <td><p>732532</p></td>
-<td class="text-right"><p>13296</p></td>
+<td class="text-align:right"><p>13296</p></td>
 </tr>
 </tbody>
 </table>
 <p><strong>Asymmetric Results:</strong></p>
-<table class="docutils align-default">
+<table class="colwidths-auto docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head text-left"><p>$N_s$</p></th>
-<th class="head"><p>$N_\tau$</p></th>
+<tr class="row-odd"><th class="text-align:left head"><p><span class="math notranslate nohighlight">\(N_s\)</span></p></th>
+<th class="head"><p><span class="math notranslate nohighlight">\(N_\tau\)</span></p></th>
 <th class="head"><p>UA id3 x id3 [ms]</p></th>
-<th class="head text-right"><p>US id3 x id3 [ms]</p></th>
+<th class="text-align:right head"><p>US id3 x id3 [ms]</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td class="text-left"><p>8</p></td>
+<tr class="row-even"><td class="text-align:left"><p>8</p></td>
 <td><p>4</p></td>
 <td><p>15</p></td>
-<td class="text-right"><p>5</p></td>
+<td class="text-align:right"><p>5</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>24</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>24</p></td>
 <td><p>6</p></td>
 <td><p>4027</p></td>
-<td class="text-right"><p>97</p></td>
+<td class="text-align:right"><p>97</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>24</p></td>
+<tr class="row-even"><td class="text-align:left"><p>24</p></td>
 <td><p>8</p></td>
 <td><p>6746</p></td>
-<td class="text-right"><p>96</p></td>
+<td class="text-align:right"><p>96</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>20</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>20</p></td>
 <td><p>20</p></td>
 <td><p>13410</p></td>
-<td class="text-right"><p>47</p></td>
+<td class="text-align:right"><p>47</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>32</p></td>
+<tr class="row-even"><td class="text-align:left"><p>32</p></td>
 <td><p>6</p></td>
 <td><p>22265</p></td>
-<td class="text-right"><p>633</p></td>
+<td class="text-align:right"><p>633</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>32</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>32</p></td>
 <td><p>8</p></td>
 <td><p>37821</p></td>
-<td class="text-right"><p>632</p></td>
+<td class="text-align:right"><p>632</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>40</p></td>
+<tr class="row-even"><td class="text-align:left"><p>40</p></td>
 <td><p>8</p></td>
 <td><p>155048</p></td>
-<td class="text-right"><p>2465</p></td>
+<td class="text-align:right"><p>2465</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>48</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>48</p></td>
 <td><p>6</p></td>
 <td><p>283987</p></td>
-<td class="text-right"><p>8014</p></td>
+<td class="text-align:right"><p>8014</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>48</p></td>
+<tr class="row-even"><td class="text-align:left"><p>48</p></td>
 <td><p>8</p></td>
 <td><p>476607</p></td>
-<td class="text-right"><p>8016</p></td>
+<td class="text-align:right"><p>8016</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>42</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>42</p></td>
 <td><p>12</p></td>
 <td><p>448504</p></td>
-<td class="text-right"><p>3896</p></td>
+<td class="text-align:right"><p>3896</p></td>
 </tr>
-<tr class="row-even"><td class="text-left"><p>48</p></td>
+<tr class="row-even"><td class="text-align:left"><p>48</p></td>
 <td><p>12</p></td>
 <td><p>1007574</p></td>
-<td class="text-right"><p>8012</p></td>
+<td class="text-align:right"><p>8012</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p>56</p></td>
+<tr class="row-odd"><td class="text-align:left"><p>56</p></td>
 <td><p>8</p></td>
 <td><p>1239982</p></td>
-<td class="text-right"><p>18401</p></td>
+<td class="text-align:right"><p>18401</p></td>
 </tr>
 </tbody>
 </table>

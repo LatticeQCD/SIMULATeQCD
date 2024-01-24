@@ -1,4 +1,6 @@
 # 
+# wilsonLinesCorrelator.param
+# 
 # Example parameter file for main_wilsonLinesCorrelatorMultiGPUStacked.cpp
 # 
 #           Lattice: Nx Ny Nz Nt
@@ -26,11 +28,11 @@ gauge_file = l9632f21b8249m002022m01011a.1390
 directory  = /home/rlarsen/simulateQCD/test/
 file_type  = milc
 
-load_conf  = 2  #load( 0 = integer), (1=configuration) (2=configuration+ gauge fixing)
+load_conf  = 2
 
-gtolerance       = 1e-6  #tolerance for gauge fixing
-maxgfsteps       = 100000 #maximum amount of gauge fixing steps
-numunit          = 20    # how often to unitarize
+gtolerance = 1e-6
+maxgfsteps = 100000
+numunit    = 20
 
 use_wilson=0
 wilson_step=0.0001

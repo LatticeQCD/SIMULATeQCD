@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lattice Container &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,16 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -36,15 +31,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -81,9 +72,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="codeBase.html">Code base</a></li>
-      <li class="breadcrumb-item active">Lattice Container</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
+      <li>Lattice Container</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/latticeContainer.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -93,44 +84,44 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="lattice-container">
-<h1>Lattice Container<a class="headerlink" href="#lattice-container" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="lattice-container">
+<h1>Lattice Container<a class="headerlink" href="#lattice-container" title="Permalink to this headline"></a></h1>
 <p>This class oversees <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> objects, which are essentially intermediate containers used to store intermediate
 results that will be reduced later. For instance if one calculates the action, one first finds each local
 contribution, sums these contributions over a sublattice, then sums this result over all sublattices.
 This whole process is carried out with <code class="docutils literal notranslate"><span class="pre">reduce</span></code> call.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> can hold elements of arbitrary type, and it is spread over the processes in a similar
-way as the <a class="reference internal" href="gaugefield.html#gaugefield"><span class="std std-ref">Gaugefield</span></a> or Spinorfield. The memory of
+way as the <a class="reference internal" href="gaugefield.html#gaugefield"><span class="std std-doc">Gaugefield</span></a> or Spinorfield. The memory of
 the <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> is by default shared with the memory of the halo buffer, because in general the
 intermediate results have to be re-calculated after a halo update. As of this writing, the available reduction methods are</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="c1">/// Reduce only timeslices. The result is a vector of length N_tau</span>
-<span class="kt">void</span><span class="w"> </span><span class="n">reduceTimeSlices</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceTimeSlices</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">)</span><span class="w"></span>
 <span class="c1">/// Methods to reduce intermediate results of a stacked spinor. Currently no support for halo exchange.</span>
-<span class="kt">void</span><span class="w"> </span><span class="n">reduceStackedLocal</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stackSize</span><span class="p">)</span>
-<span class="kt">void</span><span class="w"> </span><span class="n">reduceStacked</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stackSize</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceStackedLocal</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stackSize</span><span class="p">)</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceStacked</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">elemType</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">values</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">NStacks</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">stackSize</span><span class="p">)</span><span class="w"></span>
 <span class="c1">/// Reduce full lattice. Supports halo exchange.</span>
-<span class="kt">void</span><span class="w"> </span><span class="n">reduce</span><span class="p">(</span><span class="n">elemType</span><span class="w"> </span><span class="o">&amp;</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rootToAll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span>
-<span class="kt">void</span><span class="w"> </span><span class="n">reduceMax</span><span class="p">(</span><span class="n">elemType</span><span class="w"> </span><span class="o">&amp;</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rootToAll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduce</span><span class="p">(</span><span class="n">elemType</span><span class="w"> </span><span class="o">&amp;</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rootToAll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">reduceMax</span><span class="p">(</span><span class="n">elemType</span><span class="w"> </span><span class="o">&amp;</span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">size</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">rootToAll</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>At some point you may need to write into or extract from your <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>. This can be accomplished
 with <code class="docutils literal notranslate"><span class="pre">LatticeContainerAccessor</span></code> objects. Once you have created your accessor object corresponding to
 your <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>, the methods <code class="docutils literal notranslate"><span class="pre">getElement</span></code> and <code class="docutils literal notranslate"><span class="pre">setElement</span></code> allow you to interact with it.</p>
 <p>A basic implementation of a 100-element <code class="docutils literal notranslate"><span class="pre">SU3&lt;PREC&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code> on the GPU could be</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">latty</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span>
-<span class="n">latty</span><span class="p">.</span><span class="n">adjustSize</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeContainer</span><span class="o">&lt;</span><span class="nb">true</span><span class="p">,</span><span class="n">SU3</span><span class="o">&lt;</span><span class="n">PREC</span><span class="o">&gt;&gt;</span><span class="w"> </span><span class="n">latty</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span><span class="w"></span>
+<span class="n">latty</span><span class="p">.</span><span class="n">adjustSize</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Then you can set element 3 of <code class="docutils literal notranslate"><span class="pre">latty</span></code> to <code class="docutils literal notranslate"><span class="pre">test</span></code>, or store the contents of element 3 in <code class="docutils literal notranslate"><span class="pre">test</span></code>, using respectively</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeContainerAccessor</span><span class="w"> </span><span class="nf">_latty</span><span class="p">(</span><span class="n">latty</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">());</span>
-<span class="n">_latty</span><span class="p">.</span><span class="n">setElement</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">test</span><span class="p">);</span>
-<span class="n">_latty</span><span class="p">.</span><span class="n">getElement</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">test</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LatticeContainerAccessor</span><span class="w"> </span><span class="nf">_latty</span><span class="p">(</span><span class="n">latty</span><span class="p">.</span><span class="n">getAccessor</span><span class="p">());</span><span class="w"></span>
+<span class="n">_latty</span><span class="p">.</span><span class="n">setElement</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">test</span><span class="p">);</span><span class="w"></span>
+<span class="n">_latty</span><span class="p">.</span><span class="n">getElement</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="n">test</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>In general if you need to create some general array-like class, it is recommended that you inherit
 from the <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>. Besides giving you the convenience of not having to rewrite reduction code,
 it also already has multi-processor functionality built in.
-The <a class="reference internal" href="../05_modules/correlator.html#correlator-class"><span class="std std-ref">Correlator Class</span></a>, for example,
+The <a class="reference internal" href="../05_modules/correlator.html#correlator-class"><span class="std std-doc">Correlator Class</span></a>, for example,
 is implemented by inheriting from the <code class="docutils literal notranslate"><span class="pre">LatticeContainer</span></code>.</p>
 </section>
 
