@@ -98,6 +98,8 @@ typedef floatT floatT_inner;
     //! destructor
     ~Spinorfield() {
         gpuError_t gpuErr = gpuStreamDestroy(runStream);
+        if (gpuErr)
+            GpuError("Failed to destroy stream", gpuErr);
     };
 
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &
