@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Topology &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,16 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -36,15 +31,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -81,9 +72,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="codeBase.html">Code base</a></li>
-      <li class="breadcrumb-item active">Topology</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
+      <li>Topology</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/topology.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -93,24 +84,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="topology">
-<h1>Topology<a class="headerlink" href="#topology" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="topology">
+<h1>Topology<a class="headerlink" href="#topology" title="Permalink to this headline"></a></h1>
 <p>You want to distribute your MPI ranks according to your <em>nvlink</em> Topology on the respective node.
 Usually the ideal mapping should be done automatically, however if this is not the case you can try
 to improve it by using the topology parameter.
 If you do not want to handle this manually, just set <code class="docutils literal notranslate"><span class="pre">Topology</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">0</span></code> or do not specify it at all in your
 parameter file.</p>
 <section id="how-it-works">
-<h2>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading"></a></h2>
+<h2>How it works<a class="headerlink" href="#how-it-works" title="Permalink to this headline"></a></h2>
 <p>With the topology parameter we can map the cartesian coordinate of an MPI rank to a device, we set</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">myInfo</span><span class="p">.</span><span class="n">deviceRank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">myInfo</span><span class="p">.</span><span class="n">deviceRank</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">myInfo</span><span class="p">.</span><span class="n">coord</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">Topo</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span><span class="w"></span>
 </pre></div>
 </div>
 <p>E.g. when you want to split your lattice in 8 parts, by e.g. setting <code class="docutils literal notranslate"><span class="pre">Nodes</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">1</span> <span class="pre">4</span> <span class="pre">2</span></code> you can use <code class="docutils literal notranslate"><span class="pre">Topology</span> <span class="pre">=</span> <span class="pre">0</span> <span class="pre">0</span> <span class="pre">1</span> <span class="pre">4</span></code>
 to get a “good” mapping of MPI ranks to deviceRanks.</p>
 </section>
 <section id="some-cluster-specific-recommendations">
-<h2>Some cluster-specific recommendations<a class="headerlink" href="#some-cluster-specific-recommendations" title="Link to this heading"></a></h2>
+<h2>Some cluster-specific recommendations<a class="headerlink" href="#some-cluster-specific-recommendations" title="Permalink to this headline"></a></h2>
 <p>If you want to spilt by setting <code class="docutils literal notranslate"><span class="pre">Nodes</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">2</span> <span class="pre">2</span> <span class="pre">1</span></code> the optimal topology is <code class="docutils literal notranslate"><span class="pre">Topology</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">2</span> <span class="pre">4</span> <span class="pre">0</span></code>.
 With this topology setting you distribute the ranks over
 the corners of a cube, just like the <code class="docutils literal notranslate"><span class="pre">nvlink</span></code> Topology on the Bielefeld cluster.

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Multi-GPU: Distribution of local lattices on the individual GPUs &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,17 +13,14 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -36,15 +33,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,9 +77,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
-      <li class="breadcrumb-item active">Multi-GPU: Distribution of local lattices on the individual GPUs</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>Multi-GPU: Distribution of local lattices on the individual GPUs</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/multiGPU.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -96,8 +89,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="multi-gpu-distribution-of-local-lattices-on-the-individual-gpus">
-<h1>Multi-GPU: Distribution of local lattices on the individual GPUs<a class="headerlink" href="#multi-gpu-distribution-of-local-lattices-on-the-individual-gpus" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="multi-gpu-distribution-of-local-lattices-on-the-individual-gpus">
+<h1>Multi-GPU: Distribution of local lattices on the individual GPUs<a class="headerlink" href="#multi-gpu-distribution-of-local-lattices-on-the-individual-gpus" title="Permalink to this headline"></a></h1>
 <p>To work with multiple devices, SIMULATeQCD splits a lattice into multiple
 sublattices, with partitioning possible along any of the four Euclidean
 space-time directions. Each sublattice is given to a single GPU. In addition to
@@ -107,18 +100,18 @@ sublattices–we call these copies the halo. A schematic drawing
 of the exchange of halos between different GPUs is shown below.</p>
 <p><img alt="alt" src="../_images/haloStructure.png" /></p>
 <p>If we consider a lattice of size <code class="docutils literal notranslate"><span class="pre">Nx*Ny*Nz*Nt</span></code>, each GPU has a local Lattice of size</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">Nx_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">Ny_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Nz_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Nt_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">),</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="p">(</span><span class="n">Nx_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="n">Ny_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Nz_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">Nt_sub</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">Halo_depth</span><span class="p">),</span><span class="w"></span>
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">N_sub</span> <span class="pre">=</span> <span class="pre">N/Cores_i</span></code> with <code class="docutils literal notranslate"><span class="pre">i=x,y,z,t</span></code>.
-For example if we have a lattice of size $32^3\times 8$ and we split the lattice in x direction with
-<code class="docutils literal notranslate"><span class="pre">halo_depth=1</span></code>, both GPU’s will have a local lattice size of $18\times 34\times 34\times 10$.
+For example if we have a lattice of size <span class="math notranslate nohighlight">\(32^3\times 8\)</span> and we split the lattice in x direction with
+<code class="docutils literal notranslate"><span class="pre">halo_depth=1</span></code>, both GPU’s will have a local lattice size of <span class="math notranslate nohighlight">\(18\times 34\times 34\times 10\)</span>.
 This can be accomplished with:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LatDim</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">};</span>
-<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">NodeDim</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">LatDim</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">32</span><span class="p">,</span><span class="w"> </span><span class="mi">8</span><span class="p">};</span><span class="w"></span>
+<span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">NodeDim</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">};</span><span class="w"></span>
 </pre></div>
 </div>
-<p>When using P2P, for a lattice with size e.g. $120^3 \times 30$, it is best (=lowest overall memory consumption) to split the lattice like this:</p>
+<p>When using P2P, for a lattice with size e.g. <span class="math notranslate nohighlight">\(120^3 \times 30\)</span>, it is best (=lowest overall memory consumption) to split the lattice like this:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span> <span class="n">GPU</span><span class="p">:</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span>  <span class="mf">28476.5625</span> <span class="n">MiB</span>
 <span class="mi">2</span> <span class="n">GPUs</span><span class="p">:</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span> <span class="mf">18509.765625</span> <span class="n">MiB</span>
 <span class="mi">4</span> <span class="n">GPUs</span><span class="p">:</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">4</span> <span class="mi">1</span><span class="p">,</span> <span class="n">Size</span> <span class="n">per</span> <span class="n">GPU</span><span class="p">:</span>  <span class="mf">11390.625</span> <span class="n">MiB</span>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HISQ smearing &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,17 +13,14 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -35,15 +32,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -79,9 +72,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
-      <li class="breadcrumb-item active">HISQ smearing</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">Modules</a> &raquo;</li>
+      <li>HISQ smearing</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/05_modules/gaugeSmearing.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -91,30 +84,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="hisq-smearing">
-<h1>HISQ smearing<a class="headerlink" href="#hisq-smearing" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="hisq-smearing">
+<h1>HISQ smearing<a class="headerlink" href="#hisq-smearing" title="Permalink to this headline"></a></h1>
 <p>Much of the rhmc in SIMULATeQCD follows the MILC code. For a thorough discussion of this
 implementation, look <a class="reference external" href="https://journals.aps.org/prd/abstract/10.1103/PhysRevD.82.074501">here</a>.
 Here we just list a few important details.</p>
 <section id="general-idea-behind-smearing">
-<h2>General idea behind smearing<a class="headerlink" href="#general-idea-behind-smearing" title="Link to this heading"></a></h2>
-<p>Typically the gauge connection between two neighboring sites $x$ and $y$
-on the lattice is just a single link $U(x,y)$, which is in some sense the
+<h2>General idea behind smearing<a class="headerlink" href="#general-idea-behind-smearing" title="Permalink to this headline"></a></h2>
+<p>Typically the gauge connection between two neighboring sites <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>
+on the lattice is just a single link <span class="math notranslate nohighlight">\(U(x,y)\)</span>, which is in some sense the
 most local connection imaginable. One can also relax this locality, so that
 the gauge connection contains information from a larger region around
-$x$ and $y$; for example the connection could depend on a general sum,
-including many paths connecting $x$ and $y$. Let’s call
-this sum $\Sigma(x,y)$. Then the gauge connection could be $V(x,y)$,
-where $V$ is chosen by extremizing $\mathrm{tr} V\Sigma^\dagger$. These gauge
+<span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>; for example the connection could depend on a general sum,
+including many paths connecting <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>. Let’s call
+this sum <span class="math notranslate nohighlight">\(\Sigma(x,y)\)</span>. Then the gauge connection could be <span class="math notranslate nohighlight">\(V(x,y)\)</span>,
+where <span class="math notranslate nohighlight">\(V\)</span> is chosen by extremizing <span class="math notranslate nohighlight">\(\mathrm{tr} V\Sigma^\dagger\)</span>. These gauge
 connections are called <a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevD.55.R1133">fat links</a>.
 Fat links modify particle spectra, since they amount to a change of the lattice
 propagator.</p>
 </section>
 <section id="id1">
-<h2>HISQ smearing<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<h2>HISQ smearing<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h2>
 <p>Taste breaking can be thought of through <em>taste exchange</em>, where
 one quark changes its taste by exchanging a virtual gluon with momentum
-$p=\pi/a$; a quark with low enough momentum can thereby be pushed into
+<span class="math notranslate nohighlight">\(p=\pi/a\)</span>; a quark with low enough momentum can thereby be pushed into
 another corner of the Brillouin zone. This is an effect of our discretization,
 so taste breaking vanishes in the continuum limit. A strategy at finite spacing
 to reduce this discretization effect is to
@@ -124,54 +117,54 @@ idea behind HISQ smearing.</p>
 You can find information about ASQTAD <a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevD.60.054503">here</a>
 and <a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevD.59.074502">here</a>.
 The first-level HISQ link treatment is</p>
-<p>$  c_1 = 1/8$</p>
-<p>$  c_3 = 1/16$</p>
-<p>$  c_5 = 1/64$</p>
-<p>$  c_7 = 1/384,$</p>
-<p>where $c_1$ is the coefficient for the 1-link, and $c_3$, $c_5$, and $c_7$
+<p><span class="math notranslate nohighlight">\(  c_1 = 1/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_3 = 1/16\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_5 = 1/64\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_7 = 1/384,\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(c_1\)</span> is the coefficient for the 1-link, and <span class="math notranslate nohighlight">\(c_3\)</span>, <span class="math notranslate nohighlight">\(c_5\)</span>, and <span class="math notranslate nohighlight">\(c_7\)</span>
 are for the 3-link staple, 5-link staple, and 7-link staples, respectively.
 The first-level smeared link is then projected
-back to U$(3)$ before the application of the second-level smearing.
+back to U<span class="math notranslate nohighlight">\((3)\)</span> before the application of the second-level smearing.
 The second level uses</p>
-<p>$  c_1 = 1$</p>
-<p>$  c_3 = 1/16$</p>
-<p>$  c_5 = 1/64$</p>
-<p>$  c_7 = 1/384$</p>
-<p>$  c_\text{Lepage} = -1/8$</p>
-<p>$  c_\text{Naik} = -1/24+\epsilon/8,$</p>
-<p>where $c_\text{Naik}$ and $c_\text{Lepage}$ are the coefficients for the
+<p><span class="math notranslate nohighlight">\(  c_1 = 1\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_3 = 1/16\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_5 = 1/64\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_7 = 1/384\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_\text{Lepage} = -1/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_\text{Naik} = -1/24+\epsilon/8,\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(c_\text{Naik}\)</span> and <span class="math notranslate nohighlight">\(c_\text{Lepage}\)</span> are the coefficients for the
 Naik and Lepage terms.</p>
-<p>Let’s see how this is carried out in the code. Let the original gaugefields be $U$.
-For the first level, we smear $U$ links with various 3-link, 5-link and 7-link paths. MILC calls it $V$</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<p>Let’s see how this is carried out in the code. Let the original gaugefields be <span class="math notranslate nohighlight">\(U\)</span>.
+For the first level, we smear <span class="math notranslate nohighlight">\(U\)</span> links with various 3-link, 5-link and 7-link paths. MILC calls it <span class="math notranslate nohighlight">\(V\)</span></p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do this use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">V</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel1params</span><span class="p">())</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">V</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel1params</span><span class="p">())</span><span class="w"></span>
 </pre></div>
 </div>
-<p>Next we project the level 1 smeared links back to U(3). MILC calls it $W$</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">W</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
-</pre></div>
-</div>
-<p>To do this use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">.</span><span class="n">u3Project</span><span class="p">()</span>
-</pre></div>
-</div>
-<p>Finally we smear again the $W$ links with 3-link, 5-link and 7-link paths. MILC calls it $X$</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<p>Next we project the level 1 smeared links back to U(3). MILC calls it <span class="math notranslate nohighlight">\(W\)</span></p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">W</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do this use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel2params</span><span class="p">())</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">.</span><span class="n">u3Project</span><span class="p">()</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Finally we smear again the <span class="math notranslate nohighlight">\(W\)</span> links with 3-link, 5-link and 7-link paths. MILC calls it <span class="math notranslate nohighlight">\(X\)</span></p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
+</pre></div>
+</div>
+<p>To do this use</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel2params</span><span class="p">())</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do the tadpole improvement we use the Naik term in the Dirac operator. For HISQ dslash,
-the Naik links are constructed from the unitarized links, i.e. using the $W$ links.
-MILC calls it $N$.
+the Naik links are constructed from the unitarized links, i.e. using the <span class="math notranslate nohighlight">\(W\)</span> links.
+MILC calls it <span class="math notranslate nohighlight">\(N\)</span>.
 To use this we have to call</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
-<span class="w"> </span><span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
+<span class="w"> </span><span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The smearing classes are implemented in</p>

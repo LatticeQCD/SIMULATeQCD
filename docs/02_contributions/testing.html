@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Testing the code &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,16 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -36,15 +31,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -84,9 +75,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="contributions.html">Contributions</a></li>
-      <li class="breadcrumb-item active">Testing the code</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="contributions.html">Contributions</a> &raquo;</li>
+      <li>Testing the code</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/02_contributions/testing.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -96,24 +87,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="testing-the-code">
-<h1>Testing the code<a class="headerlink" href="#testing-the-code" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="testing-the-code">
+<h1>Testing the code<a class="headerlink" href="#testing-the-code" title="Permalink to this headline"></a></h1>
 <p>This is perhaps the most important aspect of code creation for SIMULATeQCD:
 <strong>It is crucially important that you write a test for each new feature that you implement.</strong>
-As indicated in the <a class="reference internal" href="codeStructure.html#how-to-organize-new-files"><span class="std std-ref">Code Structure</span></a> document,
+As indicated in the <a class="reference internal" href="codeStructure.html#how-to-organize-new-files"><span class="std std-doc">Code Structure</span></a> document,
 new testing <code class="docutils literal notranslate"><span class="pre">main</span></code> programs should go in <code class="docutils literal notranslate"><span class="pre">src/testing</span></code>. <strong>It is also crucially important that
 you run ALL tests after you have made major changes.</strong> Please always do this, even if
 you are convinced that your changes could not have possibly broken anything.</p>
 <p>To make running the tests a bit easier for you, we have included some scripts to do this
 automatically. In the <code class="docutils literal notranslate"><span class="pre">scripts</span></code> directory one finds the Bash scripts</p>
-<ol class="arabic simple">
+<ol class="simple">
 <li><p>runTests_0.bash</p></li>
 <li><p>runTests_1.bash</p></li>
 <li><p>runTests_2.bash</p></li>
 </ol>
 <p>which should be run in that order. To compile the tests,
 navigate to your build folder and</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>-j<span class="w"> </span>tests
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make -j tests
 </pre></div>
 </div>
 <p>It may take some time to compile all the tests; in particular for CUDA versions lower than
@@ -125,7 +116,7 @@ pull request until we verify all multi-GPU tests pass.)
 We have collected test executables within each <code class="docutils literal notranslate"><span class="pre">runTests</span></code> script to run in
 less than 30 minutes on Pascal GPUs so that you can test interactively at most
 computing centers. When you are ready to run the tests,</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>testing
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> testing
 ../scripts/runTests_0.bash
 </pre></div>
 </div>
@@ -135,10 +126,10 @@ it will be redirected to a <code class="docutils literal notranslate"><span clas
 have run script <code class="docutils literal notranslate"><span class="pre">0</span></code>, run scripts <code class="docutils literal notranslate"><span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
 <p>At the end of your test run, if there are no <code class="docutils literal notranslate"><span class="pre">runERR</span></code> files, then you are done.</p>
 <section id="adding-your-test-to-the-runtests-scripts">
-<h2>Adding your test to the <code class="docutils literal notranslate"><span class="pre">runTests</span></code> scripts<a class="headerlink" href="#adding-your-test-to-the-runtests-scripts" title="Link to this heading"></a></h2>
+<h2>Adding your test to the <code class="docutils literal notranslate"><span class="pre">runTests</span></code> scripts<a class="headerlink" href="#adding-your-test-to-the-runtests-scripts" title="Permalink to this headline"></a></h2>
 <p>After your test is working, please add it to the last <code class="docutils literal notranslate"><span class="pre">runTests</span></code> script. This way your
 test will always be run automatically by future developers. To accomplish this:</p>
-<ol class="arabic simple">
+<ol class="simple">
 <li><p>Make sure that you added your test to the <code class="docutils literal notranslate"><span class="pre">tests</span></code> executables in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>,
 i.e. you will need the line <code class="docutils literal notranslate"><span class="pre">add_to_compound_SIMULATeQCD_target(tests</span> <span class="pre">myTest)</span></code>. Please
 also add an entry to <code class="docutils literal notranslate"><span class="pre">runTestsSingleGPU.bash</span></code>.</p></li>
@@ -157,7 +148,7 @@ where one prefers not to split the lattice in the Euclidean time direction.</p><
 </ul>
 </section>
 <section id="using-the-testing-h-header-file">
-<h2>Using the <code class="docutils literal notranslate"><span class="pre">testing.h</span></code> header file<a class="headerlink" href="#using-the-testing-h-header-file" title="Link to this heading"></a></h2>
+<h2>Using the <code class="docutils literal notranslate"><span class="pre">testing.h</span></code> header file<a class="headerlink" href="#using-the-testing-h-header-file" title="Permalink to this headline"></a></h2>
 <p>It is very important that your code yields correct scientific results. One of the most
 straightforward ways to carry out such a test is to make a comparison with known results.
 For your convenience, there are several functions in <code class="docutils literal notranslate"><span class="pre">testing.h</span></code> for exactly this
@@ -166,14 +157,14 @@ purpose.</p>
 over-relaxation update, please check this using a link-by-link comparison against
 some known reference. One can compare <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects
 using</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">compare_fields</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">compare_fields</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>which check that every element of every link of <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> agree
 within a relative error of <code class="docutils literal notranslate"><span class="pre">tol</span></code>. It returns <code class="docutils literal notranslate"><span class="pre">true</span></code> if every single element of
 both <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects agree.</p>
 <p>To compare scalars <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> one can use</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">compare_relative</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">prec</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">compare_relative</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">prec</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>which makes sure they agree within relative error <code class="docutils literal notranslate"><span class="pre">rel</span></code> as well as absolute
