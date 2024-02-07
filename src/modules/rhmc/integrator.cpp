@@ -12,8 +12,6 @@ struct do_evolve_Q
     SU3Accessor<floatT, comp> _gAcc;
 
     __host__ __device__ __host__ SU3<floatT> operator()(gSiteMu site){
-        typedef GIndexer<All,HaloDepth> GInd;
-
         SU3<double> temp;
 
         temp= su3_exp<double>(COMPLEX(double)(0.0,1.0)*_stepsize*_pAccessor.template getLink<double>(site))
@@ -36,8 +34,6 @@ struct do_evolve_P
     SU3Accessor<floatT> _ipdotAccessor;
 
     __device__ __host__ SU3<floatT> operator()(gSiteMu site){
-        typedef GIndexer<All,HaloDepth> GInd;
-
         SU3<double> temp;
 
         temp = _pAccessor.template getLink<double>(site);

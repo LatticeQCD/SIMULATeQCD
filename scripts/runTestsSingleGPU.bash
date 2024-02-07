@@ -45,9 +45,9 @@ ${prefix} ./_correlatorTest ../parameter/tests/correlatorTest.param Nodes="${nod
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_dotProductTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
+echo Running Test: ./_dotProductTest ../parameter/tests/mixedPrecInverterTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_dotProductTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
+${prefix} ./_dotProductTest ../parameter/tests/mixedPrecInverterTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
@@ -146,9 +146,9 @@ echo ===========================================================================
 ${prefix} ./_linkPathTest ../parameter/tests/linkPathTest.param Nodes="${nodes}"
 
 echo ""
-echo Running Test: ./_mixedPrecInverterTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
+echo Running Test: ./_mixedPrecInverterTest ../parameter/tests/mixedPrecInverterTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_mixedPrecInverterTest ../parameter/tests/mixedPrecinverterTest.param Nodes="${nodes}"
+${prefix} ./_mixedPrecInverterTest ../parameter/tests/mixedPrecInverterTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
@@ -158,21 +158,15 @@ ${prefix} ./_pureGaugeHmcTest ../parameter/tests/pureGaugeHmcTest.param Nodes="$
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_rhmcTest_4pf ../parameter/tests/rhmcTest_4pf.param Nodes="${nodes}"
-echo ==========================================================================================================
-${prefix} ./_rhmcTest_4pf ../parameter/tests/rhmcTest_4pf.param Nodes="${nodes}"
-
-echo ""
-echo ==========================================================================================================
 echo Running Test: ./_rhmcTest ../parameter/tests/rhmcTest.param Nodes="${nodes}"
 echo ==========================================================================================================
 ${prefix} ./_rhmcTest ../parameter/tests/rhmcTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================
-echo Running Test: ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
+echo Running Test: ./_confReadWriteTest ../parameter/tests/confReadWriteTest.param Nodes="${nodes}"
 echo ==========================================================================================================
-${prefix} ./_saveTest ../parameter/tests/saveTest.param Nodes="${nodes}"
+${prefix} ./_confReadWriteTest ../parameter/tests/confReadWriteTest.param Nodes="${nodes}"
 
 echo ""
 echo ==========================================================================================================

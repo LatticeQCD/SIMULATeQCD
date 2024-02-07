@@ -24,7 +24,7 @@
 #include "wrapper/marker.h"
 
 template<class floatT>
-gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size);
+gpuError_t CubReduce(void *helpArr, size_t *temp_storage_bytes, floatT *Arr, floatT *out, size_t size, gpuStream_t stream = NULL);
 
 template<class floatT>
 gpuError_t CubReduceMax(void *helpArr, size_t *temp_storage_bytes, void *Arr, floatT *out, size_t size);
@@ -127,12 +127,15 @@ public:
     d_out(std::move(source.d_out)),
     StackOffsetsHostTemp(std::move(source.StackOffsetsHostTemp)),
     StackOffsetsTemp(std::move(source.StackOffsetsTemp)){}
-
+    // reductionStream(std::move(source.reductionStream)){}
     //! move assignment
     LatticeContainer<onDevice, elemType>& operator=(LatticeContainer<onDevice, elemType>&&) = delete;
 
     //! destructor
-    ~LatticeContainer() = default;
+    ~LatticeContainer(){
+        // gpuError_t gpuErr =  gpuStreamDestroy(reductionStream);
+        // if (gpuErr != gpuSuccess) GpuError("latticeContainer.h: gpuStreamDestroy", gpuErr);
+    }
 
     void adjustSize(size_t size) {
 
@@ -251,35 +254,91 @@ public:
     void reduce(elemType &value, size_t size, bool rootToAll = false) {
         markerBegin("reduce", "Reduction");
         elemType result = 0;
+        
 
         if (onDevice) {
+            ReductionResultHost->template adjustSize<elemType>(1);
+            
+            markerBegin("DeviceReduce::Sum (1)", "Reduction");
             // Determine temporary device storage requirements
             size_t temp_storage_bytes = 0;
 
             gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                                     d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
+            markerEnd();
 
             HelperArray->template adjustSize<void *>(temp_storage_bytes);
 
+            markerBegin("DeviceReduce::Sum (2)", "Reduction");
             gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
                             d_out->template getPointer<elemType>(), size);
             if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
+            markerEnd();
 
-            gpuErr = gpuMemcpy(&result, d_out->template getPointer<elemType>(), sizeof(result), gpuMemcpyDeviceToHost);
-            if (gpuErr)
-                GpuError("Reductionbase.h: Failed to copy data", gpuErr);
-
+            markerBegin("DtH copy result", "Reduction");
+            ReductionResultHost->copyFrom(d_out, sizeof(elemType));
+    
+            // LatticeContainerAccessor accRes(ReductionResultHost->getPointer());
+            // accRes.getValue((size_t) 0, result);
+            result = *(ReductionResultHost->template getPointer<elemType>());
+            markerEnd();
         } else{
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
                 result += acc.getElement<elemType>(i);
             }
         }
+        markerBegin("MPI reduce", "Reduction");
         value = comm.reduce(result);
         if (rootToAll) comm.root2all(result);
         markerEnd();
+        markerEnd();
     }
+
+#ifdef USE_NCCL
+    void reduce_nccl(gMemoryPtr<onDevice> value, size_t size) {
+        markerBegin("reduce", "Reduction");
+        auto dcount = d_out->getSize()/sizeof(elemType);
+        value->template adjustSize<elemType*>(dcount);
+
+        markerBegin("DeviceReduce::Sum (1)", "Reduction");
+        // Determine temporary device storage requirements
+        size_t temp_storage_bytes = 0;
+
+        gpuError_t gpuErr = CubReduce(NULL, &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
+                                d_out->template getPointer<elemType>(), size);
+        if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (1)", gpuErr);
+        markerEnd();
+
+        HelperArray->template adjustSize<void *>(temp_storage_bytes);
+
+        markerBegin("DeviceReduce::Sum (2)", "Reduction");
+        gpuErr = CubReduce(HelperArray->getPointer(), &temp_storage_bytes, ContainerArray->template getPointer<elemType>(),
+                        d_out->template getPointer<elemType>(), size);
+        if (gpuErr) GpuError("LatticeContainer::reduce: gpucub::DeviceReduce::Sum (2)", gpuErr);
+        markerEnd();
+
+        // markerBegin("DtH copy result", "Reduction");
+        // ReductionResultHost->copyFrom(d_out, sizeof(elemType));
+
+        // // LatticeContainerAccessor accRes(ReductionResultHost->getPointer());
+        // // accRes.getValue((size_t) 0, result);
+        // result = *(ReductionResultHost->template getPointer<elemType>());
+        // markerEnd();
+        
+        ncclResult_t r = ncclAllReduce(static_cast<const void*>(d_out->getPointer()), static_cast<void*>(value->getPointer()),
+         comm.getNumberProcesses(), ncclDouble, ncclSum, comm.getNccl_communicator(), NULL);
+        if (r != ncclSuccess) {
+            NcclError("LatticeContainer::reduce_nccl: ncclAllReduce failed ", r);
+        }
+
+        // gpuErr = gpuStreamSynchronize(reductionStream);
+        // if (gpuErr) GpuError("LatticeContainer::reduce: gpuStreamSynchronize", gpuErr);
+        markerEnd();
+        markerEnd();
+    }
+#endif
 
     void reduceMax(elemType &value, size_t size, bool rootToAll = false) {
         markerBegin("reduceMax", "Reduction");
@@ -320,16 +379,25 @@ public:
 
     gMemoryPtr<onDevice> getMemPointer() { return ContainerArray; }
 
-    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = 256, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulk(Functor op);
 
-    template<Layout LatticeLayout, size_t HaloDepth, size_t NStacks, unsigned BlockSize = 64, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverCenter(Functor op);
+
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverHalo(Functor op);
+    
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
+    void iterateOverHaloLookup(gSite* Halsites, Functor op);
+
+    template<Layout LatticeLayout, size_t HaloDepth, size_t NStacks, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverBulkStacked(Functor op);
 
-    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = 256, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverTimeslices(Functor op);
 
-    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = 256, typename Functor>
+    template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
 
     void iterateOverSpatialBulk(Functor op);
 
@@ -367,6 +435,52 @@ void LatticeContainer<onDevice, elemType>::iterateOverBulk(Functor op) {
         elems = GInd::getLatData().vol4 / 2;
     }
     this->template iterateFunctor<BlockSize>(op, calcGSite, writeAtRead, elems);
+}
+
+template<bool onDevice, typename elemType>
+template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize, typename Functor>
+void LatticeContainer<onDevice, elemType>::iterateOverCenter(Functor op) {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    CalcGSiteInnerBulk<LatticeLayout,HaloDepth> calcCenterSite;
+    WriteAtRead writeAtRead;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getCenterSize();
+    } else {
+        elems = HInd::getCenterSize()/2;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcCenterSite, writeAtRead, elems);    
+}
+
+
+template<bool onDevice, typename elemType>
+template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize, typename Functor>
+void LatticeContainer<onDevice, elemType>::iterateOverHalo(Functor op) {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    CalcGSiteHalo<LatticeLayout,HaloDepth> calcHaloSite;
+    WriteAtRead writeAtRead;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getInnerHaloSize();
+    } else {
+        elems = HInd::getInnerHaloSize()/2;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcHaloSite, writeAtRead, elems);    
+}
+
+template<bool onDevice, typename elemType>
+template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize, typename Functor>
+void LatticeContainer<onDevice, elemType>::iterateOverHaloLookup(gSite* Halsites, Functor op) {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    CalcGSiteHaloLookup calcHaloSite(Halsites);
+    WriteAtRead writeAtRead;
+    size_t elems;
+    if (LatticeLayout == All) {
+        elems = HInd::getInnerHaloSize();
+    } else {
+        elems = HInd::getInnerHaloSize()/2;
+    }
+    this->template iterateFunctor<BlockSize>(op, calcHaloSite, writeAtRead, elems);    
 }
 
 

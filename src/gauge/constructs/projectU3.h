@@ -13,6 +13,14 @@
 #include "../../base/math/su3.h"
 #include "../gaugefield.h"
 #include "gsvd.h"
+
+
+// Project back to U3 using the Cayley-Hamilton approach. We follow the notation in the MILC
+// paper 10.1103/PhysRevD.82.074501, which follows Hasenfratz et al 10.1088/1126-6708/2007/05/029.
+// More detail about how the Cayley-Hamilton theorem leads to this approach for matrix inversion
+// can be found in Morningstar and Peardon 10.1103/PhysRevD.69.054501. This gives us approximate 
+// eigenvalues. We perform a consistency check by making sure their product equals the determinant. 
+// If this check fails, we use singular value decomposition.
 template<class floatT,size_t HaloDepth>
 __host__ __device__ SU3<floatT> inline projectU3(SU3Accessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All, HaloDepth> GInd;
@@ -21,14 +29,13 @@ __host__ __device__ SU3<floatT> inline projectU3(SU3Accessor<floatT> gAcc, gSite
     SU3<double> Q;
     V = gAcc.template getLink<double>(GInd::getSiteMu(site,mu));
     Q = dagger(V) * V;
-    //Calculate Coefficients of characteristic equation
+
+    // Calculate Coefficients of characteristic equation
     double c0 = tr_d(Q);
     double c1 = tr_d(Q*Q)*0.5;
     double c2 = tr_d(Q*Q*Q)*(1./3.);
 
-    double g0;
-    double g1;
-    double g2;
+    double g0, g1, g2;
 
     double S_coeff = c1*(1./3.)-(c0*c0/18.);
 
@@ -50,13 +57,13 @@ __host__ __device__ SU3<floatT> inline projectU3(SU3Accessor<floatT> gAcc, gSite
 
         } else {
             if (R_coeff > 0) {
-              Theta = 0.0;
+                Theta = 0.0;
             } else {
-              Theta = M_PI;
+                Theta = M_PI;
             }
         }
 
-        //Solutions to characteristic equation
+        // Solutions to characteristic equation
         g0 = c0*(1./3.)+2.0*S_coeff*cos(Theta/3.0-2*M_PI/3.0);
         g1 = c0*(1./3.)+2.0*S_coeff*cos(Theta/3.0);
         g2 = c0*(1./3.)+2.0*S_coeff*cos(Theta/3.0+2*M_PI/3.0);
@@ -67,6 +74,7 @@ __host__ __device__ SU3<floatT> inline projectU3(SU3Accessor<floatT> gAcc, gSite
 
     SU3<double> temp_svd;
     if (fabs(detQ/(g0*g1*g2)-1.0) > 1e-5) {
+        // TODO: Change to an SVD count to avoid spamming the user with messages like this. 
         printf("Using SVD in smearing\n");
         temp_svd=svd3x3core<double,double>(V,sv);
         return temp_svd;

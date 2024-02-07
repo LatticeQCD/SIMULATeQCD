@@ -35,6 +35,9 @@
 #include "../IO/misc.h"
 #include "haloOffsetInfo.h"
 #include "../math/matrix4x4.h"
+#ifdef USE_NCCL
+#include <rccl.h>
+#endif
 
 template<class floatT>
 class SU3;
@@ -134,10 +137,14 @@ private:
 
     void _MPI_fail(int ret, const std::string& func);
 
-
     MPI_File fh;
     MPI_Datatype basetype;
     MPI_Datatype fvtype;
+    commStreams_t commStreams;
+#ifdef USE_NCCL
+    ncclUniqueId nccl_uid;
+    ncclComm_t nccl_comm;
+#endif
 
     void initNodeComm();
 
@@ -146,6 +153,9 @@ public:
 
     void init(const LatticeDimensions &Dim, const LatticeDimensions &Topo = LatticeDimensions());
 
+#ifdef USE_NCCL
+    void ncclinit();
+#endif
     ~CommunicationBase();
 
     bool gpuAwareMPIAvail() const {
@@ -176,11 +186,18 @@ public:
 
     int getNumberProcesses() { return world_size; }
 
+
+    commStreams_t& getCommStreams() {
+        return commStreams;
+    }
     /// Return rank of process with given coordinates
     int getRank(LatticeDimensions) const RET0_IF_SCALAR;
 
     MPI_Comm getCart_comm() const { return cart_comm; }
 
+#ifdef USE_NCCL
+    ncclComm_t getNccl_communicator() const { return nccl_comm;}
+#endif
     /// Return if only a single process is running
     bool single() const { return (world_size == 1); }
 

@@ -2,6 +2,7 @@
 # hisqForce.param
 #
 #      Lattice: Nx Ny Nz Nt
+#         beta: Bare coupling constant 6/g^2
 #        Nodes: Number of nodes per direction
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass

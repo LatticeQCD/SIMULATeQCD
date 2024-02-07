@@ -166,18 +166,18 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
     rootLogger.info("Constructing peudo-fermion fields");
 
-    for(size_t i = 0; i < _no_pf; i++) {
+    for(int i = 0; i < _no_pf; i++) {
         make_phi(phi_sf_container.phi_container[i], rat_inv_sf);
     }
     rootLogger.info("phi_sf: done");
 
-    for(size_t i = 0; i < _no_pf; i++) {
+    for(int i = 0; i < _no_pf; i++) {
         make_phi(phi_lf_container.phi_container[i], rat_inv_lf);
     }
     rootLogger.info("phi_lf: done");
 
     //get oldaction
-    double old_hamiltonian = get_Hamiltonian(energy_dens_old);
+    __attribute__((unused))double old_hamiltonian = get_Hamiltonian(energy_dens_old);
 
     //do the integration
     integrator.integrate(phi_lf_container, phi_sf_container);
@@ -216,7 +216,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     }
 
     //get newaction
-    double new_hamiltonian = get_Hamiltonian(energy_dens_new);
+    __attribute__((unused)) double new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
     int ret;
 
@@ -258,13 +258,13 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
 
     rootLogger.info("Constructing peudo-fermion fields");
 
-    for(size_t i = 0; i < _no_pf; i++) {
+    for(int i = 0; i < _no_pf; i++) {
         make_const_phi(phi_sf_container.phi_container[i], rat_inv_sf);
     }
 
     rootLogger.info("phi_sf: done");
 
-    for(size_t i = 0; i < _no_pf; i++) {
+    for(int i = 0; i < _no_pf; i++) {
         make_const_phi(phi_lf_container.phi_container[i], rat_inv_lf);
     }
 
@@ -274,13 +274,13 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     generate_const_momenta();
 
     //get oldaction
-    floatT old_hamiltonian = get_Hamiltonian(energy_dens_old);
+    __attribute__((unused))floatT old_hamiltonian = get_Hamiltonian(energy_dens_old);
 
     //do the integration
     integrator.integrate(phi_lf_container, phi_sf_container);
 
     //get newaction
-    floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
+    __attribute__((unused))floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
 
     int ret;
 

@@ -16,7 +16,7 @@
 
 #include "../base/indexer/haloIndexer.h"
 
-#define DEFAULT_NBLOCKS  128
+#define DEFAULT_NBLOCKS  64
 #define DEFAULT_NBLOCKS_LOOP  128
 #define DEFAULT_NBLOCKS_CONST  256
 
@@ -63,7 +63,7 @@ __host__ __device__ static dim3 GetUint3(dim3 Idx){
 
 
 template<typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
-__global__ void performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS) performFunctor(Accessor res, Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t size_x) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {
@@ -81,7 +81,7 @@ auto site = calcReadInd(dim3(blockDim), GetUint3(dim3(blockIdx)), GetUint3(dim3(
 
 
 template<size_t Nloops, typename Accessor, typename Functor, typename CalcReadInd, typename CalcWriteInd>
-__global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS_LOOP) performFunctorLoop(Accessor res, Functor op, CalcReadInd calcReadInd,
         CalcWriteInd calcWriteInd, const size_t size_x, __attribute__((unused)) size_t Nmax=Nloops) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -107,7 +107,7 @@ __global__ void performFunctorLoop(Accessor res, Functor op, CalcReadInd calcRea
 
 
 template<typename Accessor, typename Object, typename CalcReadInd, typename CalcWriteInd>
-__global__ void performCopyConstObject(Accessor res, Object ob, CalcReadInd calcReadInd,
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS_CONST) performCopyConstObject(Accessor res, Object ob, CalcReadInd calcReadInd,
         CalcWriteInd calcWriteInd, const size_t size_x) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
@@ -345,7 +345,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 #ifdef __GPUCC__
 
 template<typename Functor, typename CalcReadInd>
-__global__ void performFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t size_x) {
+__global__ void __launch_bounds__(DEFAULT_NBLOCKS) performFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t size_x) {
 
     size_t i = blockDim.x * blockIdx.x + threadIdx.x;
     if (i >= size_x) {
@@ -536,6 +536,72 @@ struct CalcGSite {
     template<typename... Args>
     inline __host__ __device__ gSite operator()(Args... args) {
         gSite site = GIndexer<LatticeLayout, HaloDepth>::getSite(args...);
+        return site;
+    }
+};
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteInnerBulk {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSite operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getCenterCoord(index);
+        gSite site = GInd::getSite(coord.x, coord.y, coord.z, coord.t);
+        return site;
+    }
+};
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteInnerBulkStack {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSiteStack operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getCenterCoord(index);
+        gSiteStack site = GInd::getSiteStack(coord.x, coord.y, coord.z, coord.t, threadidx.y);
+        return site;
+    }
+};
+
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteHalo {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSite operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getInnerCoord(index);
+        gSite site = GInd::getSite(coord.x, coord.y, coord.z, coord.t);
+        return site;
+    }
+};
+
+template<Layout LatticeLayout, size_t HaloDepth>
+struct CalcGSiteHaloStack {
+    typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+
+    inline __host__ __device__ gSiteStack operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        sitexyzt coord = HInd::getInnerCoord(index);
+        gSiteStack site = GInd::getSiteStack(coord.x, coord.y, coord.z, coord.t, threadidx.y);
+        return site;
+    }
+};
+
+
+struct CalcGSiteHaloLookup {
+    gSite* HaloSites;
+
+    CalcGSiteHaloLookup(gSite* HalSites) : HaloSites(HalSites) {}
+
+    inline __host__ __device__ gSite operator()(const dim3& blockdim, const uint3& blockidx, const uint3& threadidx) {
+        size_t index = blockdim.x*blockidx.x+threadidx.x;
+        gSite site = HaloSites[index];
         return site;
     }
 };

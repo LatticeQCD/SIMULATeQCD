@@ -20,6 +20,16 @@
 #include "../memoryManagement.h"
 #include <array>
 
+const size_t MAX_NUM_HALOSEGMENTS = 80;
+
+#ifdef COMMS_STREAMS
+const size_t MAX_NUM_STREAMS = 160;
+#else
+const size_t MAX_NUM_STREAMS = 2;
+#endif
+
+typedef std::array<gpuStream_t, MAX_NUM_STREAMS> commStreams_t;
+
 struct HaloSegmentInfo {
 private:
     gMemoryPtr<false> sendBase = MemoryManagement::getMemAt<false>("SHARED_NULL");
@@ -37,13 +47,17 @@ private:
     bool recvReqUsed = false;
     MPI_Request hostRequestSend = 0;
     MPI_Request hostRequestRecv = 0;
-    std::vector<gpuStream_t> deviceStream;
-    std::vector<bool> streamUsed;
+    gpuStream_t& sendStream;
+    gpuStream_t& receiveStream;
+    bool sendStreamUsed = false;
+    bool receiveStreamUsed = false;
 
 public:
 
-    HaloSegmentInfo() {
-        init();
+    HaloSegmentInfo(gpuStream_t &sendStream, gpuStream_t &recvStream) : sendStream(sendStream), receiveStream(recvStream) {
+        MpiType = MPI_DATATYPE_NULL;
+        hostRequestSend = MPI_REQUEST_NULL;
+        hostRequestRecv = MPI_REQUEST_NULL;
     }
 
     //! copy constructor
@@ -82,8 +96,11 @@ public:
     hostRequestRecv(source.hostRequestRecv),
 
     //! these are vectors of basic types
-    deviceStream(std::move(source.deviceStream)),
-    streamUsed(std::move(source.streamUsed))
+    // deviceStream(std::move(source.deviceStream)),
+    sendStream(source.sendStream),
+    receiveStream(source.receiveStream),
+    sendStreamUsed(std::move(source.sendStreamUsed)),
+    receiveStreamUsed(std::move(source.receiveStreamUsed))
     {
         //! make source hollow
         source.offset = 0;
@@ -146,59 +163,58 @@ public:
         return hostRequestRecv;
     }
 
-    gpuStream_t &getDeviceStream(int ind = 0) {
-        streamUsed[ind] = true;
+    // gpuStream_t &getDeviceStream(int ind = 0) {
+    //     streamUsed[ind] = true;
 
-        return deviceStream[ind];
+    //     return deviceStream[ind];
+    // }
+
+    gpuStream_t &getSendStream() {
+        sendStreamUsed = true;
+        return sendStream;
     }
 
-
-    void init(__attribute__((unused)) int deviceStreamCount = 2) {
-#ifndef CPUONLY
-    for (int i = 0; i < deviceStreamCount; ++i) {
-            addDeviceStream();
-        }
-#endif
-        MpiType = MPI_DATATYPE_NULL;
-        hostRequestSend = MPI_REQUEST_NULL;
-        hostRequestRecv = MPI_REQUEST_NULL;
+    gpuStream_t &getReceiveStream() {
+        receiveStreamUsed = true;
+        return receiveStream;
     }
 
-    int addDeviceStream() {
-        deviceStream.emplace_back();
+  
+    // int addDeviceStream() {
+    //     deviceStream.emplace_back();
 
-        int lastIndex = deviceStream.size() - 1;
-        gpuError_t gpuErr = gpuStreamCreate(&deviceStream[lastIndex]);
-        if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamCreate", gpuErr);
+    //     int lastIndex = deviceStream.size() - 1;
+    //     gpuError_t gpuErr = gpuStreamCreate(&deviceStream[lastIndex]);
+    //     if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamCreate", gpuErr);
 
-        streamUsed.emplace_back();
-        streamUsed[lastIndex] = false;
-        return lastIndex;
-    }
+    //     streamUsed.emplace_back();
+    //     streamUsed[lastIndex] = false;
+    //     return lastIndex;
+    // }
 
     void synchronizeAll() {
-        synchronizeStream();
+        synchronizeSendStream();
+        synchronizeReceiveStream();
         synchronizeRequest();
     }
 
-    void synchronizeStream(int streamIndex = -1) {
-        if (streamIndex == -1){
-            for (unsigned int i = 0; i < deviceStream.size();i++){
-                if (streamUsed[i]) {
-                    gpuError_t gpuErr = gpuStreamSynchronize(deviceStream[i]);
-                    if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamSynchronize", gpuErr);
-                    streamUsed[i] = false;
-                }
-            }
-        }
-        else {
-            if (streamUsed[streamIndex]) {
-                gpuError_t gpuErr = gpuStreamSynchronize(deviceStream[streamIndex]);
-                if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamSynchronize", gpuErr);
-                streamUsed[streamIndex] = false;
-            }
+    void synchronizeSendStream() {
+        if (sendStreamUsed) {
+                gpuError_t gpuErr = gpuStreamSynchronize(sendStream);
+                if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamSynchronize sendStream", gpuErr);
+                sendStreamUsed = false;
         }
     }
+    
+     void synchronizeReceiveStream() {
+        if (receiveStreamUsed) {
+                gpuError_t gpuErr = gpuStreamSynchronize(receiveStream);
+                if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamSynchronize receiveStream", gpuErr);
+                receiveStreamUsed = false;
+        }
+    }
+    
+    
 
     void synchronizeRequest(int sendRecv = -1) {
 
@@ -242,10 +258,12 @@ public:
     }
 
     ~HaloSegmentInfo() {
-        for (auto & i : deviceStream) {
-            gpuError_t gpuErr = gpuStreamDestroy(i);
-            if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamDestroy", gpuErr);
-        }
+
+        // gpuError_t gpuErr = gpuStreamDestroy(sendStream);
+        //     if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamDestroy sendStream", gpuErr);
+        
+        // gpuError_t gpuErr = gpuStreamDestroy(receiveStream);
+        //     if (gpuErr != gpuSuccess) GpuError("haloOffsetInfo.h: gpuStreamDestroy recieveStream", gpuErr);
 
         if ((hostRequestSend != MPI_REQUEST_NULL) && (hostRequestSend != 0)) {
             MPI_Request_free(&hostRequestSend);
@@ -274,11 +292,13 @@ private:
     bool _gpuAwareMPI;
     bool _gpuP2P;
 
-    std::array<HaloSegmentInfo,8> _hypPlaneInfo;
-    std::array<HaloSegmentInfo,24> _planeInfo;
-    std::array<HaloSegmentInfo,32> _stripeInfo;
-    std::array<HaloSegmentInfo,16> _cornerInfo;
-
+    std::vector<HaloSegmentInfo> _hypPlaneInfo;
+    std::vector<HaloSegmentInfo> _planeInfo;
+    std::vector<HaloSegmentInfo> _stripeInfo;
+    std::vector<HaloSegmentInfo> _cornerInfo;
+    
+    commStreams_t& commStreams;
+    
     gpuIPCEvent _cIPCEvent;
 
 
@@ -287,10 +307,12 @@ public:
     std::map<HaloSegment, HaloSegmentInfo *> _HalSegMapLeft;
     std::map<HaloSegment, HaloSegmentInfo *> _HalSegMapRight;
 
-    HaloOffsetInfo() = default;
+    
+
+    HaloOffsetInfo() = delete;
 
     //! constructor
-    HaloOffsetInfo(NeighborInfo &NInfo, MPI_Comm comm, int myRank, bool gpuAwareMPI = false, bool gpuP2P = false) :
+    HaloOffsetInfo(commStreams_t &cstreams, NeighborInfo &NInfo, MPI_Comm comm, int myRank, bool gpuAwareMPI = false, bool gpuP2P = false) :
             neighbor_info(NInfo),
             cart_comm(comm), _myRank(myRank),
             sendBase(MemoryManagement::getMemAt<false>("sendBase")),
@@ -299,8 +321,42 @@ public:
             recvBaseP2P(MemoryManagement::getMemAt<true>("recvBaseP2P")),
             _gpuAwareMPI(gpuAwareMPI),
             _gpuP2P(gpuP2P),
+            commStreams(cstreams),
             _cIPCEvent(cart_comm, _myRank) {
 
+#ifdef COMMS_STREAMS       
+        for (size_t i = 0; i < 2*MAX_NUM_HALOSEGMENTS; i+=2) {
+            if (i < 16) {
+                _hypPlaneInfo.push_back(HaloSegmentInfo(commStreams[i],commStreams[i+1]));
+            }
+            else if (i < 64) {
+                _planeInfo.push_back(HaloSegmentInfo(commStreams[i],commStreams[i+1]));
+            }
+            else if (i < 128) {
+                _stripeInfo.push_back(HaloSegmentInfo(commStreams[i],commStreams[i+1]));
+            }
+            else {
+                _cornerInfo.push_back(HaloSegmentInfo(commStreams[i],commStreams[i+1]));
+            }
+
+        }
+#else
+        for (size_t i = 0; i < 2*MAX_NUM_HALOSEGMENTS; i+=2) {
+            if (i < 16) {
+                _hypPlaneInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+            else if (i < 64) {
+                _planeInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+            else if (i < 128) {
+                _stripeInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+            else {
+                _cornerInfo.push_back(HaloSegmentInfo(commStreams[0],commStreams[1]));
+            }
+
+        }
+#endif
         for (auto &HypPlane : HaloHypPlanes) {
             _HalSegMapLeft[HypPlane] = _hypPlaneInfo.data();
             _HalSegMapRight[HypPlane] = _hypPlaneInfo.data();
@@ -342,7 +398,7 @@ public:
         _planeInfo(std::move(source._planeInfo)),
         _stripeInfo(std::move(source._stripeInfo)),
         _cornerInfo(std::move(source._cornerInfo)),
-
+        commStreams(source.commStreams),
         _cIPCEvent(std::move(source._cIPCEvent))
     {
         //! reset other object somewhat

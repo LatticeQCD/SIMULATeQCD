@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     rhmc_param.readfile(commBase,"../parameter/profiling/force_profiling.param", argc, argv);
 
     commBase.init(rhmc_param.nodeDim());
-
+    // commBase.forceHalos(true);
     const size_t HaloDepth = 2;
     const size_t HaloDepthSpin = 4;
     initIndexer(HaloDepth,rhmc_param,commBase);
@@ -30,12 +30,12 @@ int main(int argc, char *argv[]) {
     rat.readfile(commBase, rhmc_param.rat_file());
 
     Gaugefield<PREC, true, HaloDepth, R18> gauge(commBase);
-    Gaugefield<PREC, true, HaloDepth> gaugeLvl2(commBase,"SHARED_GAUGELVL2");
-    Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase, "SHARED_GAUGENAIK");
+    Gaugefield<PREC, true, HaloDepth> gaugeLvl2(commBase);
+    Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase);
     Gaugefield<PREC, true, HaloDepth> force(commBase);
     Gaugefield<PREC, false, HaloDepth> force_host(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin, 3> SpinorIn(commBase);
-    Spinorfield<PREC, true, Even, HaloDepthSpin, 3, 14> SpinorOutMulti(commBase,"SHARED_tmp");
+    Spinorfield<PREC, true, Even, HaloDepthSpin, 3, 14> SpinorOutMulti(commBase);
     Spinorfield<PREC, true, Even, HaloDepthSpin, 3> spinortmp(commBase);
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
@@ -63,9 +63,12 @@ int main(int argc, char *argv[]) {
     for (size_t i = 0; i <rat.r_lf_den.get().size(); ++i) {
         shifts[i] = rat.r_lf_den[i] + rhmc_param.m_ud()*rhmc_param.m_ud();;
     }
-
+    StopWatch<true> timer;
+    timer.start();
     CG14.invert(dslash,SpinorOutMulti,SpinorIn,shifts,rhmc_param.cgMax(), rhmc_param.residue());
-
+    timer.stop();
+    rootLogger.info("Time (Inversion outside of Force): ", timer);
+    timer.reset();
     SpinorIn = (PREC)rat.r_lf_const() * SpinorIn;
 
     for (size_t i = 0; i < rat.r_lf_den.get().size(); ++i) {
@@ -75,9 +78,7 @@ int main(int argc, char *argv[]) {
     SpinorIn.updateAll();
 
 
-    MemoryManagement::memorySummary();
 
-    StopWatch<true> timer;
     timer.start();
 
     ip_dot_f2_hisq.updateForce(SpinorIn,force,true);

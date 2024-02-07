@@ -122,7 +122,9 @@ write_every = 11
 
 ## Rational Approximation Coefficients
 
-There is a class holding the coefficients for the rational approximation, again it is a child class of `LatticeParameters`. To read in rational coefficients, just use
+There is a class holding the coefficients for the rational approximation, which we
+save in `.rat` files. Again, it is a child class of `LatticeParameters`. 
+To read in rational coefficients, just use
 ```C++
 RationalCoeff <YourRatCoeffObject>;
 <YourRatCoeffObject>.readfile(commBase, <YourRhmcParameterObject>.rat_file(), argc, argv);
@@ -205,7 +207,11 @@ Of course you should define the precision at the beginning of your `.cpp` file w
 #define PREC float
 ```
 
+## Correlator class normalizations
 
-
+The [correlator class](../05_modules/correlator.md) expects a lookup table to know
+how many space-time pairs of separation $r^2$ can be made. This is to normalize
+aribtrary all-to-all correlators. We keep a couple example `.norm` files also
+in the `parameter` folder.
 
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rational Hybrid Monte Carlo &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,17 +13,14 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -36,15 +33,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -54,8 +47,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gradientFlow.html">Gradient Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="multiLevel.html">Multi-level algorithm</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Rational Hybrid Monte Carlo</a></li>
@@ -78,9 +71,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="applications.html">Applications</a></li>
-      <li class="breadcrumb-item active">Rational Hybrid Monte Carlo</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="applications.html">Applications</a> &raquo;</li>
+      <li>Rational Hybrid Monte Carlo</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/03_applications/rhmc.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -90,8 +83,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="rational-hybrid-monte-carlo">
-<h1>Rational Hybrid Monte Carlo<a class="headerlink" href="#rational-hybrid-monte-carlo" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="rational-hybrid-monte-carlo">
+<h1>Rational Hybrid Monte Carlo<a class="headerlink" href="#rational-hybrid-monte-carlo" title="Permalink to this headline"></a></h1>
 <p><a class="reference external" href="https://doi.org/10.1016/S0920-5632(99)85217-7">The rational hybrid Monte Carlo (rhmc)</a>
 algorithm is a way of updating gauge fields when simulating dynamical fermions.
 At the end of the rhmc process, usually called a <em>trajectory</em>, there is a
@@ -101,34 +94,34 @@ in Monte Carlo time.</p>
 <p>The trajectory is pushed by a fictious driving force. There comes contributions from
 the gauge part of the action as well as the fermion part. Schematically, it comes
 out to something of the form</p>
-<p>$
+<p><span class="math notranslate nohighlight">\(
 F \sim -\phi^\dagger \left(D D^{\dagger}\right)^{-1}
 \left(\partial D D^{\dagger}\right)
 \left(D D^{\dagger}\right)^{-1}\phi,
-$</p>
-<p>where $\phi$ is a pseudo-fermion field, and where the $\partial$ indicates a
+\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(\phi\)</span> is a pseudo-fermion field, and where the <span class="math notranslate nohighlight">\(\partial\)</span> indicates a
 Lie group derivative. Hence we need to spend some effort finding
-the vector $X=\left(D D^{\dagger}\right)^{-1}\phi$. Since $D$ depends on the gauge
-field, we have to solve for $X$ at each step in the rhmc trajectory, which
+the vector <span class="math notranslate nohighlight">\(X=\left(D D^{\dagger}\right)^{-1}\phi\)</span>. Since <span class="math notranslate nohighlight">\(D\)</span> depends on the gauge
+field, we have to solve for <span class="math notranslate nohighlight">\(X\)</span> at each step in the rhmc trajectory, which
 makes it an important bottleneck in the rhmc algorithm. Hence it is important
 that the inversion carried out in that equation is very fast.</p>
-<p>The inverter is a <a class="reference internal" href="../05_modules/inverter.html"><span class="std std-doc">conjugate gradient</span></a>, with possibilities
+<p>The inverter is a <a class="reference internal" href="../05_modules/inverter.html"><span class="doc std std-doc">conjugate gradient</span></a>, with possibilities
 for multiple RHS and multiple shifts to boost performance.
-The <a class="reference internal" href="../05_modules/integrator.html"><span class="std std-doc">integrator</span></a> uses a leapfrog by default, but it
+The <a class="reference internal" href="../05_modules/integrator.html"><span class="doc std std-doc">integrator</span></a> uses a leapfrog by default, but it
 can use an Omelyan on the largest scale.
 We use the HISQ/tree action, which is a tree-level improved
 Lüscher-Weisz action in the gauge sector. The relative
 weights of the plaquette and rectangle terms are</p>
-<p>$
-c_\text{plaq} = 5/4,
-$</p>
-<p>$
-c_\text{rect} = -1/6.
-$</p>
+<p><span class="math notranslate nohighlight">\(
+    c_\text{plaq} = 5/4,
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+    c_\text{rect} = -1/6.
+\)</span></p>
 <p>To use the rhmc class, the user will only have to call the constructor and two functions</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rhmc</span><span class="p">(</span><span class="n">RhmcParameters</span><span class="w"> </span><span class="n">rhmc_param</span><span class="p">,</span><span class="w"> </span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="n">onDevice</span><span class="p">,</span><span class="n">All</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeField</span><span class="p">,</span><span class="w"> </span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">rand_state</span><span class="p">)</span>
-<span class="kt">void</span><span class="w"> </span><span class="n">init_ratapprox</span><span class="p">(</span><span class="n">RationalCoeff</span><span class="w"> </span><span class="n">rat</span><span class="p">)</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">update</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">metro</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">reverse</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">rhmc</span><span class="p">(</span><span class="n">RhmcParameters</span><span class="w"> </span><span class="n">rhmc_param</span><span class="p">,</span><span class="w"> </span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">floatT</span><span class="p">,</span><span class="n">onDevice</span><span class="p">,</span><span class="n">All</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="o">&amp;</span><span class="n">gaugeField</span><span class="p">,</span><span class="w"> </span><span class="n">uint4</span><span class="o">*</span><span class="w"> </span><span class="n">rand_state</span><span class="p">)</span><span class="w"></span>
+<span class="kt">void</span><span class="w"> </span><span class="n">init_ratapprox</span><span class="p">(</span><span class="n">RationalCoeff</span><span class="w"> </span><span class="n">rat</span><span class="p">)</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">update</span><span class="p">(</span><span class="kt">bool</span><span class="w"> </span><span class="n">metro</span><span class="o">=</span><span class="nb">true</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">reverse</span><span class="o">=</span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The constructor has to be called with the usual template arguments and passed
@@ -143,7 +136,7 @@ the beginning of thermalization. The second argument is <code class="docutils li
 passing <code class="docutils literal notranslate"><span class="pre">true</span></code> to update will make the updater run the trajectory forward
 and backwards for testing if the integration is reversible.</p>
 <section id="generating-rational-approximation-input-files">
-<h2>Generating rational approximation input files<a class="headerlink" href="#generating-rational-approximation-input-files" title="Link to this heading"></a></h2>
+<h2>Generating rational approximation input files<a class="headerlink" href="#generating-rational-approximation-input-files" title="Permalink to this headline"></a></h2>
 <p>A tool to generate rational approximation files written by K. Clark
 can be found in <code class="docutils literal notranslate"><span class="pre">SIMULATeQCD/src/tools/rational_approx</span></code>. One can find a document
 <code class="docutils literal notranslate"><span class="pre">explainRatApprox.pdf</span></code> by Q. Yuan explaining the idea behind the rational
@@ -151,60 +144,60 @@ approximation for the fermion determinant, as well as some of the following
 notation. The makefile <code class="docutils literal notranslate"><span class="pre">makeRatApprox</span></code> will compile the executable <code class="docutils literal notranslate"><span class="pre">ratApprox</span></code>,
 which will generate you a rational approximation file for use with the
 rhmc of SIMULATeQCD.  You can call it with</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ratApprox<span class="w"> </span>input.dat<span class="w"> </span>out.rational<span class="w"> </span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>ratApprox input.dat out.rational 
 </pre></div>
 </div>
 <p>The input file <code class="docutils literal notranslate"><span class="pre">input.dat</span></code> should be structured as</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">npff</span><span class="w">        </span><span class="c1">// Number of pseudo-fermion flavors</span>
 
-<span class="n">y1</span>
-<span class="n">y2</span>
+<span class="n">y1</span><span class="w"></span>
+<span class="n">y2</span><span class="w"></span>
 <span class="n">mprec</span><span class="w">       </span><span class="c1">// Pre-conditioner mass (reduces the condition number in CG)</span>
-<span class="n">mq</span>
-<span class="n">order1</span>
-<span class="n">order2</span>
-<span class="n">lambda_low</span>
-<span class="n">lambda_high</span>
-<span class="n">precision</span>
+<span class="n">mq</span><span class="w"></span>
+<span class="n">order1</span><span class="w"></span>
+<span class="n">order2</span><span class="w"></span>
+<span class="n">lambda_low</span><span class="w"></span>
+<span class="n">lambda_high</span><span class="w"></span>
+<span class="n">precision</span><span class="w"></span>
 </pre></div>
 </div>
 <p>One block will generate three rational approximations according to</p>
-<p>$
+<p><span class="math notranslate nohighlight">\(
 f(x) = x^{y_1/8}  (x+ m_\text{prec}^2 -m_q^2 )^{y_2/8}
-$</p>
-<p>$
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
 g(x) = x^{-y_1/8} (x+ m_\text{prec}^2 -m_q^2 )^{-y_2/8}
-$</p>
-<p>$
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
 h(x) = x^{-y_1/4} (x+ m_\text{prec}^2 -m_q^2 )^{-y_2/4}
-$</p>
-<p>with $m^2 = m_\text{prec}^2 - m_q^2$.
-An example input file for $N_f=2+1$ with standard Hasenbusch preconditioning
+\)</span></p>
+<p>with <span class="math notranslate nohighlight">\(m^2 = m_\text{prec}^2 - m_q^2\)</span>.
+An example input file for <span class="math notranslate nohighlight">\(N_f=2+1\)</span> with standard Hasenbusch preconditioning
 for the light flavors is given in <code class="docutils literal notranslate"><span class="pre">exampleInput.dat</span></code>.
 This input file has a light block and a strange block, which together
 generate six rational approximations. The light approximations are</p>
-<p>$
+<p><span class="math notranslate nohighlight">\(
 f(x) = x^{1/4}  (x + m_s^2 - m_l^2 )^{-1/4}
-$</p>
-<p>$
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
 g(x) = x^{-1/4} (x + m_s^2 - m_l^2 )^{1/4}
-$</p>
-<p>$
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
 h(x) = x^{-1/2} (x + m_s^2 + m_l^2 )^{-1/2}
-$</p>
+\)</span></p>
 <p>while the strange are</p>
-<p>$
+<p><span class="math notranslate nohighlight">\(
 f(x) = x^{3/8}
-$</p>
-<p>$
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
 g(x) = x^{-3/8}
-$</p>
-<p>$
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
 h(x) = x^{-3/4}
-$</p>
+\)</span></p>
 </section>
 <section id="update">
-<h2>Update<a class="headerlink" href="#update" title="Link to this heading"></a></h2>
+<h2>Update<a class="headerlink" href="#update" title="Permalink to this headline"></a></h2>
 <p>The update routine saves a copy of the gauge field, applies the smearing to
 the gauge field, builds the pseudo-fermion fields, generates the conjugate
 momenta and calculates the Hamiltonian.
@@ -212,28 +205,28 @@ Then it starts the MD evolution by calling <code class="docutils literal notrans
 class (the integrator object is instantiated by the rhmc constructor). After
 the MD trajectory the new Hamiltonian is calculated and - depending on the
 arguments - the Metropolis step is done.
-You can learn more about the smearing <a class="reference internal" href="../05_modules/gaugeSmearing.html"><span class="std std-doc">here</span></a>.</p>
+You can learn more about the smearing <a class="reference internal" href="../05_modules/gaugeSmearing.html"><span class="doc std std-doc">here</span></a>.</p>
 </section>
 <section id="multiple-pseudo-fermions">
-<h2>Multiple pseudo-fermions<a class="headerlink" href="#multiple-pseudo-fermions" title="Link to this heading"></a></h2>
+<h2>Multiple pseudo-fermions<a class="headerlink" href="#multiple-pseudo-fermions" title="Permalink to this headline"></a></h2>
 <p>When you want to use multiple pseudo-fermion fields, set <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> in the rhmc
 input file to the respective number. Be aware that this changes the way you
 have to construct your ratapprox: In the remez <code class="docutils literal notranslate"><span class="pre">input.dat</span></code>, if you want to
-generate $N_f$ flavors using $N_{pf}$ pseudo-fermion fields, you have to use $N_f/N_{pf}$
-as an input, (which is then used $N_{pf}$ times). Note that $N_f/N_{pf}$ must be &lt; 4.
+generate <span class="math notranslate nohighlight">\(N_f\)</span> flavors using <span class="math notranslate nohighlight">\(N_{pf}\)</span> pseudo-fermion fields, you have to use <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span>
+as an input, (which is then used <span class="math notranslate nohighlight">\(N_{pf}\)</span> times). Note that <span class="math notranslate nohighlight">\(N_f/N_{pf}\)</span> must be &lt; 4.
 <code class="docutils literal notranslate"><span class="pre">no_pf</span></code> is 1 per default.</p>
 </section>
 <section id="imaginary-chemical-potential">
-<h2>Imaginary chemical potential<a class="headerlink" href="#imaginary-chemical-potential" title="Link to this heading"></a></h2>
-<p>The rhmc has the option to generate HISQ lattices with $\mu_B=i\mu_I$. This can be accomplished
+<h2>Imaginary chemical potential<a class="headerlink" href="#imaginary-chemical-potential" title="Permalink to this headline"></a></h2>
+<p>The rhmc has the option to generate HISQ lattices with <span class="math notranslate nohighlight">\(\mu_B=i\mu_I\)</span>. This can be accomplished
 by setting the rhmc parameter <code class="docutils literal notranslate"><span class="pre">mu0</span></code> to your desired value. (The default value is 0.)
 This can be accomplished straightforwardly in lattice calculations by multiplying time-facing
-staggered phases by an appropriate function of $\mu_I$; see for instance
+staggered phases by an appropriate function of <span class="math notranslate nohighlight">\(\mu_I\)</span>; see for instance
 <a class="reference external" href="https://doi.org/10.1016/0370-2693(83)91290-X">this work</a>.</p>
 <p>In our code we implement the imaginary phase corresponding to the chemical potential
 <code class="docutils literal notranslate"><span class="pre">chmp</span></code> in <code class="docutils literal notranslate"><span class="pre">staggeredPhases.h</span></code> as:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">img_chmp</span><span class="p">.</span><span class="n">cREAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">chmp</span><span class="p">);</span>
-<span class="n">img_chmp</span><span class="p">.</span><span class="n">cIMAG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">chmp</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">img_chmp</span><span class="p">.</span><span class="n">cREAL</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">cos</span><span class="p">(</span><span class="n">chmp</span><span class="p">);</span><span class="w"></span>
+<span class="n">img_chmp</span><span class="p">.</span><span class="n">cIMAG</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sin</span><span class="p">(</span><span class="n">chmp</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 </section>

@@ -278,6 +278,36 @@ std::vector<floatT> WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gDotA
 
 };
 
+////////////// wilson loop
+
+template<class floatT, size_t HaloDepth,int stacks>
+std::vector<floatT> WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gWilsonLoop( Gaugefield<floatT,true,HaloDepth> &gauge ,Gaugefield<floatT,true,HaloDepth> &gaugeX ,int wlt,  LatticeContainer<true,floatT> &redBase){
+
+    typedef GIndexer<All,HaloDepth> GInd;
+    /// Since we run the kernel on the spacelike volume only, elems need only be size d_vol3.
+    const size_t elems = GInd::getLatData().vol3;
+    redBase.adjustSize(elems*stacks);
+
+    /// main call in this function
+    redBase.template iterateOverSpatialBulk<All, HaloDepth>(WilsonLoop<floatT,HaloDepth,All,stacks>(redBase,gauge,gaugeX,wlt));
+
+
+    /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
+    floatT vol=GInd::getLatData().globvol4;
+
+
+    std::vector<floatT> result;
+    redBase.reduceStacked(result, stacks, elems,false);
+    for (size_t i = 0; i < result.size(); i++){
+        result[i] = result[i]/(vol);
+    }
+    return result;
+};
+
+
+
+
+////////////////
 
 
 #define CLASS_INIT2(floatT, HALO) \
@@ -290,7 +320,7 @@ template class WilsonLineCorrelatorMultiGPU<floatT,HALO,96>; \
 template class WilsonLineCorrelatorMultiGPU<floatT,HALO,20>; \
 template class WilsonLineCorrelatorMultiGPU<floatT,HALO,32>; \
 template class WilsonLineCorrelatorMultiGPU<floatT,HALO,48>; \
-
+template class WilsonLineCorrelatorMultiGPU<floatT,HALO,64>; \
 
 INIT_PH(CLASS_INIT2)
 

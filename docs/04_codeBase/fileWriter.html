@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>File Writer &mdash; SIMULATeQCD 0.7 documentation</title>
@@ -13,16 +13,11 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../_static/jquery.js?v=5d32c60e"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=48f8e935"></script>
-        <script src="../_static/doctools.js?v=888ff710"></script>
-        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-        <script>let toggleHintShow = 'Click to show';</script>
-        <script>let toggleHintHide = 'Click to hide';</script>
-        <script>let toggleOpenOnPrint = 'true';</script>
-        <script src="../_static/togglebutton.js?v=bcf87968"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/togglebutton.js"></script>
         <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -36,15 +31,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            SIMULATeQCD
+            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -81,9 +72,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="codeBase.html">Code base</a></li>
-      <li class="breadcrumb-item active">File Writer</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="codeBase.html">Code base</a> &raquo;</li>
+      <li>File Writer</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/04_codeBase/fileWriter.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -93,8 +84,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="file-writer">
-<h1>File Writer<a class="headerlink" href="#file-writer" title="Link to this heading"></a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="file-writer">
+<h1>File Writer<a class="headerlink" href="#file-writer" title="Permalink to this headline"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> contains objects to help streamline output to files. The to-be-outputted data
 are stored in <code class="docutils literal notranslate"><span class="pre">LineFormatter</span></code> objects, which are essentially <code class="docutils literal notranslate"><span class="pre">ostream</span></code> objects. They automatically
 end the line whenever they are destructed; for example they will end lines automatically
@@ -107,29 +98,29 @@ this <code class="docutils literal notranslate"><span class="pre">ostream</span>
 the <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> <code class="docutils literal notranslate"><span class="pre">header()</span></code> method.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> is used extensively in the <code class="docutils literal notranslate"><span class="pre">gradientFlow</span></code> application. Very generally, the
 <code class="docutils literal notranslate"><span class="pre">FileWriter</span></code> can be used following an example like this one:</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">FileWriter</span><span class="w"> </span><span class="nf">filePolyCorrSinglet</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">latticeParameters</span><span class="p">);</span>
-<span class="n">filePolyCorrSinglet</span><span class="p">.</span><span class="n">createFile</span><span class="p">(</span><span class="s">&quot;PolyCorrFileName&quot;</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">FileWriter</span><span class="w"> </span><span class="nf">filePolyCorrSinglet</span><span class="p">(</span><span class="n">commBase</span><span class="p">,</span><span class="w"> </span><span class="n">latticeParameters</span><span class="p">);</span><span class="w"></span>
+<span class="n">filePolyCorrSinglet</span><span class="p">.</span><span class="n">createFile</span><span class="p">(</span><span class="s">&quot;PolyCorrFileName&quot;</span><span class="p">);</span><span class="w"></span>
 <span class="n">LineFormatter</span><span class="w"> </span><span class="n">newLineplc1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filePolyCorrSinglet</span><span class="p">.</span><span class="n">tag</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">/// Passes ostream to newLineplc1</span>
-<span class="n">newLineplc1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">flow_time</span><span class="p">;</span>
+<span class="n">newLineplc1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">flow_time</span><span class="p">;</span><span class="w"></span>
 <span class="c1">/// Write std::vector vec_plc1 to output file</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dx</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">dx</span><span class="o">&lt;</span><span class="n">distmax</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">dx</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">newLineplc1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">[</span><span class="n">dx</span><span class="p">];</span>
-<span class="p">}</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">dx</span><span class="o">=</span><span class="mi">0</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">dx</span><span class="o">&lt;</span><span class="n">distmax</span><span class="w"> </span><span class="p">;</span><span class="w"> </span><span class="n">dx</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">newLineplc1</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">vec_plc1</span><span class="p">[</span><span class="n">dx</span><span class="p">];</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Remember that when <code class="docutils literal notranslate"><span class="pre">newLineplc1</span></code> leaves scope, it will end the line in the output file. By
 default there will be some white space between output from the <code class="docutils literal notranslate"><span class="pre">LineFormatter</span></code>. This can be
 seen from the <code class="docutils literal notranslate"><span class="pre">fieldwidth</span></code> argument in its constructor</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LineFormatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ostr</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">tag</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">prec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">:</span>
-<span class="w">            </span><span class="n">_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">),</span><span class="w"> </span><span class="n">_ostr</span><span class="p">(</span><span class="n">ostr</span><span class="p">),</span><span class="w"> </span><span class="n">fieldwidth</span><span class="p">(</span><span class="n">prec</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">8</span><span class="p">),</span><span class="w"> </span><span class="n">endl</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LineFormatter</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">ostream</span><span class="w"> </span><span class="o">&amp;</span><span class="n">ostr</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">tag</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">prec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">space</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">true</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"></span>
+<span class="w">            </span><span class="n">_tag</span><span class="p">(</span><span class="n">tag</span><span class="p">),</span><span class="w"> </span><span class="n">_ostr</span><span class="p">(</span><span class="n">ostr</span><span class="p">),</span><span class="w"> </span><span class="n">fieldwidth</span><span class="p">(</span><span class="n">prec</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">8</span><span class="p">),</span><span class="w"> </span><span class="n">endl</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>which is then used in the <code class="docutils literal notranslate"><span class="pre">&lt;&lt;</span></code> stream operator</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span><span class="w"> </span><span class="nc">T</span><span class="o">&gt;</span>
-<span class="w">    </span><span class="n">LineFormatter</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">&amp;</span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">_ostr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="n">fieldwidth</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="k">this</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="nc">T</span><span class="o">&gt;</span><span class="w"></span>
+<span class="w">    </span><span class="n">LineFormatter</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="k">operator</span><span class="o">&lt;&lt;</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">T</span><span class="w"> </span><span class="o">&amp;</span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">_ostr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">setw</span><span class="p">(</span><span class="n">fieldwidth</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">obj</span><span class="p">;</span><span class="w"></span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="o">*</span><span class="k">this</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 </pre></div>
 </div>
 </section>
