@@ -290,7 +290,17 @@ struct LatticeData {
 
 
 };
-extern __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO + 1];
+
+// To avoid using relocatable code builds, we use static instances of the GPU constant memory for the Lattice data.
+// This means that each compilation unit will use its own. To make sure all instances are initialized with the same
+// address, we use the Ctor of a static object to register all intances so that the initialization
+// could be copied to all of them.
+__device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO + 1];
+struct globLatDataRegistor {
+    globLatDataRegistor(LatticeData &);
+};
+static globLatDataRegistor globLatDataRegistorInstance(globLatDataGPU[0]);
+
 extern struct LatticeData globLatDataCPU[MAXHALO + 1];
 
 /// --------------------------------------------------------------------------------------------- INDEXER INITIALIZATION
