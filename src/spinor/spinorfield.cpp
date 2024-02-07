@@ -87,13 +87,13 @@ double Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::real
 
         size_t elems_ = getNumberElements();
 
-        _redBase.adjustSize(elems_);
+        _redBase_real.adjustSize(elems_);
 
-        _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, 1>(
+        _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, 1>(
                 SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>(*this, y));
 
-        _redBase.reduce(result, elems_);
-        return result.cREAL;
+        _redBase_real.reduce(result, elems_);
+        return result;
     }
 }
 
@@ -304,11 +304,11 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::fusedD
     this->axpyThisPtr(norm_r2, pAp, s);
 }
 
-/// S_out *= val
-template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems size_t NStacks>
-void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::operator*=(const COMPLEX(floatT) &y) {
-    iterateOverFull(general_mult(*this, y));
-}
+/* /// S_out *= val */
+/* template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t NStacks> */
+/* void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::operator*=(const COMPLEX(floatT) &y) { */
+/*     iterateOverFull(general_mult(*this, y)); */
+/* } */
 
 
 template<class floatT, Layout LatLayout, size_t HaloDepth, typename const_T, size_t elems, size_t NStacks>
@@ -712,17 +712,17 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::xpayTh
 
 }
 
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t Nstacks>
-returnSpinor<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks>::returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks> &spinorIn) :
-        _gAcc(spinorIn.getAccessor()) {
-}
+/* template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t Nstacks> */
+/* returnSpinor<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks>::returnSpinor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks> &spinorIn) : */
+/*         _gAcc(spinorIn.getAccessor()) { */
+/* } */
 
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t Nstacks>
-__host__ __device__ Vect<floatT,elems> returnSpinor<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks>::operator()(gSiteStack site) {
-    //! Deduce gSiteStacked object for the source from the gSite object of the destination
-    gSite temp = GIndexer<LatLayout,HaloDepth>::getSite(site.coord);
-    return _gAcc.template getElement<floatT>(temp);
-}
+/* template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t Nstacks> */
+/* __host__ __device__ Vect<floatT,elems> returnSpinor<floatT, onDevice, LatLayout, HaloDepth, elems, Nstacks>::operator()(gSiteStack site) { */
+/*     //! Deduce gSiteStacked object for the source from the gSite object of the destination */
+/*     gSite temp = GIndexer<LatLayout,HaloDepth>::getSite(site.coord); */
+/*     return _gAcc.template getElement<floatT>(temp); */
+/* } */
 
 #define SPINOR_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
 template class Spinorfield<floatT,false,LO,HALOSPIN,3,STACKS>;\
@@ -767,7 +767,7 @@ template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::axpyThisB<64>(const
 template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::axpyThis(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::axpyThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::axpyThisB<32>(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>&);\
-template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::xpayThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::xpayThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,3, STACKS>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,3,STACKS>::axupbyThisB(const SimpleArray<floatT, STACKS>&, const SimpleArray<floatT, STACKS>&, const Spinorfield<floatT,true,LO,HALOSPIN,3,1>&);\
 template void Spinorfield<floatT, true, LO, HALOSPIN,3, STACKS>::axupbyThisLoop<64>(const SimpleArray<floatT, STACKS> &a, const SimpleArray<floatT, STACKS> &b, const Spinorfield<floatT, true, LO, HALOSPIN,3, 1> &y, size_t stack_entry);\
 template void Spinorfield<floatT, true, LO, HALOSPIN,3, STACKS>::axupbyThisLoopd<64>(const SimpleArray<double, STACKS> &a, const SimpleArray<double, STACKS> &b, const Spinorfield<floatT, true, LO, HALOSPIN,3, 1> &y, size_t stack_entry); \
