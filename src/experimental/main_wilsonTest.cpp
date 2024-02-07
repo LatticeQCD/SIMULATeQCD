@@ -156,22 +156,19 @@ int main(int argc, char *argv[]) {
 //    bicg.invert(wDslash, spinor_lhs, spinor_rhs, 1000, 1e-8); 
 //    bicgE.invert(wDslashEven, spinor_src, spinor_out, 1000, 1e-8); 
     
-    SpinorLHS spinor_lhs_cpu(commBase);
+    SpinorLHS_cpu spinor_lhs_cpu(commBase);
     typedef GIndexer<All, HaloDepth> Gind;
     typedef Vect<PREC, 12> Vect12;
     spinor_lhs_cpu = propagator1;
     VectArrayAcc<PREC,12> spinorAcc = spinor_lhs_cpu.getAccessor();
-    for(int t = 0 ; t < (int) Gind::getLatData().lt ; t++){
-      for(int z = 0 ; z < (int) Gind::getLatData().lz ; z++){
-        for(int y = 0 ; y < (int) Gind::getLatData().ly ; y++){
-          for(int x = 0 ; x < (int) Gind::getLatData().lx ; x++){
+    for(size_t t = 0 ; t < Gind::getLatData().lt ; t++){
+      for(size_t z = 0 ; z < Gind::getLatData().lz ; z++){
+        for(size_t y = 0 ; y < Gind::getLatData().ly ; y++){
+          for(size_t x = 0 ; x < Gind::getLatData().lx ; x++){
             gSiteStack site = Gind::getSiteStack(x,y,z,t,0);
             Vect12 vec = spinorAcc.template getElement<PREC>(site);
 
-            //rootLogger.info(x," ",y," ",z," ",t);
-            //rootLogger.info(x," ",y," ",z," ",t," : " ,vec.data[0]);
-            //rootLogger.info(x," ",y," ",z," ",t," : ", &site );
-            std::cout << vec.data[0] << std::endl;
+            rootLogger.info(x," ",y," ",z," ",t," : " ,vec);
           }
         }
       }
