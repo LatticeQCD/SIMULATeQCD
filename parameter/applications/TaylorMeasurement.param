@@ -1,0 +1,40 @@
+# input file for measurement of the derivatives of the partitionfunction with respect to the chemical potential.
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#
+#      residue: residue for inversions
+#        cgMax: max cg steps for multi mass solver
+#
+#            output_file: The file to put the individual randomvector results into. Each mass gets its own file with the respective mass prefix.
+#  collected_output_file: The file to put the accumulated end results into. Each mass gets its own file with the respective mass prefix.
+#
+#         seed: myseed
+#    Gaugefile: Configuration to be read in
+#    Eigenvectorfile: Eigenvalues and Eigenvectors to be read in
+#
+# num_random_vectors: The number of random vectors in the trace estimation for the operators
+#     valence_masses: The masses at which to measure all operators
+#       operator_ids: The operator ids to measure.
+#                     The ids represent the measured operator directly in the decimal representation.
+#                     Each digit represents a term with a derivative of order digit-1.
+#                     ID 1 is tr(D^-1), ID 11 is tr((D^-1) (D^-1)), ID 12 is tr((D^-1) (D^-1 dDdmu))
+#
+Lattice = 48 48 48 8
+Nodes = 1 1 1 1
+
+use_naik_epsilon = 0
+mu0 = 0.0
+
+residue = 1e-08
+cgMax = 20000
+
+seed = 1234
+Gaugefile = ../../test_conf/l488f21b6640m00196m0528_s0.1000
+Eigenvectorfile = ../../test_conf/trlanl488f21b6640m00196m0528_s0.1000
+
+num_random_vectors = 304
+valence_masses = 0.0528
+operator_ids = 1 2
+
+output_file = out
