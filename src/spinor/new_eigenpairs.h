@@ -1,10 +1,3 @@
-/*
- * gaugefield.h
- *
- * L. Mazur
- *
- */
-
 #pragma once
 
 #include "../define.h"
@@ -16,13 +9,13 @@
 #define PREC double
 
 template<class floatT, bool onDevice, size_t HaloDepth>
-class new_readev
+class new_eigenpairs
 {
 prorectet:
     Spinorfield
 public:
     
-    explicit new_readev(CommunicationBase &comm, std::string gaugefieldName="Gaugefield");
+    explicit new_eigenpairs(CommunicationBase &comm, std::string gaugefieldName="Gaugefield");
 
     void readconf_evnersc(const std::string &fname);
     void readconf_evnersc_host(const std::string &fname);
