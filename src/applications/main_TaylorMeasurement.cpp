@@ -10,6 +10,7 @@
 #include "../modules/dslash/condensate.h"
 #include "../testing/testing.h" // for comparing stuff
 #include "../base/IO/eigenpairs.h"
+// main
 int main(int argc, char **argv) {
 
     stdLogger.setVerbosity(INFO);
