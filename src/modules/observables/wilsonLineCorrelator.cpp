@@ -34,9 +34,6 @@ struct MeasureWilsonLineKernel{
 
         typedef GIndexer<All,HaloDepth> GInd;
         const int Nt = (int)GInd::getLatData().globLT;
-        const int Nx = (int)GInd::getLatData().globLX;
-        const int Ny = (int)GInd::getLatData().globLY;
-        const int Nz = (int)GInd::getLatData().globLZ;
 
         sitexyzt coord = site.coord;
         gSite newSite = GInd::getSite(coord[0],coord[1],coord[2],(_tau+_dtau)%Nt);

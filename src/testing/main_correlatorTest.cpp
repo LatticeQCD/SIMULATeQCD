@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     CPUfield1.one();
 
     LatticeContainerAccessor _CPUfield1(CPUfield1.getAccessor());
-    for(int m=0; m<corrTools.vol4; m++) {
+    for(size_t m=0; m<corrTools.vol4; m++) {
         _CPUfield1.getValue(m,corrScalar);
         if(corrScalar!=1.) lerror=true;
     }
@@ -164,8 +164,6 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     compareWithOne(CPUScorr, CPUSnorm, "asymmetric US 1 x 1:", corrTools.USr2max, lerror);
 
     /// ------------------------------------------------------------------------------------------- id_3 x id_3 TEST
-
-    SU3<PREC> id_3 = su3_one<PREC>();
 
     CorrField<false,SU3<PREC>> CPUfield3(commBase, corrTools.vol4);
     CorrField<false,SU3<PREC>> CPUfield4(commBase, corrTools.vol4);
@@ -231,7 +229,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         SU3Accessor<PREC> _gauge(gauge.getAccessor());
 
         /// Load gauge fields
-        for(int m=0; m<corrTools.vol4; m++) {
+        for(size_t m=0; m<corrTools.vol4; m++) {
             _CPUfield3.setValue(m, _gauge.getLink(GInd::getSiteMu(m,2)));
             _CPUfield4.setValue(m, _gauge.getLink(GInd::getSiteMu(m,3)));
         }
@@ -260,7 +258,6 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
             for (int nt = 0; nt < corrTools.Nt; nt++) {
 
                 n=GInd::getSite(nx,ny,nz,nt).isite;
-                gSite site = GInd::getSite(mx,my,mz,mt);
                 _CPUfield4.getValue<SU3<PREC>>(n,field2);
 
                 dx = nx-mx;
@@ -380,7 +377,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         LatticeContainerAccessor _CPUSfield4(CPUSfield4.getAccessor());
 
         /// Load gauge fields
-        for(int m=0; m<corrTools.vol3; m++) { /// If it doesn't work, check this guy maybe he's the reason
+        for(size_t m=0; m<corrTools.vol3; m++) { /// If it doesn't work, check this guy maybe he's the reason
             _CPUSfield3.setValue(m, _gauge.getLink(GInd::getSiteSpatialMu(m,2)));
             _CPUSfield4.setValue(m, _gauge.getLink(GInd::getSiteSpatialMu(m,3)));
         }

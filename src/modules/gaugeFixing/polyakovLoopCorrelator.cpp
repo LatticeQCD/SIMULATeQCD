@@ -92,7 +92,7 @@ struct PloopCorrOnAxisKernel : CorrelatorTools<floatT, true, HaloDepth> {
         SU3<floatT> polm,poln;
         floatT       avg,sin,oct,plcx,plcy,plcz;
 
-        if(dx<(this->RSxmax)) {
+        if((int)dx<(this->RSxmax)) {
             /// This is the part where we grab the on-axis calculations that were already done in the above kernel.
             _plcaoff.getValue<floatT>(dx      ,plcx);
             _plcaoff.getValue<floatT>(dx*(this->pvol1),plcy);
@@ -154,7 +154,6 @@ void PolyakovLoopCorrelator<floatT,onDevice,HaloDepth>::PLCtoArrays(std::vector<
                                                                     std::vector<int> &vec_weight,
                                                                     bool fastCorr) {
 
-    typedef GIndexer<All,HaloDepth> GInd;
 
     int psite,qnorm,g;
 

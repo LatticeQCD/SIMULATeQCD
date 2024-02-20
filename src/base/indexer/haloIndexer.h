@@ -268,9 +268,17 @@ private:
 
 };
 
+// To avoid using relocatable code builds, we use static instances of the GPU constant memory for the Halo data.
+// This means that each compilation unit will use its own. To make sure all instances are initialized with the same
+// address, we use the Ctor of a static object to register all intances so that the initialization
+// could be copied to all of them.
+__device__ __constant__ struct HaloData globHalDataGPU[MAXHALO + 1];
+__device__ __constant__ struct HaloData globHalDataGPUReduced[MAXHALO + 1];
+struct globHalDataRegistor {
+    globHalDataRegistor(HaloData &, HaloData &);
+};
+static globHalDataRegistor globHalDataRegistorInstance(globHalDataGPU[0], globHalDataGPUReduced[0]);
 
-extern __device__ __constant__ struct HaloData globHalDataGPU[MAXHALO + 1];
-extern __device__ __constant__ struct HaloData globHalDataGPUReduced[MAXHALO + 1];
 extern struct HaloData globHalDataCPU[MAXHALO + 1];
 extern struct HaloData globHalDataCPUReduced[MAXHALO + 1];
 
