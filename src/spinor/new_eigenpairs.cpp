@@ -1,5 +1,5 @@
 #include "new_eigenpairs.h"
-#include "../base/IO/nersc.h"
+#include "../base/IO/evnersc.h"
 #include "../base/latticeParameters.h"
 #include <fstream>
 
@@ -9,9 +9,12 @@ void new_eigenpairs<floatT, onDevice, HaloDepth>::readconf_evnersc(const std::st
 
     if(onDevice) {
         rootLogger.info("readconf_evnersc: Reading NERSC configuration ",fname);
-        readconf_evnersc_host(fname);
+        gVect3array<floatT, false> eigenvector_host;
+        readconf_evnersc_host(eigenvector_host.getAccessor(), fname);
+        eigenvectors.copyFrom(eigenvector_host);
+
     } else {
-        readconf_evnersc_host(fname);
+        readconf_evnersc_host(getAccessor(), fname);
     }
     this->su3latunitarize();
 }

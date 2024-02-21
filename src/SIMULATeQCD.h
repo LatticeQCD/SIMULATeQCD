@@ -43,6 +43,7 @@
 #include "base/IO/milc.h"
 #include "base/IO/misc.h"
 #include "base/IO/nersc.h"
+#include "base/IO/evnersc.h"
 #include "base/IO/parameterManagement.h"
 
 #include "base/math/correlators.h"
@@ -85,4 +86,5 @@
 #include "gauge/constructs/RectConstructs.h"
 
 #include "spinor/spinorfield.h"
+#include "spinor/new_eigenpairs.h"
 
