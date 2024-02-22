@@ -96,20 +96,16 @@ template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t
 std::vector<double> Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks>::realdotProductStacked(
         const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &y)
 {
-    std::vector<COMPLEX(double)> result_complex;
+    std::vector<double> result;
     size_t elems = getNumberElements();
 
-    _redBase.adjustSize(elems);
+    _redBase_real.adjustSize(elems);
 
-    _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
+    _redBase_real.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
             SpinorrealDotProduct<floatT, onDevice, LatLayout, HaloDepth, NStacks>(*this, y));
 
-    _redBase.reduceStacked(result_complex, NStacks, getNumberLatticePoints(), true);
-    std::vector<double> result;
-    result.resize(result_complex.size());
-    for (size_t i = 0; i < result.size(); i++){
-        result[i] = result_complex[i].cREAL;
-    }
+    _redBase_real.reduceStacked(result, NStacks, getNumberLatticePoints(), true);
+    
     return result;
 }
 
