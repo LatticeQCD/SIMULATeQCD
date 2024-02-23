@@ -135,7 +135,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
                                                                                    const size_t elems_y,
                                                                                    const size_t elems_z,
                                                                                    __attribute__((unused)) gpuStream_t stream){
-    AutoTimer<onDevice> marker(type_name<Functor>(), "KernelCall");
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCall");
     dim3 blockDim;
 
     blockDim.x = BlockSize/(elems_y * elems_z);
@@ -198,7 +198,7 @@ template<bool onDevice, class Accessor>
 template<size_t Nloops, unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t elems_x, const size_t elems_y, const size_t elems_z,__attribute__((unused)) gpuStream_t stream, size_t Nmax) {
-    AutoTimer<onDevice> marker(type_name<Functor>(), "KernelCall");
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCall");
 
     dim3 blockDim;
 
@@ -278,7 +278,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
         const size_t elems_y,
         const size_t elems_z,
         __attribute__((unused)) gpuStream_t stream ){
-    AutoTimer<onDevice> marker(type_name<Object>(), "KernelCall (const object)");
+    AutoTimer<onDevice,TRACE> marker(type_name<Object>(), "KernelCall (const object)");
 
     dim3 blockDim;
 
@@ -365,7 +365,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
         const size_t elems_y = 1,
         const size_t elems_z = 1,
         __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
-    AutoTimer<onDevice> marker(type_name<Functor>(), "KernelCallNoReturn");
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCallNoReturn");
 
     dim3 blockDim;
 
@@ -450,7 +450,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
                                    const size_t elems_y = 1,
                                    const size_t elems_z = 1,
                                    __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
-    AutoTimer<onDevice> marker(type_name<Functor>(), "KernelCallComms");
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCallComms");
 
     dim3 blockDim;
 
