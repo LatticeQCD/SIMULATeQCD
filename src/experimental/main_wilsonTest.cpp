@@ -2,7 +2,7 @@
 #include "fullSpinor.h"
 #include "fullSpinorfield.h"
 #include "gammaMatrix.h"
-#include "WilsonPropagator.h"
+#include "wilsonPropagator.h"
 #include "../modules/observables/fieldStrengthTensor.h"
 #include "biCG.h"
 #include "../base/IO/fileWriter.h"
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
     WilsonDslashEven<PREC, true, HaloDepth, SpinorEVEN, SpinorEVEN > wDslashEven(gauge, param.kappa(), param.c_sw());
 
     BiCGStabInverter<PREC, true, HaloDepth, SpinorLHS> bicg;
-    BiCGStabInverterEven<PREC, true, HaloDepth, SpinorEVEN> bicgE;
+ //   BiCGStabInverterEven<PREC, true, HaloDepth, SpinorEVEN> bicgE;
 
     grnd_state<true> d_rand;
     initialize_rng(1337, d_rand);
