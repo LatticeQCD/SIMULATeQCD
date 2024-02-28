@@ -60,15 +60,17 @@ int main(int argc, char *argv[]) {
     typedef GIndexer<All, HaloDepth> Gind;
     typedef Vect<PREC, 12> Vect12;
     spinor_lhs_cpu = spinor_lhs;
-    VectArrayAcc<PREC,12> spinorAcc = spinor_lhs_cpu.getAccessor();
+    SpinorColorAcc spinorAcc = spinor_lhs_cpu.getAccessor();
     for(size_t t = 0 ; t < Gind::getLatData().lt ; t++){
       for(size_t z = 0 ; z < Gind::getLatData().lz ; z++){
         for(size_t y = 0 ; y < Gind::getLatData().ly ; y++){
           for(size_t x = 0 ; x < Gind::getLatData().lx ; x++){
             gSiteStack site = Gind::getSiteStack(x,y,z,t,0);
-            Vect12 vec = spinorAcc.template getElement<PREC>(site);
-
-            rootLogger.info(x," ",y," ",z," ",t," : " ,vec);
+            ColorVect<PREC> vec = spinorAcc.getColorVect(site);
+            rootLogger.info(x," ",y," ",z," ",t,", i=0: " ,vec[0]);
+            rootLogger.info(x," ",y," ",z," ",t,", i=1: " ,vec[1]);
+            rootLogger.info(x," ",y," ",z," ",t,", i=2: " ,vec[2]);
+            rootLogger.info(x," ",y," ",z," ",t,", i=3: " ,vec[3]);
           }
         }
       }
