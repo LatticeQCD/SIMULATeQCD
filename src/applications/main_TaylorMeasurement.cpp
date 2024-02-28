@@ -8,6 +8,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/TaylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
+#include "../spinor/new_eigenpairs.h"
 #include "../testing/testing.h" // for comparing stuff
 // #include "../base/IO/eigenpairs.h"
 
@@ -56,8 +57,8 @@ int main(int argc, char **argv) {
     const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
     // ReadEV(param.EigenvectorfileName().c_str(), nvec, sizeh);
     new_eigenpairs<PREC,true,All,HaloDepthSpin,NStacks> eigenpairs(commBase);
-    rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
-    eigenpairs.readconf_evnersc(param.EigenvectorfileName());
+    // rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
+    // eigenpairs.readconf_evnersc(param.EigenvectorfileName());
 
     // if (param.valence_masses.numberValues() == 0) {
     //     rootLogger.error("No valence masses specified, aborting");
