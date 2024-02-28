@@ -53,9 +53,9 @@ int main(int argc, char **argv) {
     gauge.updateAll();
     // Read the Eigenvalues and Eigenvectors
     // std::vector<Spinorfield<PREC, true, All, HaloDepthSpin, NStacks>> eigenvectors;
-    // const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
+    const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
     // ReadEV(param.EigenvectorfileName().c_str(), nvec, sizeh);
-    new_eigenpairs<PREC,true,HaloDepth> eigenpairs(commBase);
+    new_eigenpairs<PREC,true,All,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
     eigenpairs.readconf_evnersc(param.EigenvectorfileName());
 
