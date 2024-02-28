@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../base/math/vect3.h"
-#include "../base/math/vectArray.h"
+#include "../../base/math/vect3.h"
+#include "../../base/math/vectArray.h"
 #include "gammaMatrix.h"
 #include <array>
 

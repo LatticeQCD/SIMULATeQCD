@@ -135,6 +135,7 @@ typedef floatT floatT_inner;
 
     void unit_basis(const int& i);
     void one();
+    void zero();
    
     void fusedDotProdAndaxpy(spin_t &pi, const spin_t &s, gMemoryPtr<onDevice> pAp, gMemoryPtr<onDevice> norm_r2);
 

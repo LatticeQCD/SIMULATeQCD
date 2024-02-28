@@ -1,11 +1,12 @@
-#include "../simulateqcd.h"
+#include "../../simulateqcd.h"
 #include "fullSpinor.h"
 #include "fullSpinorfield.h"
 #include "gammaMatrix.h"
 #include "wilsonPropagator.h"
-#include "../modules/observables/fieldStrengthTensor.h"
+#include "../../modules/observables/fieldStrengthTensor.h"
 #include "biCG.h"
-#include "../base/IO/fileWriter.h"
+#include "../../base/IO/fileWriter.h"
+
 struct WilsonParameters : LatticeParameters {
     Parameter<double> kappa;
     Parameter<double> c_sw;
@@ -27,11 +28,6 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
     WilsonParameters param;
     param.readfile(commBase, "../parameter/tests/wilsonTest.param", argc, argv);
-    commBase.init(param.nodeDim());
-    //const int LatDim[] = {20, 20, 20, 20};
-    //const int NodeDim[] = {1, 1, 1, 1};
-    //param.latDim.set(LatDim);
-    //param.nodeDim.set(NodeDim);
     commBase.init(param.nodeDim());
 
     const size_t HaloDepth = 0;
@@ -56,21 +52,7 @@ int main(int argc, char *argv[]) {
     SpinorEVEN spinor_out(commBase);
     SpinorEVEN spinor_odd(commBase);
     
-    const std::string& format = param.format();
-    std::string Gaugefile = param.GaugefileName();
-    //Our gaugefield
-    if (format == "nersc") {
-        gauge.readconf_nersc(Gaugefile);
-    } else if (format == "ildg") {
-        gauge.readconf_ildg(Gaugefile);
-    } else if (format == "milc") {
-        gauge.readconf_milc(Gaugefile);
-    } else if (format == "openqcd") {
-        gauge.readconf_openqcd(Gaugefile);
-    } else {
-        throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
-    }
-
+    gauge.readconf(param.GaugefileName(), param.format());
     gauge.updateAll();
 
 //    WilsonPropagator<PREC> point_source;

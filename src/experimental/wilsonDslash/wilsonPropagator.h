@@ -1,7 +1,7 @@
 #pragma once
-#include "../define.h"
-#include "../base/math/complex.h"
-#include "../base/math/su3.h"
+#include "../../define.h"
+#include "../../base/math/complex.h"
+#include "../../base/math/su3.h"
 
 template <typename floatT>
 struct WilsonPropagator {

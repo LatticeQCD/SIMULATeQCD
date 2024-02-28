@@ -878,17 +878,24 @@ add_to_compound_SIMULATeQCD_target(examples wilsonLinesFieldsShared)
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: EXPERIMENTAL
 
-set_SIMULATeQCD_gpu_backend(src/experimental/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
-add_SIMULATeQCD_executable(wilsonloop src/experimental/main_wilsonloop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp )
-set_SIMULATeQCD_property(wilsonloop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
-SIMULATeQCD_target_compile_definitions(wilsonloop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
-add_to_compound_SIMULATeQCD_target(experimental wilsonloop)
+set_SIMULATeQCD_gpu_backend(src/experimental/wilsonLoop/main_wilsonLoop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp)
+add_SIMULATeQCD_executable(wilsonLoop src/experimental/wilsonLoop/main_wilsonLoop.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp )
+set_SIMULATeQCD_property(wilsonLoop PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
+SIMULATeQCD_target_compile_definitions(wilsonLoop PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
+add_to_compound_SIMULATeQCD_target(experimental wilsonLoop)
 
-set_SIMULATeQCD_gpu_backend(src/experimental/main_wilsonTest.cpp src/experimental/fullSpinorfield.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(wilsonTest src/experimental/main_wilsonTest.cpp src/experimental/fullSpinorfield.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_gpu_backend(src/experimental/wilsonDslash/main_wilsonTest.cpp src/experimental/wilsonDslash/fullSpinorfield.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(wilsonTest src/experimental/wilsonDslash/main_wilsonTest.cpp src/experimental/wilsonDslash/fullSpinorfield.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(wilsonTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
 SIMULATeQCD_target_compile_definitions(wilsonTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1 SINGLEPREC=1 NSTACKS_1=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(experimental wilsonTest)
+
+set_SIMULATeQCD_gpu_backend(src/experimental/wilsonDslash/main_printWilsonDslash.cpp src/experimental/wilsonDslash/fullSpinorfield.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(printWilsonDslash src/experimental/wilsonDslash/main_printWilsonDslash.cpp src/experimental/wilsonDslash/fullSpinorfield.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(printWilsonDslash PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
+SIMULATeQCD_target_compile_definitions(printWilsonDslash PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1 SINGLEPREC=1 NSTACKS_1=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(experimental printWilsonDslash)
+
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS
 

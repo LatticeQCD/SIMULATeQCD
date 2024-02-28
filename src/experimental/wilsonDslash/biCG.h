@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../gauge/gaugefield.h"
-#include "../spinor/spinorfield.h"
-#include "../base/math/simpleArray.h"
-#include "../modules/inverter/inverter.h"
-#include "../base/latticeContainer.h"
+#include "../../gauge/gaugefield.h"
+#include "../../spinor/spinorfield.h"
+#include "../../base/math/simpleArray.h"
+#include "../../modules/inverter/inverter.h"
+#include "../../base/latticeContainer.h"
 #include "utilities.h"
 #include "wilsonDslash.h"
 

@@ -45,6 +45,13 @@ void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::one()
     this->updateAll();
 }
 
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t NStacks>
+void Spinorfield<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>::zero()
+{
+    iterateWithConst(vect_zero<floatT,elems>());
+    this->updateAll();
+}
+
 
 /// val = s_in * s_out
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t elems, size_t NStacks>

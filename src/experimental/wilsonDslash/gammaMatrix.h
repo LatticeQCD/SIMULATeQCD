@@ -1,6 +1,6 @@
 #pragma once
-#include "../define.h"
-#include "../base/math/complex.h"
+#include "../../define.h"
+#include "../../base/math/complex.h"
 
 template <typename floatT>
 struct FourMatrix {
