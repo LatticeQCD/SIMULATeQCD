@@ -8,11 +8,12 @@
 // #include "../base/communication/siteComm.h"
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
-class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>
+, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _lattice;
-    LatticeContainer<onDevice,GCOMPLEX(double)> _redBase;
+    // LatticeContainer<onDevice,GCOMPLEX(double)> _redBase;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
@@ -24,16 +25,14 @@ private:
 public:
 
     explicit new_eigenpairs(CommunicationBase &comm, std::string eigenpairsName="eigenpairsName") :
-            siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
-            gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
-            _lattice( (int)(NStacks*( (LatticeLayout == All) ? GInd::getLatData().vol4Full : GInd::getLatData().sizehFull )), eigenpairsName ),
-            _redBase(comm)
+            siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
+            _lattice(comm)
     {
-        if (LatticeLayout == All){
-            _lattice.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
-        }else{
-            _lattice.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
-        }
+        // if (LatticeLayout == All){
+        //     _lattice.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
+        // }else{
+        //     _lattice.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
+        // }
     }
 
     void readconf_evnersc(const std::string &fname);

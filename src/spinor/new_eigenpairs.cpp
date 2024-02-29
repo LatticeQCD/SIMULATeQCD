@@ -9,9 +9,9 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
     if(onDevice) {
         rootLogger.info("readconf_evnersc: Reading NERSC configuration ",fname);
-        new_eigenpairs<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host;
+        new_eigenpairs<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(comm);
         readconf_evnersc_host(lattice_host.getAccessor(), fname);
-        _lattice.copyFrom(lattice_host);
+        _lattice.copyFromStackToStack(lattice_host, onDevice, LatticeLayout, HaloDepth, NStacks);
 
     } else {
         readconf_evnersc_host(getAccessor(), fname);
@@ -40,3 +40,22 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
         throw std::runtime_error(stdLogger.fatal("Error checksum!"));
     }
 }
+
+
+// template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
+// returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const Spinorfield<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
+//         _gAcc(spinorIn.getAccessor()) {
+// }
+
+#define EIGEN_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
+template class new_eigenpairs<floatT,false,LO,HALOSPIN,STACKS>;\
+// template struct returnSpinor<floatT,false,LO,HALOSPIN,STACKS>;\
+
+INIT_PLHSN(EIGEN_INIT_PLHSN)
+
+#define EIGEN_INIT_PLHSN_HALF(floatT,LO,HALOSPIN,STACKS)\
+template class new_eigenpairs<floatT,true,LO,HALOSPIN,STACKS>;\
+// template struct returnSpinor<floatT,true,LO,HALOSPIN,STACKS>;\
+
+INIT_PLHSN_HALF(EIGEN_INIT_PLHSN_HALF)
+
