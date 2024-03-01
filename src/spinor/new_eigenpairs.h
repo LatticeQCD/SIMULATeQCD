@@ -4,6 +4,8 @@
 #include "../define.h"
 #include "../base/math/gvect3array.h"
 #include "../base/LatticeContainer.h"
+#include "../base/communication/siteComm.h"
+#include "../base/communication/communicationBase.h"
 #include "spinorfield.h"
 // #include "../base/communication/siteComm.h"
 
@@ -24,19 +26,21 @@ private:
 
 public:
 
-    explicit new_eigenpairs(CommunicationBase &comm, std::string eigenpairsName="eigenpairsName") :
+    explicit new_eigenpairs(CommunicationBase &comm) :
             siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
-            _lattice(comm)
-    {
-        // if (LatticeLayout == All){
-        //     _lattice.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks);
-        // }else{
-        //     _lattice.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
-        // }
-    }
+            _lattice(comm){}
 
     void readconf_evnersc(const std::string &fname);
     void readconf_evnersc_host(gVect3arrayAcc<floatT> gVect3arrayAcc, const std::string &fname);
 
     virtual gVect3arrayAcc<floatT> getAccessor() const;
+};
+
+
+template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
+struct returnEigen {
+    gVect3arrayAcc<floatT> _gAcc;
+
+    explicit returnEigen(const new_eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn);
+    __host__ __device__ gVect3<floatT> operator()(gSiteStack site);
 };
