@@ -10,12 +10,10 @@
 // #include "../base/communication/siteComm.h"
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks = 1>
-class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>
-, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _lattice;
-    // LatticeContainer<onDevice,GCOMPLEX(double)> _redBase;
 
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 

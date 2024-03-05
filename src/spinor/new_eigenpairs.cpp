@@ -6,13 +6,13 @@
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(const std::string &fname) 
-{
+{   
+    // const size_t NStacks2 = 0;
     if(onDevice) {
         rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
         new_eigenpairs<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
-        // readconf_evnersc_host(lattice_host.getAccessor(), fname);
-        // _lattice.copyFromStackToStack(lattice_host, onDevice, NStacks);
-
+        readconf_evnersc_host(lattice_host.getAccessor(), fname);
+        _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
     } else {
         readconf_evnersc_host(getAccessor(), fname);
     }
@@ -22,6 +22,7 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT>, const std::string &fname)
 {
+    rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
     // evNerscFormat<HaloDepth> evnersc(this->getComm());
     // typedef GIndexer<All,HaloDepth> GInd;
 
@@ -50,6 +51,7 @@ returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const 
 #define EIGEN_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
 template class new_eigenpairs<floatT,false,LO,HALOSPIN,STACKS>;\
 template struct returnEigen<floatT,false,LO,HALOSPIN,STACKS>;\
+
 
 INIT_PLHSN(EIGEN_INIT_PLHSN)
 

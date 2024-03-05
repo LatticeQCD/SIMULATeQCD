@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
     commBase.init(param.nodeDim());
 
-    const int HaloDepth = 2; // >= 1 for multi gpu
+    const int HaloDepth = 1; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
     const int nvec= 304; // number of vectors to be read
     const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
@@ -52,12 +52,13 @@ int main(int argc, char **argv) {
     rootLogger.info("Read configuration from ", param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
+    
     // Read the Eigenvalues and Eigenvectors
     // std::vector<Spinorfield<PREC, true, All, HaloDepthSpin, NStacks>> eigenvectors;
     const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
     // ReadEV(param.EigenvectorfileName().c_str(), nvec, sizeh);
     new_eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
-    // rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
+    rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
     // eigenpairs.readconf_evnersc(param.EigenvectorfileName());
 
     // if (param.valence_masses.numberValues() == 0) {
