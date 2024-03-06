@@ -8,9 +8,7 @@
 #include "../SIMULATeQCD.h"
 #include "../modules/observables/TaylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
-// #include "../spinor/new_eigenpairs.h"
 #include "../testing/testing.h" // for comparing stuff
-// #include "../base/IO/eigenpairs.h"
 
 #define PREC double
 // main
@@ -30,7 +28,7 @@ int main(int argc, char **argv) {
 
     const int HaloDepth = 1; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
-    const int nvec= 304; // number of vectors to be read
+    // const int nvec= 304; // number of vectors to be read
     const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
 
@@ -48,10 +46,10 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    Gaugefield<PREC,true,HaloDepth> gauge(commBase);      /// gauge field
-    rootLogger.info("Read configuration from ", param.GaugefileName());
-    gauge.readconf_nersc(param.GaugefileName());
-    gauge.updateAll();
+    // Gaugefield<PREC,true,HaloDepth> gauge(commBase);      /// gauge field
+    // rootLogger.info("Read configuration from ", param.GaugefileName());
+    // gauge.readconf_nersc(param.GaugefileName());
+    // gauge.updateAll();
     
     // Read the Eigenvalues and Eigenvectors
     // std::vector<Spinorfield<PREC, true, All, HaloDepthSpin, NStacks>> eigenvectors;
@@ -59,7 +57,7 @@ int main(int argc, char **argv) {
     // ReadEV(param.EigenvectorfileName().c_str(), nvec, sizeh);
     new_eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
-    // eigenpairs.readconf_evnersc(param.EigenvectorfileName());
+    eigenpairs.readconf_evnersc(param.EigenvectorfileName());
 
     // if (param.valence_masses.numberValues() == 0) {
     //     rootLogger.error("No valence masses specified, aborting");
