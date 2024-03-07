@@ -25,24 +25,6 @@ private:
                                          // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
-    //compute checksum of 'bytes' bytes at beginning of buffer
-    uint32_t checksum(size_t bytes) {
-        uint32_t result = 0;
-        uint32_t *dat = (uint32_t *) &buf[0];
-        for (size_t i = 0; i < bytes / 4; i++)
-            result += dat[i];
-        return result;
-    }
-
-    template<class floatT>
-    uint32_t checksum(GSU3<floatT> U) {
-        if (float_size == 4)
-            to_buf((float *) &buf[0], U);
-        else if (float_size == 8)
-            to_buf((double *) &buf[0], U);
-        return checksum(su3_size);
-    }
-
 public:
 
     evNerscFormat(CommunicationBase &comm) : comm(comm) {
@@ -54,6 +36,10 @@ public:
         computed_checksum = 0;
         index = 0;
     }
+
+    // size_t bytes_per_site() const {
+    //     return 4 * su3_size;
+    // }
 };
 
 

@@ -100,10 +100,10 @@ typedef floatT floatT_inner;
 
     template<bool onDevice2, size_t NStacks2>
     void copyFromStackToStack(const Spinorfield<floatT, onDevice2, LatticeLayout, HaloDepth, NStacks2> &spinorRHS, size_t stackSelf, size_t stackSrc){
-        if (stackSelf >= NStacks){
+        if (stackSelf > NStacks){
             throw std::runtime_error(stdLogger.fatal("stackSelf larger than NStacks"));
         }
-        if (stackSrc >= NStacks2){
+        if (stackSrc > NStacks2){
             throw std::runtime_error(stdLogger.fatal("stackSrc larger than NStacks"));
         }
         _lattice.copyFromPartial(spinorRHS.getArray(), getNumberLatticePointsFull(), getNumberLatticePointsFull() * stackSelf,

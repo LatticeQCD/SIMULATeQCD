@@ -1,5 +1,6 @@
 #include "new_eigenpairs.h"
 #include "../base/IO/evnersc.h"
+#include "../base/IO/nersc.h"
 #include "../base/latticeParameters.h"
 #include <fstream>
 
@@ -21,29 +22,21 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT>, const std::string &fname)
 {
-    rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
-    evNerscFormat<HaloDepth> evnersc(this->getComm());
+    NerscFormat<HaloDepth> nersc(this->getComm());
     // typedef GIndexer<All,HaloDepth> GInd;
 
     std::ifstream in;
-    int nvec = NStacks;
-    double lambda;
-    float vec31[8];
-    // float vec32[8];
-    int sizeh=48*48*48*8/2;
+
+    int sizeh=nersc.bytes_per_site();
+    rootLogger.info("sizeh ", sizeh);
+
     if (this->getComm().IamRoot()) {
         in.open(fname.c_str());
-        for(int i=0; i<nvec-1; i++){
-            in.read( (char*) &lambda, sizeof(double) );
-            printf("lambda[%d]=%le\n",i,lambda);
-            in.read( (char*) &vec31, sizeof(float)*8 );
-            in.ignore( (sizeh-2)*sizeof(float)*8 );
-            // in.read( (char*) &vec32, sizeof(float)*8 );
-            printf("cvect3[%d]={{(%e,%e)(%e,%e)(%e,%e)}\n",i,vec31[0],vec31[1],vec31[2],vec31[3],vec31[4],vec31[5]);
-            // printf("   ... {(%e,%e)(%e,%e)(%e,%e)}}\n",vec32[0],vec32[1],vec32[2],vec32[3],vec32[4],vec32[5]);
-            printf("\n");
-        }
-    in.close();
+        // for(int i=0; i<8-1; i++){
+        //     in.ignore(sizeof(double));
+        //     in.read( (char*) &vec, sizeof(float)*8 );
+        // }
+        in.close();
     }
 }
 
