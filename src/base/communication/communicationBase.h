@@ -328,6 +328,8 @@ public:
 
     void closeIOBinary();
 
+    void SetFileView(size_t displacement);
+
     static std::string gpuAwareMPICheck();
 
     std::string getLocalInfoString() const;

@@ -6,38 +6,46 @@
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(const std::string &fname) 
-{   
+void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
     if(onDevice) {
         rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
-        readconf_evnersc_host(lattice_host.getAccessor(), fname);
-        _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
+        readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
+        // _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
     } else {
-        readconf_evnersc_host(getAccessor(), fname);
+        readconf_evnersc_host(getAccessor(), nvec, fname);
     }
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT>, const std::string &fname)
+void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT>, int nvec, const std::string &fname)
 {
-    NerscFormat<HaloDepth> nersc(this->getComm());
-    // typedef GIndexer<All,HaloDepth> GInd;
+    // NerscFormat<HaloDepth> nersc(this->getComm());
+    evNerscFormat<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> evnersc(this->getComm());
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    double vec[nvec];
+
+    int sizeh=evnersc.bytes_per_site();
+    rootLogger.info("sizeh ", sizeh);
 
     std::ifstream in;
 
-    int sizeh=nersc.bytes_per_site();
-    rootLogger.info("sizeh ", sizeh);
-
     if (this->getComm().IamRoot()) {
         in.open(fname.c_str());
-        // for(int i=0; i<8-1; i++){
-        //     in.ignore(sizeof(double));
-        //     in.read( (char*) &vec, sizeof(float)*8 );
-        // }
-        in.close();
+        for(int i=0; i<nvec; i++){
+            in.ignore(sizeof(double));
+            in.read( (char*) &vec, sizeof(float)*8 );
+        }
+        // rootLogger.info("test 40");
     }
+
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+
+    this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
+    
 }
 
 

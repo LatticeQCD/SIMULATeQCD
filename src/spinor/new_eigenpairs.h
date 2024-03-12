@@ -14,6 +14,8 @@ class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
 {
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _lattice;
+    std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>> spinors;
+
 private:
 
     new_eigenpairs(const new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &) = delete;
@@ -26,8 +28,8 @@ public:
             siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _lattice(comm){}
 
-    void readconf_evnersc(const std::string &fname);
-    void readconf_evnersc_host(gVect3arrayAcc<floatT> gVect3arrayAcc, const std::string &fname);
+    void readconf_evnersc(int nvec,const std::string &fname);
+    void readconf_evnersc_host(gVect3arrayAcc<floatT> gVect3arrayAcc, int nvec, const std::string &fname);
     
     virtual gVect3arrayAcc<floatT> getAccessor() const;
 };

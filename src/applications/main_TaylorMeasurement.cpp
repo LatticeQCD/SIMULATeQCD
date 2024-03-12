@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
     const int HaloDepth = 2; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
-    // const int nvec= 304; // number of vectors to be read
+    const int nvec= 304; // number of vectors to be read
     const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
 
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     // Read the Eigenvalues and Eigenvectors
     new_eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
-    eigenpairs.readconf_evnersc(param.EigenvectorfileName());
+    eigenpairs.readconf_evnersc(nvec, param.EigenvectorfileName());
     eigenpairs.updateAll();
 
     // if (param.valence_masses.numberValues() == 0) {
