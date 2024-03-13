@@ -21,31 +21,52 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT>, int nvec, const std::string &fname)
 {
-    // NerscFormat<HaloDepth> nersc(this->getComm());
     evNerscFormat<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> evnersc(this->getComm());
-    typedef GIndexer<All,HaloDepth> GInd;
+    // typedef GIndexer<All,HaloDepth> GInd;
 
-    double vec[nvec];
+    double vec[8];
 
     int sizeh=evnersc.bytes_per_site();
     rootLogger.info("sizeh ", sizeh);
 
     std::ifstream in;
 
+    evnersc.read_header(in);
+
     if (this->getComm().IamRoot()) {
         in.open(fname.c_str());
         for(int i=0; i<nvec; i++){
             in.ignore(sizeof(double));
             in.read( (char*) &vec, sizeof(float)*8 );
+            rootLogger.info(vec[0]);
         }
-        // rootLogger.info("test 40");
     }
 
-    LatticeDimensions global = GInd::getLatData().globalLattice();
-    LatticeDimensions local = GInd::getLatData().localLattice();
 
-    this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
+
+    // LatticeDimensions global = GInd::getLatData().globalLattice();
+    // LatticeDimensions local = GInd::getLatData().localLattice();
+
+    // this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
     
+    // typedef GIndexer<All, HaloDepth> GInd;
+    // for (size_t t = 0; t < GInd::getLatData().lt; t++) {
+    //     if (evnersc.end_of_buffer()) {
+    //         this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+    //         evnersc.process_read_data();
+    //     }
+    //     for (int mu = 0; mu < 4; mu++) {
+    //         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> ret = evnersc.template get<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>();
+    //         gSite site = GInd::getSite(x, y, z, t);
+    //         gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+    //     }
+    // }
+
+    // this->getComm().closeIOBinary();
+
+    if (!evnersc.checksums_match()) {
+        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
+    }
 }
 
 

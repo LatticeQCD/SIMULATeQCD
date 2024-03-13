@@ -14,12 +14,12 @@ private:
     const CommunicationBase &comm;
     int header_size;
 
-    Parameter<std::string> dattype;
-    Parameter<int> dim[4];
+    // Parameter<std::string> dattype;
+    // Parameter<int> dim[4];
     Parameter<std::string> checksum;
     Parameter<std::string> floatingpoint;
-    Parameter<double> linktrace;
-    Parameter<double> plaq;
+    // Parameter<double> linktrace;
+    // Parameter<double> plaq;
 
 
     bool read(std::istream &in, std::string &content) {
@@ -52,14 +52,14 @@ private:
     evNerscHeader(const CommunicationBase &_comm) : comm(_comm) {
         header_size = 0;
 
-        add(dattype, "DATATYPE");
-        add(dim[0], "DIMENSION_1");
-        add(dim[1], "DIMENSION_2");
-        add(dim[2], "DIMENSION_3");
-        add(dim[3], "DIMENSION_4");
+        // add(dattype, "DATATYPE");
+        // add(dim[0], "DIMENSION_1");
+        // add(dim[1], "DIMENSION_2");
+        // add(dim[2], "DIMENSION_3");
+        // add(dim[3], "DIMENSION_4");
         add(checksum, "CHECKSUM");
-        add(linktrace, "LINK_TRACE");
-        add(plaq, "PLAQUETTE");
+        // add(linktrace, "LINK_TRACE");
+        // add(plaq, "PLAQUETTE");
         addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
     }
 
@@ -90,23 +90,6 @@ public:
             return false;
         std::istringstream str(content);
         return readstream(str, "NERSC", true);
-    }
-
-    bool write(std::ostream &out) {
-        bool success = true;
-        if (comm.IamRoot()) {
-            out.precision(10);
-            out << "BEGIN_HEADER" << std::endl
-                << (*this)
-                << "END_HEADER" << std::endl;
-            header_size = out.tellp();
-            success = !out.fail();
-        }
-        if (!comm.single()) {
-            comm.root2all(header_size);
-            comm.root2all(success);
-        }
-        return success;
     }
 };
 
@@ -141,6 +124,22 @@ private:
         if (rows == 2 || sizeof(f1) != sizeof(f2))
             U.su3unitarize();
         return U;
+    }
+
+    template<class f1, class f2>
+    void to_buf(f1 *buf, const GSU3<f2> &U) const {
+        int i = 0;
+        for (int j = 0; j < rows; j++)
+            for (int k = 0; k < 3; k++) {
+                buf[i++] = U(j, k).cREAL;
+                buf[i++] = U(j, k).cIMAG;
+            }
+    }
+
+    void byte_swap() {
+        const long count = buf.size() / float_size;
+        for (long i = 0; i < count; i++)
+            Byte_swap(&buf[i * float_size], float_size);
     }
 
     //compute checksum of 'bytes' bytes at beginning of buffer
@@ -212,8 +211,27 @@ public:
         return header.size();
     }
 
+    char *buf_ptr() {
+        return &buf[0];
+    }
+
+    size_t buf_size() const {
+        return buf.size();
+    }
+
     size_t bytes_per_site() const {
         return GInd::getLatData().globalLattice().mult() / 2;
+    }
+
+    bool end_of_buffer() const {
+        return index >= buf.size();
+    }
+
+    void process_read_data() {
+        if (switch_endian)
+            byte_swap();
+        computed_checksum += checksum(buf.size());
+        index = 0;
     }
 
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> get() {
@@ -225,6 +243,17 @@ public:
             ret = from_buf<double,double>((double *) start);
         index += su3_size;
         return ret;
+    }
+
+    bool checksums_match() {
+        uint32_t checksum = comm.reduce(computed_checksum);
+        if (stored_checksum != checksum) {
+            rootLogger.error("Checksum mismatch! "
+                               ,  std::hex ,  stored_checksum ,  " != "
+                               ,  std::hex ,  checksum);
+            return false;
+        }
+        return true;
     }
 };
 
