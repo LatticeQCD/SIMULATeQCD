@@ -7,11 +7,16 @@
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
-    if(onDevice) {
+    
+    typedef GIndexer<All,HaloDepth> GInd;
+    if(onDevice) {    
         rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
-        readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
-        // _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
+        for (size_t n = 0; n < nvec; n++) {
+            readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
+            spinors[n].copyFromStackToStack(lattice_host, NStacks, NStacks);
+        }
+
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
     }
@@ -19,48 +24,49 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT>, int nvec, const std::string &fname)
+void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT> spinorAccessor, int idxvec, const std::string &fname)
 {
-    evNerscFormat<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> evnersc(this->getComm());
-    // typedef GIndexer<All,HaloDepth> GInd;
+    evNerscFormat<HaloDepth> evnersc(this->getComm());
+    typedef GIndexer<All,HaloDepth> GInd;
 
-    double vec[8];
 
-    int sizeh=evnersc.bytes_per_site();
-    rootLogger.info("sizeh ", sizeh);
+    int displacement=(evnersc.bytes_per_site() + 1) * sizeof(floatT);            
+    this->getComm().SetFileView(displacement * idxvec);
+
+    rootLogger.info("sizeh ", displacement);
 
     std::ifstream in;
 
-    evnersc.read_header(in);
+    // evnersc.read_header(in);
 
-    if (this->getComm().IamRoot()) {
-        in.open(fname.c_str());
-        for(int i=0; i<nvec; i++){
-            in.ignore(sizeof(double));
-            in.read( (char*) &vec, sizeof(float)*8 );
-            rootLogger.info(vec[0]);
-        }
-    }
-
-
-
-    // LatticeDimensions global = GInd::getLatData().globalLattice();
-    // LatticeDimensions local = GInd::getLatData().localLattice();
-
-    // this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
-    
-    // typedef GIndexer<All, HaloDepth> GInd;
-    // for (size_t t = 0; t < GInd::getLatData().lt; t++) {
-    //     if (evnersc.end_of_buffer()) {
-    //         this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
-    //         evnersc.process_read_data();
-    //     }
-    //     for (int mu = 0; mu < 4; mu++) {
-    //         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> ret = evnersc.template get<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>();
-    //         gSite site = GInd::getSite(x, y, z, t);
-    //         gaugeAccessor.setLink(GInd::getSiteMu(site, mu), ret);
+    // if (this->getComm().IamRoot()) {
+    //     in.open(fname.c_str());
+    //     for(int i=0; i<nvec; i++){
+    //         in.ignore(sizeof(double));
+    //         in.read( (char*) &vec, sizeof(float)*8 );
+    //         rootLogger.info(vec[0]);
     //     }
     // }
+
+
+
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+
+    this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
+    typedef GIndexer<All, HaloDepth> GInd;
+    for (size_t t = 0; t < GInd::getLatData().lt; t++)
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        if (evnersc.end_of_buffer()) {
+            this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+            evnersc.process_read_data();
+        }
+        gVect3<floatT> ret = evnersc.template get<floatT>();
+        gSite site = GInd::getSite(x, y, z, t);
+        spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
+    }
 
     // this->getComm().closeIOBinary();
 

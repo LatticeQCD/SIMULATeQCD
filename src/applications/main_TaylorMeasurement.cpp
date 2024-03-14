@@ -49,10 +49,10 @@ int main(int argc, char **argv) {
     rootLogger.info("sizeh: ", sizeh);
 
     // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    Gaugefield<PREC,true,HaloDepth> gauge(commBase);      /// gauge field
-    rootLogger.info("Read configuration from ", param.GaugefileName());
-    gauge.readconf_nersc(param.GaugefileName());
-    gauge.updateAll();
+    // Gaugefield<floatT,true,HaloDepth> gauge(commBase);      /// gauge field
+    // rootLogger.info("Read configuration from ", param.GaugefileName());
+    // gauge.readconf_nersc(param.GaugefileName());
+    // gauge.updateAll();
     
     // Read the Eigenvalues and Eigenvectors
     new_eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);

@@ -64,7 +64,7 @@ private:
     }
 
 
-    template <class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+    template <size_t HaloDepth>
     friend class evNerscFormat;
 
 public:
@@ -93,7 +93,7 @@ public:
     }
 };
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+template<size_t HaloDepth>
 class evNerscFormat {
 private:
 
@@ -106,23 +106,22 @@ private:
     uint32_t stored_checksum, computed_checksum;
     int su3_size;
     size_t index; //position in buffer
-    static const bool sep_lines = false; // make the buffer smaller and read each xline separately
-                                         // (slow on large lattices, but needs less memory)
+    // static const bool sep_lines = false; // make the buffer smaller and read each xline separately
+    //                                      // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
     template<class f1, class f2>
-    Spinorfield<f2, onDevice, LatticeLayout, HaloDepth, NStacks> from_buf(f1 *buf) const {
+    gVect3<f2> from_buf(f1 *buf) const {
         int i = 0;
-        Spinorfield<f2, onDevice, LatticeLayout, HaloDepth, NStacks> U;
-        for (int j = 0; j < rows; j++)
-            for (int k = 0; k < 3; k++) {
-                f2 re = buf[i++];
-                f2 im = buf[i++];
-                U(j, k) = GCOMPLEX(f2)(re, im);
+        gVect3<f2> U;
+        for (int k = 0; k < 3; k++) {
+            f2 re = buf[i++];
+            f2 im = buf[i++];
+            U(k) = GCOMPLEX(f2)(re, im);
 
-            }
-        if (rows == 2 || sizeof(f1) != sizeof(f2))
-            U.su3unitarize();
+        }
+        // if (rows == 2 || sizeof(f1) != sizeof(f2))
+        //     U.su3unitarize();
         return U;
     }
 
@@ -200,8 +199,8 @@ public:
             error = true;
         }
 
-        su3_size = 2 * 3 * rows * float_size;
-        buf.resize((sep_lines ? GInd::getLatData().lx : GInd::getLatData().vol4) * 4 * su3_size);
+        su3_size = 2 * 3 * float_size;
+        buf.resize(GInd::getLatData().vol4 * su3_size);
         index = buf.size();
 
         return !error;
@@ -220,7 +219,7 @@ public:
     }
 
     size_t bytes_per_site() const {
-        return GInd::getLatData().globalLattice().mult() / 2;
+        return su3_size;
     }
 
     bool end_of_buffer() const {
@@ -233,10 +232,10 @@ public:
         computed_checksum += checksum(buf.size());
         index = 0;
     }
-
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> get() {
+    template<class floatT>
+    gVect3<floatT> get() {
         char *start = &buf[index];
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> ret;
+        gVect3<floatT> ret;
         if (float_size == 4)
             ret = from_buf<float,float>((float *) start);
         else if (float_size == 8)

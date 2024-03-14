@@ -712,8 +712,7 @@ void CommunicationBase::closeIOBinary() {
 }
 
 void CommunicationBase::SetFileView(size_t displacement){
-    char fnative[10] = "native";
-    MPI_File_set_view(fh, displacement, basetype, fvtype, fnative, MPI_INFO_NULL);
+    MPI_File_set_view(fh, displacement, basetype, fvtype, "native", MPI_INFO_NULL);
 }
 
 template int CommunicationBase::updateSegment<true>(HaloSegment hseg, size_t direction, int leftRight,
