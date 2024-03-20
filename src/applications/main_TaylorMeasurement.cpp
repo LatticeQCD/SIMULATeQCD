@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
     const int nvec= 304; // number of vectors to be read
     const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
-    typedef double PREC;
+    typedef float PREC;
 
     rootLogger.info("STARTING Taxlor Measurement:");
 
