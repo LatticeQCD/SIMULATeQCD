@@ -8,11 +8,11 @@
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
     
-    typedef GIndexer<All,HaloDepth> GInd;
+    // typedef GIndexer<All,HaloDepth> GInd;
     if(onDevice) {    
         rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
-        for (size_t n = 0; n < nvec; n++) {
+        for (int n = 0; n < nvec; n++) {
             readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
             spinors[n].copyFromStackToStack(lattice_host, NStacks, NStacks);
         }

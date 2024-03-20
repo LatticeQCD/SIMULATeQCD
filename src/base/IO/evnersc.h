@@ -110,8 +110,8 @@ private:
     //                                      // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
-    template<class f1, class f2>
-    gVect3<f2> from_buf(f1 *buf) const {
+    template<class f2>
+    gVect3<f2> from_buf(f2 *buf) const {
         int i = 0;
         gVect3<f2> U;
         for (int k = 0; k < 3; k++) {
@@ -123,16 +123,6 @@ private:
         // if (rows == 2 || sizeof(f1) != sizeof(f2))
         //     U.su3unitarize();
         return U;
-    }
-
-    template<class f1, class f2>
-    void to_buf(f1 *buf, const GSU3<f2> &U) const {
-        int i = 0;
-        for (int j = 0; j < rows; j++)
-            for (int k = 0; k < 3; k++) {
-                buf[i++] = U(j, k).cREAL;
-                buf[i++] = U(j, k).cIMAG;
-            }
     }
 
     void byte_swap() {
@@ -237,9 +227,9 @@ public:
         char *start = &buf[index];
         gVect3<floatT> ret;
         if (float_size == 4)
-            ret = from_buf<float,float>((float *) start);
+            ret = from_buf<float>((float *) start);
         else if (float_size == 8)
-            ret = from_buf<double,double>((double *) start);
+            ret = from_buf<double>((double *) start);
         index += su3_size;
         return ret;
     }

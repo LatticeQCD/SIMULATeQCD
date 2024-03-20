@@ -10,7 +10,6 @@
 #include "../modules/dslash/condensate.h"
 #include "../testing/testing.h" // for comparing stuff
 
-#define PREC double
 // main
 int main(int argc, char **argv) {
 
@@ -21,7 +20,7 @@ int main(int argc, char **argv) {
     
     // try reading parameter file from the same directory 
     rootLogger.info("Reading parameter file \"TaylorMeasurement.param\" from the current working directory.");
-    param.readfile(commBase, "/home/finn/_s0_stream_0/TaylorMeasurement.param", argc, argv);
+    param.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
 
 
     commBase.init(param.nodeDim());
@@ -31,6 +30,7 @@ int main(int argc, char **argv) {
     const int nvec= 304; // number of vectors to be read
     const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
+    typedef double PREC;
 
     rootLogger.info("STARTING Taxlor Measurement:");
 
