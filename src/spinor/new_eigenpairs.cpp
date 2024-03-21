@@ -37,7 +37,7 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
     std::ifstream in;
 
-    // evnersc.read_header(in);
+    evnersc.read_header(in);
 
     // if (this->getComm().IamRoot()) {
     //     in.open(fname.c_str());

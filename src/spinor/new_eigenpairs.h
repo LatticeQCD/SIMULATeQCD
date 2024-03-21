@@ -39,7 +39,7 @@ inline gVect3arrayAcc<floatT> new_eigenpairs<floatT, onDevice, LatticeLayout, Ha
     return (_lattice.getAccessor());
 }
 
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
 struct returnEigen {
     gVect3arrayAcc<floatT> _gAcc;
 

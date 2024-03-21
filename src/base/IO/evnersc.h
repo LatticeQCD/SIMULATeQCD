@@ -144,8 +144,8 @@ public:
 
     evNerscFormat(CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
-        float_size = 0;
-        su3_size = 0;
+        float_size = sizeof(float_t);
+        su3_size = 2 * 3 * float_size;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;
@@ -162,25 +162,6 @@ public:
 
         bool error = false;
 
-        Endianness disken = ENDIAN_AUTO;
-        if (header.floatingpoint() == "IEEE32BIG" || header.floatingpoint() == "IEEE32") {
-            float_size = 4;
-            disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "IEEE64BIG") {
-            float_size = 8;
-            disken = ENDIAN_BIG;
-        } else if (header.floatingpoint() == "IEEE32LITTLE") {
-            float_size = 4;
-            disken = ENDIAN_LITTLE;
-        } else if (header.floatingpoint() == "IEEE64LITTLE") {
-            float_size = 8;
-            disken = ENDIAN_LITTLE;
-        } else {
-            rootLogger.error("Unrecognized FLOATING_POINT " ,  header.floatingpoint());
-            error = true;
-        }
-        switch_endian = switch_endianness(disken);
-
         std::stringstream s(header.checksum());
         s >> std::hex >> stored_checksum;
         if (s.fail()) {
@@ -189,7 +170,6 @@ public:
             error = true;
         }
 
-        su3_size = 2 * 3 * float_size;
         buf.resize(GInd::getLatData().vol4 * su3_size);
         index = buf.size();
 

@@ -691,8 +691,8 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
 
     if (mode != READ) MPI_File_set_size(fh, filesize); //truncate if file exists and is too large
 
-    char fnative[10] = "native";
-    MPI_File_set_view(fh, displacement, basetype, fvtype, fnative, MPI_INFO_NULL);
+    // char fnative[10] = "native";
+    MPI_File_set_view(fh, displacement, basetype, fvtype, "native", MPI_INFO_NULL);
 }
 
 void CommunicationBase::writeBinary(void *buffer, size_t elemCount) {
