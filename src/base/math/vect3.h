@@ -90,7 +90,7 @@ public:
     __device__ __host__ void gauss( uint4 * state )
     {
 #ifndef USE_HIP_AMD
-   	if constexpr (!std::is_same<floatT,__half>::value) {
+   	if constexpr (!std::is_same<floatT,half>::value) {
 #endif
         floatT radius0,radius1,radius2,phi0,phi1,phi2;
 
@@ -130,9 +130,9 @@ public:
         radius2 = radius2 + (1.0 - radius2) * minVal<float>(); // exclude 0 from random numbers!
         radius2 = sqrt(-1.0 * log(radius2));
 
-        _v0 = COMPLEX(__half)(__float2half(radius0 * cos(phi0)), __float2half(radius0 * sin(phi0)));
-        _v1 = COMPLEX(__half)(__float2half(radius1 * cos(phi1)), __float2half(radius1 * sin(phi1)));
-        _v2 = COMPLEX(__half)(__float2half(radius2 * cos(phi2)), __float2half(radius2 * sin(phi2)));
+        _v0 = COMPLEX(half)(__float2half(radius0 * cos(phi0)), __float2half(radius0 * sin(phi0)));
+        _v1 = COMPLEX(half)(__float2half(radius1 * cos(phi1)), __float2half(radius1 * sin(phi1)));
+        _v2 = COMPLEX(half)(__float2half(radius2 * cos(phi2)), __float2half(radius2 * sin(phi2)));
         #endif
         }
 #endif
@@ -232,18 +232,18 @@ __device__ __host__ inline Vect3<floatT> vect3_unity(const int& i)
 }
 #ifndef USE_HIP_AMD
 template <>
-__device__ inline Vect3<__half> vect3_unity(const int& i)
+__device__ inline Vect3<half> vect3_unity(const int& i)
 {
 
     switch ( i )
     {
     case 1:
-return Vect3<__half> (__float2half(0), __float2half(1), __float2half(0));
+return Vect3<half> (__float2half(0), __float2half(1), __float2half(0));
     case 2:
-return Vect3<__half> (__float2half(0), __float2half(0), __float2half(1));
+return Vect3<half> (__float2half(0), __float2half(0), __float2half(1));
     }
 // default value
-return Vect3<__half> (__float2half(1), __float2half(0), __float2half(0));
+return Vect3<half> (__float2half(1), __float2half(0), __float2half(0));
 
 }
 #endif
@@ -264,9 +264,9 @@ __device__ __host__ inline Vect3<floatT> vect3_zero()
 }
 #ifndef USE_HIP_AMD
 template<>
-__device__ inline Vect3<__half> vect3_zero()
+__device__ inline Vect3<half> vect3_zero()
 {
-    return Vect3<__half> (__float2half(0), __float2half(0), __float2half(0));
+    return Vect3<half> (__float2half(0), __float2half(0), __float2half(0));
 }
 #endif
 template <class floatT>

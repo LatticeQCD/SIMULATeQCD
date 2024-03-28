@@ -16,8 +16,8 @@
 #include <type_traits>
 #include "../wrapper/gpu_wrapper.h"
 #include "complex.h"
-// #include "gsu3.h"
-// #include "gvect3.h"
+#include "su3.h"
+#include "vect3.h"
 // #include "../indexer/BulkIndexer.h"
 
 enum Operation {
@@ -519,16 +519,16 @@ auto operator/(const GeneralOperator<typeLHS1, typeRHS1, op1> &lhs,
 //Idea taken from https://stackoverflow.com/questions/44387251/thrust-reduction-and-overloaded-operator-const-float3-const-float3-wont-co
 
 template<typename inputType>
-using isAllowedType = typename std::enable_if<custom_is_scalar<inputType>::value, inputType>::type;
-                                        //       || std::is_same<inputType, GCOMPLEX(__half)>::value
-                                        //       || std::is_same<inputType, GCOMPLEX(float)>::value
-                                        //       || std::is_same<inputType, GCOMPLEX(double)>::value
-                                        //       || std::is_same<inputType, GSU3<__half> >::value
-                                        //       || std::is_same<inputType, GSU3<float> >::value
-                                        //       || std::is_same<inputType, GSU3<double> >::value
-                                        //       || std::is_same<inputType, gVect3<__half> >::value
-                                        //       || std::is_same<inputType, gVect3<float> >::value
-                                        //       || std::is_same<inputType, gVect3<double> >::value, inputType>::type;
+using isAllowedType = typename std::enable_if<custom_is_scalar<inputType>::value
+                                              || std::is_same<inputType, COMPLEX(half)>::value
+                                              || std::is_same<inputType, COMPLEX(float)>::value
+                                              || std::is_same<inputType, COMPLEX(double)>::value
+                                              || std::is_same<inputType, SU3<half> >::value
+                                              || std::is_same<inputType, SU3<float> >::value
+                                              || std::is_same<inputType, SU3<double> >::value
+                                              || std::is_same<inputType, Vect3<half> >::value
+                                              || std::is_same<inputType, Vect3<float> >::value
+                                              || std::is_same<inputType, Vect3<double> >::value, inputType>::type;
 
 
 template<typename typeLHS1, typename typeRHS1, Operation op1, typename typeRHS>

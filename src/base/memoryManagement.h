@@ -267,15 +267,18 @@ private:
 
     /// THIS IS ALL CUDA IPC/P2P related stuff
     private:
+    #if defined(USE_CUDA) || defined(USE_HIP)
         gpuIPC _cIpc;
         bool P2Ppaired;
-
+    #endif
     public:
         void initP2P(MPI_Comm comm, int myRank) {
             if (onDevice && _current_size != 0) {
                 if (!P2Ppaired) {
+                    #if defined(USE_CUDA) || defined(USE_HIP)
                     _cIpc = gpuIPC(comm, myRank, this->template getPointer<uint8_t>());
                     P2Ppaired = true;
+                    #endif
                 }
             } else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: initP2P: gpuIPC not possible on gMemory<HOST>");
@@ -283,25 +286,31 @@ private:
         }
 
         void addP2PRank(int oppositeRank) {
+            #if defined(USE_CUDA) || defined(USE_HIP)
             if (onDevice) _cIpc.addP2PRank(oppositeRank);
             else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: addP2PRank: gpuIPC not possible on gMemory<HOST>");
             }
+            #endif
         }
 
         void syncAndInitP2PRanks() {
+            #if defined(USE_CUDA) || defined(USE_HIP)
             if (onDevice && _current_size != 0) _cIpc.syncAndInitAllP2PRanks();
             else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: syncAndInitP2PRanks: gpuIPC not possible on gMemory<HOST>");
             }
+            #endif
         }
 
         uint8_t *getOppositeP2PPointer(int oppositeRank) {
+            #if defined(USE_CUDA) || defined(USE_HIP)
             if (onDevice && _current_size != 0) return _cIpc.getPointer(oppositeRank);
             else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: getOppositeP2PPointer: gpuIPC not possible on gMemory<HOST>");
                 return nullptr;
             }
+            #endif
             return nullptr;
         }
     };
