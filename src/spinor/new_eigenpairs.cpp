@@ -33,8 +33,13 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     rootLogger.info("sizeh ", displacement);
 
     std::ifstream in;
+    if (this->getComm().IamRoot()) {
+      in.open(fname.c_str());
+    }
+    if (!evnersc.read_header(in)) {
+      throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
+    }
 
-    evnersc.read_header(in);
 
     LatticeDimensions global = GInd::getLatData().globalLattice();
     LatticeDimensions local = GInd::getLatData().localLattice();
@@ -46,10 +51,10 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        if (evnersc.end_of_buffer()) {
-            this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
-            evnersc.process_read_data();
-        }
+        //if (evnersc.end_of_buffer()) {
+        this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+        evnersc.process_read_data();
+        //}
         gVect3<floatT> ret = evnersc.template get<floatT>();
         gSite site = GInd::getSite(x, y, z, t);
         spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
@@ -57,9 +62,9 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
     // this->getComm().closeIOBinary();
 
-    if (!evnersc.checksums_match()) {
-        throw std::runtime_error(stdLogger.fatal("Error checksum!"));
-    }
+    //    if (!evnersc.checksums_match()) {
+    //       throw std::runtime_error(stdLogger.fatal("Error checksum!"));
+    //    }
 }
 
 

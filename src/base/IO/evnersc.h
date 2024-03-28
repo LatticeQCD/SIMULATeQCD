@@ -16,35 +16,37 @@ private:
 
     // Parameter<std::string> dattype;
     // Parameter<int> dim[4];
-    Parameter<std::string> checksum;
-    Parameter<std::string> floatingpoint;
+    // Parameter<std::string> checksum;
+    // Parameter<std::string> floatingpoint;
     // Parameter<double> linktrace;
     // Parameter<double> plaq;
 
 
-    bool read(std::istream &in, std::string &content) {
+    bool read(std::istream &in, double * lambda) {
         if (in.fail()) {
             rootLogger.error("Could not open file.");
             return false;
         }
-        std::string line;
 
-        getline(in, line);
-        if (line != "BEGIN_HEADER") {
-            rootLogger.error("BEGIN_HEADER not found!");
-            return false;
-        }
+        //std::string line;
 
-        while (!in.fail()) {
-            getline(in, line);
-            if (line == "END_HEADER")
-                break;
-            content.append(line + '\n');
-        }
-        if (in.fail()) {
-            rootLogger.error("END_HEADER not found!");
-            return false;
-        }
+        //getline(in, line);
+        //if (line != "BEGIN_HEADER") {
+        //    rootLogger.error("BEGIN_HEADER not found!");
+        //    return false;
+        //}
+
+        //while (!in.fail()) {
+        //    getline(in, line);
+        //    if (line == "END_HEADER")
+        //        break;
+        //    content.append(line + '\n');
+        //}
+        //if (in.fail()) {
+        //    rootLogger.error("END_HEADER not found!");
+        //    return false;
+        //}
+        in.read((char*)lambda, sizeof(double));
         header_size = in.tellg();
         return true;
     }
@@ -57,10 +59,10 @@ private:
         // add(dim[1], "DIMENSION_2");
         // add(dim[2], "DIMENSION_3");
         // add(dim[3], "DIMENSION_4");
-        add(checksum, "CHECKSUM");
+        // add(checksum, "CHECKSUM");
         // add(linktrace, "LINK_TRACE");
         // add(plaq, "PLAQUETTE");
-        addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
+        // addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
     }
 
 
@@ -74,10 +76,10 @@ public:
 
     // called from all nodes, but only root node has already opened file
     bool read(std::istream &in) {
-        std::string content;
+        double content;
         bool success = true;
         if (comm.IamRoot())
-            success = read(in, content);
+            success = read(in, &content);
 
         if (!comm.single()) {
             comm.root2all(success);
@@ -88,8 +90,10 @@ public:
         }
         if (!success)
             return false;
-        std::istringstream str(content);
-        return readstream(str, "NERSC", true);
+        //std::istringstream str(content);
+        //return readstream(str, "NERSC", true);
+	rootLogger.info("lambda = ", content);
+        return true;
     }
 };
 
@@ -150,22 +154,22 @@ public:
     }
 
     bool read_header(std::istream &in) {
-        rootLogger.push_verbosity(OFF);
+      //rootLogger.push_verbosity(OFF);
         if (!header.read(in)){
             rootLogger.error("header.read() failed!");
             return false;
         }
-        rootLogger.pop_verbosity();
+        //rootLogger.pop_verbosity();
 
         bool error = false;
 
-        std::stringstream s(header.checksum());
-        s >> std::hex >> stored_checksum;
-        if (s.fail()) {
-            rootLogger.error("Could not interpret checksum " ,
-                               header.checksum() ,  "as hexadecimal number.");
-            error = true;
-        }
+        //std::stringstream s(header.checksum());
+        //s >> std::hex >> stored_checksum;
+        //if (s.fail()) {
+        //    rootLogger.error("Could not interpret checksum " ,
+        //                       header.checksum() ,  "as hexadecimal number.");
+        //    error = true;
+        //}
 
         buf.resize(GInd::getLatData().vol4 * su3_size);
         index = buf.size();

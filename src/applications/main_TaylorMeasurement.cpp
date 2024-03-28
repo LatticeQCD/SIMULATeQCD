@@ -56,8 +56,8 @@ int main(int argc, char **argv) {
     
     // Read the Eigenvalues and Eigenvectors
     new_eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
-    rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
-    eigenpairs.readconf_evnersc(nvec, param.EigenvectorfileName());
+    rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
+    eigenpairs.readconf_evnersc(nvec, param.eigen_file());
     eigenpairs.updateAll();
 
     // if (param.valence_masses.numberValues() == 0) {

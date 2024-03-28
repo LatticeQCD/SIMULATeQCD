@@ -29,6 +29,7 @@ public:
     Parameter<double> residue;
     Parameter<int> cgMax;
 
+    Parameter<std::string> eigen_file;
     Parameter<std::string> output_file;
     Parameter<std::string> collected_output_file;
 
@@ -37,6 +38,7 @@ public:
         add(valence_masses, "valence_masses");
         add(num_random_vectors, "num_random_vectors");
         addDefault(seed, "seed", 0);
+        addOptional(eigen_file, "eigen_file");
         addOptional(output_file, "output_file");
         addOptional(collected_output_file, "collected_output_file");
 
