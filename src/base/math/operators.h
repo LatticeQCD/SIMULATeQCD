@@ -15,7 +15,7 @@
 
 #include <type_traits>
 #include "../wrapper/gpu_wrapper.h"
-// #include "gcomplex.h"
+#include "complex.h"
 // #include "gsu3.h"
 // #include "gvect3.h"
 // #include "../indexer/BulkIndexer.h"

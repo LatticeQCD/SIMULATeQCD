@@ -151,13 +151,6 @@ struct ComplexReferenceFunctor{
 };
 
 
-template<class T>
-__host__ __device__ bool cmp_rel(const T a, const T b, const double rel, const double prec) {
-    if (abs(a-b) / abs(a+b) < rel && abs(a-b) < prec) {
-        return true;
-    }
-    return false;
-}
 
 bool cmp_rel(Spinor& lhs, Spinor& rhs, double rel, double prec){
 #ifndef CPU
@@ -340,7 +333,7 @@ int main(){
     // compare_relative(ref, res, 1e-8, 1e-8, "Combined operators vs one operator test");
 
     // std::cout << res << std::endl<<std::endl;
-    sycl::queue q;
+    sycl::queue q(sycl::gpu_selector_v);
     q.wait();
     referenceSyclLaunch(res.getAccessor(), a.getAccessor(), b.getAccessor(), c.getAccessor(),
             d.getAccessor(), nelems, q);

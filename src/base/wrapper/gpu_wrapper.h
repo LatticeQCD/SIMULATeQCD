@@ -69,7 +69,7 @@
 #define gpuStreamWaitEvent               cudaStreamWaitEvent
 #define gpuSuccess                       cudaSuccess
 
-
+#define half                             __half
 #ifdef __CUDA_ARCH__
 #define __GPU_ARCH__                     __CUDA_ARCH__
 #endif
@@ -146,6 +146,7 @@
 #define gpuStreamSynchronize             hipStreamSynchronize
 #define gpuStreamWaitEvent               hipStreamWaitEvent
 #define gpuSuccess                       hipSuccess
+#define half                             __half
 
 #ifdef __HIP_DEVICE_COMPILE__
 #define __GPU_ARCH__                     __HIP_DEVICE_COMPILE__
@@ -161,5 +162,11 @@
 #define __device__  
 
 #define gpuError_t sycl::exception
+#define half       sycl::half
+#define half2      sycl::half2
+#define float2     sycl::float2
+#define double2    sycl::double2
+
+
 #endif
 

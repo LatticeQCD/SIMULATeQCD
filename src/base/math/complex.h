@@ -25,7 +25,7 @@
 
 template <typename T>
 class Selector; // implement this one as well, if you want to have a default...
-using namespace sycl;
+
 template <> class Selector<float> {
 public:
   using Type = float2;
@@ -34,10 +34,10 @@ template <> class Selector<double> {
 public:
   using Type = double2;
 };
-// template <> class Selector<__half> {
-// public:
-//   using Type = __half2;
-// };
+template <> class Selector<half> {
+public:
+  using Type = half2;
+};
 
 /**
  * A utility class to provide complex numbers for operation
