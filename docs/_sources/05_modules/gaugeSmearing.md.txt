@@ -1,6 +1,6 @@
 # HISQ smearing
 
-Much of the RHMC in SIMULATeQCD follows the MILC code. For a thorough discussion of this
+Much of the rhmc in SIMULATeQCD follows the MILC code. For a thorough discussion of this
 implementation, look [here](https://journals.aps.org/prd/abstract/10.1103/PhysRevD.82.074501).
 Here we just list a few important details.
 
@@ -103,5 +103,5 @@ The smearing classes are implemented in
 > hisqSmearing.cpp.
 How to construct the smeared links are defined in
 ```shell
-main_HisqSmearing.cpp.
+main_hisqSmearing.cpp.
 ```

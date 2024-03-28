@@ -5,7 +5,7 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 std::ostream& operator<< (std::ostream &out, const uint4 &rand){

@@ -16,7 +16,7 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
 
     Spinor_t vap(spinorIn.getComm());
 
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0);
 
     vr = spinorIn;
     vp = vr;
@@ -70,8 +70,8 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
 template<class floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStack
 {
-    gVect3arrayAcc<floatT> spinorIn1;
-    gVect3arrayAcc<floatT> spinorIn2;
+    Vect3arrayAcc<floatT> spinorIn1;
+    Vect3arrayAcc<floatT> spinorIn2;
     SimpleArray<floatT, NStacks> _a;
     SimpleArray<floatT, NStacks> _b;
 
@@ -84,9 +84,9 @@ struct StackTimesFloatPlusFloatTimesNoStack
         spinorIn1(spinorIn1.getAccessor()), spinorIn2(spinorIn2.getAccessor()), _a(a), _b(b) {}
 
 
-    __host__ __device__ gVect3<floatT> operator()(gSiteStack& siteStack){
+    __host__ __device__ Vect3<floatT> operator()(gSiteStack& siteStack){
         gSiteStack siteUnStack = GInd::getSiteStack(siteStack, 0);
-        gVect3<floatT> my_vec;
+        Vect3<floatT> my_vec;
 
         my_vec = spinorIn1.getElement(siteStack)*_a[siteStack.stack] + spinorIn2.getElement(siteUnStack)*_b[siteStack.stack];
 
@@ -97,8 +97,8 @@ struct StackTimesFloatPlusFloatTimesNoStack
 template<class floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 struct StackMinusFloatTimeStack
 {
-    gVect3arrayAcc<floatT> spinorIn1;
-    gVect3arrayAcc<floatT> spinorIn2;
+    Vect3arrayAcc<floatT> spinorIn1;
+    Vect3arrayAcc<floatT> spinorIn2;
     SimpleArray<floatT, NStacks> _a;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
@@ -108,8 +108,8 @@ struct StackMinusFloatTimeStack
             SimpleArray<floatT,NStacks> a) :
         spinorIn1(spinorIn1.getAccessor()), spinorIn2(spinorIn2.getAccessor()), _a(a) {}
 
-    __host__ __device__ gVect3<floatT> operator()(gSiteStack& siteStack){
-        gVect3<floatT> my_vec;
+    __host__ __device__ Vect3<floatT> operator()(gSiteStack& siteStack){
+        Vect3<floatT> my_vec;
 
         my_vec = spinorIn1.getElement(siteStack) - spinorIn2.getElement(siteStack)*_a[siteStack.stack];
 
@@ -130,7 +130,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     SpinorIn_t pi0(spinorIn.getComm());
 
     int max_term = NStacks;
-
+    StopWatch<true> timer;
     int cg = 0;
 
     SimpleArray<floatT, NStacks> a(0.0);
@@ -143,32 +143,49 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     double norm_r2 = r.realdotProduct(r);
 
     double  pAp,lambda, lambda2, rr_1, Bm1;
+    // gMemoryPtr<true> pAp_ptr(MemoryManagement::getMemAt<true>("SHARED_pAp_ptr"));
+    // gMemoryPtr<true> norm_r2_ptr(MemoryManagement::getMemAt<true>("SHARED_r2_ptr"));
+    // pAp_ptr->template adjustSize<double>(1);
+    // norm_r2_ptr->template adjustSize<double>(1);
 
+    // r.realDotProductNoCopy(r, norm_r2_ptr);
+    // gMemoryPtr<true> a_ptr(MemoryManagement::getMemAt<true>("SHARED_CGa_ptr"));
+    // gMemoryPtr<true> B_ptr(MemoryManagement::getMemAt<true>("SHARED_CGB_ptr"));
+    // gMemoryPtr<true> Z_ptr(MemoryManagement::getMemAt<true>("SHARED_CGZ_ptr"));
+    // gMemoryPtr<true> Zm1_ptr(MemoryManagement::getMemAt<true>("SHARED_CGZm1_ptr"));
+    // a_ptr->template adjustSize<floatT>(NStacks);
+
+    // B_ptr->template adjustSize<floatT>(NStacks);
+    // Z_ptr->template adjustSize<floatT>(NStacks);
+    // Zm1_ptr->template adjustSize<floatT>(NStacks);
     Bm1 = 1.0;
 
     for (size_t i = 0; i < NStacks; i++) {
         pi.copyFromStackToStack(spinorIn, i ,0);
     }
 
-    spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
 
     do {
         cg++;
 
-        pi0.copyFromStackToStack(pi, 0, 0);
+        pi0.template copyFromStackToStackDevice<NStacks,0,0>(pi);
         pi0.updateAll(COMM_BOTH | Hyperplane);
 
         dslash.applyMdaggM(s, pi0, false);
 
         s = sigma[0] * pi0 - s;
 
-        pAp = pi0.realdotProduct(s);
+        pAp = pi0.realdotProduct(s); //Optimization: do dot product but dont copy result to host
 
-        B[0] = - norm_r2 / pAp;
+        B[0] = - norm_r2 / pAp; //use device-resident result to do this on the gpu
 
-        r.template axpyThisB<64>(B[0], s);
+        r.axpyThisB(B[0], s); //fuse with this kernel call
 
+        // r.fusedDotProdAndaxpy(pi0, s, pAp_ptr, norm_r2_ptr);
+
+        
 
         for (int j=1; j<max_term; j++) {
             rr_1   = Bm1 * Zm1[j] / ( B[0] * a[0] * (Zm1[j] - Z[j])
@@ -178,23 +195,24 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
             B[j]   = B[0] * rr_1;
         }
         Bm1 = B[0];
-        lambda2 = r.realdotProduct(r);
+        lambda2 = r.realdotProduct(r); //Optimization: do dot product but dont copy result to host
         a[0]  = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
+        // r.realDotProductNoCopy(r, norm_r2_ptr);
 
-        spinorOut.template axpyThisLoop<64>(((floatT)(-1.0))*B, pi,max_term);
+        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term); // move this up
         //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
 
 
         //################################
         for (int j=1; j<max_term; j++) {
-            a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]);
+            a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]); //move to gpu
         }
         //################################
 
 
-        pi.template axupbyThisLoop<64>(Z, a, r, max_term);
+        pi.template axupbyThisLoop(Z, a, r, max_term); //fuse with dot product
         //     pi[i] = Z[i] * r + a[i] * pi[i];
 
 
@@ -238,9 +256,9 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     SimpleArray<double, NStacks> lambda2(0.0);
     SimpleArray<double, NStacks> pAp(0.0);
 
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot3(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
 
     r = spinorIn;
 
@@ -254,7 +272,7 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
     pi = spinorIn;
 
-    spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
 
     do {
@@ -270,7 +288,7 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
         B = -1.0* norm_r2 / pAp;
 
-        r.template axpyThisLoopd<32>(B, s, NStacks);
+        r.axpyThisLoopd(B, s, NStacks);
 
         dot2 = r.dotProductStacked(r);
 
@@ -278,7 +296,7 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
         a = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        spinorOut.template axpyThisLoopd<32>(-1.0*B, pi,NStacks);
+        spinorOut.axpyThisLoopd(-1.0*B, pi,NStacks);
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
@@ -312,8 +330,8 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
     SimpleArray<double, NStacks> lambda2(0.0);
     SimpleArray<double, NStacks> pAp(0.0);
     SimpleArray<double, NStacks> pdotr(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
 
     SimpleArray<double, NStacks> norm_restart(0.0);
     SimpleArray<double, NStacks> norm_restart_prev(0.0);
@@ -332,7 +350,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
     lambda2 = norm_r2;
     norm_restart = norm_r2;
     norm_comp = norm_r2;
-    spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
     accum = spinorOut;
 
     do {
@@ -348,7 +366,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
         alpha = -1.0 * norm_r2 / pAp;
 
         //r_k+1 = r_k - |r|^2/pAp * Ap_k+1
-        r.template axpyThisLoopd<32>(alpha, s, NStacks);
+        r.axpyThisLoopd(alpha, s, NStacks);
 
         dot = r.dotProductStacked(r);
         lambda2 = real<double>(dot);
@@ -359,7 +377,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
         }
 
         //x_k+1 = x_k + |r|^2/pAp * p_k+1
-        accum.template axpyThisLoopd<32>(-1.0*alpha, pi, NStacks);
+        accum.axpyThisLoopd(-1.0*alpha, pi, NStacks);
         norm_r2 = lambda2;
         if ((max(lambda2) < delta*max(norm_restart)) && (max(norm_restart) <= max(norm_comp))) {
             //reliable update
@@ -372,7 +390,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             SimpleArray<double, NStacks> tmp_arr(-1.0);
             spinorOut.updateAll();
             dslash.applyMdaggM(s,spinorOut, false);
-            r.template axpyThisLoopd<32>(tmp_arr,s,NStacks);
+            r.axpyThisLoopd(tmp_arr,s,NStacks);
 
             dot = r.dotProductStacked(r);
             lambda2 = real<double>(dot);
@@ -380,7 +398,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
             norm_restart = lambda2;
 
             //reset acc. solution vector
-            accum.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
+            accum.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
             //reproject gradient vector so that pi and r are orthogonal
             dot2 = pi.dotProductStacked(r);
@@ -388,7 +406,7 @@ void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spino
 
             SimpleArray<double,NStacks> proj(-1.0*pdotr/norm_restart);
             //pi = pi - <p,r>/|r|^2 * r
-            pi.template axpyThisLoopd<32>(proj,r,NStacks);
+            pi.axpyThisLoopd(proj,r,NStacks);
 
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             norm_r2 = lambda2;
@@ -435,9 +453,9 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
     SimpleArray<double, NStacks> lambda2(0.0);
     SimpleArray<double, NStacks> pAp(0.0);
     SimpleArray<double, NStacks> pdotr(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot2(0.0);
-    SimpleArray<GCOMPLEX(double), NStacks> dot3(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
     SimpleArray<double, NStacks> norm_restart(0.0);
     SimpleArray<double, NStacks> norm_restart_prev(0.0);
     SimpleArray<double, NStacks> norm_input(0.0);
@@ -455,7 +473,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
     lambda2 = norm_r2;
     norm_restart = norm_r2;
     norm_comp = norm_r2;
-    spinorOut.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
     accum = spinorOut;
 
     do {
@@ -473,7 +491,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
         alpha = -1.0 * norm_r2 / pAp;
 
         //r_k+1 = r_k - |r|^2/pAp * Ap_k+1
-        r_inner.template axpyThisLoopd<32>(alpha, s_inner, NStacks);
+        r_inner.axpyThisLoopd(alpha, s_inner, NStacks);
 
         dot = r_inner.dotProductStacked(r_inner);
         lambda2 = real<double>(dot);
@@ -486,7 +504,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
         }
 
         //x_k+1 = x_k + |r|^2/pAp * p_k+1
-        accum.template axpyThisLoopd<32>(-1.0*alpha, pi, NStacks);
+        accum.axpyThisLoopd(-1.0*alpha, pi, NStacks);
         norm_r2 = lambda2;
         if ((max(lambda2) < delta*max(norm_restart)) && (max(norm_restart) <= max(norm_comp))) {
             //reliable update
@@ -501,7 +519,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             //reuse accum to save dslash result.
             spinorOut.updateAll();
             dslash.applyMdaggM(accum,spinorOut, false);
-            r.template axpyThisLoopd<32>(tmp_arr,accum,NStacks);
+            r.axpyThisLoopd(tmp_arr,accum,NStacks);
             r_inner.convert_precision(r);
 
             dot = r.dotProductStacked(r);
@@ -510,7 +528,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             norm_restart = lambda2;
 
             //reset acc. solution vector
-            accum.template iterateWithConst<BLOCKSIZE>(gvect3_zero<floatT>());
+            accum.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
             //reproject gradient vector so that pi and r are orthogonal
             dot2 = pi.dotProductStacked(r);
@@ -519,7 +537,7 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
             SimpleArray<double,NStacks> proj(-1.0*pdotr/norm_restart);
 
             //pi = pi - <p,r>/|r|^2 * r
-            pi.template axpyThisLoopd<32>(proj,r,NStacks);
+            pi.axpyThisLoopd(proj,r,NStacks);
             //beta = norm_restart / norm_r2;
             pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(beta,r);
             pi_inner.convert_precision(pi);

@@ -5,6 +5,7 @@
 #
 #          Lattice: Nx Ny Nz Nt
 #            Nodes: Number of nodes per direction
+#             beta: Bare coupling constant 6/g^2
 #       gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
 #       maxgfsteps: Maximum number of OR gauge fixing steps (DEFAULT = 1000)
 #          numunit: Reunitarize after this many OR gauge fixing steps (DEFAULT = 20)
@@ -15,6 +16,8 @@
 #    SavedConfName: name of to-be-saved configuration
 # PolyakovLoopCorr: calculate or not
 #   WilsonLineCorr: same as above
+#          conf_nr: configuration number
+#           stream: stream/series label
 #       SaveConfig: save gfixed configuration or not
 #
 Lattice          = 32 32 32 8

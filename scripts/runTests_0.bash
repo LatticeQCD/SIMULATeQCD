@@ -21,18 +21,18 @@ for killFile in runERR_*; do
 done
 
 # The correlator tests require correlatorNorm files.
-cp ../parameter/UA_s8t4.norm .
-cp ../parameter/US_s8t4.norm .
+cp ../parameter/ua_s8t4.norm .
+cp ../parameter/us_s8t4.norm .
 
 # Associative arrays are like Python dictionaries. Associate to each test script the number of GPUs you want to use,
 # and give any special directions needed for the splitting.
 declare -A testRoutines
-testRoutines[_BulkIndexerTest]="4k"
-testRoutines[_ColorElectricCorrTest]="4s"
-testRoutines[_DslashMultiTest]="4k"
+testRoutines[_bulkIndexerTest]="4k"
+testRoutines[_colorElectricCorrTest]="4s"
+testRoutines[_dslashMultiTest]="4k"
 testRoutines[_gradientFlowTest]="4k"           # Apparently multi node doesn't work?
-testRoutines[_HaloTest]="1"
-testRoutines[_MixedPrecInverterTest]="4k"
+testRoutines[_haloTest]="1"
+testRoutines[_mixedPrecInverterTest]="4k"
 
 numberOfTestRoutines="${#testRoutines[@]}"
 numberOfTestRoutines="$((${numberOfTestRoutines}+${#testRoutinesNoParam[@]}))"

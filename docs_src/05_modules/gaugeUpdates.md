@@ -2,7 +2,7 @@
 
 The pure gauge update class contains both heat bath (HB) and over-relaxation (OR) updating for pure gauge fields. The heat bath is implemented using the [Kennedy-Pendleton](https://doi.org/10.1016/0370-2693(85)91632-6) algorithm, which is extended from SU2 to SU3 via the method of [Cabbibo and Marinari](https://doi.org/10.1016/0370-2693(82)90696-7).
 
-To use this class include the `src/gauge/PureGaugeUpdates.h` header file and include `src/gauge/PureGaugeUpdates.cpp` as a source file for your program in `CMakeLists.txt`.  The pure gauge update class is initialized with, for example,
+To use this class include the `src/gauge/pureGaugeUpdates.h` header file and include `src/gauge/pureGaugeUpdates.cpp` as a source file for your program in `CMakeLists.txt`.  The pure gauge update class is initialized with, for example,
 ```C++
 GaugeUpdate<PREC,true,HaloDepth>    gUpdate(gauge);
 ```

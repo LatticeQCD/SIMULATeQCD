@@ -9,7 +9,7 @@
 #include <string>
 #include "../base/communication/communicationBase.h"
 #include "IO/parameterManagement.h"
-#include "LatticeDimension.h"
+#include "latticeDimension.h"
 
 
 class LatticeParameters : virtual public ParameterList {

@@ -3,12 +3,12 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/Topology.h"
+#include "../simulateqcd.h"
+#include "../modules/observables/topology.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include <cstdio>
 #include "refValues_gradFlow.h"
-#include "../modules/gauge_updates/PureGaugeUpdates.h"
+#include "../modules/gauge_updates/pureGaugeUpdates.h"
 
 #define USE_GPU true
 

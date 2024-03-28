@@ -88,24 +88,24 @@
   <section class="tex2jax_ignore mathjax_ignore" id="gauge-updates-hb-and-or">
 <h1>Gauge Updates (HB and OR)<a class="headerlink" href="#gauge-updates-hb-and-or" title="Permalink to this headline"></a></h1>
 <p>The pure gauge update class contains both heat bath (HB) and over-relaxation (OR) updating for pure gauge fields. The heat bath is implemented using the <a class="reference external" href="https://doi.org/10.1016/0370-2693(85)91632-6">Kennedy-Pendleton</a> algorithm, which is extended from SU2 to SU3 via the method of <a class="reference external" href="https://doi.org/10.1016/0370-2693(82)90696-7">Cabbibo and Marinari</a>.</p>
-<p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gauge/PureGaugeUpdates.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gauge/PureGaugeUpdates.cpp</span></code> as a source file for your program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The pure gauge update class is initialized with, for example,</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeUpdate</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">gUpdate</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span>
+<p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gauge/pureGaugeUpdates.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gauge/pureGaugeUpdates.cpp</span></code> as a source file for your program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The pure gauge update class is initialized with, for example,</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeUpdate</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">gUpdate</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>and one OR sweep of the entire lattice can be performed with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gUpdate</span><span class="p">.</span><span class="n">updateOR</span><span class="p">();</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gUpdate</span><span class="p">.</span><span class="n">updateOR</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The HB update requires you to initialize a random number generator on the host, then pass the state to the device. This can be done by</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="n">grnd_state</span><span class="o">&lt;</span><span class="nb">false</span><span class="o">&gt;</span><span class="w"> </span><span class="n">host_state</span><span class="p">;</span>
-<span class="n">grnd_state</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="w">  </span><span class="n">dev_state</span><span class="p">;</span>
-<span class="n">host_state</span><span class="p">.</span><span class="n">make_rng_state</span><span class="p">(</span><span class="n">seed</span><span class="p">);</span>
-<span class="n">dev_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">host_state</span><span class="p">;</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">seed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="n">grnd_state</span><span class="o">&lt;</span><span class="nb">false</span><span class="o">&gt;</span><span class="w"> </span><span class="n">host_state</span><span class="p">;</span><span class="w"></span>
+<span class="n">grnd_state</span><span class="o">&lt;</span><span class="nb">true</span><span class="o">&gt;</span><span class="w">  </span><span class="n">dev_state</span><span class="p">;</span><span class="w"></span>
+<span class="n">host_state</span><span class="p">.</span><span class="n">make_rng_state</span><span class="p">(</span><span class="n">seed</span><span class="p">);</span><span class="w"></span>
+<span class="n">dev_state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">host_state</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>More information about the random number generator can be found in <a class="reference internal" href="randomNumbers.html#random-number-generator"><span class="std std-doc">Random Number Generator</span></a>. The state is then passed as an argument to the HB function as</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gUpdate</span><span class="p">.</span><span class="n">updateHB</span><span class="p">(</span><span class="n">dev_state</span><span class="p">.</span><span class="n">state</span><span class="p">,</span><span class="n">beta</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gUpdate</span><span class="p">.</span><span class="n">updateHB</span><span class="p">(</span><span class="n">dev_state</span><span class="p">.</span><span class="n">state</span><span class="p">,</span><span class="n">beta</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <section id="some-benchmarks">

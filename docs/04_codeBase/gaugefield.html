@@ -90,7 +90,7 @@
 <h1>Gaugefield<a class="headerlink" href="#gaugefield" title="Permalink to this headline"></a></h1>
 <p>The <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> class provides a template who has data member <code class="docutils literal notranslate"><span class="pre">_lattice</span></code> to store the
 gauge links for all
-the sites on a 4D lattice. Each link is an SU<span class="math notranslate nohighlight">\((\)</span>3<span class="math notranslate nohighlight">\()\)</span> matrix of data type <code class="docutils literal notranslate"><span class="pre">GSU3</span></code>. One could use
+the sites on a 4D lattice. Each link is an SU<span class="math notranslate nohighlight">\((\)</span>3<span class="math notranslate nohighlight">\()\)</span> matrix of data type <code class="docutils literal notranslate"><span class="pre">SU3</span></code>. One could use
 the indexer <code class="docutils literal notranslate"><span class="pre">GIndexer&lt;All,</span> <span class="pre">HaloDepth&gt;</span></code> to reach any link, including those in the halo.
 There are also several function members</p>
 <ul class="simple">
@@ -129,8 +129,8 @@ a file, and this can be done by the <code class="docutils literal notranslate"><
 this template.</p>
 <p>Reading/writing NERSC configurations to/from <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects <code class="docutils literal notranslate"><span class="pre">gauge</span></code> can be
 accomplished with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_nersc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span>
-<span class="n">gauge</span><span class="p">.</span><span class="n">writeconf_nersc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">diskprec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">endianness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENDIAN_BIG</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_nersc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">gauge</span><span class="p">.</span><span class="n">writeconf_nersc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">diskprec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">endianness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ENDIAN_BIG</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>One can set either <code class="docutils literal notranslate"><span class="pre">rows</span></code> to 2 or 3, depending on whether one wants compressed
@@ -139,19 +139,19 @@ the third row of each SU(3) link automatically. The precision <code class="docut
 <code class="docutils literal notranslate"><span class="pre">float</span></code> or 2 for <code class="docutils literal notranslate"><span class="pre">double</span></code>.</p>
 <p>Reading/writing ILDG configurations to/from <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects <code class="docutils literal notranslate"><span class="pre">gauge</span></code> can be
 accomplished with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_ildg</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span>
-<span class="n">gauge</span><span class="p">.</span><span class="n">writeconf_ildg</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">diskprec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_ildg</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span><span class="w"></span>
+<span class="n">gauge</span><span class="p">.</span><span class="n">writeconf_ildg</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">diskprec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>In the case of ILDG configurations, the endianness is fixed to BIG and they are not
 compressed by definition, so these are not options that can be passed.</p>
 <p>Reading a MILC configuration to a <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> object <code class="docutils literal notranslate"><span class="pre">gauge</span></code> is done with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_milc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_milc</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>There is no MILC writer.</p>
 <p>Reading an openQCD configuration to a <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> object <code class="docutils literal notranslate"><span class="pre">gauge</span></code> is done with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_openqcd</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">readconf_openqcd</span><span class="p">(</span><span class="s">&quot;path/to/gaugefile&quot;</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>There is no openQCD writer.</p>

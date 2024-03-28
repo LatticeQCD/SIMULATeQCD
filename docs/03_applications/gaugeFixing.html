@@ -24,8 +24,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Gradient Flow" href="gradientFlow.html" />
-    <link rel="prev" title="Generate quenched gauge configurations" href="quenched.html" /> 
+    <link rel="next" title="Generate quenched gauge configurations" href="quenched.html" />
+    <link rel="prev" title="Applications" href="applications.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,11 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Gauge Fixing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gradientFlow.html">Gradient Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="multiLevel.html">Multi-level algorithm</a></li>
-<li class="toctree-l2"><a class="reference internal" href="RHMC.html">Rational Hybrid Monte Carlo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rhmc.html">Rational Hybrid Monte Carlo</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
@@ -94,29 +94,29 @@ where <span class="math notranslate nohighlight">\(\mu\in\{1,2,3\}\)</span> for 
 by setting the <code class="docutils literal notranslate"><span class="pre">D_FIX</span></code> and <code class="docutils literal notranslate"><span class="pre">I_FIX</span></code> parameters in <code class="docutils literal notranslate"><span class="pre">gfix.h</span></code>.</p>
 <p>To use this class include the <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.h</span></code> header file and include <code class="docutils literal notranslate"><span class="pre">src/gfixing/gfix.cpp</span></code> as a source file for your
 program in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code>.  The gauge fixing class is initialized with, for example,</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>and one GFOR gauge fixing step for the entire lattice can be performed with</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Gauge fixing on the lattice is generally implemented as follows: There is a functional <span class="math notranslate nohighlight">\(F\)</span> of the gauge field that is
 extremized if and only if the gauge fixing condition is satisfied. So, the idea is to evolve the lattice toward the minimum of <span class="math notranslate nohighlight">\(F\)</span>
 using GFOR sweep. The value of <span class="math notranslate nohighlight">\(F\)</span> can be obtained by</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getAction</span><span class="p">();</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getAction</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The closeness of the configuration to the desired gauge is measured with a gauge fixing quality <span class="math notranslate nohighlight">\(\theta\)</span>. One iterates
 the GFOR sweep until <span class="math notranslate nohighlight">\(\theta\)</span> falls below some desired threshold. To obtain the value of <span class="math notranslate nohighlight">\(\theta\)</span>, use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 </div>
 <p>You can decide a good threshold for your purposes looking out for a window where the results for your observable of interest
 become relatively stable under GFOR sweeps. An undesirable artifact of this GFOR implementation is that the links lose their
 unitarity as time goes on. Therefore one should re-unitarize the lattice every so often; for instance one can re-unitarize every
 20 sweeps. To re-unitarize the lattice, call</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Don’t forget to do one final unitarization before making any measurements! The gauge fixing is tested in
@@ -125,25 +125,25 @@ unitarity as time goes on. Therefore one should re-unitarize the lattice every s
 <h2>Minimal working example<a class="headerlink" href="#minimal-working-example" title="Permalink to this headline"></a></h2>
 <p>Here’s a short snippet of code that will fix the gauge, assuming you’ve already initialized everything else like the Gaugefield.
 This snippet contains the main features needed for gauge fixing.</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">   </span><span class="n">gauge</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span>
-<span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span>
-<span class="kt">int</span><span class="w"> </span><span class="n">ngfstep</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
-<span class="n">PREC</span><span class="w"> </span><span class="n">gftheta</span><span class="o">=</span><span class="mf">1e10</span><span class="p">;</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">Gaugefield</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">   </span><span class="n">gauge</span><span class="p">(</span><span class="n">commBase</span><span class="p">);</span><span class="w"></span>
+<span class="n">GaugeFixing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="nb">true</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w">    </span><span class="n">GFixing</span><span class="p">(</span><span class="n">gauge</span><span class="p">);</span><span class="w"></span>
+<span class="kt">int</span><span class="w"> </span><span class="n">ngfstep</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="w"></span>
+<span class="n">PREC</span><span class="w"> </span><span class="n">gftheta</span><span class="o">=</span><span class="mf">1e10</span><span class="p">;</span><span class="w"></span>
 <span class="k">const</span><span class="w"> </span><span class="n">PREC</span><span class="w"> </span><span class="n">gtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">;</span><span class="w">          </span><span class="c1">/// When theta falls below this number, stop...</span>
 <span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">ngfstepMAX</span><span class="o">=</span><span class="mi">9000</span><span class="p">;</span><span class="w">     </span><span class="c1">/// ...or stop after a fixed number of steps; this way the program doesn&#39;t get stuck.</span>
 <span class="k">const</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">nunit</span><span class="o">=</span><span class="mi">20</span><span class="p">;</span><span class="w">            </span><span class="c1">/// Re-unitarize every 20 steps.</span>
-<span class="n">gauge</span><span class="p">.</span><span class="n">updateAll</span><span class="p">();</span>
-<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">&lt;</span><span class="n">ngfstepMAX</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">gftheta</span><span class="o">&gt;</span><span class="n">gtol</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="n">gauge</span><span class="p">.</span><span class="n">updateAll</span><span class="p">();</span><span class="w"></span>
+<span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">&lt;</span><span class="n">ngfstepMAX</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="p">(</span><span class="n">gftheta</span><span class="o">&gt;</span><span class="n">gtol</span><span class="p">)</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="c1">/// Compute starting GF functional and update the lattice.</span>
-<span class="w">    </span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span>
+<span class="w">    </span><span class="n">GFixing</span><span class="p">.</span><span class="n">gaugefixOR</span><span class="p">();</span><span class="w"></span>
 <span class="w">    </span><span class="c1">/// Due to the nature of the update, we have to re-unitarize every so often.</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">%</span><span class="n">nunit</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span>
-<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="p">(</span><span class="n">ngfstep</span><span class="o">%</span><span class="n">nunit</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">        </span><span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="p">}</span><span class="w"></span>
 <span class="w">    </span><span class="c1">/// Re-calculate theta to determine whether we are sufficiently fixed.</span>
-<span class="w">    </span><span class="n">gftheta</span><span class="o">=</span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span>
-<span class="w">    </span><span class="n">ngfstep</span><span class="o">+=</span><span class="mi">1</span><span class="p">;</span>
-<span class="p">}</span>
+<span class="w">    </span><span class="n">gftheta</span><span class="o">=</span><span class="n">GFixing</span><span class="p">.</span><span class="n">getTheta</span><span class="p">();</span><span class="w"></span>
+<span class="w">    </span><span class="n">ngfstep</span><span class="o">+=</span><span class="mi">1</span><span class="p">;</span><span class="w"></span>
+<span class="p">}</span><span class="w"></span>
 <span class="n">gauge</span><span class="p">.</span><span class="n">su3latunitarize</span><span class="p">();</span><span class="w"> </span><span class="c1">/// One final re-unitarization.</span>
 </pre></div>
 </div>
@@ -154,12 +154,12 @@ This snippet contains the main features needed for gauge fixing.</p>
 observables that depend on the gauge, in particular Polyakov loop and Wilson line correlators. (You can learn a bit more
 about the implementation of Polyakov loop correlators <a class="reference internal" href="../05_modules/correlator.html"><span class="doc std std-doc">here</span></a>.) The available options are
 given under <code class="docutils literal notranslate"><span class="pre">parameter/applications/gaugeFixing.param</span></code>, which has options like</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">gtolerance</span><span class="w">       </span><span class="o">=</span><span class="w"> </span>1e-6<span class="w">  </span><span class="c1"># stop gauge fixing below this theta</span>
-<span class="nv">maxgfsteps</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="m">3000</span><span class="w">  </span><span class="c1"># or after this many steps</span>
-<span class="nv">numunit</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="m">20</span><span class="w">    </span><span class="c1"># re-unitarize every 20 steps</span>
-<span class="nv">PolyakovLoopCorr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w">     </span><span class="c1"># measure Polyakov loop correlators</span>
-<span class="nv">WilsonLineCorr</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w">     </span><span class="c1"># don&#39;t measure Wilson lines</span>
-<span class="nv">SaveConfig</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w">     </span><span class="c1"># don&#39;t saved the gauge-fixed configuration</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">gtolerance</span>       <span class="o">=</span> 1e-6  <span class="c1"># stop gauge fixing below this theta</span>
+<span class="nv">maxgfsteps</span>       <span class="o">=</span> <span class="m">3000</span>  <span class="c1"># or after this many steps</span>
+<span class="nv">numunit</span>          <span class="o">=</span> <span class="m">20</span>    <span class="c1"># re-unitarize every 20 steps</span>
+<span class="nv">polyakovLoopCorr</span> <span class="o">=</span> <span class="m">1</span>     <span class="c1"># measure Polyakov loop correlators</span>
+<span class="nv">WilsonLineCorr</span>   <span class="o">=</span> <span class="m">0</span>     <span class="c1"># don&#39;t measure Wilson lines</span>
+<span class="nv">SaveConfig</span>       <span class="o">=</span> <span class="m">0</span>     <span class="c1"># don&#39;t saved the gauge-fixed configuration</span>
 </pre></div>
 </div>
 <p>If you would like to implement your own observable in this application, please follow the examples of the Wilson line

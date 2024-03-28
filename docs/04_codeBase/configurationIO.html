@@ -122,13 +122,13 @@ LIME files as four records, each containing a single message.</p></li>
 <p>The <code class="docutils literal notranslate"><span class="pre">ildg-format</span></code> record is an XML document with some set of non-mutable parameters needed to
 read the binary. Here is an example:</p>
 <div class="highlight-XML notranslate"><div class="highlight"><pre><span></span><span class="cp">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span>
-<span class="nt">&lt;ildgFormat</span><span class="w"> </span><span class="na">xmlns=</span><span class="s">&quot;http://www.lqcd.org/ildg&quot;</span>
-<span class="w">            </span><span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
-<span class="w">            </span><span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.lqcd.org/ildg/filefmt.xsd&quot;</span><span class="nt">&gt;</span>
-<span class="w">  </span><span class="nt">&lt;version&gt;</span><span class="w"> </span>1.0<span class="w"> </span><span class="nt">&lt;/version&gt;</span>
-<span class="w">  </span><span class="nt">&lt;field&gt;</span><span class="w"> </span>su3gauge<span class="w"> </span><span class="nt">&lt;/field&gt;</span>
-<span class="w">  </span><span class="nt">&lt;precision&gt;</span><span class="w"> </span>32<span class="w"> </span><span class="nt">&lt;/precision&gt;</span>
-<span class="w">  </span><span class="nt">&lt;lx&gt;</span><span class="w"> </span>20<span class="w"> </span><span class="nt">&lt;/lx&gt;</span><span class="w"> </span><span class="nt">&lt;ly&gt;</span><span class="w"> </span>20<span class="w"> </span><span class="nt">&lt;/ly&gt;</span><span class="w"> </span><span class="nt">&lt;lz&gt;</span><span class="w"> </span>20<span class="w"> </span><span class="nt">&lt;/lz&gt;</span><span class="w"> </span><span class="nt">&lt;lt&gt;</span><span class="w"> </span>64<span class="w"> </span><span class="nt">&lt;/lt&gt;</span>
+<span class="nt">&lt;ildgFormat</span> <span class="na">xmlns=</span><span class="s">&quot;http://www.lqcd.org/ildg&quot;</span>
+            <span class="na">xmlns:xsi=</span><span class="s">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span>
+            <span class="na">xsi:schemaLocation=</span><span class="s">&quot;http://www.lqcd.org/ildg/filefmt.xsd&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;version&gt;</span> 1.0 <span class="nt">&lt;/version&gt;</span>
+  <span class="nt">&lt;field&gt;</span> su3gauge <span class="nt">&lt;/field&gt;</span>
+  <span class="nt">&lt;precision&gt;</span> 32 <span class="nt">&lt;/precision&gt;</span>
+  <span class="nt">&lt;lx&gt;</span> 20 <span class="nt">&lt;/lx&gt;</span> <span class="nt">&lt;ly&gt;</span> 20 <span class="nt">&lt;/ly&gt;</span> <span class="nt">&lt;lz&gt;</span> 20 <span class="nt">&lt;/lz&gt;</span> <span class="nt">&lt;lt&gt;</span> 64 <span class="nt">&lt;/lt&gt;</span>
 <span class="nt">&lt;/ildgFormat&gt;</span>
 </pre></div>
 </div>
@@ -149,7 +149,7 @@ In this format a <code class="docutils literal notranslate"><span class="pre">Ga
 <p>The next record is a <code class="docutils literal notranslate"><span class="pre">ildg-data-lfn</span></code> record. When the configuration is uploaded somewhere,
 the Logical File Name (LFN) is the string used to identify it. The ILDG standard for
 constructing LFNs is</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LFN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mc://ldg/&quot;</span><span class="o">+</span><span class="n">collaborationName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">projectName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">ensembleName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">fileName</span><span class="p">;</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">LFN</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;mc://ldg/&quot;</span><span class="o">+</span><span class="n">collaborationName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">projectName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">ensembleName</span><span class="o">+</span><span class="s">&quot;/&quot;</span><span class="o">+</span><span class="n">fileName</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Therefore this is how we construct it automatically in SIMULATeQCD.</p>
@@ -181,17 +181,17 @@ checksum is computed on each site. All the checksums from sites are combined to 
 performing again some bit-wise operations. To make it stronger one takes a lexicographic rotation
 of the checksum coming from each site. As a result one gets two checksums. The
 function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">checksum_crc32_sitedata</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">checksum_crc32_sitedata</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">bytes</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>computes the checksum <code class="docutils literal notranslate"><span class="pre">crc32</span></code> from the site data (4 links, each link is 3x3 matrix of complex numbers).
 The function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_combine</span><span class="p">(</span><span class="n">Checksum</span><span class="w">  </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="kt">size_t</span><span class="w"> </span><span class="n">global_vol</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cs_crc32_sd</span><span class="p">[])</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_combine</span><span class="p">(</span><span class="n">Checksum</span><span class="w">  </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="kt">size_t</span><span class="w"> </span><span class="n">global_vol</span><span class="p">,</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">cs_crc32_sd</span><span class="p">[])</span><span class="w"></span>
 </pre></div>
 </div>
 <p>combines all checksums from sites and performs the lexicographic rotation.
 The function</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_accumulator</span><span class="p">(</span><span class="n">Checksum</span><span class="w"> </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site_index</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">sitedata_bytes</span><span class="p">)</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">checksum_crc32_accumulator</span><span class="p">(</span><span class="n">Checksum</span><span class="w"> </span><span class="o">*</span><span class="n">checksum_crc32</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">site_index</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">ptr_buffer</span><span class="p">,</span><span class="w"> </span><span class="kt">size_t</span><span class="w"> </span><span class="n">sitedata_bytes</span><span class="p">)</span><span class="w"></span>
 </pre></div>
 </div>
 <p>does the same job as the two above. But it should only be used on single GPU.</p>

@@ -8,25 +8,25 @@
 template<class floatT, size_t HaloDepth, CompressionType comp, int linkNumber>
 class HypStaple {
 private:
-  gaugeAccessor<floatT, comp> _gAcc_0;
-  gaugeAccessor<floatT, comp> _gAcc_1;
-  gaugeAccessor<floatT, comp> _gAcc_2;
-  gaugeAccessor<floatT, comp> _gAcc_3;
-  gaugeAccessor<floatT, comp> _gAcc_temp1;
-  gaugeAccessor<floatT, comp> _gAcc_temp2;
+  SU3Accessor<floatT, comp> _gAcc_0;
+  SU3Accessor<floatT, comp> _gAcc_1;
+  SU3Accessor<floatT, comp> _gAcc_2;
+  SU3Accessor<floatT, comp> _gAcc_3;
+  SU3Accessor<floatT, comp> _gAcc_temp1;
+  SU3Accessor<floatT, comp> _gAcc_temp2;
   int _excluded_dir1;
   int _excluded_dir2;
 
 public:
-  HypStaple(gaugeAccessor<floatT, comp> gAccIn_0, //this is really the only required arg, but I'm not sure what the default is for gAcc
-	    gaugeAccessor<floatT, comp> gAccIn_1,
-	    gaugeAccessor<floatT, comp> gAccIn_2,
-	    gaugeAccessor<floatT, comp> gAccIn_3,
+  HypStaple(SU3Accessor<floatT, comp> gAccIn_0, //this is really the only required arg, but I'm not sure what the default is for gAcc
+	    SU3Accessor<floatT, comp> gAccIn_1,
+	    SU3Accessor<floatT, comp> gAccIn_2,
+	    SU3Accessor<floatT, comp> gAccIn_3,
 	    int excluded_dir1 = -1,
 	    int excluded_dir2 = -1 ) : _gAcc_0(gAccIn_0),_gAcc_1(gAccIn_1), _gAcc_2(gAccIn_2), _gAcc_3(gAccIn_3),
 				       _gAcc_temp1(gAccIn_0), _gAcc_temp2(gAccIn_0),
 				       _excluded_dir1(excluded_dir1), _excluded_dir2(excluded_dir2){}
-  __host__ __device__ GSU3<floatT> operator() (gSiteMu site) {
+  __host__ __device__ SU3<floatT> operator() (gSiteMu site) {
     switch (linkNumber) {
     case 1:
       return hypThreeLinkStaple_third_level<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, _gAcc_2, _gAcc_3, site, _gAcc_temp1, _gAcc_temp2);
@@ -37,7 +37,7 @@ public:
     case 4:
       return su3unitarize_project<floatT, HaloDepth, comp>(_gAcc_0, _gAcc_1, site);
     default:
-      return gsu3_zero<floatT>();
+      return su3_zero<floatT>();
     }
   }
 

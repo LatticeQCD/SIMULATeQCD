@@ -14,12 +14,12 @@ struct fill_with_rand
     uint4* _rand_state;
     explicit fill_with_rand(uint4* rand_state) : _rand_state(rand_state){}
 
-    GSU3<floatT> my_mat;
+    SU3<floatT> my_mat;
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite site){
     }
 
-    __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){
+    __device__ __host__ SU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu){
         my_mat.random(&_rand_state[site.isite]);
         return my_mat;
     }
@@ -30,12 +30,12 @@ struct fill_with_gauss {
     uint4* _rand_state;
     explicit fill_with_gauss(uint4* rand_state) : _rand_state(rand_state){}
 
-    GSU3<floatT> my_mat;
+    SU3<floatT> my_mat;
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite site) {
     }
 
-    __device__ __host__ GSU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu) {
+    __device__ __host__ SU3<floatT> operator()(gSite site, __attribute__((unused)) size_t mu) {
         my_mat.gauss(&_rand_state[site.isite]);
         return my_mat;
     }
@@ -45,12 +45,12 @@ struct fill_with_gauss {
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct UnitKernel{
 
-    gaugeAccessor<floatT,comp> gaugeAccessor;
-    explicit UnitKernel(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : gaugeAccessor(gauge.getAccessor()){}
-    __device__ __host__ GSU3<floatT> operator()(gSiteMu siteMu){
-        typedef GIndexer<All,HaloDepth> GInd;
-        GSU3<double> temp;
-        temp=gaugeAccessor.template getLink<double>(siteMu);
+    SU3Accessor<floatT,comp> SU3Accessor;
+    explicit UnitKernel(Gaugefield<floatT,onDevice,HaloDepth,comp>& gauge) : SU3Accessor(gauge.getAccessor()){}
+    __device__ __host__ SU3<floatT> operator()(gSiteMu siteMu){
+        
+        SU3<double> temp;
+        temp=SU3Accessor.template getLink<double>(siteMu);
         temp.su3unitarize();
         return temp;
     }
@@ -73,7 +73,7 @@ void Gaugefield<floatT, onDevice, HaloDepth, comp>::gauss(uint4* rand_state) {
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 void Gaugefield<floatT, onDevice, HaloDepth, comp>::one() {
-    iterateWithConst(gsu3_one<floatT>());
+    iterateWithConst(su3_one<floatT>());
 }
 
 /// Unitarize all the SU3 links on the lattice.
@@ -86,12 +86,12 @@ void Gaugefield<floatT,onDevice,HaloDepth,comp>::su3latunitarize() {
 ////warning on usage, convergence to su3 matrix can fail in edge cases, when input far away from proper su3 matrix
 //such that convergence never happens, and algorithm gives up
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ GSU3<floatT> inline su3unitarize_project(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT,comp> gAcc_base, gSiteMu siteMu) {
+__host__ __device__ SU3<floatT> inline su3unitarize_project(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT,comp> gAcc_base, gSiteMu siteMu) {
 
   typedef GIndexer<All,HaloDepth> GInd;
 
-  GSU3<floatT> temp = gsu3_zero<floatT>();
-  GSU3<floatT> temp_guess = gsu3_zero<floatT>();
+  SU3<floatT> temp = su3_zero<floatT>();
+  SU3<floatT> temp_guess = su3_zero<floatT>();
 
   int mu = siteMu.mu;
   gSite origin = GInd::getSite(siteMu.isite);
