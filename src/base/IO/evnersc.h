@@ -118,12 +118,15 @@ private:
     gVect3<f2> from_buf(f1 *buf) const {
         int i = 0;
         gVect3<f2> U;
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < ; k++) {
             f2 re = buf[i++];
             f2 im = buf[i++];
             rootLogger.info('c', k, re, im);
             U(k) = GCOMPLEX(f2)(re, im);
         }
+        f2 re = buf[i++];
+        f2 im = buf[i++];
+        rootLogger.info('c3', re, im);
         return U;
     }
 
