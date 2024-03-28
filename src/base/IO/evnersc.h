@@ -147,7 +147,7 @@ public:
     evNerscFormat(CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
-        su3_size = 2 * 3 * float_size;
+        su3_size = 8 * float_size;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;
