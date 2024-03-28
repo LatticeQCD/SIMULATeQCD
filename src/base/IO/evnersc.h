@@ -121,6 +121,7 @@ private:
         for (int k = 0; k < 3; k++) {
             f2 re = buf[i++];
             f2 im = buf[i++];
+            rootLogger.info('c', k, re, im);
             U(k) = GCOMPLEX(f2)(re, im);
         }
         return U;
@@ -206,8 +207,9 @@ public:
     template<class floatT>
     gVect3<floatT> get() {
         char *start = &buf[index];
-        gVect3<floatT> ret = from_buf<floatT, floatT>((floatT *) start);
+        gVect3<floatT> ret = from_buf<float, float>((float *) start);
         index += su3_size;
+        rootLogger.info(index);
         return ret;
     }
 

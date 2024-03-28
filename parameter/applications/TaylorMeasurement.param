@@ -31,7 +31,7 @@ cgMax = 20000
 
 seed = 1234
 Gaugefile = /home/finn/_s0_stream_0/l488f21b6640m00196m0528_s0.1000
-Eigenvectorfile = /home/finn/_s0_stream_0/trlanl488f21b6640m00196m0528_s0.1000
+eigen_file = /home/finn/_s0_stream_0/trlanl488f21b6640m00196m0528_s0.1000
 
 num_random_vectors = 304
 valence_masses = 0.0528
