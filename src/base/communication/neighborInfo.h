@@ -61,8 +61,9 @@ private:
 
     ProcessInfo fail;
 
+    #ifndef USE_SYCL
     gpuDeviceProp myProp;
-
+    #endif
     inline void _fill2DNeighbors(ProcessInfo array[][2], int mu, int nu);
 
     inline void _fill3DNeighbors(ProcessInfo array[][2], int mu, int nu, int rho);
@@ -127,7 +128,7 @@ public:
         fail.coord = LatticeDimensions(-99, -99, -99, -99);
         fail.onNode = false;
 
-#ifndef CPUONLY
+#ifndef USE_SYCL
         gpuError_t gpuErr = gpuGetDeviceProperties(&myProp, myInfo.deviceRank);
         if (gpuErr != gpuSuccess) {
             GpuError("neighborInfo.h: gpuGetDeviceProperties failed:", gpuErr);
@@ -426,18 +427,21 @@ inline void NeighborInfo::exchangeProcessInfo() {
 }
 
 inline bool NeighborInfo::IsGPUCapableP2P() const {
+    #ifndef USE_SYCL
     // This requires two processes accessing each device, so we need
     // to ensure exclusive or prohibited mode is not set
     if (myProp.computeMode != gpuComputeModeDefault) {
         throw std::runtime_error(stdLogger.fatal("Device ", myProp.name, " is in an unsupported compute mode (exclusive or prohibited mode is NOT allowed)"));
     }
     return (bool) (myProp.major >= 2);
-
+    #else
+    return false;
+    #endif
 }
 
 
 inline void NeighborInfo::checkP2P() {
-
+#ifndef USE_SYCL
 //! This checks
     for (const HaloSegment &hseg : AllHaloSegments) {
         for (int dir = 0; dir < HaloSegmentDirections(hseg); dir++) {
@@ -472,6 +476,7 @@ inline void NeighborInfo::checkP2P() {
       , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
 #elif defined USE_HIP
       , "UVA ", "Unknown (HIP does not support this!)");
+#endif
 #endif
 }
 

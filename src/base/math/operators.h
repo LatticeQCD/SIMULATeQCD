@@ -17,7 +17,7 @@
 #include "../wrapper/gpu_wrapper.h"
 #include "complex.h"
 #include "su3.h"
-#include "vect3.h"
+//#include "vect3.h"
 // #include "../indexer/BulkIndexer.h"
 
 enum Operation {

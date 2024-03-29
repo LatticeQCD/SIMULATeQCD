@@ -37,11 +37,13 @@
 #include <memory>
 #include <cstring>
 #include <map>
-#include "./communication/gpuIPC.h"
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 
+#ifndef USE_SYCL
+#include "./communication/gpuIPC.h"
+#endif
 #define DISALLOW_SHARED_MEM 0     /// True: Enforce that all memory channels are unique
 
 /// This line is needed because the MemoryManagement and MemoryAccessor need to know what gMemoryPtr is, and compilation
@@ -60,6 +62,8 @@ class MemoryManagement {
 private:
     //! gMemory objects contain the actual pointers to dynamic memory. It should only be possible to construct them through
     //! the creation of a gMemoryPtr object, which in turn can only be constructed by the MemoryManagement.
+    
+    #ifndef USE_SYCL
     template<bool onDevice>
     class gMemory {
     private:
@@ -267,18 +271,18 @@ private:
 
     /// THIS IS ALL CUDA IPC/P2P related stuff
     private:
-    #if defined(USE_CUDA) || defined(USE_HIP)
+
         gpuIPC _cIpc;
         bool P2Ppaired;
-    #endif
+
     public:
         void initP2P(MPI_Comm comm, int myRank) {
             if (onDevice && _current_size != 0) {
                 if (!P2Ppaired) {
-                    #if defined(USE_CUDA) || defined(USE_HIP)
+                    
                     _cIpc = gpuIPC(comm, myRank, this->template getPointer<uint8_t>());
                     P2Ppaired = true;
-                    #endif
+                   
                 }
             } else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: initP2P: gpuIPC not possible on gMemory<HOST>");
@@ -286,35 +290,198 @@ private:
         }
 
         void addP2PRank(int oppositeRank) {
-            #if defined(USE_CUDA) || defined(USE_HIP)
+            
             if (onDevice) _cIpc.addP2PRank(oppositeRank);
             else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: addP2PRank: gpuIPC not possible on gMemory<HOST>");
             }
-            #endif
+            
         }
 
         void syncAndInitP2PRanks() {
-            #if defined(USE_CUDA) || defined(USE_HIP)
+            
             if (onDevice && _current_size != 0) _cIpc.syncAndInitAllP2PRanks();
             else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: syncAndInitP2PRanks: gpuIPC not possible on gMemory<HOST>");
             }
-            #endif
+           
         }
 
         uint8_t *getOppositeP2PPointer(int oppositeRank) {
-            #if defined(USE_CUDA) || defined(USE_HIP)
+            
             if (onDevice && _current_size != 0) return _cIpc.getPointer(oppositeRank);
             else if (!onDevice) {
                 rootLogger.error("memoryManagement.h: getOppositeP2PPointer: gpuIPC not possible on gMemory<HOST>");
                 return nullptr;
             }
-            #endif
+            
             return nullptr;
         }
     };
 
+    #else
+    template<bool onDevice>
+    class gMemory {
+    private:
+        sycl::queue &device_queue;
+        size_t _current_size; /// Size of rawPointer in bytes.
+        void *_rawPointer;    /// Declare a rawPointer pointer of type void, which we want to do because void type pointers
+        /// can point to an object of any type. A goal of the new memory management is that this
+        /// will be the only raw pointer.
+
+        void alloc(size_t size) {
+            if (size > 0) {
+                if (onDevice) {
+                    _rawPointer = sycl::malloc_device<void>(size,device_queue);
+                } else {
+    #ifndef CPUONLY
+                    _rawPointer = sycl::malloc_host<void>(size,device_queue);
+    #else
+                    _rawPointer = std::malloc(size);
+                    if (_rawPointer == nullptr){
+                        MemoryManagement::memorySummary(true,true,false, false,false);
+                        std::stringstream err_msg;
+                        err_msg << "_rawPointer: Failed to allocate (additional) " << size/1000000000. << " GB of memory on host";
+                        throw std::runtime_error(stdLogger.fatal(err_msg.str()));
+                    }
+    #endif
+                }
+                rootLogger.alloc("> Allocated mem at " ,  static_cast<void*>(_rawPointer)
+                                    ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): "
+                                    ,  size/1000000000. ,  " GB");
+            }
+            _current_size = size;
+        }
+
+        void free() {
+            if (_current_size > 0) {
+    #ifndef CPUONLY           
+                free(_rawPointer,device_queue);
+    #else
+                std::free(_rawPointer);
+    #endif
+                rootLogger.alloc("> Free      mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host  ") ,  "): " ,
+                                    _current_size/1000000000. ,  " GB");
+            }
+            _rawPointer = nullptr;
+            _current_size = 0;
+        }
+
+
+
+    public:
+        //! gMemory constructor; initialize _current_size and _rawPointer.
+        //! We should figure out how to make this private. Problem: befriending std::map or std::pair doesn't work.
+        explicit gMemory(size_t size, sycl::queue &q) : _current_size(size), _rawPointer(nullptr), device_queue(q) {
+            adjustSize(size);
+        }
+
+        /// First we remove the default copy constructors. We want to disallow any copies of a gMemory object, because if
+        /// there were a copy, the MemoryManager would not know about it. The MemoryManager shall be omniscient. To
+        /// understand the syntax, google references and R-value references.
+        gMemory(const gMemory<onDevice> &) = delete;
+
+        gMemory(const gMemory<onDevice> &&) = delete;
+
+        gMemory(gMemory<onDevice> &) = delete;
+
+        gMemory(gMemory<onDevice> &&) = delete;
+
+
+
+        /// We make sure we free up memory automatically when we exit whatever scope a gMemory object is defined in.
+        /// In general we should do this whenever we dynamically allocate memory. If we're not dynamically allocating
+        /// memory we don't have to worry about it, because memory allocation is handled automatically by the stack.
+        ~gMemory() {
+            free(); /// Remember that this was defined above
+        }
+
+        void swap(gMemoryPtr<onDevice> &src);
+
+        void memset(int value)
+        {
+            if (_current_size > 0) {
+                if (onDevice) {
+                    device_queue.memset(_rawPointer, value, _current_size).wait();
+                } else {
+                    std::memset(_rawPointer, value, _current_size);
+                }
+            }
+        }
+
+        template<bool onDeviceSrc>
+        void copyFrom(const gMemoryPtr<onDeviceSrc> &src, size_t sizeInBytes, size_t offsetSelf = 0,
+                        size_t offsetSrc = 0);
+
+        /// Assignment operator.
+        template<bool onDeviceSrc>
+        gMemory<onDevice> &operator=(const gMemory<onDeviceSrc> &memRHS) {
+            copyFrom(memRHS, memRHS.getSize());
+            return *this;
+        }
+
+        /// If we need more memory for the array pointed to by _rawPointer, allocate some more space. If adjustSize
+        /// receives a template parameter, allocate an amount of space appropriate for the specified type. Otherwise
+        /// allocate the size in bytes directly.
+        template<class T>
+        bool adjustSize(size_t size) {
+            size_t sizeBytes = sizeof(T) * size;
+            bool resize = _current_size < sizeBytes;
+            if (resize) {
+                if (_current_size > 0){
+                    rootLogger.alloc("Increasing mem (" ,  (onDevice ? "Device" : "Host") ,  ") from " ,
+                                        _current_size/1000000000. ,  " GB to " ,  sizeBytes/1000000000. ,  " GB:");
+                }
+                free();
+                alloc(sizeBytes);
+            }
+            return resize;
+        }
+
+        bool adjustSize(size_t sizeBytes) {
+            bool resize = _current_size < sizeBytes;
+            if (resize) {
+                if (_current_size > 0){
+                    rootLogger.alloc(">> Increase mem at " ,  static_cast<void*>(_rawPointer) ,  " (" ,  (onDevice ? "Device" : "Host") ,  ") from " ,
+                                        _current_size/1000000000. ,  " GB to " ,  sizeBytes/1000000000. ,  " GB.");
+                }
+                free();
+                alloc(sizeBytes);
+            }
+            return resize;
+        }
+
+        /// Again, arithmetic on void pointers is not allowed, so convert to char. static_cast is compile time casting.
+        /// Also remember that _rawPointer is the pointer to the block of memory that we're interested in; if we never
+        /// required pointer arithmetic, we would just have written return _rawPointer. But we need it for stacked spinors.
+        /// Implemented in cpp file because the compiler does not recognize the second instance as a pointer.
+        void *getPointer(const size_t offsetInBytes = 0) const {
+            return static_cast<char *>(_rawPointer) + offsetInBytes;
+        }
+
+        template<class T>
+        __host__ __device__ T *getPointer(const size_t offsetInUnitsOfT = 0) const {
+            return static_cast<T *>(_rawPointer) + offsetInUnitsOfT;
+        }
+
+        /// Returns size of buffer in bytes
+        size_t getSize() const { return _current_size; }
+
+        /// Overload the stream operator for use in memorySummary()
+        friend std::ostream &operator<<(std::ostream &s, const std::map<std::string,gMemory<onDevice>>& container) {
+            size_t total = 0;
+            for ( auto it = container.begin(); it != container.end(); it++ ) {
+                std::string name = it->first;
+                size_t byteSize = it->second.getSize();
+                total += byteSize;
+                s << name << ": " << byteSize << " Bytes\n\t";
+            }
+
+            s << "Total: " << total << " Bytes (" << total/1000000000. << " GB)\n";
+            return s;
+        }
+    };
+    #endif
 
 
 private:

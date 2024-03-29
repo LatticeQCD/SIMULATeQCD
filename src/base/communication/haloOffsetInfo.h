@@ -28,7 +28,9 @@ const size_t MAX_NUM_STREAMS = 160;
 const size_t MAX_NUM_STREAMS = 2;
 #endif
 
+#ifndef USE_SYCL
 typedef std::array<gpuStream_t, MAX_NUM_STREAMS> commStreams_t;
+#endif
 
 struct HaloSegmentInfo {
 private:
@@ -47,14 +49,26 @@ private:
     bool recvReqUsed = false;
     MPI_Request hostRequestSend = 0;
     MPI_Request hostRequestRecv = 0;
+    
+    #ifndef USE_SYCL
     gpuStream_t& sendStream;
     gpuStream_t& receiveStream;
+  
+
     bool sendStreamUsed = false;
     bool receiveStreamUsed = false;
+    #endif
 
 public:
-
+    #ifndef USE_SYCL
     HaloSegmentInfo(gpuStream_t &sendStream, gpuStream_t &recvStream) : sendStream(sendStream), receiveStream(recvStream) {
+        MpiType = MPI_DATATYPE_NULL;
+        hostRequestSend = MPI_REQUEST_NULL;
+        hostRequestRecv = MPI_REQUEST_NULL;
+    }
+    #endif
+
+    HaloSegmentInfo() {
         MpiType = MPI_DATATYPE_NULL;
         hostRequestSend = MPI_REQUEST_NULL;
         hostRequestRecv = MPI_REQUEST_NULL;
@@ -67,8 +81,9 @@ public:
     HaloSegmentInfo& operator=(HaloSegmentInfo&) = delete;
 
     //! move assignment
+   
     HaloSegmentInfo& operator=(HaloSegmentInfo&&) = delete;
-
+#ifndef USE_SYCL
     //! move constructor
     HaloSegmentInfo(HaloSegmentInfo&& source) noexcept :
     //! move the gMemoryPtr's
@@ -94,7 +109,6 @@ public:
     //! MPI_Request. These are just pointers
     hostRequestSend(source.hostRequestSend),
     hostRequestRecv(source.hostRequestRecv),
-
     //! these are vectors of basic types
     // deviceStream(std::move(source.deviceStream)),
     sendStream(source.sendStream),
@@ -112,6 +126,43 @@ public:
         source.hostRequestSend = MPI_REQUEST_NULL;
         source.hostRequestRecv = MPI_REQUEST_NULL;
     }
+    #else
+    HaloSegmentInfo(HaloSegmentInfo&& source) noexcept :
+    //! move the gMemoryPtr's
+    sendBase(std::move(source.sendBase)),
+    recvBase(std::move(source.recvBase)),
+    destinationBase(std::move(source.destinationBase)),
+    sourceBase(std::move(source.sourceBase)),
+
+    //! these can be copied as they are just basic types
+    offset(source.offset),
+    reverseOffset(source.reverseOffset),
+    p2p(source.p2p),
+    oppositeP2PRank(source.oppositeP2PRank),
+    length(source.length),
+
+    //! This is just a pointer
+    MpiType(source.MpiType),
+
+    //! again basic types
+    sendReqUsed(source.sendReqUsed),
+    recvReqUsed(source.recvReqUsed),
+
+    //! MPI_Request. These are just pointers
+    hostRequestSend(source.hostRequestSend),
+    hostRequestRecv(source.hostRequestRecv)
+    {
+        //! make source hollow
+        source.offset = 0;
+        source.reverseOffset = 0;
+        source.p2p = false;
+        source.oppositeP2PRank = 0;
+        source.length = 0;
+        source.MpiType = MPI_DATATYPE_NULL;
+        source.hostRequestSend = MPI_REQUEST_NULL;
+        source.hostRequestRecv = MPI_REQUEST_NULL;
+    }
+    #endif
 
     void setSendBase(const gMemoryPtr<false> &_sendBase) { HaloSegmentInfo::sendBase = _sendBase; }
 
@@ -168,7 +219,7 @@ public:
 
     //     return deviceStream[ind];
     // }
-
+    #ifndef USE_SYCL
     gpuStream_t &getSendStream() {
         sendStreamUsed = true;
         return sendStream;
@@ -179,7 +230,7 @@ public:
         return receiveStream;
     }
 
-  
+    #endif
     // int addDeviceStream() {
     //     deviceStream.emplace_back();
 
@@ -193,11 +244,14 @@ public:
     // }
 
     void synchronizeAll() {
+        #ifndef USE_SYCL
         synchronizeSendStream();
         synchronizeReceiveStream();
+        #endif
         synchronizeRequest();
     }
 
+    #ifndef USE_SYCL
     void synchronizeSendStream() {
         if (sendStreamUsed) {
                 gpuError_t gpuErr = gpuStreamSynchronize(sendStream);
@@ -213,7 +267,7 @@ public:
                 receiveStreamUsed = false;
         }
     }
-    
+    #endif
     
 
     void synchronizeRequest(int sendRecv = -1) {
@@ -250,7 +304,11 @@ public:
     }
 
     uint8_t *getDeviceDestinationPtrP2P() {
+        #ifndef USE_SYCL
         return destinationBase->getOppositeP2PPointer(oppositeP2PRank) + reverseOffset;
+        #else
+        return nullptr;
+        #endif
     }
 
     uint8_t *getDeviceDestinationPtrGPUAwareMPI() {
@@ -297,10 +355,11 @@ private:
     std::vector<HaloSegmentInfo> _stripeInfo;
     std::vector<HaloSegmentInfo> _cornerInfo;
     
+    #ifndef USE_SYCL
     commStreams_t& commStreams;
     
     gpuIPCEvent _cIPCEvent;
-
+    #endif
 
 public:
 
@@ -312,6 +371,7 @@ public:
     HaloOffsetInfo() = delete;
 
     //! constructor
+    #ifndef USE_SYCL
     HaloOffsetInfo(commStreams_t &cstreams, NeighborInfo &NInfo, MPI_Comm comm, int myRank, bool gpuAwareMPI = false, bool gpuP2P = false) :
             neighbor_info(NInfo),
             cart_comm(comm), _myRank(myRank),
@@ -377,7 +437,39 @@ public:
             _HalSegMapRight[corner] = _cornerInfo.data();
         }
     }
+    #else
+     HaloOffsetInfo(NeighborInfo &NInfo, MPI_Comm comm, int myRank, bool gpuAwareMPI = false, bool gpuP2P = false) :
+            neighbor_info(NInfo),
+            cart_comm(comm), _myRank(myRank),
+            sendBase(MemoryManagement::getMemAt<false>("sendBase")),
+            recvBase(MemoryManagement::getMemAt<false>("recvBase")),
+            sendBaseP2P(MemoryManagement::getMemAt<true>("sendBaseP2P")),
+            recvBaseP2P(MemoryManagement::getMemAt<true>("recvBaseP2P")),
+            _gpuAwareMPI(gpuAwareMPI),
+            _gpuP2P(gpuP2P) {
 
+        for (auto &HypPlane : HaloHypPlanes) {
+            _HalSegMapLeft[HypPlane] = _hypPlaneInfo.data();
+            _HalSegMapRight[HypPlane] = _hypPlaneInfo.data();
+        }
+
+        for (auto &plane : HaloPlanes) {
+            _HalSegMapLeft[plane] = _planeInfo.data();
+            _HalSegMapRight[plane] = _planeInfo.data();
+        }
+
+        for (auto &stripe : HaloStripes) {
+            _HalSegMapLeft[stripe] = _stripeInfo.data();
+            _HalSegMapRight[stripe] = _stripeInfo.data();
+        }
+
+        for (auto &corner : HaloCorners) {
+            _HalSegMapLeft[corner] = _cornerInfo.data();
+            _HalSegMapRight[corner] = _cornerInfo.data();
+        }
+    }
+    #endif
+    
     //! move constructor
     HaloOffsetInfo(HaloOffsetInfo<onDevice>&& source)  noexcept :
         neighbor_info(source.neighbor_info), //! this is a reference and doesn't need to be moved

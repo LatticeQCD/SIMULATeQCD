@@ -16,7 +16,7 @@ execute_process(
 
 message(STATUS "Using git version ${GIT_HASH}")
 
-set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
+set(BACKEND "sycl" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_amd, hip_nvidia (experimental!), sycl (experimental!)")
 
 # Determine the backend for GPU acceleration
 if (BACKEND STREQUAL "cuda")
@@ -59,10 +59,11 @@ elseif (USE_HIP_NVIDIA)
     # This will hopefully work in the future
     # project(SIMULATeQCD LANGUAGES CXX HIP)
     project(SIMULATeQCD LANGUAGES CXX CUDA)
-elseif (USE_SYCL)
+
+endif()
+if (USE_SYCL)
     project(SIMULATeQCD LANGUAGES CXX)
 endif()
-
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(MPI 3.1 REQUIRED)
@@ -133,6 +134,9 @@ elseif (USE_HIP_AMD)
     set(ARCHITECTURE "" CACHE STRING "Set the (AMD) architecture. For example gfx906,gfx908.")
     message(STATUS "HIP (AMD) Architecture: ${ARCHITECTURE}")
     set(CMAKE_HIP_ARCHITECTURES "${ARCHITECTURE}")
+elseif (USE_SYCL)
+    set(ARCHITECTURE "" CACHE STRING "Set the architecture. For example 70 will compile with Volta support")
+    message(STATUS "Architecture: ${ARCHITECTURE}")
 endif()
 
 if(NOT ARCHITECTURE)
@@ -197,8 +201,8 @@ elseif (USE_HIP_NVIDIA)
     set(NVCC_LINK_FLAGS "${NVCC_LINK_FLAGS} -rdc=true")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3")
 elseif (USE_SYCL)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fsycl")
-    set(CMAKE_EXE_LINKER_FLAGS "-O3 -fsycl")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC -fsycl -fsycl-targets=nvptx64-nvidia-cuda")
+    set(CMAKE_EXE_LINKER_FLAGS "-O3 -fsycl -fsycl-targets=nvptx64-nvidia-cuda")
 endif()
 
 option(USE_MPFR "Set to ON to include MPFR - needed for rat_approx (default - OFF)" OFF)
@@ -753,6 +757,11 @@ elseif (USE_HIP_NVIDIA)
     add_executable(_simpleFunctorTest src/testing/main_simpleFunctorTest.cpp src/base/communication/communicationBase_mpi.cpp src/base/gutils.cpp)
     set_target_properties(simpleFunctorTest _simpleFunctorTest PROPERTIES 
         COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}"  HIP_SEPARABLE_COMPILATION ON CUDA_SEPARABLE_COMPILATION ON LINKER_LANGUAGE CUDA CUDA_RESOLVE_DEVICE_SYMBOLS ON RUNTIME_OUTPUT_DIRECTORY "testing")
+elseif (USE_SYCL)
+    # set_SIMULATeQCD_gpu_backend(src/testing/main_SimpleFunctorSycleTest.cpp)
+    add_executable(simpleFunctorTest src/testing/main_SimpleFunctorSycleTest.cpp)
+    add_executable(_simpleFunctorTest src/testing/main_SimpleFunctorSycleTest.cpp)
+    set_target_properties(simpleFunctorTest _simpleFunctorTest PROPERTIES COMPILE_FLAGS "${MPI_COMPILE_FLAGS}" LINK_FLAGS "${MPI_LINK_FLAGS}" LINKER_LANGUAGE CXX RUNTIME_OUTPUT_DIRECTORY "testing")
 endif()
 target_compile_definitions(simpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")
 target_compile_definitions(_simpleFunctorTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 SINGLEPREC=1 ARCHITECTURE=${ARCHITECTURE} GIT_HASH="${GIT_HASH}")

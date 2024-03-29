@@ -13,7 +13,7 @@
 #include "vect3.h"
 #include <random>
 #include <limits>
-#include "random.h"
+//#include "random.h"
 #include <float.h>
 #include <type_traits>
 #include "su2.h"
@@ -245,7 +245,7 @@ public:
 
 
 
-        //For half prec, this block is faster than the above because COMPLEX(__half)*COMPLEX(__half) uses __half2 intrinsics. The above version would end up using __half intrinsics.
+        //For half prec, this block is faster than the above because COMPLEX(half)*COMPLEX(half) uses half2 intrinsics. The above version would end up using half intrinsics.
         /*_e20 = _e01*_e12 - _e02*_e11;
         _e12 = _e02*_e10 - _e00*_e12;
         _e22 = _e00*_e11 - _e01*_e10;
@@ -273,7 +273,7 @@ public:
                                 (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                                  + (_e10.cIMAG * _e01.cREAL + _e10.cREAL * _e01.cIMAG)));
 
-        //For half prec, this block is faster than the above because COMPLEX(__half)*COMPLEX(__half) uses __half2 intrinsics. The above version would end up using __half intrinsics.
+        //For half prec, this block is faster than the above because COMPLEX(half)*COMPLEX(half) uses half2 intrinsics. The above version would end up using half intrinsics.
         /*_e02 = _e10*_e21 - _e20*_e11;
         _e12 = _e20*_e01 - _e00*_e21;
         _e22 = _e00*_e11 - _e10*_e01;
@@ -529,11 +529,11 @@ __device__ __host__ inline SU3<floatT> su3_one() {
 }
 
 template <>
-__device__ __host__ inline SU3<__half> su3_one() {
-    GPUcomplex<__half> g_one(__float2half(1.0));
-    GPUcomplex<__half> g_zero(__float2half(0.0));
+__device__ __host__ inline SU3<half> su3_one() {
+    GPUcomplex<half> g_one(static_cast<half>(1.0));
+    GPUcomplex<half> g_zero(static_cast<half>(0.0));
 
-    return SU3<__half>( g_one, g_zero, g_zero,
+    return SU3<half>( g_one, g_zero, g_zero,
                          g_zero, g_one, g_zero,
                          g_zero, g_zero, g_one);
 }
@@ -838,7 +838,7 @@ __device__ __host__ void SU3<floatT>::random(uint4 *state) {
 
 template<class floatT>
 __device__ __host__ void SU3<floatT>::gauss(uint4 *state) {
-    if constexpr (!std::is_same<floatT,__half>::value) {
+    if constexpr (!std::is_same<floatT,half>::value) {
             floatT rand1[4], rand2[4], phi[4], radius[4], temp1[4], temp2[4];
 
             for (int i = 0; i < 4; ++i) {
@@ -883,15 +883,15 @@ __device__ __host__ void SU3<floatT>::gauss(uint4 *state) {
         temp2[i] = radius[i] * sin(phi[i]);
     }
 
-    _e00 = COMPLEX(__half)(__float2half(temp1[2] + 1. / sqrt(3.0) * temp2[3]), __float2half( 0.0));
-    _e01 = COMPLEX(__half)(__float2half(temp1[0]), __float2half( -temp1[1]));
-    _e02 = COMPLEX(__half)(__float2half(temp1[3]), __float2half( -temp2[0]));
-    _e10 = COMPLEX(__half)(__float2half(temp1[0]), __float2half( temp1[1]));
-    _e11 = COMPLEX(__half)(__float2half(-temp1[2] + 1. / sqrt(3.0) * temp2[3]), __float2half( 0.0));
-    _e12 = COMPLEX(__half)(__float2half(temp2[1]), __float2half( -temp2[2]));
-    _e20 = COMPLEX(__half)(__float2half(temp1[3]), __float2half( temp2[0]));
-    _e21 = COMPLEX(__half)(__float2half(temp2[1]), __float2half( temp2[2]));
-    _e22 = COMPLEX(__half)(__float2half(-2. / sqrt(3.0) * temp2[3]), __float2half( 0.0));
+    _e00 = COMPLEX(half)(static_cast<half>(temp1[2] + 1. / sqrt(3.0) * temp2[3]), static_cast<half>( 0.0));
+    _e01 = COMPLEX(half)(static_cast<half>(temp1[0]), static_cast<half>( -temp1[1]));
+    _e02 = COMPLEX(half)(static_cast<half>(temp1[3]), static_cast<half>( -temp2[0]));
+    _e10 = COMPLEX(half)(static_cast<half>(temp1[0]), static_cast<half>( temp1[1]));
+    _e11 = COMPLEX(half)(static_cast<half>(-temp1[2] + 1. / sqrt(3.0) * temp2[3]), static_cast<half>( 0.0));
+    _e12 = COMPLEX(half)(static_cast<half>(temp2[1]), static_cast<half>( -temp2[2]));
+    _e20 = COMPLEX(half)(static_cast<half>(temp1[3]), static_cast<half>( temp2[0]));
+    _e21 = COMPLEX(half)(static_cast<half>(temp2[1]), static_cast<half>( temp2[2]));
+    _e22 = COMPLEX(half)(static_cast<half>(-2. / sqrt(3.0) * temp2[3]), static_cast<half>( 0.0));
 #endif
     }
 }
@@ -988,7 +988,7 @@ __device__ __host__ int su3unitarize_hits(
 // project to su3 using first two rows of link
 template<class floatT>
 __device__ __host__ void SU3<floatT>::su3unitarize() {
-    if constexpr (!std::is_same<floatT,__half>::value) {
+    if constexpr (!std::is_same<floatT,half>::value) {
     double quadnorm, invnorm;
     double Cre, Cim;
 
@@ -1053,58 +1053,58 @@ __device__ __host__ void SU3<floatT>::su3unitarize() {
     double quadnorm, invnorm;
     double Cre, Cim;
 
-    quadnorm = __half2float( _e00.cREAL * _e00.cREAL + _e00.cIMAG * _e00.cIMAG
+    quadnorm = static_cast<float>( _e00.cREAL * _e00.cREAL + _e00.cIMAG * _e00.cIMAG
                              + _e01.cREAL * _e01.cREAL + _e01.cIMAG * _e01.cIMAG
                              + _e02.cREAL * _e02.cREAL + _e02.cIMAG * _e02.cIMAG);
 
     invnorm = 1.0 / sqrt(quadnorm);
 
-    _e00 *= __float2half(invnorm);
-    _e01 *= __float2half(invnorm);
-    _e02 *= __float2half(invnorm);
+    _e00 *= static_cast<half>(invnorm);
+    _e01 *= static_cast<half>(invnorm);
+    _e02 *= static_cast<half>(invnorm);
 
 
 // 2.Zeile ist die ON-Projektion auf die 1.Zeile
 
-    Cre = __half2float(_e10.cREAL * _e00.cREAL + _e10.cIMAG * _e00.cIMAG
+    Cre = static_cast<float>(_e10.cREAL * _e00.cREAL + _e10.cIMAG * _e00.cIMAG
                        + _e11.cREAL * _e01.cREAL + _e11.cIMAG * _e01.cIMAG
                        + _e12.cREAL * _e02.cREAL + _e12.cIMAG * _e02.cIMAG);
 
-    Cim = __half2float(_e10.cIMAG * _e00.cREAL - _e10.cREAL * _e00.cIMAG
+    Cim = static_cast<float>(_e10.cIMAG * _e00.cREAL - _e10.cREAL * _e00.cIMAG
                        + _e11.cIMAG * _e01.cREAL - _e11.cREAL * _e01.cIMAG
                        + _e12.cIMAG * _e02.cREAL - _e12.cREAL * _e02.cIMAG);
 
-    _e10 -= COMPLEX(__half)((Cre * __half2float(_e00.cREAL) - Cim * __half2float(_e00.cIMAG)), (Cre * __half2float(_e00.cIMAG) + Cim * __half2float(_e00.cREAL)));
-    _e11 -= COMPLEX(__half)((Cre * __half2float(_e01.cREAL) - Cim * __half2float(_e01.cIMAG)), (Cre * __half2float(_e01.cIMAG) + Cim * __half2float(_e01.cREAL)));
-    _e12 -= COMPLEX(__half)((Cre * __half2float(_e02.cREAL) - Cim * __half2float(_e02.cIMAG)), (Cre * __half2float(_e02.cIMAG) + Cim * __half2float(_e02.cREAL)));
+    _e10 -= COMPLEX(half)((Cre * static_cast<float>(_e00.cREAL) - Cim * static_cast<float>(_e00.cIMAG)), (Cre * static_cast<float>(_e00.cIMAG) + Cim * static_cast<float>(_e00.cREAL)));
+    _e11 -= COMPLEX(half)((Cre * static_cast<float>(_e01.cREAL) - Cim * static_cast<float>(_e01.cIMAG)), (Cre * static_cast<float>(_e01.cIMAG) + Cim * static_cast<float>(_e01.cREAL)));
+    _e12 -= COMPLEX(half)((Cre * static_cast<float>(_e02.cREAL) - Cim * static_cast<float>(_e02.cIMAG)), (Cre * static_cast<float>(_e02.cIMAG) + Cim * static_cast<float>(_e02.cREAL)));
 
 
 // Normierung der 2.Zeile
 
-    quadnorm =  __half2float(_e10.cREAL * _e10.cREAL + _e10.cIMAG * _e10.cIMAG
+    quadnorm =  static_cast<float>(_e10.cREAL * _e10.cREAL + _e10.cIMAG * _e10.cIMAG
                              + _e11.cREAL * _e11.cREAL + _e11.cIMAG * _e11.cIMAG
                              + _e12.cREAL * _e12.cREAL + _e12.cIMAG * _e12.cIMAG);
 
     invnorm = 1.0 / sqrt(quadnorm);
 
-    _e10 *=  __float2half(invnorm);
-    _e11 *= __float2half(invnorm);
-    _e12 *= __float2half(invnorm);
+    _e10 *=  static_cast<half>(invnorm);
+    _e11 *= static_cast<half>(invnorm);
+    _e12 *= static_cast<half>(invnorm);
 
 
 // 3.Zeile ist das Vektorprodukt von 1* und 2*
 
-    _e20 = COMPLEX(__half)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
+    _e20 = COMPLEX(half)((_e01.cREAL * _e12.cREAL - _e01.cIMAG * _e12.cIMAG
                              - (_e02.cREAL * _e11.cREAL - _e02.cIMAG * _e11.cIMAG)),
                             (-(_e01.cIMAG * _e12.cREAL + _e01.cREAL * _e12.cIMAG)
                              + (_e02.cIMAG * _e11.cREAL + _e02.cREAL * _e11.cIMAG)));
 
-    _e21 = COMPLEX(__half)((_e02.cREAL * _e10.cREAL - _e02.cIMAG * _e10.cIMAG
+    _e21 = COMPLEX(half)((_e02.cREAL * _e10.cREAL - _e02.cIMAG * _e10.cIMAG
                              - (_e00.cREAL * _e12.cREAL - _e00.cIMAG * _e12.cIMAG)),
                             (-(_e02.cIMAG * _e10.cREAL + _e02.cREAL * _e10.cIMAG)
                              + (_e00.cIMAG * _e12.cREAL + _e00.cREAL * _e12.cIMAG)));
 
-    _e22 = COMPLEX(__half)((_e00.cREAL * _e11.cREAL - _e00.cIMAG * _e11.cIMAG
+    _e22 = COMPLEX(half)((_e00.cREAL * _e11.cREAL - _e00.cIMAG * _e11.cIMAG
                              - (_e01.cREAL * _e10.cREAL - _e01.cIMAG * _e10.cIMAG)),
                             (-(_e00.cIMAG * _e11.cREAL + _e00.cREAL * _e11.cIMAG)
                              + (_e01.cIMAG * _e10.cREAL + _e01.cREAL * _e10.cIMAG)));

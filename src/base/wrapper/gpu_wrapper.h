@@ -157,16 +157,16 @@
 #endif
 
 #else 
-
+#include <sycl/sycl.hpp>
 #define __host__ 
 #define __device__  
 
-#define gpuError_t sycl::exception
+#define gpuError_t sycl::runtime_error
 #define half       sycl::half
 #define half2      sycl::half2
 #define float2     sycl::float2
 #define double2    sycl::double2
-
+#define uint4      sycl::uint4
 
 #endif
 

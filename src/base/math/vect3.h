@@ -11,7 +11,7 @@
 
 #include "../../define.h"
 #include "complex.h"
-#include "random.h"
+// #include "random.h"
 
 
 // forward declaration
@@ -85,9 +85,13 @@ public:
     __device__ __host__ friend floatT norm2 <> (const Vect3<floatT> &);  // norm2
     __device__ __host__ friend COMPLEX(floatT) dot_prod <> (const Vect3<floatT>&, const Vect3<floatT>&); // true complex dot product
     __device__ __host__ friend floatT re_dot_prod <> (const Vect3<floatT> &,const Vect3<floatT> &);  // real part of dot product
+
+    #ifndef USE_SYCL
+
     template<class rndstateT>
     __device__ __host__ void random( rndstateT * const);   // set vect3 randomly
     __device__ __host__ void gauss( uint4 * state )
+    
     {
 #ifndef USE_HIP_AMD
    	if constexpr (!std::is_same<floatT,half>::value) {
@@ -130,14 +134,14 @@ public:
         radius2 = radius2 + (1.0 - radius2) * minVal<float>(); // exclude 0 from random numbers!
         radius2 = sqrt(-1.0 * log(radius2));
 
-        _v0 = COMPLEX(half)(__float2half(radius0 * cos(phi0)), __float2half(radius0 * sin(phi0)));
-        _v1 = COMPLEX(half)(__float2half(radius1 * cos(phi1)), __float2half(radius1 * sin(phi1)));
-        _v2 = COMPLEX(half)(__float2half(radius2 * cos(phi2)), __float2half(radius2 * sin(phi2)));
+        _v0 = COMPLEX(half)(static_cast<half>(radius0 * cos(phi0)), static_cast<half>(radius0 * sin(phi0)));
+        _v1 = COMPLEX(half)(static_cast<half>(radius1 * cos(phi1)), static_cast<half>(radius1 * sin(phi1)));
+        _v2 = COMPLEX(half)(static_cast<half>(radius2 * cos(phi2)), static_cast<half>(radius2 * sin(phi2)));
         #endif
         }
 #endif
     };
-
+    #endif
     // cast operations single <-> double precision
     template <class T>
     __device__ __host__ operator Vect3<T> () const {
@@ -238,12 +242,12 @@ __device__ inline Vect3<half> vect3_unity(const int& i)
     switch ( i )
     {
     case 1:
-return Vect3<half> (__float2half(0), __float2half(1), __float2half(0));
+return Vect3<half> (static_cast<half>(0), static_cast<half>(1), static_cast<half>(0));
     case 2:
-return Vect3<half> (__float2half(0), __float2half(0), __float2half(1));
+return Vect3<half> (static_cast<half>(0), static_cast<half>(0), static_cast<half>(1));
     }
 // default value
-return Vect3<half> (__float2half(1), __float2half(0), __float2half(0));
+return Vect3<half> (static_cast<half>(1), static_cast<half>(0), static_cast<half>(0));
 
 }
 #endif
@@ -266,7 +270,7 @@ __device__ __host__ inline Vect3<floatT> vect3_zero()
 template<>
 __device__ inline Vect3<half> vect3_zero()
 {
-    return Vect3<half> (__float2half(0), __float2half(0), __float2half(0));
+    return Vect3<half> (static_cast<half>(0), static_cast<half>(0), static_cast<half>(0));
 }
 #endif
 template <class floatT>

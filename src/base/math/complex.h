@@ -68,8 +68,8 @@ public:
    * to be zero.
    */
   __host__ __device__ GPUcomplex(const floatT &real) {
-    c.x = real;
-    c.y = 0.0f;
+    c.x() = real;
+    c.y() = 0.0f;
   };
 
   __host__ GPUcomplex(const std::complex<float> &orig) {
