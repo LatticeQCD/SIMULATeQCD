@@ -1,6 +1,6 @@
 #include <sycl/sycl.hpp>
 #include "../base/math/operators.h"
-
+#include "../base/indexer/haloIndexer.h"
 #define RELEVANT_SIZE 10
 
 
@@ -305,7 +305,19 @@ void referenceSyclLaunch(SpinorAccessor res, SpinorAccessor a, SpinorAccessor b,
 int main(){
 
     // rootLogger.setVerbosity(DEBUG);
+    for (auto platform : sycl::platform::get_platforms())
+        {
+            std::cout << "Platform: "
+                    << platform.get_info<sycl::info::platform::name>()
+                    << std::endl;
 
+            for (auto device : platform.get_devices())
+            {
+                std::cout << "\tDevice: "
+                        << device.get_info<sycl::info::device::name>()
+                        << std::endl;
+            }
+        }
     int nelems = 1e5;
     Spinor a(nelems);
     Spinor b(nelems);
@@ -335,6 +347,9 @@ int main(){
     // std::cout << res << std::endl<<std::endl;
     sycl::queue q(sycl::gpu_selector_v);
     q.wait();
+    auto info = q.get_device().get_info<sycl::info::device::name>();
+    std::cout << "Chosen Device: " << info << std::endl;
+
     referenceSyclLaunch(res.getAccessor(), a.getAccessor(), b.getAccessor(), c.getAccessor(),
             d.getAccessor(), nelems, q);
 

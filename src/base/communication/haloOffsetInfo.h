@@ -470,6 +470,7 @@ public:
     }
     #endif
     
+    #ifndef USE_SYCL
     //! move constructor
     HaloOffsetInfo(HaloOffsetInfo<onDevice>&& source)  noexcept :
         neighbor_info(source.neighbor_info), //! this is a reference and doesn't need to be moved
@@ -518,8 +519,54 @@ public:
             _HalSegMapRight[corner] = _cornerInfo.data();
         }
     }
+    #else
+     //! move constructor
+    HaloOffsetInfo(HaloOffsetInfo<onDevice>&& source)  noexcept :
+        neighbor_info(source.neighbor_info), //! this is a reference and doesn't need to be moved
+        cart_comm(source.cart_comm),
+        _myRank(source._myRank),
+        //! move gMemoryPtr's:
+        sendBase(std::move(source.sendBase)),
+        recvBase(std::move(source.recvBase)),
+        sendBaseP2P(std::move(source.sendBaseP2P)),
+        recvBaseP2P(std::move(source.recvBaseP2P)),
 
+        //! these are just bools
+        _gpuAwareMPI(source._gpuAwareMPI),
+        _gpuP2P(source._gpuP2P),
 
+        //! move HaloSegmentInfo arrays
+        _hypPlaneInfo(std::move(source._hypPlaneInfo)),
+        _planeInfo(std::move(source._planeInfo)),
+        _stripeInfo(std::move(source._stripeInfo)),
+        _cornerInfo(std::move(source._cornerInfo))
+    {
+        //! reset other object somewhat
+        source._myRank = -1;
+        source.cart_comm = MPI_COMM_NULL;
+
+        //! this is basically the normal constructor
+        for (auto &HypPlane : HaloHypPlanes) {
+            _HalSegMapLeft[HypPlane] = _hypPlaneInfo.data();
+            _HalSegMapRight[HypPlane] = _hypPlaneInfo.data();
+        }
+
+        for (auto &plane : HaloPlanes) {
+            _HalSegMapLeft[plane] = _planeInfo.data();
+            _HalSegMapRight[plane] = _planeInfo.data();
+        }
+
+        for (auto &stripe : HaloStripes) {
+            _HalSegMapLeft[stripe] = _stripeInfo.data();
+            _HalSegMapRight[stripe] = _stripeInfo.data();
+        }
+
+        for (auto &corner : HaloCorners) {
+            _HalSegMapLeft[corner] = _cornerInfo.data();
+            _HalSegMapRight[corner] = _cornerInfo.data();
+        }
+    }
+    #endif
     ~HaloOffsetInfo() = default;
 
     void syncAllStreamRequests() {
@@ -568,11 +615,13 @@ public:
     }
 
     void initP2P() {
+        #ifndef USE_SYCL
         if (_gpuP2P && onDevice) {
             sendBaseP2P->initP2P(cart_comm, _myRank);
             recvBaseP2P->initP2P(cart_comm, _myRank);
             //      _cIPCEvent = gpuIPCEvent(cart_comm,_myRank);
         }
+        #endif
     }
 
     gMemoryPtr<true> getRecvBaseP2P() {
@@ -591,6 +640,7 @@ public:
         segInfo.setP2P(false);
 
         if (neighborInfo.p2p && (segInfo.getLength() != 0) && onDevice && _gpuP2P) {
+            #ifndef USE_SYCL
             segInfo.setP2P(neighborInfo.p2p && _gpuP2P);
 
             segInfo.setOppositeP2PRank(neighborInfo.world_rank);
@@ -599,15 +649,18 @@ public:
                 recvBaseP2P->addP2PRank(neighborInfo.world_rank);
                 _cIPCEvent.addP2PRank(index, oppositeIndex, neighborInfo.world_rank);
             }
+            #endif
         }
     }
 
     void syncAndInitP2PRanks() {
+        #ifndef USE_SYCL
         if (onDevice && _gpuP2P) {
             sendBaseP2P->syncAndInitP2PRanks();
             recvBaseP2P->syncAndInitP2PRanks();
             _cIPCEvent.syncAndInitAllP2PRanks();
         }
+        #endif
     }
 
     void exchangeHandles() {
@@ -663,7 +716,7 @@ public:
             MPI_Type_commit(&_HalSegMapRight[hseg][pos_r].getMpiType());
         }
     }
-
+    #ifndef USE_SYCL
     deviceEventPair &getGpuEventPair(HaloSegment hseg, size_t direction, bool leftRight) {
         int oppositeIndex = haloSegmentCoordToIndex(hseg, direction, !leftRight);
         int rank = neighbor_info.getNeighborInfo(hseg, direction, leftRight).world_rank;
@@ -675,6 +728,7 @@ public:
         int rank = neighbor_info.getNeighborInfo(hseg, direction, leftRight).world_rank;
         return _cIPCEvent.getMyEventPair(index, rank);
     }
+    #endif
 
     HaloSegmentInfo &get(HaloSegment hseg, size_t direction, bool leftRight) {
         size_t pos_l = getSegTypeOffset(hseg, direction);
@@ -684,6 +738,6 @@ public:
             return _HalSegMapRight[hseg][pos_r];
         } else return _HalSegMapLeft[hseg][pos_l];
     }
-
+    
 };
 

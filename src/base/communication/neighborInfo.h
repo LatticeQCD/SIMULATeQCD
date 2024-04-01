@@ -477,6 +477,8 @@ inline void NeighborInfo::checkP2P() {
 #elif defined USE_HIP
       , "UVA ", "Unknown (HIP does not support this!)");
 #endif
+#else
+    stdLogger.info("> ", myInfo.nodeName , " SYCL Backend: No P2P implementation, using pure MPI instead!");
 #endif
 }
 

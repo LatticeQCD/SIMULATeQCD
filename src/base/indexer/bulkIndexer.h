@@ -341,9 +341,11 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSite getSite(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSite(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
+    #endif
     __device__ __host__ inline static gSite getSite(int x, int y, int z, int t) {
         sitexyzt coord = sitexyzt(x, y, z, t);
         sitexyzt coordFull = coordToFullCoord(coord);
@@ -386,9 +388,11 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSite getSiteSpatial(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSiteSpatial(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
+    #endif
     __device__ __host__ inline static gSite getSiteSpatial(int x, int y, int z, int t) {
         // There is probably a way to allow t>0. My worry right now is that there is that if you allow
         // t>0, there is no longer a one-to-one correspondence between isite and coord.
@@ -426,9 +430,11 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSite getSiteFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSiteFull(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
+    #endif
     __device__ __host__ inline static gSite getSiteFull(int x, int y, int z, int t) {
         sitexyzt coordFull = sitexyzt(x, y, z, t);
         sitexyzt coord = fullCoordToCoord(coordFull);
@@ -466,9 +472,11 @@ public:
         }
         return gSite(isite, isiteFull, coord, coordFull);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSite getSiteSpatialFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx) {
         return getSiteSpatialFull(_blockDim.x * _blockIdx.x + _threadIdx.x);
     }
+    #endif
     __device__ __host__ inline static gSite getSiteSpatialFull(int x, int y, int z, int t) {
         sitexyzt coordFull = sitexyzt(x, y, z, t);
         sitexyzt coord = fullCoordToCoord(coordFull);
@@ -504,13 +512,16 @@ public:
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
     }
+    #ifndef USE_SYCL    
     __device__ __host__ inline static gSiteMu getSiteMu(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, size_t mu){
         return getSiteMu(_blockDim.x * _blockIdx.x + _threadIdx.x, mu);
     }
+    
     __device__ __host__ inline static gSiteMu getSiteMu(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         //! It gets the mu index from the y direction of the block.
         return getSiteMu(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
+    #endif
     __device__ __host__ inline static gSiteMu getSiteMu(gSite site, size_t mu) {
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
@@ -530,6 +541,7 @@ public:
         size_t indexmufull = indexMu_Full(site, mu);
         return gSiteMu(site, indexmufull, mu);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSiteMu getSiteMuFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, size_t mu){
         return getSiteMuFull(_blockDim.x * _blockIdx.x + _threadIdx.x, mu);
     }
@@ -537,6 +549,7 @@ public:
         //!get the mu index from the y direction of the block.
         return getSiteMuFull(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
+    #endif
     __device__ __host__ inline static gSiteMu getSiteMuFull(int x, int y, int z, int t, size_t mu){
         return getSiteMu(getSiteFull(x, y, z, t), mu);
     }
@@ -559,12 +572,14 @@ public:
     __device__ __host__ inline static gSiteStack getSiteStack(const size_t isite, const size_t stack){
         return getSiteStack(getSite(isite), stack);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSiteStack getSiteStack(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         return getSiteStack(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
     __device__ __host__ inline static gSiteStack getSiteStack(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
         return getSiteStack(_blockDim.x * _blockIdx.x + _threadIdx.x, stack);
     }
+    #endif
     __device__ __host__ inline static gSiteStack getSiteStack(int x, int y, int z, int t, int stack) {
         return getSiteStack(getSite(x, y, z, t), stack);
     }
@@ -591,17 +606,21 @@ public:
     __device__ __host__ inline static gSiteStack getSiteStackOdd(const size_t isite, const size_t stack){
         return getSiteStackOdd(getSite(isite), stack);
     }
+
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSiteStack getSiteStackOdd(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         return getSiteStackOdd(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
     }
     __device__ __host__ inline static gSiteStack getSiteStackOdd(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx, const size_t stack){
         return getSiteStackOdd(_blockDim.x * _blockIdx.x + _threadIdx.x, stack);
     }
+    #endif
 
     /// FULL (WITH HALOS)
     __device__ __host__ inline static gSiteStack getSiteStackFull(const size_t isiteFull, const size_t stack){
         return getSiteStack(getSiteFull(isiteFull), stack);
     }
+    #ifndef USE_SYCL
     __device__ __host__ inline static gSiteStack getSiteStackFull(const dim3& _blockDim, const uint3& _blockIdx, const uint3& _threadIdx){
         gSiteStack ret = getSiteStackFull(_blockDim.x * _blockIdx.x + _threadIdx.x, _threadIdx.y);
         return ret;
@@ -610,6 +629,7 @@ public:
         gSiteStack ret = getSiteStackFull(_blockDim.x * _blockIdx.x + _threadIdx.x, stack);
         return ret;
     }
+    #endif
     __device__ __host__ inline static gSiteStack getSiteStackFull(int x, int y, int z, int t, int stack) {
         return getSiteStack(getSiteFull(x, y, z, t), stack);
     }

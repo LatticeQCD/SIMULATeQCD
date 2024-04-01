@@ -140,7 +140,9 @@ private:
     MPI_File fh;
     MPI_Datatype basetype;
     MPI_Datatype fvtype;
+    #ifndef USE_SYCL
     commStreams_t commStreams;
+    #endif
 #ifdef USE_NCCL
     ncclUniqueId nccl_uid;
     ncclComm_t nccl_comm;
@@ -186,10 +188,11 @@ public:
 
     int getNumberProcesses() { return world_size; }
 
-
+    #ifndef USE_SYCL
     commStreams_t& getCommStreams() {
         return commStreams;
     }
+    #endif
     /// Return rank of process with given coordinates
     int getRank(LatticeDimensions) const RET0_IF_SCALAR;
 

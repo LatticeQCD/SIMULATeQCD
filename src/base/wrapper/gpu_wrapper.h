@@ -167,6 +167,6 @@
 #define float2     sycl::float2
 #define double2    sycl::double2
 #define uint4      sycl::uint4
-
+#define __constant__ 
 #endif
 
