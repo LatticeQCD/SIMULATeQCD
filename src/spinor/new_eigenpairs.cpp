@@ -7,12 +7,11 @@
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
-    if(onDevice) {    
-        rootLogger.info("readconf_evnersc: Reading NERSC configuration ", fname);
+    if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
         for (int n = 0; n < nvec; n++) {
             readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
-            // spinors[n].copyFromStackToStack(lattice_host, 1, 1);
+            spinors[n].copyFromStackToStack(lattice_host, 1, 1);
         }
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
@@ -26,11 +25,8 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
-
     int displacement=(evnersc.bytes_per_site() + 1) * sizeof(floatT);            
     this->getComm().SetFileView(displacement * idxvec);
-
-    rootLogger.info("sizeh ", displacement);
 
     std::ifstream in;
     if (this->getComm().IamRoot()) {
@@ -56,6 +52,10 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
             evnersc.process_read_data();
         }
         gVect3<floatT> ret = evnersc.template get<floatT>();
+        for (int k=0; k<3; k++) {
+            rootLogger.info('c', k, ret(k));
+        }
+        rootLogger.info(evnersc.bytes_per_site());
         gSite site = GInd::getSite(x, y, z, t);
         spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     }

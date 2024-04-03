@@ -46,7 +46,6 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
-    rootLogger.info("sizeh: ", sizeh);
 
     // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
     // Gaugefield<floatT,true,HaloDepth> gauge(commBase);      /// gauge field

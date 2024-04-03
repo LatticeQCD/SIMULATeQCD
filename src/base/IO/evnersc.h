@@ -92,7 +92,7 @@ public:
             return false;
         //std::istringstream str(content);
         //return readstream(str, "NERSC", true);
-	rootLogger.info("lambda = ", content);
+	    rootLogger.info("lambda = ", content);
         return true;
     }
 };
@@ -114,19 +114,15 @@ private:
     //                                      // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
-    template<class f1, class f2>
-    gVect3<f2> from_buf(f1 *buf) const {
+    template<class floatT>
+    gVect3<floatT> from_buf(floatT *buf) const {
         int i = 0;
-        gVect3<f2> U;
-        for (int k = 0; k < ; k++) {
-            f2 re = buf[i++];
-            f2 im = buf[i++];
-            rootLogger.info('c', k, re, im);
-            U(k) = GCOMPLEX(f2)(re, im);
+        gVect3<floatT> U;
+        for (int k = 0; k < 3; k++) {
+            floatT re = buf[i++];
+            floatT im = buf[i++];
+            U(k) = GCOMPLEX(floatT)(re, im);
         }
-        f2 re = buf[i++];
-        f2 im = buf[i++];
-        rootLogger.info('c3', re, im);
         return U;
     }
 
@@ -210,9 +206,8 @@ public:
     template<class floatT>
     gVect3<floatT> get() {
         char *start = &buf[index];
-        gVect3<floatT> ret = from_buf<float, float>((float *) start);
+        gVect3<floatT> ret = from_buf<floatT>((floatT *) start);
         index += su3_size;
-        rootLogger.info(index);
         return ret;
     }
 
