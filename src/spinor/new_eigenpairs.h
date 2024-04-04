@@ -15,6 +15,7 @@ class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _lattice;
     std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>> spinors;
+    // std::vector<int> spinors;
 
 private:
 

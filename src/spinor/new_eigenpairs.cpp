@@ -9,9 +9,13 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
+        spinors.reserve(nvec);
         for (int n = 0; n < nvec; n++) {
             readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
             spinors[n].copyFromStackToStack(lattice_host, 1, 1);
+            // _lattice.copyFromStackToStack(lattice_host, 1, 1) test_lat;
+            // spinors.push_back(_lattice);
+            rootLogger.info(spinors.size());
         }
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
@@ -52,10 +56,10 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
             evnersc.process_read_data();
         }
         gVect3<floatT> ret = evnersc.template get<floatT>();
-        for (int k=0; k<3; k++) {
-            rootLogger.info('c', k, ret(k));
-        }
-        rootLogger.info(evnersc.bytes_per_site());
+        // for (int k=0; k<3; k++) {
+        //     rootLogger.info('c', k, ret(k));
+        // }
+        // rootLogger.info(evnersc.bytes_per_site());
         gSite site = GInd::getSite(x, y, z, t);
         spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     }
