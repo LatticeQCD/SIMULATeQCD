@@ -12,8 +12,8 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
         spinors.reserve(nvec);
         for (int n = 0; n < nvec; n++) {
             readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
-            spinors[n].copyFromStackToStack(lattice_host, 1, 1);
-            // _lattice.copyFromStackToStack(lattice_host, 1, 1) test_lat;
+            spinors[n].copyFromStackToStack(lattice_host, NStacks, NStacks);
+            // _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
             // spinors.push_back(_lattice);
             rootLogger.info(spinors.size());
         }
