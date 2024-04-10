@@ -7,7 +7,7 @@
 #include "../base/communication/siteComm.h"
 #include "../base/communication/communicationBase.h"
 #include "spinorfield.h"
-// #include "../base/communication/siteComm.h"
+#include "../base/communication/siteComm.h"
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
@@ -15,7 +15,6 @@ class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _lattice;
     std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>> spinors;
-    // std::vector<int> spinors;
 
 private:
 
