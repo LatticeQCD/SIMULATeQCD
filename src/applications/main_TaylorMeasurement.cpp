@@ -28,9 +28,9 @@ int main(int argc, char **argv) {
     const int HaloDepth = 2; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
     const int nvec= 304; // number of vectors to be read
-    const int NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
+    const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
-    typedef double PREC;
+    typedef float PREC;
 
     rootLogger.info("STARTING Taxlor Measurement:");
 
@@ -48,10 +48,10 @@ int main(int argc, char **argv) {
     // const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
 
     // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    // Gaugefield<floatT,true,HaloDepth> gauge(commBase);      /// gauge field
-    // rootLogger.info("Read configuration from ", param.GaugefileName());
-    // gauge.readconf_nersc(param.GaugefileName());
-    // gauge.updateAll();
+    Gaugefield<floatT,true,HaloDepth> gauge(commBase);      /// gauge field
+    rootLogger.info("Read configuration from ", param.GaugefileName());
+    gauge.readconf_nersc(param.GaugefileName());
+    gauge.updateAll();
     
     // Read the Eigenvalues and Eigenvectors
     new_eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
