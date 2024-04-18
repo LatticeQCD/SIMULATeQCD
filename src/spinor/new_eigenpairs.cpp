@@ -9,16 +9,16 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
+        // readconf_evnersc_host(lattice_host.getAccessor(), 0, fname);
+        // _lattice.copyFrom<onDevice>(lattice_host)
         spinors.reserve(nvec);
-        readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
-        _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
-        // for (int n = 0; n < nvec; n++) {
-        //     readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
-        //     // spinors[n].copyFromStackToStack(lattice_host, NStacks, NStacks);
-        //     // _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
-        //     // spinors.push_back(_lattice);
-        // }
-        rootLogger.info(spinors.size());
+        for (int n = 0; n < nvec; n++) {
+            readconf_evnersc_host(lattice_host.getAccessor(), n, fname);
+            spinors[n] = lattice_host;
+            // _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
+            // spinors.push_back(_lattice);
+        }
+        // rootLogger.info(spinors.size());
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
     }
@@ -57,7 +57,7 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
             this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
             evnersc.process_read_data();
         }
-        gVect3<floatT> ret = evnersc.template get<float>();
+        gVect3<floatT> ret = evnersc.template get<floatT>();
         // for (int k=0; k<3; k++) {
         //     rootLogger.info('c', k, ret(k));
         // }
