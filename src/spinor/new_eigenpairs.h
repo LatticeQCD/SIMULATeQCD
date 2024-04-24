@@ -13,7 +13,7 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 protected:
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _lattice;
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _spinor_lattice;
     std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>> spinors;
 
 private:
@@ -26,7 +26,7 @@ public:
 
     explicit new_eigenpairs(CommunicationBase &comm) :
             siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
-            _lattice(comm){}
+            _spinor_lattice(comm){}
 
     void readconf_evnersc(int nvec,const std::string &fname);
     void readconf_evnersc_host(gVect3arrayAcc<floatT> gVect3arrayAcc, int nvec, const std::string &fname);
@@ -36,7 +36,7 @@ public:
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 inline gVect3arrayAcc<floatT> new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
-    return (_lattice.getAccessor());
+    return (_spinor_lattice.getAccessor());
 }
 
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>

@@ -9,16 +9,18 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
-        // readconf_evnersc_host(lattice_host.getAccessor(), 0, fname);
-        // _lattice.copyFrom<onDevice>(lattice_host)
-        spinors.reserve(nvec);
+        // readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
+        // _spinor_lattice = lattice_host;
+        // spinors.reserve(nvec);
+        // rootLogger.info(spinors.max_size());
         for (int n = 0; n < nvec; n++) {
+            rootLogger.info(n);
             readconf_evnersc_host(lattice_host.getAccessor(), n, fname);
-            spinors[n] = lattice_host;
-            // _lattice.copyFromStackToStack(lattice_host, NStacks, NStacks);
-            // spinors.push_back(_lattice);
+            // spinors[n] = lattice_host;
+            _spinor_lattice = lattice_host;
+            // spinors.push_back(_spinor_lattice);
+
         }
-        // rootLogger.info(spinors.size());
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
     }
