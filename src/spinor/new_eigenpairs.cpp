@@ -9,21 +9,15 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
-        // readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
-        // _spinor_lattice = lattice_host;
-        // spinors.reserve(nvec);
-        // rootLogger.info(spinors.max_size());
         for (int n = 0; n < nvec; n++) {
-            rootLogger.info(n);
+            _spinors.emplace_back(this->getComm());
             readconf_evnersc_host(lattice_host.getAccessor(), n, fname);
-            // spinors[n] = lattice_host;
-            _spinor_lattice = lattice_host;
-            // spinors.push_back(_spinor_lattice);
-
+            _spinors[n] = lattice_host;
         }
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
     }
+    // rootLogger.info(_spinors[0]);
 }
 
 
@@ -33,7 +27,8 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
-    int displacement=(evnersc.bytes_per_site() + 1) * sizeof(floatT);            
+    // rootLogger.info(idxvec);
+    int displacement=GInd::getLatData().globvol4() * 8 * sizeof(floatT) + sizeof(double);            
     this->getComm().SetFileView(displacement * idxvec);
 
     std::ifstream in;
@@ -60,10 +55,6 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
             evnersc.process_read_data();
         }
         gVect3<floatT> ret = evnersc.template get<floatT>();
-        // for (int k=0; k<3; k++) {
-        //     rootLogger.info('c', k, ret(k));
-        // }
-        // rootLogger.info(evnersc.bytes_per_site());
         gSite site = GInd::getSite(x, y, z, t);
         spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     }
