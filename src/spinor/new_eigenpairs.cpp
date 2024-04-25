@@ -11,15 +11,16 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
         // readconf_evnersc_host(lattice_host.getAccessor(), nvec, fname);
         // _spinor_lattice = lattice_host;
-        // spinors.reserve(nvec);
+        spinors.reserve(10);
+        for (int i = 0; i < 10; i++)
+	  spinors.emplace_back(this->getComm());
         // rootLogger.info(spinors.max_size());
-        for (int n = 0; n < nvec; n++) {
+        for (int n = 0; n < 10; n++) {
             rootLogger.info(n);
             readconf_evnersc_host(lattice_host.getAccessor(), n, fname);
-            // spinors[n] = lattice_host;
-            _spinor_lattice = lattice_host;
-            // spinors.push_back(_spinor_lattice);
-
+            spinors[n] = lattice_host;
+            // _spinor_lattice = lattice_host;
+            //spinors.push_back(lattice_host);
         }
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
@@ -33,20 +34,22 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
-    int displacement=(evnersc.bytes_per_site() + 1) * sizeof(floatT);            
+    int sizeh=GInd::getLatData().globvol4/2;
+    int displacement=evnersc.bytes_per_site()*sizeh+sizeof(double);            
     this->getComm().SetFileView(displacement * idxvec);
 
     std::ifstream in;
     if (this->getComm().IamRoot()) {
       in.open(fname.c_str());
     }
+    in.ignore(displacement*idxvec);
     if (!evnersc.read_header(in)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 
-
     LatticeDimensions global = GInd::getLatData().globalLattice();
     LatticeDimensions local = GInd::getLatData().localLattice();
+
 
     this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
     
