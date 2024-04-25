@@ -10,9 +10,9 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
         for (int n = 0; n < nvec; n++) {
-            _spinors.emplace_back(this->getComm());
+            spinors.emplace_back(this->getComm());
             readconf_evnersc_host(lattice_host.getAccessor(), n, fname);
-            _spinors[n] = lattice_host;
+            spinors[n] = lattice_host;
         }
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
@@ -27,21 +27,22 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
 
-    // rootLogger.info(idxvec);
-    int displacement=GInd::getLatData().globvol4() * 8 * sizeof(floatT) + sizeof(double);            
+    int sizeh=GInd::getLatData().globvol4/2;
+    int displacement=evnersc.bytes_per_site()*sizeh+sizeof(double);            
     this->getComm().SetFileView(displacement * idxvec);
 
     std::ifstream in;
     if (this->getComm().IamRoot()) {
       in.open(fname.c_str());
     }
+    in.ignore(displacement*idxvec);
     if (!evnersc.read_header(in)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 
-
     LatticeDimensions global = GInd::getLatData().globalLattice();
     LatticeDimensions local = GInd::getLatData().localLattice();
+
 
     this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
     
