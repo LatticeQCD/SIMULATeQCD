@@ -291,7 +291,7 @@ struct LatticeData {
 
 };
 extern __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO + 1];
-extern struct LatticeData globLatDataCPU[MAXHALO + 1];
+const extern struct LatticeData globLatDataCPU[MAXHALO + 1];
 
 /// --------------------------------------------------------------------------------------------- INDEXER INITIALIZATION
 

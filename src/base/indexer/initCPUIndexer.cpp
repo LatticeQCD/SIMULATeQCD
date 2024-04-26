@@ -65,7 +65,7 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
 }
 
 
-struct LatticeData globLatDataCPU[MAXHALO+1];
+const struct LatticeData globLatDataCPU[MAXHALO+1];
 
 template <size_t HaloDepth>
 void initCPUBulk(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]){

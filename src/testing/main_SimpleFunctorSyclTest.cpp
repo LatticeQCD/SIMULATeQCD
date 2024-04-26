@@ -1,6 +1,8 @@
 #include <sycl/sycl.hpp>
 #include "../base/math/operators.h"
 #include "../base/indexer/haloIndexer.h"
+#include "../base/runFunctors_sycl.h"
+
 #define RELEVANT_SIZE 10
 
 
@@ -24,13 +26,17 @@ class SpinorAccessor{
         _mem[i] = elem;
     }
 
+    void setElement(const gSite site, double elem) const {
+        int i = site.isite;
+        _mem[i] = elem;
+    }
     
 };
 
 
 
 // Simple class to simulate a Spinor
-class Spinor{
+class Spinor : public RunFunctors<true, SpinorAccessor> {
     const int _size;
     double* _h_mem;
     double* _d_mem;
@@ -102,6 +108,14 @@ class Spinor{
 
         return *this;
     }
+
+    template<typename Function>
+    void iterateOverBulk(Function op) {
+        CalcGSite<All, 0> calcGSite;
+        WriteAtRead writeAtRead;
+
+        this->template iterateFunctor<64>(op, calcGSite, writeAtRead, _size, _q);
+    }
 };
 
 
@@ -139,6 +153,18 @@ struct ComplexReferenceFunctor{
 
     __host__ __device__ double operator()(const int i) const {
 
+        return a[i]*b[i] + a[i]/b[i]
+                         - ((a[i] + b[i]) / (a[i] - 2.3*b[i])) * (2*a[i])
+                         + (a[i]*2) * (a[i]/2) / (2/a[i])
+                         + (c[i] + 4) + (4 + c[i]) + (c[i] - 4) + (4 - c[i]) + c[i] * (a[i] + c[i])
+                         + (a[i]*b[i])*2 + 2*(a[i]*c[i])
+                         + (a[i]*b[i])/2 + 2/(a[i]*c[i])
+                         + (2 + (a[i]*b[i])) + (2+(a[i]*c[i]))
+                         + (2 - (a[i]*b[i])) + (2-(a[i]*c[i]));
+    }
+
+    double operator() (const gSite site) const {
+        int i = site.isite;
         return a[i]*b[i] + a[i]/b[i]
                          - ((a[i] + b[i]) / (a[i] - 2.3*b[i])) * (2*a[i])
                          + (a[i]*2) * (a[i]/2) / (2/a[i])
@@ -345,7 +371,7 @@ int main(){
     // compare_relative(ref, res, 1e-8, 1e-8, "Combined operators vs one operator test");
 
     // std::cout << res << std::endl<<std::endl;
-    sycl::queue q(sycl::gpu_selector_v);
+    sycl::queue q;//(sycl::cpu_selector_v);
     q.wait();
     auto info = q.get_device().get_info<sycl::info::device::name>();
     std::cout << "Chosen Device: " << info << std::endl;
@@ -370,5 +396,9 @@ int main(){
     ref = ComplexReferenceFunctor(a, b, c, d);
 
     compare_relative(res, ref, 1e-8, 1e-8, "Complex operators vs one operator test");
+    ComplexReferenceFunctor functor(a,b,c,d);
+    res.iterateOverBulk(functor);
+    compare_relative(res, ref, 1e-8, 1e-8, "runFunctors_sycl.h test");
+    
     return 0;
 }
