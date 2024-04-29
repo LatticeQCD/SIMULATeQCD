@@ -17,7 +17,6 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
     } else {
         readconf_evnersc_host(getAccessor(), nvec, fname);
     }
-    // rootLogger.info(_spinors[0]);
 }
 
 

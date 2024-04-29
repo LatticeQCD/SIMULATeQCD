@@ -14,38 +14,12 @@ private:
     const CommunicationBase &comm;
     int header_size;
 
-    // Parameter<std::string> dattype;
-    // Parameter<int> dim[4];
-    // Parameter<std::string> checksum;
-    // Parameter<std::string> floatingpoint;
-    // Parameter<double> linktrace;
-    // Parameter<double> plaq;
-
-
     bool read(std::istream &in, double * lambda) {
         if (in.fail()) {
             rootLogger.error("Could not open file.");
             return false;
         }
-
-        //std::string line;
-
-        //getline(in, line);
-        //if (line != "BEGIN_HEADER") {
-        //    rootLogger.error("BEGIN_HEADER not found!");
-        //    return false;
-        //}
-
-        //while (!in.fail()) {
-        //    getline(in, line);
-        //    if (line == "END_HEADER")
-        //        break;
-        //    content.append(line + '\n');
-        //}
-        //if (in.fail()) {
-        //    rootLogger.error("END_HEADER not found!");
-        //    return false;
-        //}
+        
         in.read((char*)lambda, sizeof(double));
         header_size = in.tellg();
         return true;
@@ -53,16 +27,6 @@ private:
 
     evNerscHeader(const CommunicationBase &_comm) : comm(_comm) {
         header_size = 0;
-
-        // add(dattype, "DATATYPE");
-        // add(dim[0], "DIMENSION_1");
-        // add(dim[1], "DIMENSION_2");
-        // add(dim[2], "DIMENSION_3");
-        // add(dim[3], "DIMENSION_4");
-        // add(checksum, "CHECKSUM");
-        // add(linktrace, "LINK_TRACE");
-        // add(plaq, "PLAQUETTE");
-        // addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
     }
 
 
@@ -90,8 +54,6 @@ public:
         }
         if (!success)
             return false;
-        //std::istringstream str(content);
-        //return readstream(str, "NERSC", true);
 	    rootLogger.info("lambda = ", content);
         return true;
     }
@@ -154,22 +116,12 @@ public:
     }
 
     bool read_header(std::istream &in) {
-      //rootLogger.push_verbosity(OFF);
         if (!header.read(in)){
             rootLogger.error("header.read() failed!");
             return false;
         }
-        //rootLogger.pop_verbosity();
 
         bool error = false;
-
-        //std::stringstream s(header.checksum());
-        //s >> std::hex >> stored_checksum;
-        //if (s.fail()) {
-        //    rootLogger.error("Could not interpret checksum " ,
-        //                       header.checksum() ,  "as hexadecimal number.");
-        //    error = true;
-        //}
 
         buf.resize(GInd::getLatData().vol4 * su3_size);
         index = buf.size();

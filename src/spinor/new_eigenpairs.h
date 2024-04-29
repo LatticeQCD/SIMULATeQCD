@@ -14,7 +14,7 @@ class new_eigenpairs : public siteComm<floatT, onDevice, gVect3arrayAcc<floatT>,
 {
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _spinor_lattice;
-    std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>> _spinors;
+    std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>> spinors;
 
 private:
 
@@ -26,7 +26,6 @@ public:
 
     explicit new_eigenpairs(CommunicationBase &comm) :
             siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
-            // _spinors(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>(comm)),
             _spinor_lattice(comm){}
 
     void readconf_evnersc(int nvec,const std::string &fname);
