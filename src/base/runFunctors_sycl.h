@@ -16,36 +16,40 @@ class RunFunctors {
     public:
     virtual Accessor getAccessor() const = 0;
 
-    template<unsigned WgSize = DEFAULT_NBLOCKS_CONST, typename CalcReadInd, typename CalcWriteInd, typename Object>
+    template<unsigned WorkGroupSize = DEFAULT_NBLOCKS_CONST, typename CalcReadInd, typename CalcWriteInd, typename Object>
     void iterateWithConstObject(Object ob, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd,
     const size_t elems_x, sycl::queue q);
 
-    template<unsigned WgSize = DEFAULT_NBLOCKS, typename CalcReadInd, typename CalcWriteInd, typename Functor>
+    template<unsigned WorkGroupSize = DEFAULT_NBLOCKS, typename CalcReadInd, typename CalcWriteInd, typename Functor>
     void iterateFunctor(Functor Op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, 
     const size_t elems_x, sycl::queue q);
 
 
-    template<size_t Nloops, unsigned WgSize = DEFAULT_NBLOCKS_LOOP, typename CalcReadInd, typename CalcWriteInd, typename Functor>
+    template<size_t Nloops, unsigned WorkGroupSize = DEFAULT_NBLOCKS_LOOP, typename CalcReadInd, typename CalcWriteInd, typename Functor>
     void iterateFunctorLoop(Functor op, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, 
     const size_t elems_x, sycl::queue q, size_t Nmax = Nloops);
 
 };
 
 template<bool onDevice, class Accessor>
-template<unsigned WgSize, typename CalcReadInd, typename CalcWriteInd, typename Object>
+template<unsigned WorkGroupSize, typename CalcReadInd, typename CalcWriteInd, typename Object>
 void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcReadInd calcReadInd, CalcWriteInd calcWriteInd,
     const size_t elems_x, sycl::queue q) {
 
     q.submit([&] (sycl::handler& cgh) {
+        size_t WorkGroups = static_cast<size_t> (ceilf(static_cast<float> (elems_x) / static_cast<float> (WorkGroupSize)));
+        size_t iteration_limit = WorkGroups * WorkGroupSize;
 
-        auto iteration_range = sycl::nd_range{sycl::range<1>{elems_x}, sycl::range<1>{DEFAULT_NBLOCKS_CONST}};
+        auto iteration_range = sycl::nd_range{sycl::range<1>{iteration_limit}, sycl::range<1>{WorkGroupSize}};
         auto acc = getAccessor();
 
         cgh.parallel_for(iteration_range, [=](sycl::nd_item<1> itm) {
             size_t i = itm.get_local_id()+itm.get_group().get_group_id(0)*itm.get_local_range(0);
 
+            if (i > elems_x) return;
+
             auto site = calcReadInd(i);
-            acc.setElement(CalcWriteInd(site), ob);
+            acc.setElement(calcWriteInd(site), ob);
         });
 
     }).wait();
@@ -56,19 +60,24 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
 
 template<bool onDevice, class Accessor>
-template<unsigned WgSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
+template<unsigned WorkGroupSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd calcReadInd, 
     CalcWriteInd calcWriteInd, const size_t elems_x, sycl::queue q) {
     
 
     q.submit([&] (sycl::handler& cgh) {
 
-        auto iteration_range = sycl::nd_range{sycl::range<1> {elems_x}, sycl::range<1>{DEFAULT_NBLOCKS}};
+        size_t WorkGroups = static_cast<size_t> (ceilf(static_cast<float> (elems_x) / static_cast<float> (WorkGroupSize)));
+        size_t iteration_limit = WorkGroups * WorkGroupSize;
+
+        auto iteration_range = sycl::nd_range{sycl::range<1> {iteration_limit}, sycl::range<1>{WorkGroupSize}};
         auto acc = getAccessor(); //implicit capture of 'this' is not allowed inside sycl kernel so we get hold of a local copy here
 
         cgh.parallel_for(iteration_range, [=](sycl::nd_item<1> itm) {
             size_t i = itm.get_local_id()+itm.get_group().get_group_id(0)*itm.get_local_range(0);
             
+            if (i > elems_x) return;
+
             auto site = calcReadInd(i);
             acc.setElement(calcWriteInd(site), op(site));
         });
@@ -77,7 +86,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 }
 
 template<bool onDevice, class Accessor>
-template<size_t Nloops, unsigned WgSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
+template<size_t Nloops, unsigned WorkGroupSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op, CalcReadInd calcReadInd,
 CalcWriteInd calcWriteInd, const size_t elems_x, sycl::queue q, size_t Nmax) {
     
@@ -86,11 +95,16 @@ CalcWriteInd calcWriteInd, const size_t elems_x, sycl::queue q, size_t Nmax) {
     }
 
     q.submit([&] (sycl::handler& cgh) {
-        auto iteration_range = sycl::nd_range{sycl::range<1> {elems_x}, sycl::range<1>{DEFAULT_NBLOCKS}};
+        
+        size_t WorkGroups = static_cast<size_t> (ceilf(static_cast<float> (elems_x) / static_cast<float> (WorkGroupSize)));
+        size_t iteration_limit = WorkGroups * WorkGroupSize;
+        auto iteration_range = sycl::nd_range{sycl::range<1> {iteration_limit}, sycl::range<1>{WorkGroupSize}};
         auto acc = getAccessor();
 
         cgh.parallel_for(iteration_range, [=] (sycl::nd_item<1> itm) {
             size_t i = itm.get_local_id() + itm.get_group().get_group_id(0)*itm.get_local_range(0);
+            
+            if (i > elems_x) return;
 
             auto site = calcReadInd(i);
             op.initialize(site);

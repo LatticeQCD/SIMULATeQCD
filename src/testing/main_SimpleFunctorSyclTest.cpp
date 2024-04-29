@@ -279,9 +279,7 @@ auto operator-(const Spinor& lhs, const T rhs){
 template<typename Function>
 void performFunctorsSyclLaunch(SpinorAccessor res, Function op, const int size, sycl::queue q) {
     #ifndef CPU
-        const int blockDim = 256;
-        const int gridDim = static_cast<int>(ceilf(static_cast<float> (size)) / static_cast<float>(blockDim));
-
+        
         sycl::range<1> ndr(size);
 
         std::cout << "Size of operator " << sizeof(op) << "\n";
@@ -371,7 +369,7 @@ int main(){
     // compare_relative(ref, res, 1e-8, 1e-8, "Combined operators vs one operator test");
 
     // std::cout << res << std::endl<<std::endl;
-    sycl::queue q;//(sycl::cpu_selector_v);
+    sycl::queue q(sycl::gpu_selector_v);
     q.wait();
     auto info = q.get_device().get_info<sycl::info::device::name>();
     std::cout << "Chosen Device: " << info << std::endl;
