@@ -52,10 +52,12 @@ public:
                 comm.root2all(content);
             }
         }
-        if (!success)
+        if (!success) {
             return false;
-	    rootLogger.info("lambda = ", content);
-        return true;
+        } else {
+            rootLogger.info("lambda = ", content);
+            return true;
+        }
     }
 };
 
