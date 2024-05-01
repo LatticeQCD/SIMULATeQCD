@@ -35,8 +35,11 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
       in.open(fname.c_str());
     }
     in.ignore(displacement*idxvec);
-    if (!evnersc.read_header(in)) {
+    double lambda;
+    if (!evnersc.read_header(in, lambda)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
+    } else {
+        rootLogger.info("lambda = ", lambda);
     }
 
     LatticeDimensions global = GInd::getLatData().globalLattice();

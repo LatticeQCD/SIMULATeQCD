@@ -18,11 +18,11 @@ private:
         if (in.fail()) {
             rootLogger.error("Could not open file.");
             return false;
+        } else {
+            in.read((char*)lambda, sizeof(double));
+            header_size = in.tellg();
+            return true;
         }
-        
-        in.read((char*)lambda, sizeof(double));
-        header_size = in.tellg();
-        return true;
     }
 
     evNerscHeader(const CommunicationBase &_comm) : comm(_comm) {
@@ -39,8 +39,8 @@ public:
     }
 
     // called from all nodes, but only root node has already opened file
-    bool read(std::istream &in) {
-        double content;
+    bool read(std::istream &in, double &content) {
+        // double content;
         bool success = true;
         if (comm.IamRoot())
             success = read(in, &content);
@@ -55,7 +55,6 @@ public:
         if (!success) {
             return false;
         } else {
-            rootLogger.info("lambda = ", content);
             return true;
         }
     }
@@ -117,18 +116,17 @@ public:
         index = 0;
     }
 
-    bool read_header(std::istream &in) {
-        if (!header.read(in)){
+    bool read_header(std::istream &in, double &content) {
+        if (!header.read(in, content)){
             rootLogger.error("header.read() failed!");
             return false;
+        } else {
+
+            buf.resize(GInd::getLatData().vol4 * su3_size);
+            index = buf.size();
+
+            return true;
         }
-
-        bool error = false;
-
-        buf.resize(GInd::getLatData().vol4 * su3_size);
-        index = buf.size();
-
-        return !error;
     }
 
     size_t header_size() {
