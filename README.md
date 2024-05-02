@@ -11,7 +11,7 @@
 
 
 SIMULATeQCD is a multi-GPU Lattice QCD framework that makes it easy for physicists to implement lattice QCD formulas while still providing
-competitive performance. 
+competetive performance. 
 
 ## How to Build 
 
@@ -27,13 +27,13 @@ please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULAT
 You will need to install [`git-lfs`](https://git-lfs.github.com/) before continuing or you will need to use a git client which natively supports it.
 This is needed for downloading configurations used in the unit tests. Then run 
 ```shell
-git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.2.0
+git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.0.1
 ```
 
 ### Compile Using Container
 
 To build using the container, you need to have `podman` properly configured on your system.  
-You can find more detailed instructions about the container in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
+More information on that you may find in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
 To run the container you need an NVIDIA GPU.
 
 To build the code, you then simply
@@ -47,7 +47,7 @@ To build the code, you then simply
 
 The following software is required to manually compile SIMULATeQCD:
 
-- `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or [3.19.2](https://gitlab.kitware.com/cmake/cmake/-/tree/v3.19.2?ref_type=tags).)
+- `cmake` (Some versions have the "--phtread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 - `C++` compiler with `C++17` support.
 - `MPI` (e.g. `openmpi-4.0.4`).
 - `CUDA Toolkit` version 11+. 
@@ -62,7 +62,7 @@ cmake ../SIMULATeQCD/ \
 ```
 Here, it is assumed that your source code folder is called `SIMULATeQCD`. 
 You can set the path to CUDA by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR:PATH`.
-`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example use "70" for Volta or "80" for Ampere.
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "70" for Volta or "80" for Ampere.
 Inside the build folder, you can now begin to use `make` to compile your executables, e.g.
 ```shell
 make NameOfExecutable
@@ -71,12 +71,15 @@ If you would like to speed up the compiling process, add the option `-j`, which 
 
 Popular production-ready executables are:
 ```Shell
-rhmc             # generate HISQ configurations
-generateQuenched # generate quenched gauge configurations using HB and OR
-gradientFlow     # Apply Wilson/Zeuthen flow and measure various observables
-gaugeFixing      # Gauge fixing
+# generate HISQ configurations
+rhmc                 # Example Parameter-file: parameter/applications/rhmc.param
+# generate quenched gauge configurations using HB and OR
+GenerateQuenched     # Example Parameter-file: parameter/applications/GenerateQuenched.param
+# Apply Wilson/Zeuthen flow and measure various observables
+gradientFlow         # Example Parameter-file: parameter/applications/gradientFlow.param
+# Gauge fixing
+gaugeFixing          # Example Parameter-file: parameter/applications/gaugeFixing.param
 ```
-Example parameter files for the above executables can be found in `parameter/applications/`.
 In the [documentation](https://latticeqcd.github.io/SIMULATeQCD/03_applications/applications.html) you will find more information on how to execute these programs.
 
 ## Example: Plaquette action computation
@@ -91,7 +94,7 @@ for a more detailed understanding.
 ```C++
 template<class floatT, bool onDevice, size_t HaloDepth>
 struct CalcPlaq {
-  SU3Accessor<floatT> gaugeAccessor;
+  gaugeAccessor<floatT> gaugeAccessor;
   CalcPlaq(Gaugefield<floatT,onDevice,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
   __device__ __host__ floatT operator()(gSite site) {
     floatT result = 0;
@@ -138,6 +141,7 @@ or clarke(dot)davida(at)gmail.com.
 [G. Curell](https://github.com/grantcurell/),
 [H. Dick](https://github.com/redweasel),
 [J. Goswami](https://github.com/jishnuxx),
+[D. Hoying](https://github.com/goracle),
 [O. Kaczmarek](https://github.com/olaf-kaczmarek),
 [J. Kim](https://github.com/kimjangho1120),
 [R. Larsen](https://github.com/RasmusNL),
@@ -162,4 +166,4 @@ If you are using this code in your research please cite:
 - This work was partly performed in the framework of the PUNCH4NFDI consortium supported by DFG fund "NFDI 39/1", Germany.
 - This work is also supported by the U.S. Department of Energy, Office of Science, though the Scientific Discovery through Advance
 - We would also like to acknowedge enlightening technical discussions with the ILDG team, in particular H. Simma.
-- The authors gratefully acknowledge computing time provided to them on the high-performance computers Noctua2 at the NHR Center PC2. These are funded by the Federal Ministry of Education and Research and the state governments participating on the basis of the resolutions of the GWK for the national highperformance computing at universities (www.nhr-verein.de/unsere-partner).
+

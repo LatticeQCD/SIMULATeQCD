@@ -7,7 +7,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 
 #define PREC double
 

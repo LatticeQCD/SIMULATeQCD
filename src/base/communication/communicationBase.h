@@ -25,22 +25,19 @@
 #include <cstring>
 #include <complex>
 #include "../../define.h"
-#include "../latticeDimension.h"
+#include "../LatticeDimension.h"
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
-#include "../math/complex.h"
-#include "../math/su3.h"
+#include "../math/gcomplex.h"
+#include "../math/gsu3.h"
 #include "../IO/misc.h"
 #include "haloOffsetInfo.h"
 #include "../math/matrix4x4.h"
-#ifdef USE_NCCL
-#include <rccl.h>
-#endif
 
 template<class floatT>
-class SU3;
+class GSU3;
 
 /*
 	     T Z Y X 	   Lies on another node
@@ -123,7 +120,6 @@ enum IO_Mode {
 
 class CommunicationBase {
 private:
-    bool _forceHalos;
     int world_size; /// Total number of processes
 
     LatticeDimensions dims;
@@ -137,26 +133,20 @@ private:
 
     void _MPI_fail(int ret, const std::string& func);
 
+
     MPI_File fh;
     MPI_Datatype basetype;
     MPI_Datatype fvtype;
-    commStreams_t commStreams;
-#ifdef USE_NCCL
-    ncclUniqueId nccl_uid;
-    ncclComm_t nccl_comm;
-#endif
 
     void initNodeComm();
 
 public:
-    CommunicationBase(int *argc, char ***argv, bool forceHalos=false);
+    CommunicationBase(int *argc, char ***argv);
 
     void init(const LatticeDimensions &Dim, const LatticeDimensions &Topo = LatticeDimensions());
 
-#ifdef USE_NCCL
-    void ncclinit();
-#endif
     ~CommunicationBase();
+
 
     bool gpuAwareMPIAvail() const {
 #ifdef USE_GPU_AWARE_MPI
@@ -181,23 +171,14 @@ public:
     bool IamRoot() const RET0_IF_SCALAR;
 
     int MyRank() { return myInfo.world_rank; }
-    bool forceHalos() const { return _forceHalos; }
-    void forceHalos(bool forceHalos) { _forceHalos = forceHalos; }
 
     int getNumberProcesses() { return world_size; }
 
-
-    commStreams_t& getCommStreams() {
-        return commStreams;
-    }
     /// Return rank of process with given coordinates
     int getRank(LatticeDimensions) const RET0_IF_SCALAR;
 
     MPI_Comm getCart_comm() const { return cart_comm; }
 
-#ifdef USE_NCCL
-    ncclComm_t getNccl_communicator() const { return nccl_comm;}
-#endif
     /// Return if only a single process is running
     bool single() const { return (world_size == 1); }
 
@@ -214,17 +195,17 @@ public:
 
     void root2all(double &) const EMPTY_IF_SCALAR;
 
-    void root2all(COMPLEX(float) &) const EMPTY_IF_SCALAR;
+    void root2all(GCOMPLEX(float) &) const EMPTY_IF_SCALAR;
 
-    void root2all(COMPLEX(double) &) const EMPTY_IF_SCALAR;
+    void root2all(GCOMPLEX(double) &) const EMPTY_IF_SCALAR;
 
     void root2all(Matrix4x4Sym<float> &) const EMPTY_IF_SCALAR;
 
     void root2all(Matrix4x4Sym<double> &) const EMPTY_IF_SCALAR;
 
-    void root2all(SU3<float> &) const EMPTY_IF_SCALAR;
+    void root2all(GSU3<float> &) const EMPTY_IF_SCALAR;
 
-    void root2all(SU3<double> &) const EMPTY_IF_SCALAR;
+    void root2all(GSU3<double> &) const EMPTY_IF_SCALAR;
 
     void root2all(std::vector<int> &) const EMPTY_IF_SCALAR;
 
@@ -257,9 +238,9 @@ public:
     std::complex<double> reduce(std::complex<double> a) const RETa_IF_SCALAR;
 
     /// Reduce (summing up) a complex  value
-    COMPLEX(float) reduce(COMPLEX(float) a) const RETa_IF_SCALAR;
+    GCOMPLEX(float) reduce(GCOMPLEX(float) a) const RETa_IF_SCALAR;
 
-    COMPLEX(double) reduce(COMPLEX(double) a) const RETa_IF_SCALAR;
+    GCOMPLEX(double) reduce(GCOMPLEX(double) a) const RETa_IF_SCALAR;
 
     /// Reduce (summing up) an array of double values, replacing values
     void reduce(float *, int) const EMPTY_IF_SCALAR;
@@ -269,19 +250,19 @@ public:
     void reduce(double *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of values, replacing values
-    void reduce(COMPLEX(float) *, int) const EMPTY_IF_SCALAR;
+    void reduce(GCOMPLEX(float) *, int) const EMPTY_IF_SCALAR;
 
-    void reduce(COMPLEX(double) *, int) const EMPTY_IF_SCALAR;
+    void reduce(GCOMPLEX(double) *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of matrix values, replacing values
     void reduce(Matrix4x4Sym<float> *, int) const EMPTY_IF_SCALAR;
 
     void reduce(Matrix4x4Sym<double> *, int) const EMPTY_IF_SCALAR;
 
-    /// Reduce (summing up) an array of SU3(double) values, replacing values
-    void reduce(SU3<float> *, int) const EMPTY_IF_SCALAR;
+    /// Reduce (summing up) an array of GSU3(double) values, replacing values
+    void reduce(GSU3<float> *, int) const EMPTY_IF_SCALAR;
 
-    void reduce(SU3<double> *, int) const EMPTY_IF_SCALAR;
+    void reduce(GSU3<double> *, int) const EMPTY_IF_SCALAR;
 
     /// Reduce (summing up) an array of complex values, replacing values
     void reduce(std::complex<float> *, int) const EMPTY_IF_SCALAR;
@@ -293,10 +274,10 @@ public:
 
     Matrix4x4Sym<double> reduce(Matrix4x4Sym<double> a) const RETa_IF_SCALAR;
 
-    /// Reduce (summing up) a SU3 value
-    SU3<float> reduce(SU3<float> a) const RETa_IF_SCALAR;
+    /// Reduce (summing up) a GSU3 value
+    GSU3<float> reduce(GSU3<float> a) const RETa_IF_SCALAR;
 
-    SU3<double> reduce(SU3<double> a) const RETa_IF_SCALAR;
+    GSU3<double> reduce(GSU3<double> a) const RETa_IF_SCALAR;
 
     /// Average values from all processes
     float globalAverage(float a) const RETa_IF_SCALAR;

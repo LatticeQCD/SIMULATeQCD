@@ -6,11 +6,11 @@
  */
 
 #include "../../define.h"
-#include "bulkIndexer.h"
-#include "../indexer/haloIndexer.h"
+#include "BulkIndexer.h"
+#include "../indexer/HaloIndexer.h"
 
-void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm) {
-    bool forceAllHalos = comm.forceHalos();
+void initIndexer(const size_t HaloDepth, const LatticeParameters &param, CommunicationBase &comm, bool forceAllHalos) {
+
     LatticeDimensions _globalLattice(param.latDim);
     LatticeDimensions _localLattice(_globalLattice / comm.nodes());
 

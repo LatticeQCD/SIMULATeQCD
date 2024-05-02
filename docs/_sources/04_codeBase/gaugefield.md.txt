@@ -2,7 +2,7 @@
 
 The `Gaugefield` class provides a template who has data member `_lattice` to store the
 gauge links for all
-the sites on a 4D lattice. Each link is an SU$($3$)$ matrix of data type `SU3`. One could use
+the sites on a 4D lattice. Each link is an SU$($3$)$ matrix of data type `GSU3`. One could use
 the indexer `GIndexer<All, HaloDepth>` to reach any link, including those in the halo.
 There are also several function members
 

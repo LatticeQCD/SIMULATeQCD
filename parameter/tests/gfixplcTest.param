@@ -2,7 +2,6 @@
 # gfixplcTest.param
 #
 #    Lattice: Nx Ny Nz Nt
-#       beta: Bare coupling constant 6/g^2
 #      Nodes: Number of nodes per direction
 # gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
 # ptolerance: To how many digits should this test agree with old results (DEFAULT = 1e-3)

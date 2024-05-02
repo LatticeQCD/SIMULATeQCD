@@ -121,25 +121,25 @@ If you have added additional <code class="docutils literal notranslate"><span cl
 them in a new module folder, e.g. <code class="docutils literal notranslate"><span class="pre">src/modules/&lt;exec_name&gt;/&lt;meaningfulName&gt;.cpp</span></code> and add them to the source files
 list in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> (root folder):</p>
 <div class="highlight-Cmake notranslate"><div class="highlight"><pre><span></span><span class="c"># If your `*cpp` files contain device code, you need to specify them with this call</span>
-<span class="nb">set_SIMULATeQCD_gpu_backend</span><span class="p">(</span><span class="s">&lt;path/to/file1.cpp&gt;</span> <span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
+<span class="nb">set_SIMULATeQCD_gpu_backend</span><span class="p">(</span><span class="s">&lt;path/to/file1.cpp&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
 
 <span class="c"># With this call you define the name of your executable.</span>
 <span class="c"># You also need to specify all your `*cpp` files</span>
-<span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_FILES_&lt;exec_name&gt;</span> <span class="s">&lt;path/to/file1.cpp&gt;</span> <span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
-<span class="nb">add_SIMULATeQCD_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cpp</span>
-                           <span class="o">${</span><span class="nv">SOURCE_FILES_&lt;exec_name&gt;</span><span class="o">}</span><span class="p">)</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">SOURCE_FILES_&lt;exec_name&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file1.cpp&gt;</span><span class="w"> </span><span class="s">&lt;path/to/file2.cpp&gt;</span><span class="p">)</span>
+<span class="nb">add_SIMULATeQCD_executable</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">src/&lt;type_of_application&gt;/main_&lt;exec_name&gt;.cpp</span>
+<span class="w">                           </span><span class="o">${</span><span class="nv">SOURCE_FILES_&lt;exec_name&gt;</span><span class="o">}</span><span class="p">)</span>
 
 <span class="c"># Here you specify the type of application. Available types are:</span>
 <span class="c"># &quot;testing&quot;, &quot;profiling&quot;, &quot;examples&quot;, &quot;applications&quot;, &quot;tools&quot;</span>
-<span class="nb">set_SIMULATeQCD_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PROPERTIES</span> <span class="s">RUNTIME_OUTPUT_DIRECTORY</span> <span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
+<span class="nb">set_SIMULATeQCD_property</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">PROPERTIES</span><span class="w"> </span><span class="s">RUNTIME_OUTPUT_DIRECTORY</span><span class="w"> </span><span class="s2">&quot;&lt;type_of_application&gt;&quot;</span><span class="p">)</span>
 
 <span class="c"># Add the `HaloDepth` and precision which you want to use in you application.</span>
 <span class="c"># Available definitions are written in `define.h`.</span>
-<span class="nb">SIMULATeQCD_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span> <span class="s">PRIVATE</span> <span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
+<span class="nb">SIMULATeQCD_target_compile_definitions</span><span class="p">(</span><span class="s">&lt;exec_name&gt;</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">&lt;your_compile_definitions&gt;</span><span class="p">)</span>
 
 <span class="c"># Add your executable to the correct compound. Available types are (similar as before):</span>
 <span class="c"># tests, profilers, examples, applications, tools.</span>
-<span class="nb">add_to_compound_SIMULATeQCD_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span> <span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
+<span class="nb">add_to_compound_SIMULATeQCD_target</span><span class="p">(</span><span class="s">&lt;type_of_application&gt;</span><span class="w"> </span><span class="s">&lt;exec_name&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Header files should NOT be listed there!</p>
@@ -151,7 +151,7 @@ list in <code class="docutils literal notranslate"><span class="pre">CMakeLists.
 <p>Nice examples on how to write SIMULATeQCD code may be found in
 <code class="docutils literal notranslate"><span class="pre">src/examples/main_plaquette.cpp</span></code>
 or
-<code class="docutils literal notranslate"><span class="pre">src/testing/main_generalFunctorTest.cpp</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">src/testing/main_GeneralOperatorTest.cpp</span></code>.</p>
 </section>
 </section>
 

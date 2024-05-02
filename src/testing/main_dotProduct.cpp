@@ -5,7 +5,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 template<class floatT, Layout LatLayout, bool onDevice>
@@ -22,7 +22,7 @@ void run_func_nostacks(CommunicationBase &commBase) {
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
-    COMPLEX(double) dot(0.0,0.0);
+    GCOMPLEX(double) dot(0.0,0.0);
 
     timer.start();
     dot = spinorIn.dotProduct(spinorIn);
@@ -49,7 +49,7 @@ void run_func(CommunicationBase &commBase) {
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
-    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<GCOMPLEX(double), NStacks> dot(0.0);
 
     timer.start();
     dot = spinorIn.dotProductStacked(spinorIn);
@@ -59,7 +59,7 @@ void run_func(CommunicationBase &commBase) {
         rootLogger.info("dot " ,  dot[i]);
     }
 
-    rootLogger.info("Time for dot-product: " , timer, "with precision ", sizeof(floatT), " Bytes");
+    rootLogger.info("Time for dot-product: " , timer);
 }
 
 int main(int argc, char **argv) {
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
         CommunicationBase commBase(&argc, &argv);
         RhmcParameters param;
 
-        param.readfile(commBase, "../parameter/tests/mixedPrecInverterTest.param", argc, argv);
+        param.readfile(commBase, "../parameter/tests/MixedPrecInverterTest.param", argc, argv);
 
         RationalCoeff rat;
 
@@ -93,12 +93,6 @@ int main(int argc, char **argv) {
         run_func<double, Even, 8, true>(commBase);
         run_func<float, Even, 10, true>(commBase);
         run_func<double, Even, 10, true>(commBase);
-        
-        run_func<float, Even, 12, true>(commBase);
-        run_func<double, Even, 12, true>(commBase);
-        
-        run_func<float, Even, 14, true>(commBase);
-        run_func<double, Even, 14, true>(commBase);
 
         return 0;
     }

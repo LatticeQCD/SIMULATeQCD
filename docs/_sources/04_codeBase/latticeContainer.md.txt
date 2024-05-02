@@ -23,9 +23,9 @@ At some point you may need to write into or extract from your `LatticeContainer`
 with `LatticeContainerAccessor` objects. Once you have created your accessor object corresponding to
 your `LatticeContainer`, the methods `getElement` and `setElement` allow you to interact with it.
 
-A basic implementation of a 100-element `SU3<PREC>` `LatticeContainer` on the GPU could be
+A basic implementation of a 100-element `GSU3<PREC>` `LatticeContainer` on the GPU could be
 ```C++
-LatticeContainer<true,SU3<PREC>> latty(commBase);
+LatticeContainer<true,GSU3<PREC>> latty(commBase);
 latty.adjustSize(100);
 ```
 Then you can set element 3 of `latty` to `test`, or store the contents of element 3 in `test`, using respectively

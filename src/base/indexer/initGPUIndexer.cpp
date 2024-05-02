@@ -6,8 +6,8 @@
  */
 
 #include "../../define.h"
-#include "bulkIndexer.h"
-#include "../indexer/haloIndexer.h"
+#include "BulkIndexer.h"
+#include "../indexer/HaloIndexer.h"
 
 
 __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO+1];

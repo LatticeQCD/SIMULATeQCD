@@ -102,7 +102,7 @@ void pure_gauge_hmc<floatT, LatticeLayout, HaloDepth, comp>::generate_const_mome
 template<class floatT, size_t HaloDepth>
 struct get_momenta
 {
-    SU3Accessor<floatT> pAccessor;
+    gaugeAccessor<floatT> pAccessor;
 
     get_momenta(Gaugefield<floatT,true,HaloDepth> &p) : pAccessor(p.getAccessor()) {
     }

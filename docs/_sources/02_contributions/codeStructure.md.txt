@@ -68,4 +68,4 @@ An example configuration is stored in `test_conf/l20t20b06498a_nersc.302500`. It
 Nice examples on how to write SIMULATeQCD code may be found in
 `src/examples/main_plaquette.cpp`
 or
-`src/testing/main_generalFunctorTest.cpp`.
+`src/testing/main_GeneralOperatorTest.cpp`.

@@ -1,18 +1,19 @@
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct plaquetteKernel{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     plaquetteKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
-       
-        SU3<floatT> temp;
+        typedef GIndexer<All,HaloDepth> GInd;
+
+        GSU3<floatT> temp;
 
         floatT result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                SU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
                 result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
             }
         }
@@ -24,18 +25,19 @@ struct plaquetteKernel{
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct plaquetteKernelSS{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     plaquetteKernelSS(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
-       
-        SU3<floatT> temp;
+        typedef GIndexer<All,HaloDepth> GInd;
+
+        GSU3<floatT> temp;
 
         floatT result = 0;
         for (int nu = 1; nu < 3; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                SU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
                 result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
             }
         }
@@ -47,7 +49,7 @@ struct plaquetteKernelSS{
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct plaquetteKernel_double{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     plaquetteKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
@@ -57,7 +59,7 @@ struct plaquetteKernel_double{
         double result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                SU3<double> tmp = gAcc.template getLink<double>(GInd::getSiteMu(site, mu));
+                GSU3<double> tmp = gAcc.template getLink<double>(GInd::getSiteMu(site, mu));
                              tmp*= gAcc.template getLink<double>(GInd::getSiteMu(GInd::site_up(site, mu),nu));
                              tmp*= gAcc.template getLinkDagger<double>(GInd::getSiteMu(GInd::site_up(site, nu),mu));
                              tmp*= gAcc.template getLinkDagger<double>(GInd::getSiteMu(site, nu));
@@ -71,18 +73,19 @@ struct plaquetteKernel_double{
 
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct UtauMinusUsigmaKernel{
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     UtauMinusUsigmaKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
-       
-        SU3<floatT> temp;
+        typedef GIndexer<All,HaloDepth> GInd;
+
+        GSU3<floatT> temp;
 
         floatT result = 0;
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                SU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                GSU3<floatT> tmp = gAcc.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
                 if ( mu == 0 ) {
                     result += tr_d(gAcc.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
                 } else {
@@ -98,14 +101,14 @@ struct UtauMinusUsigmaKernel{
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct cloverKernel{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
     FieldStrengthTensor<floatT,HaloDepth,onDevice,comp> FT;
 
     cloverKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()), FT(gAcc){ }
 
     __device__ __host__ floatT operator()(gSite site) {
 
-        SU3<floatT> Fmunu;
+        GSU3<floatT> Fmunu;
 
         floatT result = 0;
 
@@ -123,14 +126,14 @@ struct cloverKernel{
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct rectangleKernel{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     rectangleKernel(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ floatT operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-        SU3<floatT> temp;
+        GSU3<floatT> temp;
 
         floatT result = 0;
         for (int nu = 1; nu < 4; nu++) {
@@ -157,15 +160,15 @@ struct rectangleKernel{
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct rectangleKernel_double{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     rectangleKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-        SU3<double> temp;
-        SU3<double> temp2;
+        GSU3<double> temp;
+        GSU3<double> temp2;
 
         double result = 0;
         for (int nu = 1; nu < 4; nu++) {
@@ -197,15 +200,15 @@ struct rectangleKernel_double{
 template<class floatT, bool onDevice,size_t HaloDepth, CompressionType comp>
 struct gaugeActKernel_double{
 
-    SU3Accessor<floatT,comp> gAcc;
+    gaugeAccessor<floatT,comp> gAcc;
 
     gaugeActKernel_double(Gaugefield<floatT,onDevice,HaloDepth,comp> &gauge) : gAcc(gauge.getAccessor()){ }
 
     __device__ __host__ double operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-        SU3<double> m_0;
-        SU3<double> m_3;
+        GSU3<double> m_0;
+        GSU3<double> m_3;
 
         const double g1_r = 5.0/3.0;
         const double g2_r = -1.0/12.0;
@@ -269,8 +272,8 @@ struct gaugeActKernel_double{
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct count_faulty_links {
-    SU3Accessor<floatT,comp> gL;
-    SU3Accessor<floatT,comp> gR;
+    gaugeAccessor<floatT,comp> gL;
+    gaugeAccessor<floatT,comp> gR;
     floatT tol;
     count_faulty_links(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeL, Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeR, floatT tolerance=1e-6) : gL(GaugeL.getAccessor()), gR(GaugeR.getAccessor()), tol(tolerance) {}
 
@@ -278,12 +281,12 @@ struct count_faulty_links {
         int sum = 0;
         for (int mu = 0; mu < 4; mu++) {
             gSiteMu siteMu = GIndexer<All,HaloDepth>::getSiteMu(site,mu);
-            SU3<floatT> a = gL.getLink(siteMu);
-            SU3<floatT> b = gR.getLink(siteMu);
-            if (!compareSU3(a, b, tol)) {
+            GSU3<floatT> a = gL.getLink(siteMu);
+            GSU3<floatT> b = gR.getLink(siteMu);
+            if (!compareGSU3(a, b, tol)) {
                 for (int i = 0; i < 3; i++)
                 for (int j = 0; j < 3; j++) {
-                    COMPLEX(floatT) diff = a(i, j) - b(i, j);
+                    GCOMPLEX(floatT) diff = a(i, j) - b(i, j);
                     floatT diff_abs = fabs(diff.cREAL);
                     if (diff_abs > tol){
                         printf("Link at site (%i %i %i %i) mu=%i, Matrix-Element (%i,%i) differ by %.4e \n", siteMu.coord.x, siteMu.coord.y, siteMu.coord.z, siteMu.coord.t, mu, i,j, diff_abs);

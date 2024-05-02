@@ -2,7 +2,6 @@
 # gradientFlow.param
 #
 #    Lattice: Nx Ny Nz Nt
-#       beta: Bare coupling constant 6/g^2
 #      Nodes: Number of nodes per direction
 #  Gaugefile: Configuration to be read in
 #     format: Format of input configuration
@@ -15,19 +14,23 @@
 #         accuracy: Specify the accuracy of the adaptive step size method.
 #
 #      measurements_dir: Measurement output directory
-# measurement_intervall: Flow time Interval which should be iterated.
+# measurement_invervall: Flow time Interval which should be iterated.
 #  necessary_flow_times: Set the flow-times which should not be skipped by the fixed or adaptive stepsize
 #
-
-Lattice       = 20 20 20 20
-Nodes         = 1 1 1 1
-beta          = 6.498
+# ignore_fixed_startstepsize: ignore the fixed stepsize and infer stepsizes from necessary_flow_times. only use with
+#                             RK_method=fixed_stepsize
+#                  save_conf: Save the flowed configuration at each step? (0=no, 1=yes)
+#          save_at_flow_time: Save flowed configuration only for these flow times
+#
+Lattice    = 20 20 20 20
+Nodes      = 1 1 1 1
+beta       = 6.498
 use_unit_conf = 0
-Gaugefile     = ../test_conf/l20t20b06498a_nersc.302500
-format        = nersc
-endianness    = auto
-conf_nr       = 302500
-force         = zeuthen
+Gaugefile  = ../test_conf/l20t20b06498a_nersc.302500
+format     = nersc
+endianness = auto
+conf_nr    = 302500
+force      = zeuthen
 
 start_step_size = 0.01
 RK_method       = adaptive_stepsize
@@ -41,7 +44,7 @@ ignore_start_step_size     = 0
 save_configurations        = 0
 
 #
-# Set to 1 if you want to measure any of these observables (or 0 if not)
+# Set to 1 if you want to measure any of these observables (or 0 if not):
 #
 plaquette                               = 1
 clover                                  = 0
@@ -57,7 +60,7 @@ ColorMagneticCorrTimeSlices_naive       = 0
 ColorElectricCorrTimeSlices_clover      = 0
 ColorMagneticCorrTimeSlices_clover      = 0
 PolyakovLoopCorrelator                  = 0
-topCharge_imp_block                     = 0    # using imp discretization
+topCharge_imp_block                     = 0    #using imp discretization
 energyMomentumTensorTracelessTimeSlices = 0
 energyMomentumTensorTracefullTimeSlices = 0
 RenormPolyakovSusc                      = 0

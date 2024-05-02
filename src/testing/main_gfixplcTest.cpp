@@ -8,9 +8,9 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
+#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
 
 #include "refValues_gfixplc.h"
 

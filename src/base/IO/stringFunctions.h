@@ -5,7 +5,6 @@
 #pragma once
 #include <iostream>
 #include <sstream>
-#include "../math/complex.h"
 
 namespace COLORS {
     const std::string red("\033[0;31m");
@@ -62,31 +61,6 @@ inline std::string sformat(const std::string &fmt, Ts&&... vs)
     std::snprintf(const_cast<char*>(result.data()), required + 1, fmt.c_str(), cast(std::forward<Ts>(vs))...);
 
     return result;
-}
-
-template <class floatT>
-inline std::string sformatScientific(floatT&& x)
-{
-    using baseT = std::remove_cv_t<std::remove_reference_t<floatT>>;
-    if constexpr(std::is_same_v<baseT,float> == true){
-        return sformat("%.7e", x);
-    }
-    if constexpr(std::is_same_v<baseT,double> == true){
-        return sformat("%.14e", x);
-    }
-    if constexpr(std::is_same_v<baseT,GPUcomplex<float>> == true){
-        return sformat("(%.7e, %.7e)", x.cREAL, x.cIMAG);
-    }
-    if constexpr(std::is_same_v<baseT,GPUcomplex<double>> == true){
-        return sformat("(%.14e, %.14e)", x.cREAL, x.cIMAG);
-    }
-    static_assert(std::is_same_v<baseT, float> || 
-                std::is_same_v<baseT, double> ||
-                std::is_same_v<baseT, GPUcomplex<double>> ||
-                std::is_same_v<baseT, GPUcomplex<float>>,
-                "sformatScientific error: Unknown data type!"
-                );
-    return "";
 }
 
 inline std::string timeStamp() {

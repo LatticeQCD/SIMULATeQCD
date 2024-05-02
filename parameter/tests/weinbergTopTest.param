@@ -1,12 +1,6 @@
 #
 # weinbergTopTest.param
 #
-#                Lattice: Nx Ny Nz Nt
-#                  Nodes: Number of nodes per direction
-#              Gaugefile: Configuration to be read in
-#                 format: Format of input configuration
-#  measurement_intervall: Flow time Interval which should be iterated.
-#
 Nodes      = 1 1 1 1
 Lattice    = 4 4 4 4
 Gaugefile  = ../test_conf/openQCD.l4t4b12.0k0.125csw1.13295

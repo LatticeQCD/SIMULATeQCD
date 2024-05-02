@@ -6,23 +6,23 @@
 #pragma once
 
 #include "../../define.h"
-#include "../../base/math/complex.h"
+#include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
-#include "../../base/math/su3array.h"
-#include "../../base/math/su3.h"
+#include "../../base/math/gsu3array.h"
+#include "../../base/math/gsu3.h"
 #include "../gaugefield.h"
 
 #include "gsvd.h"
 
 template<class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18>
-__host__ __device__ SU3<floatT> derivativeProjectU3(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> fAcc, gSite site, int mu) {
+__host__ __device__ GSU3<floatT> derivativeProjectU3(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> fAcc, gSite site, int mu) {
 
     typedef GIndexer<All, HaloDepth> GInd;
 
-    SU3<double> V;
-    SU3<double> Q;
-    SU3<double> f;
-    SU3<double> fd;
+    GSU3<double> V;
+    GSU3<double> Q;
+    GSU3<double> f;
+    GSU3<double> fd;
     V = gAcc.template getLink<double>(GInd::getSiteMu(site,mu));
     Q = dagger(V) * V;
 
@@ -74,7 +74,7 @@ __host__ __device__ SU3<floatT> derivativeProjectU3(SU3Accessor<floatT,compIn> g
 
     double detQ = realdet(Q);
     double sv[3];
-    SU3<double> temp_svd;
+    GSU3<double> temp_svd;
 
     if (fabs(detQ/(g0*g1*g2)-1.0) > 1e-5) {
 #ifndef USE_HIP_AMD
@@ -94,7 +94,7 @@ __host__ __device__ SU3<floatT> derivativeProjectU3(SU3Accessor<floatT,compIn> g
         g0 = g0 + delta;
         g1 = g1 + delta;
         g2 = g2 + delta;
-        Q = Q + delta*su3_one<double>();
+        Q = Q + delta*gsu3_one<double>();
     }
 
     //symmetric polynomials of roots of eigenvalues
@@ -108,7 +108,7 @@ __host__ __device__ SU3<floatT> derivativeProjectU3(SU3Accessor<floatT,compIn> g
     double f1 = (-w-u*u*u+2*u*v)/den;
     double f2 = u/den;
 
-    SU3<double> Qinvsq = f0*su3_one<double>() + f1*Q + f2*Q*Q;
+    GSU3<double> Qinvsq = f0*gsu3_one<double>() + f1*Q + f2*Q*Q;
 
     double u2 = u * u;
     double u3 = u2 * u;
@@ -157,27 +157,27 @@ __host__ __device__ SU3<floatT> derivativeProjectU3(SU3Accessor<floatT,compIn> g
     C22 = C22/den3;
 
     //calculate P = B00*id + B01*Q + B02*Q*Q
-    SU3<double> P = C00*su3_one<double>() + C01*Q + C02*Q*Q;
+    GSU3<double> P = C00*gsu3_one<double>() + C01*Q + C02*Q*Q;
 
     //calculate R = B10*id + B11*Q + B12*Q*Q
-    SU3<double> R = C01*su3_one<double>() + C11*Q + C12*Q*Q;
+    GSU3<double> R = C01*gsu3_one<double>() + C11*Q + C12*Q*Q;
 
     //calculate S = B20*id + B21*Q + B22*Q*Q
-    SU3<double> S = C02*su3_one<double>() + C12*Q + C22*Q*Q;
+    GSU3<double> S = C02*gsu3_one<double>() + C12*Q + C22*Q*Q;
 
-    SU3<double> temp = su3_zero<double>();
-    SU3<double> Vd = dagger(V);
-    SU3<double> VVd = V*dagger(V);
-    SU3<double> VQVd = V*Q*dagger(V);
-    SU3<double> PVd = P*dagger(V);
-    SU3<double> VQ = V*Q;
-    SU3<double> RVd = R*dagger(V);
-    SU3<double> VQ2 = V*Q*Q;
-    SU3<double> SVd = S*dagger(V);
-    SU3<double> QVd = Q*dagger(V);
-    SU3<double> Q2Vd = Q*Q*dagger(V);
+    GSU3<double> temp = gsu3_zero<double>();
+    GSU3<double> Vd = dagger(V);
+    GSU3<double> VVd = V*dagger(V);
+    GSU3<double> VQVd = V*Q*dagger(V);
+    GSU3<double> PVd = P*dagger(V);
+    GSU3<double> VQ = V*Q;
+    GSU3<double> RVd = R*dagger(V);
+    GSU3<double> VQ2 = V*Q*Q;
+    GSU3<double> SVd = S*dagger(V);
+    GSU3<double> QVd = Q*dagger(V);
+    GSU3<double> Q2Vd = Q*Q*dagger(V);
 
-    COMPLEX(double) der;
+    GCOMPLEX(double) der;
 
     for (int k = 0; k < 3; k++)
     for (int l = 0; l < 3; l++)

@@ -1,16 +1,13 @@
 #
 # configConverter.param
 #
-#       Lattice: Nx Ny Nz Nt
-#          beta: Bare coupling constant 6/g^2
-#         Nodes: Number of nodes per direction
-#     Gaugefile: Name of input gauge configuration
-# Gaugefile_out: Name of output gauge configuration
-#    endianness: Endianness of input configuration
-#        format: Format of input configuration (ildg, milc, or nersc)
-#    format_out: Format of output configuration (ildg or nersc)
-#      prec_out: Precision of the output configuration, 1 for single and 2 for double
-#  compress_out: If true (!=0) then save only the first 2 rows of SU(3) matrix. 
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#    Gaugefile: Name of input gauge configuration
+#   endianness: Endianness of input configuration
+#       format: Format of input configuration (ildg, milc, or nersc)
+#   format_out: Format of output configuration (ildg or nersc)
+#     prec_out: Precision of the output configuration, 1 for single and 2 for double
 #
 Lattice       = 8 8 8 4
 Nodes         = 1 1 1 1
@@ -21,4 +18,4 @@ endianness    = auto
 Gaugefile_out = ./ildg.l8t4b3360_bie_readtest
 format_out    = ildg
 prec_out      = 2
-compress_out  = 0 
+compress_out  = 0

@@ -104,7 +104,7 @@ automatically. In the <code class="docutils literal notranslate"><span class="pr
 </ol>
 <p>which should be run in that order. To compile the tests,
 navigate to your build folder and</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make -j tests
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>-j<span class="w"> </span>tests
 </pre></div>
 </div>
 <p>It may take some time to compile all the tests; in particular for CUDA versions lower than
@@ -116,7 +116,7 @@ pull request until we verify all multi-GPU tests pass.)
 We have collected test executables within each <code class="docutils literal notranslate"><span class="pre">runTests</span></code> script to run in
 less than 30 minutes on Pascal GPUs so that you can test interactively at most
 computing centers. When you are ready to run the tests,</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span> testing
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>testing
 ../scripts/runTests_0.bash
 </pre></div>
 </div>
@@ -137,7 +137,7 @@ also add an entry to <code class="docutils literal notranslate"><span class="pre
 where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of GPUs required, to <code class="docutils literal notranslate"><span class="pre">TEST_run.bash</span></code>.</p></li>
 <li><p>Otherwise if you would like to run your test with various GPU layouts, make sure it
 has its own <code class="docutils literal notranslate"><span class="pre">.param</span></code> file in the <code class="docutils literal notranslate"><span class="pre">parameter/tests</span></code> with <code class="docutils literal notranslate"><span class="pre">Nodes</span></code> as an adjustable parameter and</p></li>
-<li><p>add the entry <code class="docutils literal notranslate"><span class="pre">testRoutines[_bulkIndexerTest]=&quot;GPUkey&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">runTests</span></code>.</p></li>
+<li><p>add the entry <code class="docutils literal notranslate"><span class="pre">testRoutines[_BulkIndexerTest]=&quot;GPUkey&quot;</span></code> to <code class="docutils literal notranslate"><span class="pre">runTests</span></code>.</p></li>
 </ol>
 <p>For the last step, the <code class="docutils literal notranslate"><span class="pre">GPUkey</span></code> tells the <code class="docutils literal notranslate"><span class="pre">runTests</span></code> scrips which GPU layouts they should test.
 The <code class="docutils literal notranslate"><span class="pre">GPUkey</span></code> consists for a number of GPUs concatenated with one of two layout symbols:</p>
@@ -157,14 +157,14 @@ purpose.</p>
 over-relaxation update, please check this using a link-by-link comparison against
 some known reference. One can compare <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects
 using</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">compare_fields</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">bool</span><span class="w"> </span><span class="n">compare_fields</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>which check that every element of every link of <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> agree
 within a relative error of <code class="docutils literal notranslate"><span class="pre">tol</span></code>. It returns <code class="docutils literal notranslate"><span class="pre">true</span></code> if every single element of
 both <code class="docutils literal notranslate"><span class="pre">Gaugefield</span></code> objects agree.</p>
 <p>To compare scalars <code class="docutils literal notranslate"><span class="pre">test</span></code> and <code class="docutils literal notranslate"><span class="pre">reference</span></code> one can use</p>
-<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">compare_relative</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">prec</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span><span class="w"></span>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="n">compare_relative</span><span class="p">(</span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">reference</span><span class="p">,</span><span class="w"> </span><span class="n">rel</span><span class="p">,</span><span class="w"> </span><span class="n">prec</span><span class="p">,</span><span class="w"> </span><span class="n">text</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>which makes sure they agree within relative error <code class="docutils literal notranslate"><span class="pre">rel</span></code> as well as absolute

@@ -4,19 +4,19 @@
 
 #pragma once
 #include "../define.h"
-#include "../base/math/complex.h"
+#include "../base/math/gcomplex.h"
 #include "../base/gutils.h"
-#include "../base/math/su3array.h"
-#include "../base/math/su3.h"
-#include "constructs/plaqConstructs.h"
+#include "../base/math/gsu3array.h"
+#include "../base/math/gsu3.h"
+#include "constructs/PlaqConstructs.h"
 #include "gaugefield.h"
 
 
 
 template<class floatT,size_t HaloDepth>
-__host__ __device__ SU3<floatT> inline gaugeActionDerivPlaq(SU3Accessor<floatT> gAcc, gSite site, int mu) {
-    SU3<floatT> result = su3_zero<floatT>();
-    SU3<floatT> tmp = su3_zero<floatT>();
+__host__ __device__ GSU3<floatT> inline gaugeActionDerivPlaq(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
+    GSU3<floatT> result = gsu3_zero<floatT>();
+    GSU3<floatT> tmp = gsu3_zero<floatT>();
 
     for (int nu_aux = 1; nu_aux < 4; ++nu_aux) {
         const int nu = (mu + nu_aux) % 4;
@@ -30,16 +30,16 @@ __host__ __device__ SU3<floatT> inline gaugeActionDerivPlaq(SU3Accessor<floatT> 
 }
 
 template<class floatT,size_t HaloDepth>
-__host__ __device__ SU3<floatT> inline gaugeActionDerivRect(SU3Accessor<floatT> gAcc, gSite site, int mu) {
+__host__ __device__ GSU3<floatT> inline gaugeActionDerivRect(gaugeAccessor<floatT> gAcc, gSite site, int mu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> result = su3_zero<floatT>();
-    SU3<floatT> tmp = su3_zero<floatT>();
+    GSU3<floatT> result = gsu3_zero<floatT>();
+    GSU3<floatT> tmp = gsu3_zero<floatT>();
 
-    SU3<floatT> P, Q, R, S;
-    SU3<floatT> Pmu, Pnu, Qmu, Qnu;
-    SU3<floatT> LinkNu, LinkDNu;
-    SU3<floatT> LinkNu_nu, LinkDNu_nu;
-    SU3<floatT> LinkMu, LinkDMu;
+    GSU3<floatT> P, Q, R, S;
+    GSU3<floatT> Pmu, Pnu, Qmu, Qnu;
+    GSU3<floatT> LinkNu, LinkDNu;
+    GSU3<floatT> LinkNu_nu, LinkDNu_nu;
+    GSU3<floatT> LinkMu, LinkDMu;
 
     for (int nu_aux = 1; nu_aux < 4; ++nu_aux) {
         const int nu = (mu + nu_aux) % 4;
@@ -77,9 +77,9 @@ __host__ __device__ SU3<floatT> inline gaugeActionDerivRect(SU3Accessor<floatT> 
 }
 
 template<class floatT,size_t HaloDepth>
-__host__ __device__ SU3<floatT> inline symanzikGaugeActionDeriv(SU3Accessor<floatT> latacc, gSite s, int mu) {
+__host__ __device__ GSU3<floatT> inline symanzikGaugeActionDeriv(gaugeAccessor<floatT> latacc, gSite s, int mu) {
     typedef GIndexer<All,HaloDepth> GInd;
-   // SU3<floatT> tmp = (5. / 3.) * gaugeActionDerivPlaq<floatT,HaloDepth>(gAcc, site, mu) -
+   // GSU3<floatT> tmp = (5. / 3.) * gaugeActionDerivPlaq<floatT,HaloDepth>(gAcc, site, mu) -
      //                  (1. / 12.) * gaugeActionDerivRect<floatT,HaloDepth>(gAcc, site, mu);
     //return tmp;
 
@@ -89,9 +89,9 @@ __host__ __device__ SU3<floatT> inline symanzikGaugeActionDeriv(SU3Accessor<floa
     const floatT g_c1 = -5.0/3.0;
     const floatT g_c2 = 1.0/12.0;
 
-    SU3<floatT> m_0, m_res1, staple;
+    GSU3<floatT> m_0, m_res1, staple;
 
-    staple = su3_zero<floatT>();
+    staple = gsu3_zero<floatT>();
 
     for (int nu_aux = 1; nu_aux < 4; nu_aux++)
     {
@@ -165,7 +165,7 @@ __host__ __device__ SU3<floatT> inline symanzikGaugeActionDeriv(SU3Accessor<floa
 
 //up to an additional factor of -beta/3 identical to symanikGaugeActionDeriv but faster
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
-__host__ __device__ SU3<floatT> inline gauge_force(SU3Accessor<floatT,comp> latacc, gSiteMu site, floatT beta){
+__host__ __device__ GSU3<floatT> inline gauge_force(gaugeAccessor<floatT,comp> latacc, gSiteMu site, floatT beta){
 
     typedef GIndexer<All,HaloDepth> GInd;
 
@@ -177,12 +177,12 @@ __host__ __device__ SU3<floatT> inline gauge_force(SU3Accessor<floatT,comp> lata
 
     //CAVE: In contrast to std. textbook definitions of the gauge action: We use a definition inherited from MILC!
     //      Therefore we find an additional factor of 3/5 in r_1!
-    const COMPLEX(floatT) r_1 = COMPLEX(floatT)(beta / 3.0, 0.0)* 3.0/5.0; //
+    const GCOMPLEX(floatT) r_1 = GCOMPLEX(floatT)(beta / 3.0, 0.0)* 3.0/5.0; //
 
 
-    SU3<floatT> m_0, m_res1, staple;
+    GSU3<floatT> m_0, m_res1, staple;
 
-    staple = su3_zero<floatT>();
+    staple = gsu3_zero<floatT>();
 
     for (int nu_aux = 1; nu_aux < 4; nu_aux++)
       {

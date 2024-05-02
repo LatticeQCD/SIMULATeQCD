@@ -242,7 +242,7 @@ private:
         }
 
         template<class T>
-        __host__ __device__ T *getPointer(const size_t offsetInUnitsOfT = 0) const {
+        T *getPointer(const size_t offsetInUnitsOfT = 0) const {
             return static_cast<T *>(_rawPointer) + offsetInUnitsOfT;
         }
 
@@ -517,7 +517,7 @@ public:
     //! This helps the gMemoryPtr behave like a real pointer.
     //! This way, by using the -> operator on a gMemoryPtr you're actually using it on the gMemory object it points to!
     //! (this is called "drill-down behavior")
-    __host__ __device__ MemoryManagement::gMemory<onDevice>* operator->() const {
+    MemoryManagement::gMemory<onDevice>* operator->() const {
         return raw;
     }
 
@@ -562,12 +562,6 @@ public:
     __device__  __host__ inline void getValue(const size_t isite, floatT &value) {
         auto *arr = reinterpret_cast<floatT *>(Array);
         value = arr[isite];
-    }
-
-    template<class floatT>
-    __device__ __host__ inline void getScalar(floatT &value) {
-        auto *arr = reinterpret_cast<floatT *> (Array);
-        value = *arr;
     }
 };
 

@@ -8,14 +8,14 @@
 #ifndef PURE_GAUGE_HMC
 #define PURE_GAUGE_HMC
 
-#include "../../base/math/su3.h"
-#include "../../base/math/random.h"
+#include "../../base/math/gsu3.h"
+#include "../../base/math/grnd.h"
 #include "../../gauge/gaugefield.h"
 #include "../../base/latticeParameters.h"
 #include "../../base/memoryManagement.h"
 #include "../../base/stopWatch.h"
-#include "../../base/latticeContainer.h"
-#include "../../gauge/gaugeAction.h"
+#include "../../base/LatticeContainer.h"
+#include "../../gauge/GaugeAction.h"
 #include "../../gauge/gaugeActionDeriv.h"
 #include "integrator.h"
 #include <random>
@@ -60,7 +60,7 @@ private:
 
     uint4 *_rand_state;
 
-    SU3Accessor<floatT, comp> gAcc;
+    gaugeAccessor<floatT, comp> gAcc;
 
     void generate_momenta();
 

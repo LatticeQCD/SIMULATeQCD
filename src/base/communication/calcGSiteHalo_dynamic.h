@@ -9,7 +9,7 @@
 #include "../../define.h"
 #include "../../base/gutils.h"
 #include "../math/operators.h"
-#include "../indexer/haloIndexer.h"
+#include "../indexer/HaloIndexer.h"
 
 
 struct HaloSite {

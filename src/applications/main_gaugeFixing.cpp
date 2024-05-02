@@ -14,9 +14,9 @@
  */
 
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/observables/polyakovLoop.h"
-#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
-#include "../modules/observables/wilsonLineCorrelator.h"
+#include "../modules/observables/PolyakovLoop.h"
+#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
+#include "../modules/observables/WilsonLineCorrelator.h"
 
 #define PREC double
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[]) {
     gauge.updateAll();
 
     /// Measure the Polyakov loop and report to user.
-    COMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
+    GCOMPLEX(PREC) ploop = ploopClass.getPolyakovLoop();
     rootLogger.info("# POLYAKOV LOOP :: " ,  ploop);
 
     /// ----------------------------------------------------------------------------------------------------GAUGE FIXING

@@ -5,17 +5,17 @@
 
 #pragma once
 #include "../../define.h"
-#include "../../base/math/complex.h"
+#include "../../base/math/gcomplex.h"
 #include "../../base/gutils.h"
-#include "../../base/math/su3array.h"
-#include "../../base/math/su3.h"
+#include "../../base/math/gsu3array.h"
+#include "../../base/math/gsu3.h"
 #include "../gaugefield.h"
-#include "../../modules/hisq/smearParameters.h"
+#include "../../modules/HISQ/smearParameters.h"
 #include <assert.h>
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> inline naikLinkStaple(SU3Accessor<floatT,comp> gAcc, gSiteMu siteMu) {
+__host__ __device__ GSU3<floatT> inline naikLinkStaple(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu) {
 
     typedef GIndexer<All,HaloDepth> GInd;
 
@@ -29,9 +29,9 @@ __host__ __device__ SU3<floatT> inline naikLinkStaple(SU3Accessor<floatT,comp> g
 
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ SU3<floatT> inline threeLinkStaple(SU3Accessor<floatT,comp> gAcc, gSiteMu siteMu) {
+__host__ __device__ GSU3<floatT> inline threeLinkStaple(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
     gSite site = GInd::getSite(siteMu.isite);
     gSite site_save = site;
     int mu = siteMu.mu;
@@ -48,9 +48,9 @@ __host__ __device__ SU3<floatT> inline threeLinkStaple(SU3Accessor<floatT,comp> 
 
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ SU3<floatT> inline hypThreeLinkStaple_first_level(SU3Accessor<floatT,comp> gAcc, gSiteMu siteMu, int excluded_dir1, int excluded_dir2) {
+__host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_first_level(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu, int excluded_dir1, int excluded_dir2) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
     gSite site = GInd::getSite(siteMu.isite);
     gSite site_save = site;
     int mu = siteMu.mu;
@@ -80,10 +80,10 @@ __host__ __device__ SU3<floatT> inline hypThreeLinkStaple_first_level(SU3Accesso
 // example:  suppose the exluded directions are 20, 21, 32, (for Vtilde_{i, mu; 2}), then gAcc_0 = _gauge_lvl1_20, gAcc_1 = _gauge_lvl1_21, gAcc_2 = _gauge_lvl1_32
 // in other words, the primary excluded direction in this example is 2, so the extra excluded directions go in asending order:  0, 1, 3.
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ SU3<floatT> inline hypThreeLinkStaple_second_level(SU3Accessor<floatT,comp> gAcc_0, SU3Accessor<floatT,comp> gAcc_1, SU3Accessor<floatT,comp> gAcc_2, gSiteMu siteMu, int excluded_dir, SU3Accessor<floatT,comp> temp_gAcc_mu_excluded_dir, SU3Accessor<floatT,comp> temp_gAcc_nu_excluded_dir) {
+__host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_second_level(gaugeAccessor<floatT,comp> gAcc_0, gaugeAccessor<floatT,comp> gAcc_1, gaugeAccessor<floatT,comp> gAcc_2, gSiteMu siteMu, int excluded_dir, gaugeAccessor<floatT,comp> temp_gAcc_mu_excluded_dir, gaugeAccessor<floatT,comp> temp_gAcc_nu_excluded_dir) {
 
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
     int mu = siteMu.mu;
     if(mu==excluded_dir) return temp*(floatT)NAN;
     gSite origin = GInd::getSite(siteMu.isite);
@@ -128,11 +128,11 @@ __host__ __device__ SU3<floatT> inline hypThreeLinkStaple_second_level(SU3Access
 
 
 template<class floatT,size_t HaloDepth,CompressionType comp>
-__host__ __device__ SU3<floatT> inline hypThreeLinkStaple_third_level(SU3Accessor<floatT,comp> gAcc_0, SU3Accessor<floatT,comp> gAcc_1, SU3Accessor<floatT,comp> gAcc_2, SU3Accessor<floatT,comp> gAcc_3, gSiteMu siteMu, SU3Accessor<floatT,comp> temp_gAcc_mu, SU3Accessor<floatT,comp> temp_gAcc_nu) {
+__host__ __device__ GSU3<floatT> inline hypThreeLinkStaple_third_level(gaugeAccessor<floatT,comp> gAcc_0, gaugeAccessor<floatT,comp> gAcc_1, gaugeAccessor<floatT,comp> gAcc_2, gaugeAccessor<floatT,comp> gAcc_3, gSiteMu siteMu, gaugeAccessor<floatT,comp> temp_gAcc_mu, gaugeAccessor<floatT,comp> temp_gAcc_nu) {
 
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
-    SU3<floatT> temp_chk = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
+    GSU3<floatT> temp_chk = gsu3_zero<floatT>();
     int mu = siteMu.mu;
     gSite origin = GInd::getSite(siteMu.isite);
     gSite upMu = GInd::site_up(origin,mu);
@@ -164,9 +164,9 @@ __host__ __device__ SU3<floatT> inline hypThreeLinkStaple_third_level(SU3Accesso
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> inline lepageLinkStaple(SU3Accessor<floatT,comp> gAcc, gSiteMu siteMu) {
+__host__ __device__ GSU3<floatT> inline lepageLinkStaple(gaugeAccessor<floatT,comp> gAcc, gSiteMu siteMu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
     gSite site = GInd::getSite(siteMu.isite);
     gSite site_save = site;
     int mu = siteMu.mu;
@@ -183,9 +183,9 @@ __host__ __device__ SU3<floatT> inline lepageLinkStaple(SU3Accessor<floatT,comp>
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp, int partNumber>
-__host__ __device__ SU3<floatT> inline fiveLinkStaple(SU3Accessor<floatT, comp> gAcc, gSiteMu siteMu) {
+__host__ __device__ GSU3<floatT> inline fiveLinkStaple(gaugeAccessor<floatT, comp> gAcc, gSiteMu siteMu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
     gSite site = GInd::getSite(siteMu.isite);
     gSite site_save = site;
     int mu = siteMu.mu;
@@ -235,14 +235,14 @@ __host__ __device__ SU3<floatT> inline fiveLinkStaple(SU3Accessor<floatT, comp> 
         }
         return temp;
     default:
-        return su3_zero<floatT>();
+        return gsu3_zero<floatT>();
     }
 }
 
 template<class floatT, size_t HaloDepth, CompressionType comp, int partNumber>
-__host__ __device__ SU3<floatT> inline sevenLinkStaple(SU3Accessor<floatT, comp> gAcc, gSiteMu siteMu) {
+__host__ __device__ GSU3<floatT> inline sevenLinkStaple(gaugeAccessor<floatT, comp> gAcc, gSiteMu siteMu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
     gSite site = GInd::getSite(siteMu.isite);
     gSite site_save = site;
     int mu = siteMu.mu;
@@ -345,7 +345,7 @@ __host__ __device__ SU3<floatT> inline sevenLinkStaple(SU3Accessor<floatT, comp>
         }
         return temp;
     default:
-        return su3_zero<floatT>();
+        return gsu3_zero<floatT>();
     }
 }
 

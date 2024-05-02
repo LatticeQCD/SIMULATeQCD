@@ -6,9 +6,9 @@
  *
  */
 
-#include "../simulateqcd.h"
-#include "../modules/hisq/hisqSmearing.h"
-#include "../modules/hisq/hisqForce.h"
+#include "../SIMULATeQCD.h"
+#include "../modules/HISQ/hisqSmearing.h"
+#include "../modules/HISQ/hisqForce.h"
 #include "testing.h"
 
 #define PREC double
@@ -63,17 +63,17 @@ int main(int argc, char *argv[]) {
     HisqForce<PREC, true, HaloDepth, HaloDepthSpin, R18, true> ip_dot_f2_hisq(gauge,force,CG,dslash,dslash_multi,rhmc_param,rat,smearing);
 
     timer.start();
-    // gpuError_t gpuErr;
-    // gpuErr = gpuProfilerStart();
-    // if (gpuErr) GpuError("hisqForce: gpuProfilerStart", gpuErr);
+    gpuError_t gpuErr;
+    gpuErr = gpuProfilerStart();
+    if (gpuErr) GpuError("hisqForce: gpuProfilerStart", gpuErr);
     ip_dot_f2_hisq.TestForce(SpinorIn,force,d_rand);
-    // gpuErr = gpuProfilerStop();
-    // if (gpuErr) GpuError("hisqForce: gpuProfilerStop", gpuErr);
+    gpuErr = gpuProfilerStop();
+    if (gpuErr) GpuError("hisqForce: gpuProfilerStop", gpuErr);
     timer.stop();
 
     force_host=force;
 
-    SU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
+    GSU3<PREC> test1 = force_host.getAccessor().getLink(GInd::getSiteMu(0,0,0,3,3));
 
     rootLogger.info("Time: " ,  timer);
     rootLogger.info("Force:");
@@ -89,9 +89,8 @@ int main(int argc, char *argv[]) {
     // force field and force_reference have both been reunitarized in the same way.
     force.writeconf_nersc("../test_conf/force_testrun",3,2);
     force.readconf_nersc("../test_conf/force_testrun");
-    
-    rootLogger.info("starting field comparison");
-    bool pass = compare_fields<PREC,HaloDepth,true,R18>(force,force_reference,1e-8);
+
+    bool pass = compare_fields<PREC,HaloDepth,true,R18>(force,force_reference,3e-9);
     if (pass) {
         rootLogger.info(CoutColors::green, "Force is correct", CoutColors::reset);
     } else {

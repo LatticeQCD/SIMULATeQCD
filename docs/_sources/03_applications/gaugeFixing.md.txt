@@ -76,7 +76,7 @@ given under `parameter/applications/gaugeFixing.param`, which has options like
 gtolerance       = 1e-6  # stop gauge fixing below this theta
 maxgfsteps       = 3000  # or after this many steps
 numunit          = 20    # re-unitarize every 20 steps
-polyakovLoopCorr = 1     # measure Polyakov loop correlators
+PolyakovLoopCorr = 1     # measure Polyakov loop correlators
 WilsonLineCorr   = 0     # don't measure Wilson lines
 SaveConfig       = 0     # don't saved the gauge-fixed configuration
 ```

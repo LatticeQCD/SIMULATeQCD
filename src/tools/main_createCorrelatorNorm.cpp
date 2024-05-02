@@ -9,7 +9,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 
 #define PREC double
 
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialization.");
     corrParam param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/correlatorTest.param", argc, argv);
+    param.readfile(commBase, "../test_parameter/correlatorTest.param", argc, argv);
     commBase.init(param.nodeDim());
     initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;

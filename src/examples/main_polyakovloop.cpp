@@ -8,7 +8,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 
 #define PREC double
 #define MY_BLOCKSIZE 256
@@ -17,21 +17,21 @@ template<class floatT,size_t HaloDepth>
 struct CalcPloop{
 
     /// Gauge accessor to access the gauge field.
-    SU3Accessor<floatT> SU3Accessor;
+    gaugeAccessor<floatT> gaugeAccessor;
 
     /// Constructor to initialize all necessary members.
-    CalcPloop(Gaugefield<floatT,true,HaloDepth> &gauge) : SU3Accessor(gauge.getAccessor()){
+    CalcPloop(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){
     }
 
-    /// This is the operator that is called inside the Kernel. We set the type to COMPLEX(floatT) because the
+    /// This is the operator that is called inside the Kernel. We set the type to GCOMPLEX(floatT) because the
     /// Polyakov loop is complex valued.
-    __device__ __host__ COMPLEX(floatT) operator()(gSite site) {
+    __device__ __host__ GCOMPLEX(floatT) operator()(gSite site) {
 
         typedef GIndexer<All,HaloDepth> GInd;
 
         /// Define an SU(3) matrix and initialize result variable.
-        SU3<floatT> temp;
-        COMPLEX(floatT) result;
+        GSU3<floatT> temp;
+        GCOMPLEX(floatT) result;
 
         /// Extension in timelike direction. In general unsigned declarations reduce compiler warnings.
         const size_t Ntau=GInd::getLatData().lt;
@@ -44,12 +44,12 @@ struct CalcPloop{
         size_t it=coords.t;
 
         /// Start off at this site, pointing in N_tau direction.
-        temp=SU3Accessor.getLink(GInd::getSiteMu(site, 3));
+        temp=gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
 
         /// Loop over N_tau direction.
         for (size_t itp = 1; itp < Ntau; itp++) {
           size_t itau=it+itp;
-          temp*=SU3Accessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau), 3));
+          temp*=gaugeAccessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau), 3));
         }
 
         /// tr_c is the complex trace.
@@ -60,7 +60,7 @@ struct CalcPloop{
 
 /// Function to compute the polyakov loop using the above struct CalcPloop.
 template<class floatT, size_t HaloDepth>
-COMPLEX(floatT) gPloop(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeContainer<true,COMPLEX(floatT)> &redBase){
+GCOMPLEX(floatT) gPloop(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeContainer<true,GCOMPLEX(floatT)> &redBase){
 
     typedef GIndexer<All,HaloDepth> GInd;
     /// Since we run the kernel on the spacelike volume only, elems need only be size d_vol3.
@@ -72,7 +72,7 @@ COMPLEX(floatT) gPloop(Gaugefield<floatT,true,HaloDepth> &gauge, LatticeContaine
     redBase.template iterateOverSpatialBulk<All, HaloDepth>(CalcPloop<floatT,HaloDepth>(gauge));
 
     /// Do the final reduction.
-    COMPLEX(floatT) ploop;
+    GCOMPLEX(floatT) ploop;
     redBase.reduce(ploop, elems);
 
     /// This construction ensures you obtain the spacelike volume of the entire lattice, rather than just a sublattice.
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
     gauge.one();
 
     /// Initialize LatticeContainer.
-    LatticeContainer<true,COMPLEX(PREC)> redBase(commBase);
+    LatticeContainer<true,GCOMPLEX(PREC)> redBase(commBase);
 
     /// We need to tell the Reductionbase how large our array will be. Again it runs on the spacelike volume only,
     /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
     timer.start();
 
     /// Ploop variable
-    COMPLEX(PREC) ploop;
+    GCOMPLEX(PREC) ploop;
 
     /// Exchange Halos
     gauge.updateAll();

@@ -6,9 +6,9 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmc.h"
-#include "../modules/observables/polyakovLoop.h"
+#include "../modules/observables/PolyakovLoop.h"
 #include "../modules/dslash/condensate.h"
 
 int main(int argc, char *argv[]) {
@@ -107,17 +107,17 @@ int main(int argc, char *argv[]) {
 
         rootLogger.info("MEASUREMENT: ",  param.confnumber()+i);
 
-        rootLogger.info("Polyakov Loop = ",  sformatScientific(ploop.getPolyakovLoop()));
-        rootLogger.info("Plaquette = ",  sformatScientific(gaugeaction.plaquette()));
-        rootLogger.info("Rectangle = ",  sformatScientific(gaugeaction.rectangle()));
+        rootLogger.info("Polyakov Loop = ",  ploop.getPolyakovLoop());
+        rootLogger.info("Plaquette = ",  gaugeaction.plaquette());
+        rootLogger.info("Rectangle = ",  gaugeaction.rectangle());
 
-        SimpleArray<floatT,Nmeas> chi_l = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, param.m_ud(),  gauge, d_rand);
-        for (size_t j = 0; j < Nmeas; ++j) {
-            rootLogger.info("CHI_UD = ", sformatScientific(chi_l[j]));
+        SimpleArray<double,Nmeas> chi_l = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, param.m_ud(),  gauge, d_rand);
+        for (int j = 0; j < Nmeas; ++j) {
+            rootLogger.info("CHI_UD = ", chi_l[j]);
         }
-        SimpleArray<floatT,Nmeas> chi_s = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, param.m_s(), gauge, d_rand);
-        for (size_t j = 0; j < Nmeas; ++j) {
-            rootLogger.info("CHI_S = ", sformatScientific(chi_s[j]));
+        SimpleArray<double,Nmeas> chi_s = measure_condensate<floatT, true, 2, 4, Nmeas>(commBase, param, param.m_s(), gauge, d_rand);
+        for (int j = 0; j < Nmeas; ++j) {
+            rootLogger.info("CHI_S = ", chi_s[j]);
         }
 
         timer.stop();

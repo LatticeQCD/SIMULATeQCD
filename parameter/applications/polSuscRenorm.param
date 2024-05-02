@@ -4,12 +4,9 @@
 # Example parameter file for main_polSuscRenorm.cu
 #
 #    Lattice: Nx Ny Nz Nt
-#       beta: Bare coupling constant 6/g^2
 #      Nodes: Number of nodes per direction
 #     mlight: Light quark mass label (OPTIONAL, for labelling plc output file)
 #   mstrange: Strange quark mass label (OPTIONAL, for labelling plc output file)
-#    conf_nr: configuration number
-#     stream: stream/series label
 #  Gaugefile: Configuration to be read in
 #
 Lattice   = 32 32 32 8

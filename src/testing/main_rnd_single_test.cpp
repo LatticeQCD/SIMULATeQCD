@@ -5,7 +5,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/rhmc/rhmcParameters.h"
 
 

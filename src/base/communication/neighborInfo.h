@@ -13,7 +13,7 @@
 #include <mpi.h>
 
 #include <utility>
-#include "../latticeDimension.h"
+#include "../LatticeDimension.h"
 #include "../wrapper/gpu_wrapper.h"
 
 struct ProcessInfo {

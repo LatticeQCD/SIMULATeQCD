@@ -60,9 +60,9 @@ In order to communicate, each sublattice needs to know something about his neigh
 for example their rank or whether they are on the same node. This information is
 kept in the `neighborInfo` class.
 
-## SiteComm
+## siteComm
 
-The `SiteComm` class is the highest level class from which all objects that need to
+The `siteComm` class is the highest level class from which all objects that need to
 communicate across sublattices, such as the [Gaugefield](gaugefield.md#gaugefield)
 inherit. It uses the [Memorymanagement](../02_contributions/memoryAllocation.md)
 to allocate memory for the buffer,

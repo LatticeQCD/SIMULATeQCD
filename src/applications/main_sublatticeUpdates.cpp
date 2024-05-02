@@ -28,9 +28,9 @@ The spatial links on the border won't be updated.
 ***********************************************/
 
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/gauge_updates/luscherweisz.h"
-#include "../modules/gauge_updates/subLatMeas.h"
+#include "../modules/gauge_updates/SubLatMeas.h"
 
 #define PREC double
 #define USE_GPU true
@@ -192,11 +192,11 @@ int main(int argc, char *argv[]) {
     MemTypeGPU mem52 = MemoryManagement::getMemAt<true>("sub2_cec_Nt_gpu");
 
     if (lp.ColorElectricCorr()) {
-        mem50->template adjustSize<SU3<PREC>>(elem1*lp.latDim()[3]);
+        mem50->template adjustSize<GSU3<PREC>>(elem1*lp.latDim()[3]);
         mem50->memset(0);
-        mem51->template adjustSize<SU3<PREC>>(elem1*6*(lp.sublattice_lt()-2)*lp.latDim()[3]);
+        mem51->template adjustSize<GSU3<PREC>>(elem1*6*(lp.sublattice_lt()-2)*lp.latDim()[3]);
         mem51->memset(0);
-        mem52->template adjustSize<SU3<PREC>>(elem2*6*(lp.sublattice_lt()-2)*lp.latDim()[3]);
+        mem52->template adjustSize<GSU3<PREC>>(elem2*6*(lp.sublattice_lt()-2)*lp.latDim()[3]);
         mem52->memset(0);
     }
     MemoryAccessor sub_poly_Nt (mem50->getPointer());
@@ -213,7 +213,7 @@ int main(int argc, char *argv[]) {
     std::vector<PREC> SubTbarbp00(lp.latDim()[3]*(lp.sublattice_lt()-3), 0);
     std::vector<PREC> SubSbp(lp.latDim()[3]*(lp.sublattice_lt()-3), 0);
     //save SubTbarbc00 and SubSbc as the real and imag part of a complex number.
-    std::vector<COMPLEX(PREC)> SubTbarbc00_SubSbc(lp.latDim()[3]*(lp.sublattice_lt()-3), 0);
+    std::vector<GCOMPLEX(PREC)> SubTbarbc00_SubSbc(lp.latDim()[3]*(lp.sublattice_lt()-3), 0);
 
     //only for the zero momentum, where the summation over different lp.num_meas() needs to be specially taken care of.
     std::vector<PREC> SubBulk_Nt_p0(lp.num_meas()*lp.latDim()[3]*(lp.sublattice_lt()-3), 0);
@@ -385,10 +385,10 @@ int main(int argc, char *argv[]) {
 
         //calculate standard polyakovloop
         //PolyakovLoop<PREC, USE_GPU, HaloDepth> StandardPolyloop(gauge_device);
-        //COMPLEX(PREC) NonimprovePolyakovLoop = StandardPolyloop.getPolyakovLoop();
+        //GCOMPLEX(PREC) NonimprovePolyakovLoop = StandardPolyloop.getPolyakovLoop();
 
         ////calculate standard  color electric correlator
-        //std::vector<COMPLEX(PREC)> NonimproveColorElectricCorrelator;
+        //std::vector<GCOMPLEX(PREC)> NonimproveColorElectricCorrelator;
         //ColorElectricCorr<PREC, USE_GPU, HaloDepth> StandardCEC(gauge_device);
         //NonimproveColorElectricCorrelator = StandardCEC.getColorElectricCorr();
 
@@ -414,11 +414,11 @@ int main(int argc, char *argv[]) {
 
 
         //contraction for the improve polyakovloop
-        COMPLEX(PREC) ImprovePolyakovLoop ;
+        GCOMPLEX(PREC) ImprovePolyakovLoop ;
         ImprovePolyakovLoop = sublatmeas.contraction_poly(sub_poly_Nt, lp.min_dist());
 
         //contraction for the improve color electric correlator
-        std::vector<COMPLEX(PREC)> ImproveColorElectricCorrelator(lp.latDim()[3]/2+1, 0) ;
+        std::vector<GCOMPLEX(PREC)> ImproveColorElectricCorrelator(lp.latDim()[3]/2+1, 0) ;
         ImproveColorElectricCorrelator = sublatmeas.contraction_cec(sub1_cec_Nt, sub2_cec_Nt, lp.min_dist());
 
         //write improve polyakovloop

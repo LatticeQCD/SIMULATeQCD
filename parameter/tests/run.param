@@ -5,7 +5,6 @@
 #
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
-#         beta: Bare coupling constant 6/g^2
 #      mass_ud: Light quark mass
 #       mass_s: Strange quark mass
 #

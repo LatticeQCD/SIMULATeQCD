@@ -3,9 +3,9 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/rhmc/pure_gauge_hmc.h"
-#include "../modules/observables/polyakovLoop.h"
+#include "../modules/observables/PolyakovLoop.h"
 
 
 template<int HaloDepth>
@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/tests/pureGaugeHmcTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/tests/PureGaugeHmcTest.param", argc, argv);
 
     const int HaloDepth = 2;
 

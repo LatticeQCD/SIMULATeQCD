@@ -7,8 +7,8 @@
 
 #ifndef GSVD_HCU_
 #define GSVD_HCU_
-#include "../../base/math/su3.h"
-#include "../../base/math/su3array.h"
+#include "../../base/math/gsu3.h"
+#include "../../base/math/gsu3array.h"
 
 /* define precision for chopping small values */
 #define SVD3x3_PREC 5e-16
@@ -272,7 +272,7 @@ __device__ __host__ inline int svd2x2bidiag(svdfloatT *a00, svdfloatT *a01, svdf
 
 
 template<class floatT, class svdfloatT>
-__device__ __host__ SU3<floatT> svd3x3core(const SU3<floatT>& AA, floatT* sv){
+__device__ __host__ GSU3<floatT> svd3x3core(const GSU3<floatT>& AA, floatT* sv){
 
   /******************************************
    *  sigma[3] -- singular values,          *
@@ -1672,16 +1672,16 @@ printf( "%+20.16e %+20.16e %+20.16e\n", b20, b21, b22 );
     Ad[i][j][1]+=-U[i][2][0]*V[j][2][1]+U[i][2][1]*V[j][2][0];
   }
 //TODO convert to floatT here
-  SU3<floatT> w = SU3<floatT>(
-                  COMPLEX(floatT)((floatT)Ad[0][0][0],(floatT)Ad[0][0][1]),
-                  COMPLEX(floatT)((floatT)Ad[0][1][0],(floatT)Ad[0][1][1]),
-                  COMPLEX(floatT)((floatT)Ad[0][2][0],(floatT)Ad[0][2][1]),
-                  COMPLEX(floatT)((floatT)Ad[1][0][0],(floatT)Ad[1][0][1]),
-                  COMPLEX(floatT)((floatT)Ad[1][1][0],(floatT)Ad[1][1][1]),
-                  COMPLEX(floatT)((floatT)Ad[1][2][0],(floatT)Ad[1][2][1]),
-                  COMPLEX(floatT)((floatT)Ad[2][0][0],(floatT)Ad[2][0][1]),
-                  COMPLEX(floatT)((floatT)Ad[2][1][0],(floatT)Ad[2][1][1]),
-                  COMPLEX(floatT)((floatT)Ad[2][2][0],(floatT)Ad[2][2][1])
+  GSU3<floatT> w = GSU3<floatT>(
+                  GCOMPLEX(floatT)((floatT)Ad[0][0][0],(floatT)Ad[0][0][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[0][1][0],(floatT)Ad[0][1][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[0][2][0],(floatT)Ad[0][2][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[1][0][0],(floatT)Ad[1][0][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[1][1][0],(floatT)Ad[1][1][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[1][2][0],(floatT)Ad[1][2][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[2][0][0],(floatT)Ad[2][0][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[2][1][0],(floatT)Ad[2][1][1]),
+                  GCOMPLEX(floatT)((floatT)Ad[2][2][0],(floatT)Ad[2][2][1])
                      );
 
   // inner part of SVD routine ends here

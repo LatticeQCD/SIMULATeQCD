@@ -5,7 +5,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 
 #define USE_GPU true
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     CommunicationBase commBase(&argc, &argv);
     gradientFlowParam<PREC> lp;
-    lp.readfile(commBase, "../parameter/applications/gradientFlow.param", argc, argv);
+    lp.readfile(commBase, "../parameter/gradientFlow.param", argc, argv);
     commBase.init(lp.nodeDim());
 
     if (lp.force() != "zeuthen"

@@ -49,7 +49,7 @@ care of all the hassle of finding and installing software automatically.
 
 For the manual build, you will need to make sure the following are installed:
 
-1. `cmake` (Some versions have the "--pthread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or [3.19.2](https://gitlab.kitware.com/cmake/cmake/-/tree/v3.19.2?ref_type=tags).)
+1. `cmake` (Some versions have the "--pthread" compiler bug. Versions that definitely work are [3.14.6](https://gitlab.kitware.com/cmake/cmake/tree/v3.14.6) or 3.19.2.)
 2. `C++` compiler with `C++17` support.
 3. `MPI` (e.g. `openmpi-4.0.4`).
 4. `CUDA Toolkit` version 11+ or `HIP`.
@@ -61,13 +61,13 @@ To build the source with CUDA, you need to have the `CUDA Toolkit` version 11.0 
 To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script:
 ```shell
 cmake ../SIMULATeQCD/ \
--DARCHITECTURE="80" \
+-DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=ON \
 ```
 Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
 You can set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
-`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example use "70" for Volta or "80" for Ampere.
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta.
 
 ### Building source with HIP for NVIDIA platforms (Experimental!)
 
@@ -81,7 +81,7 @@ you need to make sure that
 To setup the compilation, create a folder outside of the code directory (e.g. `../buildSIMULATeQCD/`) and **from there** call the following example script:
 ```shell
 cmake ../SIMULATeQCD/ \
--DARCHITECTURE="80" \
+-DARCHITECTURE="70" \
 -DUSE_GPU_AWARE_MPI=ON \
 -DUSE_GPU_P2P=OFF \
 -DBACKEND="hip_nvidia" \
@@ -89,7 +89,7 @@ cmake ../SIMULATeQCD/ \
 Here, it is assumed that your source code folder is called `SIMULATeQCD`. **Do NOT compile your code in the source code folder!**
 You can set the HIP installation path manually by setting the `cmake` parameter `-DHIP_PATH`.
 You can also set the CUDA installation path manually by setting the `cmake` parameter `-DCUDA_TOOLKIT_ROOT_DIR`.
-`-DARCHITECTURE` sets the GPU architecture.
+`-DARCHITECTURE` sets the GPU architecture (i.e. [compute capability](https://en.wikipedia.org/wiki/CUDA#GPUs_supported) version without the decimal point). For example "60" for Pascal and "70" for Volta.
 `-DUSE_GPU_P2P=ON` is not yet supported by this backend.
 
 ### Building source with HIP for AMD platforms (Experimental!)
@@ -131,7 +131,7 @@ If you just want to get something running quickly on your laptop or desktop, thi
 
 #### On RHEL-based (Rocky/CentOS/RHEL) systems
 
-Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. (The reboot just makes avoiding permissions/kernel issues easy because that stuff is reread on boot.)
+Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. The reboot just makes avoiding permissions / kernel issues easy because that stuff is reread on boot.
 
 #### On Arch-based systems
 
@@ -165,31 +165,19 @@ this indicates someone has modified the standard user privileges or you are runn
 
 ## How to run
 
+
 ### On a cluster using `slurm`
 
 If you are on a cluster that uses slurm, then inside of your sbatch script do not use `mpiexec` or `mpirun`, but instead do
 ```shell
 srun -n <NoGPUs> ./<program>
 ```
-where `<NoGPUs>` is the number of GPUs you want to use.
-The `<program>` likely already points to some default parameter file. If you would like to pass your
-own parameters, one way to do this is to make your own parameter file. This can then be passed
-as an argument like
-```shell
-srun -n <NoGPUs> ./<program> /path/to/your/parameter/file
-```
-Example parameter files can be found in the `parameter` folder. We have tried to explain
-what each parameter means in each `.param` file. You can learn more about how general parameters
-are implemented [here](../02_contributions/inputParameter.md).
 
 ### On your local machine (desktop, laptop, ...)
 
-Unless you are using one GPU, any program has to be launched using `mpirun` or `mpiexec`.
+Any program has to be launched using mpirun or mpiexec.
 For example:
 ```shell
-mpiexec -np <NoGPUs> ./<program> 
+mpiexec -np <NoGPUs> ./<program>
 ```
-Simiarly as above, if you want to pass your own parameter file,
-```shell
-mpiexec -np <NoGPUs> ./<program> /path/to/your/parameter/file
-```
+where `<NoGPUs>` is the number of GPUs you want to use.

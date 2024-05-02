@@ -14,7 +14,7 @@ Logger stdLogger;
 
 
 //! if compiling scalar, this sets matching default values
-CommunicationBase::CommunicationBase( int *argc, char ***argv, bool forceHalos) : _forceHalos(forceHalos) {
+CommunicationBase::CommunicationBase( int *argc, char ***argv) {
     myrank = 0;
     num_proc_world = 1;
     _nodes = LatticeDimensions(1,1,1,1);

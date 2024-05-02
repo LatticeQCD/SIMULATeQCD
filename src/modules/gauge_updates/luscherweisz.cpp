@@ -7,15 +7,15 @@
  */
 
 #include "luscherweisz.h"
-#include "pureGaugeUpdates.h"
+#include "PureGaugeUpdates.h"
 
 template<class floatT,Layout LatLayout,size_t HaloDepth>
 struct SubORKernel{
-  SU3Accessor<floatT> SU3Accessor;
+  gaugeAccessor<floatT> gaugeAccessor;
   uint8_t _mu;
   int _sub_lt;
   int _local_pos_t;
-  SubORKernel(Gaugefield<floatT,true,HaloDepth> &gauge,uint8_t mu,int sub_lt, int local_pos_t) : SU3Accessor(gauge.getAccessor()), _mu(mu), _sub_lt(sub_lt), _local_pos_t(local_pos_t){}
+  SubORKernel(Gaugefield<floatT,true,HaloDepth> &gauge,uint8_t mu,int sub_lt, int local_pos_t) : gaugeAccessor(gauge.getAccessor()), _mu(mu), _sub_lt(sub_lt), _local_pos_t(local_pos_t){}
 
   __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<LatLayout,HaloDepth> GInd;
@@ -27,14 +27,14 @@ struct SubORKernel{
              return;
         }
         else {
-             SU3<floatT> U,Uprime,Ustaple;
-             U = SU3Accessor.getLink(GInd::getSiteMu(site,_mu));                  /// Original link
-             Ustaple=SU3Staple<floatT,LatLayout,HaloDepth>(SU3Accessor,site,_mu); /// Staple attached to it
+             GSU3<floatT> U,Uprime,Ustaple;
+             U = gaugeAccessor.getLink(GInd::getSiteMu(site,_mu));                  /// Original link
+             Ustaple=SU3Staple<floatT,LatLayout,HaloDepth>(gaugeAccessor,site,_mu); /// Staple attached to it
              /// Perform the OR update.
              Uprime=OR_GPUSU3(U,Ustaple);
              Uprime.su3unitarize();
              /// Replace the link.
-             SU3Accessor.setLink(GInd::getSiteMu(site,_mu),Uprime);
+             gaugeAccessor.setLink(GInd::getSiteMu(site,_mu),Uprime);
         }
     }
 };
@@ -42,7 +42,7 @@ struct SubORKernel{
 /// Kernel to perform heatbath. Runs over sites, and loops over directions.
 template<class floatT,Layout LatLayout,size_t HaloDepth>
 struct SubHBKernel{
-  SU3Accessor<floatT> SU3Accessor;
+  gaugeAccessor<floatT> gaugeAccessor;
   uint4*  _state;
   floatT  _beta;
   uint8_t _mu;
@@ -50,7 +50,7 @@ struct SubHBKernel{
   int _local_pos_t;
   bool  _ltest;
   SubHBKernel(Gaugefield<floatT,true,HaloDepth> &gauge,uint4* state,floatT beta, uint8_t mu, int sub_lt, int local_pos_t, bool ltest) :
-                                             SU3Accessor(gauge.getAccessor()), _state(state), _beta(beta), _mu(mu), _sub_lt(sub_lt), _local_pos_t(local_pos_t), _ltest(ltest){}
+                                             gaugeAccessor(gauge.getAccessor()), _state(state), _beta(beta), _mu(mu), _sub_lt(sub_lt), _local_pos_t(local_pos_t), _ltest(ltest){}
 
   __device__ __host__ void operator()(gSite site) {
 
@@ -62,17 +62,17 @@ struct SubHBKernel{
              return;
         }
         else {
-             SU3<floatT> U,Uprime,Ustaple;
+             GSU3<floatT> U,Uprime,Ustaple;
              gSite siteAll=GInd::convertToAll(site);
              uint4* stateElem=&_state[siteAll.isite];
 
-             U = SU3Accessor.getLink(GInd::getSiteMu(site,_mu));                  /// Original link
-             Ustaple=SU3Staple<floatT,LatLayout,HaloDepth>(SU3Accessor,site,_mu); /// Staple attached to it
+             U = gaugeAccessor.getLink(GInd::getSiteMu(site,_mu));                  /// Original link
+             Ustaple=SU3Staple<floatT,LatLayout,HaloDepth>(gaugeAccessor,site,_mu); /// Staple attached to it
              /// Perform the HB update.
              Uprime=HB_GPUSU3(U,Ustaple,stateElem,_beta,_ltest);
              Uprime.su3unitarize();
              /// Replace the link.
-             SU3Accessor.setLink(GInd::getSiteMu(site,_mu),Uprime);
+             gaugeAccessor.setLink(GInd::getSiteMu(site,_mu),Uprime);
         }
     }
 };

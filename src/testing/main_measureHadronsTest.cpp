@@ -7,7 +7,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 #include "../modules/measureHadrons/measureHadrons.h"
 
 #define USE_GPU true

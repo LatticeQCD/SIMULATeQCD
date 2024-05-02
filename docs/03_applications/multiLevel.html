@@ -22,7 +22,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Rational Hybrid Monte Carlo" href="rhmc.html" />
+    <link rel="next" title="Rational Hybrid Monte Carlo" href="RHMC.html" />
     <link rel="prev" title="Gradient Flow" href="gradientFlow.html" /> 
 </head>
 
@@ -45,11 +45,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gradientFlow.html">Gradient Flow</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Multi-level algorithm</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rhmc.html">Rational Hybrid Monte Carlo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RHMC.html">Rational Hybrid Monte Carlo</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
@@ -89,26 +89,26 @@ paper <a class="reference external" href="https://doi.org/10.1088/1126-6708/2003
 HB and OR,  same as the standard ones <a class="reference internal" href="../05_modules/gaugeUpdates.html#gauge-updates-hb-and-or"><span class="std std-doc">Gauge Updates (HB and OR)</span></a>
 but performed within a sub lattice. For details see luscherweisz.h and luscherweisz.cpp.</p>
 <p>After the sub-lattice updates, the observables will be measured. Currently the calculations of energy-momentum tensor,
-polyakovloop and color-electric correlators have been implemented. For details, see <code class="docutils literal notranslate"><span class="pre">subLatMeas.h</span></code> and <code class="docutils literal notranslate"><span class="pre">subLatMeas.cpp</span></code>.</p>
+polyakovloop and color-electric correlators have been implemented. For details, see <code class="docutils literal notranslate"><span class="pre">SubLatMeas.h</span></code> and <code class="docutils literal notranslate"><span class="pre">SubLatMeas.cpp</span></code>.</p>
 <p>To compile, one can <code class="docutils literal notranslate"><span class="pre">make</span></code> the executable <code class="docutils literal notranslate"><span class="pre">sublatticeUpdates</span></code>. You can then find it under <code class="docutils literal notranslate"><span class="pre">applications/sublatticeUpdates</span></code>.
 The example parameter file is found under <code class="docutils literal notranslate"><span class="pre">parameter/sublatticeUpdates.param</span></code> and looks like this:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="c1">#parameter file for sublatticeUpdates</span>
-<span class="nv">Lattice</span> <span class="o">=</span> <span class="m">20</span> <span class="m">20</span> <span class="m">20</span> <span class="m">20</span>
-<span class="nv">Nodes</span> <span class="o">=</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span> <span class="m">1</span>
-<span class="nv">beta</span> <span class="o">=</span> <span class="m">6</span>.498
-<span class="nv">Gaugefile</span> <span class="o">=</span>../test_conf/l20t20b06498a_nersc.302500
-<span class="nv">conf_nr</span> <span class="o">=</span> <span class="m">302500</span>
-<span class="nv">format</span> <span class="o">=</span> nersc
-<span class="nv">endianness</span> <span class="o">=</span> auto
-<span class="nv">sublattice_lt</span> <span class="o">=</span> <span class="m">6</span>
-<span class="nv">num_meas</span> <span class="o">=</span> <span class="m">100</span>
-<span class="nv">num_update</span> <span class="o">=</span> <span class="m">10</span>
-<span class="nv">min_dist</span> <span class="o">=</span> <span class="m">0</span>
-<span class="nv">PzMax</span> <span class="o">=</span> <span class="m">0</span>
-<span class="nv">VacuumSubtractionHelper</span> <span class="o">=</span> <span class="m">1</span>.72
-<span class="nv">out_dir</span> <span class="o">=</span> ./
-<span class="nv">EnergyMomentumTensorCorr</span> <span class="o">=</span> <span class="m">0</span>
-<span class="nv">ColorElectricCorr</span> <span class="o">=</span> <span class="m">0</span>
+<span class="nv">Lattice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span><span class="w"> </span><span class="m">20</span>
+<span class="nv">Nodes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="m">1</span>
+<span class="nv">beta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6</span>.498
+<span class="nv">Gaugefile</span><span class="w"> </span><span class="o">=</span>../test_conf/l20t20b06498a_nersc.302500
+<span class="nv">conf_nr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">302500</span>
+<span class="nv">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>nersc
+<span class="nv">endianness</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>auto
+<span class="nv">sublattice_lt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">6</span>
+<span class="nv">num_meas</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">100</span>
+<span class="nv">num_update</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span>
+<span class="nv">min_dist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">PzMax</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">VacuumSubtractionHelper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span>.72
+<span class="nv">out_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>./
+<span class="nv">EnergyMomentumTensorCorr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="nv">ColorElectricCorr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 <p>Calling <code class="docutils literal notranslate"><span class="pre">./sublatticeUpdates</span> <span class="pre">sublatticeUpdates.param</span></code> will output the multi-level improved energy-momentum

@@ -6,14 +6,14 @@
  */
 
 #pragma once
-#include "../../base/indexer/bulkIndexer.h"
-#include "../../base/math/su3Accessor.h"
+#include "../../base/indexer/BulkIndexer.h"
+#include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth>
-__host__ __device__ SU3<floatT> inline naikLinkDerivative(SU3Accessor<floatT> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu) {
+__host__ __device__ GSU3<floatT> inline naikLinkDerivative(gaugeAccessor<floatT> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    SU3<floatT> temp;
+    GSU3<floatT> temp;
 
     gSite origin = site;
     gSite up_mu  = GInd::site_up(origin, mu);

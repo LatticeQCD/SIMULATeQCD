@@ -15,18 +15,18 @@ source "../scripts/testingTools.bash"
 # Associative arrays are like Python dictionaries. Associate to each test script the number of GPUs you want to use,
 # and give any special directions needed for the splitting.
 declare -A testRoutines
-testRoutines[_compressionTest]="4k"
+testRoutines[_CompressionTest]="4k"
 testRoutines[_confReadWriteTest]="4k"
 testRoutines[_correlatorTest]="1"             # All tests involving correlators work only for one GPU.
 testRoutines[_cudaIpcTest]="2"                # Only works for two GPUs.
-testRoutines[_dslashTest]="1"
-testRoutines[_generalFunctorTest]="4k"
+testRoutines[_DslashTest]="1"
+testRoutines[_GeneralFunctorTest]="4k"
 testRoutines[_gfixplcTest]="1"
-testRoutines[_inverterTest]="4k"
-testRoutines[_linkPathTest]="4k"
-testRoutines[_pureGaugeHmcTest]="4ks"
-testRoutines[_spinorHaloTest]="4k"
-testRoutines[_stackedSpinorTest]="4k"
+testRoutines[_InverterTest]="4k"
+testRoutines[_LinkPathTest]="4k"
+testRoutines[_PureGaugeHmcTest]="4ks"
+testRoutines[_SpinorHaloTest]="4k"
+testRoutines[_StackedSpinorTest]="4k"
 
 numberOfTestRoutines="${#testRoutines[@]}"
 numberOfTestRoutines="$((${numberOfTestRoutines}+${#testRoutinesNoParam[@]}))"

@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "../../base/indexer/bulkIndexer.h"
-#include "../../base/math/su3Accessor.h"
+#include "../../base/indexer/BulkIndexer.h"
+#include "../../base/math/gaugeAccessor.h"
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-__host__ __device__ SU3<floatT> linkDerivative7(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site,
+__host__ __device__ GSU3<floatT> linkDerivative7(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site,
                                         int mu, int nu, int rho, int sigma, int TermCheck = -1, int SubTermCheck = -1) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp = su3_zero<floatT>();
+    GSU3<floatT> temp = gsu3_zero<floatT>();
 
     //terms with force @ 1
     if ( TermCheck==1 || TermCheck < 0 ) {

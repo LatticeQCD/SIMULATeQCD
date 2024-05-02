@@ -3,8 +3,8 @@
 //
 
 #include "../../gauge/gaugefield.h"
-#include "../../base/latticeContainer.h"
-#include "../hisq/hisqSmearing.h"
+#include "../../base/LatticeContainer.h"
+#include "../HISQ/hisqSmearing.h"
 #include "../dslash/dslash.h"
 
 #pragma once

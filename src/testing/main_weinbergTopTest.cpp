@@ -5,13 +5,13 @@
  * 
  */
 
-#include "../simulateqcd.h"
-#include "../modules/observables/topology.h"
-#include "../modules/observables/weinberg.h"
+#include "../SIMULATeQCD.h"
+#include "../modules/observables/Topology.h"
+#include "../modules/observables/Weinberg.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include <cstdio>
 #include "refValues_weinbergTop.h"
-#include "../modules/gauge_updates/pureGaugeUpdates.h"
+#include "../modules/gauge_updates/PureGaugeUpdates.h"
 
 #define USE_GPU true
 

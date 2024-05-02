@@ -37,17 +37,17 @@ gauge field with itself using the 4d all-to-all domain. Here $f(A,B)={\rm tr}~(A
 ```C++
 gaugeAccessor<PREC> _gauge(gauge.getAccessor());
 
-CorrField<false,SU3<PREC>> CPUfield1(commBase, corrTools.vol4);
-CorrField<false,SU3<PREC>> CPUfield2(commBase, corrTools.vol4);
+CorrField<false,GSU3<PREC>> CPUfield1(commBase, corrTools.vol4);
+CorrField<false,GSU3<PREC>> CPUfield2(commBase, corrTools.vol4);
 Correlator<false,PREC> CPUnorm(commBase, corrTools.UAr2max);
-Correlator<false,COMPLEX(PREC)> CPUcorrComplex(commBase, corrTools.UAr2max);
+Correlator<false,GCOMPLEX(PREC)> CPUcorrComplex(commBase, corrTools.UAr2max);
 
 for(int m=0; m<corrTools.vol4; m++) {
     _CPUfield3.setValue(m, _gauge.getLink(GInd::getSiteMu(m,2)));
     _CPUfield4.setValue(m, _gauge.getLink(GInd::getSiteMu(m,2)));
 }
 
-corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield1, CPUfield2, CPUnorm, CPUcorrComplex, XYswapSymmetry = false);
+corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield1, CPUfield2, CPUnorm, CPUcorrComplex, XYswapSymmetry = false);
 ```
 Here, we have set sizes with `vol4`, i.e. $N_s^3\times N_\tau$, and `UAr2max`, which is the largest 4d squared separation possible,
 given periodic BCs. `UA` stands for "unrestricted all"; this is opposed to "restricted" (`R`) domains that do not include all possible
@@ -60,12 +60,12 @@ just leave it as `false`.
 
 This section contains code meant only for constructing certain Polyakov loop correlators. It was implemented by porting C code written
 by Olaf Kaczmarek into SIMULATeQCD and therefore is not utilizing the `Correlator` class fully. In principle these could be implemented
-in the future with the `Correlator` class. Instead, the following methods, part of the more specific `polyakovLoopCorrelator` class,
+in the future with the `Correlator` class. Instead, the following methods, part of the more specific `PolyakovLoopCorrelator` class,
 can be found in `src/modules/gaugeFixing`. One can instantiate this class with, e.g.
-`polyakovLoopCorrelator<PREC,true,HaloDepth> PLC(gauge)` Various correlators can be constructed from untraced Polyakov
+`PolyakovLoopCorrelator<PREC,true,HaloDepth> PLC(gauge)` Various correlators can be constructed from untraced Polyakov
 loops. Three examples include the singlet, octet, and average. Some useful information about these correlators can be
 found [here](https://doi.org/10.1103/PhysRevD.24.450), [here](https://doi.org/10.1103/PhysRevD.33.3738),
-and [here](https://doi.org/10.1103/PhysRevD.34.3904). The `polyakovLoopCorrelator` class includes a function to
+and [here](https://doi.org/10.1103/PhysRevD.34.3904). The `PolyakovLoopCorrelator` class includes a function to
 compute these correlators, which can be obtained with the following snippet of code:
 ```C++
 const int distmax=corrTools.distmax;
@@ -98,8 +98,8 @@ page. Don't forget to re-unitarize before taking your measurements! The singlet,
 
 ## Some benchmarks:
 
-This table shows results for the 4d all-to-all tested on NVIDIA Pascal GPUs. This is the time it takes to multiply two `SU3` identity matrices with themselves,
-which is a good estimate for how long it takes to correlate two `CorrFields` of type `SU3` on the lattices of the given size. For reference, 1 minute is 60 000 ms.
+This table shows results for the 4d all-to-all tested on NVIDIA Pascal GPUs. This is the time it takes to multiply two `GSU3` identity matrices with themselves,
+which is a good estimate for how long it takes to correlate two `CorrFields` of type `GSU3` on the lattices of the given size. For reference, 1 minute is 60 000 ms.
 
 **Symmetric Results:**
 | $N_s$ | $N_\tau$ | UA id3 x id3 [ms] | US id3 x id3 [ms] |

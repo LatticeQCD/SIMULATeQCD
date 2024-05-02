@@ -5,7 +5,7 @@
  *
  */
 
-#include "../simulateqcd.h"
+#include "../SIMULATeQCD.h"
 
 #define PREC double
 
@@ -24,7 +24,7 @@ struct ConvertParameters : LatticeParameters {
 int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(INFO);
-    const size_t HaloDepth = 2;
+    const size_t HaloDepth = 0;
 
     ConvertParameters param;
     CommunicationBase commBase(&argc, &argv);

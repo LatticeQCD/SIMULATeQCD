@@ -5,10 +5,8 @@
  *
  */
 
-#include "../simulateqcd.h"
-#include "../modules/observables/wilsonLineCorrelatorMultiGPU.h"
-#include "../modules/gradientFlow/gradientFlow.h"
-#include "../modules/hyp/hypSmearing.h"
+#include "../SIMULATeQCD.h"
+#include "../modules/observables/WilsonLineCorrelatorMultiGPU.h"
 
 #define PREC double
 #define STACKS 96
@@ -24,16 +22,6 @@ struct WLParam : LatticeParameters {
     Parameter <std::string> directory;
     Parameter <std::string> file_type;
 
-    Parameter<floatT>  wilson_step;
-    Parameter<floatT> wilson_start;
-    Parameter<floatT> wilson_stop;
-    Parameter<int,1> use_wilson;
-    Parameter<int,1> use_hyp;
-
-    Parameter<int,1>       cutRadius;
-    Parameter<int,1>       useInfoFile;
-
-
     WLParam() {
         addDefault (gtolerance,"gtolerance",1e-6);
         addDefault (maxgfsteps,"maxgfsteps",9000);
@@ -42,15 +30,6 @@ struct WLParam : LatticeParameters {
         addOptional(gauge_file, "gauge_file");
         add(directory, "directory");
         add(file_type, "file_type");
-
-	addDefault (use_wilson,"use_wilson",0);
-	addDefault (wilson_step,"wilson_step",0.0);
-	addDefault (wilson_start,"wilson_start",0.0);
-	addDefault (wilson_stop,"wilson_stop",0.0);
-        addDefault(cutRadius, "cutRadius", 100000);
-        addDefault(useInfoFile, "useInfoFile", 1);
-
-	addDefault (use_hyp,"use_hyp",0);
     }
 };
 
@@ -79,7 +58,7 @@ int main(int argc, char *argv[]) {
     /// Initialize the CommunicationBase.
     CommunicationBase commBase(&argc, &argv);
 
-    param.readfile(commBase, "../parameter/applications/wilsonLinesCorrelator.param", argc, argv);
+    param.readfile(commBase, "../parameter/test.param", argc, argv);
 
 
     commBase.init(param.nodeDim());
@@ -112,8 +91,8 @@ int main(int argc, char *argv[]) {
     else if(param.load_conf() == 2 || param.load_conf() == 1)
     {
         std::string file_path = param.directory();
-        file_path.append(param.gauge_file()); 
-        rootLogger.info("Starting from configuration: ", file_path);
+        file_path.append(param.gauge_file());
+        rootLogger.info("Starting from configuration: " ,  file_path);
 //	rootLogger.info(param.gauge_file() ,  endl);
         if(param.file_type() == "nersc"){
             gauge.readconf_nersc(file_path);
@@ -125,25 +104,25 @@ int main(int argc, char *argv[]) {
             GaugeAction<PREC,true,HaloDepth> enDensity(gauge);
             PREC SpatialPlaq  = enDensity.plaquetteSS();
             PREC TemporalPlaq = enDensity.plaquette()*2.0-SpatialPlaq;
-            rootLogger.info( "plaquetteST: "   , TemporalPlaq);
-            rootLogger.info( "plaquetteSS: " , SpatialPlaq);
+            rootLogger.info("plaquetteST: "   ,  TemporalPlaq);
+            rootLogger.info("plaquetteSS: " ,  SpatialPlaq);
 
 
-            if(param.useInfoFile()){
-                std::string info_path = file_path;
-                info_path.append(".info");
-                milcInfo<PREC> paramMilc;
-                paramMilc.readfile(commBase,info_path);
-                rootLogger.info( "plaquette SS info file: " ,  (paramMilc.ssplaq())/3.0  );
-                rootLogger.info( "plaquette ST info file: " ,  (paramMilc.stplaq())/3.0  );
-                rootLogger.info( "linktr info file: " , paramMilc.linktr()  );
-                if(abs((paramMilc.ssplaq())/3.0-SpatialPlaq) > 1e-5){
-                    throw std::runtime_error(stdLogger.fatal("Error ssplaq!"));
-                }
-                if(abs((paramMilc.stplaq())/3.0-TemporalPlaq) > 1e-5){
-                    throw std::runtime_error(stdLogger.fatal("Error stplaq!"));
-                }
+
+            std::string info_path = file_path;
+            info_path.append(".info");
+            milcInfo<PREC> paramMilc;
+            paramMilc.readfile(commBase,info_path);
+            rootLogger.info("plaquette SS info file: " ,   (paramMilc.ssplaq())/3.0);
+            rootLogger.info("plaquette ST info file: " ,   (paramMilc.stplaq())/3.0);
+            rootLogger.info("linktr info file: " ,  paramMilc.linktr());
+            if(abs((paramMilc.ssplaq())/3.0-SpatialPlaq) > 1e-5){
+                throw std::runtime_error(stdLogger.fatal("Error ssplaq!"));
             }
+            if(abs((paramMilc.stplaq())/3.0-TemporalPlaq) > 1e-5){
+                throw std::runtime_error(stdLogger.fatal("Error stplaq!"));
+            }
+
 
         }
     }
@@ -160,78 +139,8 @@ int main(int argc, char *argv[]) {
     /// so make sure you adjust this parameter accordingly, so that you don't waste memory.
     typedef GIndexer<All,HaloDepth> GInd;
     redBase.adjustSize(GInd::getLatData().vol4);
-    rootLogger.info( "volume size " , GInd::getLatData().globvol4  );
+    rootLogger.info("volume size " ,  GInd::getLatData().globvol4);
 
-///////////// gauge fixing 
-// left the commented part in case one wants to change the order of gauge fixing and smearing
-/*
-    if(param.load_conf() ==2){
-        GaugeFixing<PREC,true,HaloDepth>    GFixing(gauge);
-        int ngfstep=0;
-        PREC gftheta=1e10;
-        const PREC gtol = param.gtolerance();        //1e-6;          /// When theta falls below this number, stop...
-        const int ngfstepMAX = param.maxgfsteps() ;  //9000;     /// ...or stop after a fixed number of steps; this way the program doesn't get stuck.
-        const int nunit= param.numunit();            //20;            /// Re-unitarize every 20 steps.
-        while ( (ngfstep<ngfstepMAX) && (gftheta>gtol) ) {
-            /// Compute starting GF functional and update the lattice.
-            GFixing.gaugefixOR();
-            /// Due to the nature of the update, we have to re-unitarize every so often.
-            if ( (ngfstep%nunit) == 0 ) {
-                 gauge.su3latunitarize();
-            }
-            /// Re-calculate theta to determine whether we are sufficiently fixed.
-            gftheta=GFixing.getTheta();
-            ngfstep+=1;
-	    rootLogger.info() << "gftheta = " << gftheta;
-        }
-        gauge.su3latunitarize(); /// One final re-unitarization.
-
-        rootLogger.info() << "Gauge fixing finished in " << ngfstep << " steps, with gftheta = " << gftheta;
-    }
-    gauge.updateAll();
-*/
-//// Wilson Flow
-
-    if(param.use_wilson()){
-        rootLogger.info( "Start Wilson Flow"  );
-
-        std::vector<PREC> flowTimes = {100000.0};
-        PREC start = param.wilson_start();
-        PREC stop  = param.wilson_stop();
-        PREC step_size = param.wilson_step();
-        const auto force = static_cast<Force>(static_cast<int>(0));
-        gradientFlow<PREC, HaloDepth, fixed_stepsize,force> gradFlow(gauge,step_size,start,stop,flowTimes,0.0001);
-
-        bool continueFlow =  gradFlow.continueFlow();
-//	rootLogger.info() << "step " << gradFlow._step_size;
-//	rootLogger.info() << "continueFlow " << continueFlow;
-//	rootLogger.info() << "step " << gradFlow._step_size;
-        while (continueFlow) {
-            gradFlow.updateFlow();
-//            rootLogger.info() << "step " << gradFlow._step_size;
-            continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
-//	    rootLogger.info() << "step " << gradFlow._step_size;
-//	    gradFlow.updateFlow();
-	}
-
-        gauge.updateAll();
-
-        rootLogger.info( "End Wilson Flow"  );
-    }
-
-////////////   hyp smearing
-
-    if(param.use_hyp() > 0){
-        for(int i = 0; i<param.use_hyp();i++){
-            rootLogger.info( "Start hyp smearing"  );
-            Gaugefield<PREC, true, HaloDepth> gauge_out(commBase);
-            HypSmearing<PREC, true, HaloDepth ,R18> smearing(gauge);
-            smearing.SmearAll(gauge_out);
-            gauge = gauge_out;
-    
-       }
-       rootLogger.info( "end hyp smearing"  );
-    }
 
 ///////////// gauge fixing
 
@@ -252,11 +161,10 @@ int main(int argc, char *argv[]) {
             /// Re-calculate theta to determine whether we are sufficiently fixed.
             gftheta=GFixing.getTheta();
             ngfstep+=1;
-//	    rootLogger.info() << "gftheta = " << gftheta;
         }
         gauge.su3latunitarize(); /// One final re-unitarization.
 
-        rootLogger.info( "Gauge fixing finished in " , ngfstep , " steps, with gftheta = " , gftheta );
+        rootLogger.info("Gauge fixing finished in " ,  ngfstep ,  " steps, with gftheta = " ,  gftheta);
     }
 
 
@@ -266,13 +174,6 @@ int main(int argc, char *argv[]) {
     if(param.load_conf() == 2 || param.load_conf() == 1){
         Name.append(param.gauge_file());
         Name_r2.append(param.gauge_file());
-  	if(param.use_wilson()){
-	    Name.append("_");
-	    Name_r2.append("_");
-	    string s = std::to_string(param.wilson_stop());
-            Name.append(s);
-	    Name_r2.append(s);
-	}	
     }
     else{
         Name.append("one");
@@ -280,9 +181,6 @@ int main(int argc, char *argv[]) {
     }
     FileWriter file(gauge.getComm(), param, Name);
     FileWriter file_r2(gauge.getComm(), param, Name_r2);
-
-
-    rootLogger.info( "start wilson correlator" );
 
          StopWatch<true> timer;
 
@@ -343,55 +241,31 @@ int main(int argc, char *argv[]) {
                 }
             }
 
-     ///// cut off
-            int ir2 = 0;
-            if(y0 > (int)GInd::getLatData().globLY/2){
-                ir2 += (y0-(int)GInd::getLatData().globLY)*(y0-(int)GInd::getLatData().globLY);
+    // A(x).A(x+r)^dag along direction x and also y if not split on different GPU's
+            if(param.nodeDim[1] == 1){
+                 dotVector = WilsonClass.gDotAlongXYStackedShared(gauge,y0,redBase);
             }
             else{
-                ir2 += y0*y0;
+                 dotVector = WilsonClass.gDotAlongXYStackedShared(gauge,0,redBase);
             }
 
-	    if(z0 > (int)GInd::getLatData().globLZ/2){
-                ir2 += (z0-(int)GInd::getLatData().globLZ)*(z0-(int)GInd::getLatData().globLZ);
+            if(dx>0){
+                 for(int j = 0;j < STACKS ; j++){
+                    results[i+j+points*(length-1)] = dotVector[j];
+                }
             }
             else{
-                ir2 += z0*z0;
-            }
-
-
-            if(ir2 < (param.cutRadius()*param.cutRadius() +1) ){
-
-
-        // A(x).A(x+r)^dag along direction x and also y if not split on different GPU's
-                if(param.nodeDim[1] == 1){
-                     dotVector = WilsonClass.gDotAlongXYStackedShared(gauge,y0,redBase);
-                }
-                else{
-                    dotVector = WilsonClass.gDotAlongXYStackedShared(gauge,0,redBase);
-                }
-
-                if(dx>0){
-                    for(int j = 0;j < STACKS ; j++){
-                        results[i+j+points*(length-1)] = dotVector[j];
-                    }
-                }
-                else{
-                    for(int j = 0;j < STACKS ; j++){
-                       results[i+STACKS-1-j+points*(length-1)] = dotVector[j];
-                    }
-                }
-            
-
-
                 for(int j = 0;j < STACKS ; j++){
-//                    rootLogger.info() << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j]; 
-                    file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
+                    results[i+STACKS-1-j+points*(length-1)] = dotVector[j];
                 }
-
-
             }
-////////////////////
+
+
+
+            for(int j = 0;j < STACKS ; j++){
+//                rootLogger.info(x0+j ,  " " ,  y0 ,  " ",  z0 ,  " " ,  length ,  " " ,  dotVector[j]);
+                file << x0+j << " " << y0 << " "<< z0 << " " << length << " " << dotVector[j] << "\n";
+            }
         }
     }
 
@@ -467,34 +341,32 @@ int main(int argc, char *argv[]) {
                     ir2 += z0*z0;
                 }
 
-                if(ir2 < (param.cutRadius()*param.cutRadius() +1) ){
+                // factor for counting contributions
+                // Initial factor 2 for symmetry between z and -z
+                // double the factor if x or y = l/2 due to periodicity
+                double factor = 1.0;
 
-                    // factor for counting contributions
-                    // Initial factor 2 for symmetry between z and -z
-                    // double the factor if x or y = l/2 due to periodicity
-                    double factor = 1.0;
-
-                    if(z0 == (int)GInd::getLatData().globLZ/2 || z0 == 0){
-                        factor = 0.5*factor;
-                        if((y0 == (int)GInd::getLatData().globLY/2 || y0 == 0) && (x0 == (int)GInd::getLatData().globLX/2 || x0==0) ){
-                            factor = 2.0*factor;
-                        }
+                if(z0 == (int)GInd::getLatData().globLZ/2 || z0 == 0){
+                    factor = 0.5*factor;
+                    if((y0 == (int)GInd::getLatData().globLY/2 || y0 == 0) && (x0 == (int)GInd::getLatData().globLX/2 || x0==0) ){
+                        factor = 2.0*factor;
                     }
+                }
 
-                    if( (z0 == (int)GInd::getLatData().globLZ/2 || z0==0) && (y0 == (int)GInd::getLatData().globLY/2 || y0 == 0) && (x0 == (int)GInd::getLatData().globLX/2 || x0==0) ){
-                        factor = 0.5*factor;
-                    }
+                if( (z0 == (int)GInd::getLatData().globLZ/2 || z0==0) && (y0 == (int)GInd::getLatData().globLY/2 || y0 == 0) && (x0 == (int)GInd::getLatData().globLX/2 || x0==0) ){
+                    factor = 0.5*factor;
+                }
 
-                    results_r2[ir2] += factor*dot;
-                    norm_r2[ir2] += factor;
-               }
+                results_r2[ir2] += factor*dot;
+                norm_r2[ir2] += factor;
+
 
         }
 /////// write to file
 
 
         for(int ir2=0; ir2<r2max+1; ir2++) {
-            if(norm_r2[ir2] > 0.1 && ir2 < (param.cutRadius()*param.cutRadius() +1)){
+            if(norm_r2[ir2] > 0.1){
                 file_r2 << length << " " << ir2 << " " << results_r2[ir2]/norm_r2[ir2] << "\n";
             }
         }
@@ -504,15 +376,15 @@ int main(int argc, char *argv[]) {
 
 
 
- //   PREC sum = 0.0;
- //   for(size_t i = 0; i<(GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY)*GInd::getLatData().globLT;i+=1){
-//	sum += abs(results[i]);
-//    }
+    PREC sum = 0.0;
+    for(size_t i = 0; i<(GInd::getLatData().globvol3/2+GInd::getLatData().globLX*GInd::getLatData().globLY)*GInd::getLatData().globLT;i+=1){
+	sum += abs(results[i]);
+    }
 
     timer.stop();
-    rootLogger.info( "Time for operators: " , timer  );
+    rootLogger.info("Time for operators: " ,  timer);
 
-//    rootLogger.info() << "abs(sum) = " << sum;
+    rootLogger.info("abs(sum) = " ,  sum);
 
     delete [] results;
     delete [] results_r2;
@@ -521,3 +393,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+

@@ -10,15 +10,15 @@
 
 #include "../../gauge/gaugefield.h"
 #include "./rhmcParameters.h"
-#include "../../base/math/su3.h"
+#include "../../base/math/gsu3.h"
 #include "../../gauge/gaugeActionDeriv.h"
-#include "../../base/latticeContainer.h"
+#include "../../base/LatticeContainer.h"
 #include <iostream>
 #include "../../spinor/spinorfield.h"
 #include "../dslash/dslash.h"
 #include "../../base/gutils.h"
-#include "../hisq/hisqForce.h"
-#include "spinorfield_container.h"
+#include "../HISQ/hisqForce.h"
+#include "Spinorfield_container.h"
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
@@ -31,20 +31,19 @@ public:
                HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
                RationalCoeff rat, HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
         : _gaugeField(gaugeField),
+          _p(p),
           _X(X),
           _W(W),
-          _p(p),
-          _smearing(smearing),
           _rhmc_param(rhmc_param),
-          _rat(rat),
-          _dslash(dslash),
-          _dslashM(_W, _X, 0.0), // ip_dot_f2_hisq is the hisq force object, used to calculate stuff
-          ipdot(gaugeField.getComm()),         // "force" gaugeField object, p-dot
-          ip_dot_f2_hisq(_gaugeField, ipdot, cgM, _dslash, _dslashM, _rhmc_param, _rat, _smearing),
           gAcc(gaugeField.getAccessor()),
           pAccessor(p.getAccessor()),
-          ipdotAccessor(ipdot.getAccessor())
-          {};
+          _dslash(dslash),
+          ipdot(gaugeField.getComm()),         // "force" gaugeField object, p-dot
+          ipdotAccessor(ipdot.getAccessor()),
+          _rat(rat),
+          _smearing(smearing),
+          _dslashM(_W, _X, 0.0), // ip_dot_f2_hisq is the hisq force object, used to calculate stuff
+          ip_dot_f2_hisq(_gaugeField, ipdot, cgM, _dslash, _dslashM, _rhmc_param, _rat, _smearing) {};
 
     ~integrator() {};
 
@@ -92,9 +91,9 @@ private:
 
     HisqForce<floatT, onDevice, HaloDepth, 4> ip_dot_f2_hisq;
 
-    SU3Accessor<floatT, R18> gAcc;
-    SU3Accessor<floatT> pAccessor;
-    SU3Accessor<floatT> ipdotAccessor;
+    gaugeAccessor<floatT, R18> gAcc;
+    gaugeAccessor<floatT> pAccessor;
+    gaugeAccessor<floatT> ipdotAccessor;
 };
 
 
@@ -107,8 +106,8 @@ class pure_gauge_integrator {
 public:
     pure_gauge_integrator(RhmcParameters rhmc_param, Gaugefield<floatT, onDevice, HaloDepth, comp> &gaugeField,
                           Gaugefield<floatT, onDevice, HaloDepth> &p)
-            : _gaugeField(gaugeField), _p(p), _rhmc_param(rhmc_param),ipdot(gaugeField.getComm()), gAcc(gaugeField.getAccessor()),
-              pAccessor(p.getAccessor()), 
+            : _gaugeField(gaugeField), _p(p), _rhmc_param(rhmc_param), gAcc(gaugeField.getAccessor()),
+              pAccessor(p.getAccessor()), ipdot(gaugeField.getComm()),
               ipdotAccessor(ipdot.getAccessor()) {};
 
     ~pure_gauge_integrator() {};
@@ -135,9 +134,9 @@ private:
 
     Gaugefield<floatT, onDevice, HaloDepth> ipdot;
 
-    SU3Accessor<floatT, comp> gAcc;
-    SU3Accessor<floatT> pAccessor;
-    SU3Accessor<floatT> ipdotAccessor;
+    gaugeAccessor<floatT, comp> gAcc;
+    gaugeAccessor<floatT> pAccessor;
+    gaugeAccessor<floatT> ipdotAccessor;
 
 };
 

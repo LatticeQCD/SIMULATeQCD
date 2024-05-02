@@ -27,9 +27,9 @@
 #include "parameterManagement.h"
 #include "misc.h"
 #include "../../gauge/gaugefield.h"
-#include "../../gauge/gaugeAction.h"
-#include "../latticeContainer.h"
-#include "../math/su3Accessor.h"
+#include "../../gauge/GaugeAction.h"
+#include "../LatticeContainer.h"
+#include "../math/gaugeAccessor.h"
 #include "checksum.h"
 #include <iostream>
 #include <time.h>
@@ -261,20 +261,20 @@ private:
     std::vector<char> buf;
 
     template<class f1, class f2>
-    SU3<f2> from_buf(f1 *buf) const {
+    GSU3<f2> from_buf(f1 *buf) const {
         int i = 0;
-        SU3<f2> U;
+        GSU3<f2> U;
         for (int j = 0; j < 3; j++)
         for (int k = 0; k < 3; k++) {
             f2 re = buf[i++];
             f2 im = buf[i++];
-            U(j, k) = COMPLEX(f2)(re, im);
+            U(j, k) = GCOMPLEX(f2)(re, im);
         }
         return U;
     }
 
     template<class f1, class f2>
-    void to_buf(f1 *buf, const SU3<f2> &U) const {
+    void to_buf(f1 *buf, const GSU3<f2> &U) const {
         int i = 0;
         for (int j = 0; j < 3; j++)
         for (int k = 0; k < 3; k++) {
@@ -299,7 +299,7 @@ private:
     }
 
     template<class floatT>
-    uint32_t checksum(SU3<floatT> U) {
+    uint32_t checksum(GSU3<floatT> U) {
         if (float_size == 4)
             to_buf((float *) &buf[0], U);
         else if (float_size == 8)
@@ -522,9 +522,9 @@ public:
     }
 
     template<class floatT>
-    SU3<floatT> get() {
+    GSU3<floatT> get() {
         char *start = &buf[index];
-        SU3<floatT> ret;
+        GSU3<floatT> ret;
         if (float_size == 4)
             ret = from_buf<float,float>((float *) start);
         else if (float_size == 8)
@@ -534,7 +534,7 @@ public:
     }
 
     template<class floatT>
-    void put(SU3<floatT> U) {
+    void put(GSU3<floatT> U) {
         char *start = &buf[index];
         if (float_size == 4)
             to_buf((float *) start, U);

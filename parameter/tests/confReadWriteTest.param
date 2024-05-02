@@ -2,7 +2,6 @@
 # confReadWriteTest.param
 #
 #          Lattice: Nx Ny Nz Nt
-#             beta: Bare coupling constant 6/g^2
 #            Nodes: Number of nodes per direction
 #        Gaugefile: Path to input configuration
 #           format: Format of input configuration.

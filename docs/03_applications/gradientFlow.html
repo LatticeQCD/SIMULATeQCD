@@ -25,7 +25,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Multi-level algorithm" href="multiLevel.html" />
-    <link rel="prev" title="Generate quenched gauge configurations" href="quenched.html" /> 
+    <link rel="prev" title="Gauge Fixing" href="gaugeFixing.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,11 +47,11 @@
 <li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="applications.html">Applications</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quenched.html">Generate quenched gauge configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gaugeFixing.html">Gauge Fixing</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Gradient Flow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="multiLevel.html">Multi-level algorithm</a></li>
-<li class="toctree-l2"><a class="reference internal" href="rhmc.html">Rational Hybrid Monte Carlo</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RHMC.html">Rational Hybrid Monte Carlo</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
@@ -97,7 +97,7 @@ step size Runge Kutta 3.</p>
 <p>This can take up to 60+ minutes (depending on the Hardware). If you only
 want to use the zeuthen force and the adaptive step size Runge-Kutta, you
 can also compile <code class="docutils literal notranslate"><span class="pre">gradientFlow_zeuthen</span></code>, which will only take 20 minutes
-to compile. (The most compile time is consumed by <code class="docutils literal notranslate"><span class="pre">topology.cpp</span></code>.)</p>
+to compile. (The most compile time is consumed by <code class="docutils literal notranslate"><span class="pre">Topology.cpp</span></code>.)</p>
 <p>To run the program, one needs a parameter file. It should take these
 parameters:</p>
 <div class="toggle admonition">
@@ -135,7 +135,7 @@ energyMomentumTensor = 0
 ColorElectricCorrTimeSlices = 0
 ColorMagneticCorrTimeSlices = 0
 
-polyakovLoopCorrelator = 0
+PolyakovLoopCorrelator = 0
 GaugeFixTol = 1e-6
 GaugeFixNMax = 9000
 GaugeFixNUnitarize = 20

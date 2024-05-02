@@ -15,10 +15,11 @@
 #include <cstring>
 #include "communicationBase.h"
 
+
 Logger rootLogger(OFF);
 Logger stdLogger(ALL);
 
-CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) : _forceHalos(forceHalos) {
+CommunicationBase::CommunicationBase(int *argc, char ***argv) {
 
     int ret;
     ret = MPI_Init(argc, argv);
@@ -57,7 +58,6 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) :
     //! end clean up
 
     myInfo.nodeName = nodeName;
-
 
 }
 
@@ -195,35 +195,12 @@ void CommunicationBase::init(const LatticeDimensions &Dim, __attribute__((unused
     rootLogger.warn("Cannot determine for which compute capability the code was compiled!");
 #endif
 #endif
-
-    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
-        gpuError_t gpuErr =  gpuStreamCreate(&commStreams[i]);
-            if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamCreate", gpuErr);
-    }
-
     globalBarrier();
     neighbor_info = NeighborInfo(cart_comm, myInfo);
-    // ncclinit();
 }
 
-// void CommunicationBase::ncclinit() {
-
-//     if (myInfo.world_rank == 0) {
-//         ncclGetUniqueId(&nccl_uid);
-//     }
-
-//     MPI_Bcast(&nccl_uid, sizeof(nccl_uid), MPI_BYTE, 0, MPI_COMM_WORLD);
-//     ncclCommInitRank(&nccl_comm, world_size, nccl_uid, myInfo.world_rank);
-    
-// }
 
 CommunicationBase::~CommunicationBase() {
-
-    for (size_t i = 0; i < MAX_NUM_STREAMS; i++) {
-            gpuError_t gpuErr =  gpuStreamDestroy(commStreams[i]);
-                if (gpuErr != gpuSuccess) GpuError("CommunicationBase_mpi: gpuStreamDestroy", gpuErr);
-    }
-
     rootLogger.info("Finalizing MPI");
     int ret;
     if (_initialized) {
@@ -235,10 +212,6 @@ CommunicationBase::~CommunicationBase() {
     }
     ret = MPI_Finalize();
     _MPI_fail(ret, "MPI_Finalize");
-    //ncclCommFinalize(nccl_comm); Use in future rccl versions before calling ncclCommDestroy
-#ifdef USE_NCCL
-    ncclCommDestroy(nccl_comm);
-#endif
 }
 
 void CommunicationBase::_MPI_fail(int ret, const std::string &func) {
@@ -282,14 +255,14 @@ void CommunicationBase::root2all(double &value) const {
     MPI_Bcast(&value, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
-void CommunicationBase::root2all(COMPLEX(float) &value) const {
+void CommunicationBase::root2all(GCOMPLEX(float) &value) const {
     std::complex<float> v(value.cREAL, value.cIMAG);
     MPI_Bcast(&v, 1, MPI_COMPLEX, 0, MPI_COMM_WORLD);
     value.cREAL = v.real();
     value.cIMAG = v.imag();
 }
 
-void CommunicationBase::root2all(COMPLEX(double) &value) const {
+void CommunicationBase::root2all(GCOMPLEX(double) &value) const {
     std::complex<double> v(value.cREAL, value.cIMAG);
     MPI_Bcast(&v, 1, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
     value.cREAL = v.real();
@@ -304,11 +277,11 @@ void CommunicationBase::root2all(Matrix4x4Sym<double> &value) const {
     MPI_Bcast(&value, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
-void CommunicationBase::root2all(SU3<float> &value) const {
+void CommunicationBase::root2all(GSU3<float> &value) const {
     MPI_Bcast(&value, 9, MPI_COMPLEX, 0, MPI_COMM_WORLD);
 }
 
-void CommunicationBase::root2all(SU3<double> &value) const {
+void CommunicationBase::root2all(GSU3<double> &value) const {
     MPI_Bcast(&value, 9, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
 }
 
@@ -393,13 +366,13 @@ std::complex<double> CommunicationBase::reduce(std::complex<double> in) const {
     return recv;
 }
 
-COMPLEX(float) CommunicationBase::reduce(COMPLEX(float) in) const {
+GCOMPLEX(float) CommunicationBase::reduce(GCOMPLEX(float) in) const {
     std::complex<float> recv(in.cREAL, in.cIMAG);
     MPI_Allreduce(&in, &recv, 1, MPI_COMPLEX, MPI_SUM, cart_comm);
     return recv;
 }
 
-COMPLEX(double) CommunicationBase::reduce(COMPLEX(double) in) const {
+GCOMPLEX(double) CommunicationBase::reduce(GCOMPLEX(double) in) const {
     std::complex<double> recv(in.cREAL, in.cIMAG);
     MPI_Allreduce(&in, &recv, 1, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
     return recv;
@@ -418,14 +391,14 @@ Matrix4x4Sym<double> CommunicationBase::reduce(Matrix4x4Sym<double> in) const {
     return recv;
 }
 
-SU3<float> CommunicationBase::reduce(SU3<float> in) const {
-    SU3<float> recv;
+GSU3<float> CommunicationBase::reduce(GSU3<float> in) const {
+    GSU3<float> recv;
     MPI_Allreduce(&in, &recv, 9, MPI_COMPLEX, MPI_SUM, cart_comm);
     return recv;
 }
 
-SU3<double> CommunicationBase::reduce(SU3<double> in) const {
-    SU3<double> recv;
+GSU3<double> CommunicationBase::reduce(GSU3<double> in) const {
+    GSU3<double> recv;
     MPI_Allreduce(&in, &recv, 9, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
     return recv;
 }
@@ -451,16 +424,16 @@ void CommunicationBase::reduce(double *in, int nr) const {
     delete[] buf;
 }
 
-void CommunicationBase::reduce(COMPLEX(float) *in, int nr) const {
-    COMPLEX(float) *buf = new COMPLEX(float)[nr];
+void CommunicationBase::reduce(GCOMPLEX(float) *in, int nr) const {
+    GCOMPLEX(float) *buf = new GCOMPLEX(float)[nr];
     MPI_Allreduce(in, buf, nr, MPI_COMPLEX, MPI_SUM, cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
     delete[] buf;
 }
 
 
-void CommunicationBase::reduce(COMPLEX(double) *in, int nr) const {
-    COMPLEX(double) *buf = new COMPLEX(double)[nr];
+void CommunicationBase::reduce(GCOMPLEX(double) *in, int nr) const {
+    GCOMPLEX(double) *buf = new GCOMPLEX(double)[nr];
     MPI_Allreduce(in, buf, nr, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
     delete[] buf;
@@ -483,8 +456,8 @@ void CommunicationBase::reduce(Matrix4x4Sym<double> *in, int nr) const {
     delete[] buf;
 }
 
-void CommunicationBase::reduce(SU3<float> *in, int nr) const {
-    SU3<float> *buf = new SU3<float>[nr];
+void CommunicationBase::reduce(GSU3<float> *in, int nr) const {
+    GSU3<float> *buf = new GSU3<float>[nr];
     MPI_Allreduce(reinterpret_cast<float *>(in), reinterpret_cast<float *>(buf), nr * 9, MPI_COMPLEX, MPI_SUM,
             cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
@@ -492,8 +465,8 @@ void CommunicationBase::reduce(SU3<float> *in, int nr) const {
 }
 
 
-void CommunicationBase::reduce(SU3<double> *in, int nr) const {
-    SU3<double> *buf = new SU3<double>[nr];
+void CommunicationBase::reduce(GSU3<double> *in, int nr) const {
+    GSU3<double> *buf = new GSU3<double>[nr];
     MPI_Allreduce(reinterpret_cast<double *>(in), reinterpret_cast<double *>(buf), nr * 9, MPI_DOUBLE_COMPLEX, MPI_SUM,
             cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
@@ -589,7 +562,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
                                  " bytes from rank ", MyRank(), " to rank ", info.world_rank);)
 
                 gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
-                        seg.getSendStream());
+                        seg.getDeviceStream());
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1a)", gpuErr);
 
@@ -601,7 +574,7 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
                                  " bytes on rank ", MyRank());)
 
                 gpuErr = gpuMemcpyAsync(recvBase, sendBase, seg.getLength(), gpuMemcpyDeviceToDevice,
-                        seg.getSendStream());
+                        seg.getDeviceStream(0));
             if (gpuErr != gpuSuccess)
                 GpuError("communicationBase_mpi.cpp: Failed to copy data (DeviceToDevice) (1b)", gpuErr);
 

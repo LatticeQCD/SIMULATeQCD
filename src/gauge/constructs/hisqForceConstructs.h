@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "../../modules/hisq/smearParameters.h"
+#include "../../modules/HISQ/smearParameters.h"
 #include "derivative3link.h"
 #include "derivative5link.h"
 #include "derivative7link.h"
@@ -16,7 +16,7 @@
 
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R14, CompressionType compForce=R18>
-__host__ __device__ SU3<floatT> smearingForce(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu,
+__host__ __device__ GSU3<floatT> smearingForce(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu,
         SmearingParameters<floatT> _smearparam, int TermCheck = -1, int SubTermCheck = -1, bool doL1 = true, bool doL3 = true, bool doL5 = true,
         bool doL7 = true, bool doLLp = true) {
     typedef GIndexer<All,HaloDepth> GInd;
@@ -28,12 +28,12 @@ __host__ __device__ SU3<floatT> smearingForce(SU3Accessor<floatT,compIn> gAcc, S
     floatT c_lp =_smearparam._c_lp;
     bool isLvl1 = (c_lp == 0.0 ? true : false);
 
-    SU3<floatT> temp= su3_zero<floatT>();
-    SU3<floatT> derivative_single_link = su3_zero<floatT>();
-    SU3<floatT> derivative_staple3 = su3_zero<floatT>();
-    SU3<floatT> derivative_staple5 = su3_zero<floatT>();
-    SU3<floatT> derivative_staple7 = su3_zero<floatT>();
-    SU3<floatT> derivative_staple_lp = su3_zero<floatT>();
+    GSU3<floatT> temp= gsu3_zero<floatT>();
+    GSU3<floatT> derivative_single_link = gsu3_zero<floatT>();
+    GSU3<floatT> derivative_staple3 = gsu3_zero<floatT>();
+    GSU3<floatT> derivative_staple5 = gsu3_zero<floatT>();
+    GSU3<floatT> derivative_staple7 = gsu3_zero<floatT>();
+    GSU3<floatT> derivative_staple_lp = gsu3_zero<floatT>();
 
     derivative_single_link= finAccessor.getLink(GInd::getSiteMu(site, mu));
 
@@ -74,13 +74,13 @@ __host__ __device__ SU3<floatT> smearingForce(SU3Accessor<floatT,compIn> gAcc, S
 
 
 template<class floatT,size_t HaloDepth,CompressionType compIn=R14, CompressionType compForce=R18>
-__host__ __device__ SU3<floatT> threeLinkContribution(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu,
+__host__ __device__ GSU3<floatT> threeLinkContribution(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu,
         SmearingParameters<floatT> _smearparam) {
 
     typedef GIndexer<All,HaloDepth> GInd;
     floatT c1 =_smearparam._c_1;
     floatT c3 =_smearparam._c_3;
-    SU3<floatT> derivative_staple3 = su3_zero<floatT>();
+    GSU3<floatT> derivative_staple3 = gsu3_zero<floatT>();
 
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
@@ -91,8 +91,8 @@ __host__ __device__ SU3<floatT> threeLinkContribution(SU3Accessor<floatT,compIn>
 
 
 template<class floatT, size_t HaloDepth, CompressionType compIn=R14, CompressionType compForce=R18>
-__host__ __device__ SU3<floatT> lepagelinkContribution(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu, floatT c_lp) {
-    SU3<floatT> derivative_lp = su3_zero<floatT>();
+__host__ __device__ GSU3<floatT> lepagelinkContribution(gaugeAccessor<floatT,compIn> gAcc, gaugeAccessor<floatT,compForce> finAccessor, gSite site, int mu, floatT c_lp) {
+    GSU3<floatT> derivative_lp = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu+nu_h)%4;
         derivative_lp += linkDerivativeLepage<floatT,HaloDepth,compIn,compForce>(gAcc, finAccessor, site, mu ,nu);
@@ -102,8 +102,8 @@ __host__ __device__ SU3<floatT> lepagelinkContribution(SU3Accessor<floatT,compIn
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> sevenLinkContribution(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7, int Term, int SubTerm) {
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
+__host__ __device__ GSU3<floatT> sevenLinkContribution(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7, int Term, int SubTerm) {
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -117,9 +117,9 @@ __host__ __device__ SU3<floatT> sevenLinkContribution(SU3Accessor<floatT, comp> 
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> fiveLinkContribution(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5, int part) {
+__host__ __device__ GSU3<floatT> fiveLinkContribution(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5, int part) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -139,9 +139,9 @@ __host__ __device__ SU3<floatT> fiveLinkContribution(SU3Accessor<floatT, comp> g
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> fiveLinkContribution_11(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ GSU3<floatT> fiveLinkContribution_11(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -165,9 +165,9 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_11(SU3Accessor<floatT, comp
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> fiveLinkContribution_12(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ GSU3<floatT> fiveLinkContribution_12(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -192,9 +192,9 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_12(SU3Accessor<floatT, comp
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> fiveLinkContribution_13(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ GSU3<floatT> fiveLinkContribution_13(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -218,9 +218,9 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_13(SU3Accessor<floatT, comp
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> fiveLinkContribution_14(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+__host__ __device__ GSU3<floatT> fiveLinkContribution_14(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
@@ -244,17 +244,17 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_14(SU3Accessor<floatT, comp
 };
 
 
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> fiveLinkContribution_20(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
 
-          if constexpr (term == 0) {
-            fivelinkCont += (finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
+            fivelinkCont += (
+                  ( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu), mu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu), rho))
 
@@ -263,12 +263,8 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu), mu))
                   )
                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu), nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-          }
 
-          if constexpr (term == 1) {
-
-                 fivelinkCont += ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
+                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                    *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu), rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,rho), nu))
 
@@ -277,12 +273,8 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu), nu))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho), mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-          }
 
-          if constexpr (term == 2) {
-
-                 fivelinkCont += ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
+                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), rho))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho), nu))
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho), mu))
 
@@ -291,26 +283,26 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_20(SU3Accessor<floatT, comp
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu), rho))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho), nu))
+
+                )
                 *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-          }
         }
     }
     return c5*fivelinkCont;
 };
 
 
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> fiveLinkContribution_30(gaugeAccessor<floatT, comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c5) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> fivelinkCont = su3_zero<floatT>();
+    GSU3<floatT> fivelinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
 
-
-          if constexpr (term == 0) {
-            fivelinkCont += ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu), nu))
+            fivelinkCont += (
+                  ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu), mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho), rho))
 
@@ -319,12 +311,8 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho), mu))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho), nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
-          }
 
-          if constexpr (term == 1) {
-
-                 fivelinkCont += ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
+                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu), nu))
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho), rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_up_dn(site,mu,rho), nu))
 
@@ -333,11 +321,8 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
                    *gAcc.getLink(GInd::getSiteMu( GInd::site_up_dn_dn(site,mu,nu,rho), nu))
                   )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho), mu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
-          }
 
-          if constexpr (term == 2) {
-                 fivelinkCont += ( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
+                 +( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu), nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu), mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), rho))
 
@@ -346,18 +331,18 @@ __host__ __device__ SU3<floatT> fiveLinkContribution_30(SU3Accessor<floatT, comp
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), mu))
                   )
                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho), nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
-          }
+                )
+                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho), rho));
         }
     }
     return c5*fivelinkCont;
 };
 
 
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_1(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_1(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
 
@@ -365,2346 +350,487 @@ __host__ __device__ SU3<floatT> sevenLinkContribution_1(SU3Accessor<floatT,comp>
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
             int sigma = 6 - mu - nu - rho;
 
-            if constexpr(term == 0) {
-              sevenlinkCont += finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+            sevenlinkCont += (
+                  ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
 
-            if constexpr(term == 1) {
-              sevenlinkCont += finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                   +finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
 
-            if constexpr(term == 2) {
-              sevenlinkCont += finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                 +( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
 
-            if constexpr(term == 3) {
-              sevenlinkCont += finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+                   +finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
+                  )
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
 
-            if constexpr(term == 4) {
-              sevenlinkCont += finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+                +(
+                  ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_dn(site,rho),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
 
-            if constexpr (term == 5) {
-              sevenlinkCont += finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                   +finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_dn(site,rho),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
+                  )
+                 *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_dn(site,rho),sigma))
 
-            if constexpr (term == 6) {
-              sevenlinkCont += finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+                 +( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
 
-            if constexpr (term == 7) {
-              sevenlinkCont += finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                   +finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-
-            // sevenlinkCont += (
-            //       ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
-
-            //        +finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-
-            //      +( finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))  //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
-
-            //        +finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))  //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
-            //       )
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
-
-            //     +(
-            //       ( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
-
-            //        +finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))   //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
-            //       )
-            //      *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_dn(site,rho),sigma))
-
-            //      +( finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),nu))
-
-            //        +finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
-            //       )
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-            //     )
-            //     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
+                  )
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
+                )
+                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
         }
     }
     return -c7*sevenlinkCont;
 };
 
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_1_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_2(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-
-    if constexpr(term == 0) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-		               *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
             int sigma = 6 - mu - nu - rho;
-              
-            sevenlinkCont += U1
-                            *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                            *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-                            *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
-                            *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                            *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
+
+            sevenlinkCont += (
+                  ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
+                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),nu))
+
+                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
+                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
+
+                +(
+                  ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
+                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
+
+                +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
+
+                  +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
+                 )
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
+                 *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
+                )
+                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
         }
     }
+    return -c7*sevenlinkCont;
+};
 
-    if constexpr(term == 1) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
+
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_3(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+    typedef GIndexer<All, HaloDepth> GInd;
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-		         *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
             int sigma = 6 - mu - nu - rho;
 
-              sevenlinkCont += U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
+            sevenlinkCont += (
+                  (gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
+                   *(gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
+                     *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
+
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
+                     *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
+                    )
+                  )
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
+
+                 +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
+                 *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu))
+                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
+                  )
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                *gAcc.getLinkDagger(GInd::getSiteMu(site,nu))
+
+                +(
+                  (gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
+                   *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
+
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
+                    )
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
+
+                 +(gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
+                   *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
+
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
+                    )
+                  )
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
+                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
+        }
+    }
+    return -c7*sevenlinkCont;
+};
+
+
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_4(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+    typedef GIndexer<All, HaloDepth> GInd;
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    for (int nu_h = 1; nu_h < 4; nu_h++) {
+        int nu = (mu + nu_h)%4;
+        for (int rho_h = 0; rho_h < 2; rho_h++) {
+            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
+            int sigma = 6 - mu - nu - rho;
+
+            sevenlinkCont += (
+                 gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+                 *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
+                    *(gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
+                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,nu,rho,sigma),mu))
+                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
+
+                      +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
+                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),mu))
+                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
+                     )
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),rho))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
+                    *(
+                      (gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
+                       *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),mu))
+                       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
+
+                       +gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
+                       *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,sigma,rho),mu))
+                       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
+                      )
+                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
+                     )
+                  )
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(site,nu))
+
+                +(
+                 gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                 *(gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
+                   *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),mu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
+
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),mu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
+                    )
+                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
+                   *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),mu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
+
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
+                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),mu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
+                    )
+                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
+                  )
+                )
+                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
+        }
+    }
+    return -c7*sevenlinkCont;
+};
+
+
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_5(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+    typedef GIndexer<All, HaloDepth> GInd;
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
+    for (int nu_h = 1; nu_h < 4; nu_h++) {
+        int nu = (mu + nu_h)%4;
+        for (int rho_h = 0; rho_h < 2; rho_h++) {
+            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
+            int sigma = 6 - mu - nu - rho;
+
+            sevenlinkCont += (
+                  gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                 *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
+                 *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
+                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
 
-    if constexpr(term == 2) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-		         *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
+                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
+                  )
 
-    if constexpr(term == 3) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-		               *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
+                 +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
+                 *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
+                 *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr(term == 4) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                               *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += U1
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_dn(site,rho),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                         *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += U1
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu( GInd::site_dn(site,rho),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 6) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                               *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += U1
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 7) {
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-
-        SU3<floatT> U1 = finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += U1
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_2(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-    for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-            if constexpr (term == 0) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 1) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 2) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 3) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 4) {
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-
-            if constexpr (term == 5) {
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-
-            if constexpr (term == 6) {
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-
-            if constexpr (term == 7) {
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-
-            // sevenlinkCont += (
-            //       ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma)) //done
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-
-            //      +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-            //        *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma)) //done
-            //        *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
-
-            //     +(
-            //       ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma)) //done
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma)) //done
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-
-            //     +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma)) //done
-            //       *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-
-            //       +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma)) //done
-            //       *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-            //      )
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-            //      *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-            //     )
-            //     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_2_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-
-    if constexpr (term == 0) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-        
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 1) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 2) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                   *U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 3) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 4) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *U1
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 =gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu)); 
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 6) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                  *U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 7) {
-
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4;
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));
-
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                  *U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_3(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-    for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-            if constexpr (term == 0) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                     *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 1) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                      *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 2) {
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
-                        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-                        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                        *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 3) {
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                          *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu))
-                          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-                          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                          *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 4) {
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho)) //term 4 and 5 might have a copy paste error!
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 5) {
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-
-            }
-
-            if constexpr (term == 6) {
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 7) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            // sevenlinkCont += (
-            //       (gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho)) 
-            //        *(gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-            //          *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma)) //done
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-            //          *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu)) //done
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-            //         )
-            //       )
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-
-            //      +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-            //      *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))  //done
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu)) //done
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-            //       )
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(site,nu))
-
-            //     +(
-            //       (gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-            //        *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu)) //done
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu)) //done
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-            //         )
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-
-            //      +(gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-            //        *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma)) //done
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-            //         )
-            //       )
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_3_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-
-    if constexpr (term == 0) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                     *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                     *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 1) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                      *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                      *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 2) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                        *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
-                        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-                        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                        *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 3) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                          *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));     
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                          *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu))
-                          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-                          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                          *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 4) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho)) //term 4 and 5 might have a copy paste error!
-                    *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                     *U1;
-
-            }
-        }
-    }
-
-    if constexpr (term == 6) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-                sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                     *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                     *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 7) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                      *U1;
-            }
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_4(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-    for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-
-            if constexpr (term == 0) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,nu,rho,sigma),mu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 1) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),mu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 2) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),mu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 3) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,sigma,rho),mu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-            }
-
-            if constexpr (term == 4) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),mu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 5) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 6) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),mu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 7) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-
-            }
-            // sevenlinkCont += (
-            //      gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-            //      *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-            //         *(gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-            //           *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,nu,rho,sigma),mu))  //done
-            //           *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-
-            //           +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma)) //done
-            //           *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),mu))
-            //           *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-            //          )
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-            //         *(
-            //           (gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-            //            *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),mu)) //done 
-            //            *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-
-            //            +gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))  //done
-            //            *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,sigma,rho),mu))
-            //            *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-            //           )
-            //           *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-            //          )
-            //       )
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(site,nu))
-
-            //     +(
-            //      gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu)) //done
-            //      *(gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-            //        *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),mu))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),mu))
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma)) //done
-            //         )
-            //         *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-            //        *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),mu))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-            //          *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),mu))
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-            //         )
-            //         *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-            //       )
-            //     )
-            //     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_4_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-
-    if constexpr (term == 0) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu));
-            SU3<floatT> U2 = gAcc.getLinkDagger(GInd::getSiteMu(site,nu));   
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,nu,rho,sigma),mu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                      *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 1) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu));
-            SU3<floatT> U2 = gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),mu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                      *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 2) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu));
-            SU3<floatT> U2 = gAcc.getLinkDagger(GInd::getSiteMu(site,nu));
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),mu))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                      *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 3) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu)); 
-            SU3<floatT> U2 =gAcc.getLinkDagger(GInd::getSiteMu(site,nu)); 
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-                      *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,sigma,rho),mu))
-                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                      *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 4) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu)); 
-            SU3<floatT> U2 = gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),mu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu));
-            SU3<floatT> U2 = gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 6) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu));
-            SU3<floatT> U2 = gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),mu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *U2;
-            }
-        }
-    }
-
-    if constexpr (term == 7) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu));
-            SU3<floatT> U2 = gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *U2;
-
-            }
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_5(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-    for (int nu_h = 1; nu_h < 4; nu_h++) {
-        int nu = (mu + nu_h)%4;
-        for (int rho_h = 0; rho_h < 2; rho_h++) {
-            int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-            int sigma = 6 - mu - nu - rho;
-            
-            if constexpr(term == 0) {
-                sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 1) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-
-            if constexpr (term == 2) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 3) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 4) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-                  
-            if constexpr (term == 5) {
-             sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
+                  )
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
+
+                +(gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
+                 *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
+                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
                    *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
+                  )
 
-            if constexpr (term == 6) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
+                 +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
+                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
+                 *( gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
 
-
-            if constexpr (term == 7) {
-
-              sevenlinkCont +=gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-
-            // sevenlinkCont += (
-            //       gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //      *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-            //      *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-            //        *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-            //        *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-            //       )
-
-            //      +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //      *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-            //      *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-            //       )
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
-
-            //     +(gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-            //      *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-            //        *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-            //        *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-            //       )
-
-            //      +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-            //      *( gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-            //        *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-            //       )
-            //     )
-            //     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_5_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-
-    if constexpr(term == 0) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu)); 
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-                sevenlinkCont += U1
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,nu,rho),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_up(site,rho,sigma),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 1) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,nu,rho,sigma),sigma))
-                *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-
-    if constexpr (term == 2) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,rho,sigma,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 3) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,rho,nu,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 4) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),sigma))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up_dn(site,sigma,rho),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-             sevenlinkCont += U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,nu,rho,sigma),sigma))
-                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),nu))
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
+                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 6) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,sigma,nu,rho),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,rho),sigma))
+                  )
+                )
                 *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-
-    if constexpr (term == 7) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += U1
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),sigma))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn_dn(site,nu,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn_dn(site,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
         }
     }
     return -c7*sevenlinkCont;
 };
 
 
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_6(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_6(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
             int sigma = 6 - mu - nu - rho;
 
-            if constexpr (term == 0) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+            sevenlinkCont += (
+                  ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
 
-            if constexpr (term == 1) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
 
-
-            if constexpr (term == 2) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
+
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
+                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
+                  )
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                   *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
 
-            if constexpr (term == 3) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                  *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-
-            if constexpr (term == 4) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                +(
+                  ( gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
 
-            if constexpr (term == 5) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+                   +gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
                   *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-            if constexpr (term == 6) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
+
+                 +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
 
-            if constexpr (term == 7) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
+                   +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
                    *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
                    *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
                   *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-            // sevenlinkCont += (
-            //       ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))  //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))  //done
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho)) 
-            //       *finAccessor.getLink(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-
-            //      +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))//done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu)) //done
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-            //       *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(site,rho))
-
-            //     +(
-            //       ( gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))    //done
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-
-            //        +gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu)) //done
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-            //       *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-
-            //      +( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-
-            //        +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-            //        *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-            //        *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-            //       *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-            //     )
-            //     *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
+                )
+                *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
                 }
     }
     return -c7*sevenlinkCont;
 };
 
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_6_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
+
+template<class floatT, size_t HaloDepth, CompressionType comp>
+__host__ __device__ GSU3<floatT> sevenLinkContribution_7(gaugeAccessor<floatT,comp> gAcc, gaugeAccessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
     typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-
-    if constexpr (term == 0) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu)); 
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *U1
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 1) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,nu),rho))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_up(site,rho),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-
-    if constexpr (term == 2) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                  *U1
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                  *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 3) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,nu),rho))
-                  *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,rho,nu),nu))
-                  *gAcc.getLinkDagger(GInd::getSiteMu(site,rho));
-            }
-        }
-    }
-
-    if constexpr (term == 4) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,sigma),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),sigma))
-                   *U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,nu,rho),rho))
-                  *finAccessor.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-    
-    if constexpr (term == 6) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,nu),nu))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),sigma))
-                    *U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-
-    if constexpr (term == 7) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu));     
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,sigma),sigma))
-                   *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),nu))
-                   *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,sigma),sigma))
-                   *U1
-                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),rho))
-                  *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn_dn(site,nu,rho),nu))
-                  *gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site,rho),rho));
-            }
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_7(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
+    GSU3<floatT> sevenlinkCont = gsu3_zero<floatT>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h)%4;
         for (int rho_h = 0; rho_h < 2; rho_h++) {
             int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
             int sigma = 6 - mu - nu - rho;
-            if constexpr (term == 0) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));
-            }
 
-            if constexpr (term == 1) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));
-            }
+            sevenlinkCont += (
+                  ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
+                    *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
+                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
+                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
 
-            if constexpr (term == 2) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));
-            }
+                      +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
+                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
+                      *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
+                    )
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
 
-            if constexpr (term == 3) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));
-            }
+                 +(gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
+                   *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
 
-            if constexpr (term == 4) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
+                    )
+                  )
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
+                )
+                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
+                *finAccessor.getLink(GInd::getSiteMu(site,nu))
+
+                +(
+                  (gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
+                   *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu))
                      *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
 
-            if constexpr (term == 5) {
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
+                     +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
+                    )
+                  )
+                  *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
+
+                 +(gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
+                   *( gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
+                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
+
+                     +gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
+                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
+                    )
+                  )
+                  *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
+                )
                 *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
                 *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 6) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-
-            if constexpr (term == 7) {
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
-            }
-            // sevenlinkCont += (
-            //       ( gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-            //         *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-            //           *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu)) //done
-            //           *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-
-            //           +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma)) //done
-            //           *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
-            //           *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-            //         )
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-
-            //      +(gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-            //        *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma)) //done
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu)) //done
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-            //         )
-            //       )
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-            //     *finAccessor.getLink(GInd::getSiteMu(site,nu))
-
-            //     +(
-            //       (gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-            //        *( gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu)) //done 
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-
-            //          +gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu)) //done
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-            //         )
-            //       )
-            //       *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-
-            //      +(gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-            //        *( gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
-            //          *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-
-            //          +gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
-            //          *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-            //         )
-            //       )
-            //       *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-            //     )
-            //     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-            //     *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));
               }
     }
     return -c7*sevenlinkCont;
 };
-
-template<class floatT, size_t HaloDepth, CompressionType comp, size_t term>
-__host__ __device__ SU3<floatT> sevenLinkContribution_7_alt(SU3Accessor<floatT,comp> gAcc, SU3Accessor<floatT> finAccessor, gSite site, int mu, floatT c7) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    SU3<floatT> sevenlinkCont = su3_zero<floatT>();
-    
-    if constexpr (term == 0) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up(site,mu,rho,sigma),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up(site,mu,nu,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 1) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,nu,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up(site,mu,nu),rho))
-                *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 2) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,sigma,rho),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 3) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site,nu),mu))
-                *finAccessor.getLink(GInd::getSiteMu(site,nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,nu,rho,sigma),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,nu,rho),rho))
-                *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 4) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),sigma))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,sigma,nu,rho),nu))
-                     *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),sigma))
-                     *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                     *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 5) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,rho),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_dn_dn(site,mu,nu,rho),rho))
-                *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 6) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,sigma),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),nu))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up_dn_dn(site,mu,rho,sigma,nu),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *U1;
-            }
-        }
-    }
-
-    if constexpr (term == 7) {
-    
-        for (int nu_h = 1; nu_h < 4; nu_h++) {
-            int nu = (mu + nu_h)%4; 
-
-            SU3<floatT> U1 = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),mu))
-                *finAccessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site,nu),nu));    
-            
-            for (int rho_h = 0; rho_h < 2; rho_h++) {
-                int rho = (((mu+nu)%2)*((40*(mu+nu) - 6*mu*nu - 18*(mu*mu+nu*nu) + 2*(mu*mu*mu+nu*nu*nu))/12 +rho_h) + ((mu+nu+1)%2)*(mu+1+2*rho_h))%4;
-                int sigma = 6 - mu - nu - rho;
-                   
-              sevenlinkCont += gAcc.getLink(GInd::getSiteMu(GInd::site_up(site,mu),rho))
-                *gAcc.getLink(GInd::getSiteMu(GInd::site_up_up(site,mu,rho),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_up_dn(site,mu,rho,sigma,nu),nu))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_up_dn(site,mu,rho,nu),sigma))
-                *gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site,mu,nu),rho))
-                *U1;
-            }
-        }
-    }
-    return -c7*sevenlinkCont;
-};
-
 
 
