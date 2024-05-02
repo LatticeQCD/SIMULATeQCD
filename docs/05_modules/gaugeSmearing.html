@@ -86,7 +86,7 @@
              
   <section class="tex2jax_ignore mathjax_ignore" id="hisq-smearing">
 <h1>HISQ smearing<a class="headerlink" href="#hisq-smearing" title="Permalink to this headline"></a></h1>
-<p>Much of the RHMC in SIMULATeQCD follows the MILC code. For a thorough discussion of this
+<p>Much of the rhmc in SIMULATeQCD follows the MILC code. For a thorough discussion of this
 implementation, look <a class="reference external" href="https://journals.aps.org/prd/abstract/10.1103/PhysRevD.82.074501">here</a>.
 Here we just list a few important details.</p>
 <section id="general-idea-behind-smearing">
@@ -136,35 +136,35 @@ The second level uses</p>
 Naik and Lepage terms.</p>
 <p>Let’s see how this is carried out in the code. Let the original gaugefields be <span class="math notranslate nohighlight">\(U\)</span>.
 For the first level, we smear <span class="math notranslate nohighlight">\(U\)</span> links with various 3-link, 5-link and 7-link paths. MILC calls it <span class="math notranslate nohighlight">\(V\)</span></p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do this use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">V</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel1params</span><span class="p">())</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">V</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel1params</span><span class="p">())</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Next we project the level 1 smeared links back to U(3). MILC calls it <span class="math notranslate nohighlight">\(W\)</span></p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">W</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">W</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do this use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">.</span><span class="n">u3Project</span><span class="p">()</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">.</span><span class="n">u3Project</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 <p>Finally we smear again the <span class="math notranslate nohighlight">\(W\)</span> links with 3-link, 5-link and 7-link paths. MILC calls it <span class="math notranslate nohighlight">\(X\)</span></p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do this use</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel2params</span><span class="p">())</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel2params</span><span class="p">())</span><span class="w"></span>
 </pre></div>
 </div>
 <p>To do the tadpole improvement we use the Naik term in the Dirac operator. For HISQ dslash,
 the Naik links are constructed from the unitarized links, i.e. using the <span class="math notranslate nohighlight">\(W\)</span> links.
 MILC calls it <span class="math notranslate nohighlight">\(N\)</span>.
 To use this we have to call</p>
-<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
-<span class="w"> </span><span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span><span class="w"></span>
+<span class="w"> </span><span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The smearing classes are implemented in</p>
@@ -172,7 +172,7 @@ To use this we have to call</p>
 <div><p>hisqSmearing.cpp.
 How to construct the smeared links are defined in</p>
 </div></blockquote>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>main_HisqSmearing.cpp.
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>main_hisqSmearing.cpp.
 </pre></div>
 </div>
 </section>

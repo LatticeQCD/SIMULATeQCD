@@ -4,7 +4,7 @@
  * L. Mazur
  *
  */
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 
 // This test checks whether Gpu inter-process communication works.
 // Since our code is based on MPI processes, we have to communicate our gpu memory pointer first.

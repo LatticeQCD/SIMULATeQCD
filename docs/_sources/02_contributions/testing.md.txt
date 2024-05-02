@@ -51,7 +51,7 @@ also add an entry to `runTestsSingleGPU.bash`.
 where `N` is the number of GPUs required, to `TEST_run.bash`.
 3. Otherwise if you would like to run your test with various GPU layouts, make sure it
 has its own `.param` file in the `parameter/tests` with `Nodes` as an adjustable parameter and
-4. add the entry `testRoutines[_BulkIndexerTest]="GPUkey"` to `runTests`.
+4. add the entry `testRoutines[_bulkIndexerTest]="GPUkey"` to `runTests`.
 
 For the last step, the `GPUkey` tells the `runTests` scrips which GPU layouts they should test.
 The `GPUkey` consists for a number of GPUs concatenated with one of two layout symbols:

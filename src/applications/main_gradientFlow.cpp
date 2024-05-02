@@ -10,16 +10,16 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/gradientFlow/gradientFlow.h"
-#include "../modules/observables/Topology.h"
-#include "../modules/observables/Weinberg.h"
-#include "../modules/observables/Blocking.h"
-#include "../modules/observables/EnergyMomentumTensor.h"
-#include "../modules/observables/ColorElectricCorr.h"
-#include "../modules/observables/ColorMagneticCorr.h"
+#include "../modules/observables/topology.h"
+#include "../modules/observables/weinberg.h"
+#include "../modules/observables/blocking.h"
+#include "../modules/observables/energyMomentumTensor.h"
+#include "../modules/observables/colorElectricCorr.h"
+#include "../modules/observables/colorMagneticCorr.h"
 #include "../modules/gaugeFixing/gfix.h"
-#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
+#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
 
 
 #define USE_GPU true
@@ -470,10 +470,10 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     floatT plaq, clov, topChar, wb;
     std::vector<floatT> resultClSl, resultThSl, resultThSl_imp, resultThSl_imp_imp, resultEMTETimeSlices;
     std::vector<Matrix4x4Sym<floatT>> resultEMTUTimeSlices;
-    std::vector<GCOMPLEX(floatT)> resultColElecCorSl_naive, resultColMagnCorSl_naive, resultColElecCorSl_clover,
+    std::vector<COMPLEX(floatT)> resultColElecCorSl_naive, resultColMagnCorSl_naive, resultColElecCorSl_clover,
                                   resultColMagnCorSl_clover;
 
-    GCOMPLEX(floatT) resultPoly;
+    COMPLEX(floatT) resultPoly;
 
     std::vector<floatT> vec_plca, vec_plc1, vec_plc8;
     std::vector<int>    vec_factor, vec_weight;
@@ -498,7 +498,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     floatT TopologicalCharge;
 
     floatT norm, suscL, suscT;
-    GCOMPLEX(floatT) suscA;
+    COMPLEX(floatT) suscA;
 
     //! -------------------------------flow the field until max flow time-----------------------------------------------
 
@@ -837,8 +837,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         if (lp.RenormPolyakovSusc()) {
 
             // All susceptibility objects, instantiated here to save memory when RenormPolyakovSusc==False.
-            CorrField<false,GSU3<floatT>> thermalWilsonLine(gauge.getComm(), corrTools.vol3);
-            Correlator<false,GCOMPLEX(floatT)> ABareSusc(gauge.getComm(), corrTools.USr2max);
+            CorrField<false,SU3<floatT>> thermalWilsonLine(gauge.getComm(), corrTools.vol3);
+            Correlator<false,COMPLEX(floatT)> ABareSusc(gauge.getComm(), corrTools.USr2max);
             Correlator<false,floatT> LBareSusc(gauge.getComm(), corrTools.USr2max);
             Correlator<false,floatT> TBareSusc(gauge.getComm(), corrTools.USr2max);
             Correlator<false,floatT> CPUnorm(gauge.getComm(), corrTools.USr2max);
@@ -854,9 +854,9 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
             // Calculate susceptibilities.
             rootLogger.info("Remove contact term from chi_A, chi_L, chi_T...");
-            corrTools.template correlateAt<GSU3<floatT>,GCOMPLEX(floatT),trAxtrBt<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, ABareSusc, false, lp.normFileDir());
-            corrTools.template correlateAt<GSU3<floatT>,floatT,trReAxtrReB<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, LBareSusc, true, lp.normFileDir());
-            corrTools.template correlateAt<GSU3<floatT>,floatT,trImAxtrImB<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, TBareSusc, true, lp.normFileDir());
+            corrTools.template correlateAt<SU3<floatT>,COMPLEX(floatT),trAxtrBt<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, ABareSusc, false, lp.normFileDir());
+            corrTools.template correlateAt<SU3<floatT>,floatT,trReAxtrReB<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, LBareSusc, true, lp.normFileDir());
+            corrTools.template correlateAt<SU3<floatT>,floatT,trImAxtrImB<floatT>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, TBareSusc, true, lp.normFileDir());
 
             // Output.
             LineFormatter newLinePolySuscA = fileRenormPolySuscA.tag("");
@@ -868,7 +868,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             for(int ir2=0; ir2<corrTools.USr2max+1; ir2++) {
                 _CPUnorm.getValue<floatT>(ir2,norm);
                 if(norm > 0) {
-                    _ABareSusc.getValue<GCOMPLEX(floatT)>(ir2,suscA);
+                    _ABareSusc.getValue<COMPLEX(floatT)>(ir2,suscA);
                     _LBareSusc.getValue<floatT>(ir2,suscL);
                     _TBareSusc.getValue<floatT>(ir2,suscT);
                     newLinePolySuscA << real(suscA);

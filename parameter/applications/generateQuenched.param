@@ -1,0 +1,40 @@
+#
+# generateQuenched.param
+#
+# parameter file for generateQuenched
+#
+#                   Lattice: Nx Ny Nz Nt
+#                      beta: Bare coupling constant 6/g^2
+#                     Nodes: Number of nodes per direction
+#                    format: Format of the configuration binary.
+#                endianness: For output storage.
+#           nsweeps_ORperHB: How many OR sweeps should come after an HB sweep?
+#          nsweeps_HBwithOR: How many HB+OR sets between configurations?
+#   nsweeps_thermal_HB_only: When thermalizing we start with HB only. How many? 
+#  nsweeps_thermal_HBwithOR: After doing HB only, how many HB+OR sets to thermalize?
+#                     start: Set to one, fixed_random, or all_random
+#                output_dir: Path to directory where confs should be output.
+#                    nconfs: How many configurations to save?
+#                    stream: stream/series label
+#
+Lattice          = 64 64 64 16
+Nodes            = 1 1 1 1
+beta             = 6.87361
+format           = nersc
+endianness       = auto
+stream           = a
+output_dir       = .
+nconfs           = 1000
+nsweeps_ORperHB  = 4
+nsweeps_HBwithOR = 500
+
+start = one
+nsweeps_thermal_HB_only  = 500
+nsweeps_thermal_HBwithOR = 4000
+
+# The above example is set up assuming you will generate new
+# configurations from scratch. If you want to "pick up where
+# you left off", you will need to set the following parameters
+#   conf_nr   = 500
+#   prev_conf = conf_s064t16_b0687361_a_U000500
+#   prev_rand = rand_s064t16_b0687361_a_U000500

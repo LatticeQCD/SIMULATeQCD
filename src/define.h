@@ -99,11 +99,13 @@ inline int haloSegmentCoordToIndex(const HaloSegment halseg, const size_t direct
 }
 
 
-template<int N>
 class HSegSelector {
-public:
+    int N;
 
-    constexpr HaloType haloType() {
+public:
+    HSegSelector(int N) : N(N) {}
+
+    HaloType haloType() {
         if (N < 8) return Hyperplane;
         else if (N < 32) return Plane;
         else if (N < 64) return Stripe;
@@ -111,21 +113,21 @@ public:
 
     }
 
-    constexpr HaloSegment haloSeg() {
+    HaloSegment haloSeg() {
         if (haloType() == Hyperplane) return (HaloSegment) (N / 2);
         else if (haloType() == Plane) return (HaloSegment) (4 + (N - 8) / 4);
         else if (haloType() == Stripe) return (HaloSegment) (10 + (N - 32) / 8);
         else return (HaloSegment) XYZT; // Corner
     }
 
-    constexpr int subIndex() {
+    int subIndex() {
         if (haloType() == Hyperplane) return N % 2;
         else if (haloType() == Plane) return (N - 8) % 4;
         else if (haloType() == Stripe) return (N - 32) % 8;
         else return (N - 64); // Corner
     }
 
-    constexpr int dir() {
+    int dir() {
         if (haloType() == Hyperplane) return 0;
         else if (haloType() == Plane) return ((subIndex() + 1) % 4) / 2;
         else if (haloType() == Stripe) return (subIndex() < 4 ? subIndex() : 3 - (subIndex() % 4));
@@ -134,7 +136,7 @@ public:
 
     }
 
-    constexpr int leftRight() {
+    int leftRight() {
         if (haloType() == Hyperplane) return N % 2;
         else if (haloType() == Plane) return ((N - 8) % 4) >= 2;
         else if (haloType() == Stripe) return ((N - 32) % 8) >= 4;

@@ -7,8 +7,8 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/PolyakovLoop.h"
+#include "../simulateqcd.h"
+#include "../modules/observables/polyakovLoop.h"
 
 #define PREC double
 
@@ -26,7 +26,7 @@ struct ploopParam : LatticeParameters {
 int main(int argc, char *argv[]) {
 
     PREC norm, suscL, suscT;
-    GCOMPLEX(PREC) suscA, PLoop;
+    COMPLEX(PREC) suscA, PLoop;
 
     /// General initialization
     stdLogger.setVerbosity(INFO);
@@ -51,8 +51,8 @@ int main(int argc, char *argv[]) {
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
-    CorrField<false,GSU3<PREC>>       thermalWilsonLine(commBase, corrTools.vol3);
-    Correlator<false,GCOMPLEX(PREC)>  ABareSusc(commBase, corrTools.USr2max);
+    CorrField<false,SU3<PREC>>       thermalWilsonLine(commBase, corrTools.vol3);
+    Correlator<false,COMPLEX(PREC)>  ABareSusc(commBase, corrTools.USr2max);
     Correlator<false,PREC>            LBareSusc(commBase, corrTools.USr2max);
     Correlator<false,PREC>            TBareSusc(commBase, corrTools.USr2max);
     Correlator<false,PREC>            CPUnorm(commBase, corrTools.USr2max);
@@ -66,16 +66,16 @@ int main(int argc, char *argv[]) {
     ploopClass.PloopInArray(_thermalWilsonLine);
 
     timer.start();
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),trAxtrBt<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, ABareSusc);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),trAxtrBt<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, ABareSusc);
     /// Here we have A and B the same operator, so XYswapSymmetry == True here.
-    corrTools.correlateAt<GSU3<PREC>,PREC,trReAxtrReB<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, LBareSusc, true);
-    corrTools.correlateAt<GSU3<PREC>,PREC,trImAxtrImB<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, TBareSusc, true);
+    corrTools.correlateAt<SU3<PREC>,PREC,trReAxtrReB<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, LBareSusc, true);
+    corrTools.correlateAt<SU3<PREC>,PREC,trImAxtrImB<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUnorm, TBareSusc, true);
     timer.stop();
 
     for(int ir2=0; ir2<corrTools.USr2max+1; ir2++) {
         _CPUnorm.getValue<PREC>(ir2,norm);
         if(norm > 0) {
-            _ABareSusc.getValue<GCOMPLEX(PREC)>(ir2,suscA);
+            _ABareSusc.getValue<COMPLEX(PREC)>(ir2,suscA);
             _LBareSusc.getValue<PREC>(ir2,suscL);
             _TBareSusc.getValue<PREC>(ir2,suscT);
             rootLogger.info("r**2, A, L, T : " ,  ir2 ,  ": " ,  real(suscA) ,  ": " ,  suscL ,  ": " ,  suscT);

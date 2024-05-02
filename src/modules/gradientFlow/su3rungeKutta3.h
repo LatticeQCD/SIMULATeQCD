@@ -5,7 +5,7 @@
 #pragma once
 #include "../../define.h"
 #include "../../gauge/gaugefield.h"
-#include "../../gauge/GaugeAction.h"
+#include "../../gauge/gaugeAction.h"
 #include "../../base/IO/fileWriter.h"
 #include "../../base/IO/parameterManagement.h"
 #include <cstdint>
@@ -13,7 +13,7 @@
 #include <string>
 #include "../../base/math/floatComparison.h"
 #include "../../gauge/gaugeActionDeriv.h"
-#include "../../base/LatticeContainer.h"
+#include "../../base/latticeContainer.h"
 #include <algorithm>    // std::sort
 #include <cmath>
 #include <utility>
@@ -121,30 +121,30 @@ public:
 };
 
 
-/*W_1(gaugeAccessor<floatT>, gaugeAccessor<floatT>)
+/*W_1(SU3Accessor<floatT>, SU3Accessor<floatT>)
 Determine
 	W_1 = exp(1/4 * Z_0) * V_mu(x,t)
 */
 template<class floatT, size_t HaloDepth, bool onDevice>
 struct W_1 {
     // Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> gaugeAccessorA;
-    gaugeAccessor<floatT> gaugeAccessorB;
+    SU3Accessor<floatT> SU3AccessorA;
+    SU3Accessor<floatT> SU3AccessorB;
 
     typedef GIndexer<All, HaloDepth> GInd;
 
     W_1(Gaugefield<floatT, onDevice, HaloDepth> &gaugeA, Gaugefield<floatT, onDevice, HaloDepth> &gaugeB) :
-            gaugeAccessorA(gaugeA.getAccessor()),
-            gaugeAccessorB(gaugeB.getAccessor()) {}
+            SU3AccessorA(gaugeA.getAccessor()),
+            SU3AccessorB(gaugeB.getAccessor()) {}
 
     // This is the operator that is called inside the Kernel
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
-        // Define a temporary GSU3 matrix for the exp() calculation
-        GSU3<floatT> W1;
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
+        // Define a temporary SU3 matrix for the exp() calculation
+        SU3<floatT> W1;
 
         // Determine the W1 = exp(1/4 Z_0) * W_0
-        SU3Exp(floatT(0.25) * gaugeAccessorB.getLink(siteMu), W1);
-        W1 = W1 * gaugeAccessorA.getLink(siteMu);
+        SU3Exp(floatT(0.25) * SU3AccessorB.getLink(siteMu), W1);
+        W1 = W1 * SU3AccessorA.getLink(siteMu);
 
         // Store the W1 in Gaugefield A
         return W1;
@@ -152,7 +152,7 @@ struct W_1 {
 };
 
 
-/*Z1Z0(gaugeAccessor<floatT>, gaugeAccessor<floatT>, floatT )
+/*Z1Z0(SU3Accessor<floatT>, SU3Accessor<floatT>, floatT )
 Determine
 	 8/9 Z_1 - 17/36 Z_0
 with Z_1 = h * Z(W_1)
@@ -160,8 +160,8 @@ with Z_1 = h * Z(W_1)
 template<class floatT, size_t HaloDepth, bool onDevice, typename Force>
 struct Z1Z0 {
     // Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> gaugeAccessorA;
-    gaugeAccessor<floatT> gaugeAccessorB;
+    SU3Accessor<floatT> SU3AccessorA;
+    SU3Accessor<floatT> SU3AccessorB;
     Force Z_i;
     floatT _stepSize;
 
@@ -169,61 +169,61 @@ struct Z1Z0 {
 
     Z1Z0(Gaugefield<floatT, onDevice, HaloDepth> &gaugeA, Gaugefield<floatT, onDevice, HaloDepth> &gaugeB,
          Force Zi, floatT stepSize) :
-            gaugeAccessorA(gaugeA.getAccessor()),
-            gaugeAccessorB(gaugeB.getAccessor()),
+            SU3AccessorA(gaugeA.getAccessor()),
+            SU3AccessorB(gaugeB.getAccessor()),
             Z_i(Zi),
             _stepSize(stepSize) {}
 
     // This is the operator that is called inside the Kernel
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
 
-        // Define a temporary GSU3 matrix for the Z_1 calculation
-        GSU3<floatT> tmpGSU3Z1;
+        // Define a temporary SU3 matrix for the Z_1 calculation
+        SU3<floatT> tmpSU3Z1;
 
-        // Define a temporary GSU3 matrix for the subtraction
-        GSU3<floatT> tmpGSU3s;
+        // Define a temporary SU3 matrix for the subtraction
+        SU3<floatT> tmpSU3s;
 
         // Determine the Z_1 = h * Z( W_1 )
-        tmpGSU3Z1 = Z_i(siteMu);
+        tmpSU3Z1 = Z_i(siteMu);
 
         // Determine 8/9 Z_1 - 17/36 Z_0
-        tmpGSU3s = floatT(8./9.) * tmpGSU3Z1 - floatT(17./36.) * gaugeAccessorB.getLink(siteMu);
+        tmpSU3s = floatT(8./9.) * tmpSU3Z1 - floatT(17./36.) * SU3AccessorB.getLink(siteMu);
 
-        return tmpGSU3s;
+        return tmpSU3s;
     }
 };
 
 
-/*W_2(gaugeAccessor<floatT>, gaugeAccessor<floatT>)
+/*W_2(SU3Accessor<floatT>, SU3Accessor<floatT>)
 Determine
 	W_2 = exp(8/9 Z_1 - 17/36 Z_0)
 */
 template<class floatT, size_t HaloDepth, bool onDevice>
 struct W_2 {
     // Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> gaugeAccessorA;
-    gaugeAccessor<floatT> gaugeAccessorB;
+    SU3Accessor<floatT> SU3AccessorA;
+    SU3Accessor<floatT> SU3AccessorB;
 
     typedef GIndexer<All, HaloDepth> GInd;
 
     W_2(Gaugefield<floatT, onDevice, HaloDepth> &gaugeA, Gaugefield<floatT, onDevice, HaloDepth> &gaugeB) :
-            gaugeAccessorA(gaugeA.getAccessor()),
-            gaugeAccessorB(gaugeB.getAccessor()) {}
+            SU3AccessorA(gaugeA.getAccessor()),
+            SU3AccessorB(gaugeB.getAccessor()) {}
 
     // This is the operator that is called inside the Kernel
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
-        // Define a temporary GSU3 matrix for the exp() calculation
-        GSU3<floatT> W2;
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
+        // Define a temporary SU3 matrix for the exp() calculation
+        SU3<floatT> W2;
 
         // Determine the W_2 = exp(8/9 Z_1 - 17/36 Z_0) * W_1
-        SU3Exp(gaugeAccessorB.getLink(siteMu), W2);
-        W2 = W2 * gaugeAccessorA.getLink(siteMu);
+        SU3Exp(SU3AccessorB.getLink(siteMu), W2);
+        W2 = W2 * SU3AccessorA.getLink(siteMu);
 
         return W2;
     }
 };
 
-/*Vmu( gaugeAccessor<floatT>, gaugeAccessor<floatT>, floatT )
+/*Vmu( SU3Accessor<floatT>, SU3Accessor<floatT>, floatT )
 Determine
 	V_mu(x,t) = exp(3/4 Z_2 - 8/9 Z_1 + 17/36 Z_0) * W_2
 with Z_2 = h Z(W_2)
@@ -231,8 +231,8 @@ with Z_2 = h Z(W_2)
 template<class floatT, size_t HaloDepth, bool onDevice, typename Force>
 struct Vmu {
     // Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> gaugeAccessorA;
-    gaugeAccessor<floatT> gaugeAccessorB;
+    SU3Accessor<floatT> SU3AccessorA;
+    SU3Accessor<floatT> SU3AccessorB;
     Force Z_i;
     floatT _stepSize;
 
@@ -240,28 +240,28 @@ struct Vmu {
 
     Vmu(Gaugefield<floatT, onDevice, HaloDepth> &gaugeA, Gaugefield<floatT, onDevice, HaloDepth> &gaugeB,
         Force Zi, floatT stepSize) :
-            gaugeAccessorA(gaugeA.getAccessor()),
-            gaugeAccessorB(gaugeB.getAccessor()),
+            SU3AccessorA(gaugeA.getAccessor()),
+            SU3AccessorB(gaugeB.getAccessor()),
             Z_i(Zi),
             _stepSize(stepSize) {}
 
     // This is the operator that is called inside the Kernel
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
-        // Define a temporary GSU3 matrix for the Z_1 calculation
-        GSU3<floatT> tmpGSU3Z2;
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
+        // Define a temporary SU3 matrix for the Z_1 calculation
+        SU3<floatT> tmpSU3Z2;
 
-        // Define a temporary GSU3 matrix for the sum
-        GSU3<floatT> tmpGSU3s;
+        // Define a temporary SU3 matrix for the sum
+        SU3<floatT> tmpSU3s;
 
         // Determine the Z_2
-        tmpGSU3Z2 = Z_i(siteMu);
+        tmpSU3Z2 = Z_i(siteMu);
 
         // Determine 3/2 * Z_2 - (8/9 * Z_0 - 17/36 * Z_1) * W_2
-        SU3Exp(floatT(3./4.) * tmpGSU3Z2 - gaugeAccessorB.getLink(siteMu), tmpGSU3s);
-        tmpGSU3s = tmpGSU3s * gaugeAccessorA.getLink(siteMu);
+        SU3Exp(floatT(3./4.) * tmpSU3Z2 - SU3AccessorB.getLink(siteMu), tmpSU3s);
+        tmpSU3s = tmpSU3s * SU3AccessorA.getLink(siteMu);
 
         // Store the substrection in Gaugefield B
-        return tmpGSU3s;
+        return tmpSU3s;
     }
 };
 
