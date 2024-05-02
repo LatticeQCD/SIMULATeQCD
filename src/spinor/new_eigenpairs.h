@@ -24,12 +24,15 @@ private:
 public:
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
+    std::vector<double> lambda_vect;
+
+
     explicit new_eigenpairs(CommunicationBase &comm) :
             siteComm<floatT, onDevice, gVect3arrayAcc<floatT>, gVect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _spinor_lattice(comm){}
 
-    void readconf_evnersc(int nvec,const std::string &fname);
-    void readconf_evnersc_host(gVect3arrayAcc<floatT> gVect3arrayAcc, int nvec, const std::string &fname);
+    void readconf_evnersc(int nvec, const std::string &fname);
+    void readconf_evnersc_host(gVect3arrayAcc<floatT> gVect3arrayAcc, int nvec, double &lambda, const std::string &fname);
     
     virtual gVect3arrayAcc<floatT> getAccessor() const;
 };

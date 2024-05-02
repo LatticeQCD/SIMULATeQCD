@@ -59,6 +59,10 @@ int main(int argc, char **argv) {
     eigenpairs.readconf_evnersc(nvec, param.eigen_file());
     eigenpairs.updateAll();
 
+    for (int n = 0; n < nvec; n++) {
+      rootLogger.info("lambda = ", eigenpairs.lambda_vect[n]);
+    }
+
     // if (param.valence_masses.numberValues() == 0) {
     //     rootLogger.error("No valence masses specified, a);
     //     return 1;

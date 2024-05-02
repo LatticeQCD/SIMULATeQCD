@@ -7,21 +7,22 @@
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
+    lambda_vect.reserve(nvec);
+    double lambda_temp;
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
         for (int n = 0; n < nvec; n++) {
             spinors.emplace_back(this->getComm());
-            readconf_evnersc_host(lattice_host.getAccessor(), n, fname);
+            readconf_evnersc_host(lattice_host.getAccessor(), n, lambda_temp, fname);
             spinors[n] = lattice_host;
+            lambda_vect[n] = lambda_temp;
         }
-    } else {
-        readconf_evnersc_host(getAccessor(), nvec, fname);
-    }
+    } 
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT> spinorAccessor, int idxvec, const std::string &fname)
+void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
 {
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
@@ -35,11 +36,9 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
       in.open(fname.c_str());
     }
     in.ignore(displacement*idxvec);
-    double lambda;
+
     if (!evnersc.read_header(in, lambda)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
-    } else {
-        rootLogger.info("lambda = ", lambda);
     }
 
     LatticeDimensions global = GInd::getLatData().globalLattice();
