@@ -2,6 +2,7 @@
 #include "../base/math/operators.h"
 #include "../base/indexer/haloIndexer.h"
 #include "../base/runFunctors_sycl.h"
+#include "../base/memoryManagement.h"
 
 #define RELEVANT_SIZE 10
 
@@ -369,7 +370,7 @@ int main(){
     // compare_relative(ref, res, 1e-8, 1e-8, "Combined operators vs one operator test");
 
     // std::cout << res << std::endl<<std::endl;
-    sycl::queue q(sycl::gpu_selector_v);
+    sycl::queue q;//(sycl::gpu_selector_v);
     q.wait();
     auto info = q.get_device().get_info<sycl::info::device::name>();
     std::cout << "Chosen Device: " << info << std::endl;

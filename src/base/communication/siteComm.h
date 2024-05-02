@@ -23,9 +23,13 @@
 #include <memory>
 #include "../stopWatch.h"
 #include <unordered_set>
+#ifndef USE_SYCL
 #include "../runFunctors.h"
 #include "deviceEvent.h"
 #include "deviceStream.h"
+#else
+#include "../runFunctors_sycl.h"
+#endif
 #include "../wrapper/marker.h"
 
 
@@ -512,8 +516,10 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                         length, 1, 1, segmentInfo.getSendStream());
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    #ifndef USE_SYCL
                     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
                     p2pCopyEvent.start.record(segmentInfo.getSendStream());
+                    #endif
                 }
 
                 if ( (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) ||
@@ -525,8 +531,10 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 _commBase.updateSegment(hseg, dir, leftRight, HaloInfo);
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    #ifndef USE_SYCL
                     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
                     p2pCopyEvent.stop.record(segmentInfo.getSendStream());
+                    #endif
                 }
         }
     }
@@ -594,8 +602,10 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 // int streamNo = 1;
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    #ifndef USE_SYCL
                     deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
                     p2pCopyEvent.streamWaitForMe(segmentInfo.getReceiveStream());
+                    #endif
                 }
 
                 if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {

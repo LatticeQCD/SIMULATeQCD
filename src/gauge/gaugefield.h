@@ -92,10 +92,10 @@ public:
 
     template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullAllMu(Functor op);
-
+    #ifndef USE_SYCL
     template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     deviceStream<onDevice> iterateOverBulkAllMu(Functor op, bool useStream = false);
-
+    #endif
     template<unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
     void iterateOverFullLoopMu(Functor op);
 
@@ -152,7 +152,7 @@ void Gaugefield<floatT, onDevice, HaloDepth,comp>::iterateOverFullAllMu(Functor 
     WriteAtReadMu writeAtReadMu;
     this->template iterateFunctor<BlockSize>(op, calcGSiteAllMuFull, writeAtReadMu, GInd::getLatData().vol4Full, 4);
 }
-
+#ifndef USE_SYCL
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 template<unsigned BlockSize, typename Functor>
 deviceStream<onDevice> Gaugefield<floatT, onDevice, HaloDepth, comp>::iterateOverBulkAllMu(Functor op, bool useStream) {
@@ -162,7 +162,7 @@ deviceStream<onDevice> Gaugefield<floatT, onDevice, HaloDepth, comp>::iterateOve
     this->template iterateFunctor<BlockSize>(op, calcGSiteAllMu, writeAtReadMu, GInd::getLatData().vol4, 4, 1, stream._stream);
     return stream;
 }
-
+#endif
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 template<unsigned BlockSize, typename Functor>
 void Gaugefield<floatT, onDevice, HaloDepth,comp>::iterateOverFullLoopMu(Functor op) {

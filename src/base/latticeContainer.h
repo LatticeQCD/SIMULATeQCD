@@ -19,7 +19,11 @@
 #include "communication/communicationBase.h"
 #include "indexer/bulkIndexer.h"
 #include "memoryManagement.h"
+#ifndef USE_SYCL
 #include "../base/runFunctors.h"
+#else
+#include "../base/runFunctors_sycl.h"
+#endif
 #include "math/operators.h"
 #include "wrapper/marker.h"
 
