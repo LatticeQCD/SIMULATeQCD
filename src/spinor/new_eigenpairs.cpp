@@ -22,7 +22,7 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(gVect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
+void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
 {
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
@@ -56,7 +56,7 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
             this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
             evnersc.process_read_data();
         }
-        gVect3<floatT> ret = evnersc.template get<floatT>();
+        Vect3<floatT> ret = evnersc.template get<floatT>();
         gSite site = GInd::getSite(x, y, z, t);
         spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     }

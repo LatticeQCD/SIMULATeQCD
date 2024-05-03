@@ -260,10 +260,10 @@ set(SOURCE_FILES_RHMC
 set(SOURCE_FILES_TAYLORMEASUREMENT
     src/modules/dslash/dslash.cpp
     src/modules/inverter/inverter.cpp
-    src/modules/HISQ/hisqSmearing.cpp
+    src/modules/hisq/hisqSmearing.cpp
     src/spinor/spinorfield.cpp
     src/spinor/new_eigenpairs.cpp
-    src/modules/observables/DslashDerivative.cpp)
+    src/modules/observables/dslashDerivative.cpp)
 set(ALL_NSTACK
     NSTACKS_1=1
     NSTACKS_2=1
@@ -957,8 +957,8 @@ set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_TaylorMeasurement.cpp)
-add_SIMULATeQCD_executable(taylorMeasurement src/applications/main_TaylorMeasurement.cpp ${SOURCE_FILES_TAYLORMEASUREMENT})
+set_SIMULATeQCD_gpu_backend(src/applications/main_taylorMeasurement.cpp)
+add_SIMULATeQCD_executable(taylorMeasurement src/applications/main_taylorMeasurement.cpp ${SOURCE_FILES_TAYLORMEASUREMENT})
 set_SIMULATeQCD_property(taylorMeasurement PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(taylorMeasurement PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_NSTACK} NSTACKS_32=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications taylorMeasurement)

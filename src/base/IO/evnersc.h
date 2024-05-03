@@ -78,13 +78,13 @@ private:
     std::vector<char> buf;
 
     template<class floatT>
-    gVect3<floatT> from_buf(floatT *buf) const {
+    Vect3<floatT> from_buf(floatT *buf) const {
         int i = 0;
-        gVect3<floatT> U;
+        Vect3<floatT> U;
         for (int k = 0; k < 3; k++) {
             floatT re = buf[i++];
             floatT im = buf[i++];
-            U(k) = GCOMPLEX(floatT)(re, im);
+            U(k) = COMPLEX(floatT)(re, im);
         }
         return U;
     }
@@ -156,9 +156,9 @@ public:
         index = 0;
     }
     template<class floatT>
-    gVect3<floatT> get() {
+    Vect3<floatT> get() {
         char *start = &buf[index];
-        gVect3<floatT> ret = from_buf<floatT>((floatT *) start);
+        Vect3<floatT> ret = from_buf<floatT>((floatT *) start);
         index += su3_size;
         return ret;
     }

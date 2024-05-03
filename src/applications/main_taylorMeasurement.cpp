@@ -5,8 +5,8 @@
  * taylor coefficients of Z(mu)
  *
  */
-#include "../SIMULATeQCD.h"
-#include "../modules/observables/TaylorMeasurement.h"
+#include "../simulateqcd.h"
+#include "../modules/observables/taylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
 #include "../testing/testing.h" // for comparing stuff
 
