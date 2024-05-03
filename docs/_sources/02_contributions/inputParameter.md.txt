@@ -11,7 +11,7 @@ Some examples can be find directly in that directory. If you are interested in a
 the following set: this one uses, for example, a lattice $20^4$ and a test configuration.
 
 ```shell
-# This is pre-defined in LatticeParameters in src/base/LatticeParameters.h
+# This is pre-defined in LatticeParameters in src/base/latticeParameters.h
 
 #add the lattice dimensions
 Lattice = 20 20 20 20
@@ -58,7 +58,7 @@ Then, the path `../parameter/<YourInputFile>.param` exists and it is always corr
 
 ## RhmcParameters
 
-There is also a class with all the necessary parameters for the RHMC updates. Generate an object with
+There is also a class with all the necessary parameters for the rhmc updates. Generate an object with
 ```C++
 RhmcParameters <YourRhmcParameterObject>;
 ```
@@ -68,7 +68,7 @@ class. A typical .param file should look like this:
 #
 # rhmc.param
 #
-# Parameter file for RHMC runs with HISQ.
+# Parameter file for rhmc runs with HISQ.
 #
 #      Lattice: Nx Ny Nz Nt
 #        Nodes: Number of nodes per direction
@@ -122,7 +122,9 @@ write_every = 11
 
 ## Rational Approximation Coefficients
 
-There is a class holding the coefficients for the rational approximation, again it is a child class of `LatticeParameters`. To read in rational coefficients, just use
+There is a class holding the coefficients for the rational approximation, which we
+save in `.rat` files. Again, it is a child class of `LatticeParameters`. 
+To read in rational coefficients, just use
 ```C++
 RationalCoeff <YourRatCoeffObject>;
 <YourRatCoeffObject>.readfile(commBase, <YourRhmcParameterObject>.rat_file(), argc, argv);
@@ -205,7 +207,11 @@ Of course you should define the precision at the beginning of your `.cpp` file w
 #define PREC float
 ```
 
+## Correlator class normalizations
 
-
+The [correlator class](../05_modules/correlator.md) expects a lookup table to know
+how many space-time pairs of separation $r^2$ can be made. This is to normalize
+aribtrary all-to-all correlators. We keep a couple example `.norm` files also
+in the `parameter` folder.
 
 

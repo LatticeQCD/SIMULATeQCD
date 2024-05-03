@@ -8,7 +8,7 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 #include "../modules/gaugeFixing/gfix.h"
 
 #define PREC double
@@ -17,18 +17,18 @@
 template<class floatT,size_t HaloDepth>
 struct CalcTrU{
 
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> SU3Accessor;
 
-    CalcTrU(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){}
+    CalcTrU(Gaugefield<floatT,true,HaloDepth> &gauge) : SU3Accessor(gauge.getAccessor()){}
 
     __device__ __host__ floatT operator()(gSite site) {
 
         typedef GIndexer<All, HaloDepth> GInd;
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
         floatT result = 0.;
         for (int mu = 0; mu < 4; mu++) {
             gSiteMu siteMu = GInd::getSiteMu(site,mu);
-            result+=tr_d(gaugeAccessor.getLink(siteMu));
+            result+=tr_d(SU3Accessor.getLink(siteMu));
         }
         return result/4;
     }

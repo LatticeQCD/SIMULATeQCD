@@ -8,7 +8,7 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
+#include "../simulateqcd.h"
 
 #define PREC double
 
@@ -20,10 +20,10 @@ template<class floatT,size_t HaloDepth>
 struct CalcPlaq{
 
     //Gauge accessor to access the gauge field
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> SU3Accessor;
 
     //Constructor to initialize all necessary members.
-    CalcPlaq(Gaugefield<floatT,true,HaloDepth> &gauge) : gaugeAccessor(gauge.getAccessor()){
+    CalcPlaq(Gaugefield<floatT,true,HaloDepth> &gauge) : SU3Accessor(gauge.getAccessor()){
     }
 
     //This is the operator that is called inside the Kernel
@@ -33,14 +33,14 @@ struct CalcPlaq{
         typedef GIndexer<All, HaloDepth> GInd;
 
         /// Define a SU(3) matrix
-        GSU3<floatT> temp;
+        SU3<floatT> temp;
 
         floatT result = 0;
         /// loop through all directions which are needed by the four link variables in the plaquette
         for (int nu = 1; nu < 4; nu++) {
             for (int mu = 0; mu < nu; mu++) {
-                /// The gaugeAccessor class provides access to the link variables (SU(3)-matrices).
-                /// The gaugeAccessor.getLink(index) method takes the index of the Link (not site! which means that
+                /// The SU3Accessor class provides access to the link variables (SU(3)-matrices).
+                /// The SU3Accessor.getLink(index) method takes the index of the Link (not site! which means that
                 /// that index involves also a direction mu) and returns the SU(3) matrix at this position.
                 /// With a given gSite object and a direction mu, the link index can be computed with
                 /// GInd::index(site, nu).
@@ -48,25 +48,25 @@ struct CalcPlaq{
                 /// GInd::index(GInd::site_up(site, nu), mu))
 
                 // However, a simple path of links, like in the plaquette, may be defined
-                // Using the getLinkPath statement of the gaugeAccessor.
+                // Using the getLinkPath statement of the SU3Accessor.
                 // Here you can pass an arbitrary number of directions mu or nu. In the case of the plaquette only for
                 // Site is changed. It ends up at the last point of the path. In this case, this is the origin again
-                result += tr_d(gaugeAccessor.template getLinkPath<All, HaloDepth>(site, mu, nu, Back(mu), Back(nu)));
+                result += tr_d(SU3Accessor.template getLinkPath<All, HaloDepth>(site, mu, nu, Back(mu), Back(nu)));
 
                 // You can also use gSiteMu objects. In that case, the first step is done in direction mu of gSiteMu
                 //gSiteMu siteMu = GInd::indexGSiteMu(site, mu);
-                //result += tr_d(gaugeAccessor.template getLinkPath<All, HaloDepth>(siteMu, nu, Back(mu), Back(nu)));
+                //result += tr_d(SU3Accessor.template getLinkPath<All, HaloDepth>(siteMu, nu, Back(mu), Back(nu)));
 
                 // This is a bit faster, as tr(A*B) is less expensive, when only computing diagonal elements of A*B
-                //GSU3<floatT> tmp = gaugeAccessor.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
-                //result += tr_d(gaugeAccessor.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
+                //SU3<floatT> tmp = SU3Accessor.template getLinkPath<All, HaloDepth>(site, nu, mu, Back(nu));
+                //result += tr_d(SU3Accessor.template getLinkPath<All, HaloDepth>(site, Back(mu)), tmp);
 
                 // equivalent but way less intuitive
-                //GSU3<floatT> temp;
-                //temp = gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_up(site, mu), nu))
-                //       * dagger(gaugeAccessor.getLink(GInd::getSiteMu(GInd::site_up(site, nu), mu)))
-                //       * dagger(gaugeAccessor.getLink(GInd::getSiteMu(site, nu)));
-                //result += tr_d(gaugeAccessor.getLink(GInd::getSiteMu(site, mu)), temp);
+                //SU3<floatT> temp;
+                //temp = SU3Accessor.getLink(GInd::getSiteMu(GInd::site_up(site, mu), nu))
+                //       * dagger(SU3Accessor.getLink(GInd::getSiteMu(GInd::site_up(site, nu), mu)))
+                //       * dagger(SU3Accessor.getLink(GInd::getSiteMu(site, nu)));
+                //result += tr_d(SU3Accessor.getLink(GInd::getSiteMu(site, mu)), temp);
             }
         }
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
     StopWatch<true> timer;
 
     /// Initialize the CommunicationBase. This class handles the communitation between different Cores/GPU's.
-    CommunicationBase commBase(&argc, &argv);
+    CommunicationBase commBase(&argc, &argv, true);
     commBase.init(param.nodeDim());
 
     /// Set the HaloDepth. It should be a constant values, since this value should be passed as an non-type template
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
     /// highlight the output differently.
     rootLogger.info("Initialize Lattice");
     /// Initialize the Indexer on GPU and CPU.
-    initIndexer(HaloDepth,param,commBase,true);
+    initIndexer(HaloDepth,param,commBase);
     typedef GIndexer<All,HaloDepth> GInd;
 
 
@@ -158,11 +158,17 @@ int main(int argc, char *argv[]) {
     LatticeContainer<true,PREC> redBase(commBase);
     /// We need to tell the Reductionbase how large our Array will be
     redBase.adjustSize(GInd::getLatData().vol4);
+    grnd_state<false> h_rand;
+    grnd_state<true> d_rand;
+
+    h_rand.make_rng_state(1337);
+    d_rand = h_rand;
+
 
     /// Read a configuration from hard drive.
     rootLogger.info("Read configuration");
-    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
-
+    //    gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
+    gauge.random(d_rand.state);
     /// start timer...
     timer.start();
     /// define variable where the plaquette should be stored.

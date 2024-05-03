@@ -1,0 +1,41 @@
+# 
+# wilsonCorrelatorTest.param
+# 
+#           Lattice: Nx Ny Nz Nt
+#             Nodes: Number of nodes per direction (x direction has to be 1)
+#        gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
+#        maxgfsteps: Maximum number of OR gauge fixing steps (DEFAULT = 1000)
+#           numunit: Reunitarize after this many OR gauge fixing steps (DEFAULT = 20)
+#        gauge_file: Configuration to be read in
+#         directory: Location of file
+#        use_wilson: Use wilson smearing set to 1, otherwise 0
+#       wilson_step: step size of wilson smearing
+#      wilson_start: wilson smearing start time
+#       wilson_stop: wilson smearing end time
+#         cutRadius: Only compute correlation if distance is smaller or equal than input in r/a
+#         file_type: nersc or milc
+#         load_conf: 0 is set gauge to idendity matrix, 1 is load configuration, 2 is load configuration and gauge gix
+#       useInfoFile: If using info file for milc configuration put to 1, otherwise 0
+# 
+
+Lattice    = 32 32 32 8
+Nodes      = 1  1  1  1
+
+gauge_file = ../test_conf/l328f21b6285m0009875m0790a_019.995
+directory  = ./
+file_type  = nersc
+
+load_conf  = 2
+
+gtolerance = 1e-6
+maxgfsteps = 100000
+numunit    = 20
+
+use_wilson=0
+wilson_step=0.0001
+wilson_start=0.0
+wilson_stop=0.125
+
+cutRadius=100
+useInfoFile=0
+

@@ -158,7 +158,7 @@ public:
             rlinv += r_inv_lf_num[i]/(z + r_inv_lf_den[i]);
         }
 
-        for (int i = 0; i < r_bar_sf_num.numberValues(); ++i)
+        for (size_t i = 0; i < r_bar_sf_num.numberValues(); ++i)
         {
             rsbar += r_bar_sf_num[i]/(x + r_bar_sf_den[i]);
             rlbar += r_bar_lf_num[i]/(z + r_bar_lf_den[i]);

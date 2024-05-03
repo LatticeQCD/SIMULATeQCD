@@ -23,8 +23,8 @@
 #pragma once
 #include "../../define.h"
 #include "../communication/siteComm.h"
-#include "../LatticeContainer.h"
-#include "gsu2.h"
+#include "../latticeContainer.h"
+#include "su2.h"
 #include <array>
 #include <algorithm>
 #include <functional>
@@ -41,11 +41,11 @@ __host__ __device__ void inline initCorrToZero(floatT &corr) {
     corr = 0.;
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToZero(GSU3<floatT> &corr) {
-    corr = gsu3_zero<floatT>();
+__host__ __device__ void inline initCorrToZero(SU3<floatT> &corr) {
+    corr = su3_zero<floatT>();
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToZero(GCOMPLEX(floatT) &corr) {
+__host__ __device__ void inline initCorrToZero(COMPLEX(floatT) &corr) {
     corr = GPUcomplex<floatT>(0., 0.);
 }
 
@@ -59,11 +59,11 @@ __host__ __device__ void inline initCorrToOne(floatT &corr) {
     corr = 1.;
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToOne(GSU3<floatT> &corr) {
-    corr = gsu3_one<floatT>();
+__host__ __device__ void inline initCorrToOne(SU3<floatT> &corr) {
+    corr = su3_one<floatT>();
 }
 template<class floatT>
-__host__ __device__ void inline initCorrToOne(GCOMPLEX(floatT) &corr) {
+__host__ __device__ void inline initCorrToOne(COMPLEX(floatT) &corr) {
     corr = GPUcomplex<floatT>(1., 0.);
 }
 
@@ -268,9 +268,9 @@ public:
     inline std::string getnormfilePrefix(std::string domain){
         std::string normfilePrefix;
         if(domain=="spacetime") {
-            normfilePrefix="UA_s";
+            normfilePrefix="ua_s";
         } else if(domain=="spatial") {
-            normfilePrefix="US_s";
+            normfilePrefix="us_s";
         } else {
             throw std::runtime_error(stdLogger.fatal("Correlator domain ", domain, " not valid."));
         }
@@ -417,10 +417,10 @@ public:
     __host__ __device__ floatT inline orrelate(floatT A, floatT B) {
         return A*B;
     }
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GCOMPLEX(floatT) A, GCOMPLEX(floatT) B) {
+    __host__ __device__ COMPLEX(floatT) inline orrelate(COMPLEX(floatT) A, COMPLEX(floatT) B) {
         return A*B;
     }
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ COMPLEX(floatT) inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return tr_c(A*B);
     }
 };
@@ -428,7 +428,7 @@ public:
 template<class floatT>
 class trAxtrBt {
 public:
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ COMPLEX(floatT) inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return tr_c(A)*tr_c(dagger(B));
     }
 };
@@ -436,7 +436,7 @@ public:
 template<class floatT>
 class trReAxtrReB {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ floatT inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return tr_d(A)*tr_d(B);
     }
 };
@@ -444,7 +444,7 @@ public:
 template<class floatT>
 class trImAxtrImB {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ floatT inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return tr_i(A)*tr_i(B);
     }
 };
@@ -452,7 +452,7 @@ public:
 template<class floatT>
 class trAxBt {
 public:
-    __host__ __device__ GCOMPLEX(floatT) inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ COMPLEX(floatT) inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return tr_c(A*dagger(B));
     }
 };
@@ -460,21 +460,21 @@ public:
 template<class floatT>
 class polCorrAVG {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ floatT inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return real(tr_c(A)*tr_c(dagger(B)))/9.;
     }
 };
 template<class floatT>
 class polCorrSIN {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ floatT inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         return tr_d(A,dagger(B))/3.;
     }
 };
 template<class floatT>
 class polCorrOCT {
 public:
-    __host__ __device__ floatT inline orrelate(GSU3<floatT> A, GSU3<floatT> B) {
+    __host__ __device__ floatT inline orrelate(SU3<floatT> A, SU3<floatT> B) {
         floatT avg  = real(tr_c(A)*tr_c(dagger(B)));
         floatT sin  = tr_d(A,dagger(B));
         return (0.125*avg - 0.04166666666*sin);

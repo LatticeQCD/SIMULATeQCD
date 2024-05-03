@@ -29,7 +29,7 @@ std::map<std::string, RungeKuttaMethod > RK_map = {
         {RungeKuttaMethods[2], adaptive_stepsize_allgpu}
 };
 
-/*Z_i( GSU3<floatT> &, GSU3<floatT> &,  GSU3<floatT> &, floatT )
+/*Z_i( SU3<floatT> &, SU3<floatT> &,  SU3<floatT> &, floatT )
 inhomogenity Kernel
 The derivative of the Wilson gauge action can be reduced to
 
@@ -51,17 +51,17 @@ class gradientFlow{};
 template<class floatT, const size_t HaloDepth, bool onDevice>
 struct Z_i_wilson {
 
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> SU3Accessor;
     floatT _stepSize;
 
     Z_i_wilson(Gaugefield<floatT, onDevice, HaloDepth> &gauge, floatT stepSize) :
-            gaugeAccessor(gauge.getAccessor()),
+            SU3Accessor(gauge.getAccessor()),
             _stepSize(stepSize) {}
 
     typedef GIndexer<All, HaloDepth> GInd;
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
         return _stepSize * floatT(-1.0) *
-               gaugeActionDerivPlaq<floatT, HaloDepth>(gaugeAccessor, siteMu, siteMu.mu); // for Wilson Flow
+               gaugeActionDerivPlaq<floatT, HaloDepth>(SU3Accessor, siteMu, siteMu.mu); // for Wilson Flow
     }
 };
 
@@ -112,28 +112,28 @@ public:
 template<class floatT, const size_t HaloDepth, bool onDevice>
 struct Z_i_zeuthen {
 
-    gaugeAccessor<floatT> gaugeAccessor;
+    SU3Accessor<floatT> SU3Accessor;
     floatT _stepSize;
 
     typedef GIndexer<All, HaloDepth> GInd;
 
     Z_i_zeuthen(Gaugefield<floatT, onDevice, HaloDepth> &gauge, floatT stepSize) :
-            gaugeAccessor(gauge.getAccessor()),
+            SU3Accessor(gauge.getAccessor()),
             _stepSize(stepSize) {}
 
-    __device__ __host__ inline GSU3<floatT> operator()(gSiteMu siteMu) {
+    __device__ __host__ inline SU3<floatT> operator()(gSiteMu siteMu) {
 
         gSiteMu siteDn = GInd::getSiteMu(GInd::site_dn(siteMu, siteMu.mu), siteMu.mu);
         gSiteMu siteUp = GInd::getSiteMu(GInd::site_up(siteMu, siteMu.mu), siteMu.mu);
 
-        GSU3<floatT> symForce = symanzikGaugeActionDeriv<floatT,HaloDepth>(gaugeAccessor,siteMu,siteMu.mu);
-        GSU3<floatT> symForcePlusMu = symanzikGaugeActionDeriv<floatT,HaloDepth>(gaugeAccessor,siteUp,siteMu.mu);
-        GSU3<floatT> symForceMinusMu = symanzikGaugeActionDeriv<floatT,HaloDepth>(gaugeAccessor,siteDn,siteMu.mu);
-        GSU3<floatT> Link = gaugeAccessor.getLink(siteMu);
-        GSU3<floatT> LinkD = gaugeAccessor.getLinkDagger(siteMu);
+        SU3<floatT> symForce = symanzikGaugeActionDeriv<floatT,HaloDepth>(SU3Accessor,siteMu,siteMu.mu);
+        SU3<floatT> symForcePlusMu = symanzikGaugeActionDeriv<floatT,HaloDepth>(SU3Accessor,siteUp,siteMu.mu);
+        SU3<floatT> symForceMinusMu = symanzikGaugeActionDeriv<floatT,HaloDepth>(SU3Accessor,siteDn,siteMu.mu);
+        SU3<floatT> Link = SU3Accessor.getLink(siteMu);
+        SU3<floatT> LinkD = SU3Accessor.getLinkDagger(siteMu);
 
-        GSU3<floatT> LinkMu = gaugeAccessor.getLink(siteDn);
-        GSU3<floatT> LinkDMu = gaugeAccessor.getLinkDagger(siteDn);
+        SU3<floatT> LinkMu = SU3Accessor.getLink(siteDn);
+        SU3<floatT> LinkDMu = SU3Accessor.getLinkDagger(siteDn);
 
         return floatT(-1.0) * _stepSize *(
             floatT(5./6.) * symForce + floatT(1./12.) * Link * symForcePlusMu * LinkD + floatT(1./12.) * LinkDMu * symForceMinusMu * LinkMu);

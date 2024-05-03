@@ -21,3 +21,18 @@ const std::string GpuError::getErrorMessage() {
     std::string err = err_msg + " ( " + err_name + " )";
     return err;
 }
+
+#ifdef USE_NCCL
+NcclError::NcclError(ncclResult_t err) : ncclErr(err) {
+  throw std::runtime_error(stdLogger.fatal("A NCCL error occured: ", getErrorMessage()));
+}
+
+NcclError::NcclError(const char *warn, ncclResult_t err) : ncclErr(err) {
+  throw std::runtime_error(stdLogger.fatal("A NCCL error occured: ", warn, ": ", getErrorMessage()));
+}
+
+const std::string NcclError::getErrorMessage() {
+  std::string err_name = ncclGetLastError(NULL);
+  return err_name;
+}
+#endif

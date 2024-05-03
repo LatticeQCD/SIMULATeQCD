@@ -7,8 +7,8 @@
  *
  */
 
-#include "../SIMULATeQCD.h"
-#include "../modules/gaugeFixing/PolyakovLoopCorrelator.h"
+#include "../simulateqcd.h"
+#include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
 
 #define PREC double
 #define HAVECONFIG true
@@ -34,17 +34,17 @@ void compareWithOne(Correlator<false,PREC> &CPUcorr, Correlator<false,PREC> &CPU
 
 /// TEMPLATES: <the type of the correlator>
 /// INTENT:  IN--CPUcorr, CPUnorm, testName, r2max, referenceValue; OUT--lerror
-void compareWithId3(Correlator<false,GCOMPLEX(PREC)> &CPUcorr, Correlator<false,PREC> &CPUnorm, std::string testName,
+void compareWithId3(Correlator<false,COMPLEX(PREC)> &CPUcorr, Correlator<false,PREC> &CPUnorm, std::string testName,
                     int r2max, bool &lerror)
 {
-    GCOMPLEX(PREC) corrResult;
+    COMPLEX(PREC) corrResult;
     PREC norm;
     LatticeContainerAccessor _CPUcorr(CPUcorr.getAccessor());
     LatticeContainerAccessor _CPUnorm(CPUnorm.getAccessor());
     for(int ir2=0; ir2<r2max+1; ir2++) {
         _CPUnorm.getValue<PREC>(ir2,norm);
         if(norm > 0) {
-            _CPUcorr.getValue<GCOMPLEX(PREC)>(ir2,corrResult);
+            _CPUcorr.getValue<COMPLEX(PREC)>(ir2,corrResult);
             if(!isApproximatelyEqual(real(corrResult),3.0,1e-15)) {
                 rootLogger.error(testName + " ir2, corr = " ,  ir2 ,  ", " ,  corrResult);
                 lerror=true;
@@ -87,8 +87,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     int corrInt;
     PREC corrScalar;
-    GCOMPLEX(PREC) corrComplex, corrComplexControl;
-    GSU3<PREC> corrSU3, field1, field2;
+    COMPLEX(PREC) corrComplex, corrComplexControl;
+    SU3<PREC> corrSU3, field1, field2;
 
     initCorrToZero<PREC>(corrInt);
     initCorrToZero<PREC>(corrScalar);
@@ -97,8 +97,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     if(corrInt!=0) lerror=true;
     if(corrScalar!=0.) lerror=true;
-    if(!compareGCOMPLEX(corrComplex, (GCOMPLEX(PREC))0., 1e-13)) lerror=true;
-    if(!compareGSU3(corrSU3, gsu3_zero<PREC>(), 1e-13)) lerror=true;
+    if(!compareCOMPLEX(corrComplex, (COMPLEX(PREC))0., 1e-13)) lerror=true;
+    if(!compareSU3(corrSU3, su3_zero<PREC>(), 1e-13)) lerror=true;
 
     initCorrToOne<PREC>(corrInt);
     initCorrToOne<PREC>(corrScalar);
@@ -107,8 +107,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     if(corrInt!=1) lerror=true;
     if(corrScalar!=1.) lerror=true;
-    if(!compareGCOMPLEX(corrComplex, (GCOMPLEX(PREC))1., 1e-13)) lerror=true;
-    if(!compareGSU3(corrSU3, gsu3_one<PREC>(), 1e-13)) lerror=true;
+    if(!compareCOMPLEX(corrComplex, (COMPLEX(PREC))1., 1e-13)) lerror=true;
+    if(!compareSU3(corrSU3, su3_one<PREC>(), 1e-13)) lerror=true;
 
     CorrField<false,PREC>  CPUfield1(commBase, corrTools.vol4);
 
@@ -165,25 +165,25 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     /// ------------------------------------------------------------------------------------------- id_3 x id_3 TEST
 
-    GSU3<PREC> id_3 = gsu3_one<PREC>();
+    SU3<PREC> id_3 = su3_one<PREC>();
 
-    CorrField<false,GSU3<PREC>> CPUfield3(commBase, corrTools.vol4);
-    CorrField<false,GSU3<PREC>> CPUfield4(commBase, corrTools.vol4);
-    Correlator<false,GCOMPLEX(PREC)> CPUcorrComplex1(commBase, corrTools.UAr2max);
+    CorrField<false,SU3<PREC>> CPUfield3(commBase, corrTools.vol4);
+    CorrField<false,SU3<PREC>> CPUfield4(commBase, corrTools.vol4);
+    Correlator<false,COMPLEX(PREC)> CPUcorrComplex1(commBase, corrTools.UAr2max);
     LatticeContainerAccessor _CPUcorrComplex1(CPUcorrComplex1.getAccessor());
     CPUfield3.one();
     CPUfield4.one();
 
-    CorrField<false,GSU3<PREC>> CPUSfield3(commBase, corrTools.vol3);
-    CorrField<false,GSU3<PREC>> CPUSfield4(commBase, corrTools.vol3);
-    Correlator<false,GCOMPLEX(PREC)> CPUScorrComplex(commBase, corrTools.USr2max);
+    CorrField<false,SU3<PREC>> CPUSfield3(commBase, corrTools.vol3);
+    CorrField<false,SU3<PREC>> CPUSfield4(commBase, corrTools.vol3);
+    Correlator<false,COMPLEX(PREC)> CPUScorrComplex(commBase, corrTools.USr2max);
     LatticeContainerAccessor _CPUScorrComplex(CPUScorrComplex.getAccessor());
     CPUSfield3.one();
     CPUSfield4.one();
 
     rootLogger.info("Running symmetric UA id_3 x id_3 test.");
     timer.start();
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1, true);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1, true);
     timer.stop();
     compareWithId3(CPUcorrComplex1, CPUnorm, "symmetric UA id_3 x id_3:", corrTools.UAr2max, lerror);
     rootLogger.info("Time for symmetric UA id_3 x id_3: " ,  timer);
@@ -191,7 +191,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     rootLogger.info("Running asymmetric UA id_3 x id_3 test.");
     timer.start();
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1, false);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1, false);
     timer.stop();
     compareWithId3(CPUcorrComplex1, CPUnorm, "asymmetric UA id_3 x id_3:", corrTools.UAr2max, lerror);
     rootLogger.info("Time for asymmetric UA id_3 x id_3: " ,  timer);
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     rootLogger.info("Running symmetric US id_3 x id_3 test.");
     timer.start();
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex, true);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex, true);
     timer.stop();
     compareWithId3(CPUScorrComplex, CPUSnorm, "symmetric US id_3 x id_3:", corrTools.USr2max, lerror);
     rootLogger.info("Time for symmetric US id_3 x id_3: " ,  timer);
@@ -207,7 +207,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     rootLogger.info("Running asymmetric US id_3 x id_3 test.");
     timer.start();
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex, false);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex, false);
     timer.stop();
     compareWithId3(CPUScorrComplex, CPUSnorm, "asymmetric US id_3 x id_3:", corrTools.USr2max, lerror);
     rootLogger.info("Time for asymmetric US id_3 x id_3: " ,  timer);
@@ -217,7 +217,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     if(HAVECONFIG) {
 
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplex2(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUcorrComplex2(commBase, corrTools.UAr2max);
         LatticeContainerAccessor _CPUcorrComplex2(CPUcorrComplex2.getAccessor());
 
         rootLogger.info("Running generalized UA gaugefield(mu=2) x gaugefield(mu=3) test.");
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         LatticeContainerAccessor _CPUnormControl(CPUnormControl.getAccessor());
         LatticeContainerAccessor _CPUfield3(CPUfield3.getAccessor());
         LatticeContainerAccessor _CPUfield4(CPUfield4.getAccessor());
-        gaugeAccessor<PREC> _gauge(gauge.getAccessor());
+        SU3Accessor<PREC> _gauge(gauge.getAccessor());
 
         /// Load gauge fields
         for(int m=0; m<corrTools.vol4; m++) {
@@ -236,10 +236,10 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
             _CPUfield4.setValue(m, _gauge.getLink(GInd::getSiteMu(m,3)));
         }
 
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplexControl1(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUcorrComplexControl1(commBase, corrTools.UAr2max);
         CPUcorrComplexControl1.zero();
         LatticeContainerAccessor _CPUcorrComplexControl1(CPUcorrComplexControl1.getAccessor());
-        Correlator<false,GCOMPLEX(PREC)> CPUcorrComplexControl2(commBase, corrTools.UAr2max);
+        Correlator<false,COMPLEX(PREC)> CPUcorrComplexControl2(commBase, corrTools.UAr2max);
         CPUcorrComplexControl2.zero();
         LatticeContainerAccessor _CPUcorrComplexControl2(CPUcorrComplexControl2.getAccessor());
 
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         for (int mt = 0; mt < corrTools.Nt; mt++) {
 
             m=GInd::getSite(mx,my,mz,mt).isite;
-            _CPUfield3.getValue<GSU3<PREC>>(m,field1);
+            _CPUfield3.getValue<SU3<PREC>>(m,field1);
 
             for (int nx = 0; nx < corrTools.Nx; nx++)
             for (int ny = 0; ny < corrTools.Ny; ny++)
@@ -261,7 +261,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
                 n=GInd::getSite(nx,ny,nz,nt).isite;
                 gSite site = GInd::getSite(mx,my,mz,mt);
-                _CPUfield4.getValue<GSU3<PREC>>(n,field2);
+                _CPUfield4.getValue<SU3<PREC>>(n,field2);
 
                 dx = nx-mx;
                 dy = ny-my;
@@ -302,14 +302,14 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
                 _CPUnormControl.setValue(r2,ratnorm);
 
                 /// tr A x B
-                _CPUcorrComplexControl1.getValue<GCOMPLEX(PREC)>(r2,corrComplex);
+                _CPUcorrComplexControl1.getValue<COMPLEX(PREC)>(r2,corrComplex);
                 corrComplex += tr_c(field1*field2);
-                _CPUcorrComplexControl1.setValue<GCOMPLEX(PREC)>(r2,corrComplex);
+                _CPUcorrComplexControl1.setValue<COMPLEX(PREC)>(r2,corrComplex);
 
                 /// tr A x Bt
-                _CPUcorrComplexControl2.getValue<GCOMPLEX(PREC)>(r2,corrComplex);
+                _CPUcorrComplexControl2.getValue<COMPLEX(PREC)>(r2,corrComplex);
                 corrComplex += tr_c(field1*dagger(field2));
-                _CPUcorrComplexControl2.setValue<GCOMPLEX(PREC)>(r2,corrComplex);
+                _CPUcorrComplexControl2.setValue<COMPLEX(PREC)>(r2,corrComplex);
 
             }
         }
@@ -320,27 +320,27 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
             if(ratnorm > 0.) {
 
                 /// tr A x B
-                _CPUcorrComplexControl1.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUcorrComplexControl1.getValue<COMPLEX(PREC)>(ir2,corrComplex);
                 corrComplex /= ratnorm;
-                _CPUcorrComplexControl1.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUcorrComplexControl1.setValue<COMPLEX(PREC)>(ir2,corrComplex);
 
                 /// tr A x Bt
-                _CPUcorrComplexControl2.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUcorrComplexControl2.getValue<COMPLEX(PREC)>(ir2,corrComplex);
                 corrComplex /= ratnorm;
-                _CPUcorrComplexControl2.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUcorrComplexControl2.setValue<COMPLEX(PREC)>(ir2,corrComplex);
 
             }
         }
 
         /// GPU tr A x B
         timer.start();
-        corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1);
+        corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex1);
         timer.stop();
         timer.reset();
 
         /// GPU tr A x Bt
         timer.start();
-        corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),trAxBt<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex2);
+        corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),trAxBt<PREC>>("spacetime", CPUfield3, CPUfield4, CPUnorm, CPUcorrComplex2);
         timer.stop();
 
         for(int ir2=0; ir2<corrTools.UAr2max+1; ir2++) {
@@ -350,8 +350,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
             if(ratnorm > 0.) {
 
                 /// Check tr A x B
-                _CPUcorrComplex1.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-                _CPUcorrComplexControl1.getValue<GCOMPLEX(PREC)>(ir2,corrComplexControl);
+                _CPUcorrComplex1.getValue<COMPLEX(PREC)>(ir2,corrComplex);
+                _CPUcorrComplexControl1.getValue<COMPLEX(PREC)>(ir2,corrComplexControl);
                 if(!(corrComplex==corrComplexControl)) {
                     rootLogger.error("UA tr A x B: ir2, tr(test), tr(control) = " ,  ir2 ,  ", "
                                        ,  corrComplex ,  ", " ,  corrComplexControl);
@@ -359,8 +359,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
                 }
 
                 /// Check tr A x Bt
-                _CPUcorrComplex2.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-                _CPUcorrComplexControl2.getValue<GCOMPLEX(PREC)>(ir2,corrComplexControl);
+                _CPUcorrComplex2.getValue<COMPLEX(PREC)>(ir2,corrComplex);
+                _CPUcorrComplexControl2.getValue<COMPLEX(PREC)>(ir2,corrComplexControl);
                 if(!(corrComplex==corrComplexControl)) {
                     rootLogger.error("UA tr A x Bt: ir2, tr(test), tr(control) = " ,  ir2 ,  ", "
                                        ,  corrComplex ,  ", " ,  corrComplexControl);
@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         /// Calculate the correlations on the CPU, independently of the kernel. Unlike in the kernel, the strategy
         /// of this calculation is to loop over all spacetime pairs, calculate the displacement vector (dx,dy,dz,dt)
         /// from that, and use them to determine correlations and distances.
-        Correlator<false,GCOMPLEX(PREC)> CPUScorrComplexControl(commBase, corrTools.USr2max);
+        Correlator<false,COMPLEX(PREC)> CPUScorrComplexControl(commBase, corrTools.USr2max);
         CPUScorrComplexControl.zero();
         CPUSnormControl.zero();
         LatticeContainerAccessor _CPUScorrComplexControl(CPUScorrComplexControl.getAccessor());
@@ -397,12 +397,12 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
         for (int my = 0; my < corrTools.Ny; my++)
         for (int mz = 0; mz < corrTools.Nz; mz++) {
                 m=GInd::getSiteSpatial(mx,my,mz,0).isite;
-                _CPUSfield3.getValue<GSU3<PREC>>(m,field1);
+                _CPUSfield3.getValue<SU3<PREC>>(m,field1);
                 for (int nx = 0; nx < corrTools.Nx; nx++)
                 for (int ny = 0; ny < corrTools.Ny; ny++)
                 for (int nz = 0; nz < corrTools.Nz; nz++) {
                         n=GInd::getSiteSpatial(nx,ny,nz,0).isite;
-                        _CPUSfield4.getValue<GSU3<PREC>>(n,field2);
+                        _CPUSfield4.getValue<SU3<PREC>>(n,field2);
                         dx = nx-mx;
                         dy = ny-my;
                         dz = nz-mz;
@@ -435,27 +435,27 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
                             ratnorm+=0.5;
                         }
                         _CPUSnormControl.setValue(r2,ratnorm);
-                        _CPUScorrComplexControl.getValue<GCOMPLEX(PREC)>(r2,corrComplex);
+                        _CPUScorrComplexControl.getValue<COMPLEX(PREC)>(r2,corrComplex);
                         if (m == n) {
                             corrComplex += tr_c(field1*field2);
                         } else {
                             corrComplex += tr_c(field1*field2)/2.;
                         }
-                        _CPUScorrComplexControl.setValue<GCOMPLEX(PREC)>(r2,corrComplex);
+                        _CPUScorrComplexControl.setValue<COMPLEX(PREC)>(r2,corrComplex);
                 }
         }
 
         for (int ir2=0; ir2<corrTools.USr2max+1; ir2++) {
             _CPUSnormControl.getValue<PREC>(ir2,ratnorm);
             if(ratnorm > 0.) {
-                _CPUScorrComplexControl.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUScorrComplexControl.getValue<COMPLEX(PREC)>(ir2,corrComplex);
                 corrComplex /= ratnorm;
-                _CPUScorrComplexControl.setValue<GCOMPLEX(PREC)>(ir2,corrComplex);
+                _CPUScorrComplexControl.setValue<COMPLEX(PREC)>(ir2,corrComplex);
             }
         }
 
         timer.start();
-        corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex);
+        corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),AxB<PREC>>("spatial", CPUSfield3, CPUSfield4, CPUSnorm, CPUScorrComplex);
         timer.stop();
 
         for(int ir2=0; ir2<corrTools.USr2max+1; ir2++) {
@@ -463,8 +463,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
             _CPUSnormControl.getValue<PREC>(ir2,ratnorm);
             ratnorm/=corrTools.vol3;
             if(ratnorm > 0.) {
-                _CPUScorrComplex.getValue<GCOMPLEX(PREC)>(ir2,corrComplex);
-                _CPUScorrComplexControl.getValue<GCOMPLEX(PREC)>(ir2,corrComplexControl);
+                _CPUScorrComplex.getValue<COMPLEX(PREC)>(ir2,corrComplex);
+                _CPUScorrComplexControl.getValue<COMPLEX(PREC)>(ir2,corrComplexControl);
                 if(!(corrComplex==corrComplexControl)) {
                     rootLogger.error("US gauge x gauge: ir2, tr(test), tr(control) = " ,  ir2 ,  ", "
                                        ,  corrComplex ,  ", " ,  corrComplexControl);
@@ -489,8 +489,8 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
 
     PLC.PLCtoArrays(vec_plca, vec_plc1, vec_plc8, vec_factor, vec_weight, true);
 
-    CorrField<false,GSU3<PREC>>       thermalWilsonLine(commBase, corrTools.vol3);
-    Correlator<false,GCOMPLEX(PREC)>  PLoopBareSusc(commBase, corrTools.USr2max);
+    CorrField<false,SU3<PREC>>       thermalWilsonLine(commBase, corrTools.vol3);
+    Correlator<false,COMPLEX(PREC)>  PLoopBareSusc(commBase, corrTools.USr2max);
 
     LatticeContainerAccessor _thermalWilsonLine(thermalWilsonLine.getAccessor());
     LatticeContainerAccessor _PLoopBareSusc(PLoopBareSusc.getAccessor());
@@ -498,15 +498,15 @@ int main(int argc, char *argv[]) { /// -----------------------------------------
     ploopClass.PloopInArray(_thermalWilsonLine);
 
     timer.start();
-    corrTools.correlateAt<GSU3<PREC>,GCOMPLEX(PREC),trAxtrBt<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUSnorm, PLoopBareSusc);
+    corrTools.correlateAt<SU3<PREC>,COMPLEX(PREC),trAxtrBt<PREC>>("spatial", thermalWilsonLine, thermalWilsonLine, CPUSnorm, PLoopBareSusc);
     timer.stop();
 
-    GCOMPLEX(PREC) bareSusc;
+    COMPLEX(PREC) bareSusc;
 
     rootLogger.info("r2    plca    trAtrBt:");
     for (int r2=0 ; r2<corrTools.distmax ; r2++) {
         if (vec_factor[r2]>0) {
-            _PLoopBareSusc.getValue<GCOMPLEX(PREC)>(r2,bareSusc);
+            _PLoopBareSusc.getValue<COMPLEX(PREC)>(r2,bareSusc);
             rootLogger.info(vec_plca[r2] ,  "  " ,  real(bareSusc)/9.);
         }
     }

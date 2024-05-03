@@ -1,0 +1,44 @@
+# 
+# wilsonLinesCorrelator.param
+# 
+# Example parameter file for main_wilsonLinesCorrelatorMultiGPUStacked.cpp
+# 
+#           Lattice: Nx Ny Nz Nt
+#             Nodes: Number of nodes per direction (x direction has to be 1)
+#        gtolerance: OR gauge fixing tolerance for theta (DEFAULT = 1e-6)
+#        maxgfsteps: Maximum number of OR gauge fixing steps (DEFAULT = 1000)
+#           numunit: Reunitarize after this many OR gauge fixing steps (DEFAULT = 20)
+#        gauge_file: Configuration to be read in
+#         directory: Location of file
+#        use_wilson: Use wilson smearing set to 1, otherwise 0
+#       wilson_step: step size of wilson smearing
+#      wilson_start: wilson smearing start time
+#       wilson_stop: wilson smearing end time
+#         cutRadius: Only compute correlation if distance is smaller or equal than input in r/a
+#         file_type: nersc or milc
+#         load_conf: 0 is set gauge to idendity matrix, 1 is load configuration, 2 is load configuration and gauge gix
+#       useInfoFile: If using info file for milc configuration put to 1, otherwise 0
+#           use_hyp: how many times will hyp smearing be applied
+#
+#   #define STACKS 64 in src/applications/main_wilsonloop.cpp needs to be equal to Nx at compile time
+Lattice    = 96 96 96 32
+Nodes      = 1  1  2  1
+
+gauge_file = l9632f21b8249m002022m01011a.1390
+directory  = /home/rlarsen/simulateQCD/test/
+file_type  = milc
+
+load_conf  = 2
+
+gtolerance = 1e-6
+maxgfsteps = 100000
+numunit    = 20
+
+use_wilson=0
+wilson_step=0.0001
+wilson_start=0.0
+wilson_stop=0.125
+
+cutRadius=10
+useInfoFile=0
+use_hyp = 0
