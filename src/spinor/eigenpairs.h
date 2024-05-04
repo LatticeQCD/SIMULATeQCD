@@ -9,7 +9,7 @@
 #include "spinorfield.h"
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-class new_eigenpairs : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
+class eigenpairs : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
 {
 protected:
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> _spinor_lattice;
@@ -17,7 +17,7 @@ protected:
 
 private:
 
-    new_eigenpairs(const new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &) = delete;
+    eigenpairs(const eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &) = delete;
 
 
 public:
@@ -26,18 +26,18 @@ public:
     std::vector<double> lambda_vect;
 
 
-    explicit new_eigenpairs(CommunicationBase &comm) :
+    explicit eigenpairs(CommunicationBase &comm) :
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepth>(comm),
             _spinor_lattice(comm){}
 
-    void readconf_evnersc(int nvec, const std::string &fname);
-    void readconf_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int nvec, double &lambda, const std::string &fname);
+    void read_evnersc(int nvec, const std::string &fname);
+    void read_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int nvec, double &lambda, const std::string &fname);
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-inline Vect3arrayAcc<floatT> new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
+inline Vect3arrayAcc<floatT> eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::getAccessor() const {
     return (_spinor_lattice.getAccessor());
 }
 
@@ -45,6 +45,6 @@ template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t
 struct returnEigen {
     Vect3arrayAcc<floatT> _gAcc;
 
-    explicit returnEigen(const new_eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn);
+    explicit returnEigen(const eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn);
     __host__ __device__ Vect3<floatT> operator()(gSiteStack site);
 };

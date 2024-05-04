@@ -1,4 +1,4 @@
-#include "new_eigenpairs.h"
+#include "eigenpairs.h"
 #include "../base/IO/evnersc.h"
 #include "../base/IO/nersc.h"
 #include "../base/latticeParameters.h"
@@ -6,15 +6,15 @@
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc(int nvec, const std::string &fname) {   
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc(int nvec, const std::string &fname) {   
     lambda_vect.reserve(nvec);
     double lambda_temp;
     if(onDevice) {
-        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> lattice_host(this->getComm());
+        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> vector_host(this->getComm());
         for (int n = 0; n < nvec; n++) {
             spinors.emplace_back(this->getComm());
-            readconf_evnersc_host(lattice_host.getAccessor(), n, lambda_temp, fname);
-            spinors[n] = lattice_host;
+            read_evnersc_host(vector_host.getAccessor(), n, lambda_temp, fname);
+            spinors[n] = vector_host;
             lambda_vect[n] = lambda_temp;
         }
     } 
@@ -22,7 +22,7 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readconf_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
 {
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<All,HaloDepth> GInd;
@@ -70,19 +70,19 @@ void new_eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::readco
 
 
 template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
-returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const new_eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
+returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
         _gAcc(spinorIn.getAccessor()) {
 }
 
 #define EIGEN_INIT_PLHSN(floatT,LO,HALOSPIN,STACKS)\
-template class new_eigenpairs<floatT,false,LO,HALOSPIN,STACKS>;\
+template class eigenpairs<floatT,false,LO,HALOSPIN,STACKS>;\
 template struct returnEigen<floatT,false,LO,HALOSPIN,STACKS>;\
 
 
 INIT_PLHSN(EIGEN_INIT_PLHSN)
 
 #define EIGEN_INIT_PLHSN_HALF(floatT,LO,HALOSPIN,STACKS)\
-template class new_eigenpairs<floatT,true,LO,HALOSPIN,STACKS>;\
+template class eigenpairs<floatT,true,LO,HALOSPIN,STACKS>;\
 template struct returnEigen<floatT,true,LO,HALOSPIN,STACKS>;\
 
 INIT_PLHSN_HALF(EIGEN_INIT_PLHSN_HALF)

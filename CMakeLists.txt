@@ -262,7 +262,7 @@ set(SOURCE_FILES_TAYLORMEASUREMENT
     src/modules/inverter/inverter.cpp
     src/modules/hisq/hisqSmearing.cpp
     src/spinor/spinorfield.cpp
-    src/spinor/new_eigenpairs.cpp
+    src/spinor/eigenpairs.cpp
     src/modules/observables/dslashDerivative.cpp)
 set(ALL_NSTACK
     NSTACKS_1=1

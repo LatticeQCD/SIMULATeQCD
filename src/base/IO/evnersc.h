@@ -6,7 +6,6 @@
 #pragma once
 
 #include "parameterManagement.h"
-#include "../../spinor/new_eigenpairs.h"
 #include <iostream>
 
 class evNerscHeader : virtual private ParameterList {
@@ -71,7 +70,7 @@ private:
     int float_size;
     bool switch_endian;
     uint32_t stored_checksum, computed_checksum;
-    int su3_size;
+    int local_size;
     size_t index; //position in buffer
     // static const bool sep_lines = false; // make the buffer smaller and read each xline separately
     //                                      // (slow on large lattices, but needs less memory)
@@ -109,7 +108,7 @@ public:
     evNerscFormat(CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
-        su3_size = 8 * float_size;
+        local_size = 8 * float_size;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;
@@ -122,7 +121,7 @@ public:
             return false;
         } else {
 
-            buf.resize(GInd::getLatData().vol4 * su3_size);
+            buf.resize(GInd::getLatData().vol4 * local_size);
             index = buf.size();
 
             return true;
@@ -142,7 +141,7 @@ public:
     }
 
     size_t bytes_per_site() const {
-        return su3_size;
+        return local_size;
     }
 
     bool end_of_buffer() const {
@@ -159,7 +158,7 @@ public:
     Vect3<floatT> get() {
         char *start = &buf[index];
         Vect3<floatT> ret = from_buf<floatT>((floatT *) start);
-        index += su3_size;
+        index += local_size;
         return ret;
     }
 

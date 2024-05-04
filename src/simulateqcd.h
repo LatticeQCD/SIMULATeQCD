@@ -85,5 +85,5 @@
 #include "gauge/constructs/rectConstructs.h"
 
 #include "spinor/spinorfield.h"
-#include "spinor/new_eigenpairs.h"
+#include "spinor/eigenpairs.h"
 
