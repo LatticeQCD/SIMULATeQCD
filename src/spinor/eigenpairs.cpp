@@ -69,6 +69,29 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 }
 
 
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(int nvec) {
+    for (int i = 0; i < nvec; i++) {
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
+
+        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> spinorOut(this->getComm());
+
+        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
+
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vap(spinorIn.getComm());
+
+        vr = spinorIn;
+        spinorOut = static_cast<floatT>(0.0) * vr;
+
+        SimpleArray<COMPLEX(double), NStacks> lambda(lambda_vect[i]);
+
+        spinorOut.template axpyThisB<64>(((COMPLEX(double))(-1.0))*lambda, vr);
+        
+        double norm = vr.realdotProduct(vr);
+        rootLogger.info("norm=", norm);
+    }
+}
+
 template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
 returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
         _gAcc(spinorIn.getAccessor()) {

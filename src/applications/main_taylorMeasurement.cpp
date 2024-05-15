@@ -25,9 +25,8 @@ int main(int argc, char **argv) {
 
     commBase.init(param.nodeDim());
 
-    const int HaloDepth = 2; // >= 1 for multi gpu
+    const int HaloDepth = 0; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
-    const int nvec= 304; // number of vectors to be read
     const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
     typedef float PREC;
@@ -56,12 +55,10 @@ int main(int argc, char **argv) {
     // Read the Eigenvalues and Eigenvectors
     eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
-    eigenpairs.read_evnersc(nvec, param.eigen_file());
+    eigenpairs.read_evnersc(param.num_toread_vectors(), param.eigen_file());
     eigenpairs.updateAll();
 
-    for (int n = 0; n < nvec; n++) {
-      rootLogger.info("lambda = ", eigenpairs.lambda_vect[n]);
-    }
+    eigenpairs.tester(param.num_toread_vectors());
 
     // if (param.valence_masses.numberValues() == 0) {
     //     rootLogger.error("No valence masses specified, a);

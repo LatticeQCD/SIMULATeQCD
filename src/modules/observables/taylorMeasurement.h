@@ -21,6 +21,7 @@ public:
     DynamicParameter<double> valence_masses;
 
     Parameter<int> num_random_vectors;
+    Parameter<int> num_toread_vectors;
     Parameter<int> seed;
 
     // Dslash related values
@@ -37,6 +38,7 @@ public:
         add(operator_ids, "operator_ids");
         add(valence_masses, "valence_masses");
         add(num_random_vectors, "num_random_vectors");
+        add(num_toread_vectors, "num_toread_vectors");
         addDefault(seed, "seed", 0);
         addOptional(eigen_file, "eigen_file");
         addOptional(output_file, "output_file");
