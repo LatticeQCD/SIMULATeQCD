@@ -60,12 +60,6 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
         gSite site = GInd::getSite(x, y, z, t);
         spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     }
-
-    // this->getComm().closeIOBinary();
-
-    //    if (!evnersc.checksums_match()) {
-    //       throw std::runtime_error(stdLogger.fatal("Error checksum!"));
-    //    }
 }
 
 
@@ -73,19 +67,13 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(int nvec) {
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
-
-        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> spinorOut(this->getComm());
-
-        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
-
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vap(spinorIn.getComm());
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
 
         vr = spinorIn;
-        spinorOut = static_cast<floatT>(0.0) * vr;
 
-        SimpleArray<COMPLEX(double), NStacks> lambda(lambda_vect[i]);
+        SimpleArray<double, NStacks> lambda(lambda_vect[i]);
 
-        spinorOut.template axpyThisB<64>(((COMPLEX(double))(-1.0))*lambda, vr);
+        // spinorOut.template axpyThisB<64>(((double)(-1.0))*lambda, vr);
         
         double norm = vr.realdotProduct(vr);
         rootLogger.info("norm=", norm);

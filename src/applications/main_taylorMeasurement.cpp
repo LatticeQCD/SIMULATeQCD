@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     eigenpairs.read_evnersc(param.num_toread_vectors(), param.eigen_file());
     eigenpairs.updateAll();
 
-    eigenpairs.tester(param.num_toread_vectors());
+    // eigenpairs.tester(param.num_toread_vectors());
 
     // if (param.valence_masses.numberValues() == 0) {
     //     rootLogger.error("No valence masses specified, a);
