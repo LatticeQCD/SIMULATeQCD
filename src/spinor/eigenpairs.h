@@ -1,12 +1,14 @@
 #pragma once
 
-#include "../base/math/operators.h"
 #include "../define.h"
+#include "../base/math/operators.h"
 #include "../base/math/vect3array.h"
 #include "../base/latticeContainer.h"
 #include "../base/communication/siteComm.h"
 #include "../base/communication/communicationBase.h"
+#include "../modules/inverter/inverter.h"
 #include "spinorfield.h"
+
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 class eigenpairs : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepth>
@@ -32,7 +34,7 @@ public:
 
     void read_evnersc(int nvec, const std::string &fname);
     void read_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int nvec, double &lambda, const std::string &fname);
-    void tester(int nvec);
+    void tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec);
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };

@@ -64,16 +64,15 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(int nvec) {
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec) {
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
-
-        vr = spinorIn;
-
+        
+        dslash.applyMdaggM(vr, spinorIn, false);
         SimpleArray<double, NStacks> lambda(lambda_vect[i]);
 
-        // spinorOut.template axpyThisB<64>(((double)(-1.0))*lambda, vr);
+        vr.template axpyThisB<64>(((double)(-1.0))*lambda, spinorIn);
         
         double norm = vr.realdotProduct(vr);
         rootLogger.info("norm=", norm);

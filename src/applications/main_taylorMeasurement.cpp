@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
 
     commBase.init(param.nodeDim());
 
-    const int HaloDepth = 0; // >= 1 for multi gpu
+    const int HaloDepth = 2; // >= 1 for multi gpu
     const int HaloDepthSpin = 4;
-    const int NStacks = 8; // NOTE: this only works for NStacks=8 after the blocksize fix
+    const int NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
     typedef float PREC;
 
@@ -41,16 +41,19 @@ int main(int argc, char **argv) {
       rootLogger.info("update done in unknown precision");
     }
 
+
     initIndexer(HaloDepth, param, commBase);
     stdLogger.setVerbosity(INFO);
 
     // const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
 
     // // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    // Gaugefield<floatT,true,HaloDepth> gauge(commBase);      /// gauge field
-    // rootLogger.info("Read configuration from ", param.GaugefileName());
-    // gauge.readconf_nersc(param.GaugefileName());
-    // gauge.updateAll();
+    Gaugefield<floatT,true,HaloDepth> gauge(commBase);  
+    Gaugefield<floatT,true,HaloDepth,R18> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);    /// gauge field
+    rootLogger.info("Read configuration from ", param.GaugefileName());
+    gauge.readconf_nersc(param.GaugefileName());
+    gauge.updateAll();
     
     // Read the Eigenvalues and Eigenvectors
     eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
@@ -58,7 +61,9 @@ int main(int argc, char **argv) {
     eigenpairs.read_evnersc(param.num_toread_vectors(), param.eigen_file());
     eigenpairs.updateAll();
 
-    // eigenpairs.tester(param.num_toread_vectors());
+    HisqDSlash<floatT,true,Even,HaloDepth,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+
+    eigenpairs.tester(dslash, param.num_toread_vectors());
 
     // if (param.valence_masses.numberValues() == 0) {
     //     rootLogger.error("No valence masses specified, a);
