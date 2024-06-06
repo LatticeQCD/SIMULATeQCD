@@ -8,6 +8,8 @@
 #include "../simulateqcd.h"
 #include "../modules/observables/taylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
+#include "../modules/hisq/hisqSmearing.h"
+
 #include "../testing/testing.h" // for comparing stuff
 
 // main
@@ -48,12 +50,17 @@ int main(int argc, char **argv) {
     // const int sizeh = param.latDim[0]*param.latDim[1]*param.latDim[2]*param.latDim[3]/2;
 
     // // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    Gaugefield<floatT,true,HaloDepth> gauge(commBase);  
-    Gaugefield<floatT,true,HaloDepth,R18> gauge_smeared(commBase);
-    Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);    /// gauge field
+    Gaugefield<floatT,true,HaloDepth,R14> gauge(commBase);  
+    Gaugefield<floatT,true,HaloDepth> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);  
+    
+    // naik_epsilon(use_naik_epsilon ? get_naik_epsilon_from_amc(mass) : 0.0);  /// gauge field
     rootLogger.info("Read configuration from ", param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
+
+    HisqSmearing<floatT, true, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
+    smearing.SmearAll();
     
     // Read the Eigenvalues and Eigenvectors
     eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);

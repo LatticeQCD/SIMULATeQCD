@@ -1,4 +1,5 @@
 #include "eigenpairs.h"
+#include "spinorfield.h"
 #include "../base/IO/evnersc.h"
 #include "../base/IO/nersc.h"
 #include "../base/latticeParameters.h"
@@ -70,15 +71,18 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
 
         vr = spinorIn;
-        double norm = vr.realdotProduct(vr);
-        rootLogger.info("norm0=", norm);
 
         // spinorOut = static_cast<floatT>(0.0) * vr;
 
         // spinorIn.updateAll(COMM_BOTH | Hyperplane);
         dslash.applyMdaggM(vr, spinorIn, false);
 
-        vr.template axpyThisB<64>(-1*lambda_vect[i], spinorIn);
+        double norm = vr.realdotProduct(vr);
+        rootLogger.info("norm0=", norm);
+        
+        floatT lambda = -1*lambda_vect[i];
+
+        vr.template axpyThisB<64>(lambda, spinorIn);
 
         double norm1 = vr.realdotProduct(vr);
         rootLogger.info("norm1=", norm1);
