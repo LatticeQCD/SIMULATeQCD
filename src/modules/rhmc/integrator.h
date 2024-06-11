@@ -29,7 +29,8 @@ public:
                Gaugefield<floatT, onDevice, HaloDepth, U3R14> &X,
                Gaugefield<floatT, onDevice, HaloDepth> &W,
                HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &dslash,
-               RationalCoeff rat, HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
+               RationalCoeff rat, 
+               HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &smearing)
         : _gaugeField(gaugeField),
           _X(X),
           _W(W),

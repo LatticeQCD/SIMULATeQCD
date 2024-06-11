@@ -92,8 +92,11 @@ private:
     staple<floatT, HaloDepth, compLvl1, -5> stapleLepage;
 
  public:
-    HisqSmearing(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_base,Gaugefield<floatT, onDevice, HaloDepth, compLvl2> &gauge_lvl2,
-		         Gaugefield<floatT, onDevice, HaloDepth, compNaik> &gauge_naik, floatT naik_epsilon = 0.0)
+    HisqSmearing(
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_base,
+        Gaugefield<floatT, onDevice, HaloDepth, compLvl2> &gauge_lvl2,
+		Gaugefield<floatT, onDevice, HaloDepth, compNaik> &gauge_naik, 
+        floatT naik_epsilon = 0.0)
         : _gauge_base(gauge_base),                                   // This is the to-be-updated gauge field
           _gauge_lvl1(gauge_base.getComm(), "SHARED_GAUGENAIK" ),
           _gauge_lvl2(gauge_lvl2),                                   // In RHMC initializer this is "smearW"
@@ -131,7 +134,7 @@ private:
 
     void SmearAll(floatT mu_f=0.0, bool multiplyPhase = true);
 
-    // Will be used in the force calculation
+    // V = smearLvl1(U). Here the thin links U = _gauge_base 
     template<CompressionType comp_tmp>
     void SmearLvl1(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_out) {
 

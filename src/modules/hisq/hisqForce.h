@@ -3,7 +3,9 @@
  *
  * D. Bollweg
  *
- * The methods related to the fictitious HISQ force, which drives the RHMC trajectory.
+ * The methods related to the fictitious HISQ force, which drives the RHMC trajectory. At various parts of
+ * the comments there will be references to |PHI>, |X>, X, W, stuff like this. In such cases the comments
+ * are following the notation of Wong and Woloshyn arXiv:0710.0737.
  *
  */
 
@@ -141,41 +143,12 @@ private:
     //F1 part
     contribution_3link<floatT, onDevice, HaloDepth, comp, false> F1_create_3Link;
 
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 1> F1_7link_part_1;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 2> F1_7link_part_2;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 3> F1_7link_part_3;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 4> F1_7link_part_4;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 5> F1_7link_part_5;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 6> F1_7link_part_6;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 7> F1_7link_part_7;
-
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 11> F1_5link_part11;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 12> F1_5link_part12;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 13> F1_5link_part13;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 14> F1_5link_part14;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 20> F1_5link_part20;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 30> F1_5link_part30;
-
     contribution_lepagelink<floatT, onDevice, HaloDepth, comp> F1_lepagelink;
 
 
     //F3 part
     contribution_3link<floatT, onDevice, HaloDepth, comp, true> F3_create_3Link;
 
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 1> F3_7link_part_1;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 2> F3_7link_part_2;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 3> F3_7link_part_3;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 4> F3_7link_part_4;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 5> F3_7link_part_5;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 6> F3_7link_part_6;
-    // contribution_7link<floatT, onDevice, HaloDepth, comp, 7> F3_7link_part_7;
-
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 11> F3_5link_part11;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 12> F3_5link_part12;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 13> F3_5link_part13;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 14> F3_5link_part14;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 20> F3_5link_part20;
-    // contribution_5link<floatT, onDevice, HaloDepth, comp, 30> F3_5link_part30;
 
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &_smearing;
     AdvancedMultiShiftCG<floatT, rdeg> &_cg;

@@ -118,11 +118,16 @@ struct StackMinusFloatTimeStack
 };
 
 
+// spinorOut = (M^dag M)^-1 spinorIn 
 template<class floatT, size_t NStacks>
 template <typename SpinorIn_t, typename SpinorOut_t>
 void AdvancedMultiShiftCG<floatT, NStacks>::invert(
-        LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
-        SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision)
+        LinearOperator<SpinorIn_t>& dslash, 
+        SpinorOut_t& spinorOut, 
+        const SpinorIn_t& spinorIn,
+        SimpleArray<floatT, NStacks> sigma, 
+        const int max_iter, 
+        const double precision)
 {
     SpinorOut_t pi(spinorIn.getComm());
     SpinorIn_t s(spinorIn.getComm());

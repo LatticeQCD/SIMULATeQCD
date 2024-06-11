@@ -277,7 +277,10 @@ __host__ __device__ auto stdStagDslashFunctor<floatT, LatLayoutRHS, HaloDepthGau
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void stdStagDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::Dslash(
-        SpinorLHS_t& lhs, const SpinorRHS_t& rhs, bool update){
+    SpinorLHS_t& lhs, 
+    const SpinorRHS_t& rhs, 
+    bool update)
+{
     lhs.template iterateOverBulk(getFunctor(rhs));
     if(update){
         lhs.updateAll(COMM_BOTH | Hyperplane);
