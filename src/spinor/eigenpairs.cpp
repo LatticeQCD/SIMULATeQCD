@@ -71,21 +71,23 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
 
         vr = spinorIn;
-
-        // spinorOut = static_cast<floatT>(0.0) * vr;
-
-        // spinorIn.updateAll(COMM_BOTH | Hyperplane);
-        dslash.applyMdaggM(vr, spinorIn, false);
-
-        double norm = vr.realdotProduct(vr);
-        rootLogger.info("norm0=", norm);
+        rootLogger.info("norm01=", vr.realdotProduct(vr));
         
-        floatT lambda = -1*lambda_vect[i];
+        dslash.applyMdaggM(vr, spinorIn, false);
+        rootLogger.info("norm02=", vr.realdotProduct(vr));
 
+        floatT lambda = -lambda_vect[i];
+        rootLogger.info("lambda=", lambda);
         vr.template axpyThisB<64>(lambda, spinorIn);
+        rootLogger.info("norm1=", vr.realdotProduct(vr));
 
-        double norm1 = vr.realdotProduct(vr);
-        rootLogger.info("norm1=", norm1);
+        lambda = -1;
+        vr.template axpyThisB<64>(lambda, spinorIn);
+        rootLogger.info("norm21=", vr.realdotProduct(vr));
+
+        lambda = 0;
+        vr.template axpyThisB<64>(lambda, spinorIn);
+        rootLogger.info("norm22=", vr.realdotProduct(vr));
     }
 }
 
