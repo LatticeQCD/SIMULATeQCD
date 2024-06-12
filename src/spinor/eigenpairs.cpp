@@ -69,25 +69,30 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
-
-        vr = spinorIn;
-        rootLogger.info("norm01=", vr.realdotProduct(vr));
         
-        dslash.applyMdaggM(vr, spinorIn, false);
-        rootLogger.info("norm02=", vr.realdotProduct(vr));
-
         floatT lambda = -lambda_vect[i];
         rootLogger.info("lambda=", lambda);
+        
+        vr = spinorIn;
+        rootLogger.info("norm(x)=", vr.realdotProduct(vr));
+        
+        dslash.applyMdaggM(vr, spinorIn, true);
+        rootLogger.info("norm(Ax)=", vr.realdotProduct(vr));
+
         vr.template axpyThisB<64>(lambda, spinorIn);
-        rootLogger.info("norm1=", vr.realdotProduct(vr));
+        rootLogger.info("norm(Ax-µx)=", vr.realdotProduct(vr));
 
         lambda = -1;
+        vr = spinorIn;
+        dslash.applyMdaggM(vr, spinorIn, true);
         vr.template axpyThisB<64>(lambda, spinorIn);
-        rootLogger.info("norm21=", vr.realdotProduct(vr));
+        rootLogger.info("norm(Ax-x)=", vr.realdotProduct(vr));
 
         lambda = 0;
+        vr = spinorIn;
+        dslash.applyMdaggM(vr, spinorIn, true);
         vr.template axpyThisB<64>(lambda, spinorIn);
-        rootLogger.info("norm22=", vr.realdotProduct(vr));
+        rootLogger.info("norm(Ax+0*x)=", vr.realdotProduct(vr));
     }
 }
 

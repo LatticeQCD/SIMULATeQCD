@@ -51,14 +51,14 @@ int main(int argc, char **argv) {
 
     // // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
     Gaugefield<floatT,true,HaloDepth,R14> gauge(commBase);  
-    Gaugefield<floatT,true,HaloDepth> gauge_smeared(commBase);
-    Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);  
     
     // naik_epsilon(use_naik_epsilon ? get_naik_epsilon_from_amc(mass) : 0.0);  /// gauge field
     rootLogger.info("Read configuration from ", param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
+    Gaugefield<floatT,true,HaloDepth,R18> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);
     HisqSmearing<floatT, true, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
     smearing.SmearAll();
     
