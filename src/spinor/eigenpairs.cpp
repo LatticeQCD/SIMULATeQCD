@@ -91,11 +91,11 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
         vr.template axpyThisB<64>(lambda, vp);
         rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
 
-        lambda = -1;
-        vr = spinorIn;
-        dslash.applyMdaggM(vr, vp, true);
-        vr.template axpyThisB<64>(lambda, vp);
-        rootLogger.info("norm(Ax-x)=", vr.realdotProduct(vr));
+        // lambda = -1;
+        // vr = spinorIn;
+        // dslash.applyMdaggM(vr, vp, true);
+        // vr.template axpyThisB<64>(lambda, vp);
+        // rootLogger.info("norm(Ax-x)=", vr.realdotProduct(vr));
     }
 }
 
