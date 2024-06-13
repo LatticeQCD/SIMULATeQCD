@@ -26,9 +26,9 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
 {
     evNerscFormat<HaloDepth> evnersc(this->getComm());
-    typedef GIndexer<All,HaloDepth> GInd;
+    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
-    int sizeh=GInd::getLatData().globvol4/2;
+    int sizeh=GInd::getLatData().sizeh;
     int displacement=evnersc.bytes_per_site()*sizeh+sizeof(double);            
     this->getComm().SetFileView(displacement * idxvec);
 
@@ -48,18 +48,24 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 
     this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
     
-    typedef GIndexer<All, HaloDepth> GInd;
+    // typedef GIndexer<All, HaloDepth> GInd;
+    // for (int m = 0; m < sizeh; m++)  {
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        if (evnersc.end_of_buffer()) {
-            this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
-            evnersc.process_read_data();
+        if ((x+y+z+t)%2==0){
+
+            if (evnersc.end_of_buffer()) {
+                this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+                evnersc.process_read_data();
+            }
+            Vect3<floatT> ret = evnersc.template get<floatT>();
+            // sitexyzt coord = Gind.indexToCoord(m);
+            gSite site = GInd::getSite(x,y,z,t);
+            spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
+    
         }
-        Vect3<floatT> ret = evnersc.template get<floatT>();
-        gSite site = GInd::getSite(x, y, z, t);
-        spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     }
 }
 
@@ -69,30 +75,27 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vp(spinorIn.getComm());
         
-        floatT lambda = -lambda_vect[i];
+        floatT lambda = lambda_vect[i];
         rootLogger.info("lambda=", lambda);
+        rootLogger.info("lambda**2=", lambda * lambda);
         
         vr = spinorIn;
-        rootLogger.info("norm(x)=", vr.realdotProduct(vr));
+        vp = spinorIn;
+        rootLogger.info("norm(x)**2=", vr.realdotProduct(vr));
         
-        dslash.applyMdaggM(vr, spinorIn, true);
-        rootLogger.info("norm(Ax)=", vr.realdotProduct(vr));
+        dslash.applyMdaggM(vr, vp, true);
+        rootLogger.info("norm(Ax)**2=", vr.realdotProduct(vr));
 
-        vr.template axpyThisB<64>(lambda, spinorIn);
-        rootLogger.info("norm(Ax-µx)=", vr.realdotProduct(vr));
+        vr.template axpyThisB<64>(lambda, vp);
+        rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
 
         lambda = -1;
         vr = spinorIn;
-        dslash.applyMdaggM(vr, spinorIn, true);
-        vr.template axpyThisB<64>(lambda, spinorIn);
+        dslash.applyMdaggM(vr, vp, true);
+        vr.template axpyThisB<64>(lambda, vp);
         rootLogger.info("norm(Ax-x)=", vr.realdotProduct(vr));
-
-        lambda = 0;
-        vr = spinorIn;
-        dslash.applyMdaggM(vr, spinorIn, true);
-        vr.template axpyThisB<64>(lambda, spinorIn);
-        rootLogger.info("norm(Ax+0*x)=", vr.realdotProduct(vr));
     }
 }
 
