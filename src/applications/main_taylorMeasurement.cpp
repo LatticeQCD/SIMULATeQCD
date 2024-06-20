@@ -72,50 +72,50 @@ int main(int argc, char **argv) {
 
     eigenpairs.tester(dslash, param.num_toread_vectors());
 
-    // if (param.valence_masses.numberValues() == 0) {
-    //     rootLogger.error("No valence masses specified, a);
-    //     return 1;
-    // }
+    if (param.valence_masses.numberValues() == 0) {
+        rootLogger.error("No valence masses specified, aborting");
+        return 1;
+    }
 
-    // grnd_state<false> h_rand;
-    // grnd_state<true> d_rand;
-    // h_rand.make_rng_state(param.seed());
-    // d_rand = h_rand;borting"
+    grnd_state<false> h_rand;
+    grnd_state<true> d_rand;
+    h_rand.make_rng_state(param.seed());
+    d_rand = h_rand;
 
-    // rootLogger.info("Rng initialized with seed ", param.seed());
+    rootLogger.info("Rng initialized with seed ", param.seed());
 
 
-    //     // run as a standalone programm using the parameter file
-    //     rootLogger.info("Starting in Standalone Mode");
+    // run as a standalone programm using the parameter file
+    rootLogger.info("Starting in Standalone Mode");
 
         
 
-    //     for (double mass : param.valence_masses.get()) {
-    //         rootLogger.info("Using mass ", mass);
+    for (double mass : param.valence_masses.get()) {
+        rootLogger.info("Using mass ", mass);
 
-    //         TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(gauge, param, mass, param.use_naik_epsilon(), d_rand);
-    //         try {
-    //             for (const auto& id : param.operator_ids.get()) {
-    //                 taylor_measurement.insertOperator(id);
-    //             }
-    //         }
-    //         catch (std::runtime_error e) {
-    //             rootLogger.error(e.what());
-    //             return 1;
-    //         }
-    //         rootLogger.info("Operators added");
-    //         taylor_measurement.write_output_file_header();
-    //         taylor_measurement.computeOperators();
-    //         rootLogger.info("Operators computed");
+        TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(gauge, param, mass, param.use_naik_epsilon(), d_rand);
+        try {
+            for (const auto& id : param.operator_ids.get()) {
+                taylor_measurement.insertOperator(id);
+            }
+        }
+        catch (std::runtime_error e) {
+            rootLogger.error(e.what());
+            return 1;
+        }
+        rootLogger.info("Operators added");
+        taylor_measurement.write_output_file_header();
+        taylor_measurement.computeOperators();
+        rootLogger.info("Operators computed");
 
-    //         std::vector<DerivativeOperatorMeasurement> results;
-    //         taylor_measurement.collectResults(results);
-    //         rootLogger.info("Results collected");
-    //         for (DerivativeOperatorMeasurement &meas : results) {
-    //             rootLogger.info("ID: ", meas.operatorId, ", Measurement: ", meas.measurement, ", Error: ", meas.std);
-    //         }
+        std::vector<DerivativeOperatorMeasurement> results;
+        taylor_measurement.collectResults(results);
+        rootLogger.info("Results collected");
+        for (DerivativeOperatorMeasurement &meas : results) {
+            rootLogger.info("ID: ", meas.operatorId, ", Measurement: ", meas.measurement, ", Error: ", meas.std);
+        }
         
-    // }
+    }
 
     // output file name: "TaylorMeasurement_" + ensemble_id (like l328...) + "." + param.conf_nr
 }

@@ -47,22 +47,23 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 
 
     this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
-    
-    // typedef GIndexer<All, HaloDepth> GInd;
+
     // for (int m = 0; m < sizeh; m++)  {
+    //     if (true)  {
+    //         sitexyzt coord = GInd.indexToCoord(m);
+    //         gSite site = GInd::getSite(coord);
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
         if ((x+y+z+t)%2==0){
+            gSite site = GInd::getSite(x,y,z,t);
 
             if (evnersc.end_of_buffer()) {
                 this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
                 evnersc.process_read_data();
             }
             Vect3<floatT> ret = evnersc.template get<floatT>();
-            // sitexyzt coord = Gind.indexToCoord(m);
-            gSite site = GInd::getSite(x,y,z,t);
             spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
     
         }
