@@ -38,7 +38,8 @@ struct measureHadronsParam : LatticeParameters {
     Parameter<std::string> action; //FIXME this feature isn't implemented yet-
     Parameter<std::string> source_type; //FIXME this feature isn't implemented yet
 
-    Parameter<std::string> correlator_axis;
+    //Parameter<std::string> correlator_axis;
+    DynamicParameter<std::string> correlator_axes;
     Parameter<std::string> measurements_dir;
     DynamicParameter<floatT> masses;
     DynamicParameter<std::string> mass_labels;
@@ -63,7 +64,8 @@ struct measureHadronsParam : LatticeParameters {
         add(mass_labels, "mass_labels");
         add(source_type, "source_type");
         add(source_coords, "source_coords");
-        addDefault(correlator_axis, "correlator_axis", std::string("t"));
+        //addDefault(correlator_axis, "correlator_axis", std::string("t"));
+        addDefault(correlator_axes, "correlator_axes", std::string("t"));
 
         addDefault(cg_residue, "cg_residue", static_cast<floatT>(1e-6));
         addDefault(cg_max_iter, "cg_max_iter", static_cast<int>(10000));
@@ -100,8 +102,14 @@ struct measureHadronsParam : LatticeParameters {
         if ((source_coords()[0]+source_coords()[1]+source_coords()[2]+source_coords()[3]) % 2 != 0 ){
             throw std::runtime_error(stdLogger.fatal("Pointsource is odd but needs to be even!"));
         }
-        if (nodeDim()[correlator_axis_map[correlator_axis()]] != 1){
-            throw std::runtime_error(stdLogger.fatal("Don't split the lattice along the correlator axis!"));
+        //if (nodeDim()[correlator_axis_map[correlator_axis()]] != 1){
+        //    throw std::runtime_error(stdLogger.fatal("Don't split the lattice along the correlator axis!"));
+        //}
+        for ( size_t i = 0 ; i <  correlator_axes.numberValues() ; i++ ){
+            std::string correlator_axis = correlator_axes.get()[i] ;
+            if (nodeDim()[correlator_axis_map[correlator_axis]] != 1){
+                throw std::runtime_error(stdLogger.fatal("Don't split the lattice along the correlator axis!"));
+            }
         }
     }
 };
