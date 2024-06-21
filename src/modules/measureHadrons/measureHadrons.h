@@ -202,7 +202,7 @@ public:
             default:
                 throw std::runtime_error(stdLogger.fatal("Unknown correlator axis! Choose one from {x, y, z, t}."));
         }
-            _axes_indices.insert( 4 * i , _tmp_axis_indices ) ;
+            _axes_indices.insert( _axes_indices.begin() + 4 * i, _tmp_axis_indices , _tmp_axis_indices + 4 ) ;
         }
         
         for (size_t i = 0; i < _axes_indices.size(); i++)
