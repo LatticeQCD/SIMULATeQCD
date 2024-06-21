@@ -181,7 +181,7 @@ public:
             _current_source(lp.source_coords()[0], lp.source_coords()[1],lp.source_coords()[2],lp.source_coords()[3])
     {
         //! set up _axes_indices
-        _axes_indices.resize(4 + _n_correlator_axes);
+        _axes_indices.resize(4 * _n_correlator_axes);
         std::fill(_axes_indices.begin(), _axes_indices.end(), 0);
         for (size_t i = 0; i < _n_correlator_axes; i++)
         {
@@ -204,16 +204,17 @@ public:
         }
             for (size_t j = 0; j < 4; j++)
             {
+                //rootLogger.info(j , " " , _tmp_axis_indices[j] , " " ,4 * i + j , " " , _axes_indices[4 * i + j] );
                 _axes_indices[4 * i + j] = _tmp_axis_indices[j] ;// there shouldt be a better way to do this maybe with vector.insert and without reshape?
             }
             
             //_axes_indices.insert( _axes_indices.begin() + 4 * i, _tmp_axis_indices , _tmp_axis_indices + 4 ) ;
         }
         
-        for (size_t i = 0; i < _axes_indices.size(); i++)
+        /*for (size_t i = 0; i < _axes_indices.size(); i++)
         {
             rootLogger.info( i , _axes_indices[i]  );
-        }
+        }*/
         
 
         // following switch might be removed after correlator_axes is implemented
