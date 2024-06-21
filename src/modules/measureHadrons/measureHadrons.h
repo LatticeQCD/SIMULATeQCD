@@ -127,6 +127,7 @@ private:
     //! parameters derived from the ones set in the parameter struct:
     const size_t _n_masses;
     const size_t _n_channels = 8;
+    const size_t _n_correlator_axes;
     const source_type _src_type; //FIXME support for different sources
     const action_type _act_type; //FIXME support for wilson,clover fermions
     const correlator_axis _corr_axis;
@@ -140,7 +141,9 @@ private:
 
     const size_t _vol4;
     std::array<size_t,4> _lat_extents; // "lx, ly, lz, lt"
-    std::array<size_t,4> _axis_indices; // [0] is corr axis, [1-3] are not corr axis
+    std::array<size_t,4> _axis_indices; // [0] is corr axis, [1-3] are not corr axis //! Remove this after implemeting correlator_axes
+    std::array<size_t,4> _tmp_axis_indices;
+    std::vector<size_t> _axes_indices; // later of size 4*_n_correlator_axes where [4*_n_correlator_axes + 0] is corr axis, 4*_n_correlator_axes + (1 to 3)] are not corr axis
 
     size_t _corr_l;
 
@@ -159,6 +162,7 @@ public:
             _commBase(commBase),
             _lp(lp),
             _n_masses(_lp.masses.get().size()),
+            _n_correlator_axes(_lp.correlator_axes.get().size()),
             _src_type(source_type_map[_lp.source_type()]),
             _act_type(action_type_map[_lp.action()]),
             _corr_axis(correlator_axis_map[lp.correlator_axis()]),
@@ -176,7 +180,38 @@ public:
             _gauge(gauge),
             _current_source(lp.source_coords()[0], lp.source_coords()[1],lp.source_coords()[2],lp.source_coords()[3])
     {
+        //! set up _axes_indices
+        _axes_indices.resize(4 + _n_correlator_axes);
+        std::fill(_axes_indices.begin(), _axes_indices.end(), 0);
+        for (size_t i = 0; i < _n_correlator_axes; i++)
+        {
+            correlator_axis _tmp_corr_axis(correlator_axis_map[lp.correlator_axes.get()[i]]);
+            switch(_tmp_corr_axis){
+            case x_axis:
+                _tmp_axis_indices = {0, 1, 2, 3};
+                break;
+            case y_axis:
+                _tmp_axis_indices = {1, 0, 2, 3};
+                break;
+            case z_axis:
+                _tmp_axis_indices = {2, 0, 1, 3};
+                break;
+            case t_axis:
+                _tmp_axis_indices = {3, 0, 1, 2};
+                break;
+            default:
+                throw std::runtime_error(stdLogger.fatal("Unknown correlator axis! Choose one from {x, y, z, t}."));
+        }
+            _axes_indices.insert( 4 * i , _tmp_axis_indices ) ;
+        }
+        
+        for (size_t i = 0; i < _axes_indices.size(); i++)
+        {
+            rootLogger.info( i , _axes_indices[i]  );
+        }
+        
 
+        // following switch might be removed after correlator_axes is implemented
         switch(_corr_axis){
             case x_axis:
                 _axis_indices = {0, 1, 2, 3};
