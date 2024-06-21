@@ -64,8 +64,8 @@ struct measureHadronsParam : LatticeParameters {
         add(mass_labels, "mass_labels");
         add(source_type, "source_type");
         add(source_coords, "source_coords");
-        //addDefault(correlator_axis, "correlator_axis", std::string("t"));
-        addDefault(correlator_axes, "correlator_axes", std::string("t"));
+        addDefault(correlator_axis, "correlator_axis", std::string("t")); //! Remove this after implemeting correlator_axes
+        add(correlator_axes, "correlator_axes");
 
         addDefault(cg_residue, "cg_residue", static_cast<floatT>(1e-6));
         addDefault(cg_max_iter, "cg_max_iter", static_cast<int>(10000));
