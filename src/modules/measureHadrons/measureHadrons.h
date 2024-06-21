@@ -38,7 +38,7 @@ struct measureHadronsParam : LatticeParameters {
     Parameter<std::string> action; //FIXME this feature isn't implemented yet-
     Parameter<std::string> source_type; //FIXME this feature isn't implemented yet
 
-    //Parameter<std::string> correlator_axis;
+    Parameter<std::string> correlator_axis; //! Remove this after implemeting correlator_axes
     DynamicParameter<std::string> correlator_axes;
     Parameter<std::string> measurements_dir;
     DynamicParameter<floatT> masses;
