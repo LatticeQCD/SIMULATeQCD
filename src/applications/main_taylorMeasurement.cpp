@@ -9,7 +9,7 @@
 #include "../modules/observables/taylorMeasurement.h"
 #include "../modules/dslash/condensate.h"
 #include "../modules/hisq/hisqSmearing.h"
-
+#include "../modules/observables/taylorMeasurement.h"
 #include "../testing/testing.h" // for comparing stuff
 
 // main
