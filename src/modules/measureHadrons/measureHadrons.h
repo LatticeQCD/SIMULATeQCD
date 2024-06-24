@@ -128,6 +128,7 @@ private:
     const size_t _n_masses;
     const size_t _n_channels = 8;
     const size_t _n_correlator_axes;
+    size_t _n_correlator_elements ;
     const source_type _src_type; //FIXME support for different sources
     const action_type _act_type; //FIXME support for wilson,clover fermions
     const correlator_axis _corr_axis;
@@ -145,6 +146,7 @@ private:
     std::array<size_t,4> _tmp_axis_indices;
     std::vector<size_t> _axes_indices; // later of size 4*_n_correlator_axes where [4*_n_correlator_axes + 0] is corr axis, 4*_n_correlator_axes + (1 to 3)] are not corr axis
 
+    std::vector<size_t> _corr_ls ;
     size_t _corr_l;
 
     sitexyzt _current_source;
@@ -234,7 +236,19 @@ public:
             default:
                 throw std::runtime_error(stdLogger.fatal("Unknown correlator axis! Choose one from {x, y, z, t}."));
         }
+        
 
+        _corr_ls.resize(_n_correlator_axes);
+        for (size_t i = 0; i < _n_correlator_axes ; i++)
+        {            
+            _corr_ls[i] = _lat_extents[_axes_indices[ i * 4 ]] ;
+        }
+        
+        /*for (size_t i = 0; i < _corr_ls.size() ;  i++)
+        {
+            rootLogger.info( "_corr_ls[" , i , "] = " , _corr_ls[i]  );
+        }*/               
+        
         _corr_l = _lat_extents[_axis_indices[0]];
 
         //! set up _contracted_propagators
@@ -247,6 +261,16 @@ public:
                 _contracted_propagators.back().adjustSize(_vol4);
             }
         }
+        
+        _n_correlator_elements = 0 ;
+        for (size_t i = 0; i < _n_correlator_axes ; i++)
+        {
+           _n_correlator_elements += _n_masses * _n_masses * _corr_ls[i] * _n_channels ; 
+        }
+
+        //rootLogger.info( "_n_correlator_elements = " , _n_correlator_elements  ); 
+
+        //TODO: set up _correlators with _n_correlator_elements
 
         //! set up _correlators
         _correlators.resize(_n_masses * _n_masses * _corr_l * _n_channels);
@@ -290,7 +314,7 @@ public:
     void write_correlators_to_file();
 
 private:
-
+    // TODO: modify corr_index for more corrtypes at once 
     [[nodiscard]] inline int corr_index(const int w, const int channel, const int mass_index) const{
         //! Channels start at 1 but arrays at 0, so it's channel-1
         return mass_index * _n_channels * _corr_l + (channel - 1) * _corr_l + w;

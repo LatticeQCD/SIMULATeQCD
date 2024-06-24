@@ -133,7 +133,7 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         }
     }
 
-
+    //TODO for loop over _n_corr_axes
     rootLogger.info("Computing correlators along " ,  _lp.correlator_axis() ,  "-axis.");
 
     //! Reduce contracted propagators and project to different quantum numbers (channels).
