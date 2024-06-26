@@ -133,41 +133,50 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         }
     }
 
-    //TODO for loop over _n_corr_axes
-    rootLogger.info("Computing correlators along " ,  _lp.correlator_axis() ,  "-axis.");
+    //TODO for loop over _n_correlator_axes
+    for (size_t corr_axis_index = 0; corr_axis_index < _n_correlator_axes ; corr_axis_index++ ) 
+    {
+    
+    
+    
+    rootLogger.info("Computing correlators along " ,  _lp.correlator_axes.get()[corr_axis_index] ,  "-axis.");
 
     //! Reduce contracted propagators and project to different quantum numbers (channels).
     //! We do this here without functor syntax because then we can easily factor in the phase factors while reducing.
-    for (int channel = 1; channel <= 8; channel++){
-        rootLogger.info("Project to M" ,  channel);
-        mass_index = 0;
-        for (int m_i = 0; m_i < _n_masses; m_i++){
-            for (int m_j = 0; m_j <= m_i; m_j++){
-                LatticeContainerAccessor prop_acc = _contracted_propagators[mass_index].getAccessor();
-
-                for (int w = 0; w < _corr_l; w++) {
-                    GPUcomplex<floatT> result(0.0,0.0);
-
-                    //! reduce over the volume without correlator axis
-                    for (int r = 0; r < _lat_extents[_axis_indices[1]]; ++r) {
-                        for (int u = 0; u < _lat_extents[_axis_indices[2]]; ++u) {
-                            for (int v = 0; v < _lat_extents[_axis_indices[3]]; ++v) {
-                                sitexyzt coord(0,0,0,0);
-                                coord[_axis_indices[0]] = w;
-                                coord[_axis_indices[1]] = r;
-                                coord[_axis_indices[2]] = u;
-                                coord[_axis_indices[3]] = v;
-                                int isite = GIndexer<All, HaloDepthSpin>::coordToIndex_Bulk(coord);
-
-                                //! it's okay that we're using the sublattice coordinates for the phase_factors, since the (sub)lattice extents are always even.
-                                result += prop_acc.template getElement<GPUcomplex<floatT>>(isite) * static_cast<floatT>(phase_factor(channel, r, u, v));
+        for (int channel = 1; channel <= 8; channel++){
+            rootLogger.info("Project to M" ,  channel);
+            mass_index = 0;
+            for (int m_i = 0; m_i < _n_masses; m_i++){
+                for (int m_j = 0; m_j <= m_i; m_j++){
+                    LatticeContainerAccessor prop_acc = _contracted_propagators[mass_index].getAccessor();
+    
+                    for (int w = 0; w < _corr_ls[corr_axis_index] ; w++) {
+                        GPUcomplex<floatT> result(0.0,0.0);
+    
+                        //! reduce over the volume without correlator axis
+                        for (int r = 0; r < _lat_extents[_axes_indices[ 4 * corr_axis_index + 1]]; ++r) {
+                            for (int u = 0; u < _lat_extents[_axes_indices[ 4 * corr_axis_index + 2 ]]; ++u) {
+                                for (int v = 0; v < _lat_extents[_axes_indices[ 4 * corr_axis_index + 3 ]]; ++v) {
+                                    sitexyzt coord(0,0,0,0);
+                                    coord[_axes_indices[4 * corr_axis_index + 0]] = w;
+                                    coord[_axes_indices[4 * corr_axis_index + 1]] = r;
+                                    coord[_axes_indices[4 * corr_axis_index + 2]] = u;
+                                    coord[_axes_indices[4 * corr_axis_index + 3]] = v;
+                                    int isite = GIndexer<All, HaloDepthSpin>::coordToIndex_Bulk(coord);
+    
+                                    //! it's okay that we're using the sublattice coordinates for the phase_factors, since the (sub)lattice extents are always even.
+                                    result += prop_acc.template getElement<GPUcomplex<floatT>>(isite) * static_cast<floatT>(phase_factor(channel, r, u, v));
+                                }
                             }
                         }
+                        //! reduce the result from multiple gpus
+                        _correlators[corr_index(( w - _current_source[_axes_indices[4 * corr_axis_index + 0]] + _corr_ls[corr_axis_index])% _corr_ls[corr_axis_index],
+                                                channel, 
+                                                mass_index , 
+                                                corr_axis_index )] += _commBase.reduce(result);
                     }
-                    //! reduce the result from multiple gpus
-                    _correlators[corr_index((w-_current_source[_axis_indices[0]]+_corr_l)%_corr_l, channel, mass_index)] += _commBase.reduce(result);
+                    mass_index++;
                 }
-                mass_index++;
             }
         }
     }
@@ -189,43 +198,48 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
             {8, "vectort"}
     };
 
+    
     std::stringstream full_path_to_file;
+    for (size_t corr_axis_index = 0; corr_axis_index < _n_correlator_axes ; corr_axis_index++ )
+    {
 
-    std::array<std::string,4> corr_axis_prefixes = {"x", "y", "z", "t"};
-    std::string corr_axis_prefix = corr_axis_prefixes[_axis_indices[0]];
+        full_path_to_file.str("") ;
+        std::array<std::string,4> corr_axis_prefixes = {"x", "y", "z", "t"};
+        std::string corr_axis_prefix = corr_axis_prefixes[_axes_indices[4 * corr_axis_index ]];
 
-    full_path_to_file << _lp.measurements_dir() << "/" << "corr_" << _lp.action() << "_" << _lp.source_type() << "_" << corr_axis_prefix << "_"
-                      << _current_source.x << "-" << _current_source.y << "-" << _current_source.z << "-"
-                      << _current_source.t <<  _lp.fileExt();
-    FileWriter file(_commBase, _lp, full_path_to_file.str());
-    rootLogger.info("Writing correlators to file: " ,  full_path_to_file.str());
-    LineFormatter header = file.header();
-    header << corr_axis_prefix+" " << "real " << "imag ";
-    header.endLine();
+        full_path_to_file << _lp.measurements_dir() << "/" << "corr_" << _lp.action() << "_" << _lp.source_type() << "_" << corr_axis_prefix << "_"
+                          << _current_source.x << "-" << _current_source.y << "-" << _current_source.z << "-"
+                          << _current_source.t <<  _lp.fileExt();
+        FileWriter file(_commBase, _lp, full_path_to_file.str());
+        rootLogger.info("Writing correlators to file: " ,  full_path_to_file.str());
+        LineFormatter header = file.header();
+        header << corr_axis_prefix+" " << "real " << "imag ";
+        header.endLine();
 
-    #define format std::fixed << std::setprecision(6)
+        #define format std::fixed << std::setprecision(6)
 
-    size_t mass_index = 0;
-    for (int m_i = 0; m_i < _n_masses; m_i++){
-        for (int m_j = 0; m_j <= m_i; m_j++){
-            file << "# m_" << _lp.mass_labels[m_i] << "=" << format << _lp.masses[m_i]
-                 << ", eps=" << format << _individual_naik_epsilons[m_i] << " \n";
-            file << "# m_" << _lp.mass_labels[m_j] << "=" << format << _lp.masses[m_j]
-                 << ", eps=" << format << _individual_naik_epsilons[m_j] << " \n";
-            file << std::setw(0) << std::setprecision(0) << std::scientific;
-            for (int ch = 1; ch <= 8; ch++){
-                for (int w = 0; w < _corr_l; w++){
-                    LineFormatter output = file.tag(_lp.mass_labels[m_i]+_lp.mass_labels[m_j]+" M"+std::to_string(ch)
-                                                    +" "+name_mapping[ch]);
-                    output << w;
-                    output << real(_correlators[corr_index(w, ch, mass_index)]);
-                    output << imag(_correlators[corr_index(w, ch, mass_index)]);
+        size_t mass_index = 0;
+        for (int m_i = 0; m_i < _n_masses; m_i++){
+            for (int m_j = 0; m_j <= m_i; m_j++){
+                file << "# m_" << _lp.mass_labels[m_i] << "=" << format << _lp.masses[m_i]
+                     << ", eps=" << format << _individual_naik_epsilons[m_i] << " \n";
+                file << "# m_" << _lp.mass_labels[m_j] << "=" << format << _lp.masses[m_j]
+                     << ", eps=" << format << _individual_naik_epsilons[m_j] << " \n";
+                file << std::setw(0) << std::setprecision(0) << std::scientific;
+                for (int ch = 1; ch <= 8; ch++){
+                    for (int w = 0; w < _corr_ls[corr_axis_index]; w++){
+                        LineFormatter output = file.tag(_lp.mass_labels[m_i]+_lp.mass_labels[m_j]+" M"+std::to_string(ch)
+                                                        +" "+name_mapping[ch]);
+                        output << w;
+                        output << real(_correlators[corr_index(w, ch, mass_index , corr_axis_index )]);
+                        output << imag(_correlators[corr_index(w, ch, mass_index , corr_axis_index )]);
+                    }
                 }
+                mass_index++;
             }
-            mass_index++;
         }
+        #undef format
     }
-    #undef format
 }
 
 #define INITMEAS(floatT,LAYOUT,HALO,HALOSPIN,NSTACKS) \
