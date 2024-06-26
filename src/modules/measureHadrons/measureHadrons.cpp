@@ -133,7 +133,6 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         }
     }
 
-    //TODO for loop over _n_correlator_axes
     for (size_t corr_axis_index = 0; corr_axis_index < _n_correlator_axes ; corr_axis_index++ ) 
     {
     
