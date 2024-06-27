@@ -98,6 +98,19 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
     }
 }
 
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
+    spinorOut.template iterateWithConst<64>(vect3_zero<floatT>());
+    for (int i = 0; i < nvec; i++) {
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
+        floatT lambda = lambda_vect[i];
+
+        spinorOut.template axpyThisB<64>(spinorEv.realdotProduct(spinorIn) / lambda, spinorEv);
+    }
+}
+
+
 template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
 returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
         _gAcc(spinorIn.getAccessor()) {
