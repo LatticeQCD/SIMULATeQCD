@@ -44,17 +44,21 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
                              Nodes[2] > 1 ? (unsigned int)HaloDepth : 0,
                              Nodes[3] > 1 ? (unsigned int)HaloDepth : 0};
 
+    unsigned int shifts[3] = {param.shift[0],
+                              param.shift[1],
+                              param.shift[2]};
+
     sitexyzt gCoord(_globalLattice[0], _globalLattice[1], _globalLattice[2], _globalLattice[3]);
 
     LatticeDimensions globalpos = comm.mycoords() * _localLattice;
     sitexyzt gPos(globalpos[0], globalpos[1], globalpos[2], globalpos[3]);
 
 #ifndef CPUONLY
-    initGPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos,Nodes);
-    initGPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
+    initGPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos, Nodes, shifts);
+    initGPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes, Halos);
 #endif
-    initCPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos,Nodes);
-    initCPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes,Halos);
+    initCPUBulkIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], gCoord, gPos, Nodes, shifts);
+    initCPUHaloIndexer((size_t)_localLattice[0], (size_t)_localLattice[1],(size_t)_localLattice[2], (size_t)_localLattice[3], Nodes, Halos);
 
     stdLogger.debug("Local size without Halos: " ,  globLatDataCPU[HaloDepth].lx ,  " "
                       ,  globLatDataCPU[HaloDepth].ly ,  " " ,  globLatDataCPU[HaloDepth].lz ,  " "
@@ -68,31 +72,32 @@ void initIndexer(const size_t HaloDepth, const LatticeParameters &param, Communi
 struct LatticeData globLatDataCPU[MAXHALO+1];
 
 template <size_t HaloDepth>
-void initCPUBulk(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]){
+void initCPUBulk(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4], unsigned int shifts[3]){
 
     globLatDataCPU[HaloDepth] = LatticeData(lx,ly,lz,lt,HaloDepth, Nodes,
             globCoord.x,globCoord.y,globCoord.z,globCoord.t,
-            globPos.x,globPos.y,globPos.z,globPos.t);
+            globPos.x,globPos.y,globPos.z,globPos.t,
+            shifts);
 
 }
 
 
-void initCPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt,sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]) {
+void initCPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt,sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4], unsigned int shifts[3]) {
 
 #ifdef HALODEPTH_0
-    initCPUBulk<0>(lx,ly,lz,lt,globCoord,globPos,Nodes);
+    initCPUBulk<0>(lx,ly,lz,lt,globCoord,globPos,Nodes,shifts);
 #endif
 #ifdef HALODEPTH_1
-    initCPUBulk<1>(lx,ly,lz,lt,globCoord,globPos,Nodes);
+    initCPUBulk<1>(lx,ly,lz,lt,globCoord,globPos,Nodes,shifts);
 #endif
 #ifdef HALODEPTH_2
-    initCPUBulk<2>(lx,ly,lz,lt,globCoord,globPos,Nodes);
+    initCPUBulk<2>(lx,ly,lz,lt,globCoord,globPos,Nodes,shifts);
 #endif
 #ifdef HALODEPTH_3
-    initCPUBulk<3>(lx,ly,lz,lt,globCoord,globPos,Nodes);
+    initCPUBulk<3>(lx,ly,lz,lt,globCoord,globPos,Nodes,shifts);
 #endif
 #ifdef HALODEPTH_4
-    initCPUBulk<4>(lx,ly,lz,lt,globCoord,globPos,Nodes);
+    initCPUBulk<4>(lx,ly,lz,lt,globCoord,globPos,Nodes,shifts);
 #endif
 }
 

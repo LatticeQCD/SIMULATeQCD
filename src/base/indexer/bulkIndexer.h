@@ -174,6 +174,8 @@ struct LatticeData {
     size_t globLX, globLY, globLZ, globLT; //! global lattice extents
     size_t globvol1, globvol2, globvol3, globvol4; //! products of global lattice extents
 
+    size_t shiftx, shifty, shiftz;
+
     //! Offset of the bulk sublattice from 0 0 0 0.
     //! For example, when splitting 2 1 1 1 on a 20 20 20 20 lattice,
     //! this will be 0 0 0 0 on rank 0, and 10 0 0 0 on rank 1
@@ -183,7 +185,8 @@ struct LatticeData {
 
     __host__ __device__ LatticeData(size_t _lx, size_t _ly, size_t _lz, size_t _lt, size_t _HaloDepth, unsigned int _Nodes[4],
                                     size_t _globX, size_t _globY, size_t _globZ, size_t _globT,
-                                    size_t _gPosX, size_t _gPosY, size_t _gPosZ, size_t _gPosT) :
+                                    size_t _gPosX, size_t _gPosY, size_t _gPosZ, size_t _gPosT,
+                                    unsigned int _shifts[3]) :
 
             HaloDepth{_Nodes[0] != 1 ? _HaloDepth : 0,
                       _Nodes[1] != 1 ? _HaloDepth : 0,
@@ -222,7 +225,11 @@ struct LatticeData {
             gPosX(_gPosX),
             gPosY(_gPosY),
             gPosZ(_gPosZ),
-            gPosT(_gPosT) {}
+            gPosT(_gPosT),
+            
+            shiftx(_shifts[0]),
+            shifty(_shifts[1]),
+            shiftz(_shifts[2]) {}
 
     __device__ __host__ sitexyzt globalPos(sitexyzt n) {
 
@@ -295,8 +302,8 @@ extern struct LatticeData globLatDataCPU[MAXHALO + 1];
 
 /// --------------------------------------------------------------------------------------------- INDEXER INITIALIZATION
 
-void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]);
-void initCPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4]);
+void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4], unsigned int shifts[3]);
+void initCPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4], unsigned int shifts[3]);
 void initGPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int Nodes[4], unsigned int Halos[4]);
 void initCPUHaloIndexer(size_t lx, size_t ly, size_t lz, size_t lt, unsigned int Nodes[4], unsigned int Halos[4]);
 
@@ -932,8 +939,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -960,8 +977,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1010,8 +1037,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1038,8 +1075,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1066,8 +1113,18 @@ public:
                 case 3:
                     //                      t = (t+nu_steps) % size.lt();
                     t = t + nu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1094,8 +1151,18 @@ public:
                 case 3:
                     //                      t = (t+nu_steps) % size.lt();
                     t = t + nu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1148,8 +1215,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1176,8 +1253,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1204,8 +1291,18 @@ public:
                 case 3:
                     //                      t = (t+nu_steps) % size.lt();
                     t = t + nu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1232,8 +1329,18 @@ public:
                 case 3:
                     //                      t = (t+nu_steps) % size.lt();
                     t = t + nu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1260,8 +1367,18 @@ public:
                 case 3:
                     //                      t = (t+rho_steps) % size.lt();
                     t = t + rho_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1288,8 +1405,18 @@ public:
                 case 3:
                     //                      t = (t+rho_steps) % size.lt();
                     t = t + rho_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1342,8 +1469,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1370,8 +1507,18 @@ public:
                 case 3:
                     //                      t = (t+mu_steps) % size.lt();
                     t = t + mu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1398,8 +1545,18 @@ public:
                 case 3:
                     //                      t = (t+nu_steps) % size.lt();
                     t = t + nu_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1426,8 +1583,18 @@ public:
                 case 3:
                     //                      t = (t+nu_steps) % size.lt();
                     t = t + nu_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1454,8 +1621,18 @@ public:
                 case 3:
                     //                      t = (t+rho_steps) % size.lt();
                     t = t + rho_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1482,8 +1659,18 @@ public:
                 case 3:
                     //                      t = (t+rho_steps) % size.lt();
                     t = t + rho_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1510,8 +1697,18 @@ public:
                 case 3:
                     //                      t = (t+sig_steps) % size.lt();
                     t = t + sig_steps;
-                    if (t >= (int)getLatData().ltFull)
+                    if (t >= (int)getLatData().ltFull) {
                         t -= getLatData().ltFull;
+                        x -= getLatData().shiftx;
+                        if (x < 0)
+                            x += getLatData().lxFull;
+                        y -= getLatData().shifty;
+                        if (y < 0)
+                            y += getLatData().lyFull;
+                        z -= getLatData().shiftz;
+                        if (z < 0)
+                            z += getLatData().lzFull;
+                    }
                     break;
             }
         }
@@ -1538,8 +1735,18 @@ public:
                 case 3:
                     //                      t = (t+sig_steps) % size.lt();
                     t = t + sig_steps;
-                    if (t < 0)
+                    if (t < 0) {
                         t += getLatData().ltFull;
+                        x += getLatData().shiftx;
+                        if (x >= (int)getLatData().lxFull)
+                            x -= getLatData().lxFull;
+                        y += getLatData().shifty;
+                        if (y >= (int)getLatData().lyFull)
+                            y -= getLatData().lyFull;
+                        z += getLatData().shiftz;
+                        if (z >= (int)getLatData().lzFull)
+                            z -= getLatData().lzFull;
+                    }
                     break;
             }
         }

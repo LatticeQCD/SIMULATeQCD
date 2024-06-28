@@ -12,7 +12,7 @@
 
 __device__ __constant__ struct LatticeData globLatDataGPU[MAXHALO+1];
 
-void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos,unsigned int Nodes[4]){
+void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt globCoord, sitexyzt globPos, unsigned int Nodes[4], unsigned int shifts[3]){
 
     gpuError_t gpuErr;
 
@@ -21,7 +21,8 @@ void initGPUBulkIndexer(size_t lx, size_t ly, size_t lz, size_t lt, sitexyzt glo
     for (size_t i = 0; i <= MAXHALO; ++i) {
         latDat[i] = LatticeData(lx,ly,lz,lt,i,Nodes,
                 globCoord.x,globCoord.y,globCoord.z,globCoord.t,
-                globPos.x,globPos.y,globPos.z,globPos.t);
+                globPos.x,globPos.y,globPos.z,globPos.t,
+                shifts);
     }
 
     gpuErr = gpuMemcpyToSymbol(globLatDataGPU, &latDat, sizeof(LatticeData[MAXHALO+1]), 0, gpuMemcpyHostToDevice);

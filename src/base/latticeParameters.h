@@ -15,12 +15,14 @@
 class LatticeParameters : virtual public ParameterList {
 
     int nuller[4] = {0,0,0,0};
+    int nullerShift[3] = {0,0,0};
 
 public:
 
     Parameter<int, 4> latDim;
     Parameter<int, 4> nodeDim;
     Parameter<int, 4> gpuTopo;
+    Parameter<int, 3> shift;
     Parameter<int, 1> confnumber;
     Parameter<std::string> streamName;
     Parameter<double> beta;
@@ -45,6 +47,7 @@ public:
         add(latDim, "Lattice");
         add(nodeDim, "Nodes");
         addDefault<int, 4>(gpuTopo, "Topology", nuller);
+        addDefault<int, 3>(shift, "Shift", nullerShift);
         addOptional(beta, "beta");
         addOptional(GaugefileName, "Gaugefile");
         addOptional(GaugefileName_out, "Gaugefile_out");
