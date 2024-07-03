@@ -89,24 +89,19 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
 
         vr.template axpyThisB<64>(lambda, spinorIn);
         rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
-
-        // lambda = -1;
-        // vr = spinorIn;
-        // dslash.applyMdaggM(vr, vp, true);
-        // vr.template axpyThisB<64>(lambda, vp);
-        // rootLogger.info("norm(Ax-x)=", vr.realdotProduct(vr));
     }
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
-    spinorOut.template iterateWithConst<64>(vect3_zero<floatT>());
-    for (int i = 0; i < nvec; i++) {
+    int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
+    for (int i = 0; i < num_lambda; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
         floatT lambda = lambda_vect[i];
 
-        spinorOut.template axpyThisB<64>(spinorEv.realdotProduct(spinorIn) / lambda, spinorEv);
+        floatT faktor = spinorEv.realdotProduct(spinorIn) / lambda;
+        spinorOut.template axpyThisB<64>(faktor, spinorEv);
     }
 }
 
