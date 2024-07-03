@@ -6,8 +6,15 @@
 #include "../base/latticeContainer.h"
 #include "../base/communication/siteComm.h"
 #include "../base/communication/communicationBase.h"
-#include "../modules/inverter/inverter.h"
+// #include "../modules/inverter/inverter.h"
 #include "spinorfield.h"
+
+/// Abstract base class for all kind of linear operators that shall enter the inversion
+template <typename Vector>
+class LinearOperator{
+public:
+    virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
+};
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>

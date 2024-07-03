@@ -1,5 +1,4 @@
 #include "eigenpairs.h"
-#include "spinorfield.h"
 #include "../base/IO/evnersc.h"
 #include "../base/IO/nersc.h"
 #include "../base/latticeParameters.h"
