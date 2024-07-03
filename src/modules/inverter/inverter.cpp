@@ -313,6 +313,81 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
 
 template<class floatT, size_t NStacks>
+template <typename eigenpairs, typename Spinor_t>
+void ConjugateGradient<floatT, NStacks>::invert_deflation(eigenpairs& eigenpair, 
+        LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
+        const int max_iter, const double precision)
+{
+    Spinor_t pi(spinorIn.getComm());
+    Spinor_t s(spinorIn.getComm());
+    Spinor_t r(spinorIn.getComm());
+    
+
+    int cg = 0;
+
+    SimpleArray<double, NStacks> a(0.0);
+    SimpleArray<double, NStacks> B(1.0);
+    SimpleArray<double, NStacks> norm_r2(0.0);
+    SimpleArray<double, NStacks> lambda2(0.0);
+    SimpleArray<double, NStacks> pAp(0.0);
+
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
+
+    r = spinorIn;
+
+
+    dot3 = r.dotProductStacked(r);
+    norm_r2 = real<double>(dot3);
+
+    SimpleArray<double, NStacks> in_norm(0.0);
+
+    in_norm = norm_r2;
+
+    pi = spinorIn;
+
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+    eigenpair.start_vector(spinorOut, spinorIn);
+
+    do {
+        cg++;
+
+        pi.updateAll(COMM_BOTH | Hyperplane);
+
+        dslash.applyMdaggM(s, pi, false);
+
+        dot = pi.dotProductStacked(s);
+
+        pAp = real<double>(dot);
+
+        B = -1.0* norm_r2 / pAp;
+
+        r.axpyThisLoopd(B, s, NStacks);
+
+        dot2 = r.dotProductStacked(r);
+
+        lambda2 = real<double>(dot2);
+        a = lambda2 / norm_r2;
+        norm_r2 = lambda2;
+
+        spinorOut.axpyThisLoopd(-1.0*B, pi,NStacks);
+
+        pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
+
+    } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
+
+    if(cg >= max_iter -1) {
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
+    } else {
+        rootLogger.info("CG: # iterations " ,  cg);
+    }
+
+    spinorOut.updateAll();
+}
+
+
+template<class floatT, size_t NStacks>
 template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, double delta)
 {
