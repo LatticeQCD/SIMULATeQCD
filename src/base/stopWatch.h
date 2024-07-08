@@ -149,13 +149,13 @@ class StopWatch {
 
     [[nodiscard]] std::string autoFormat() const {
         if(days() > 2){
-            return sformat("%.0fd %.0fh %.2fmin", days(), hours(), std::fmod(minutes(),60.0));
+            return sformat("%.0fd %.0fh %.2fmin", std::floor(days()), std::floor(hours()), std::fmod(minutes(),60.0));
         }
         else if(hours() > 2){
-            return sformat("%.0fh %.2fmin", hours(), std::fmod(minutes(),60.0));
+            return sformat("%.0fh %.2fmin", std::floor(hours()), std::fmod(minutes(),60.0));
         }
         else if(minutes() > 2){
-            return sformat("%.0fmin %.3fs", minutes(), std::fmod(seconds(),60.0));
+            return sformat("%.0fmin %.3fs", std::floor(minutes()), std::fmod(seconds(),60.0));
         }
         else if(seconds() > 2){
             return sformat("%.3fs", seconds());

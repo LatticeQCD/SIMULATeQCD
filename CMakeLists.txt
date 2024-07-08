@@ -483,6 +483,12 @@ set_SIMULATeQCD_property(colorElectricCorrTest PROPERTIES RUNTIME_OUTPUT_DIRECTO
 SIMULATeQCD_target_compile_definitions(colorElectricCorrTest PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests colorElectricCorrTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_stopwatch.cpp)
+add_SIMULATeQCD_executable(stopwatchTest src/testing/main_stopwatch.cpp)
+set_SIMULATeQCD_property(stopwatchTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(stopwatchTest PRIVATE HALODEPTH_1=1)
+add_to_compound_SIMULATeQCD_target(tests stopwatchTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_compressionTest.cpp)
 add_SIMULATeQCD_executable(compressionTest src/testing/main_compressionTest.cpp)
 set_SIMULATeQCD_property(compressionTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

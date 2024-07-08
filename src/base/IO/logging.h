@@ -21,8 +21,8 @@
 #include "stringFunctions.h"
 
 
-enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
-static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OFF"};
+enum LogLevel { ALL, ALLOC, TRACE, TIME, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
+static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "TIME", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OFF"};
 
 class Logger {
 private:
@@ -103,6 +103,9 @@ public:
     };
     template <typename... Args> inline std::string trace(Args&&... args) {
         return message<TRACE>(std::forward<Args>(args)...);
+    };
+    template <typename... Args> inline std::string time(Args&&... args) {
+        return message<TIME>(std::forward<Args>(args)...);
     };
     template <typename... Args> inline std::string alloc(Args&&... args) {
         return message<ALLOC>(std::forward<Args>(args)...);
