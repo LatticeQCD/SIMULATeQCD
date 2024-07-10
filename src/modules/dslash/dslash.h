@@ -177,7 +177,7 @@ public:
 
     void apply_Dslash_inverse(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut,
                 const SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn,
-                const eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigenpair,
+                const eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigen,
                 int cgMax, double residue) {
         // compute the inverse using
         // \chi_e = (1m^2 - D_{eo}D_{oe})^{-1} (m \eta_e - D_{eo} \eta_o)
@@ -185,7 +185,7 @@ public:
         dslash_eo.Dslash(spinorOut.even, spinorIn.odd, true);
         spinorOut.even = spinorIn.even * mass - spinorOut.even;
         // invert in place is possible since the CG copies the input early on
-        cg.invert_new(dslash_oe_inv, spinorOut.even, spinorOut.even, cgMax, residue); //! this takes up most of the computation time
+        cg.invert_deflation(dslash_oe_inv, spinorOut.even, spinorOut.even, cgMax, residue, eigen); //! this takes up most of the computation time
 
         dslash_oe.Dslash(spinorOut.odd, spinorOut.even, false);
         spinorOut.odd = (static_cast<floatT>(1.) / mass)*(spinorIn.odd - spinorOut.odd);
