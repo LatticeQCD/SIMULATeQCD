@@ -1,4 +1,4 @@
-#pragma once
+// #pragma once
 
 #include "../../base/communication/siteComm.h"
 #include "../../base/latticeParameters.h"
@@ -181,6 +181,8 @@ private:
 
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge;
 
+    eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigen;
+
     const TaylorMeasurementParameters param;
     const floatT mass;
     const floatT naik_epsilon;
@@ -196,8 +198,9 @@ private:
 
 public:
     TaylorMeasurement(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge,
-                      const TaylorMeasurementParameters &param, const floatT mass, const bool use_naik_epsilon,
-                      grnd_state<onDevice> &rand) :
+                    eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigen,
+                    const TaylorMeasurementParameters &param, const floatT mass, const bool use_naik_epsilon,
+                    grnd_state<onDevice> &rand) :
         gauge_Naik(gauge.getComm()),
         gauge_smeared(gauge.getComm()),
         mass(mass),
@@ -205,6 +208,7 @@ public:
         rand(rand),
         param(param),
         gauge(gauge),
+        eigen(eigen),
         naik_epsilon(use_naik_epsilon ? get_naik_epsilon_from_amc(mass) : 0.0),
         dslash_inv(gauge_smeared, gauge_Naik, mass, naik_epsilon),
         output_file(gauge.getComm(), param),
@@ -349,7 +353,7 @@ private:
         // however the inversion can be done more efficient by exploiting the odd and even structure of the matrix.
 
         //rootLogger.info("CG started");
-        dslash_inv.apply_Dslash_inverse(spinorOut, spinorIn, param.cgMax(), param.residue());
+        dslash_inv.apply_Dslash_inverse(spinorOut, spinorIn, eigen, param.cgMax(), param.residue());
         spinorIn = spinorOut; // spinorIn is the node with the inverse applied from here on
 
         // MemoryManagement::memorySummary();

@@ -314,9 +314,9 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
 template<class floatT, size_t NStacks>
 template <typename eigenpairs, typename Spinor_t>
-void ConjugateGradient<floatT, NStacks>::invert_deflation(eigenpairs& eigenpair, 
+void ConjugateGradient<floatT, NStacks>::invert_deflation( 
         LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-        const int max_iter, const double precision)
+        const int max_iter, const double precision, eigenpairs& eigenpair)
 {
     Spinor_t pi(spinorIn.getComm());
     Spinor_t s(spinorIn.getComm());

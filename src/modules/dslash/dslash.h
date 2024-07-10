@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../inverter/inverter.h"
+#include "../../spinor/eigenpairs.h"
 
 #define C_1000 (0.5)
 
@@ -176,6 +177,7 @@ public:
 
     void apply_Dslash_inverse(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut,
                 const SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn,
+                const eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigenpair,
                 int cgMax, double residue) {
         // compute the inverse using
         // \chi_e = (1m^2 - D_{eo}D_{oe})^{-1} (m \eta_e - D_{eo} \eta_o)

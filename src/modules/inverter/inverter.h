@@ -31,7 +31,7 @@ public:
     void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 
     template <typename eigenpairs, typename Spinor_t>
-    void invert_deflation(eigenpairs& eigenpair, LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
+    void invert_deflation(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision, eigenpairs& eigenpair);
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,

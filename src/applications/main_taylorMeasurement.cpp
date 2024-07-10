@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
     for (double mass : param.valence_masses.get()) {
         rootLogger.info("Using mass ", mass);
         
-        TaylorMeasurement<floatT, true, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(gauge, param, mass, param.use_naik_epsilon(), d_rand);
+        TaylorMeasurement<floatT, true, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(gauge, eigenpairs, param, mass, param.use_naik_epsilon(), d_rand);
         try {
             for (const auto& id : param.operator_ids.get()) {
                 taylor_measurement.insertOperator(id);
