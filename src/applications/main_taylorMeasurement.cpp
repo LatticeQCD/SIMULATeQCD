@@ -56,10 +56,10 @@ int main(int argc, char **argv) {
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
-    // Gaugefield<floatT,true,HaloDepth,R18> gauge_smeared(commBase);
-    // Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);
-    // HisqSmearing<floatT, true, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
-    // smearing.SmearAll();
+    Gaugefield<floatT,true,HaloDepth,R18> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);
+    HisqSmearing<floatT, true, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
+    smearing.SmearAll();
     
     // Read the Eigenvalues and Eigenvectors
     eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
@@ -67,9 +67,9 @@ int main(int argc, char **argv) {
     eigenpairs.read_evnersc(param.num_toread_vectors(), param.eigen_file());
     eigenpairs.updateAll();
 
-    // HisqDSlash<floatT,true,Even,HaloDepth,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+    HisqDSlash<floatT,true,Even,HaloDepth,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-    // eigenpairs.tester(dslash, param.num_toread_vectors());
+    eigenpairs.tester(dslash, param.num_toread_vectors());
 
     if (param.valence_masses.numberValues() == 0) {
         rootLogger.error("No valence masses specified, aborting");
