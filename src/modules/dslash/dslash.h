@@ -185,7 +185,7 @@ public:
         dslash_eo.Dslash(spinorOut.even, spinorIn.odd, true);
         spinorOut.even = spinorIn.even * mass - spinorOut.even;
         // invert in place is possible since the CG copies the input early on
-        cg.invert_deflation(dslash_oe_inv, spinorOut.even, spinorOut.even, cgMax, residue, eigen); //! this takes up most of the computation time
+        cg.invert_new(dslash_oe_inv, spinorOut.even, spinorOut.even, cgMax, residue); //! this takes up most of the computation time
 
         dslash_oe.Dslash(spinorOut.odd, spinorOut.even, false);
         spinorOut.odd = (static_cast<floatT>(1.) / mass)*(spinorIn.odd - spinorOut.odd);
