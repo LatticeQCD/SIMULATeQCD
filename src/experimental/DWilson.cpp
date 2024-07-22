@@ -164,6 +164,10 @@ template class DWilsonInverseShurComplement<double,true,2,2,1>;
 template class DWilsonEvenOdd<double,true,Even,2,2,12>;
 template class DWilsonInverseShurComplement<double,true,2,2,12>;
 
+template class DWilsonEvenOdd<double,true,Even,2,2,4>;
+template class DWilsonInverseShurComplement<double,true,2,2,4>;
+
+
 
 //template class DWilsonEvenOdd<double,true,Even,2,2,1>::dslashDiagonal<Odd>;
 //template class DWilsonEvenOdd<double,true,Even,2,2,1>::dslashDiagonal<Even>;

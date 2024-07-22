@@ -770,7 +770,9 @@ struct Print{
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
           Vect12<floatT> out = _spinorIn.getElement(site);
 
-        if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
+            sitexyzt coord = GIndexer<All, HaloDepthSpin>::getLatData().globalPos(site.coord);
+            if(coord[0] == 0 && coord[1] == 0 && coord[2] == 0 && coord[3] == 0 ){
+        //if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
              printf("x=0 print \n");
              for(int i=0; i < 12; i++){
                  printf("%f  %f %u %lu \n", real(out.data[i]), imag((out.data[i])),i,  site.isiteStack );

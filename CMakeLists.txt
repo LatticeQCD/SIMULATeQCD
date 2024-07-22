@@ -902,6 +902,13 @@ set_SIMULATeQCD_property(wilsonClover PROPERTIES RUNTIME_OUTPUT_DIRECTORY "exper
 SIMULATeQCD_target_compile_definitions(wilsonClover PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_12=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(experimental wilsonClover)
 
+set_SIMULATeQCD_gpu_backend(src/experimental/main_wilsonCloverPionTest.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp)
+add_SIMULATeQCD_executable(wilsonCloverPionTest src/experimental/main_wilsonCloverPionTest.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp)
+set_SIMULATeQCD_property(wilsonCloverPionTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "experimental")
+SIMULATeQCD_target_compile_definitions(wilsonCloverPionTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(experimental wilsonCloverPionTest)
+
+
 
 
 #---------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: APPLICATIONS

@@ -33,9 +33,12 @@ struct MakePointSource{
     __device__ __host__ Vect12<floatT> operator()(gSite site) {
 
         ColorVect<floatT> outSC;
-        LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
+        //LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
 
-        if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0  && lat.gPosZ == 0){
+        //if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0  && lat.gPosZ == 0){
+
+        sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+        if(coord[0] == 0 && coord[1] == 0 && coord[2] == 0 && coord[3] == 0 ){
             outSC[_spin].data[_color] = 1.0;
         }
 
@@ -99,9 +102,12 @@ struct MakePointSource12{
         for (size_t stack = 0; stack < 12; stack++) {
             Vect12<floatT> tmp(0.0);
 
-            LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
+      //      LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
+      //      if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 && lat.gPosZ == 0 ){
 
-            if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 && lat.gPosZ == 0 ){
+
+            sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+            if(coord[0] == 0 && coord[1] == 0 && coord[2] == 0 && coord[3] == 0 ){
                 tmp.data[stack] = 1.0;
   //               const gSiteStack site2 = GInd::getSiteStack(site,stack);
   //               printf("%lu ", site2.isiteStack);
@@ -129,10 +135,12 @@ struct MakePointSourceIdendity{
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
 
-        LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
+//        LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
 
         Vect12<floatT> tmp((floatT)0.0);
-        if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0  && lat.gPosZ == 0){
+//        if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0  && lat.gPosZ == 0){
+        sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+        if(coord[0] == 0 && coord[1] == 0 && coord[2] == 0 && coord[3] == 0 ){
             tmp.data[site.stack] = 1.0;
            // tmp.data[11] = 1.0;
             _spinorIn.setElement(site,tmp);
