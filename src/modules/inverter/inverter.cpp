@@ -572,6 +572,8 @@ template class ConjugateGradient<floatT, STACKS>;
 #define CLASSCG_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
 template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
             Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, int, double);\
+template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorIn, int, double);\
 template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
                                                             Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double); \
 template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \

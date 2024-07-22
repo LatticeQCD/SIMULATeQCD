@@ -184,7 +184,8 @@ std::vector<COMPLEX(double)> Spinorfield<floatT, onDevice, LatLayout, HaloDepth,
 
     _redBase.adjustSize(elems_);
 
-    _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, elems, NStacks>(
+    // removed elems in iterateOverBulkStacked
+    _redBase.template iterateOverBulkStacked<LatLayout, HaloDepth, NStacks>(
             SpinorDotProduct<floatT, onDevice, LatLayout, HaloDepth, elems, NStacks>(*this, y));
 
     std::vector<COMPLEX(double)> result;
@@ -781,3 +782,46 @@ template void Spinorfield<floatT, true, LO, HALOSPIN,3, STACKS>::axpyThisLoopd<6
 template struct returnSpinor<floatT,true,LO,HALOSPIN,3,STACKS>;\
 
 INIT_PLHSN_HALF(SPINOR_INIT_PLHSN_HALF)
+
+
+
+#define SPINOR_INIT_PLHSN_HALF2(floatT,LO,HALOSPIN,STACKS)\
+template class Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>;\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<1,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,1>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<2,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,2>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<3,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,3>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<4,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,4>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<8,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,8>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<10,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,10>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<12,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,12>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<14,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,14>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::copyFromStackToStackDevice<32,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12,32>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axpyThis(const COMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axpyThisB(const COMPLEX(floatT)&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axpyThisB<64>(const floatT&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axpyThis(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axpyThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axpyThisB<32>(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::xpayThisB(const SimpleArray<floatT, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,12, STACKS>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::axupbyThisB(const SimpleArray<floatT, STACKS>&, const SimpleArray<floatT, STACKS>&, const Spinorfield<floatT,true,LO,HALOSPIN,12,1>&);\
+template void Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS>::axupbyThisLoop<64>(const SimpleArray<floatT, STACKS> &a, const SimpleArray<floatT, STACKS> &b, const Spinorfield<floatT, true, LO, HALOSPIN,12, 1> &y, size_t stack_entry);\
+template void Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS>::axupbyThisLoopd<64>(const SimpleArray<double, STACKS> &a, const SimpleArray<double, STACKS> &b, const Spinorfield<floatT, true, LO, HALOSPIN,12, 1> &y, size_t stack_entry); \
+template void Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS>::axpyThisLoop<64>(const SimpleArray<floatT, STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS> &y, size_t stack_entry);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>::xpayThisBd<SimpleArray<double,STACKS>,64>(const SimpleArray<double, STACKS>&,const Spinorfield<floatT,true,LO,HALOSPIN,12,STACKS>&); \
+template void Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS>::axpyThisLoopd<32>(const SimpleArray<double, STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS> &y, size_t stack_entry);\
+template void Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS>::axpyThisLoopd<64>(const SimpleArray<double, STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN,12, STACKS> &y, size_t stack_entry);\
+template struct returnSpinor<floatT,true,LO,HALOSPIN,12,STACKS>;\
+
+
+INIT_PLHSN_HALF(SPINOR_INIT_PLHSN_HALF2)
+
+
+#define SPINOR_INIT_PLHSN_HALF21(floatT,LO,HALOSPIN,STACKS)\
+template class Spinorfield<floatT,true,LO,HALOSPIN,21,STACKS>;\
+
+INIT_PLHSN_HALF(SPINOR_INIT_PLHSN_HALF21)
+
+
+
+
+
