@@ -8,10 +8,9 @@
 #include "../modules/inverter/inverter.h"
 #include "../simulateqcd.h"
 #include "fullSpinor.h"
-//#include "fullSpinorfield.h"
-//#include "gammaMatrix.h"
 #include "matrix6x6Hermitian.h"
 
+// dslash wilson, no clover
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 12>
 class DWilson : public LinearOperator<Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 12, NStacks> > {
 
@@ -76,7 +75,7 @@ public:
 template<class floatT, size_t HaloDepth, size_t HaloDepthSpin,size_t NStacks>
 struct gamma5DiracWilson{
 
-    //Gauge accessor to access the gauge field
+    //input
     SU3Accessor<floatT> _SU3Accessor;
     SpinorColorAcc<floatT> _SpinorColorAccessor;
     floatT _csw;
@@ -91,16 +90,8 @@ struct gamma5DiracWilson{
     { }
 
     //This is the operator that is called inside the Kernel
-//    __device__ __host__ Vect12<floatT> operator()(gSite site) {
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
         SU3<floatT> link;
-
-//        for (int nu = 1; nu < 4; nu++) {
-//            for (int mu = 0; mu < nu; mu++) { 
-//                link += _SU3Accessor.template getLinkPath<All, HaloDepth>(site, mu, nu, Back(mu), Back(nu));
-//            }
-//        }
-//        link = csw*link;
 
         ColorVect<floatT> spinCol = _SpinorColorAccessor.getColorVect(site);
         ColorVect<floatT> outSC   = 2.0*_mass*spinCol;
@@ -137,38 +128,7 @@ struct gamma5DiracWilson{
         outSC = outSC - temp - GammaTMultVec(temp);
 
 
-/*         
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_up(site, 0));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_dn(site, 0));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_up(site, 1));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_dn(site, 1));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_up(site, 2));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_dn(site, 2));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_up(site, 3));
-        outSC = outSC + _SpinorColorAccessor.getColorVect(GInd::site_dn(site, 3));
-*/
         outSC = 0.5*outSC;
-
-/*
-        if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
-             printf("x=0 \n");
-             for(int i=0; i < 4; i++){
-                 printf("%f  %f %f  %f %i \n", real(outSC[i].data[0]), imag((outSC[i].data[0])),real(spinCol[i].data[0]), imag((spinCol[i].data[0])), site.stack );
-                 printf("%f  %f %f  %f %i \n", real(outSC[i].data[1]), imag((outSC[i].data[1])),real(spinCol[i].data[1]), imag((spinCol[i].data[1])), site.stack );
-                 printf("%f  %f %f  %f %i \n", real(outSC[i].data[2]), imag((outSC[i].data[2])),real(spinCol[i].data[2]), imag((spinCol[i].data[2])), site.stack );
-             }
-        }
-*/
-/*        if(site.coord[0] == 19 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
-             printf("x=19 \n");
-             for(int i=0; i < 4; i++){
-                 printf("%f  %f %f  %f \n", real(outSC[i].data[0]), imag((outSC[i].data[0])),real(spinCol[i].data[0]), imag((spinCol[i].data[0])) );
-                 printf("%f  %f %f  %f \n", real(outSC[i].data[1]), imag((outSC[i].data[1])),real(spinCol[i].data[1]), imag((spinCol[i].data[1])) );
-                 printf("%f  %f %f  %f \n", real(outSC[i].data[2]), imag((outSC[i].data[2])),real(spinCol[i].data[2]), imag((spinCol[i].data[2])) );
-             }
-        }
-*/
-
 
         outSC = Gamma5MultVec(outSC);
 
@@ -179,7 +139,7 @@ struct gamma5DiracWilson{
 template<class floatT, size_t HaloDepth, size_t HaloDepthSpin,size_t NStacks>
 struct gamma5DiracWilson2{
 
-    //Gauge accessor to access the gauge field
+    //input
     SU3Accessor<floatT> _SU3Accessor;
     SpinorColorAcc<floatT> _SpinorColorAccessor;
     floatT _csw;
@@ -228,56 +188,7 @@ struct gamma5DiracWilson2{
 };
 
 
-/*
-template<class floatT, size_t HaloDepth, size_t HaloDepthSpin,size_t NStacks>
-struct gamma5DiracWilsonStack{
-
-    //Gauge accessor to access the gauge field
-    SU3Accessor<floatT> _SU3Accessor;
-    SpinorColorAcc<floatT> _spinorIn;
-    Vect12ArrayAcc<floatT> _spinorIn2;
-    floatT _csw;
-    floatT _mass;
-
-    typedef GIndexer<All, HaloDepth > GInd;
-    //Constructor to initialize all necessary members.
-    gamma5DiracWilsonStack(Gaugefield<floatT,true,HaloDepth,R18> &gauge,const Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> &spinorIn,floatT mass, floatT csw)
-                : _SU3Accessor(gauge.getAccessor()),
-                  _spinorIn(spinorIn.getAccessor()),
-                  _spinorIn2(spinorIn.getAccessor()),
-                  _mass(mass), _csw(csw)
-    { }
-
-    //This is the operator that is called inside the Kernel
-    __device__ __host__ void operator()(gSite site) {
-
-        SimpleArray<Vect12<floatT>, NStacks> Stmp((floatT)0.0);
-
-        for (size_t stack = 0; stack < NStacks; stack++) {
-
-            if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
-             printf("x=0 \n");
-             ColorVect<floatT> tmp = _spinorIn.getColorVect(GInd::getSiteStack(site,stack));
-             for(int i=0; i < 4; i++){
-                 printf("%f  %f %lu %lu \n", real(tmp[i].data[0]), imag((tmp[i].data[0])), stack, GInd::getSiteStack(site,stack).isiteStack );
-                 printf("%f  %f %lu \n", real(tmp[i].data[1]), imag((tmp[i].data[1])), stack);
-                 printf("%f  %f %lu \n", real(tmp[i].data[2]), imag((tmp[i].data[2])), stack);
-             }
-
-             printf("vect12 \n");
-             Vect12<floatT> tmp2 = _spinorIn2.getElement(GInd::getSiteStack(site,stack));
-             for(int i=0; i < 12; i++){
-                 printf("%f  %f %lu %lu \n", real(tmp2.data[i]), imag((tmp2.data[i])), stack, GInd::getSiteStack(site,stack).isiteStack );
-
-             }
-        }
-        }
-
-    }
-};
-
-*/
-
+// speed optimation 0, compiler 1 (this was slower than stacked vector)
 template<class floatT, size_t HaloDepth, size_t HaloDepthSpin,size_t NStacks>
 struct gamma5DiracWilsonStack{
 
@@ -355,7 +266,7 @@ struct gamma5DiracWilsonStack{
     }
 };
 
-
+//still slower
 template<class floatT, size_t HaloDepth, size_t HaloDepthSpin,size_t NStacks>
 struct gamma5DiracWilsonStack2{
 
@@ -476,6 +387,7 @@ struct gamma5DiracWilsonStack2{
     }
 };
 
+//also slower
 template<class floatT, size_t HaloDepth, size_t HaloDepthSpin,size_t NStacks>
 struct gamma5DiracWilsonStack3{
 
@@ -549,7 +461,7 @@ struct gamma5DiracWilsonStack3{
 template<class floatT,Layout LatLayout, size_t HaloDepthSpin,size_t NStacks>
 struct gamma5{
 
-    //Gauge accessor to access the gauge field
+    //input
     SpinorColorAcc<floatT> _SpinorColorAccessor;
 
     typedef GIndexer<LatLayout, HaloDepthSpin > GInd;
@@ -576,7 +488,7 @@ struct Contract{
     using SpinorRHS_t = Spinorfield<floatT, true, All, 2, 12, NStacks>;
 
 
-    //Gauge accessor to access the gauge field
+    //input
     SpinorColorAcc<floatT> _SpinorColorAccessor;
     int _t;
 
@@ -589,13 +501,6 @@ struct Contract{
     //This is the operator that is called inside the Kernel
     __device__ __host__ COMPLEX(double)  operator()(gSite site){
 
-/*
-          sitexyzt coords=site.coord;
-          gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
-
-          COMPLEX(double) temp  =  _SpinorColorAccessor.template getElement<double>(siteT) *  _SpinorColorAccessor.template getElement<double>(siteT);
-
-*/
 
     sitexyzt coords=site.coord;
     gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
@@ -736,7 +641,7 @@ struct DiracWilsonEvenEven2{
 template<class floatT,Layout  LatLayoutRHS, size_t HaloDepthSpin,size_t NStacks>
 struct Print{
 
-    //Gauge accessor to access the gauge field
+    //input
     Vect12ArrayAcc<floatT> _spinorIn;
 
     typedef GIndexer<LatLayoutRHS, HaloDepthSpin > GInd;
@@ -1220,7 +1125,7 @@ public:
 
 
         // compute the inverse
-        // the chur complement splits into 3 parts for odd even
+        // the shur complement splits into 3 parts for odd even
         //(A, B)^-1 = (I , -A^-1 B)(A^-1,  0            )(I   ,  0     ) odd
         //(C, D)      (0 ,  I     )(0   ,(D-C(A^-1)B)^-1)(-C (A^-1) ,I ) even
 

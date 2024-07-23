@@ -123,6 +123,116 @@ public:
                          SpinorfieldAll<floatT, true,            HaloDepth, 12, NStacks> &spinorIn,
                          int offset);
 
+    template<class floatT,Layout LatLayout, size_t HaloDepthSpin,size_t NStacks,int gammamu>
+    void gammaMu(Spinorfield<floatT, true ,LatLayout, HaloDepthSpin, 12, NStacks> & spinorIn);
+
+    template<class floatT,Layout LatLayout, size_t HaloDepthSpin, int gammamu>
+    void gammaMuRight(Spinorfield<floatT, true ,LatLayout, HaloDepthSpin, 12, 12> & spinorIn);
+
+};
+
+
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin,size_t NStacks,int gammamu>
+struct gamma_mu{
+
+    //input
+    SpinorColorAcc<floatT> _SpinorColorAccessor;
+
+    typedef GIndexer<LatLayout, HaloDepthSpin > GInd;
+    //Constructor to initialize all necessary members.
+    gamma_mu(Spinorfield<floatT, true,LatLayout, HaloDepthSpin, 12, NStacks> &spinorIn)
+                : _SpinorColorAccessor(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    //__device__ __host__ Vect12<floatT> operator()(gSite site) {
+    __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
+
+        ColorVect<floatT> outSC = _SpinorColorAccessor.getColorVect(site);
+        if(gammamu == 0){
+            outSC = GammaXMultVec(outSC);
+        }
+        if(gammamu == 1){
+            outSC = GammaYMultVec(outSC);
+        }
+        if(gammamu == 2){
+            outSC = GammaZMultVec(outSC);
+        }
+        if(gammamu == 3){
+            outSC = GammaTMultVec(outSC);
+        }
+        if(gammamu == 5){
+            outSC = Gamma5MultVec(outSC);
+        }
+
+
+        return convertColorVectToVect12(outSC);
+    }
+};
+
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin,int gammamu>
+struct gamma_mu_right{
+
+    //input
+    Vect12ArrayAcc<floatT> _spinorIn;
+
+    typedef GIndexer<LatLayout, HaloDepthSpin > GInd;
+    //Constructor to initialize all necessary members.
+    gamma_mu_right(Spinorfield<floatT, true,LatLayout, HaloDepthSpin, 12, 12> &spinorIn)
+                : _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    //__device__ __host__ Vect12<floatT> operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
+
+        Vect12<floatT> tmp[12];
+        Vect12<floatT> tmp2[12];
+        for (size_t stack = 0; stack < 12; stack++) {
+            tmp[stack] = _spinorIn.getElement(GInd::getSiteStack(site,stack));
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            for (size_t stack2 = 0; stack2 < 12; stack2++) {
+                tmp2[stack2].data[stack] = conj(tmp[stack].data[stack2]);
+            }
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+
+            ColorVect<floatT> tmp3;
+            if(gammamu == 0){
+                tmp3 = GammaXMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu == 1){
+                tmp3 = GammaYMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu == 2){
+                tmp3 = GammaZMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu == 3){
+                tmp3 = GammaTMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu == 5){
+                tmp3 = Gamma5MultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+           
+           tmp2[stack] = convertColorVectToVect12(tmp3);
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            for (size_t stack2 = 0; stack2 < 12; stack2++) {
+                tmp[stack2].data[stack] = conj(tmp2[stack].data[stack2]);
+            }
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            _spinorIn.setElement(GInd::getSiteStack(site,stack),tmp[stack]);
+        }
+
+
+
+    }
 };
 
 

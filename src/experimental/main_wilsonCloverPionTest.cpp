@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Initialize Lattice");
     /// Initialize the Indexer on GPU and CPU.
     initIndexer(HaloDepth,param,commBase);
-        
+    
+    typedef GIndexer<All,HaloDepth> GInd;    
 
     PREC mass = param.mass();
     PREC csw = param.csw();
@@ -93,12 +94,12 @@ int main(int argc, char *argv[]) {
     // contract, make this part of the same class
     DWilsonInverse<PREC,true,2,2,12> dslashinverse12(gauge,mass,0.0);
 
-    COMPLEX(PREC) CC[20];
-    for (int t=0; t<20; t++){
+    COMPLEX(PREC) CC[GInd::getLatData().globLT];
+    for (int t=0; t<GInd::getLatData().globLT; t++){
         CC[t] =  _dslashinverseSC12.sumXYZ_TrMdaggerM(t,spinor_out,spinor_out);
     }
 
-    for (int t=0; t<20; t++){
+    for (int t=0; t<GInd::getLatData().globLT; t++){
          rootLogger.info( CC[t]);
     }
 
@@ -121,11 +122,11 @@ int main(int argc, char *argv[]) {
     timer.stop();
     timer.print("Shur test 1");
 
-    for (int t=0; t<20; t++){
+    for (int t=0; t<GInd::getLatData().globLT; t++){
         CC[t] =  _dslashinverseSC1.sumXYZ_TrMdaggerM(t,spinor_out,spinor_out);
     }
 
-    for (int t=0; t<20; t++){
+    for (int t=0; t<GInd::getLatData().globLT; t++){
         rootLogger.info( CC[t]);
     }
 
@@ -147,14 +148,61 @@ int main(int argc, char *argv[]) {
     timer.stop();
     timer.print("Shur test 4");
 
-    for (int t=0; t<20; t++){
+    for (int t=0; t<GInd::getLatData().globLT; t++){
         CC[t] =  _dslashinverseSC4.sumXYZ_TrMdaggerM(t,spinor_out,spinor_out);
     }
 
-    for (int t=0; t<20; t++){
+    for (int t=0; t<GInd::getLatData().globLT; t++){
         rootLogger.info( CC[t]);
-        fileOut << t << " " << CC[t] << "\n";
+        fileOut << t << " " << real(CC[t]) << " " << imag(CC[t]) << "\n";
     }
+
+    //vector test
+    spinor_in = spinor_out;
+    source.gammaMuRight<PREC,All,2,5>(spinor_out);
+    source.gammaMu<PREC,All,2,12,5>(spinor_out);
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  _dslashinverseSC4.sumXYZ_TrMdaggerM(t,spinor_in,spinor_out);
+    }
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        rootLogger.info( CC[t]);
+    }
+
+    // multi sources
+    timer.reset();
+    timer.start();
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] = 0.0;
+    }
+    for (int px=0; px<GInd::getLatData().globLX; px+= GInd::getLatData().globLX/2){
+        for (int py=0; py<GInd::getLatData().globLY; py+= GInd::getLatData().globLY/2){
+            for (int pz=0; pz<GInd::getLatData().globLZ; pz+= GInd::getLatData().globLZ/2){
+                for (int pt=0; pt<GInd::getLatData().globLT; pt+= GInd::getLatData().globLT/2){
+                     source.makePointSource(spinor_in,px,py,pz,pt);
+
+                     for (int j=0; j<12; j+=4){
+                         source.copyHalfFromAll(spinorAll_in4,spinor_in,j);
+                         _dslashinverseSC4.DslashInverseShurComplementClover(spinorAll_out4,spinorAll_in4,10000,1e-10);
+                         source.copyAllFromHalf(spinor_out,spinorAll_out4,j);       
+                     }
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC[t] = CC[t] +  _dslashinverseSC4.sumXYZ_TrMdaggerM(((t+pt)%(GInd::getLatData().globLT)),spinor_out,spinor_out);
+                     }
+
+                }
+            }
+        }
+    }
+    timer.stop();
+    timer.print("Shur test 4 multi");
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        rootLogger.info( CC[t]/(2.*2.*2.*2.));
+    }
+
+    
 
 
     return 0;

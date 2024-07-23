@@ -50,6 +50,29 @@ void Source::copyAllFromHalf(Spinorfield<floatT, true, All, HaloDepth, 12, 12   
 }
 
 
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin,size_t NStacks,int gammamu>
+void Source::gammaMu(Spinorfield<floatT, true,LatLayout , HaloDepthSpin, 12, NStacks> & spinorIn){
+
+     spinorIn.template iterateOverBulk<BLOCKSIZE>(gamma_mu<floatT,LatLayout,HaloDepthSpin,NStacks,gammamu>(spinorIn));
+
+};
+
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin,int gammamu>
+void Source::gammaMuRight(Spinorfield<floatT, true,LatLayout , HaloDepthSpin, 12, 12> & spinorIn){
+
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+
+    ReadIndex<All,HaloDepthSpin> index;
+    iterateFunctorNoReturn<true,BLOCKSIZE>(gamma_mu_right<floatT,LatLayout,HaloDepthSpin,gammamu>(spinorIn),index,_elems);
+
+
+};
+
+template void Source::gammaMu<double,All,2, 12, 5>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+
+template void Source::gammaMuRight<double,All,2, 5>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+
 template void Source::makePointSource<double,2>(Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
                       size_t posx, size_t posy,size_t posz,size_t post);
 
