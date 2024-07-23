@@ -75,29 +75,25 @@ void DWilsonInverse<floatT,onDevice,HaloDepthGauge,HaloDepth,NStacks>::gamma5Mul
 
 /////////////////////////////
 
+//overloaded function to be used in CG
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::applyMdaggM(SpinorRHS_t& spinorOut, const SpinorRHS_t& spinorIn, bool update){
 
-/*
+    //calculate gamma5 (D-C(A^-1)B)
+    //B
     _tmpSpin.template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,_mass,_csw));
-    _tmpSpin.updateAll();
-    spinorOut.template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(_gauge, _tmpSpin,_mass,_csw));
-
-    _tmpSpinEven.template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorIn));
-
-    // remember to multiply by gamma5
-    spinorOut = (_mass*_tmpSpinEven)-((1.0/_mass)*spinorOut);
-
-*/
-
-    _tmpSpin.template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,_mass,_csw));
+    //A^-1
     dslashDiagonalOdd( _tmpSpin, _tmpSpin,true);
     _tmpSpin.updateAll();
+    //C
     spinorOut.template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(_gauge, _tmpSpin,_mass,_csw));
 
+    //D
     dslashDiagonalEven( _tmpSpinEven,spinorIn,false);
+    //gamma 5
     _tmpSpinEven.template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(_tmpSpinEven));
 
+    //add together
     spinorOut = _tmpSpinEven-spinorOut;
     
 
@@ -105,6 +101,7 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
         spinorOut.updateAll();
 }
 
+// function to calculate sigma munu Fmunu and store it in 4 vectors
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::calcFmunu(){
 
@@ -114,6 +111,7 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
     iterateFunctorNoReturn<onDevice>(preCalcFmunu<floatT,HaloDepthGauge>(_gauge,FmunuUpper,FmunuLower,FmunuInvUpper,FmunuInvLower, _mass,_csw), calcGSite, _elems);
 }
 
+// the A matrix, true if inverse A^-1
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::dslashDiagonalOdd(Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks> & spinorOut, 
                                                                                                          const Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks> & spinorIn, bool inverse){
@@ -126,6 +124,7 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
     }
 }
 
+// the D matrix, true if inverse D^-1
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::dslashDiagonalEven(Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks> & spinorOut,
                                                                                                           const Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks> & spinorIn, bool inverse){
@@ -136,6 +135,26 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
     else{
         spinorOut.template iterateOverBulk<32>(DiracWilsonEvenEven2<floatT,Even,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));
     }
+}
+
+
+/// val = S_in * S_in but only at spatial time t
+template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+COMPLEX(double) DWilsonInverseShurComplement<floatT,onDevice,HaloDepthGauge,HaloDepthSpin,NStacks>::sumXYZ_TrMdaggerM(int t,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger, 
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn){
+
+        COMPLEX(double) result = 0;
+
+        size_t elems_ = GInd::getLatData().vol3;
+
+        _redBase.adjustSize(elems_);
+
+        _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerM<floatT, HaloDepthSpin,12>(t, spinorInDagger,spinorIn));
+
+        _redBase.reduce(result, elems_);
+        return result;
 }
 
 

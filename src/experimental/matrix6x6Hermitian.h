@@ -42,7 +42,7 @@ struct Matrix6x6 {
     return out;
     }
 
-    __host__ __device__ Matrix6x6<floatT>(Vect21<floatT> & in){
+    __host__ __device__ Matrix6x6<floatT>(Vect18<floatT> & in){
         for(int i = 0; i < 3;i++){
            val[i][i]     = real(in.data[i]);
            val[i+3][i+3] = imag(in.data[i]);
@@ -59,9 +59,9 @@ struct Matrix6x6 {
    }
 
 
-        // save uppper hermitian matrix to vect21
-        __host__ __device__ Vect21<floatT> ConvertHermitianToVect21(){
-           Vect21<floatT> out(0.0);
+        // save uppper hermitian matrix to vect18
+        __host__ __device__ Vect18<floatT> ConvertHermitianToVect18(){
+           Vect18<floatT> out(0.0);
            COMPLEX(floatT)  ii(0.0,1.0);
            for(int i = 0; i < 3;i++){
               out.data[i]    = real(val[i][i]) +ii*real(val[i+3][i+3]);

@@ -18,13 +18,13 @@ using Vect12Array = VectArray<floatT,12,onDevice>;
 
 /// to hold information about 6x6 hermitian matrices
 template <class floatT>
-using Vect21 = Vect<floatT,21>;
+using Vect18 = Vect<floatT,18>;
 
 template<class floatT>
-using Vect21ArrayAcc = VectArrayAcc<floatT,21>;
+using Vect18ArrayAcc = VectArrayAcc<floatT,18>;
 
 template<class floatT, bool onDevice>
-using Vect21Array = VectArray<floatT,21,onDevice>;
+using Vect18Array = VectArray<floatT,18,onDevice>;
 
 /////
 

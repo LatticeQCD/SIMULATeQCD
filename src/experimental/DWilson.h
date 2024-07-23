@@ -612,9 +612,9 @@ struct Contract{
 
 
 
-///////////////////////////////
+///////////////////////////////  below is the functions for shur complement inversion of wilson clover dirac operator
 
-
+//dslash split up into odd and even parts
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 12>
 class DWilsonEvenOdd : public LinearOperator<Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 12, NStacks> > {
 
@@ -633,10 +633,10 @@ class DWilsonEvenOdd : public LinearOperator<Spinorfield<floatT, onDevice, LatLa
     Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, 12, NStacks> _tmpSpinEven;
 
     // vector to holdfmunu and its inverted
-    Spinorfield<floatT, true, All, HaloDepthSpin, 21, 1> FmunuUpper;
-    Spinorfield<floatT, true, All, HaloDepthSpin, 21, 1> FmunuLower;
-    Spinorfield<floatT, true, All, HaloDepthSpin, 21, 1> FmunuInvUpper;
-    Spinorfield<floatT, true, All, HaloDepthSpin, 21, 1> FmunuInvLower;
+    Spinorfield<floatT, true, All, HaloDepthSpin, 18, 1> FmunuUpper;
+    Spinorfield<floatT, true, All, HaloDepthSpin, 18, 1> FmunuLower;
+    Spinorfield<floatT, true, All, HaloDepthSpin, 18, 1> FmunuInvUpper;
+    Spinorfield<floatT, true, All, HaloDepthSpin, 18, 1> FmunuInvLower;
 
 
 
@@ -649,11 +649,13 @@ public:
              FmunuInvUpper(_gauge.getComm()),
              FmunuInvLower(_gauge.getComm()) {}
 
-    //! not sure if need to include this
+    //overwrite function for use in CG (conjugate gradient)
     virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false) override;
 
+    // calc fmunu sigmamunu and store it in 2 vectors
     void calcFmunu();
 
+    // the part of dsalsh that takes even to even or odd to odd
     void dslashDiagonalOdd(Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks> &spinorOut,const Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks>  &spinorIn, bool inverse);
     void dslashDiagonalEven(Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks> &spinorOut,const Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks>  &spinorIn, bool inverse);
 
@@ -663,16 +665,16 @@ public:
 template<class floatT,Layout  LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin,size_t NStacks>
 struct DiracWilsonEvenEven{
 
-    //Gauge accessor to access the gauge field
+    //input 
     Vect12ArrayAcc<floatT> _spinorIn;
-    Vect21ArrayAcc<floatT> _spinorUpper;
-    Vect21ArrayAcc<floatT> _spinorLower;
+    Vect18ArrayAcc<floatT> _spinorUpper;
+    Vect18ArrayAcc<floatT> _spinorLower;
 
     typedef GIndexer<LatLayoutRHS, HaloDepthSpin > GInd;
     //Constructor to initialize all necessary members.
     DiracWilsonEvenEven(const Spinorfield<floatT, true,LatLayoutRHS, HaloDepthSpin, 12, NStacks> &spinorIn,
-                        const Spinorfield<floatT, true,All, HaloDepthGauge, 21,1> &spinorUpper,
-                        const Spinorfield<floatT, true,All, HaloDepthGauge, 21,1> &spinorLower)
+                        const Spinorfield<floatT, true,All, HaloDepthGauge, 18,1> &spinorUpper,
+                        const Spinorfield<floatT, true,All, HaloDepthGauge, 18,1> &spinorLower)
                 : _spinorIn(spinorIn.getAccessor()),
                   _spinorUpper(spinorUpper.getAccessor()),
                   _spinorLower(spinorLower.getAccessor())
@@ -680,58 +682,35 @@ struct DiracWilsonEvenEven{
 
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
-          Vect21<floatT> tmp = _spinorUpper.getElement(GInd::template convertSite<All, HaloDepthGauge>(site));
-          Matrix6x6<floatT> upper(tmp);
-   //     Matrix6x6<floatT> upper(_spinorUpper.getElement(GInd::template convertSite<All, HaloDepthGauge>(site))); 
-   //     Matrix6x6<floatT> lower(_spinorLower.getElement(GInd::template convertSite<All, HaloDepthGauge>(site)));
-          Vect12<floatT> out;
+          Vect18<floatT> tmp = _spinorUpper.getElement(GInd::template convertSite<All, HaloDepthGauge>(site));
           
+          Matrix6x6<floatT> upper(tmp);
+          Vect12<floatT> out;
+          // apply the precalculated fmunu sigmamunu on uppper 2 spin and 3 colors          
           out = upper.MatrixXVect12UpDown(_spinorIn.getElement(site),0);
           
           tmp = _spinorLower.getElement(GInd::template convertSite<All, HaloDepthGauge>(site));
           Matrix6x6<floatT> lower(tmp);
+          // apply lower part
           out = lower.MatrixXVect12UpDown(out,1);   
-    /*
-          // test
-          Vect12<floatT> temp = (1/3.0)*_spinorIn.getElement(site);
-          
-   
-        if(site.coord[0] == 1 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
-             printf("x=1 inv comp \n");
-             for(int i=0; i < 12; i++){
-                 printf("%f  %f %lu \n", real(out.data[i]), imag((out.data[i])),  site.isite );
-                 printf("%f  %f %lu \n", real(temp.data[i]), imag((temp.data[i])),  site.isite );
-             }
-        }
-
-        if(site.coord[0] == 1 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
-             printf("x=1 matrix \n");
-             for(int i=0; i < 6; i++){
-                 for(int j=0; j < 6; j++){
-                     printf("(%f  %f )", real(upper.val[i][j]), imag(upper.val[i][j]) );
-                 }
-             
-           printf("\n");
-           }
-        }
-    */
           return out;
     }
 };
 
+//alternative version
 template<class floatT,Layout  LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin,size_t NStacks>
 struct DiracWilsonEvenEven2{
 
-    //Gauge accessor to access the gauge field
+    //input
     Vect12ArrayAcc<floatT> _spinorIn;
-    Vect21ArrayAcc<floatT> _spinorUpper;
-    Vect21ArrayAcc<floatT> _spinorLower;
+    Vect18ArrayAcc<floatT> _spinorUpper;
+    Vect18ArrayAcc<floatT> _spinorLower;
 
     typedef GIndexer<LatLayoutRHS, HaloDepthSpin > GInd;
     //Constructor to initialize all necessary members.
     DiracWilsonEvenEven2(const Spinorfield<floatT, true,LatLayoutRHS, HaloDepthSpin, 12, NStacks> &spinorIn,
-                        const Spinorfield<floatT, true,All, HaloDepthGauge, 21,1> &spinorUpper,
-                        const Spinorfield<floatT, true,All, HaloDepthGauge, 21,1> &spinorLower)
+                        const Spinorfield<floatT, true,All, HaloDepthGauge, 18,1> &spinorUpper,
+                        const Spinorfield<floatT, true,All, HaloDepthGauge, 18,1> &spinorLower)
                 : _spinorIn(spinorIn.getAccessor()),
                   _spinorUpper(spinorUpper.getAccessor()),
                   _spinorLower(spinorLower.getAccessor())
@@ -739,7 +718,7 @@ struct DiracWilsonEvenEven2{
 
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
-          Vect21<floatT> tmp = _spinorUpper.getElement(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteStack(site,0)));
+          Vect18<floatT> tmp = _spinorUpper.getElement(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteStack(site,0)));
           Matrix6x6<floatT> upper(tmp);
           Vect12<floatT> out;
 
@@ -753,7 +732,7 @@ struct DiracWilsonEvenEven2{
     }
 };
 
-
+// print information
 template<class floatT,Layout  LatLayoutRHS, size_t HaloDepthSpin,size_t NStacks>
 struct Print{
 
@@ -787,11 +766,11 @@ struct Print{
     }
 };
 
-
+// the part of dslash that takes odd to even or even to odd
 template<class floatT,Layout  LatLayoutLHS,Layout  LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin,size_t NStacks,bool g5 = true>
 struct DiracWilsonEvenOdd{
 
-    //Gauge accessor to access the gauge field
+    //declare input variables
     SU3Accessor<floatT> _SU3Accessor;
     SpinorColorAcc<floatT> _SpinorColorAccessor;
     floatT _csw;
@@ -842,16 +821,7 @@ struct DiracWilsonEvenOdd{
     }
 
         outSC = 0.5*outSC;
- /*   
-        if(site.coord[0] == 1 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
-             printf("x=0 \n");
-             for(int i=0; i < 4; i++){
-                 printf("%f  %f %lu \n", real(outSC[i].data[0]), imag((outSC[i].data[0])),  site.isite );
-                 printf("%f  %f %lu \n", real(outSC[i].data[1]), imag((outSC[i].data[1])),  site.isite );
-                 printf("%f  %f %lu \n", real(outSC[i].data[2]), imag((outSC[i].data[2])),  site.isite );
-             }
-        }
-    */
+        
         if(g5){
              outSC = Gamma5MultVec(outSC);
         }
@@ -860,7 +830,7 @@ struct DiracWilsonEvenOdd{
     }
 };
 
-
+// alternative version with only odd or even part
 template<class floatT,Layout  LatLayoutLHS,Layout  LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin,size_t NStacks,bool g5 = true>
 struct DiracWilsonEvenOdd2{
 
@@ -909,6 +879,7 @@ struct DiracWilsonEvenOdd2{
         outSC = outSC - temp-temp2 + GammaTMultVec(temp-temp2);
 
         outSC = 0.5*outSC;
+        // multiply by gamma 5 when needed
         if(g5){
              outSC = Gamma5MultVec(outSC);
         }
@@ -917,7 +888,7 @@ struct DiracWilsonEvenOdd2{
     }
 };
 
-
+// calculate sigmunu fmunu that splits into 2 block matrices of size 6X6 and save to vector 18 complex
 template<class floatT,size_t HaloDepthGauge>
 struct preCalcFmunu{
 
@@ -926,19 +897,19 @@ struct preCalcFmunu{
     floatT _csw;
     floatT _mass;
     FieldStrengthTensor<floatT,HaloDepthGauge,true,R18> FT;
-    Vect21ArrayAcc<floatT> _spinorOutUpper;
-    Vect21ArrayAcc<floatT> _spinorOutLower;
-    Vect21ArrayAcc<floatT> _spinorOutInvUpper;
-    Vect21ArrayAcc<floatT> _spinorOutInvLower;
+    Vect18ArrayAcc<floatT> _spinorOutUpper;
+    Vect18ArrayAcc<floatT> _spinorOutLower;
+    Vect18ArrayAcc<floatT> _spinorOutInvUpper;
+    Vect18ArrayAcc<floatT> _spinorOutInvLower;
 
 
     typedef GIndexer<All, HaloDepthGauge > GInd;
     //Constructor to initialize all necessary members.
     preCalcFmunu(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
-                 Spinorfield<floatT, true, All, HaloDepthGauge, 21, 1> & spinorOutUpper,
-                 Spinorfield<floatT, true, All, HaloDepthGauge, 21, 1> & spinorOutLower,
-                 Spinorfield<floatT, true, All, HaloDepthGauge, 21, 1> & spinorOutInvUpper,
-                 Spinorfield<floatT, true, All, HaloDepthGauge, 21, 1> & spinorOutInvLower,
+                 Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> & spinorOutUpper,
+                 Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> & spinorOutLower,
+                 Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> & spinorOutInvUpper,
+                 Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> & spinorOutInvLower,
                  floatT mass, floatT csw)
                 : _SU3Accessor(gauge.getAccessor()),
                   _spinorOutUpper(spinorOutUpper.getAccessor()),
@@ -1005,7 +976,7 @@ struct preCalcFmunu{
                 M6x6.val[i+3][j+3] +=  Fmunu(i,j);
             }
         }
-
+/*
         // write out fmunu
         if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
              printf("x=0 F01 \n");
@@ -1018,7 +989,7 @@ struct preCalcFmunu{
 
              }
         } 
-
+*/
 
         ///add mass and csw parameters
         for(int i=0; i < 6; i++){
@@ -1027,6 +998,7 @@ struct preCalcFmunu{
             }
         }
 
+/*
         // test to see iff fmunu is corret
         if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
              printf("x=0 sigma*Fmunu \n");
@@ -1040,7 +1012,7 @@ struct preCalcFmunu{
 
              }
         }
-
+*/
 
 
         for(int i=0; i < 6; i++){
@@ -1050,9 +1022,9 @@ struct preCalcFmunu{
         // invert
         Matrix6x6<floatT> M6x6inv = M6x6.invert();
 
-        // save uppper hermitian matrix to vect21
-        Vect21<floatT> tmp = M6x6.ConvertHermitianToVect21();
-        Vect21<floatT> tmpInv = M6x6inv.ConvertHermitianToVect21();
+        // save uppper hermitian matrix to vect18
+        Vect18<floatT> tmp = M6x6.ConvertHermitianToVect18();
+        Vect18<floatT> tmpInv = M6x6inv.ConvertHermitianToVect18();
 
         _spinorOutUpper.setElement(site,tmp);
         _spinorOutInvUpper.setElement(site,tmpInv); 
@@ -1120,6 +1092,7 @@ struct preCalcFmunu{
                 M6x6.val[i][j]    = -0.5*_csw*M6x6.val[i][j];
             }
         }
+/*
         // test to see iff fmunu is corret
         if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
              printf("x=0 sigma*Fmunu lower \n");
@@ -1133,6 +1106,7 @@ struct preCalcFmunu{
 
              }
         }
+*/
 
         for(int i=0; i < 6; i++){
             M6x6.val[i][i] += _mass;
@@ -1141,9 +1115,9 @@ struct preCalcFmunu{
         // invert matrix 
         M6x6inv = M6x6.invert();
 
-        // save lower hermitian matrix to vect21
-        tmp = M6x6.ConvertHermitianToVect21();
-        tmpInv = M6x6inv.ConvertHermitianToVect21();
+        // save lower hermitian matrix to vect18
+        tmp = M6x6.ConvertHermitianToVect18();
+        tmpInv = M6x6inv.ConvertHermitianToVect18();
 
         _spinorOutLower.setElement(site,tmp);
         _spinorOutInvLower.setElement(site,tmpInv);
@@ -1153,7 +1127,39 @@ struct preCalcFmunu{
     }
 };
 
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct SumXYZ_TrMdaggerM{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
 
+
+    SpinorColorAcc<floatT> _spinorIn;
+    SpinorColorAcc<floatT> _spinorInDagger;
+    int _t;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SumXYZ_TrMdaggerM(int t,const SpinorRHS_t &spinorInDagger, const SpinorRHS_t &spinorIn)
+          :  _t(t), _spinorIn(spinorIn.getAccessor()), _spinorInDagger(spinorInDagger.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+
+        sitexyzt coords=site.coord;
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
+                                 _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
+        }
+
+        return temp;
+    }
+};
+
+
+// class that does the inversion
 template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class DWilsonInverseShurComplement {
 private:
@@ -1173,11 +1179,10 @@ public:
                       floatT mass, floatT csw = 0.0) :
                       dslash(gauge, mass, csw), _redBase(gauge.getComm()), _mass(mass), _csw(csw), _gauge(gauge) {
         _redBase.adjustSize(GIndexer<All, HaloDepthGauge>::getLatData().vol3 * NStacks);
+        dslash.calcFmunu();
     }
 
-    //void gamma5MultVec(Spinorfield<floatT, onDevice,Even, HaloDepthSpin, 12, NStacks> &spinorOut,
-    //                   Spinorfield<floatT, onDevice,Even, HaloDepthSpin, 12, NStacks> &spinorIn );
-
+    // version without the clover term
     void DslashInverseShurComplement(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorOut,
                      SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorIn,
                 int cgMax, double residue) {
@@ -1186,13 +1191,11 @@ public:
         (spinorOut.even).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.odd,_mass,_csw));
         spinorOut.even = spinorIn.even-(1.0/_mass)*spinorOut.even;
         spinorOut.odd  = spinorIn.odd;
-        //gamma5MultVec(spinorOut.even,spinorOut.even);
         (spinorOut.even).template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
         spinorOut.updateAll();
        
 
         cg.invert(dslash, spinorIn.even, spinorOut.even, cgMax, residue);
-//        spinorIn.even  = spinorOut.even;
         spinorIn.odd  = (1.0/_mass)*spinorOut.odd;
         spinorIn.updateAll();
         
@@ -1215,52 +1218,51 @@ public:
 
    //     spinorIn.even.template iterateOverBulk<32>(Print(spinorIn.even));
 
-        //setup fmunu, should probably make this into a step at initialising Dslash
-        dslash.calcFmunu();
-          
 
-        // compute the inverse 
+        // compute the inverse
+        // the chur complement splits into 3 parts for odd even
+        //(A, B)^-1 = (I , -A^-1 B)(A^-1,  0            )(I   ,  0     ) odd
+        //(C, D)      (0 ,  I     )(0   ,(D-C(A^-1)B)^-1)(-C (A^-1) ,I ) even
+
+        // first part from right
+        //  A^-1(odd)
         dslash.dslashDiagonalOdd(spinorOut.odd,spinorIn.odd,true);
         spinorOut.odd.updateAll();
+        // C (A^-1(odd))
         (spinorOut.even).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorOut.odd,_mass,_csw));
+        // (-C (A^-1) ,I )
         spinorOut.even = spinorIn.even-spinorOut.even;
+        //(I   ,  0     ) odd
         spinorOut.odd  = spinorIn.odd;
+
+        //second matrix
+        // use gamma5 hermiticity of (D-C(A^-1)B), so multiply by gamma5 for even part
         (spinorOut.even).template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
         spinorOut.updateAll();
-
-
+        //invert even part
         cg.invert(dslash, spinorIn.even, spinorOut.even, cgMax, residue);
-        
+        // (A^-1,  0 ) Odd
         dslash.dslashDiagonalOdd(spinorIn.odd,spinorOut.odd,true);
         spinorIn.updateAll();
 
-     //   spinorIn.even = spinorIn.even;
+        //third matrix
+        // B even
         (spinorOut.odd).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.even,_mass,_csw));
+        // A^-1 (B even)
         dslash.dslashDiagonalOdd(spinorOut.odd,spinorOut.odd,true);
-  
+        // I even
         spinorOut.even  = spinorIn.even;        
-
-/*
-        tmp.odd = (1.0/_mass)*spinorOut.odd;
-        tmp.odd = tmp.odd -spinorOut.odd;
-
-
-        SimpleArray<COMPLEX(double), 1> dot3(0);
-        dot3 = (tmp.odd).dotProductStacked(tmp.odd);
-        for (int t=0; t<1; t++){
-            std::cout << "dot source after " << dot3[t] << std::endl;
-        } 
-*/
+        // (I , -A^-1 B)
         spinorOut.odd = spinorIn.odd-spinorOut.odd;
 
-       // spinorOut.odd = spinorIn.odd-(1.0/_mass)*spinorOut.odd;
-       // spinorOut.even  = spinorIn.even;
 
         spinorOut.updateAll();
       }
 
+      // function to contract 2 vectors
+      COMPLEX(double) sumXYZ_TrMdaggerM(int t,const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorInDagger,
+                                            const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
 
-    //COMPLEX(double) Correlator(int t,const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, NStacks> &spinorIn);
 
 };
 
