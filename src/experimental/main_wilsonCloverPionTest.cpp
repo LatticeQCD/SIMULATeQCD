@@ -8,13 +8,17 @@ struct wilsonParam : LatticeParameters {
     Parameter <std::string> gauge_file;
     Parameter <std::string> gauge_file_folder;
     Parameter<double,1>  mass; 
+    Parameter<double,1>  mass2;
     Parameter<double,1>  csw;
+    Parameter<int, 4> sourcePos;
 
     wilsonParam() {
         add(gauge_file, "gauge_file");
         add(gauge_file_folder, "gauge_file_folder");
         add(mass, "mass");
+        add(mass2, "mass2");
         add(csw, "csw");
+        add(sourcePos, "sourcePos");
     }
 };
 
@@ -39,8 +43,16 @@ int main(int argc, char *argv[]) {
     
     typedef GIndexer<All,HaloDepth> GInd;    
 
+    // set parameters
     PREC mass = param.mass();
+    PREC mass2 = param.mass2();
     PREC csw = param.csw();
+    size_t sourcePos[4];
+    sourcePos[0]=param.sourcePos()[0];
+    sourcePos[1]=param.sourcePos()[1];
+    sourcePos[2]=param.sourcePos()[2];
+    sourcePos[3]=param.sourcePos()[3];
+
 
     // file write
     std::string Name = "pion_m";
@@ -202,7 +214,94 @@ int main(int argc, char *argv[]) {
         rootLogger.info( CC[t]/(2.*2.*2.*2.));
     }
 
+
+    // change mass
+    // stack 4 version
+    source.makePointSource(spinor_in,1,0,0,0);
+    _dslashinverseSC4.setMass(mass2);
+
+    for (int j=0; j<12; j+=4){
+        source.copyHalfFromAll(spinorAll_in4,spinor_in,j);
+        _dslashinverseSC4.DslashInverseShurComplementClover(spinorAll_out4,spinorAll_in4,10000,1e-14);
+        source.copyAllFromHalf(spinor_out,spinorAll_out4,j);
+    }
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  _dslashinverseSC4.sumXYZ_TrMdaggerM(t,spinor_out,spinor_out);
+    }
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        rootLogger.info( CC[t]);
+    }
+
+    //version that gives the correlator from input spinor only (spinorAll inside class instead)
+    _dslashinverseSC4.setMass(mass);
+    source.makePointSource(spinor_in,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]);
+
+    _dslashinverseSC4.antiperiodicBoundaries();
+    _dslashinverseSC4.correlator(spinor_out,spinor_in,10000,1e-14);
+
+    /////////pion
+    // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  _dslashinverseSC4.sumXYZ_TrMdaggerM(((t+sourcePos[3])%(GInd::getLatData().globLT)),spinor_out,spinor_out);
+    }
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        rootLogger.info("pion ", CC[t]);
+    }
+    /////////rho
+    // tr( (g5*M^d*g5) gi M gi )
     
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  0.0;
+    }
+    //x diraction
+    spinor_in = spinor_out;    
+    source.gammaMuRight<PREC,All,2,0>(spinor_in);
+    source.gammaMu<PREC,All,2,12,0>(spinor_in);
+
+    source.gammaMuRight<PREC,All,2,5>(spinor_in);
+    source.gammaMu<PREC,All,2,12,5>(spinor_in);
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  CC[t]+_dslashinverseSC4.sumXYZ_TrMdaggerM(((t+sourcePos[3])%(GInd::getLatData().globLT)),spinor_out,spinor_in);
+    }
+    //y diraction
+    spinor_in = spinor_out;
+    source.gammaMuRight<PREC,All,2,1>(spinor_in);
+    source.gammaMu<PREC,All,2,12,1>(spinor_in);
+
+    source.gammaMuRight<PREC,All,2,5>(spinor_in);
+    source.gammaMu<PREC,All,2,12,5>(spinor_in);
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  CC[t]+_dslashinverseSC4.sumXYZ_TrMdaggerM(((t+sourcePos[3])%(GInd::getLatData().globLT)),spinor_out,spinor_in);
+    }
+    //z diraction
+    spinor_in = spinor_out;
+    source.gammaMuRight<PREC,All,2,2>(spinor_in);
+    source.gammaMu<PREC,All,2,12,2>(spinor_in);
+
+    source.gammaMuRight<PREC,All,2,5>(spinor_in);
+    source.gammaMu<PREC,All,2,12,5>(spinor_in);
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        CC[t] =  CC[t]+_dslashinverseSC4.sumXYZ_TrMdaggerM(((t+sourcePos[3])%(GInd::getLatData().globLT)),spinor_out,spinor_in);
+    }
+
+    //  scalar
+    // tr( (g5*M^d*g5) M )
+    
+
+    // Axial vector
+    // tr( (g5*M^d*g5) gi g5 M gi g5 )
+
+
+    for (int t=0; t<GInd::getLatData().globLT; t++){
+        rootLogger.info("rho ", CC[t]);
+    }
+
 
 
     return 0;

@@ -69,9 +69,41 @@ void Source::gammaMuRight(Spinorfield<floatT, true,LatLayout , HaloDepthSpin, 12
 
 };
 
+
+template<class floatT,size_t HaloDepthGauge, size_t HaloDepthSpin>
+void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                         Spinorfield<floatT, true,All , HaloDepthSpin, 12, 12> & spinorOut,
+                         Spinorfield<floatT, true,All , HaloDepthSpin, 12, 12> & spinorIn,
+                         floatT lambda, int steps){
+     for(int i =0;i < steps;i++){
+         spinorOut.template iterateOverBulk<BLOCKSIZE>(SmearSource<floatT,HaloDepthGauge,HaloDepthSpin>(gauge,spinorIn,lambda*lambda/(4.0*steps)));
+         spinorIn = spinorOut;
+         spinorIn.updateAll();
+     }
+     spinorOut = spinorIn;
+     spinorOut.updateAll();
+
+};
+
+template void Source::smearSource(Gaugefield<double,true,2,R18> &gauge,
+                         Spinorfield<double, true,All ,2, 12, 12> & spinorOut,
+                         Spinorfield<double, true,All ,2, 12, 12> & spinorIn,
+                         double lambda, int steps);
+
+template void Source::gammaMu<double,All,2, 12, 0>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<double,All,2, 12, 1>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<double,All,2, 12, 2>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<double,All,2, 12, 3>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
 template void Source::gammaMu<double,All,2, 12, 5>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
 
+
+
+template void Source::gammaMuRight<double,All,2, 0>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<double,All,2, 1>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<double,All,2, 2>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<double,All,2, 3>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
 template void Source::gammaMuRight<double,All,2, 5>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+
 
 template void Source::makePointSource<double,2>(Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
                       size_t posx, size_t posy,size_t posz,size_t post);

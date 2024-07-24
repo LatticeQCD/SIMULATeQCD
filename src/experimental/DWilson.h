@@ -9,6 +9,8 @@
 #include "../simulateqcd.h"
 #include "fullSpinor.h"
 #include "matrix6x6Hermitian.h"
+#include "source.h"
+
 
 // dslash wilson, no clover
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 12>
@@ -564,6 +566,17 @@ public:
     void dslashDiagonalOdd(Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks> &spinorOut,const Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks>  &spinorIn, bool inverse);
     void dslashDiagonalEven(Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks> &spinorOut,const Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks>  &spinorIn, bool inverse);
 
+    // function to update mass
+    void setMass(double mass){
+         _mass = mass;
+    }
+
+    // function to update Csw
+    void setCsw(double csw){
+         _csw = csw;
+    }
+
+
 };
 
 
@@ -793,11 +806,36 @@ struct DiracWilsonEvenOdd2{
     }
 };
 
+//set lin to -link if it reaches over the boundary
+template<class floatT,size_t HaloDepthGauge>
+struct setAntiPeriodicBoundary{
+
+    //input
+    SU3Accessor<floatT> _SU3Accessor;
+  
+    typedef GIndexer<All, HaloDepthGauge > GInd;
+    setAntiPeriodicBoundary(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge): _SU3Accessor(gauge.getAccessor()){}
+    
+    __device__ __host__ void operator()(gSite site) {
+
+        SU3<floatT> tmp = (-1.0)*_SU3Accessor.getLink(GInd::getSiteMu(site,3));
+
+        size_t lt = GIndexer<All, HaloDepthGauge>::getLatData().lt;
+
+        if(site.coord[3] == (lt-1) ){
+            _SU3Accessor.setLink(GInd::getSiteMu(site,3),tmp);
+        }
+
+    }
+
+};
+
+
 // calculate sigmunu fmunu that splits into 2 block matrices of size 6X6 and save to vector 18 complex
 template<class floatT,size_t HaloDepthGauge>
 struct preCalcFmunu{
 
-    //Gauge accessor to access the gauge field
+    //input
     SU3Accessor<floatT> _SU3Accessor;
     floatT _csw;
     floatT _mass;
@@ -1079,15 +1117,35 @@ private:
     LatticeContainer<onDevice,COMPLEX(double)> _redBase;
     typedef GIndexer<All, HaloDepthGauge> GInd;
 
+    //spinorAll to do inversion on
+    SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> _tmpIn;
+    SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> _tmpOut;
+
 public:
     DWilsonInverseShurComplement(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge,
                       floatT mass, floatT csw = 0.0) :
-                      dslash(gauge, mass, csw), _redBase(gauge.getComm()), _mass(mass), _csw(csw), _gauge(gauge) {
+                      dslash(gauge, mass, csw), _redBase(gauge.getComm()), _mass(mass), _csw(csw), _gauge(gauge),
+                      _tmpIn(gauge.getComm()), _tmpOut(gauge.getComm()) {
         _redBase.adjustSize(GIndexer<All, HaloDepthGauge>::getLatData().vol3 * NStacks);
         dslash.calcFmunu();
     }
 
-    // version without the clover term
+    // function to update mass
+    void setMass(floatT mass){
+         _mass = mass;
+         dslash.setMass(mass);
+         dslash.calcFmunu();
+    }
+
+    // function to update Csw
+    void setCsw(floatT csw){
+         _csw = csw;
+         dslash.setCsw(csw);
+         dslash.calcFmunu();
+    }
+
+
+    // shur complement, version without the clover term, see below for explanation
     void DslashInverseShurComplement(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorOut,
                      SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorIn,
                 int cgMax, double residue) {
@@ -1119,9 +1177,7 @@ public:
     void DslashInverseShurComplementClover(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorOut,
                      SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorIn,
                 int cgMax, double residue) {
-        SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> tmp(_gauge.getComm());
 
-   //     spinorIn.even.template iterateOverBulk<32>(Print(spinorIn.even));
 
 
         // compute the inverse
@@ -1168,6 +1224,28 @@ public:
       COMPLEX(double) sumXYZ_TrMdaggerM(int t,const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorInDagger,
                                             const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
 
+      //function that takes in 12*12 source and computes correlator
+      void correlator(Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorOut,
+                      Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn,
+                int cgMax, double residue){
+
+          Source source;
+          for (int j=0; j<12; j+=NStacks){
+              source.copyHalfFromAll(_tmpIn,spinorIn,j);
+              DslashInverseShurComplementClover(_tmpOut,_tmpIn,cgMax,residue);
+              source.copyAllFromHalf(spinorOut,_tmpOut,j);
+          }
+
+      }
+
+      // set antiperiodic boundaries
+      void antiperiodicBoundaries(){
+          typedef GIndexer<All, HaloDepthGauge> GInd;
+          size_t _elems = GInd::getLatData().vol4;
+          CalcGSite<All, HaloDepthGauge> calcGSite;
+          iterateFunctorNoReturn<onDevice>(setAntiPeriodicBoundary<floatT,HaloDepthGauge>(_gauge), calcGSite, _elems);
+          _gauge.updateAll();
+      }
 
 };
 

@@ -49,6 +49,39 @@ struct MakePointSource12{
 };
 
 
+template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin>
+struct SmearSource{
+
+    // accessor to access the spinor field
+    SpinorColorAcc<floatT> _spinorIn;
+    SU3Accessor<floatT> _SU3Accessor;
+
+    floatT _smear;
+
+    typedef GIndexer<All, HaloDepthSpin > GInd;
+    //Constructor to initialize all necessary members.
+    SmearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                Spinorfield<floatT, true, All, HaloDepthSpin, 12, 12> & spinorIn,floatT smear)
+                : _SU3Accessor(gauge.getAccessor()),
+                  _spinorIn(spinorIn.getAccessor()),
+                  _smear(smear)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
+
+        ColorVect<floatT> tmp = (1.0-4*2.0*_smear)*_spinorIn.getColorVect(site);
+
+        for(int dir=0; dir < 4; dir ++){
+            tmp = tmp + _smear*_SU3Accessor.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site,dir)))*
+                               _spinorIn.getColorVect(GInd::site_up(site, dir));
+            tmp = tmp + _smear*_SU3Accessor.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, dir),dir)))*
+                              _spinorIn.getColorVect(GInd::site_dn(site, dir));
+        }
+
+        return convertColorVectToVect12(tmp);
+    }
+};
 
 template<class floatT,Layout layoutRHS, size_t HaloDepth, size_t NStacks>
 struct CopyAllFromHalf{
@@ -103,6 +136,8 @@ struct CopyHalfFromAll{
     }
 };
 
+
+
 class Source {
 private:
 
@@ -128,6 +163,12 @@ public:
 
     template<class floatT,Layout LatLayout, size_t HaloDepthSpin, int gammamu>
     void gammaMuRight(Spinorfield<floatT, true ,LatLayout, HaloDepthSpin, 12, 12> & spinorIn);
+
+    template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin>
+    void smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                     Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorOut,
+                     Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorIn,
+                     floatT lambda, int steps);
 
 };
 
