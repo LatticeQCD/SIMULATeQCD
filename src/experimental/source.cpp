@@ -85,6 +85,23 @@ void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
 
 };
 
+template<class floatT, size_t HaloDepthGauge,size_t HaloDepthSpin,size_t NStacks>
+void Source::shiftSource1t(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                         Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorOut,
+                         Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorIn){
+
+    spinorOut.template iterateOverBulk<BLOCKSIZE>(ShiftSource<floatT,HaloDepthGauge,HaloDepthSpin,NStacks>(gauge,spinorIn));
+    spinorOut.updateAll();
+
+}
+
+
+//////////template declarations
+
+template void Source::shiftSource1t<double,2,2,12>(Gaugefield<double,true,2,R18> &gauge,
+                         Spinorfield<double, true ,All, 2, 12, 12> & spinorOut,
+                         Spinorfield<double, true ,All, 2, 12, 12> & spinorIn);
+
 template void Source::smearSource(Gaugefield<double,true,2,R18> &gauge,
                          Spinorfield<double, true,All ,2, 12, 12> & spinorOut,
                          Spinorfield<double, true,All ,2, 12, 12> & spinorIn,

@@ -240,6 +240,7 @@ int main(int argc, char *argv[]) {
 
     _dslashinverseSC4.antiperiodicBoundaries();
     _dslashinverseSC4.correlator(spinor_out,spinor_in,10000,1e-14);
+    _dslashinverseSC4.antiperiodicBoundaries();
 
     /////////pion
     // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
@@ -303,6 +304,75 @@ int main(int argc, char *argv[]) {
     }
 
 
+    // test of initial conditions
+    Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_tmp(commBase);
+    source.makePointSource(spinor_in,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]);
+
+    _dslashinverseSC4.antiperiodicBoundaries();
+    _dslashinverseSC4.correlator(spinor_out,spinor_in,10000,1e-14);
+    _dslashinverseSC4.antiperiodicBoundaries();
+
+    spinor_out.template iterateOverBulk<32>(Print(spinor_out,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3],0));
+    spinor_out.template iterateOverBulk<32>(Print(spinor_out,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]+1,0));
+
+
+    DWilsonEvenOdd<double,true, Even, HaloDepth, HaloDepth, 12> dslash12(gauge, mass, csw);
+    dslash12.calcFmunu();
+
+    _dslashinverseSC4.antiperiodicBoundaries();
+    dslash<double,true,All,2,2,12>(gauge,spinor_tmp,spinor_in,spinor_out,dslash12.FmunuUpper ,dslash12.FmunuLower);
+//    DWilson<PREC,true,All,2,2,12> dslash0(gauge,mass,0.0);
+//    dslash0.applyMdaggM(spinor_tmp,spinor_out);
+//    DWilsonInverse<PREC,true,2,2,12> dslashinverse(gauge,mass,0.0);
+//    dslashinverse.gamma5MultVec(spinor_tmp,spinor_tmp);
+
+    _dslashinverseSC4.antiperiodicBoundaries();
+
+    source.makePointSource(spinor_in,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]);
+    spinor_in = spinor_in- spinor_tmp;
+    SimpleArray<COMPLEX(double), 12> dot2(0);
+    dot2 = spinor_in.dotProductStacked(spinor_in);
+    for (int t=0; t<12; t++){
+        rootLogger.info("dot2 ", dot2[t]);
+    }
+
+    Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_out_2(commBase);
+    source.makePointSource(spinor_in,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]+1);
+
+    _dslashinverseSC4.antiperiodicBoundaries();
+    _dslashinverseSC4.correlator(spinor_out_2,spinor_in,10000,1e-14);
+    _dslashinverseSC4.antiperiodicBoundaries();
+    spinor_out_2.template iterateOverBulk<32>(Print(spinor_out_2,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]+1,0));
+    spinor_out_2.template iterateOverBulk<32>(Print(spinor_out_2,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]+2,0));
+    dot2 = spinor_out_2.dotProductStacked(spinor_out_2);
+    for (int t=0; t<12; t++){
+        rootLogger.info("dot2 out2 ", dot2[t]);
+    }
+
+    //////
+    _dslashinverseSC4.antiperiodicBoundaries();
+    source.shiftSource1t<double,2,2,12>(gauge,spinor_in,spinor_out);
+    spinor_in = spinor_in- spinor_out_2;
+    spinor_in.template iterateOverBulk<32>(Print(spinor_in,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3],0));
+    spinor_in.template iterateOverBulk<32>(Print(spinor_in,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]+1,0));
+
+    dot2 = spinor_in.dotProductStacked(spinor_in);
+    for (int t=0; t<12; t++){
+        rootLogger.info("dot2 diff shift", dot2[t]);
+    }
+
+
+
+    source.shiftSource1t<double,2,2,12>(gauge,spinor_tmp,spinor_out); 
+    dslash<double,true,All,2,2,12>(gauge,spinor_in,spinor_out,spinor_tmp,dslash12.FmunuUpper ,dslash12.FmunuLower);
+    source.makePointSource(spinor_tmp,sourcePos[0],sourcePos[1],sourcePos[2],sourcePos[3]+1);
+    spinor_in = spinor_tmp-spinor_in;
+   
+
+    _dslashinverseSC4.correlator(spinor_out_2,spinor_in,10000,1e-14);
+
+    _dslashinverseSC4.antiperiodicBoundaries();
+    
 
     return 0;
 }

@@ -136,6 +136,58 @@ struct CopyHalfFromAll{
     }
 };
 
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct SumXYZ_TrM{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+
+    SpinorColorAcc<floatT> _spinorIn;
+    int _t;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SumXYZ_TrM(int t, const SpinorRHS_t &spinorIn)
+          :  _t(t), _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+
+        sitexyzt coords=site.coord;
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack)).data[stack];
+        }
+
+        return temp;
+    }
+};
+
+template<class floatT, size_t HaloDepthGauge,size_t HaloDepthSpin,size_t NStacks>
+struct ShiftSource{
+
+     SU3Accessor<floatT> _SU3Accessor;
+     SpinorColorAcc<floatT> _spinorIn;
+ 
+     typedef GIndexer<All, HaloDepthSpin > GInd;
+     ShiftSource( Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                 Spinorfield<floatT, true, All, HaloDepthSpin, 12, NStacks> &spinorIn):
+                 _SU3Accessor(gauge.getAccessor()), _spinorIn(spinorIn.getAccessor())
+     {}
+
+      __device__ __host__ Vect12<floatT> operator()(gSiteStack site){
+ 
+          //ColorVect<floatT> out = _SU3Accessor.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, 3),3)))*_spinorIn.getColorVect(GInd::site_dn(site, 3));
+          ColorVect<floatT> out =_spinorIn.getColorVect(GInd::site_dn(site, 3));
+
+          //ColorVect<floatT> tmp = GammaTMultVec(out);
+          //out = (-0.5)*tmp+(-0.5)*out;     
+
+          return convertColorVectToVect12(out);
+      }
+};
 
 
 class Source {
@@ -169,6 +221,11 @@ public:
                      Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorOut,
                      Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorIn,
                      floatT lambda, int steps);
+
+    template<class floatT, size_t HaloDepthGauge,size_t HaloDepthSpin,size_t NStacks>
+    void shiftSource1t(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                         Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorOut,
+                         Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorIn);
 
 };
 

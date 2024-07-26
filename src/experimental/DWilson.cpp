@@ -81,17 +81,17 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
 
     //calculate gamma5 (D-C(A^-1)B)
     //B
-    _tmpSpin.template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,_mass,_csw));
+    _tmpSpin.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,_mass,_csw));
     //A^-1
     dslashDiagonalOdd( _tmpSpin, _tmpSpin,true);
     _tmpSpin.updateAll();
     //C
-    spinorOut.template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(_gauge, _tmpSpin,_mass,_csw));
+    spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(_gauge, _tmpSpin,_mass,_csw));
 
     //D
     dslashDiagonalEven( _tmpSpinEven,spinorIn,false);
     //gamma 5
-    _tmpSpinEven.template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(_tmpSpinEven));
+    _tmpSpinEven.template iterateOverBulk<BLOCKSIZE>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(_tmpSpinEven));
 
     //add together
     spinorOut = _tmpSpinEven-spinorOut;
@@ -117,10 +117,10 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
                                                                                                          const Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks> & spinorIn, bool inverse){
 
     if(inverse){
-        spinorOut.template iterateOverBulk<32>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuInvUpper,FmunuInvLower));
+        spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuInvUpper,FmunuInvLower));
     }
     else{
-        spinorOut.template iterateOverBulk<32>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));
+        spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));
     }
 }
 
@@ -130,11 +130,26 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
                                                                                                           const Spinorfield<floatT, true, Even, HaloDepthSpin, 12, NStacks> & spinorIn, bool inverse){
 
     if(inverse){
-        spinorOut.template iterateOverBulk<32>(DiracWilsonEvenEven2<floatT,Even,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuInvUpper,FmunuInvLower));
+        spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Even,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuInvUpper,FmunuInvLower));
     }
     else{
-        spinorOut.template iterateOverBulk<32>(DiracWilsonEvenEven2<floatT,Even,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));
+        spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Even,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));
     }
+}
+
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void dslash(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> & _gauge,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> & spinorOut,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> & spinorTmp,
+      const Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> & spinorIn,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 18, 1> & FmunuUpper,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 18, 1> & FmunuLower){
+
+        spinorTmp.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd2<floatT,All,All,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,0.0,0.0));
+        spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,All,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));
+
+        spinorOut = spinorOut + spinorTmp;
+        spinorOut.updateAll();
 }
 
 
@@ -157,6 +172,25 @@ COMPLEX(double) DWilsonInverseShurComplement<floatT,onDevice,HaloDepthGauge,Halo
         return result;
 }
 
+template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+COMPLEX(double) DWilsonInverseShurComplement<floatT,onDevice,HaloDepthGauge,HaloDepthSpin,NStacks>::sumXYZ_TrM(int t,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn){
+
+        COMPLEX(double) result = 0;
+
+        size_t elems_ = GInd::getLatData().vol3;
+
+        _redBase.adjustSize(elems_);
+
+        _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrM<floatT, HaloDepthSpin,12>(t,spinorIn));
+
+        _redBase.reduce(result, elems_);
+        return result;
+}
+
+
+///////template declarations
 
 
 template class DWilson<double,true,All,2,2,1>;
@@ -185,6 +219,17 @@ template class DWilsonInverseShurComplement<double,true,2,2,12>;
 
 template class DWilsonEvenOdd<double,true,Even,2,2,4>;
 template class DWilsonInverseShurComplement<double,true,2,2,4>;
+
+
+
+template void dslash<double,true,All,2,2,12>(Gaugefield<double, true, 2, R18> & _gauge,
+            Spinorfield<double, true,All, 2, 12, 12> & spinorOut,
+            Spinorfield<double, true,All, 2, 12, 12> & spinorTmp,
+      const Spinorfield<double, true,All, 2, 12, 12> & spinorIn,
+            Spinorfield<double, true,All, 2, 18, 1> & FmunuUpper,
+            Spinorfield<double, true,All, 2, 18, 1> & FmunuLower);
+
+
 
 
 

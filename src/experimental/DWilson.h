@@ -11,6 +11,12 @@
 #include "matrix6x6Hermitian.h"
 #include "source.h"
 
+#ifdef USE_HIP_AMD
+#define BLOCKSIZE 64
+#else
+#define BLOCKSIZE 32
+#endif
+
 
 // dslash wilson, no clover
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks = 12>
@@ -538,7 +544,7 @@ class DWilsonEvenOdd : public LinearOperator<Spinorfield<floatT, onDevice, LatLa
 
     Spinorfield<floatT, true, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 12, NStacks> _tmpSpin;
     Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, 12, NStacks> _tmpSpinEven;
-
+public:
     // vector to holdfmunu and its inverted
     Spinorfield<floatT, true, All, HaloDepthSpin, 18, 1> FmunuUpper;
     Spinorfield<floatT, true, All, HaloDepthSpin, 18, 1> FmunuLower;
@@ -554,7 +560,9 @@ public:
              FmunuUpper(_gauge.getComm()),
              FmunuLower(_gauge.getComm()),
              FmunuInvUpper(_gauge.getComm()),
-             FmunuInvLower(_gauge.getComm()) {}
+             FmunuInvLower(_gauge.getComm()) {
+    calcFmunu();
+    }
 
     //overwrite function for use in CG (conjugate gradient)
     virtual void applyMdaggM(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false) override;
@@ -575,9 +583,16 @@ public:
     void setCsw(double csw){
          _csw = csw;
     }
-
-
+  
 };
+
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void dslash(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> & _gauge,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> & spinorOut,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> & spinorTmp,
+      const Spinorfield<floatT, true,All, HaloDepthSpin, 12, NStacks> & spinorIn,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 18, 1> & FmunuUpper,
+            Spinorfield<floatT, true,All, HaloDepthSpin, 18, 1> & FmunuLower);
 
 
 template<class floatT,Layout  LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin,size_t NStacks>
@@ -656,11 +671,12 @@ struct Print{
 
     //input
     Vect12ArrayAcc<floatT> _spinorIn;
+    size_t _px, _py, _pz, _pt, _stack;
 
     typedef GIndexer<LatLayoutRHS, HaloDepthSpin > GInd;
     //Constructor to initialize all necessary members.
-    Print(Spinorfield<floatT, true,LatLayoutRHS, HaloDepthSpin, 12, NStacks> &spinorIn)
-                : _spinorIn(spinorIn.getAccessor())
+    Print(Spinorfield<floatT, true,LatLayoutRHS, HaloDepthSpin, 12, NStacks> &spinorIn,size_t px,size_t py,size_t pz,size_t pt, size_t stack)
+                : _spinorIn(spinorIn.getAccessor()), _px(px), _py(py), _pz(pz), _pt(pt), _stack(stack)
     { }
 
     //This is the operator that is called inside the Kernel
@@ -668,15 +684,15 @@ struct Print{
           Vect12<floatT> out = _spinorIn.getElement(site);
 
             sitexyzt coord = GIndexer<All, HaloDepthSpin>::getLatData().globalPos(site.coord);
-            if(coord[0] == 0 && coord[1] == 0 && coord[2] == 0 && coord[3] == 0 ){
+            if(coord[0] == _px && coord[1] == _py && coord[2] == _pz && coord[3] == _pt && site.stack == _stack ){
         //if(site.coord[0] == 0 && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 0 ){
              printf("x=0 print \n");
              for(int i=0; i < 12; i++){
                  printf("%f  %f %u %lu \n", real(out.data[i]), imag((out.data[i])),i,  site.isiteStack );
              }
-            Vect12<floatT> tmp((floatT)0.0);
-            tmp.data[site.stack] = 1.0;
-            out = tmp;
+            //Vect12<floatT> tmp((floatT)0.0);
+            //tmp.data[site.stack] = 1.0;
+       //     out = tmp;
 
       }
 
@@ -1151,10 +1167,10 @@ public:
                 int cgMax, double residue) {
         // compute the inverse 
 
-        (spinorOut.even).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.odd,_mass,_csw));
+        (spinorOut.even).template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.odd,_mass,_csw));
         spinorOut.even = spinorIn.even-(1.0/_mass)*spinorOut.even;
         spinorOut.odd  = spinorIn.odd;
-        (spinorOut.even).template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
+        (spinorOut.even).template iterateOverBulk<BLOCKSIZE>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
         spinorOut.updateAll();
        
 
@@ -1163,7 +1179,7 @@ public:
         spinorIn.updateAll();
         
         spinorIn.even = spinorIn.even;
-        (spinorOut.odd).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.even,_mass,_csw));
+        (spinorOut.odd).template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.even,_mass,_csw));
         spinorOut.odd = spinorIn.odd-(1.0/_mass)*spinorOut.odd;
         spinorOut.even  = spinorIn.even;
 
@@ -1178,7 +1194,7 @@ public:
                      SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 12, NStacks> &spinorIn,
                 int cgMax, double residue) {
 
-
+        spinorIn.updateAll();
 
         // compute the inverse
         // the shur complement splits into 3 parts for odd even
@@ -1190,7 +1206,7 @@ public:
         dslash.dslashDiagonalOdd(spinorOut.odd,spinorIn.odd,true);
         spinorOut.odd.updateAll();
         // C (A^-1(odd))
-        (spinorOut.even).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorOut.odd,_mass,_csw));
+        (spinorOut.even).template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorOut.odd,_mass,_csw));
         // (-C (A^-1) ,I )
         spinorOut.even = spinorIn.even-spinorOut.even;
         //(I   ,  0     ) odd
@@ -1198,7 +1214,7 @@ public:
 
         //second matrix
         // use gamma5 hermiticity of (D-C(A^-1)B), so multiply by gamma5 for even part
-        (spinorOut.even).template iterateOverBulk<32>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
+        (spinorOut.even).template iterateOverBulk<BLOCKSIZE>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
         spinorOut.updateAll();
         //invert even part
         cg.invert(dslash, spinorIn.even, spinorOut.even, cgMax, residue);
@@ -1208,7 +1224,7 @@ public:
 
         //third matrix
         // B even
-        (spinorOut.odd).template iterateOverBulk<32>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.even,_mass,_csw));
+        (spinorOut.odd).template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.even,_mass,_csw));
         // A^-1 (B even)
         dslash.dslashDiagonalOdd(spinorOut.odd,spinorOut.odd,true);
         // I even
@@ -1223,6 +1239,7 @@ public:
       // function to contract 2 vectors
       COMPLEX(double) sumXYZ_TrMdaggerM(int t,const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorInDagger,
                                             const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
+      COMPLEX(double) sumXYZ_TrM(int t, const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
 
       //function that takes in 12*12 source and computes correlator
       void correlator(Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorOut,
