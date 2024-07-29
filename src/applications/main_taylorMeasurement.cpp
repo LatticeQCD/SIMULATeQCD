@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
     Gaugefield<floatT,true,HaloDepth,R18> gauge_smeared(commBase);
     Gaugefield<floatT,true,HaloDepth,U3R14> gauge_Naik(commBase);
-    HisqSmearing<floatT, true, HaloDepth> smearing(gauge, gauge_smeared, gauge_Naik);
+    HisqSmearing<floatT, true, HaloDepth, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
     smearing.SmearAll();
     
     // Read the Eigenvalues and Eigenvectors

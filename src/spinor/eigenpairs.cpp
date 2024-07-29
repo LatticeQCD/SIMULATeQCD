@@ -3,6 +3,7 @@
 #include "../base/IO/nersc.h"
 #include "../base/latticeParameters.h"
 #include <fstream>
+#define BLOCKSIZE 64
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
@@ -72,22 +73,31 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec) {
-    int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
+
+    // if (nvec < 0)
+    // {
+    //     nvec0 = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
+    // }
+    // else
+    // {
+    //     nvec0 = nvec;
+    // }
+
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
         
         floatT lambda = lambda_vect[i];
-        rootLogger.info("lambda=", lambda);
-        rootLogger.info("lambda**2=", lambda * lambda);
+        // rootLogger.info("lambda=", lambda);
+        // rootLogger.info("lambda**2=", lambda * lambda);
         
         vr = spinorIn;
-        rootLogger.info("norm(x)**2=", vr.realdotProduct(vr));
+        // rootLogger.info("norm(x)**2=", vr.realdotProduct(vr));
         
         dslash.applyMdaggM(vr, spinorIn, true);
-        rootLogger.info("norm(Ax)**2=", vr.realdotProduct(vr));
+        // rootLogger.info("norm(Ax)**2=", vr.realdotProduct(vr));
 
-        vr.template axpyThisB<64>(lambda, spinorIn);
+        vr.template axpyThisB<BLOCKSIZE>(lambda, spinorIn);
         rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
     }
 }
@@ -101,7 +111,7 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vect
         floatT lambda = lambda_vect[i];
 
         floatT faktor = spinorEv.realdotProduct(spinorIn) / lambda;
-        spinorOut.template axpyThisB<64>(faktor, spinorEv);
+        spinorOut.template axpyThisB<BLOCKSIZE>(faktor, spinorEv);
     }
 }
 
