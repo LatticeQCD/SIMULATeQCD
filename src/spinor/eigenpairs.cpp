@@ -74,14 +74,12 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec) {
 
-    // if (nvec < 0)
-    // {
-    //     nvec0 = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
-    // }
-    // else
-    // {
-    //     nvec0 = nvec;
-    // }
+    if (nvec < 0) {
+        nvec = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
+    } else
+    {
+        nvec = nvec;
+    }
 
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
