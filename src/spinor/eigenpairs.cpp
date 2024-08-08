@@ -7,7 +7,9 @@
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc(int nvec, const std::string &fname) {   
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc(int nvec, const std::string &fname) {
+    rootLogger.info("EW read in ", nvec);
+   
     lambda_vect.reserve(nvec);
     double lambda_temp;
     if(onDevice) {
@@ -25,6 +27,7 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
 {
+
     evNerscFormat<HaloDepth> evnersc(this->getComm());
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
 
