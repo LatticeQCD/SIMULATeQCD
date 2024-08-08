@@ -8,7 +8,6 @@
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc(int nvec, const std::string &fname) {
-    rootLogger.info("EW read in ", nvec);
    
     lambda_vect.reserve(nvec);
     double lambda_temp;
@@ -21,6 +20,9 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
             lambda_vect[n] = lambda_temp;
         }
     } 
+    int nvec0 = spinors.size();
+    rootLogger.info("nvec0 = ", nvec0);
+
 }
 
 
@@ -76,14 +78,15 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec) {
-    int nvec0 = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
+    int nvec0 = spinors.size();
+    rootLogger.info("EW read in ", nvec0);
+
     if (nvec < 0) {
         nvec = nvec0;
     } else
     {
         nvec = nvec;
     }
-    rootLogger.info("EW read in ", nvec0);
 
     for (int i = 0; i < nvec; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
@@ -107,8 +110,10 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
-    int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
-    for (int i = 0; i < num_lambda; i++) {
+    int nvec0 = spinors.size();
+    rootLogger.info("num_lambda = ", nvec0);
+
+    for (int i = 0; i < nvec0; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
         floatT lambda = lambda_vect[i];
 
