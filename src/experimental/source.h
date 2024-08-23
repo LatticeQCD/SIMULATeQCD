@@ -70,9 +70,9 @@ struct SmearSource{
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
 
-        ColorVect<floatT> tmp = (1.0-4*2.0*_smear)*_spinorIn.getColorVect(site);
+        ColorVect<floatT> tmp = (1.0-3*2.0*_smear)*_spinorIn.getColorVect(site);
 
-        for(int dir=0; dir < 4; dir ++){
+        for(int dir=0; dir < 3; dir ++){
             tmp = tmp + _smear*_SU3Accessor.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site,dir)))*
                                _spinorIn.getColorVect(GInd::site_up(site, dir));
             tmp = tmp + _smear*_SU3Accessor.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, dir),dir)))*
@@ -227,6 +227,13 @@ public:
                          Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorOut,
                          Spinorfield<floatT, true ,All, HaloDepthSpin, 12, 12> & spinorIn);
 
+
+    template<class floatT,Layout LatLayout, size_t HaloDepthSpin>
+    void daggerSource(Spinorfield<floatT, true ,LatLayout, HaloDepthSpin, 12, 12> & spinorIn);
+
+    template<class floatT,Layout LatLayout, size_t HaloDepthSpin>
+    void conjugateSource(Spinorfield<floatT, true ,LatLayout, HaloDepthSpin, 12, 12> & spinorIn);
+
 };
 
 
@@ -333,4 +340,71 @@ struct gamma_mu_right{
     }
 };
 
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin>
+struct ConjugateSource{
+
+    //input
+    Vect12ArrayAcc<floatT> _spinorIn;
+
+    typedef GIndexer<LatLayout, HaloDepthSpin > GInd;
+    //Constructor to initialize all necessary members.
+    ConjugateSource(Spinorfield<floatT, true,LatLayout, HaloDepthSpin, 12, 12> &spinorIn)
+                : _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    //__device__ __host__ Vect12<floatT> operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
+
+        Vect12<floatT> tmp[12];
+        Vect12<floatT> tmp2[12];
+        for (size_t stack = 0; stack < 12; stack++) {
+            tmp[stack] = conj(_spinorIn.getElement(GInd::getSiteStack(site,stack)));
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            _spinorIn.setElement(GInd::getSiteStack(site,stack),tmp[stack]);
+        }
+
+
+
+    }
+};
+
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin>
+struct DaggerSource{
+
+    //input
+    Vect12ArrayAcc<floatT> _spinorIn;
+
+    typedef GIndexer<LatLayout, HaloDepthSpin > GInd;
+    //Constructor to initialize all necessary members.
+    DaggerSource(Spinorfield<floatT, true,LatLayout, HaloDepthSpin, 12, 12> &spinorIn)
+                : _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    //__device__ __host__ Vect12<floatT> operator()(gSite site) {
+    __device__ __host__ void operator()(gSite site) {
+
+        Vect12<floatT> tmp[12];
+        Vect12<floatT> tmp2[12];
+        for (size_t stack = 0; stack < 12; stack++) {
+            tmp[stack] = _spinorIn.getElement(GInd::getSiteStack(site,stack));
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            for (size_t stack2 = 0; stack2 < 12; stack2++) {
+                tmp2[stack2].data[stack] = conj(tmp[stack].data[stack2]);
+            }
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            _spinorIn.setElement(GInd::getSiteStack(site,stack),tmp2[stack]);
+        }
+
+
+
+    }
+};
 

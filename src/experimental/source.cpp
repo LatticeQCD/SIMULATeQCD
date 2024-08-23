@@ -69,6 +69,30 @@ void Source::gammaMuRight(Spinorfield<floatT, true,LatLayout , HaloDepthSpin, 12
 
 };
 
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin>
+void Source::daggerSource(Spinorfield<floatT, true,LatLayout , HaloDepthSpin, 12, 12> & spinorIn){
+
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+
+    ReadIndex<All,HaloDepthSpin> index;
+    iterateFunctorNoReturn<true,BLOCKSIZE>(DaggerSource<floatT,LatLayout,HaloDepthSpin>(spinorIn),index,_elems);
+
+
+};
+
+template<class floatT,Layout LatLayout, size_t HaloDepthSpin>
+void Source::conjugateSource(Spinorfield<floatT, true,LatLayout , HaloDepthSpin, 12, 12> & spinorIn){
+
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+
+    ReadIndex<All,HaloDepthSpin> index;
+    iterateFunctorNoReturn<true,BLOCKSIZE>(ConjugateSource<floatT,LatLayout,HaloDepthSpin>(spinorIn),index,_elems);
+
+
+};
+
 
 template<class floatT,size_t HaloDepthGauge, size_t HaloDepthSpin>
 void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
@@ -120,6 +144,9 @@ template void Source::gammaMuRight<double,All,2, 1>(Spinorfield<double,true,All,
 template void Source::gammaMuRight<double,All,2, 2>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
 template void Source::gammaMuRight<double,All,2, 3>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
 template void Source::gammaMuRight<double,All,2, 5>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+
+template void Source::daggerSource<double,All,2>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
+template void Source::conjugateSource<double,All,2>(Spinorfield<double,true,All,2, 12, 12> &spinorIn);
 
 
 template void Source::makePointSource<double,2>(Spinorfield<double, true, All, 2, 12, 12> & spinorIn,

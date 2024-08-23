@@ -18,7 +18,15 @@ gauge_file_folder = ./
 format        = nersc
 endianness    = auto
 mass          = 3.5
-mass2         = 4.5
+mass2         = 3.5
 csw           = 0.5
 sourcePos     = 3 4 7 0
 sources       = 1 1 1 1
+smear1         = 2.0
+smearSteps1    = 50
+smear2         = 2.0
+smearSteps2    = 20
+tolerance      = 1e-12
+maxiter        = 10000
+
+

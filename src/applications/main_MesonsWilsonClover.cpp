@@ -12,6 +12,12 @@ struct wilsonParam : LatticeParameters {
     Parameter<double,1>  csw;
     Parameter<int, 4> sourcePos;
     Parameter<int, 4> sources;
+    Parameter<double,1>  smear1;
+    Parameter<int,1>  smearSteps1;
+    Parameter<double,1>  smear2;
+    Parameter<int,1>  smearSteps2;
+    Parameter<double,1> tolerance;
+    Parameter<int,1> maxiter;
 
     wilsonParam() {
         add(gauge_file, "gauge_file");
@@ -21,6 +27,13 @@ struct wilsonParam : LatticeParameters {
         add(csw, "csw");
         add(sourcePos, "sourcePos");
         add(sources, "sources");
+        add(smear1, "smear1");
+        add(smearSteps1, "smearSteps1");
+        add(smear2, "smear2");
+        add(smearSteps2, "smearSteps2");
+        add(maxiter, "maxiter");
+        add(tolerance, "tolerance");
+
     }
 };
 
@@ -55,6 +68,14 @@ int main(int argc, char *argv[]) {
     sourcePos[1]=param.sourcePos()[1];
     sourcePos[2]=param.sourcePos()[2];
     sourcePos[3]=param.sourcePos()[3];
+
+    PREC lambda1 = param.smear1();
+    int smearSteps1 = param.smearSteps1();
+    PREC lambda2 = param.smear2();
+    int smearSteps2 = param.smearSteps2();
+
+    PREC tolerance = param.tolerance();
+    int maxiter = param.maxiter();
 
 
     // file write
@@ -159,8 +180,24 @@ int main(int argc, char *argv[]) {
                      _dslashinverseSC4.setMass(mass);
                      source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
 
-                    _dslashinverseSC4.antiperiodicBoundaries();
-                    _dslashinverseSC4.correlator(spinor_out,spinor_in,10000,1e-12);
+                     
+                     //smear source
+                     _dslashinverseSC4.antiperiodicBoundaries();
+                     if(smearSteps1 > 0){
+                         source.smearSource(gauge,spinor_out,spinor_in,lambda1,smearSteps1);
+                     }
+                     //source.conjugateSource(spinor_in);
+
+                    //_dslashinverseSC4.antiperiodicBoundaries();
+                    _dslashinverseSC4.correlator(spinor_out,spinor_in,maxiter,tolerance);
+                    //_dslashinverseSC4.antiperiodicBoundaries();
+
+                    //source.daggerSource(spinor_out);
+                    if(smearSteps1 > 0){
+                        //smearting uses both vectors and saves the output in both
+                        source.smearSource(gauge,spinor_in,spinor_out,lambda1,smearSteps1);
+                    }
+                    //source.daggerSource(spinor_out);
                     _dslashinverseSC4.antiperiodicBoundaries();
 
                      // heavier mass
@@ -168,7 +205,13 @@ int main(int argc, char *argv[]) {
                      source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
 
                     _dslashinverseSC4.antiperiodicBoundaries();
-                    _dslashinverseSC4.correlator(spinor_out_s,spinor_in,10000,1e-12);
+                    if(smearSteps2 > 0){
+                         source.smearSource(gauge,spinor_out_s,spinor_in,lambda2,smearSteps2);
+                    }
+                    _dslashinverseSC4.correlator(spinor_out_s,spinor_in,maxiter,tolerance);
+                    if(smearSteps2 > 0){
+                        source.smearSource(gauge,spinor_in,spinor_out_s,lambda2,smearSteps2);
+                    }
                     _dslashinverseSC4.antiperiodicBoundaries();
 
 
