@@ -320,6 +320,9 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         eigenpairs& eigen,
         const int max_iter, const double precision)
 {
+    rootLogger.info("spinorOut_inverter0=", spinorOut.realdotProduct(spinorOut));
+    eigen.start_vector(spinorOut, spinorIn);
+
     Spinor_t pi(spinorIn.getComm());
     Spinor_t s(spinorIn.getComm());
     Spinor_t r(spinorIn.getComm());
@@ -350,7 +353,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     pi = spinorIn;
 
     spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
-    eigen.start_vector(spinorOut, spinorIn);
+    // rootLogger.info("spinorIn_inverter=", spinorIn.realdotProduct(spinorIn));
 
     do {
         cg++;

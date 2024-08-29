@@ -70,7 +70,12 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
             }
             Vect3<floatT> ret = evnersc.template get<floatT>();
             spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
-    
+            // if ((x+y+z+t)==0) {
+            //     Vect3<floatT> test = spinorAccessor.getElement(site);
+            //     rootLogger.info("ev0=", test(0));
+            //     rootLogger.info("ev1=", test(1));
+            //     rootLogger.info("ev2=", test(2));
+            // }
         }
     }
 }
@@ -117,9 +122,11 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vect
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
         floatT lambda = lambda_vect[i];
 
-        floatT faktor = spinorEv.realdotProduct(spinorIn) / lambda;
+        floatT faktor = -1.0 * spinorEv.realdotProduct(spinorIn) / lambda;
+        rootLogger.info("faktor=", faktor);
         spinorOut.template axpyThisB<BLOCKSIZE>(faktor, spinorEv);
     }
+    rootLogger.info("spinorOut=", spinorOut.realdotProduct(spinorOut));
 }
 
 

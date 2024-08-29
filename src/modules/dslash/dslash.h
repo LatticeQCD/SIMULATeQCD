@@ -184,8 +184,11 @@ public:
         // \chi_o = \frac 1m (\eta_o - D_{oe}\chi_e)
         dslash_eo.Dslash(spinorOut.even, spinorIn.odd, true);
         spinorOut.even = spinorIn.even * mass - spinorOut.even;
+        rootLogger.info("spinorOut0=", spinorOut.realdotProduct(spinorOut));
+
         // invert in place is possible since the CG copies the input early on
         cg.invert_deflation(dslash_oe_inv, spinorOut.even, spinorOut.even, eigen, cgMax, residue); //! this takes up most of the computation time
+        rootLogger.info("spinorOut1=", spinorOut.realdotProduct(spinorOut));
 
         dslash_oe.Dslash(spinorOut.odd, spinorOut.even, false);
         spinorOut.odd = (static_cast<floatT>(1.) / mass)*(spinorIn.odd - spinorOut.odd);
