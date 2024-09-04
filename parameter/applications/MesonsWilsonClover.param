@@ -28,5 +28,6 @@ smear2         = 2.0
 smearSteps2    = 20
 tolerance      = 1e-12
 maxiter        = 10000
-
+use_hyp        = 0
+use_mass2      = 1
 

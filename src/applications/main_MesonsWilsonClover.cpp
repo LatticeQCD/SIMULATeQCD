@@ -2,6 +2,7 @@
 #include "../experimental/fullSpinor.h"
 #include "../experimental/DWilson.h"
 #include "../experimental/source.h"
+#include "../modules/hyp/hypSmearing.h"
 
 template<class floatT>
 struct wilsonParam : LatticeParameters {
@@ -18,6 +19,8 @@ struct wilsonParam : LatticeParameters {
     Parameter<int,1>  smearSteps2;
     Parameter<double,1> tolerance;
     Parameter<int,1> maxiter;
+    Parameter<int,1> use_hyp;
+    Parameter<int,1> use_mass2;
 
     wilsonParam() {
         add(gauge_file, "gauge_file");
@@ -33,6 +36,8 @@ struct wilsonParam : LatticeParameters {
         add(smearSteps2, "smearSteps2");
         add(maxiter, "maxiter");
         add(tolerance, "tolerance");
+        addDefault (use_hyp,"use_hyp",0);
+        add(use_mass2, "use_mass2");
 
     }
 };
@@ -105,7 +110,23 @@ int main(int argc, char *argv[]) {
     gauge.readconf_nersc(file_path);
     gauge.updateAll();
 
-    // make source
+////////////   hyp smearing
+
+    if(param.use_hyp() > 0){
+        for(int i = 0; i<param.use_hyp();i++){
+            rootLogger.info( "Start hyp smearing"  );
+            Gaugefield<PREC, true, HaloDepth> gauge_out(commBase);
+            HypSmearing<PREC, true, HaloDepth ,R18> smearing(gauge);
+            smearing.SmearAll(gauge_out);
+            gauge = gauge_out;
+
+       }
+       rootLogger.info( "end hyp smearing"  );
+       gauge.updateAll();
+    }
+
+
+    // make source class used to manipulate or create the source
     Source source;
 
     // start timer
@@ -200,20 +221,21 @@ int main(int argc, char *argv[]) {
                     //source.daggerSource(spinor_out);
                     _dslashinverseSC4.antiperiodicBoundaries();
 
-                     // heavier mass
-                     _dslashinverseSC4.setMass(mass2);
-                     source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+                    if(param.use_mass2()>0){
+                        // heavier mass
+                        _dslashinverseSC4.setMass(mass2);
+                        source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
 
-                    _dslashinverseSC4.antiperiodicBoundaries();
-                    if(smearSteps2 > 0){
-                         source.smearSource(gauge,spinor_out_s,spinor_in,lambda2,smearSteps2);
+                       _dslashinverseSC4.antiperiodicBoundaries();
+                       if(smearSteps2 > 0){
+                           source.smearSource(gauge,spinor_out_s,spinor_in,lambda2,smearSteps2);
+                       }
+                       _dslashinverseSC4.correlator(spinor_out_s,spinor_in,maxiter,tolerance);
+                       if(smearSteps2 > 0){
+                          source.smearSource(gauge,spinor_in,spinor_out_s,lambda2,smearSteps2);
+                       }
+                       _dslashinverseSC4.antiperiodicBoundaries();
                     }
-                    _dslashinverseSC4.correlator(spinor_out_s,spinor_in,maxiter,tolerance);
-                    if(smearSteps2 > 0){
-                        source.smearSource(gauge,spinor_in,spinor_out_s,lambda2,smearSteps2);
-                    }
-                    _dslashinverseSC4.antiperiodicBoundaries();
-
 
                      /////////pion
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
@@ -356,7 +378,7 @@ int main(int argc, char *argv[]) {
 
 
 /////////////////s quark
-
+                     if(param.use_mass2()>0){
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
                      for (int t=0; t<GInd::getLatData().globLT; t++){
                          CC_s_g5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out_s,spinor_out_s);
@@ -634,7 +656,7 @@ int main(int argc, char *argv[]) {
                          CC_ls_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
                      }
 
-
+                    }//end check for use of mass2
                 }
             }
         }
@@ -659,6 +681,7 @@ int main(int argc, char *argv[]) {
                         " " << real(CC_l_g4[t])   << " " << imag(CC_l_g4[t])   <<
                         " " << real(CC_l_gig4[t]) << " " << imag(CC_l_gig4[t]) << "\n";
     }
+    if(param.use_mass2()>0){
     fileOut << "mass2" << "\n";
     for (int t=0; t<lt; t++){
         fileOut << t << " " << real(CC_s_I[t])    << " " << imag(CC_s_I[t])    <<
@@ -677,7 +700,7 @@ int main(int argc, char *argv[]) {
                         " " << real(CC_ls_g4[t])   << " " << imag(CC_ls_g4[t])   <<
                         " " << real(CC_ls_gig4[t]) << " " << imag(CC_ls_gig4[t]) << "\n";
     }
-
+    }
 
     return 0;
 }
