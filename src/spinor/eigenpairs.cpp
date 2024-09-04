@@ -116,17 +116,13 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
     int nvec0 = spinors.size();
-    rootLogger.info("num_lambda = ", nvec0);
-
     for (int i = 0; i < nvec0; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
         floatT lambda = lambda_vect[i];
 
         floatT faktor = -1.0 * spinorEv.realdotProduct(spinorIn) / lambda;
-        rootLogger.info("faktor=", faktor);
         spinorOut.template axpyThisB<BLOCKSIZE>(faktor, spinorEv);
     }
-    rootLogger.info("spinorOut=", spinorOut.realdotProduct(spinorOut));
 }
 
 

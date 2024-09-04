@@ -182,13 +182,19 @@ public:
         // compute the inverse using
         // \chi_e = (1m^2 - D_{eo}D_{oe})^{-1} (m \eta_e - D_{eo} \eta_o)
         // \chi_o = \frac 1m (\eta_o - D_{oe}\chi_e)
+
+
+
         dslash_eo.Dslash(spinorOut.even, spinorIn.odd, true);
         spinorOut.even = spinorIn.even * mass - spinorOut.even;
-        rootLogger.info("spinorOut0=", spinorOut.realdotProduct(spinorOut));
+
+        Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> spinor_even(spinorOut.even.getComm());
+        spinor_even = spinorOut.even; 
 
         // invert in place is possible since the CG copies the input early on
-        cg.invert_deflation(dslash_oe_inv, spinorOut.even, spinorOut.even, eigen, cgMax, residue); //! this takes up most of the computation time
-        rootLogger.info("spinorOut1=", spinorOut.realdotProduct(spinorOut));
+        cg.invert_deflation(dslash_oe_inv, spinor_even, spinorOut.even, eigen, cgMax, residue); //! this takes up most of the computation time
+
+        spinorOut.even = spinor_even;
 
         dslash_oe.Dslash(spinorOut.odd, spinorOut.even, false);
         spinorOut.odd = (static_cast<floatT>(1.) / mass)*(spinorIn.odd - spinorOut.odd);

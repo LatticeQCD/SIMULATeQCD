@@ -347,7 +347,6 @@ private:
 
         SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn = spinors[depth];
         SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut = spinors[depth + 1];
-        rootLogger.info("spinorIn=", spinorIn.realdotProduct(spinorIn));
 
         // invert once for each tree node that gets traversed
         // cg uses dslash.applyMdaggM as the positive semidefinite matrix, so I need to solve MdaggM * x = Mdagg * b =? -M * b
