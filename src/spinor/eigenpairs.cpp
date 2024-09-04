@@ -76,7 +76,23 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
             //     rootLogger.info("ev1=", test(1));
             //     rootLogger.info("ev2=", test(2));
             // }
-        }
+        } 
+        // else {
+        //     gSite site = GInd::getSite(x,y,z,t);
+
+        //     if (evnersc.end_of_buffer()) {
+        //         this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+        //         evnersc.process_read_data();
+        //     }
+        //     Vect3<floatT> ret = evnersc.template get<floatT>();
+        //     spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
+        //     // if ((x+y+z+t)==0) {
+        //     //     Vect3<floatT> test = spinorAccessor.getElement(site);
+        //     //     rootLogger.info("ev0=", test(0));
+        //     //     rootLogger.info("ev1=", test(1));
+        //     //     rootLogger.info("ev2=", test(2));
+        //     // }
+        // }
     }
 }
 
