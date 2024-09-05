@@ -349,6 +349,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
     pi = spinorIn;
 
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
     eigen.start_vector(spinorOut, spinorIn);
 
     do {
