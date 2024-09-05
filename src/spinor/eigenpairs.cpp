@@ -13,12 +13,15 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
     double lambda_temp;
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> vector_host(this->getComm());
-        for (int n = 0; n < nvec; n++) {
+        // Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> vector_host_odd(this->getComm());
+        for (int n = 0; n < nvec; n+=2) {
             spinors.emplace_back(this->getComm());
             read_evnersc_host(vector_host.getAccessor(), n, lambda_temp, fname);
             spinors[n] = vector_host;
+            // spinors[n + 1] = vector_host_odd;
             lambda_vect[n] = lambda_temp;
-            rootLogger.info("lambda=", lambda_vect[n]);
+            // lambda_vect[n+1] = lambda_temp;
+            // rootLogger.info("lambda=", lambda_vect[n]);
         }
     } 
     int nvec0 = spinors.size();
@@ -71,12 +74,12 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
             }
             Vect3<floatT> ret = evnersc.template get<floatT>();
             spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
-            if ((x+y+z+t)==0) {
-                Vect3<floatT> test = spinorAccessor.getElement(site);
-                rootLogger.info("ev0=", test(0));
-                rootLogger.info("ev1=", test(1));
-                rootLogger.info("ev2=", test(2));
-            }
+            // if ((x+y+z+t)==0) {
+            //     Vect3<floatT> test = spinorAccessor.getElement(site);
+            //     rootLogger.info("ev0=", test(0));
+            //     rootLogger.info("ev1=", test(1));
+            //     rootLogger.info("ev2=", test(2));
+            // }
         } 
         // else {
         //     gSite site = GInd::getSite(x,y,z,t);

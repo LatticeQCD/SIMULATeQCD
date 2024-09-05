@@ -373,11 +373,11 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         a = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        spinorOut.axpyThisLoopd(-1.0*B, pi,NStacks);
+        spinorOut.axpyThisLoopd(-1.0*B, pi, NStacks);
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
-    } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
+    } while ( (sqrt(max(lambda2/in_norm)) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
