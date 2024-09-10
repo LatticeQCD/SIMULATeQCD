@@ -95,6 +95,7 @@ void MemoryManagement::increaseDevCounter(const std::string& name){
 
 /// Copy something into the chunk of memory. This method must be implemented in the cpp file because otherwise the
 /// compiler doesn't recognize src->getPointer as a pointer for some reason.
+#ifndef USE_SYCL
 template<bool onDevice>
 template<bool onDeviceSrc>
 void MemoryManagement::gMemory<onDevice>::copyFrom(const gMemoryPtr<onDeviceSrc> &src, const size_t sizeInBytes,
@@ -133,7 +134,15 @@ void MemoryManagement::gMemory<onDevice>::copyFrom(const gMemoryPtr<onDeviceSrc>
         }
     }
 }
-
+#else
+template<bool onDevice>
+template<bool onDeviceSrc>
+void MemoryManagement::gMemory<onDevice>::copyFrom(const gMemoryPtr<onDeviceSrc> &src, const size_t sizeInBytes,
+                                const size_t offsetSelf, const size_t offsetSrc) {
+                                    adjustSize(sizeInBytes);
+                                    device_queue.memcpy(static_cast<char*>(_rawPointer)+offsetSelf, src->getPointer(offsetSrc), sizeInBytes).wait();                                
+                                }
+#endif
 
 
 /// A convenient wrapper for getting host and device memory.

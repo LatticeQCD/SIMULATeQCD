@@ -7,7 +7,15 @@
  *
  */
 
+
+#ifdef USE_SYCL
+
+#include "../base/memoryManagement.h"
+Logger rootLogger(OFF);
+Logger stdLogger(ALL);
+#else 
 #include "../simulateqcd.h"
+#endif
 
 #define PREC double
 

@@ -323,19 +323,21 @@ private:
     template<bool onDevice>
     class gMemory {
     private:
-        sycl::queue &device_queue;
+        
         size_t _current_size; /// Size of rawPointer in bytes.
         void *_rawPointer;    /// Declare a rawPointer pointer of type void, which we want to do because void type pointers
         /// can point to an object of any type. A goal of the new memory management is that this
         /// will be the only raw pointer.
+        sycl::queue device_queue;
+
 
         void alloc(size_t size) {
             if (size > 0) {
                 if (onDevice) {
-                    _rawPointer = sycl::malloc_device<void>(size,device_queue);
+                    _rawPointer = sycl::malloc_device(size,device_queue);
                 } else {
     #ifndef CPUONLY
-                    _rawPointer = sycl::malloc_host<void>(size,device_queue);
+                    _rawPointer = sycl::malloc_host(size,device_queue);
     #else
                     _rawPointer = std::malloc(size);
                     if (_rawPointer == nullptr){
@@ -356,7 +358,7 @@ private:
         void free() {
             if (_current_size > 0) {
     #ifndef CPUONLY           
-                free(_rawPointer,device_queue);
+                sycl::free(_rawPointer,device_queue);
     #else
                 std::free(_rawPointer);
     #endif
@@ -372,7 +374,7 @@ private:
     public:
         //! gMemory constructor; initialize _current_size and _rawPointer.
         //! We should figure out how to make this private. Problem: befriending std::map or std::pair doesn't work.
-        explicit gMemory(size_t size, sycl::queue &q) : _current_size(size), _rawPointer(nullptr), device_queue(q) {
+        explicit gMemory(size_t size) : _current_size(size), _rawPointer(nullptr) {
             adjustSize(size);
         }
 

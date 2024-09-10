@@ -686,11 +686,11 @@ set_SIMULATeQCD_property(measureHadronsTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY 
 SIMULATeQCD_target_compile_definitions(measureHadronsTest PRIVATE COMP_R18=1 HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_3=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests measureHadronsTest)
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_memManTest.cpp)
-add_SIMULATeQCD_executable(memManTest src/testing/main_memManTest.cpp)
-set_SIMULATeQCD_property(memManTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(memManTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
-add_to_compound_SIMULATeQCD_target(tests memManTest)
+#set_SIMULATeQCD_gpu_backend(src/testing/main_memManTest.cpp)
+add_executable(memManTest src/base/memoryManagement.cpp src/testing/main_memManTest.cpp)
+set_target_properties(memManTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+target_compile_definitions(memManTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
+add_dependencies(tests memManTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_pure_gauge_hmc_test.cpp src/modules/observables/polyakovLoop.cpp)
 add_SIMULATeQCD_executable(pureGaugeHmcTest src/testing/main_pure_gauge_hmc_test.cpp src/modules/observables/polyakovLoop.cpp ${SOURCE_FILES_HMC})
