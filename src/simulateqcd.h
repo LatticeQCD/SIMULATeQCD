@@ -19,14 +19,20 @@
 #include "base/latticeParameters.h"
 #include "base/memoryManagement.h"
 #include "base/stopWatch.h"
+#ifndef USE_SYCL
 #include "base/runFunctors.h"
+#else 
+#include "base/runFunctors_sycl.h"
+#endif
 #include "base/utilities/staticArray.h"
 #include "base/utilities/static_for_loop.h"
 
 #include "base/communication/communicationBase.h"
+#ifndef USE_SYCL
 #include "base/communication/deviceEvent.h"
 #include "base/communication/deviceStream.h"
 #include "base/communication/gpuIPC.h"
+#endif
   // Contains:
   //   base/communication/calcGSiteHalo_dynamic.h
 #include "base/communication/haloOffsetInfo.h"
