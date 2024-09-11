@@ -404,7 +404,9 @@ private:
         {
             if (_current_size > 0) {
                 if (onDevice) {
-                    device_queue.memset(_rawPointer, value, _current_size).wait();
+                    //Including this just to test the exceptionWrapper - this is ugly.
+                    gpuError_t gpuErr = syclExceptionWrapper([&]() {device_queue.memset(_rawPointer, value, _current_size).wait();});
+                    if (gpuErr != gpuSuccess) GpuError("_rawPointer: Failed to set memory on device", gpuErr);
                 } else {
                     std::memset(_rawPointer, value, _current_size);
                 }
