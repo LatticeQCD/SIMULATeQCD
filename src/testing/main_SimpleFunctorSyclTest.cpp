@@ -344,6 +344,13 @@ int main(int argc, char *argv[]){
                         << std::endl;
             }
         }
+    
+    auto sycl_devices = sycl::device::get_devices();
+    for (auto dev : sycl_devices) {
+        if (dev.has(sycl::aspect::gpu)) {
+            std::cout << "\tDevice with sycl::aspect::gpu: " << dev.get_info<sycl::info::device::name>() << std::endl;
+        }
+    }
     int nelems = 1e5;
     Spinor a(nelems);
     Spinor b(nelems);
@@ -375,6 +382,10 @@ int main(int argc, char *argv[]){
     q.wait();
     auto info = q.get_device().get_info<sycl::info::device::name>();
     std::cout << "Chosen Device: " << info << std::endl;
+    
+    auto sycl_target = SYCL_TARGET;
+    std::cout << "Compiled for SYCL_TARGET: " << sycl_target << std::endl;
+    auto test_devices = sycl::device::get_devices(sycl::info::device_type::gpu);
 
     referenceSyclLaunch(res.getAccessor(), a.getAccessor(), b.getAccessor(), c.getAccessor(),
             d.getAccessor(), nelems, q);
