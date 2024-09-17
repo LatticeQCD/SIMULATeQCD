@@ -2,6 +2,7 @@
 #include "../base/math/operators.h"
 #include "../base/indexer/haloIndexer.h"
 #include "../base/runFunctors_sycl.h"
+#include "../base/communication/communicationBase.h"
 #include "../base/memoryManagement.h"
 
 #define RELEVANT_SIZE 10
@@ -327,7 +328,7 @@ void referenceSyclLaunch(SpinorAccessor res, SpinorAccessor a, SpinorAccessor b,
 }
 
 
-int main(){
+int main(int argc, char *argv[]){
 
     // rootLogger.setVerbosity(DEBUG);
     for (auto platform : sycl::platform::get_platforms())
@@ -366,7 +367,7 @@ int main(){
     // std::cout << res << std::endl<<std::endl;
     ref = ReferenceFunctor(a,b,c,d);
     // std::cout << ref <<std::endl <<std::endl;
-    
+    CommunicationBase commBase(&argc, &argv);
     // compare_relative(ref, res, 1e-8, 1e-8, "Combined operators vs one operator test");
 
     // std::cout << res << std::endl<<std::endl;

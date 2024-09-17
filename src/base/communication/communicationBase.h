@@ -26,6 +26,7 @@
 #include <complex>
 #include "../../define.h"
 #include "../latticeDimension.h"
+#include "../latticeParameters.h"
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
@@ -158,7 +159,7 @@ public:
 #ifdef USE_NCCL
     void ncclinit();
 #endif
-    ~CommunicationBase();
+    // ~CommunicationBase();
 
     bool gpuAwareMPIAvail() const {
 #ifdef USE_GPU_AWARE_MPI

@@ -9,7 +9,7 @@
 #include "base/IO/logging.h"
 #include "explicit_instantiation_macros.h"
 
-#define COMPILE_WITH_MPI
+// #define COMPILE_WITH_MPI
 //! define functions as 'void bla() EMPTY_IF_SCALAR;' in order to give a
 //! standard implementation of doing nothing in the case of scalar code
 #ifdef COMPILE_WITH_MPI
