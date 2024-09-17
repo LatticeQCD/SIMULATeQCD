@@ -157,16 +157,21 @@
 #endif
 
 #else 
+#pragma once
 #include <sycl/sycl.hpp>
+#include "syclExceptionWrapper.h"
+
 #define __host__ 
 #define __device__  
 
-#define gpuError_t sycl::runtime_error
+#define gpuError_t syclError_t
+#define gpuSuccess syclSuccess
 #define half       sycl::half
 #define half2      sycl::half2
 #define float2     sycl::float2
 #define double2    sycl::double2
 #define uint4      sycl::uint4
 #define __constant__ 
+
 #endif
 

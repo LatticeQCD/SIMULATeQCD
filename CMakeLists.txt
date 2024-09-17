@@ -687,7 +687,7 @@ SIMULATeQCD_target_compile_definitions(measureHadronsTest PRIVATE COMP_R18=1 HAL
 add_to_compound_SIMULATeQCD_target(tests measureHadronsTest)
 
 #set_SIMULATeQCD_gpu_backend(src/testing/main_memManTest.cpp)
-add_executable(memManTest src/base/memoryManagement.cpp src/testing/main_memManTest.cpp)
+add_executable(memManTest src/testing/main_memManTest.cpp src/base/memoryManagement.cpp src/base/wrapper/syclExceptionWrapper.cpp src/base/gutils.cpp)
 set_target_properties(memManTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 target_compile_definitions(memManTest PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
 add_dependencies(tests memManTest)
