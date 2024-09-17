@@ -15,6 +15,8 @@ void Source::makePointSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> &
     ReadIndex<All,HaloDepth> index;
 
     iterateFunctorNoReturn<true,BLOCKSIZE>(MakePointSource12<floatT,HaloDepth>( spinorIn, posx,posy,posz,post),index,_elems);
+    
+    spinorIn.updateAll();
 
 }
 
@@ -32,6 +34,8 @@ void Source::copyHalfFromAll(SpinorfieldAll<floatT, true,   HaloDepth, 12, NStac
     ReadIndex<Odd,HaloDepth> indexOdd;
     iterateFunctorNoReturn<true,BLOCKSIZE>(CopyHalfFromAll<floatT,Odd,HaloDepth,NStacks>(spinorIn.odd, spinorInAll,offset),indexOdd,_elems);
 
+    spinorIn.updateAll();
+
 }
 
 template<typename floatT, size_t HaloDepth, size_t NStacks>
@@ -46,6 +50,8 @@ void Source::copyAllFromHalf(Spinorfield<floatT, true, All, HaloDepth, 12, 12   
 
     ReadIndex<Odd,HaloDepth> indexOdd;
     iterateFunctorNoReturn<true,BLOCKSIZE>(CopyAllFromHalf<floatT,Odd,HaloDepth,NStacks>(spinorInAll,spinorIn.odd,offset),indexOdd,_elems);
+
+    spinorInAll.updateAll();
 
 }
 

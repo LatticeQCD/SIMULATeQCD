@@ -3,6 +3,7 @@
 #include "../experimental/DWilson.h"
 #include "../experimental/source.h"
 #include "../modules/hyp/hypSmearing.h"
+#include "../modules/gradientFlow/gradientFlow.h"
 
 template<class floatT>
 struct wilsonParam : LatticeParameters {
@@ -21,6 +22,11 @@ struct wilsonParam : LatticeParameters {
     Parameter<int,1> maxiter;
     Parameter<int,1> use_hyp;
     Parameter<int,1> use_mass2;
+    Parameter<floatT> wilson_step;
+    Parameter<floatT> wilson_start;
+    Parameter<floatT> wilson_stop;
+    Parameter<int,1> use_wilson;
+
 
     wilsonParam() {
         add(gauge_file, "gauge_file");
@@ -38,6 +44,10 @@ struct wilsonParam : LatticeParameters {
         add(tolerance, "tolerance");
         addDefault (use_hyp,"use_hyp",0);
         add(use_mass2, "use_mass2");
+        addDefault (use_wilson,"use_wilson",0);
+        addDefault (wilson_step,"wilson_step",0.0);
+        addDefault (wilson_start,"wilson_start",0.0);
+        addDefault (wilson_stop,"wilson_stop",0.0);
 
     }
 };
@@ -126,6 +136,35 @@ int main(int argc, char *argv[]) {
     }
 
 
+////// wilson flow
+    if(param.use_wilson()){
+        rootLogger.info( "Start Wilson Flow"  );
+
+        std::vector<PREC> flowTimes = {100000.0};
+        PREC start = param.wilson_start();
+        PREC stop  = param.wilson_stop();
+        PREC step_size = param.wilson_step();
+        const auto force = static_cast<Force>(static_cast<int>(0));
+        gradientFlow<PREC, HaloDepth, fixed_stepsize,force> gradFlow(gauge,step_size,start,stop,flowTimes,0.0001);
+
+        bool continueFlow =  gradFlow.continueFlow();
+        while (continueFlow) {
+            gradFlow.updateFlow();
+            continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
+        }
+
+        gauge.updateAll();
+
+        rootLogger.info( "End Wilson Flow"  );
+    }
+
+
+
+    //calculate plaq
+    GaugeAction<PREC, true, HaloDepth, R18> gaugeaction(gauge);
+    PREC AveragePlaq = gaugeaction.plaquette();
+
+
     // make source class used to manipulate or create the source
     Source source;
 
@@ -201,7 +240,7 @@ int main(int argc, char *argv[]) {
                      _dslashinverseSC4.setMass(mass);
                      source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
 
-                     
+/*                     
                      //smear source
                      _dslashinverseSC4.antiperiodicBoundaries();
                      if(smearSteps1 > 0){
@@ -220,6 +259,24 @@ int main(int argc, char *argv[]) {
                     }
                     //source.daggerSource(spinor_out);
                     _dslashinverseSC4.antiperiodicBoundaries();
+*/
+
+                    //if(param.use_mass2()>0){
+                        // light mass
+                        _dslashinverseSC4.setMass(mass);
+                        source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+
+                       _dslashinverseSC4.antiperiodicBoundaries();
+                       if(smearSteps1 > 0){
+                           source.smearSource(gauge,spinor_out,spinor_in,lambda1,smearSteps1);
+                       }
+                       _dslashinverseSC4.correlator(spinor_out,spinor_in,maxiter,tolerance);
+                       if(smearSteps1 > 0){
+                          source.smearSource(gauge,spinor_in,spinor_out,lambda1,smearSteps1);
+                       }
+                       _dslashinverseSC4.antiperiodicBoundaries();
+                    //}
+
 
                     if(param.use_mass2()>0){
                         // heavier mass
@@ -663,7 +720,10 @@ int main(int argc, char *argv[]) {
     }
     timer.stop();
     timer.print("Time for all inversions and contractions");
-   
+
+    fileOut << "Average Plaquette " << AveragePlaq << "\n";
+
+
     fileOut << "t" << " " << "real(I)"     << " " << "imag(I)"     <<
                       " " << "real(g5)"    << " " << "imag(g5)"    <<
                       " " << "real(gi)"    << " " << "imag(gi)"    <<

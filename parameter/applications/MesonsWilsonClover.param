@@ -31,3 +31,8 @@ maxiter        = 10000
 use_hyp        = 0
 use_mass2      = 1
 
+use_wilson=0
+wilson_step=0.0001
+wilson_start=0.0
+wilson_stop=0.125
+
