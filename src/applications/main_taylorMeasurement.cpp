@@ -69,11 +69,7 @@ int main(int argc, char **argv) {
 
     HisqDSlash<floatT,true,Even,HaloDepth,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-<<<<<<< HEAD
     eigenpairs.tester(dslash, param.num_toread_vectors());
-=======
-    eigenpairs.tester(dslash);
->>>>>>> eb4e9854d9afcd73546c06a07fe03f0b0459f041
 
     if (param.valence_masses.numberValues() == 0) {
         rootLogger.error("No valence masses specified, aborting");
