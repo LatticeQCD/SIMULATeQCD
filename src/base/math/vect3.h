@@ -24,7 +24,6 @@ template <class floatT>  __device__ __host__ COMPLEX(floatT) operator*(const Vec
 template <class floatT>  __device__ __host__ COMPLEX(floatT) complex_product(const Vect3<floatT> &,const Vect3<floatT> &);
 template <class floatT>  __device__ __host__ COMPLEX(floatT) complex_product_add(const Vect3<floatT> &,const Vect3<floatT> &, const COMPLEX(floatT) &);
 
-
 template <class floatT>  __device__ __host__ Vect3<floatT> operator+(const Vect3<floatT> &,const Vect3<floatT> &);
 template <class floatT>  __device__ __host__ Vect3<floatT> operator-(const Vect3<floatT> &,const Vect3<floatT> &);
 template <class floatT>  __device__ __host__ Vect3<floatT> operator*(const floatT &,const Vect3<floatT> &);
@@ -50,7 +49,7 @@ private:
     COMPLEX(floatT) _v0, _v1, _v2;
 
 public:
-
+    constexpr Vect3(const Vect3<floatT>&) = default;
     __host__ __device__ Vect3() {};
     __host__ __device__ Vect3(COMPLEX(floatT) v0) : _v0(v0), _v1(v0), _v2(v0) {};
     __host__ __device__ Vect3(floatT v0) : _v0(v0), _v1(v0), _v2(v0) {};
@@ -192,6 +191,19 @@ public:
     }
 
     __device__ __host__ inline COMPLEX(floatT)& operator() (int i) {
+        switch (i) {
+            case 0:
+                return _v0;
+            case 1:
+                return _v1;
+            case 2:
+                return _v2;
+            default:
+                return _v0;
+        }
+    }
+
+    __device__ __host__ inline const COMPLEX(floatT)& operator() (int i) const {
         switch (i) {
             case 0:
                 return _v0;
