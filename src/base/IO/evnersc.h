@@ -77,7 +77,7 @@ private:
     std::vector<char> buf;
 
     template<class floatT>
-    Vect3<floatT> from_buf(floatT *buf) const {
+    Vect3<floatT> from_buf(floatT *buf)  {
         int i = 0;
         Vect3<floatT> U;
         for (int k = 0; k < 3; k++) {
