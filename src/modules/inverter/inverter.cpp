@@ -316,7 +316,7 @@ template<class floatT, size_t NStacks>
 template <typename eigenpairs, typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert_deflation( 
         LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-        const int max_iter, const double precision, eigenpairs& eigenpair)
+        eigenpairs& eigenpair, const int max_iter, const double precision)
 {
     Spinor_t pi(spinorIn.getComm());
     Spinor_t s(spinorIn.getComm());
@@ -651,6 +651,8 @@ template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spino
                                                             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
 template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
                                                                     Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, double); \
+template void ConjugateGradient<floatT, STACKS>::invert_deflation(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
+                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, eigenpairs<floatT, true, LO, HALOSPIN, STACKS> &eigenpair, const int, const double); \
 
 #define CLASSCG_FLOAT_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
 template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);

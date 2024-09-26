@@ -353,7 +353,7 @@ private:
         // however the inversion can be done more efficient by exploiting the odd and even structure of the matrix.
 
         //rootLogger.info("CG started");
-        dslash_inv.apply_Dslash_inverse(spinorOut, spinorIn, eigen, param.cgMax(), param.residue());
+        dslash_inv.apply_Dslash_inverse_deflation(spinorOut, spinorIn, eigen, param.cgMax(), param.residue());
         spinorIn = spinorOut; // spinorIn is the node with the inverse applied from here on
 
         // MemoryManagement::memorySummary();

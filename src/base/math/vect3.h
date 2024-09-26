@@ -51,6 +51,7 @@ private:
 
 public:
 
+    constexpr Vect3(const Vect3<floatT>&) = default;
     __host__ __device__ Vect3() {};
     __host__ __device__ Vect3(COMPLEX(floatT) v0) : _v0(v0), _v1(v0), _v2(v0) {};
     __host__ __device__ Vect3(floatT v0) : _v0(v0), _v1(v0), _v2(v0) {};
