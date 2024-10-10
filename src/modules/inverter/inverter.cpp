@@ -296,7 +296,7 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
         a = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        spinorOut.axpyThisLoopd(-1.0*B, pi,NStacks);
+        spinorOut.axpyThisLoopd(-1.0*B, pi, NStacks);
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
@@ -321,6 +321,10 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     Spinor_t pi(spinorIn.getComm());
     Spinor_t s(spinorIn.getComm());
     Spinor_t r(spinorIn.getComm());
+
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+
+    eigenpair.start_vector(spinorOut, spinorIn);
     
 
     int cg = 0;
@@ -335,7 +339,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
     SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
 
-    r = spinorIn;
+    r = spinorOut;
 
 
     dot3 = r.dotProductStacked(r);
@@ -345,10 +349,9 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
     in_norm = norm_r2;
 
-    pi = spinorIn;
+    pi = spinorOut;
 
     spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
-    eigenpair.start_vector(spinorOut, spinorIn);
 
     do {
         cg++;
