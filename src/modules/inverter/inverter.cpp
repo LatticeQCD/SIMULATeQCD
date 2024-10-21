@@ -327,6 +327,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     eigenpair.start_vector(spinorOut, spinorIn);
     
 
+    
     int cg = 0;
 
     SimpleArray<double, NStacks> a(0.0);
@@ -341,7 +342,10 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
     r = spinorOut;
 
+    dslash.applyMdaggM(pi, spinorOut, false);
 
+    r.axpyThisLoopd(-1.0 * B, pi, NStacks);
+    
     dot3 = r.dotProductStacked(r);
     norm_r2 = real<double>(dot3);
 
@@ -349,9 +353,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
     in_norm = norm_r2;
 
-    pi = spinorOut;
-
-    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+    pi = r;
 
     do {
         cg++;
@@ -378,7 +380,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
-    } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
+    } while ( sqrt(max(lambda2/in_norm) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
