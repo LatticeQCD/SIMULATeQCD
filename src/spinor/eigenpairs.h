@@ -43,7 +43,8 @@ public:
     void read_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int nvec, double &lambda, const std::string &fname);
     void tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec);
     void start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn);
-    
+    void start_vector_tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorRHS);
+
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };
 

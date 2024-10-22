@@ -315,18 +315,19 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 template<class floatT, size_t NStacks>
 template <typename eigenpairs, typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert_deflation( 
-        LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
+        LinearOperator<Spinor_t>& dslash, Spinor_t& spinorStart, const Spinor_t& spinorRHS,
         eigenpairs& eigenpair, const int max_iter, const double precision)
 {
-    Spinor_t pi(spinorIn.getComm());
-    Spinor_t s(spinorIn.getComm());
-    Spinor_t r(spinorIn.getComm());
+    Spinor_t pi(spinorRHS.getComm());
+    Spinor_t s(spinorRHS.getComm());
+    Spinor_t r(spinorRHS.getComm());
 
-    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+    spinorStart.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
-    eigenpair.start_vector(spinorOut, spinorIn);
+    eigenpair.start_vector(spinorStart, spinorRHS);
+
+    eigenpair.start_vector_tester(dslash, spinorStart, spinorRHS);
     
-
     
     int cg = 0;
 
@@ -340,9 +341,9 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
     SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
 
-    r = spinorOut;
+    r = spinorStart;
 
-    dslash.applyMdaggM(pi, spinorOut, false);
+    dslash.applyMdaggM(pi, spinorStart, false);
 
     r.axpyThisLoopd(-1.0 * B, pi, NStacks);
     
@@ -376,7 +377,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         a = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
-        spinorOut.axpyThisLoopd(-1.0*B, pi,NStacks);
+        spinorStart.axpyThisLoopd(-1.0*B, pi,NStacks);
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
@@ -388,7 +389,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         rootLogger.info("CG: # iterations " ,  cg);
     }
 
-    spinorOut.updateAll();
+    spinorStart.updateAll();
 }
 
 

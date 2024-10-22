@@ -96,11 +96,6 @@ template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, si
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
     int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);    
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
-        
-    vr = spinorIn;
-    rootLogger.info("norm(spinorIn)**2=", vr.realdotProduct(vr));
-    vr = spinorOut;
-    rootLogger.info("norm(spinorOut)**2=", vr.realdotProduct(vr));
 
     for (int i = 0; i < num_lambda; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
@@ -111,6 +106,27 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vect
     }
     vr = spinorOut;
     rootLogger.info("norm(spinorOut)**2=", vr.realdotProduct(vr));
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector_tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorRHS) {
+    int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorStart.getComm());
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> va(spinorRHS.getComm());
+    
+    dslash.applyMdaggM(vr, spinorStart, true);
+
+    floatT faktor = 1.0;
+
+    for (int i = 0; i < num_lambda; i++) {
+        // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
+
+        faktor = -lambda_vect[i];
+
+        vr.template axpyThisB<64>(faktor, spinors[i]);
+    }
+    rootLogger.info("start_vector_tester=", vr.realdotProduct(vr));
 }
 
 
