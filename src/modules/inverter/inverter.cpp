@@ -322,7 +322,6 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     Spinor_t s(spinorRHS.getComm());
     Spinor_t r(spinorRHS.getComm());
 
-    spinorStart.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
     eigenpair.start_vector(spinorStart, spinorRHS);
 
