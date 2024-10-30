@@ -651,6 +651,8 @@ struct DiracWilsonEvenEven2{
 
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
+
+
           Vect18<floatT> tmp = _spinorUpper.getElement(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteStack(site,0)));
           Matrix6x6<floatT> upper(tmp);
           Vect12<floatT> out;
@@ -709,6 +711,7 @@ struct DiracWilsonEvenOdd{
     SpinorColorAcc<floatT> _SpinorColorAccessor;
     floatT _csw;
     floatT _mass;
+
 
     typedef GIndexer<LatLayoutLHS, HaloDepthSpin > GInd;
     //Constructor to initialize all necessary members.

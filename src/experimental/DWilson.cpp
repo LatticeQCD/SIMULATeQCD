@@ -81,10 +81,11 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
 
     //calculate gamma5 (D-C(A^-1)B)
     //B
-    _tmpSpin.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,_mass,_csw));
+    _tmpSpin.template iterateOverFull<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn,_mass,_csw));
     //A^-1
+//    _tmpSpin.updateAll();
     dslashDiagonalOdd( _tmpSpin, _tmpSpin,true);
-    _tmpSpin.updateAll();
+//    _tmpSpin.updateAll();
     //C
     spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(_gauge, _tmpSpin,_mass,_csw));
 
@@ -109,6 +110,10 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
     size_t _elems = GInd::getLatData().vol4;
     CalcGSite<All, HaloDepthSpin> calcGSite;
     iterateFunctorNoReturn<onDevice>(preCalcFmunu<floatT,HaloDepthGauge>(_gauge,FmunuUpper,FmunuLower,FmunuInvUpper,FmunuInvLower, _mass,_csw), calcGSite, _elems);
+    FmunuUpper.updateAll();
+    FmunuLower.updateAll();
+    FmunuInvUpper.updateAll();
+    FmunuInvLower.updateAll();
 }
 
 // the A matrix, true if inverse A^-1
@@ -117,7 +122,7 @@ void DWilsonEvenOdd<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpi
                                                                                                          const Spinorfield<floatT, true, Odd, HaloDepthSpin, 12, NStacks> & spinorIn, bool inverse){
 
     if(inverse){
-        spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuInvUpper,FmunuInvLower));
+        spinorOut.template iterateOverFull<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuInvUpper,FmunuInvLower));
     }
     else{
         spinorOut.template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenEven2<floatT,Odd,HaloDepthGauge,HaloDepthSpin,NStacks>(spinorIn,FmunuUpper,FmunuLower));

@@ -99,7 +99,7 @@ void Source::conjugateSource(Spinorfield<floatT, true,LatLayout , HaloDepthSpin,
 
 };
 
-
+/*
 template<class floatT,size_t HaloDepthGauge, size_t HaloDepthSpin>
 void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
                          Spinorfield<floatT, true,All , HaloDepthSpin, 12, 12> & spinorOut,
@@ -114,6 +114,33 @@ void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
      spinorOut.updateAll();
 
 };
+*/
+template<class floatT,size_t HaloDepthGauge, size_t HaloDepthSpin>
+void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
+                         Spinorfield<floatT, true,All , HaloDepthSpin, 12, 12> & spinorOut,
+                         Spinorfield<floatT, true,All , HaloDepthSpin, 12, 12> & spinorIn,
+                         floatT lambda, int steps){
+     int i = 0;
+     while(i < steps){
+         if((steps-1) > 2){
+             spinorOut.template iterateOverFull<BLOCKSIZE>(SmearSource<floatT,HaloDepthGauge,HaloDepthSpin>(gauge,spinorIn,lambda*lambda/(4.0*steps)));
+             spinorIn.template iterateOverBulk<BLOCKSIZE>(SmearSource<floatT,HaloDepthGauge,HaloDepthSpin>(gauge,spinorOut,lambda*lambda/(4.0*steps)));
+             spinorIn.updateAll();
+             i=i+2;
+         }
+         else{
+             spinorOut.template iterateOverBulk<BLOCKSIZE>(SmearSource<floatT,HaloDepthGauge,HaloDepthSpin>(gauge,spinorIn,lambda*lambda/(4.0*steps)));
+             spinorIn = spinorOut;
+             spinorIn.updateAll();
+             i++;
+         }
+     }
+
+     spinorOut = spinorIn;
+     spinorOut.updateAll();
+
+};
+
 
 template<class floatT, size_t HaloDepthGauge,size_t HaloDepthSpin,size_t NStacks>
 void Source::shiftSource1t(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,

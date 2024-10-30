@@ -31,7 +31,8 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
     SimpleArray<floatT, NStacks> remain;
 
     for (int i = 0; i < max_iter; i++) {
-        vp.updateAll(COMM_BOTH | Hyperplane);
+        vp.updateAll(COMM_BOTH | Hyperplane | Plane);
+        //vp.updateAll(COMM_BOTH | Hyperplane);
         dslash.applyMdaggM(vap, vp, false);
 
         dot = vp.dotProductStacked(vap);
