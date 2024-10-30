@@ -77,7 +77,7 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
         
         floatT lambda = lambda_vect[i];
-        // rootLogger.info("lambda=", lambda);
+        rootLogger.info("lambda=", lambda);
         // rootLogger.info("lambda**2=", lambda * lambda);
         
         vr = spinorIn;
@@ -89,23 +89,24 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(Lin
         vr.template axpyThisB<64>(lambda, spinorIn);
         rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
     }
+
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
-    int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);    
+    int num_lambda = 208  ;
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
     // rootLogger.info("norm(spinorOut)**2=", spinorOut.realdotProduct(spinorOut));
     // rootLogger.info("norm(vr)**2=", vr.realdotProduct(vr));
 
     for (int i = 0; i < num_lambda; i++) {
         Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
-        
-        double lambda = lambda_vect[i];
+        double lambda = - lambda_vect[i];
+
         COMPLEX(double) faktor_double =  spinorEv.dotProduct(spinorIn);
         faktor_double  /= lambda;
-        COMPLEX(floatT) faktor_compat = -1.0 * GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
+        COMPLEX(floatT) faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
         vr.template axpyThisB<64>(faktor_compat, spinorEv);
     }
     spinorOut = vr;
@@ -119,14 +120,21 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vect
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorStart.getComm());
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> va(spinorRHS.getComm());
     va = spinorRHS;
-    
+    int num_lambda = sizeof(lambda_vect)/sizeof(lambda_vect[0]);
+
     dslash.applyMdaggM(vr, spinorStart, true);
 
-    COMPLEX(double) sum = vr.dotProduct(vr) - vr.dotProduct(va);
-    rootLogger.info("start_vector_tester0=", sum);
+    COMPLEX(double) sum = va.dotProduct(vr);
+    
+    for (int i =0; i < num_lambda; i++) {
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
+        vr = spinorEv;
 
-    sum = vr.dotProduct(vr) - va.dotProduct(vr);
-    rootLogger.info("start_vector_tester1=", sum);
+        sum -= va.dotProduct(vr) * vr.dotProduct(va);
+        
+    }
+
+    rootLogger.info("start_vector_tester0=", sum);
 }
 
 
