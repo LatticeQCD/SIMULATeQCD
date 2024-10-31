@@ -234,16 +234,19 @@ __host__ __device__ SU3<floatT> tensor_product<floatT, onDevice, HaloDepth, Halo
     for (int i = 0; i < rdeg; i++) {
         sitexyzt here =  site.coord;
 
+        // C++ XOR operator is ^. The boolean variable `oddness` will be `true` if the total number of 
+        // `true` values among `isOdd(here.x)`, `isOdd(here.y)`, `isOdd(here.z)`, and `isOdd(here.t)` 
+        // is odd, and `false` otherwise.
         bool oddness = (isOdd(here.x) ^ isOdd(here.y)) ^ (isOdd(here.z) ^ isOdd(here.t));
 
         if (!oddness) {
             gSiteStack even_site = GInd_even::getSiteStack(here.x, here.y, here.z, here.t,i);
-            gSiteStack odd_site = GInd_even::template site_move<steps>(even_site,site.mu);
+            gSiteStack odd_site  = GInd_even::template site_move<steps>(even_site,site.mu);
 
             tmp += _rat_num[i]*tensor_prod(_y.getElement(odd_site),conj(_x.getElement(even_site)));
 
         } else {
-            gSiteStack odd_site = GInd_odd::getSiteStack(here.x, here.y, here.z, here.t,i);
+            gSiteStack odd_site  = GInd_odd::getSiteStack(here.x, here.y, here.z, here.t,i);
             gSiteStack even_site = GInd_odd::template site_move<steps>(odd_site,site.mu);
 
             tmp -= _rat_num[i]*tensor_prod(_x.getElement(even_site), conj(_y.getElement(odd_site)));
@@ -312,10 +315,10 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
         }
     }
 
-    // |X> ~ (M^dag M + beta_l)^-1 |PHI>? not 100% sure about what is in the ()^-1
+    // |X> ~ (D^dagger D)^-1 |PHI>. Here D is the massless Dirac operator.
     _cg.invert(_dslash,_spinor_x,SpinorIn,shifts,_rhmc_param.cgMax(),_rhmc_param.residue_force());
 
-    // |Y> = Dslash |X>
+    // |Y> = D |X>. Again, massless DSlash.
     _dslash_multi.Dslash(_spinor_y,_spinor_x,true);
 
     // Force ~ alpha_l |X><Y| (depends on site parity, separated by one site)

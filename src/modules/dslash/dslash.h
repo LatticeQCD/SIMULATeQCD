@@ -129,10 +129,17 @@ class HisqDSlash : public DSlash<Spinorfield<floatT, onDevice, LayoutSwitcher<La
     floatT _c_3000;
 
 public:
-    HisqDSlash(Gauge_t<R18> &gaugefield_smeared, Gauge_t<U3R14> &gaugefield_Naik, const double mass, floatT naik_epsilon = 0.0,
-               std::string spinorName = "SHARED_HisqDSlashSpinor") :
-            _gauge_smeared(gaugefield_smeared), _gauge_Naik(gaugefield_Naik),
-    _tmpSpin(_gauge_smeared.getComm(), spinorName), _mass(mass), _mass2(mass * mass), _c_3000((-1./48.0)*(1.0+(double)naik_epsilon)) {}
+    HisqDSlash(Gauge_t<R18> &gaugefield_smeared, 
+               Gauge_t<U3R14> &gaugefield_Naik, 
+               const double mass, 
+               floatT naik_epsilon = 0.0,
+               std::string spinorName = "SHARED_HisqDSlashSpinor") 
+               : _gauge_smeared(gaugefield_smeared), 
+                 _gauge_Naik(gaugefield_Naik),
+                 _tmpSpin(_gauge_smeared.getComm(), spinorName), 
+                 _mass(mass), 
+                 _mass2(mass * mass), 
+                 _c_3000((-1./48.0)*(1.0+(double)naik_epsilon)) {}
 
     //! Does not use the mass
     virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);

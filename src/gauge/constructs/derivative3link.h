@@ -26,27 +26,27 @@ __host__ __device__ SU3<floatT> linkDerivative3(
     gSite down = GInd::site_dn(site,nu);
     gSite rightDn = GInd::site_dn(right,nu);
 
-    temp=fAcc.getLinkDagger(GInd::getSiteMu(right,nu))
+    temp=    fAcc.getLinkDagger(GInd::getSiteMu(right,nu))
             *gAcc.getLinkDagger(GInd::getSiteMu(up,mu))
             *gAcc.getLinkDagger(GInd::getSiteMu(origin,nu));
 
-    temp+=gAcc.getLink(GInd::getSiteMu(right,nu))
-            *fAcc.getLink(GInd::getSiteMu(up,mu))
+    temp+=   gAcc.getLink(      GInd::getSiteMu(right,nu))
+            *fAcc.getLink(      GInd::getSiteMu(up,mu))
             *gAcc.getLinkDagger(GInd::getSiteMu(origin,nu));
 
-    temp+=gAcc.getLink(GInd::getSiteMu(right,nu))
+    temp+=   gAcc.getLink(      GInd::getSiteMu(right,nu))
             *gAcc.getLinkDagger(GInd::getSiteMu(up,mu))
-            *fAcc.getLink(GInd::getSiteMu(origin,nu));
+            *fAcc.getLink(      GInd::getSiteMu(origin,nu));
 
-    temp+=fAcc.getLink(GInd::getSiteMu(rightDn,nu))
+    temp+=   fAcc.getLink(      GInd::getSiteMu(rightDn,nu))
             *gAcc.getLinkDagger(GInd::getSiteMu(down,mu))
-            *gAcc.getLink(GInd::getSiteMu(down,nu));
+            *gAcc.getLink(      GInd::getSiteMu(down,nu));
 
-    temp+=gAcc.getLinkDagger(GInd::getSiteMu(rightDn,nu))
-            *fAcc.getLink(GInd::getSiteMu(down,mu))
-            *gAcc.getLink(GInd::getSiteMu(down,nu));
+    temp+=   gAcc.getLinkDagger(GInd::getSiteMu(rightDn,nu))
+            *fAcc.getLink(      GInd::getSiteMu(down,mu))
+            *gAcc.getLink(      GInd::getSiteMu(down,nu));
 
-    temp+=gAcc.getLinkDagger(GInd::getSiteMu(rightDn,nu))
+    temp+=   gAcc.getLinkDagger(GInd::getSiteMu(rightDn,nu))
             *gAcc.getLinkDagger(GInd::getSiteMu(down,mu))
             *fAcc.getLinkDagger(GInd::getSiteMu(down,nu));
 

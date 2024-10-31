@@ -50,7 +50,7 @@ public:
           phi_sf_container(gaugeField.getComm(), rhmc_param.no_pf()),
           phi_lf_container(gaugeField.getComm(), rhmc_param.no_pf()),
           chi(gaugeField.getComm()),
-          dslash(_smeared_W, _smeared_X, 0.0),
+          dslash(_smeared_W, _smeared_X, 0.0), // this is a HisqDSlash object
           integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, dslash, _rat, _smearing),
           _rand_state(rand_state),
           gAcc(gaugeField.getAccessor())          
@@ -96,8 +96,8 @@ private:
     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_lf_container;
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> chi;
 
-    HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> dslash;
-    integrator<floatT,onDevice,All,HaloDepth,HaloDepthSpin> integrator;
+    HisqDSlash<floatT,onDevice,Even,HaloDepth,HaloDepthSpin,1> dslash;
+    integrator<floatT,onDevice,All ,HaloDepth,HaloDepthSpin> integrator;
 
     // the rng state
     uint4* _rand_state;

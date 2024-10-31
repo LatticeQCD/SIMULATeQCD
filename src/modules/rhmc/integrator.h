@@ -24,7 +24,8 @@
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 class integrator {
 public:
-    integrator(RhmcParameters rhmc_param, Gaugefield<floatT, onDevice, HaloDepth, R18> &gaugeField,
+    integrator(RhmcParameters rhmc_param, 
+               Gaugefield<floatT, onDevice, HaloDepth, R18> &gaugeField,
                Gaugefield<floatT, onDevice, HaloDepth> &p,
                Gaugefield<floatT, onDevice, HaloDepth, U3R14> &X,
                Gaugefield<floatT, onDevice, HaloDepth> &W,
