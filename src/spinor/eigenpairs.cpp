@@ -2,15 +2,18 @@
 #include "../base/IO/evnersc.h"
 #include "../base/IO/nersc.h"
 #include "../base/latticeParameters.h"
+#include "../modules/hisq/hisqSmearing.h"
 #include <fstream>
 
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc(int nvec, const std::string &fname) {   
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::read_evnersc(const std::string &fname) 
+{   
+    int nvec = param.num_toread_vectors();
     lambda_vect.reserve(nvec);
     double lambda_temp;
     if(onDevice) {
-        Spinorfield<floatT, false, LatticeLayout, HaloDepth, NStacks> vector_host(this->getComm());
+        Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> vector_host(this->getComm());
         for (int n = 0; n < nvec; n++) {
             spinors.emplace_back(this->getComm());
             read_evnersc_host(vector_host.getAccessor(), n, lambda_temp, fname);
@@ -21,11 +24,11 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 }
 
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
 {
-    evNerscFormat<HaloDepth> evnersc(this->getComm());
-    typedef GIndexer<LatticeLayout, HaloDepth> GInd;
+    evNerscFormat<HaloDepthSpin> evnersc(this->getComm());
+    typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
 
     int sizeh=GInd::getLatData().sizeh;
     int displacement=evnersc.bytes_per_site()*sizeh+sizeof(double);            
@@ -70,76 +73,86 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::read_evner
 }
 
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, int nvec) {
-    for (int i = 0; i < nvec; i++) {
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorIn = spinors[i];
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
+// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+// void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::tester(int argc, char **argv) 
+// {    
+//     CommunicationBase commBase(&argc, &argv);
+//     // const size_t HaloDepthGauge = 2;
+//     // gauge.readconf_nersc(param.GaugefileName());
+//     // gauge.updateAll();
+
+//     // Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(comm);
+//     // // Gaugefield<floatT, onDevice, HaloDepthGauge, U3R18> gauge_Naik(comm);
+//     // // HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+//     // // smearing.SmearAll();
+//     // // HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+
+//     // for (int i = 0; i < param.num_toread_vectors(); i++) {
+//     //     // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = spinors[i];
+//     //     // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(spinorIn.getComm());
         
-        floatT lambda = lambda_vect[i];
-        rootLogger.info("lambda=", lambda);
-        // rootLogger.info("lambda**2=", lambda * lambda);
+//     //     // floatT lambda = lambda_vect[i];
+//     //     // rootLogger.info("lambda=", lambda);
+//     //     // // rootLogger.info("lambda**2=", lambda * lambda);
         
-        vr = spinorIn;
-        // rootLogger.info("norm(x)**2=", vr.realdotProduct(vr));
+//     //     // vr = spinorIn;
+//     //     // // rootLogger.info("norm(x)**2=", vr.realdotProduct(vr));
         
-        dslash.applyMdaggM(vr, spinorIn, true);
-        // rootLogger.info("norm(Ax)**2=", vr.realdotProduct(vr));
+//     //     // dslash.applyMdaggM(vr, spinorIn, true);
+//     //     // // rootLogger.info("norm(Ax)**2=", vr.realdotProduct(vr));
 
-        vr.template axpyThisB<64>(lambda, spinorIn);
-        rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
-    }
+//     //     // vr.template axpyThisB<64>(lambda, spinorIn);
+//     //     // rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
+//     // }
+// }
 
-}
 
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::start_vector(double mass, Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn) {
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(spinorIn.getComm());
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(spinorIn.getComm());
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector(Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorIn) {
-    int num_lambda = 208  ;
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorIn.getComm());
-    // rootLogger.info("norm(spinorOut)**2=", spinorOut.realdotProduct(spinorOut));
-    // rootLogger.info("norm(vr)**2=", vr.realdotProduct(vr));
+    double lambda;
+    COMPLEX(double) faktor_double;
+    COMPLEX(floatT) faktor_compat;
 
-    for (int i = 0; i < num_lambda; i++) {
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
-        double lambda = - lambda_vect[i];
+    for (int i = 0; i < param.num_toread_vectors(); i++) {
+        spinorEv = spinors[i];
+        lambda = mass*mass - lambda_vect[i];
 
-        COMPLEX(double) faktor_double =  spinorEv.dotProduct(spinorIn);
+        faktor_double =  spinorEv.dotProduct(spinorIn);
         faktor_double  /= lambda;
-        COMPLEX(floatT) faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
+        faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
         vr.template axpyThisB<64>(faktor_compat, spinorEv);
     }
     spinorOut = vr;
-    // rootLogger.info("norm(spinorOut)**2=", vr.realdotProduct(vr));
 }
 
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::start_vector_tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>& spinorRHS) {
-    // int num_lambda = sizeof(lambda_vect) / sizeof(lambda_vect[0]);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> vr(spinorStart.getComm());
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> va(spinorRHS.getComm());
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::start_vector_tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS) {
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(spinorStart.getComm());
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(spinorRHS.getComm());
     va = spinorRHS;
-    int num_lambda = sizeof(lambda_vect)/sizeof(lambda_vect[0]);
 
     dslash.applyMdaggM(vr, spinorStart, true);
-
-    COMPLEX(double) sum = va.dotProduct(vr);
     
-    for (int i =0; i < num_lambda; i++) {
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &spinorEv = spinors[i];
+    COMPLEX(double) sum0 = vr.dotProduct(vr)-va.dotProduct(vr);
+    rootLogger.info("start_vector_tester0=", sum0);
+
+    COMPLEX(double) sum1 = va.dotProduct(vr);
+    
+    for (int i =0; i < param.num_toread_vectors(); i++) {
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorEv = spinors[i];
         vr = spinorEv;
-
-        sum -= va.dotProduct(vr) * vr.dotProduct(va);
-        
+        sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
     }
-
-    rootLogger.info("start_vector_tester0=", sum);
+    rootLogger.info("start_vector_tester1=", sum1);
 }
 
 
-template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t Nstacks>
-returnEigen<floatT, onDevice, LatLayout, HaloDepth, Nstacks>::returnEigen(const eigenpairs<floatT, onDevice, LatLayout, HaloDepth, Nstacks> &spinorIn) :
+template<typename floatT, bool onDevice, Layout LatLayout, size_t HaloDepthSpin, size_t Nstacks>
+returnEigen<floatT, onDevice, LatLayout, HaloDepthSpin, Nstacks>::returnEigen(const eigenpairs<floatT, onDevice, LatLayout, HaloDepthSpin, Nstacks> &spinorIn) :
         _gAcc(spinorIn.getAccessor()) {
 }
 

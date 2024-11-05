@@ -48,7 +48,7 @@ public:
         addDefault<int, 4>(gpuTopo, "Topology", nuller);
         addOptional(beta, "beta");
         addOptional(GaugefileName, "Gaugefile");
-	addOptional(EigenvectorfileName, "Eigenvectorfile");
+	    addOptional(EigenvectorfileName, "Eigenvectorfile");
         addOptional(GaugefileName_out, "Gaugefile_out");
         addOptional(format, "format");
         addDefault(endianness, "endianness", std::string("auto"));

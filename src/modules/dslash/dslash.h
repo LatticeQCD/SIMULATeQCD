@@ -205,7 +205,7 @@ public:
         spinor_even = spinorOut.even; 
 
         // invert in place is possible since the CG copies the input early on
-        cg.invert_deflation(dslash_oe_inv, spinor_even, spinorOut.even, eigenpair, cgMax, residue); //! this takes up most of the computation time
+        cg.invert_deflation(dslash_oe_inv, spinor_even, spinorOut.even, eigenpair, mass, cgMax, residue); //! this takes up most of the computation time
 
         spinorOut.even = spinor_even;
 
