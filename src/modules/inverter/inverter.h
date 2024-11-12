@@ -7,15 +7,14 @@
 
 #include "../../gauge/gaugefield.h"
 #include "../../spinor/spinorfield.h"
-#include "../../spinor/eigenpairs.h"
 #include "../../base/math/simpleArray.h"
 
-// /// Abstract base class for all kind of linear operators that shall enter the inversion
-// template <typename Vector>
-// class LinearOperator{
-// public:
-//     virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
-// };
+/// Abstract base class for all kind of linear operators that shall enter the inversion
+template <typename Vector>
+class LinearOperator{
+public:
+    virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
+};
 
 
 /// Class for multiple right hand side inversion. NStacks is the number of right hand sides. The objects to be inverted
@@ -30,8 +29,8 @@ public:
     template <typename Spinor_t>
     void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 
-    template <typename eigenpairs, typename Spinor_t>
-    void invert_deflation(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, eigenpairs& eigenpair, double mass, const int max_iter, const double precision);
+    template <typename Spinor_t>
+    void invert_deflation(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,

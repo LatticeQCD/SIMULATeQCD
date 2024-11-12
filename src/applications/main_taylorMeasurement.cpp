@@ -17,13 +17,13 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     TaylorMeasurementParameters param;
-    eigenpairsParameters eigenparam;
+    // eigenpairsParameters eigenparam;
     CommunicationBase commBase(&argc, &argv);
     
     // try reading parameter file from the same directory 
     rootLogger.info("Reading parameter file \"TaylorMeasurement.param\" from the current working directory.");
     param.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
-    eigenparam.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
+    // eigenparam.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
 
 
     commBase.init(param.nodeDim());
@@ -56,14 +56,23 @@ int main(int argc, char **argv) {
     rootLogger.info("Read configuration from ", param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
+
+    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
+    HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    smearing.SmearAll();
+
     
     // Read the Eigenvalues and Eigenvectors
-    eigenpairs<PREC,true,Even,HaloDepthSpin,NStacks> eigenpairs(commBase);
+    eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
-    eigenpairs.read_evnersc(param.EigenvectorfileName());
+    eigenpairs.read_evnersc(param.num_toread_vectors(), param.EigenvectorfileName());
     eigenpairs.updateAll();
 
-    // eigenpairs.tester(&argc, &argv);
+    // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+
+    eigenpairs.tester(commBase, gauge);
+
 
     if (param.valence_masses.numberValues() == 0) {
         rootLogger.error("No valence masses specified, aborting");

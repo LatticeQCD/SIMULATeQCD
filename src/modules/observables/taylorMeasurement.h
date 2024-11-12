@@ -181,7 +181,7 @@ private:
 
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge;
 
-    eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigen;
+    eigenpairs<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> &eigen;
 
     const TaylorMeasurementParameters param;
     const floatT mass;
@@ -198,7 +198,7 @@ private:
 
 public:
     TaylorMeasurement(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge,
-                    eigenpairs<floatT, onDevice, Even, HaloDepthSpin, NStacks> &eigen,
+                    eigenpairs<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> &eigen,
                     const TaylorMeasurementParameters &param, const floatT mass, const bool use_naik_epsilon,
                     grnd_state<onDevice> &rand) :
         gauge_Naik(gauge.getComm()),
