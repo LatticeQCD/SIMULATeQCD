@@ -1,12 +1,6 @@
 #pragma once
 
-#include "../base/communication/siteComm.h"
-#include "../define.h"
-#include "../base/math/operators.h"
-#include "../base/math/vect3array.h"
 #include "../base/latticeContainer.h"
-#include "../base/communication/siteComm.h"
-#include "../base/communication/communicationBase.h"
 #include "../modules/inverter/inverter.h"
 #include "spinorfield.h"
 
@@ -77,7 +71,7 @@ public:
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepthSpin>(comm),
             _spinor_lattice(comm) { }
 
-    void read_evnersc(int numVecIn, const std::string &fname);
+    void read_evnersc(const int &numVecIn, const std::string &fname);
     void read_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int idxvec, double &lambda, const std::string &fname);
     void tester(CommunicationBase &commBase, Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
     void start_vector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);

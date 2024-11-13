@@ -57,16 +57,16 @@ int main(int argc, char **argv) {
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
-    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
-    Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
-    HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    smearing.SmearAll();
+    // Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
+    // Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
+    // HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    // smearing.SmearAll();
 
     
     // Read the Eigenvalues and Eigenvectors
     eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
-    rootLogger.info("Read eigenvectors and eigenvalues from ", param.EigenvectorfileName());
-    eigenpairs.read_evnersc(param.num_toread_vectors(), param.EigenvectorfileName());
+    rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
+    eigenpairs.read_evnersc(param.num_toread_vectors(), param.eigen_file());
     eigenpairs.updateAll();
 
     // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);

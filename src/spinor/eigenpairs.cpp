@@ -8,7 +8,7 @@
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::read_evnersc(int numVecIn, const std::string &fname) 
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::read_evnersc(const int &numVecIn, const std::string &fname) 
 {   
     numVec = numVecIn;
     lambda_vect.reserve(numVec);
@@ -80,7 +80,7 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
     HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    // smearing.SmearAll(param.mu_f());
+    // smearing.SmearAll();
 
     HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
@@ -108,28 +108,25 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(spinorIn.getComm());
 
     va = spinorIn;
-    rootLogger.info("norm(x)**2=", spinorOut.realdotProduct(spinorOut));
 
     double lambda;
     COMPLEX(double) faktor_double;
     COMPLEX(floatT) faktor_compat;
-    rootLogger.info("num_toread_vectors=", numVec);
 
     for (int i = 0; i < numVec; i++) {
         spinorEv = spinors[i];
         lambda = mass*mass - lambda_vect[i];
-        rootLogger.info("lambda", lambda);
+
 
         faktor_double =  spinorEv.dotProduct(spinorIn);
-        rootLogger.info("faktor_double", faktor_double);
+
         faktor_double /= lambda;
-        rootLogger.info("faktor_double2", faktor_double);
+
         faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
-        rootLogger.info("faktor_compat", faktor_compat);
+
         vr.template axpyThisB<64>(faktor_compat, spinorEv);
     }
     spinorOut = vr;
-    rootLogger.info("norm(x)**2=", spinorOut.realdotProduct(spinorOut));
 }
 
 
