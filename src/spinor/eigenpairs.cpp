@@ -1,7 +1,7 @@
 #include "eigenpairs.h"
 #include "../base/IO/evnersc.h"
-#include "../base/IO/nersc.h"
-#include "../base/latticeParameters.h"
+// #include "../base/IO/nersc.h"
+// #include "../base/latticeParameters.h"
 #include "../modules/hisq/hisqSmearing.h"
 #include "../modules/dslash/dslash.h"
 #include <fstream>
@@ -120,7 +120,7 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
         faktor_double =  spinorEv.dotProduct(spinorIn);
 
-        faktor_double /= lambda;
+        faktor_double /= -lambda;
 
         faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
 
