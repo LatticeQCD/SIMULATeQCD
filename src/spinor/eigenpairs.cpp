@@ -115,12 +115,12 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     for (int i = 0; i < numVec; i++) {
         spinorEv = spinors[i];
-        lambda = mass*mass - lambda_vect[i];
+        lambda = mass*mass + lambda_vect[i];
 
 
         faktor_double =  spinorEv.dotProduct(spinorIn);
 
-        faktor_double /= -lambda;
+        faktor_double /= lambda;
 
         faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
 
