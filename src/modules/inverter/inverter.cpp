@@ -148,21 +148,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     double norm_r2 = r.realdotProduct(r);
 
     double  pAp,lambda, lambda2, rr_1, Bm1;
-    // gMemoryPtr<true> pAp_ptr(MemoryManagement::getMemAt<true>("SHARED_pAp_ptr"));
-    // gMemoryPtr<true> norm_r2_ptr(MemoryManagement::getMemAt<true>("SHARED_r2_ptr"));
-    // pAp_ptr->template adjustSize<double>(1);
-    // norm_r2_ptr->template adjustSize<double>(1);
-
-    // r.realDotProductNoCopy(r, norm_r2_ptr);
-    // gMemoryPtr<true> a_ptr(MemoryManagement::getMemAt<true>("SHARED_CGa_ptr"));
-    // gMemoryPtr<true> B_ptr(MemoryManagement::getMemAt<true>("SHARED_CGB_ptr"));
-    // gMemoryPtr<true> Z_ptr(MemoryManagement::getMemAt<true>("SHARED_CGZ_ptr"));
-    // gMemoryPtr<true> Zm1_ptr(MemoryManagement::getMemAt<true>("SHARED_CGZm1_ptr"));
-    // a_ptr->template adjustSize<floatT>(NStacks);
-
-    // B_ptr->template adjustSize<floatT>(NStacks);
-    // Z_ptr->template adjustSize<floatT>(NStacks);
-    // Zm1_ptr->template adjustSize<floatT>(NStacks);
+    
     Bm1 = 1.0;
 
     for (size_t i = 0; i < NStacks; i++) {

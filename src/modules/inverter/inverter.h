@@ -50,13 +50,16 @@ public:
 
 
 /// This is a reimplementation of the old BielefeldGPUcode MultishiftCG, the cool feature here is that parts of the
-/// stack that have already converged are not updated any more in the CGM iterations. Might produce better results for
-/// the rational approximations. Not finished yet.
+/// stack that have already converged are not updated any more in the CGM iterations.
 template <typename floatT, size_t NStacks = 14>
 class AdvancedMultiShiftCG {
 public:
     template <typename SpinorIn_t, typename SpinorOut_t>
-    void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
-                 SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
+    void invert(LinearOperator<SpinorIn_t>& dslash, 
+                SpinorOut_t& spinorOut, 
+                const SpinorIn_t& spinorIn,
+                SimpleArray<floatT, NStacks> sigma,   // Array of shifts
+                const int max_iter, 
+                const double precision);
 };
 

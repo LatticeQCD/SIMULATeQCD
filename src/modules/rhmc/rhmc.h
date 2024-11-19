@@ -50,7 +50,7 @@ public:
           phi_sf_container(gaugeField.getComm(), rhmc_param.no_pf()),
           phi_lf_container(gaugeField.getComm(), rhmc_param.no_pf()),
           chi(gaugeField.getComm()),
-          dslash(_smeared_W, _smeared_X, 0.0), // this is a HisqDSlash object
+          dslash(_smeared_W, _smeared_X, 0.0), // massless dslash
           integrator(_rhmc_param, _gaugeField, _p, _smeared_X, _smeared_W, dslash, _rat, _smearing),
           _rand_state(rand_state),
           gAcc(gaugeField.getAccessor())          
@@ -79,12 +79,10 @@ private:
     Gaugefield<floatT,onDevice,HaloDepth> &_gaugeField;                    // The to-be-updated field
     Gaugefield<floatT,onDevice,HaloDepth> _smeared_W;
     Gaugefield<floatT,onDevice,HaloDepth, U3R14> _smeared_X;
-    Gaugefield<floatT,onDevice,HaloDepth> _savedField;                     // A saved copy. If we reject the update, we go back to savedField.
+    Gaugefield<floatT,onDevice,HaloDepth> _savedField;                     // A saved copy. Used e.g. in reversibility tests. 
     HisqSmearing<floatT,onDevice,HaloDepth,R18,R18,R18,U3R14> _smearing;
     Gaugefield<floatT,onDevice,HaloDepth> _p;                              // The conjugate momentum field
 
-    //! In the end this contains the *contracted* propagators for each mass combination and spacetime point (vol4)
-    //std::vector<LatticeContainer<false,GPUcomplex<floatT>>> _contracted_propagators;
     // Fields containing energy densities for the Metropolis step
     LatticeContainer<onDevice,double> energy_dens_old;
     LatticeContainer<onDevice,double> energy_dens_new;
@@ -96,7 +94,7 @@ private:
     Spinorfield_container<floatT, onDevice, Even, HaloDepthSpin> phi_lf_container;
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin> chi;
 
-    HisqDSlash<floatT,onDevice,Even,HaloDepth,HaloDepthSpin,1> dslash;
+    HisqDSlash<floatT,onDevice,Even,HaloDepth,HaloDepthSpin,1> dslash;     // Massless DSlash (see initializer list.)
     integrator<floatT,onDevice,All ,HaloDepth,HaloDepthSpin> integrator;
 
     // the rng state

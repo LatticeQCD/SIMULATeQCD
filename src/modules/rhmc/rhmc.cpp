@@ -102,7 +102,7 @@ void rhmc<floatT,onDevice,HaloDepth,HaloDepthSpin>::init_ratapprox()
     floatT ml2 = _rhmc_param.m_ud() * _rhmc_param.m_ud();
     floatT ms2 = _rhmc_param.m_s() * _rhmc_param.m_s();
 
-    rat_sf.push_back(_rat.r_sf_const());
+    rat_sf.push_back(_rat.r_sf_const());  // Append to std::vector rat_sf
     rat_lf.push_back(_rat.r_lf_const());
     rat_inv_sf.push_back(_rat.r_inv_sf_const());
     rat_inv_lf.push_back(_rat.r_inv_lf_const());
@@ -155,8 +155,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
     check_unitarity();
 
-    //copy gaugefield to savedfield
-    _savedField = _gaugeField;
+    _savedField = _gaugeField;  // If the Metropolis is rejected, we revert to _savedField
 
     rootLogger.info("Smearing gauge fields");
     _smearing.SmearAll(_rhmc_param.mu_f());
@@ -164,7 +163,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     rootLogger.info("generating momenta");
     generate_momenta();
 
-    rootLogger.info("Constructing peudo-fermion fields");
+    rootLogger.info("Constructing pseudo-fermion fields");
 
     for(int i = 0; i < _no_pf; i++) {
         make_phi(phi_sf_container.phi_container[i], rat_inv_sf);
@@ -511,8 +510,7 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_phi(Spinorfield<floa
         rat_den[i] = rat_coeff[length/2+1+i];
     }
 
-    // using the multishift inverter
-
+    //                 out             in   shift    max_iter             precision 
     cgM.invert(dslash, spinorOutMulti, eta, rat_den, _rhmc_param.cgMax(), _rhmc_param.residue());
 
     phi = rat_num[0] * eta;
