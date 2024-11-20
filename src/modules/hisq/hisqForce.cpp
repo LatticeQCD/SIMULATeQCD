@@ -276,7 +276,7 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
       _createF2(_GaugeLvl1,_TmpForce),
       _finalizeF3(_GaugeU3P,_TmpForce),
       _createNaikF1(_GaugeU3P,_TmpForce),
-      F1_create_3Link(_GaugeU3P,Force),
+      F1_create_3Link(_GaugeU3P,Force), // Initializes _GaugeU3P right now
       F1_lepagelink(_GaugeU3P, Force),
       F3_create_3Link(_GaugeU3P,Force),
       _smearing(smearing),
@@ -315,10 +315,10 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
         }
     }
 
-    // |X> ~ (D^dagger D)^-1 |PHI>. Here D is the massless Dirac operator.
+    // |X> ~ (M^dagger M + beta_l)^-1 |PHI>. If you look above, you see that the shifts make this massive. 
     _cg.invert(_dslash,_spinor_x,SpinorIn,shifts,_rhmc_param.cgMax(),_rhmc_param.residue_force());
 
-    // |Y> = D |X>. Again, massless DSlash.
+    // |Y> = D |X>. This one is massless since _dslash_multi was instantiated as massless and there's no shifts. 
     _dslash_multi.Dslash(_spinor_y,_spinor_x,true);
 
     // Force ~ alpha_l |X><Y| (depends on site parity, separated by one site)
@@ -509,7 +509,8 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
 void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::updateForce(
     Spinorfield<floatT,onDevice,Even,HaloDepthSpin> &SpinorIn,
-    Gaugefield<floatT,onDevice,HaloDepth,comp> &Force, bool isLight) 
+    Gaugefield<floatT,onDevice,HaloDepth,comp> &Force, 
+    bool isLight) 
 {
     // Populate Force and _TmpForce ~ |X><Y| for 1-step and Naik, respectively. We start the _TmpForce with the
     // Naik separation because _TmpForce will accumulate all the force contributions and we're starting with

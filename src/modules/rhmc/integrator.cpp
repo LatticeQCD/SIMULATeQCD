@@ -122,8 +122,8 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::SWle
     // Perform the first half step                      //
     //==================================================//
 
-    updateP_fermforce( iepsh, _phi_lf, true);
-    updateP_fermforce( steph_sf, _phi_sf, false);
+    updateP_fermforce( iepsh, _phi_lf, true );
+    updateP_fermforce( steph_sf, _phi_sf, false );
 
     updateP_gaugeforce( sw_steph );
 
