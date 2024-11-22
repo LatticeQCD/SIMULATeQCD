@@ -5,7 +5,7 @@
 #include "../modules/hyp/hypSmearing.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/gaugeFixing/gfix.h"
-#include "../experimental/fourier.h"
+#include "../experimental/fourierNon2.h"
 
 
 template<class floatT>
@@ -219,10 +219,12 @@ int main(int argc, char *argv[]) {
 
     std::string fname = param.source1_file();
     loadWave(fname, spinor_device,spinor_host,0, 0,commBase);
+    //loadWavePos(fname, spinor_device,spinor_host,sourcePos[0],sourcePos[1],sourcePos[2],0, 0,commBase);
+
 
     fname = param.source1F_file();
     loadWave(fname, spinor_device,spinor_host,1, 0,commBase);
-
+    //loadWavePos(fname, spinor_device,spinor_host,sourcePos[0],sourcePos[1],sourcePos[2],1, 0,commBase);
 
     //calculate plaq
     GaugeAction<PREC, true, HaloDepth, R18> gaugeaction(gauge);
@@ -306,8 +308,8 @@ int main(int argc, char *argv[]) {
                         _dslashinverseSC4.setMass(mass);
                         //source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
                           makeWaveSource(spinor_in,spinor_device,0,0,pos[3]);
-
-                       
+                         //fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase);                      
+ 
                        _dslashinverseSC4.antiperiodicBoundaries();
                        if(smearSteps1 > 0){
                            source.smearSource(gauge,spinor_out,spinor_in,lambda1,smearSteps1);
@@ -813,33 +815,35 @@ int main(int argc, char *argv[]) {
                       " " << "real(g4 )"   << " " << "imag(g4 )"   << 
                       " " << "real(gi g4)" << " " << "imag(gi g4)" << "\n";
 
+    PREC norm = sqrt(GInd::getLatData().globLX*GInd::getLatData().globLY*GInd::getLatData().globLZ);
+
     fileOut << "mass1" << "\n";
     for (int t=0; t<lt; t++){   
-        fileOut << t << " " << real(CC_l_I[t])    << " " << imag(CC_l_I[t])    <<
-                        " " << real(CC_l_g5[t])   << " " << imag(CC_l_g5[t])   <<
-                        " " << real(CC_l_gi[t])   << " " << imag(CC_l_gi[t])   <<
-                        " " << real(CC_l_gig5[t]) << " " << imag(CC_l_gig5[t]) <<
-                        " " << real(CC_l_g4[t])   << " " << imag(CC_l_g4[t])   <<
-                        " " << real(CC_l_gig4[t]) << " " << imag(CC_l_gig4[t]) << "\n";
+        fileOut << t << " " << norm*real(CC_l_I[t])    << " " << norm*imag(CC_l_I[t])    <<
+                        " " << norm*real(CC_l_g5[t])   << " " << norm*imag(CC_l_g5[t])   <<
+                        " " << norm*real(CC_l_gi[t])   << " " << norm*imag(CC_l_gi[t])   <<
+                        " " << norm*real(CC_l_gig5[t]) << " " << norm*imag(CC_l_gig5[t]) <<
+                        " " << norm*real(CC_l_g4[t])   << " " << norm*imag(CC_l_g4[t])   <<
+                        " " << norm*real(CC_l_gig4[t]) << " " << norm*imag(CC_l_gig4[t]) << "\n";
     }
     if(param.use_mass2()>0){
     fileOut << "mass2" << "\n";
     for (int t=0; t<lt; t++){
-        fileOut << t << " " << real(CC_s_I[t])    << " " << imag(CC_s_I[t])    <<
-                        " " << real(CC_s_g5[t])   << " " << imag(CC_s_g5[t])   <<
-                        " " << real(CC_s_gi[t])   << " " << imag(CC_s_gi[t])   <<
-                        " " << real(CC_s_gig5[t]) << " " << imag(CC_s_gig5[t]) <<
-                        " " << real(CC_s_g4[t])   << " " << imag(CC_s_g4[t])   <<
-                        " " << real(CC_s_gig4[t]) << " " << imag(CC_s_gig4[t]) << "\n";
+        fileOut << t << " " << norm*real(CC_s_I[t])    << " " << norm*imag(CC_s_I[t])    <<
+                        " " << norm*real(CC_s_g5[t])   << " " << norm*imag(CC_s_g5[t])   <<
+                        " " << norm*real(CC_s_gi[t])   << " " << norm*imag(CC_s_gi[t])   <<
+                        " " << norm*real(CC_s_gig5[t]) << " " << norm*imag(CC_s_gig5[t]) <<
+                        " " << norm*real(CC_s_g4[t])   << " " << norm*imag(CC_s_g4[t])   <<
+                        " " << norm*real(CC_s_gig4[t]) << " " << norm*imag(CC_s_gig4[t]) << "\n";
     }
     fileOut << "mass to mass2" << "\n";
     for (int t=0; t<lt; t++){
-        fileOut << t << " " << real(CC_ls_I[t])    << " " << imag(CC_ls_I[t])    <<
-                        " " << real(CC_ls_g5[t])   << " " << imag(CC_ls_g5[t])   <<
-                        " " << real(CC_ls_gi[t])   << " " << imag(CC_ls_gi[t])   <<
-                        " " << real(CC_ls_gig5[t]) << " " << imag(CC_ls_gig5[t]) <<
-                        " " << real(CC_ls_g4[t])   << " " << imag(CC_ls_g4[t])   <<
-                        " " << real(CC_ls_gig4[t]) << " " << imag(CC_ls_gig4[t]) << "\n";
+        fileOut << t << " " << norm*real(CC_ls_I[t])    << " " << norm*imag(CC_ls_I[t])    <<
+                        " " << norm*real(CC_ls_g5[t])   << " " << norm*imag(CC_ls_g5[t])   <<
+                        " " << norm*real(CC_ls_gi[t])   << " " << norm*imag(CC_ls_gi[t])   <<
+                        " " << norm*real(CC_ls_gig5[t]) << " " << norm*imag(CC_ls_gig5[t]) <<
+                        " " << norm*real(CC_ls_g4[t])   << " " << norm*imag(CC_ls_g4[t])   <<
+                        " " << norm*real(CC_ls_gig4[t]) << " " << norm*imag(CC_ls_gig4[t]) << "\n";
     }
     }
 

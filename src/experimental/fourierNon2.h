@@ -28,6 +28,12 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
                                  Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
                                  int time, int col,CommunicationBase & commBase);
 
+template<typename floatT, size_t HaloDepthSpin>
+void loadWavePos(std::string fname, Spinorfield<floatT, true , All, HaloDepthSpin, 3,1> & spinor_device,
+                                    Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                    size_t posX, size_t posY, size_t posZ,
+                                    int time, int col,CommunicationBase & commBase);
+
 template<typename floatT, size_t HaloDepth>
 void makeWaveSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave,
                       size_t time, size_t col,size_t post);
@@ -125,8 +131,8 @@ __global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAc
          _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(z+lz*(iy+ly*it)),v[z]);
       }
       if(direction == 2){
-//         if(ix == 0 && iy == 0 && z==0)
-//         printf("i%d %d %d %f %f \n",(int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
+         //if(it == 0)
+         //printf("i%d %d %d %f %f \n",(int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
          _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(z+lz*it)),v[z]);
       }
    }

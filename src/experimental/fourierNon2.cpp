@@ -265,7 +265,7 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
         }
     }
 
-    std::cout << "Finished " << std::endl;
+    //std::cout << "Finished " << std::endl;
 
 }
 
@@ -328,10 +328,10 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     global[3] = 1;
     local[3] = 1;
 
-    commBase.initIOBinary(fname, 0, sizeof(floatT), 0, global, local, READ);
+    commBase.initIOBinary(fname, 0, 2*sizeof(floatT), 0, global, local, READ);
 
     std::vector<char> buf;
-    buf.resize(local[0]*local[1]*local[2]*sizeof(floatT));
+    buf.resize(local[0]*local[1]*local[2]*2*sizeof(floatT));
     commBase.readBinary(&buf[0], local[0]*local[1]*local[2]);
     int ps = 0;
     Vect3<floatT> tmp3;
@@ -341,10 +341,51 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        floatT *data = (floatT *) &buf[ps];
+        floatT *dataRe = (floatT *) &buf[ps];
         ps += sizeof(floatT);
-        tmp3.data[col] = data[0];
+        floatT *dataIm = (floatT *) &buf[ps];
+        ps += sizeof(floatT);
+        tmp3.data[col] = COMPLEX(floatT)(dataRe[0],dataIm[0]);
         //std::cout << "data " << data[0] << std::endl;
+        spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
+    }
+
+    commBase.closeIOBinary();
+
+    spinor_device = spinor_host;
+
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWavePos(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
+                                 Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 size_t posX, size_t posY, size_t posZ,
+                                 int time, int col,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+    global[3] = 1;
+//    local[3] = 1;
+
+    commBase.initIOBinary(fname, 0, 2*sizeof(floatT), 0, global, global, READ);
+
+    std::vector<char> buf;
+    buf.resize(global[0]*global[1]*global[2]*2*sizeof(floatT));
+    commBase.readBinary(&buf[0], global[0]*global[1]*global[2]);
+    int ps = 0;
+    Vect3<floatT> tmp3;
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        size_t xg = (x+commBase.mycoords()[0]*local[0]+posX)%global[0];
+        size_t yg = (y+commBase.mycoords()[1]*local[1]+posY)%global[1];
+        size_t zg = (z+commBase.mycoords()[2]*local[2]+posZ)%global[2];
+        ps = 2*sizeof(floatT)*(xg+global[0]*(yg+global[1]*(zg)));
+        floatT *dataRe = (floatT *) &buf[ps];
+        ps += sizeof(floatT);
+        floatT *dataIm = (floatT *) &buf[ps];
+        tmp3.data[col] = COMPLEX(floatT)(dataRe[0], dataIm[0] );
+        std::cout << "x "<< xg << " y "<< yg << " z "<< zg <<" dataRe " << dataRe[0] << " dataIm " << dataIm[0] << std::endl;
         spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
     }
 
@@ -479,6 +520,11 @@ template COMPLEX(double) sumXYZ_TrMdaggerMwave(int t,
 template void loadWave(std::string fname, Spinorfield<double, true , All, 2, 3,1> & spinor_device,
                                           Spinorfield<double, false, All, 2, 3,1> & spinor_host,
                                           int time, int col,CommunicationBase & commBase);
+
+template void loadWavePos(std::string fname, Spinorfield<double, true , All, 2, 3,1> & spinor_device,
+                                             Spinorfield<double, false, All, 2, 3,1> & spinor_host,
+                                             size_t posX, size_t posY, size_t posZ,
+                                             int time, int col,CommunicationBase & commBase);
 
 template void makeWaveSource(Spinorfield<double, true, All, 2, 12, 12> & spinorIn, const Spinorfield<double, true, All, 2, 3,1> &spinor_wave,
                       size_t time, size_t col,size_t post);
