@@ -136,6 +136,68 @@ struct CopyHalfFromAll{
     }
 };
 
+/*
+
+template<class floatT,size_t HaloDepth>
+__global__ void copySpinorToContainer(MemoryAccessor _redBase, Vect12ArrayAcc<floatT> _SpinorIn, const size_t size,int spincolor1, int spincolor2,int lx,int ly,int lz,const int xtopo,const int ytopo,const int ztopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+    it = 0;
+
+    int  tmp;
+
+    divmod(site, GInd::getLatData().vol2, iz, tmp);
+    divmod(tmp,  GInd::getLatData().vol1, iy, ix);
+
+    Vect12<floatT> tmp12 = _SpinorIn.getElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2));
+
+    ix += xtopo*GInd::getLatData().lx;
+    iy += ytopo*GInd::getLatData().ly;
+    iz += ztopo*GInd::getLatData().lz;
+
+    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*iz),tmp12.data[spincolor1]);
+//    printf("%d %f \n" ,(int)(ix+GInd::getLatData().lx*(iy+GInd::getLatData().ly*iz)), tmp12.data[spincolor1].cREAL );
+}
+
+
+
+template<class floatT,size_t HaloDepth>
+__global__ void copyContainerToSpinor(Vect12ArrayAcc<floatT> _SpinorOut,LatticeContainerAccessor _redBase, const size_t size,int spincolor1, int spincolor2,int lx,int ly,int lz,const int xtopo,const int ytopo,const int ztopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+    it = 0;
+
+    int  tmp;
+
+    divmod(site, GInd::getLatData().vol2, iz, tmp);
+    divmod(tmp,  GInd::getLatData().vol1, iy, ix);
+
+    Vect12<floatT> tmp12 = _SpinorIn.getElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2));
+
+    ix += xtopo*GInd::getLatData().lx;
+    iy += ytopo*GInd::getLatData().ly;
+    iz += ztopo*GInd::getLatData().lz;
+
+    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*iz),tmp12.data[spincolor1]);
+//    printf("%d %f \n" ,(int)(ix+GInd::getLatData().lx*(iy+GInd::getLatData().ly*iz)), tmp12.data[spincolor1].cREAL );
+}
+
+*/
+
 template<class floatT, size_t HaloDepth,size_t NStacks>
 struct SumXYZ_TrM{
     using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
