@@ -21,7 +21,7 @@ COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 3,1> & spinor_wave,
-        LatticeContainer<true,COMPLEX(floatT)> & _redBase, int time, int col);
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase, int time, int col, int conjON);
 
 template<typename floatT, size_t HaloDepthSpin>
 void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
@@ -131,8 +131,8 @@ __global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAc
          _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(z+lz*(iy+ly*it)),v[z]);
       }
       if(direction == 2){
-         //if(it == 0)
-         //printf("i%d %d %d %f %f \n",(int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
+        // if(it == 0 && ix == 0 && iy == 0)
+        // printf("i  %d %d %d %f %f \n",(int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
          _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(z+lz*it)),v[z]);
       }
    }
@@ -327,7 +327,7 @@ struct SumXYZ_TrMdaggerM2{
     }
 };
 
-template<class floatT, size_t HaloDepth,size_t NStacks>
+template<class floatT, size_t HaloDepth,size_t NStacks, int conjON>
 struct SumXYZ_TrMdaggerMwave{
     using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
 
@@ -355,11 +355,26 @@ struct SumXYZ_TrMdaggerMwave{
             temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
                                  _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
         }
-        temp = temp*(_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col];  
+        if (conjON == 1){
+            temp = temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
+        }
+        else{
+            temp = temp*((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);  
+        }
+
       //  temp = (_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[col];
+/*
+        if (_t==0){
+        COMPLEX(double) tmp2(0.0,0.0);
+        tmp2 = (_spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,0))).data[0];
+        COMPLEX(double) tmp3(0.0,0.0);
+        tmp3 = (_spinorIn.template getElement<double>(GInd::getSiteStack(siteT,0))).data[0];
+        COMPLEX(double) tmp4(0.0,0.0);
+        tmp4 = (_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col];
+        printf("psi %d %d %d %f %f %f %f %f %f \n", coords.x,coords.y,coords.z,tmp2.cREAL, tmp2.cIMAG,tmp3.cREAL, tmp3.cIMAG,tmp4.cREAL, tmp4.cIMAG);
 
-//        printf("tr %d %d %d %f %f \n", coords.x,coords.y,coords.z,temp.cREAL, temp.cIMAG);
-
+        }
+*/
         return temp;
     }
 };
@@ -394,6 +409,9 @@ struct MakeWaveSource12{
                 tmp.data[stack] = (_spinor_wave.template getElement<double>(siteT)).data[_col];
             }
 
+            //if(_time == 0 && coords.y == 0 && coords.x == 0)
+            //  printf("i i %d %d %d %f %f \n",(int)coords.x, (int)coords.y, (int)coords.z, tmp.data[stack].cREAL , tmp.data[stack].cIMAG);
+          
             const gSiteStack writeSite = GInd::getSiteStack(site,stack);
             _spinorIn.setElement(writeSite,tmp);
 

@@ -301,7 +301,7 @@ COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 3,1> & spinor_wave,
-        LatticeContainer<true,COMPLEX(floatT)> & _redBase, int time, int col){
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase, int time, int col, int conjON){
 
         typedef GIndexer<All, HaloDepthSpin> GInd;
 
@@ -311,9 +311,15 @@ COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
 
         _redBase.adjustSize(elems_);
 
-        _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
-                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
-
+        if(conjON == 1){
+            _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,1>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
+        }
+        else{
+            _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,0>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
+        }
+   
         _redBase.reduce(result, elems_);
         return result;
 }
@@ -353,6 +359,71 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     commBase.closeIOBinary();
 
     spinor_device = spinor_host;
+
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void moveWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = (spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn];
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+    
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            Vect3<floatT> tmp3 = spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeOut));
+            tmp3[colOut] = buf[x+glx*(y+gly*(z))];
+            spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, timeOut),tmp3);
+        }
+
+    spinor_device = spinor_host;
+    delete[] buf;
+    delete[] buf2;
+
 
 }
 
@@ -515,7 +586,7 @@ template COMPLEX(double) sumXYZ_TrMdaggerMwave(int t,
         const Spinorfield<double, true, All, 2, 12, 12> & spinorInDagger,
         const Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
         const Spinorfield<double, true, All, 2, 3 ,  1> & spinor_wave,
-        LatticeContainer<true,COMPLEX(double)> & _redBase, int time, int col);
+        LatticeContainer<true,COMPLEX(double)> & _redBase, int time, int col, int conjON);
 
 template void loadWave(std::string fname, Spinorfield<double, true , All, 2, 3,1> & spinor_device,
                                           Spinorfield<double, false, All, 2, 3,1> & spinor_host,
