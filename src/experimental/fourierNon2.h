@@ -38,6 +38,11 @@ template<typename floatT, size_t HaloDepth>
 void makeWaveSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave,
                       size_t time, size_t col,size_t post);
 
+template<typename floatT, size_t HaloDepthSpin>
+void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
+
 template<typename floatT>
 void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase);
 
@@ -355,7 +360,11 @@ struct SumXYZ_TrMdaggerMwave{
             temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
                                  _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
         }
-        if (conjON == 1){
+        if (conjON == 2){
+            temp = COMPLEX(double)((    temp*((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL,
+                                   (temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL);
+        }
+        else if (conjON == 1){
             temp = temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
         }
         else{

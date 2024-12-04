@@ -311,7 +311,11 @@ COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
 
         _redBase.adjustSize(elems_);
 
-        if(conjON == 1){
+        if(conjON == 2){
+            _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,2>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
+        }
+        else if(conjON == 1){
             _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
                 SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,1>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
         }
@@ -363,7 +367,8 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
 }
 
 template<typename floatT, size_t HaloDepthSpin>
-void moveWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
                                  int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase){
     typedef GIndexer<All, HaloDepthSpin> GInd;
 
@@ -390,7 +395,8 @@ void moveWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
         for (int z=0; z<lz; z++)
         for (int y=0; y<ly; y++)
         for (int x=0; x<lx; x++){
-            buf[x+lx*(y+ly*(z))] = (spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn];
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cIMAG);
         }
 
 
@@ -416,7 +422,8 @@ void moveWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
         for (int y=0; y<ly; y++)
         for (int x=0; x<lx; x++){
             Vect3<floatT> tmp3 = spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeOut));
-            tmp3[colOut] = buf[x+glx*(y+gly*(z))];
+            tmp3.data[colOut] = COMPLEX(floatT)(real(buf[((x+glx-posX)%glx)+glx*(((y+gly-posY)%gly)+gly*(((z+glz-posZ)%glz)))]),
+                                           imag(buf[((x+glx-posX)%glx)+glx*(((y+gly-posY)%gly)+gly*(((z+glz-posZ)%glz)))]));
             spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, timeOut),tmp3);
         }
 
@@ -599,4 +606,8 @@ template void loadWavePos(std::string fname, Spinorfield<double, true , All, 2, 
 
 template void makeWaveSource(Spinorfield<double, true, All, 2, 12, 12> & spinorIn, const Spinorfield<double, true, All, 2, 3,1> &spinor_wave,
                       size_t time, size_t col,size_t post);
+
+template void moveWave(Spinorfield<double, true, All, 2, 3,1> & spinor_device,Spinorfield<double, false, All, 2, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
 
