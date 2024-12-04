@@ -119,5 +119,19 @@ int main(int argc, char **argv) {
         
     }
 
-    // output file name: "TaylorMeasurement_" + ensemble_id (like l328...) + "." + param.conf_nr
+    // output file
+
+    ///prepare output file
+    std::stringstream outputfilename,cbeta,cstream;
+    outputfilename << param.measurements_dir() << "TaylorMeasurement_l" << param.latDim[0] << param.latDim[3] << "f21";
+
+    outputfilename << ".d";
+
+    std::ofstream resultfile;
+    if (true) {
+        resultfile.open(outputfilename.str());
+        rootLogger.info("output_file_name: " ,  outputfilename.str());
+    }
+
+    // output_file_name: "TaylorMeasurement_" + ensemble_id (like l328...) + "." + param.conf_nr
 }
