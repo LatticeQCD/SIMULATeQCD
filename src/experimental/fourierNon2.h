@@ -372,18 +372,19 @@ struct SumXYZ_TrMdaggerMwave{
         }
 
       //  temp = (_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[col];
-/*
-        if (_t==0){
-        COMPLEX(double) tmp2(0.0,0.0);
-        tmp2 = (_spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,0))).data[0];
-        COMPLEX(double) tmp3(0.0,0.0);
-        tmp3 = (_spinorIn.template getElement<double>(GInd::getSiteStack(siteT,0))).data[0];
-        COMPLEX(double) tmp4(0.0,0.0);
-        tmp4 = (_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col];
-        printf("psi %d %d %d %f %f %f %f %f %f \n", coords.x,coords.y,coords.z,tmp2.cREAL, tmp2.cIMAG,tmp3.cREAL, tmp3.cIMAG,tmp4.cREAL, tmp4.cIMAG);
 
-        }
-*/
+//        if (_time==5 && _col ==0 ){
+        //COMPLEX(double) tmp2(0.0,0.0);
+        //tmp2 = (_spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,0))).data[0];
+        //COMPLEX(double) tmp3(0.0,0.0);
+        //tmp3 = (_spinorIn.template getElement<double>(GInd::getSiteStack(siteT,0))).data[0];
+//        COMPLEX(double) tmp4(0.0,0.0);
+//        tmp4 = (_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col];
+        //printf("psi %d %d %d %f %f %f %f %f %f \n", coords.x,coords.y,coords.z,tmp2.cREAL, tmp2.cIMAG,tmp3.cREAL, tmp3.cIMAG,tmp4.cREAL, tmp4.cIMAG);
+//        printf("psi %d %d %d %f %f \n", coords.x,coords.y,coords.z,tmp4.cREAL, tmp4.cIMAG);
+//
+//        }
+
         return temp;
     }
 };

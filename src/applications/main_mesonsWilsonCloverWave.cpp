@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(DEBUG);
 
     using PREC = double;
-    const size_t mrhs = 1;
+    const size_t mrhs = 4;
 
     wilsonParam<PREC> param;
 
@@ -223,13 +223,13 @@ int main(int argc, char *argv[]) {
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_in(commBase);
 
     int nWave = param.nSources();
-    int Size = 1+nWave;
+//    int Size = 1+nWave;
 
 //    if(param.use_mass2()>0){
 //         Size = 1+1;
 //    }
-    spinor_out = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>*[Size];
-    for (int i = 0; i < Size; i++) {
+    spinor_out = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>*[nWave];
+    for (int i = 0; i < nWave; i++) {
        spinor_out[i] = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>(commBase); 
     }
 
@@ -316,21 +316,21 @@ int main(int argc, char *argv[]) {
 
                      //version that gives the correlator from input spinor only (spinorAll inside class instead)
 
-                     for(int ss = 0; ss < Size; ss ++){
+                     for(int ss = 0; ss < nWave; ss ++){
 
                         _dslashinverseSC4.setMass(mass);
-                        if(ss==0){
-                            source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
-                        }
-                        else{
+               //         if(ss==0){
+               //             source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+               //         }
+               //         else{
                             if(pos[0] == 0 && pos[1] == 0 && pos[2] == 0){
-                                makeWaveSource(spinor_in,spinor_device,(ss-1)*2,0,pos[3]);
+                                makeWaveSource(spinor_in,spinor_device,(ss)*2,0,pos[3]);
                             }
                             else{
-                                moveWave(spinor_device,spinor_host,pos[0],pos[1],pos[2],(ss-1)*2, 2,(ss-1)*2, 0 , commBase);
-                                makeWaveSource(spinor_in,spinor_device,(ss-1)*2,2,pos[3]);
+                                moveWave(spinor_device,spinor_host,pos[0],pos[1],pos[2],(ss)*2, 2,(ss)*2, 0 , commBase);
+                                makeWaveSource(spinor_in,spinor_device,(ss)*2,2,pos[3]);
                            }                        
-                        }
+              //          }
                         //// test
                         /*
                         for (int t=0; t<GInd::getLatData().globLT; t++){
@@ -367,7 +367,7 @@ int main(int argc, char *argv[]) {
                          //CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[ss+1][0],spinor_out[0][0],spinor_device,redBaseDevice,2*ss2+1,0,0);
                          //CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_out[ss+1][0],spinor_device,redBaseDevice,2*ss2+1,0,0);
                          //CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[ss+1][0],spinor_out[0][0],spinor_device,redBaseDevice,2*ss2+1,0,1);
-                         CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_out[ss+1][0],spinor_device,redBaseDevice,2*ss2+1,0,2);
+                         CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_out[ss][0],spinor_device,redBaseDevice,2*ss2+1,0,2);
 
                      }
 
@@ -375,7 +375,7 @@ int main(int argc, char *argv[]) {
                      // tr( (g5*M^d*g5) gi M gi )
     
                      //x direction
-                     spinor_in = spinor_out[ss+1][0];    
+                     spinor_in = spinor_out[ss][0];    
                      source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
 
@@ -388,7 +388,7 @@ int main(int argc, char *argv[]) {
                          CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
                      //y direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
 
@@ -401,7 +401,7 @@ int main(int argc, char *argv[]) {
                          CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
                      //z direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
 
@@ -416,7 +416,7 @@ int main(int argc, char *argv[]) {
 
                      //  scalar
                      // tr( (g5*M^d*g5) M )
-                     spinor_in = spinor_out[ss+1][0]; 
+                     spinor_in = spinor_out[ss][0]; 
                      source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
                      for (int t=0; t<GInd::getLatData().globLT; t++){
@@ -429,7 +429,7 @@ int main(int argc, char *argv[]) {
                      // tr( (g5*M^d*g5) gi g5 M gi g5 )
 
                      //x direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
 
@@ -439,7 +439,7 @@ int main(int argc, char *argv[]) {
                          CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
                      //y direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
 
@@ -449,7 +449,7 @@ int main(int argc, char *argv[]) {
                          CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
                      //z direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
 
@@ -461,7 +461,7 @@ int main(int argc, char *argv[]) {
 
 
                      // tr( (g5*M^d*g5) g4 M g4 )
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
 
                      source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
@@ -478,7 +478,7 @@ int main(int argc, char *argv[]) {
                      // tr( (g5*M^d*g5) gi g4 M gi g4 )
 
                      //x direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
 
@@ -494,7 +494,7 @@ int main(int argc, char *argv[]) {
                          CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
                      //y direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
 
@@ -510,7 +510,7 @@ int main(int argc, char *argv[]) {
                          CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
                      //z direction
-                     spinor_in = spinor_out[ss+1][0];
+                     spinor_in = spinor_out[ss][0];
                      source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
 
@@ -560,7 +560,7 @@ int main(int argc, char *argv[]) {
                         " " << norm*real(CC_gig4[ss+nWave*(ss2+nWave*t)]) << " " << norm*imag(CC_gig4[ss+nWave*(ss2+nWave*t)]) << "\n";
     }}}
 
-    for (int i = 0; i < Size; i++) {
+    for (int i = 0; i < nWave; i++) {
         delete spinor_out[i];
     }
     delete spinor_out;

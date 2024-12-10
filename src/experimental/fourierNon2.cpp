@@ -363,7 +363,7 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     commBase.closeIOBinary();
 
     spinor_device = spinor_host;
-
+    spinor_device.updateAll();
 }
 
 template<typename floatT, size_t HaloDepthSpin>
@@ -422,8 +422,12 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
         for (int y=0; y<ly; y++)
         for (int x=0; x<lx; x++){
             Vect3<floatT> tmp3 = spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeOut));
-            tmp3.data[colOut] = COMPLEX(floatT)(real(buf[((x+glx-posX)%glx)+glx*(((y+gly-posY)%gly)+gly*(((z+glz-posZ)%glz)))]),
-                                           imag(buf[((x+glx-posX)%glx)+glx*(((y+gly-posY)%gly)+gly*(((z+glz-posZ)%glz)))]));
+            tmp3.data[colOut] = COMPLEX(floatT)(real(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]),
+                                                imag(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]));
             spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, timeOut),tmp3);
         }
 
@@ -431,6 +435,7 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
     delete[] buf;
     delete[] buf2;
 
+    spinor_device.updateAll();
 
 }
 
