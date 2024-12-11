@@ -18,7 +18,7 @@ private:
             rootLogger.error("Could not open file.");
             return false;
         } else {
-            in.read((char*)lambda, sizeof(double));
+            in.read((char*)lambda, 2*sizeof(double));
             header_size = in.tellg();
             return true;
         }
@@ -115,7 +115,7 @@ public:
         index = 0;
     }
 
-    bool read_header(std::istream &in, double &content) {
+    bool read_header(std::istream &in, double* content) {
         if (!header.read(in, content)){
             rootLogger.error("header.read() failed!");
             return false;

@@ -12,27 +12,36 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 {   
     numVec = numVecIn;
     lambda_vect.reserve(numVec);
-    double lambda_temp;
+    double lambda_temp[2];
     if(onDevice) {
         Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> vector_host(this->getComm());
-        for (int n = 0; n < numVec; n++) {
+        Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> vector_host_odd(this->getComm());
+        for (int n = 0; n < numVec/2; n++) {
             spinors.emplace_back(this->getComm());
-            read_evnersc_host(vector_host.getAccessor(), n, lambda_temp, fname);
-            spinors[n] = vector_host;
-            lambda_vect[n] = lambda_temp;
+            read_evnersc_host(vector_host.getAccessor(), 2*n, lambda_temp, fname);
+            // read_evnersc_host(vector_host_odd.getAccessor(), 2*n+1, lambda_temp, fname);
+
+            spinors[2*n] = vector_host;
+            // spinors[2*n+1] = vector_host_odd;
+            lambda_vect[2*n] = lambda_temp[0];
+            lambda_vect[2*n+1] = lambda_temp[1];
         }
     } 
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double &lambda, const std::string &fname)
+void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::read_evnersc_host(Vect3arrayAcc<floatT> spinorAccessor, int idxvec, double* lambda, const std::string &fname)
 {
     evNerscFormat<HaloDepthSpin> evnersc(this->getComm());
     typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
 
-    int sizeh=GInd::getLatData().sizeh;
-    int displacement=evnersc.bytes_per_site()*sizeh+sizeof(double);            
+    // int sizeh=GInd::getLatData().sizeh;
+    // int displacement=evnersc.bytes_per_site()*sizeh+sizeof(double);
+    
+    int vol4 = GInd::getLatData().vol4;
+    int displacement=evnersc.bytes_per_site()*vol4+sizeof(double);            
+    
     this->getComm().SetFileView(displacement * idxvec);
 
     std::ifstream in;
@@ -59,17 +68,15 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        if ((x+y+z+t)%2==0){
-            gSite site = GInd::getSite(x,y,z,t);
+        gSite site = GInd::getSite(x,y,z,t);
 
-            if (evnersc.end_of_buffer()) {
-                this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
-                evnersc.process_read_data();
-            }
-            Vect3<floatT> ret = evnersc.template get<floatT>();
-            spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
-    
+        if (evnersc.end_of_buffer()) {
+            this->getComm().readBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+            evnersc.process_read_data();
         }
+        Vect3<floatT> ret = evnersc.template get<floatT>();
+        spinorAccessor.setElement(GInd::getSiteMu(site, 0), ret);
+    
     }
 }
 

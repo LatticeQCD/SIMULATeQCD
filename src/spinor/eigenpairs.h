@@ -72,7 +72,7 @@ public:
             _spinor_lattice(comm) { }
 
     void read_evnersc(const int &numVecIn, const std::string &fname);
-    void read_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int idxvec, double &lambda, const std::string &fname);
+    void read_evnersc_host(Vect3arrayAcc<floatT> Vect3arrayAcc, int idxvec, double* lambda, const std::string &fname);
     void tester(CommunicationBase &commBase, Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
     void start_vector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);
     void start_vector_tester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS);
