@@ -963,6 +963,11 @@ set_SIMULATeQCD_property(maximalCenterGaugeFixing PROPERTIES RUNTIME_OUTPUT_DIRE
 SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixing PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications maximalCenterGaugeFixing)
 
+#add_SIMULATeQCD_executable(NERSC_ILDG_Converter src/applications/main_NERSC_ILDG_Converter.cpp)
+#set_SIMULATeQCD_property(NERSC_ILDG_Converter PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+#SIMULATeQCD_target_compile_definitions(NERSC_ILDG_Converter PRIVATE HALODEPTH_1=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 LAYOUT_ALL=1)
+#add_to_compound_SIMULATeQCD_target(applications NERSC_ILDG_Converter)
+
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS
 
