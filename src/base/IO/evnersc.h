@@ -6,6 +6,7 @@
 #pragma once
 
 #include "parameterManagement.h"
+#include "../indexer/bulkIndexer.h"
 #include <iostream>
 
 class evNerscHeader : virtual private ParameterList {
@@ -16,6 +17,7 @@ private:
     bool read(std::istream &in, double * lambda) {
         if (in.fail()) {
             rootLogger.error("Could not open file.");
+            in.clear(); // Clear the stream state
             return false;
         } else {
             in.read((char*)lambda, sizeof(double));
@@ -24,9 +26,8 @@ private:
         }
     }
 
-    evNerscHeader(const CommunicationBase &_comm) : comm(_comm) {
-        header_size = 0;
-    }
+public:
+    evNerscHeader(const CommunicationBase &_comm) : comm(_comm), header_size(0) {}
 
 
     template <size_t HaloDepth>
@@ -89,13 +90,17 @@ private:
     }
 
     void byte_swap() {
-        const long count = buf.size() / float_size;
-        for (long i = 0; i < count; i++)
-            Byte_swap(&buf[i * float_size], float_size);
+        for (size_t i = 0; i < buf.size(); i += float_size) {
+            std::reverse(buf.begin() + i, buf.begin() + i + float_size);
+        }
     }
 
     //compute checksum of 'bytes' bytes at beginning of buffer
     uint32_t checksum(size_t bytes) {
+        if (bytes % 4 != 0) {
+            rootLogger.error("Checksum size must be a multiple of 4.");
+            return 0;
+        }
         uint32_t result = 0;
         uint32_t *dat = (uint32_t *) &buf[0];
         for (size_t i = 0; i < bytes / 4; i++)
@@ -105,7 +110,7 @@ private:
 
 public:
 
-    evNerscFormat(CommunicationBase &comm) : comm(comm), header(comm) {
+    evNerscFormat(const CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
         local_size = 8 * float_size;

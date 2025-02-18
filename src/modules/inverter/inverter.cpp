@@ -380,7 +380,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     } while (( sqrt(max(lambda2/in_norm)) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
-        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg,  " residual: " ,  sqrt(max(lambda2/in_norm)));
     } else {
         rootLogger.info("CG: # iterations " ,  cg);
     }

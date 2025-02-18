@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
     typedef float floatT; // Define the precision here
     typedef float PREC;
 
-    rootLogger.info("STARTING Taxlor Measurement:");
+    rootLogger.info("STARTING Taylor Measurement:");
 
     if (sizeof(floatT)==4) {
       rootLogger.info("update done in single precision");
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
                 taylor_measurement.insertOperator(id);
             }
         }
-        catch (std::runtime_error e) {
+        catch (const std::runtime_error& e) {
             rootLogger.error(e.what());
             return 1;
         }
