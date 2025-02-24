@@ -373,14 +373,15 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         spinorStart.axpyThisLoopd(-1.0*B, pi,NStacks);
 
         pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
-        // rootLogger.info("a=" ,  max(a));
-        // rootLogger.info("norm=" ,  max(norm_r2));
+
+        // rootLogger.info("residual=" ,  sqrt(max(lambda2/in_norm)));
 
 
     } while (( sqrt(max(lambda2/in_norm)) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
-        rootLogger.warn("CG: Warning max iteration reached " ,  cg,  " residual: " ,  sqrt(max(lambda2/in_norm)));
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
+        rootLogger.info("residual=" ,  sqrt(max(lambda2/in_norm)));
     } else {
         rootLogger.info("CG: # iterations " ,  cg);
     }
