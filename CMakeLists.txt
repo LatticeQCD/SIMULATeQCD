@@ -1028,11 +1028,11 @@ set_SIMULATeQCD_property(fourier PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applicatio
 SIMULATeQCD_target_compile_definitions(fourier PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications fourier)
 
-set_SIMULATeQCD_gpu_backend(src/applications/main_fourierTest.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp)
-add_SIMULATeQCD_executable(fourierTest src/applications/main_fourierTest.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp)
-set_SIMULATeQCD_property(fourierTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(fourierTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(applications fourierTest)
+#set_SIMULATeQCD_gpu_backend(src/applications/main_fourierTest.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp)
+#add_SIMULATeQCD_executable(fourierTest src/applications/main_fourierTest.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp)
+#set_SIMULATeQCD_property(fourierTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+#SIMULATeQCD_target_compile_definitions(fourierTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 ${ALL_LAYOUTS})
+#add_to_compound_SIMULATeQCD_target(applications fourierTest)
 
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS

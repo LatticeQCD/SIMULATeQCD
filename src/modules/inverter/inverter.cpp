@@ -7,6 +7,102 @@
 
 template<class floatT, size_t NStacks>
 template <typename Spinor_t>
+void bicgstab<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
+        Spinor_t& spinorIn, int max_iter, double precision)
+{
+    Spinor_t vri(spinorIn.getComm());
+
+    Spinor_t vpi(spinorIn.getComm());
+
+    Spinor_t vr0h(spinorIn.getComm());
+
+    Spinor_t vv(spinorIn.getComm());
+    Spinor_t vh(spinorIn.getComm());
+    Spinor_t vs(spinorIn.getComm());
+    Spinor_t vt(spinorIn.getComm());
+
+
+
+    vri = spinorIn;
+    vr0h= vri;
+    vpi = vri;
+    spinorOut = static_cast<floatT>(0.0) * vri;
+
+    SimpleArray<COMPLEX(double), NStacks> dot(0);
+    SimpleArray<COMPLEX(double), NStacks> spi(0.0);
+    SimpleArray<COMPLEX(double), NStacks> spip1(0.0);
+    SimpleArray<COMPLEX(double), NStacks> alpha(0.0);
+    SimpleArray<COMPLEX(double), NStacks> omega(0.0);
+    SimpleArray<COMPLEX(double), NStacks> beta(0.0);
+
+
+    SimpleArray<floatT, NStacks> rsnew(0.0);
+
+    spi = vr0h.dotProductStacked(vri);
+
+    for (int i = 0; i < max_iter; i++) {
+        vpi.updateAll(COMM_BOTH | Hyperplane | Plane);
+        //vp.updateAll(COMM_BOTH | Hyperplane);
+        dslash.applyMdaggM(vv, vpi, false);
+
+        dot = (vr0h.dotProductStacked(vv));
+        alpha = spi/dot;
+
+        // h = spinorOut + ( vp * alpha);
+        vh = spinorOut + alpha * vpi;
+
+        // s = vr - (vap * alpha);
+        vs = vri - alpha * vv;
+
+        dot = vs.dotProductStacked(vs);
+        rsnew = real<floatT>(dot);
+
+        if(max(rsnew /*/ norm*/) < precision) {
+            spinorOut = vh;
+            rootLogger.info("# iterations " ,  i);
+            break;
+        }
+        vs.updateAll(COMM_BOTH | Hyperplane | Plane);
+        dslash.applyMdaggM(vt, vs, false);
+
+        
+        beta = vt.dotProductStacked(vs);
+        dot   = vt.dotProductStacked(vt);
+        omega = beta/dot;     
+
+        spinorOut = vh + omega * vs;
+
+        vri       = vs - omega * vt;
+
+        dot = vri.dotProductStacked(vri);
+        rsnew = real<floatT>(dot);
+
+        if(max(rsnew /*/ norm*/) < precision) {
+            rootLogger.info("# iterations " ,  i);
+            break;
+        }
+
+        spip1 = vr0h.dotProductStacked(vri);
+        //beta  = (spip1/spi)*(alpha/omega);
+        beta =  spip1/spi;
+        dot  = omega/alpha;
+        beta = beta/dot;
+
+        vpi = vri + beta * (vpi -omega *vv);
+
+        spi = spip1;
+        
+
+        if(i == max_iter -1) {
+            rootLogger.warn("CG: Warning max iteration reached " ,  i);
+        }
+    }
+    spinorOut.updateAll();
+    rootLogger.info("residue " ,  max(rsnew /*/norm*/));
+}
+
+template<class floatT, size_t NStacks>
+template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
         Spinor_t& spinorIn, int max_iter, double precision)
 {
@@ -595,8 +691,20 @@ template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinor
             Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, 1>& spinorIn, \
             SimpleArray<floatT, STACKS> sigma, const int, const double); \
 
+#define CLASSBICGSTAB_INIT(floatT,STACKS) \
+template class bicgstab<floatT, STACKS>;
+
+#define CLASSBICGSTAB_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
+template void bicgstab<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, int, double);\
+template void bicgstab<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorIn, int, double);\
+
+
 INIT_PN(CLASSCG_INIT)
+INIT_PN(CLASSBICGSTAB_INIT)
 INIT_PLHSN(CLASSCG_INV_INIT)
+INIT_PLHSN(CLASSBICGSTAB_INV_INIT)
 #if DOUBLEPREC == 1 && SINGLEPREC ==1
 INIT_PLHSN(CLASSCG_FLOAT_INV_INIT)
 #endif
