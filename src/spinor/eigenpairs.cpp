@@ -103,30 +103,26 @@ void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::start_vector(double mass, Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn) {
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(spinorIn.getComm());
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorSum(spinorIn.getComm());
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(spinorIn.getComm());
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(spinorIn.getComm());
-
-    va = spinorIn;
 
     double lambda;
-    COMPLEX(double) faktor_double;
-    COMPLEX(floatT) faktor_compat;
+    COMPLEX(double) factorDouble;
+    COMPLEX(floatT) factorCompat;
 
     for (int i = 0; i < numVec; i++) {
         spinorEv = spinors[i];
         lambda = mass*mass + lambda_vect[i];
 
+        factorDouble =  spinorEv.dotProduct(spinorIn);
 
-        faktor_double =  spinorEv.dotProduct(spinorIn);
+        factorDouble /= lambda;
 
-        faktor_double /= lambda;
+        factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
 
-        faktor_compat = GPUcomplex<floatT>(real(faktor_double), imag(faktor_double));
-
-        vr.template axpyThisB<64>(faktor_compat, spinorEv);
+        spinorSum.template axpyThisB<64>(factorCompat, spinorEv);
     }
-    spinorOut = vr;
+    spinorOut = spinorSum;
 }
 
 

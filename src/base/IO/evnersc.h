@@ -14,36 +14,42 @@ private:
     const CommunicationBase &comm;
     int header_size;
 
-    bool read(std::istream &in, double * lambda) {
+    // Reads a double value from the input stream
+    bool read(std::istream &in, double *lambda) {
         if (in.fail()) {
-            rootLogger.error("Could not open file.");
+            rootLogger.error("Failed to open input stream for reading.");
             in.clear(); // Clear the stream state
             return false;
-        } else {
-            in.read((char*)lambda, sizeof(double));
-            header_size = in.tellg();
-            return true;
         }
+
+        in.read(reinterpret_cast<char*>(lambda), sizeof(double));
+        if (in.fail()) {
+            rootLogger.error("Failed to read double value from input stream.");
+            return false;
+        }
+
+        header_size = static_cast<int>(in.tellg());
+        return true;
     }
 
 public:
-    evNerscHeader(const CommunicationBase &_comm) : comm(_comm), header_size(0) {}
-
+    explicit evNerscHeader(const CommunicationBase &_comm) 
+        : comm(_comm), header_size(0) {}
 
     template <size_t HaloDepth>
     friend class evNerscFormat;
 
-public:
     size_t size() const {
         return header_size;
     }
 
-    // called from all nodes, but only root node has already opened file
+    // Reads the header from the input stream
     bool read(std::istream &in, double &content) {
-        // double content;
         bool success = true;
-        if (comm.IamRoot())
+
+        if (comm.IamRoot()) {
             success = read(in, &content);
+        }
 
         if (!comm.single()) {
             comm.root2all(success);
@@ -52,11 +58,8 @@ public:
                 comm.root2all(content);
             }
         }
-        if (!success) {
-            return false;
-        } else {
-            return true;
-        }
+
+        return success;
     }
 };
 
