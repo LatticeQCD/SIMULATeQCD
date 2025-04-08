@@ -140,6 +140,9 @@ public:
     void Dslash_nostack(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
     void Dslash_stacked(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
+    void Dslash_center(SpinorLHS_t &lhs, const SpinorRHS_t &rhs);
+    void Dslash_halo(SpinorLHS_t &lhs, const SpinorRHS_t &rhs);
+
     //! Includes the mass term
     virtual void applyMdaggM_nostack(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
     virtual void applyMdaggM_stacked(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);

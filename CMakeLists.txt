@@ -828,11 +828,15 @@ else()
 set_SIMULATeQCD_gpu_backend(src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp) 
 add_SIMULATeQCD_executable(multiRHSProf src/profiling/main_mrhsDSlashProf.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
 set_target_properties(multiRHSProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_4=1 LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
+target_compile_definitions(multiRHSProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 DOUBLEPREC=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 NSTACKS_BLOCK_1=1 NSTACKS_BLOCK_2=1 NSTACKS_BLOCK_4=1 LAYOUT_EVEN=1 LAYOUT_ODD=1 GIT_HASH="${GIT_HASH}")
 add_dependencies(profilers multiRHSProf)
 endif()
 
-
+set_SIMULATeQCD_gpu_backend(src/profiling/main_dslash_overlap.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(dslash_comms src/profiling/main_dslash_overlap.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
+set_target_properties(dslash_comms PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
+target_compile_definitions(dslash_comms PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 COMP_R18=1 COMP_U3R14=1 SINGLEPREC=1 DOUBLEPREC=1 NSTACKS_1=1 NSTACKS_BLOCK_1=1 LAYOUT_EVEN=1 LAYOUT_ODD=1 LAYOUT_ALL=1 GIT_HASH="${GIT_HASH}")
+add_dependencies(profilers dslash_comms)
 
 if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_half_prec_dslash_profile.cpp ${SOURCE_FILES_DSLASH}) 

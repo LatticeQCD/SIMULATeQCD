@@ -45,7 +45,8 @@ private:
     Vect3array<floatT, onDevice> _lattice;
     LatticeContainer<onDevice,COMPLEX(double)> _redBase;
     LatticeContainer<onDevice,double> _redBase_real;
-
+    gpuStream_t compute_stream;
+    gpuStream_t halo_stream;
     typedef GIndexer<LatticeLayout, HaloDepth> GInd;
     typedef Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> spin_t;
 public:
@@ -64,6 +65,10 @@ typedef floatT floatT_inner;
             _redBase.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
             _redBase_real.adjustSize(GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 * NStacks / 2);
         }
+        gpuError_t gpuErr =  gpuStreamCreate(&compute_stream);
+        if (gpuErr != gpuSuccess) GpuError("spinorfield.h: gpuStreamCreate", gpuErr);
+        gpuErr = gpuStreamCreate(&halo_stream);
+        if (gpuErr != gpuSuccess) GpuError("spinorfield.h: gpuStreamCreate", gpuErr);
     }
 
     //! copy constructor
@@ -325,14 +330,14 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     CalcGSiteInnerBulkStack<LatticeLayout, HaloDepth> calcSite;
     WriteAtReadStack writeAtRead;
     typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
-    size_t elems; 
-    if (LatticeLayout == All) {
-        elems = HInd::getCenterSize()*Nmax;
-    } else {
-        elems = HInd::getCenterSize()/2*Nmax;
-    }
+    size_t elems = HInd::getCenterSize()*Nmax; 
+    // if (LatticeLayout == All) {
+    //     elems = (GIndexer<LatticeLayout, HaloDepth>::getLatData().vol4 - HInd::getInnerHaloSize())*Nmax;
+    // } else {
+    //     elems = (GIndexer<LatticeLayout, HaloDepth>::getLatData().sizeh - HInd::getInnerHaloSize())*Nmax; 
+    // }
 
-    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax);
+    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax, 1, compute_stream);
 }
 
 
@@ -342,13 +347,11 @@ void Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks>::iterateOv
     CalcGSiteHaloStack<LatticeLayout, HaloDepth> calcSite;
     WriteAtReadStack writeAtRead;
     typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
-    size_t elems;
-    if (LatticeLayout == All) {
-        elems = HInd::getInnerHaloSize()*Nmax;
-    } else {
-        elems = HInd::getInnerHaloSize()/2*Nmax;
-    }
-    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax);
+    size_t elems = HInd::getInnerHaloSize()*Nmax;
+    // } else {
+    //     elems = HInd::getInnerHaloSize()/2*Nmax;
+    // }
+    this->template iterateFunctor<BlockSize>(op, calcSite, writeAtRead, elems, Nmax, 1, halo_stream);
 }
 
 

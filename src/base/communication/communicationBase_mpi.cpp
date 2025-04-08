@@ -574,9 +574,8 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
     NeighborInfo &NInfo = HalInfo.getNeighborInfo();
 
     ProcessInfo &info = NInfo.getNeighborInfo(hseg, direction, leftRight);
-
     int rank = info.world_rank;
-
+    markerBegin("updateSegment with P2P:" + std::to_string(info.p2p), "commBase");
 
     gpuError_t gpuErr;
     if (seg.getLength() != 0) {
@@ -631,13 +630,14 @@ int CommunicationBase::updateSegment(HaloSegment hseg, size_t direction,
             MPI_Irecv(recvBase, 1, seg.getMpiType(), rank, index, cart_comm, &seg.getRequestRecv());
         }
     }
+    markerEnd();
     return seg.getLength();
 }
 
 
 template<bool onDevice>
 void CommunicationBase::updateAll(HaloOffsetInfo<onDevice> &HalInfo, unsigned int param) {
-
+    markerBegin("updateAll", "commBase");
     if (param & COMM_START) {
 
         if (param & Hyperplane) {
@@ -678,7 +678,7 @@ void CommunicationBase::updateAll(HaloOffsetInfo<onDevice> &HalInfo, unsigned in
     if (param & COMM_FINISH) {
         HalInfo.syncAllStreamRequests();
     }
-
+    markerEnd();
 }
 
 

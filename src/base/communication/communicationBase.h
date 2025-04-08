@@ -35,6 +35,7 @@
 #include "../IO/misc.h"
 #include "haloOffsetInfo.h"
 #include "../math/matrix4x4.h"
+#include "../wrapper/marker.h"
 #ifdef USE_NCCL
 #include <rccl.h>
 #endif

@@ -450,12 +450,12 @@ inline void NeighborInfo::checkP2P() {
                         GpuError("neighborInfo.h: gpuDeviceCanAccessPeer failed:", gpuErr);
                     }
                     nInfo.p2p = (bool) can_access_peer;
-#ifdef PEERACCESSINFO
+// #ifdef PEERACCESSINFO
                     if (!nInfo.sameRank)
                         stdLogger.debug("> Peer access on node " ,  myInfo.nodeName ,  " from GPU "
                                           ,  myInfo.deviceRank
                                           ,  " -> GPU " ,  nInfo.deviceRank ,  (can_access_peer ? " Yes" : " No"));
-#endif
+// #endif
 
                 }
             }

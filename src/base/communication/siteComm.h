@@ -288,7 +288,7 @@ public:
             return;
         }
 
-        markerBegin("updateAll", "Communication");
+        markerBegin("updateAll", "siteComm");
         
         gpuError_t gpuErr;
 
@@ -477,6 +477,7 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         COMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
 
+    markerBegin("extractHalosSeg", "siteComm");
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
         GpuError("siteComm.h: _extractHalosSeg gpuDeviceSynchronize failed:", gpuErr);
@@ -511,28 +512,37 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 iterateFunctorNoReturn<onDevice>(extractLeft, CalcInnerHaloSegIndexComm<floatT, LatLayout, HaloDepth>(hseg, subIndex),
                         length, 1, 1, segmentInfo.getSendStream());
 
-                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
-                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.start.record(segmentInfo.getSendStream());
-                }
+                // if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                //     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
+                //     p2pCopyEvent.start.record(segmentInfo.getSendStream());
+                // }
 
                 if ( (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) ||
-                        (onDevice && _commBase.gpuAwareMPIAvail()) )
+                        (onDevice && _commBase.gpuAwareMPIAvail() && !PInfo.p2p ) )
                 {
                     segmentInfo.synchronizeSendStream();
                 }
+        }
+    }
+    //break off kernel launches + syncs from data movement so we can overlap all sends with bulk compute
+    for (auto &HSegConfig : HSegConfig_send_vec){
+        HaloType currentHaltype = HSegConfig.currentHaltype();
+        if (param & currentHaltype) {
+            HaloSegment hseg = HSegConfig.hseg();
+            int dir = HSegConfig.dir();
+            int leftRight = HSegConfig.leftRight();
+            _commBase.updateSegment(hseg, dir, leftRight, HaloInfo);
 
-                _commBase.updateSegment(hseg, dir, leftRight, HaloInfo);
-
-                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
-                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.stop.record(segmentInfo.getSendStream());
-                }
+                // if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                //     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
+                //     p2pCopyEvent.stop.record(segmentInfo.getSendStream());
+                // }
         }
     }
 
-    HaloInfo.syncAllStreamRequests();
-    _commBase.globalBarrier();
+    // HaloInfo.syncAllStreamRequests();
+    // _commBase.globalBarrier();
+    markerEnd();
 }
 
 
@@ -563,7 +573,10 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         COMPLEX(floatT) *HaloBuffer, unsigned int param) {
 
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
+    markerBegin("injectHalosSeg", "siteComm");
 
+    HaloInfo.syncAllStreamRequests();
+    _commBase.globalBarrier();
     for (auto &HSegConfig : HSegConfig_recv_vec){
         
 
@@ -593,18 +606,18 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 Accessor hal_acc = Accessor(pointer, size);
                 // int streamNo = 1;
 
-                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
-                    deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
-                    p2pCopyEvent.streamWaitForMe(segmentInfo.getReceiveStream());
-                }
+                // if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                //     deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
+                //     p2pCopyEvent.streamWaitForMe(segmentInfo.getReceiveStream());
+                // }
 
-                if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {
-                    // segmentInfo.synchronizeStream(0);
-                    segmentInfo.synchronizeReceiveStream();
-                }
-                if (!onDevice || (onDevice && !_commBase.useGpuP2P())) {
-                    segmentInfo.synchronizeRequest();
-                }
+                // if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {
+                //     // segmentInfo.synchronizeStream(0);
+                //     segmentInfo.synchronizeReceiveStream();
+                // }
+                // if (!onDevice || (onDevice && !_commBase.useGpuP2P())) {
+                //     segmentInfo.synchronizeRequest();
+                // }
 
                 InjectOuterHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> injectLeft(acc, hal_acc);
 
@@ -612,12 +625,14 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                         length, 1, 1, segmentInfo.getReceiveStream());
         }
     }
-
-    gpuError_t gpuErr = gpuDeviceSynchronize();
-    if (gpuErr != gpuSuccess) {
-        GpuError("siteComm.h: _injectHalosSeg, gpuDeviceSynchronize failed:", gpuErr);
-    }
+    HaloInfo.syncAllStreamRequests();
     _commBase.globalBarrier();
-
+    //Don't deviceSync here so halo kernel can overlap with inner bulk if injection has completed
+    // gpuError_t gpuErr = gpuDeviceSynchronize();
+    // if (gpuErr != gpuSuccess) {
+    //     GpuError("siteComm.h: _injectHalosSeg, gpuDeviceSynchronize failed:", gpuErr);
+    // }
+    // _commBase.globalBarrier();
+    markerEnd();
 }
 

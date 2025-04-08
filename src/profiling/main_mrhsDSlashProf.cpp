@@ -127,7 +127,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
 int main(int argc, char **argv) {
 
-    stdLogger.setVerbosity(INFO);
+    stdLogger.setVerbosity(DEBUG);
     CommunicationBase commBase(&argc, &argv);
 
     LatticeParameters param;
@@ -151,7 +151,7 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    typedef float prec;
+    typedef double prec;
 #ifdef USE_TILED_MULTIRHS
     
     rootLogger.info("--------------------------------------");

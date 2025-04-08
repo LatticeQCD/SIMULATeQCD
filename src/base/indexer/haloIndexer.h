@@ -566,7 +566,13 @@ public:
     }
 
     __device__ __host__ inline static size_t getCenterSize() {
-        return GIndexer<LatLayout, HaloDepth>::getLatData().vol4 - getInnerHaloSize();
+        size_t center_size;
+        if (LatLayout == All) {
+            center_size = GIndexer<LatLayout, HaloDepth>::getLatData().vol4 - getInnerHaloSize();
+        } else {
+            center_size = GIndexer<LatLayout, HaloDepth>::getLatData().sizeh - getInnerHaloSize(); 
+        }
+        return center_size;
     }
 
 /// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

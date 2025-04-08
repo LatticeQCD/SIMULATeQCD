@@ -184,6 +184,17 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
 }
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
+void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::Dslash_center(SpinorLHS_t& lhs, const SpinorRHS_t& rhs) {
+    lhs.template iterateOverCenter<BLOCKSIZE>(getFunctor(rhs));
+}
+
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
+void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::Dslash_halo(SpinorLHS_t& lhs, const SpinorRHS_t& rhs) {
+    lhs.template iterateOverHalo<BLOCKSIZE>(getFunctor(rhs));
+}
+
+
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
 void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::applyMdaggM_nostack(SpinorRHS_t& spinorOut, const SpinorRHS_t& spinorIn, bool update){
 
     Dslash(_tmpSpin, spinorIn, true);

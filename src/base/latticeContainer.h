@@ -443,12 +443,8 @@ void LatticeContainer<onDevice, elemType>::iterateOverCenter(Functor op) {
     typedef HaloIndexer<LatticeLayout, HaloDepth> HInd;
     CalcGSiteInnerBulk<LatticeLayout,HaloDepth> calcCenterSite;
     WriteAtRead writeAtRead;
-    size_t elems;
-    if (LatticeLayout == All) {
-        elems = HInd::getCenterSize();
-    } else {
-        elems = HInd::getCenterSize()/2;
-    }
+    size_t elems = HInd::getCenterSize();
+
     this->template iterateFunctor<BlockSize>(op, calcCenterSite, writeAtRead, elems);    
 }
 
