@@ -76,11 +76,11 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     shifts[1] = shifts[0];
     shifts[0] = tmp;
     rootLogger.info("Multishift inversion:");
-    cgM.invert(dslash_m, spinorOut_shifts, pi_out, spinorIn, shifts, param.cgMax(), param.residue());
+    cgM.invert(dslash_m, spinorOut_shifts, spinorIn, shifts, param.cgMax(), param.residue());
     rootLogger.info("Multishift inversion converged.");
     
     rootLogger.info("Multishift inversion with concurrent comms:");
-    cgM.invert_concurrent_comms(dslash_m, spinorOut_shifts, pi_out, spinorIn, shifts, param.cgMax(), param.residue());
+    cgM.invert_concurrent_comms(dslash_m, spinorOut_shifts, spinorIn, shifts, param.cgMax(), param.residue());
     rootLogger.info("Multishift inversion converged.");
     
 }

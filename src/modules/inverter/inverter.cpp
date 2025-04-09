@@ -239,7 +239,7 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
 template<class floatT, size_t NStacks>
 template <typename SpinorIn_t, typename SpinorOut_t>
 void AdvancedMultiShiftCG<floatT, NStacks>::invert_concurrent_comms(
-        LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
+    CommunicatingLinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
         SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision)
 {
     SpinorOut_t pi(spinorIn.getComm());
@@ -691,6 +691,9 @@ template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spin
 template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 1> >& dslash, \
             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 1>& spinorIn, \
             SimpleArray<floatT, STACKS> sigma, const int, const double); \
+template void AdvancedMultiShiftCG<floatT, STACKS>::invert_concurrent_comms(CommunicatingLinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 1> >& dslash, \
+    Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 1>& spinorIn, \
+    SimpleArray<floatT, STACKS> sigma, const int, const double); \
 
 INIT_PN(CLASSCG_INIT)
 INIT_PLHSN(CLASSCG_INV_INIT)

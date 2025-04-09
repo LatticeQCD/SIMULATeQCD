@@ -629,6 +629,12 @@ set_SIMULATeQCD_property(inverterTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testi
 SIMULATeQCD_target_compile_definitions(inverterTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests inverterTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_multishift_test.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp)
+add_SIMULATeQCD_executable(multishift_test src/testing/main_multishift_test.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp)
+set_SIMULATeQCD_property(multishift_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(multishift_test PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 NSTACKS_1=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests multishift_test)
+
 if (NOT USE_HIP)
 set_SIMULATeQCD_gpu_backend(src/testing/main_mixedPrecInverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 
 add_SIMULATeQCD_executable(mixedPrecInverterTest src/testing/main_mixedPrecInverterTest.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp) 

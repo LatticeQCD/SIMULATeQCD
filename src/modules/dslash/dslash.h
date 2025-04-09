@@ -11,7 +11,7 @@
 
 //! Abstract base class for all kinds of Dslash operators that shall enter the inversion
 template<typename SpinorLHS_t, typename SpinorRHS_t>
-class DSlash : public LinearOperator<SpinorRHS_t> {
+class DSlash : public LinearOperator<SpinorRHS_t>, public CommunicatingLinearOperator<SpinorRHS_t> {
 public:
 
     //! This shall be a simple call of the DSlash without involving a constant
@@ -19,6 +19,8 @@ public:
 
     //! This shall be a call of the M^\dagger M where M = m + D or similar
     virtual void applyMdaggM(SpinorRHS_t &, const SpinorRHS_t &, bool update = true) = 0;
+
+    virtual void applyMdaggM_concurrent_comms(SpinorRHS_t &, SpinorRHS_t &) = 0;
 };
 
 

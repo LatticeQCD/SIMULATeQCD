@@ -219,8 +219,10 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
     } else {
         spinorOut.template iterateOverHalo<BLOCKSIZE>(getFunctor(_tmpSpin));
     }
-    gpuDeviceSynchronize();
-    
+    gpuError_t Err = gpuDeviceSynchronize();
+    if (Err) {
+        GpuError("applyMdaggM_concurrent_comms: failed DeviceSynchronize", Err);
+    }
 }
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
