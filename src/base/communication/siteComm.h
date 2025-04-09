@@ -580,7 +580,7 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
     markerBegin("injectHalosSeg", "siteComm");
 
-    HaloInfo.syncAllStreamRequests();
+    // HaloInfo.syncAllStreamRequests();
     // _commBase.globalBarrier();
     for (auto &HSegConfig : HSegConfig_recv_vec){
         
@@ -620,9 +620,9 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 //     // segmentInfo.synchronizeStream(0);
                 //     segmentInfo.synchronizeReceiveStream();
                 // }
-                // if (!onDevice || (onDevice && !_commBase.useGpuP2P())) {
-                //     segmentInfo.synchronizeRequest();
-                // }
+                if (!onDevice || (onDevice && !PInfo.p2p)) {
+                    segmentInfo.synchronizeRequest();
+                }
 
                 InjectOuterHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> injectLeft(acc, hal_acc);
 
