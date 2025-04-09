@@ -16,6 +16,11 @@ public:
     virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
 };
 
+template <typename Vector>
+class CommunicatingLinearOperator{
+public:
+    virtual void applyMdaggM_concurrent_comms(Vector&, Vector&) = 0;
+}
 
 /// Class for multiple right hand side inversion. NStacks is the number of right hand sides. The objects to be inverted
 /// must have the member function vec.dotProductStacked(vec&) and must to be able to use the operator syntax.
@@ -57,6 +62,10 @@ class AdvancedMultiShiftCG {
 public:
     template <typename SpinorIn_t, typename SpinorOut_t>
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
+                 SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
+
+    template <typename SpinorIn_t, typename SpinorOut_>
+    void invert_concurrent_comms(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 };
 

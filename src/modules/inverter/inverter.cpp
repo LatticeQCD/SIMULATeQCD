@@ -236,6 +236,106 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
     spinorOut.updateAll();
 }
 
+template<class floatT, size_t NStacks>
+template <typename SpinorIn_t, typename SpinorOut_t>
+void AdvancedMultiShiftCG<floatT, NStacks>::invert_concurrent_comms(
+        LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
+        SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision)
+{
+    SpinorOut_t pi(spinorIn.getComm());
+    SpinorIn_t s(spinorIn.getComm());
+    SpinorIn_t r(spinorIn.getComm());
+    SpinorIn_t pi0(spinorIn.getComm());
+
+    int max_term = NStacks;
+    StopWatch<true> timer;
+    int cg = 0;
+
+    SimpleArray<floatT, NStacks> a(0.0);
+    SimpleArray<floatT, NStacks> B(1.0);
+    SimpleArray<floatT, NStacks> Z(1.0);
+    SimpleArray<floatT, NStacks> Zm1(1.0);
+
+    r = spinorIn;
+
+    double norm_r2 = r.realdotProduct(r);
+
+    double  pAp,lambda, lambda2, rr_1, Bm1;
+ 
+    Bm1 = 1.0;
+
+    for (size_t i = 0; i < NStacks; i++) {
+        pi.copyFromStackToStack(spinorIn, i ,0);
+    }
+
+    spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+
+
+    do {
+        cg++;
+
+        pi0.template copyFromStackToStackDevice<NStacks,0,0>(pi);
+        // pi0.updateAll(COMM_BOTH | Hyperplane);
+
+        dslash.applyMdaggM_concurrent_comms(s, pi0);
+
+        s = sigma[0] * pi0 - s;
+
+        pAp = pi0.realdotProduct(s);
+
+        B[0] = - norm_r2 / pAp; 
+
+        r.axpyThisB(B[0], s); 
+
+        
+
+        for (int j=1; j<max_term; j++) {
+            rr_1   = Bm1 * Zm1[j] / ( B[0] * a[0] * (Zm1[j] - Z[j])
+                       + Zm1[j] * Bm1 * (1.0 - sigma[j] * B[0]) );
+            Zm1[j] = Z[j];
+            Z[j]   = Z[j] * rr_1;
+            B[j]   = B[0] * rr_1;
+        }
+        Bm1 = B[0];
+        lambda2 = r.realdotProduct(r); 
+        a[0]  = lambda2 / norm_r2;
+        norm_r2 = lambda2;
+
+
+        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term); 
+        //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
+
+
+        //################################
+        for (int j=1; j<max_term; j++) {
+            a[j] = a[0] * Z[j] * B[j] / (Zm1[j] * B[0]); 
+        }
+        //################################
+
+
+        pi.template axupbyThisLoop(Z, a, r, max_term); 
+        //     pi[i] = Z[i] * r + a[i] * pi[i];
+
+
+        //################################
+
+        do {
+            lambda = Z[max_term-1] * Z[max_term-1] * lambda2;
+            if ( lambda < precision/**old_norm*/ ) {
+                max_term--;
+            }
+        } while ( max_term > 0 && (lambda < precision/**old_norm*/) );
+
+    } while ( (max_term>0) && (cg<max_iter) );
+
+    if(cg >= max_iter -1) {
+        rootLogger.warn("CG: Warning max iteration reached " ,  cg);
+    } else {
+        rootLogger.info("CG: # iterations " ,  cg);
+    }
+
+    spinorOut.updateAll();
+}
 
 template<class floatT, size_t NStacks>
 template <typename Spinor_t>

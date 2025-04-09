@@ -151,7 +151,7 @@ public:
 
     virtual void applyMdaggM(SpinorRHS_t & spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
     
-    void applyMdaggM_concurrent_comms(SpinorRHS_t &spinorOut, SpinorRHS_t &spinorIn);
+    virtual void applyMdaggM_concurrent_comms(SpinorRHS_t &spinorOut, SpinorRHS_t &spinorIn);
 
     template<Layout LatLayout>
     HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>
