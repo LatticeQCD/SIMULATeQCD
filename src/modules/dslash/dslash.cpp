@@ -195,6 +195,35 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
 
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
+void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::Dslash_concurrent_comms(SpinorLHS_t &lhs, SpinorRHS_t &rhs) {
+    rhs.updateAll(COMM_START | Hyperplane);
+    Dslash_center(lhs,rhs);
+    rhs.updateAll(COMM_FINISH | Hyperplane);
+    Dslash_halo(lhs,rhs);
+}
+
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
+void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::applyMdaggM_concurrent_comms(SpinorRHS_t &spinorOut, SpinorRHS_t &spinorIn) {
+    Dslash_concurrent_comms(_tmpSpin, spinorIn);
+
+    _tmpSpin.updateAll(COMM_START | Hyperplane);
+    if(_mass != 0.0) {
+        spinorOut.template iterateOverCenter<BLOCKSIZE>(general_subtract(spinorIn * _mass2, getFunctor(_tmpSpin)));
+    } else {
+        spinorOut.template iterateOverCenter<BLOCKSIZE>(getFunctor(_tmpSpin));
+    }
+    _tmpSpin.updateAll(COMM_FINISH | Hyperplane);
+
+    if(_mass != 0.0) {
+        spinorOut.template iterateOverHalo<BLOCKSIZE>(general_subtract(spinorIn * _mass2, getFunctor(_tmpSpin)));
+    } else {
+        spinorOut.template iterateOverHalo<BLOCKSIZE>(getFunctor(_tmpSpin));
+    }
+    gpuDeviceSynchronize();
+    
+}
+
+template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
 void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::applyMdaggM_nostack(SpinorRHS_t& spinorOut, const SpinorRHS_t& spinorIn, bool update){
 
     Dslash(_tmpSpin, spinorIn, true);

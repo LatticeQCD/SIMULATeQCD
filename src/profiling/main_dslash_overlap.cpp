@@ -71,10 +71,7 @@ void test_dslash(CommunicationBase &commBase, int Vol) {
     timer.reset();
     timer.start();
     for (int i =0; i < 50; ++i) {
-        spinorIn.updateAll(COMM_START | Hyperplane);
-        dslash.Dslash_center(spinorOut,spinorIn);
-        spinorIn.updateAll(COMM_FINISH | Hyperplane);
-        dslash.Dslash_halo(spinorOut, spinorIn);
+        dslash.Dslash_concurrent_comms(spinorOut, spinorIn);
     }
 
     timer.stop();
