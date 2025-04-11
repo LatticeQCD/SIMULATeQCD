@@ -42,7 +42,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     gauge.su3latunitarize();
 
     smearing.SmearAll();
-
+    StopWatch<true> timer;
 
 
     rootLogger.info("Initialize spinors");
@@ -76,12 +76,20 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     shifts[1] = shifts[0];
     shifts[0] = tmp;
     rootLogger.info("Multishift inversion:");
+    
+    timer.reset();
+    timer.start();
     cgM.invert(dslash_m, spinorOut_shifts, spinorIn, shifts, param.cgMax(), param.residue());
-    rootLogger.info("Multishift inversion converged.");
+    
+    timer.stop();
+    rootLogger.info("Multishift inversion converged. Timing: ", timer);
+    timer.reset();
     
     rootLogger.info("Multishift inversion with concurrent comms:");
+    timer.start();
     cgM.invert_concurrent_comms(dslash_m, spinorOut_shifts, spinorIn, shifts, param.cgMax(), param.residue());
-    rootLogger.info("Multishift inversion converged.");
+    timer.stop();
+    rootLogger.info("Multishift inversion converged. Timing: ", timer);
     
 }
 

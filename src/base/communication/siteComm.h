@@ -506,6 +506,13 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
                 COMPLEX(floatT)* pointer = HaloBuffer + HInd::get_SubHaloOffset(index) * EntryCount * ElemCount;
                 Accessor hal_acc = Accessor(pointer, size);
+                
+                if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
+                    deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
+                    p2pCopyEvent.start.record(segmentInfo.getSendStream());
+                    // auto result = gpuEventQuery(p2pCopyEvent.start._event);
+                    // rootLogger.debug("siteComm extract Halosegment start event Query:", result);
+                }
 
                 //int streamNo = 0;
                 ExtractInnerHaloSeg<floatT, Accessor, ElemCount, LatLayout, HaloDepth> extractLeft(acc, hal_acc);
@@ -514,8 +521,10 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
 
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
                     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
-                    p2pCopyEvent.start.record(segmentInfo.getSendStream());
-                }
+                    //p2pCopyEvent.start.record(segmentInfo.getSendStream());
+                    // auto result = gpuEventQuery(p2pCopyEvent.start._event);
+                    // rootLogger.debug("siteComm extract Halosegment start event Query after kernel:", result);
+                }                               
 
                 if ( (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) ||
                         (onDevice && _commBase.gpuAwareMPIAvail() && !PInfo.p2p ) )
@@ -541,6 +550,8 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
                     deviceEventPair &p2pCopyEvent = HaloInfo.getMyGpuEventPair(hseg, dir, leftRight);
                     p2pCopyEvent.stop.record(segmentInfo.getSendStream());
+                    // auto result = gpuEventQuery(p2pCopyEvent.stop._event);
+                    // rootLogger.debug("siteComm extract Halosegment stop event Query:", result);
                 }
         }
     }
@@ -580,8 +591,8 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
     markerBegin("injectHalosSeg", "siteComm");
 
-    // HaloInfo.syncAllStreamRequests();
-    // _commBase.globalBarrier();
+    HaloInfo.syncAllStreamRequests();
+    _commBase.globalBarrier();
     for (auto &HSegConfig : HSegConfig_recv_vec){
         
 
@@ -614,6 +625,8 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
                 if (PInfo.p2p && onDevice && _commBase.useGpuP2P()) {
                     deviceEvent &p2pCopyEvent = HaloInfo.getGpuEventPair(hseg, dir, leftRight).stop;
                     p2pCopyEvent.streamWaitForMe(segmentInfo.getReceiveStream());
+                    // auto result = gpuEventQuery(p2pCopyEvent._event);
+                    // rootLogger.debug("siteComm inject Halosegment stop event Query:", result);
                 }
 
                 // if (onDevice && _commBase.useGpuP2P() && PInfo.sameRank) {
