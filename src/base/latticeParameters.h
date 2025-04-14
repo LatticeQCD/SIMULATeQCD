@@ -29,6 +29,7 @@ public:
     Parameter<std::string> GaugefileName;
     Parameter<std::string> GaugefileName_out;
     Parameter<std::string> format;
+    Parameter<std::string> format_out;
     Parameter<int> prec_out;
     Parameter<bool> use_unit_conf;
 
@@ -49,6 +50,7 @@ public:
         addOptional(GaugefileName, "Gaugefile");
         addOptional(GaugefileName_out, "Gaugefile_out");
         addOptional(format, "format");
+        addDefault(format_out, "format_out",std::string("nersc"));
         addDefault(endianness, "endianness", std::string("auto"));
         addOptional(confnumber, "conf_nr");
         addOptional(streamName, "stream");
