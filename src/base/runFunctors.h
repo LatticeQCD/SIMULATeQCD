@@ -11,7 +11,7 @@
 #include "../base/gutils.h"
 #include "math/operators.h"
 #include "../base/communication/communicationBase.h"
-#include "../base/utilities/parseObjectName.h"
+// #include "../base/utilities/parseObjectName.h"
 #include "wrapper/marker.h"
 
 #include "../base/indexer/haloIndexer.h"
@@ -135,7 +135,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
                                                                                    const size_t elems_y,
                                                                                    const size_t elems_z,
                                                                                    __attribute__((unused)) gpuStream_t stream){
-
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCall");
     dim3 blockDim;
 
     blockDim.x = BlockSize/(elems_y * elems_z);
@@ -148,13 +148,11 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 
     if (onDevice) {
 #ifdef __GPUCC__
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctor<<< gridDim, blockDim,0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL(performFunctor, dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x);
 #endif
-        markerEnd();
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
             GpuError("performFunctor: Failed to launch kernel", gpuErr);
@@ -200,6 +198,7 @@ template<bool onDevice, class Accessor>
 template<size_t Nloops, unsigned BlockSize, typename CalcReadInd, typename CalcWriteInd, typename Functor>
 void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     CalcReadInd calcReadInd, CalcWriteInd calcWriteInd, const size_t elems_x, const size_t elems_y, const size_t elems_z,__attribute__((unused)) gpuStream_t stream, size_t Nmax) {
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCall");
 
     dim3 blockDim;
 
@@ -220,13 +219,11 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     if (onDevice) {
 #ifdef __GPUCC__
 
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorLoop<Nloops> <<< gridDim, blockDim, 0, stream >>> (getAccessor(), op, calcReadInd, calcWriteInd, elems_x, Nmax);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorLoop<Nloops>), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), op, calcReadInd, calcWriteInd, elems_x,         Nmax);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -281,6 +278,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
         const size_t elems_y,
         const size_t elems_z,
         __attribute__((unused)) gpuStream_t stream ){
+    AutoTimer<onDevice,TRACE> marker(type_name<Object>(), "KernelCall (const object)");
 
     dim3 blockDim;
 
@@ -294,13 +292,11 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 
     if (onDevice) {
 #ifdef __GPUCC__
-        markerBegin(type_name<Object>(), "KernelCall (const object)");
 #ifdef USE_CUDA
         performCopyConstObject<<< gridDim, blockDim,0, stream >>> (getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performCopyConstObject), dim3(gridDim), dim3(blockDim), 0, stream , getAccessor(), ob, calcReadInd, calcWriteInd, elems_x);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -369,6 +365,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
         const size_t elems_y = 1,
         const size_t elems_z = 1,
         __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCallNoReturn");
 
     dim3 blockDim;
 
@@ -384,13 +381,11 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #ifdef __GPUCC__
 
 
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorNoReturn<<< gridDim, blockDim, 0, stream >>> (op, calcReadInd, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorNoReturn), dim3(gridDim), dim3(blockDim), 0, stream , op, calcReadInd, elems_x);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
@@ -455,6 +450,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
                                    const size_t elems_y = 1,
                                    const size_t elems_z = 1,
                                    __attribute__((unused)) gpuStream_t stream = (gpuStream_t)nullptr){
+    AutoTimer<onDevice,TRACE> marker(type_name<Functor>(), "KernelCallComms");
 
     dim3 blockDim;
 
@@ -469,13 +465,11 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     if (onDevice) {
 #ifdef __GPUCC__
 
-        markerBegin(type_name<Functor>(), "KernelCall");
 #ifdef USE_CUDA
         performFunctorComm<<< gridDim, blockDim, 0, stream >>> (op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #elif defined USE_HIP
         hipLaunchKernelGGL((performFunctorComm), dim3(gridDim), dim3(blockDim), 0, stream , op, acc, calcReadWriteInd, subHaloSize, elems_x);
 #endif
-        markerEnd();
 
         gpuError_t gpuErr = gpuGetLastError();
         if (gpuErr)
