@@ -243,9 +243,9 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
         LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
         const int max_iter, const double precision)
 {
-    Spinor_t spinorC(spinorIn.getComm());
-    Spinor_t spinorS(spinorIn.getComm());
-    Spinor_t spinorR(spinorIn.getComm());
+    Spinor_t pi(spinorIn.getComm());
+    Spinor_t s(spinorIn.getComm());
+    Spinor_t r(spinorIn.getComm());
 
 
     int cg = 0;
@@ -253,24 +253,24 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     SimpleArray<double, NStacks> a(0.0);
     SimpleArray<double, NStacks> nu(1.0);
     SimpleArray<double, NStacks> norm_r2(0.0);
-    SimpleArray<double, NStacks> beta(0.0);
+    SimpleArray<double, NStacks> lambda2(0.0);
     SimpleArray<double, NStacks> pAp(0.0);
 
     SimpleArray<COMPLEX(double), NStacks> dot(0.0);
     SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
     SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
 
-    spinorR = spinorIn;
+    r = spinorIn;
 
 
-    dot3 = spinorR.dotProductStacked(spinorR);
+    dot3 = r.dotProductStacked(r);
     norm_r2 = real<double>(dot3);
 
-    SimpleArray<double, NStacks> betaIn(0.0);
+    SimpleArray<double, NStacks> in_norm(0.0);
 
-    betaIn = norm_r2;
+    in_norm = norm_r2;
 
-    spinorC = spinorIn;
+    pi = spinorIn;
 
     spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
@@ -278,29 +278,29 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     do {
         cg++;
 
-        spinorC.updateAll(COMM_BOTH | Hyperplane);
+        pi.updateAll(COMM_BOTH | Hyperplane);
 
-        dslash.applyMdaggM(spinorS, spinorC, false);
+        dslash.applyMdaggM(s, pi, false);
 
-        dot = spinorC.dotProductStacked(spinorS);
+        dot = pi.dotProductStacked(s);
 
         pAp = real<double>(dot);
 
         nu = -1.0* norm_r2 / pAp;
 
-        spinorR.axpyThisLoopd(nu, spinorS, NStacks);
+        r.axpyThisLoopd(nu, s, NStacks);
 
-        dot2 = spinorR.dotProductStacked(spinorR);
+        dot2 = r.dotProductStacked(r);
 
-        beta = real<double>(dot2);
-        a = beta / norm_r2;
-        norm_r2 = beta;
+        lambda2 = real<double>(dot2);
+        a = lambda2 / norm_r2;
+        norm_r2 = lambda2;
 
-        spinorOut.axpyThisLoopd(-1.0*nu, spinorC, NStacks);
+        spinorOut.axpyThisLoopd(-1.0*nu, pi, NStacks);
 
-        spinorC.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, spinorR);
+        pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
 
-    } while ( (max(beta/betaIn) > precision) && (cg<max_iter) );
+    } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
@@ -318,70 +318,66 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         LinearOperator<Spinor_t>& dslash, Spinor_t& spinorStart, const Spinor_t& spinorRHS,
         const int max_iter, const double precision)
 {
-    Spinor_t pi(spinorRHS.getComm());
-    Spinor_t s(spinorRHS.getComm());
-    Spinor_t r(spinorRHS.getComm());
+    Spinor_t spinorResidual(spinorRHS.getComm());
+    Spinor_t spinorSearch(spinorRHS.getComm());
+    Spinor_t spinorMdMx(spinorRHS.getComm());
     
     int cg = 0;
 
-    SimpleArray<double, NStacks> a(0.0);
-    SimpleArray<double, NStacks> B(1.0);
-    SimpleArray<double, NStacks> norm_r2(0.0);
-    SimpleArray<double, NStacks> lambda2(0.0);
-    SimpleArray<double, NStacks> pAp(0.0);
+    SimpleArray<double, NStacks> stepSize(1.0);
+    SimpleArray<double, NStacks> betaScale(0.0);
+    SimpleArray<double, NStacks> betaStart(0.0);
+    SimpleArray<double, NStacks> betaAlt(0.0);
+    SimpleArray<double, NStacks> beta(0.0);
+    SimpleArray<double, NStacks> alpha(0.0);
 
     SimpleArray<COMPLEX(double), NStacks> dot(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
 
-    r = spinorRHS;
+    spinorResidual = spinorRHS;
 
-    dslash.applyMdaggM(pi, spinorStart, false);
+    dslash.applyMdaggM(spinorMdMx, spinorStart, false);
 
-    r.axpyThisLoopd(-1.0 * B, pi, NStacks);
+    spinorResidual.axpyThisLoopd(-1.0 * stepSize, spinorMdMx, NStacks);
     
-    dot3 = r.dotProductStacked(r);
-    norm_r2 = real<double>(dot3);
+    dot = spinorResidual.dotProductStacked(spinorResidual);
+    betaStart = real<double>(dot);
 
-    SimpleArray<double, NStacks> in_norm(0.0);
+    betaAlt = betaStart;
 
-    in_norm = norm_r2;
-
-    pi = r;
+    spinorSearch = spinorResidual;
 
     do {
         cg++;
 
-        pi.updateAll(COMM_BOTH | Hyperplane);
+        spinorSearch.updateAll(COMM_BOTH | Hyperplane);
 
-        dslash.applyMdaggM(s, pi, false);
+        dslash.applyMdaggM(spinorMdMx, spinorSearch, false);
 
-        dot = pi.dotProductStacked(s);
+        dot = spinorSearch.dotProductStacked(spinorMdMx);
+        alpha = real<double>(dot);
 
-        pAp = real<double>(dot);
+        stepSize = betaAlt / alpha;
 
-        B = -1.0* norm_r2 / pAp;
+        spinorStart.axpyThisLoopd(stepSize, spinorSearch, NStacks);
 
-        r.axpyThisLoopd(B, s, NStacks);
+        spinorResidual.axpyThisLoopd(-1.0 * stepSize, spinorMdMx, NStacks);
 
-        dot2 = r.dotProductStacked(r);
+        dot = spinorResidual.dotProductStacked(spinorResidual);
+        beta = real<double>(dot);
 
-        lambda2 = real<double>(dot2);
-        a = lambda2 / norm_r2;
-        norm_r2 = lambda2;
+        betaScale = beta / betaAlt;
+        betaAlt = beta;
 
-        spinorStart.axpyThisLoopd(-1.0*B, pi,NStacks);
+        spinorSearch.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(betaScale, spinorResidual);
 
-        pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
-
-        // rootLogger.info("residual=" ,  sqrt(max(lambda2/in_norm)));
+        // rootLogger.info("residual=" ,  sqrt(max(beta/betaStart)));
 
 
-    } while (( sqrt(max(lambda2/in_norm)) > precision) && (cg<max_iter) );
+    } while (( sqrt(max(beta/betaStart)) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
-        rootLogger.info("residual=" ,  sqrt(max(lambda2/in_norm)));
+        rootLogger.info("residual=" ,  sqrt(max(beta/betaStart)));
     } else {
         rootLogger.info("CG: # iterations " ,  cg);
     }
