@@ -8,7 +8,7 @@
 #endif
 
 template<class floatT, size_t HaloDepth>
-void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,CommunicationBase & commBase){
+void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin){
 
     StopWatch<true> timer;
 
@@ -63,13 +63,13 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
         lsZ = lsZ/2;
     }
 
-    std::cout << "lsX " << lsX << " lsY " << lsY << " lsZ " << lsZ << std::endl;
+   // std::cout << "lsX " << lsX << " lsY " << lsY << " lsZ " << lsZ << std::endl;
 
     redBase.adjustSize(lxL*lyL*lzL*lt);
     redBase2.adjustSize(lxL*lyL*lzL*lt);
 
-    for(int spincolor1 =0; spincolor1 < 12; spincolor1 ++){
-        for(int spincolor2 =0; spincolor2 < 12; spincolor2 ++){
+    for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
+        for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
 
     // start x direction
     gpuError_t gpuErr;
@@ -104,9 +104,9 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
     gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
                     / static_cast<float> (blockDim.x)));
 #ifdef USE_CUDA
-    fourier<floatT,0><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX);
+    fourier<floatT,0><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX,sign);
 #elif defined USE_HIP
-    hipLaunchKernelGGL((fourier<floatT,0>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX);
+    hipLaunchKernelGGL((fourier<floatT,0>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX,sign);
 #endif
 
         gpuErr = gpuGetLastError();
@@ -166,9 +166,9 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
     gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
                     / static_cast<float> (blockDim.x)));
 #ifdef USE_CUDA
-    fourier<floatT,1><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY);
+    fourier<floatT,1><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY,sign);
 #elif defined USE_HIP
-    hipLaunchKernelGGL((fourier<floatT,1>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY);
+    hipLaunchKernelGGL((fourier<floatT,1>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY,sign);
 #endif
 
         gpuErr = gpuGetLastError();
@@ -230,9 +230,9 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
     gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
                     / static_cast<float> (blockDim.x)));
 #ifdef USE_CUDA
-    fourier<floatT,2><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ);
+    fourier<floatT,2><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ,sign);
 #elif defined USE_HIP
-    hipLaunchKernelGGL((fourier<floatT,2>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ);
+    hipLaunchKernelGGL((fourier<floatT,2>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ,sign);
 #endif
 
         gpuErr = gpuGetLastError();
@@ -271,6 +271,20 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
 
 
 ////////////
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+void tr_spinorXspinor(
+        Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn){
+
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+    ReadIndex<All,HaloDepthSpin> index;
+
+
+    iterateFunctorNoReturn<true,BLOCKSIZE>(Tr_SpinorXspinor<floatT,HaloDepthSpin,12>(spinorInDagger, spinorIn),index,_elems);
+
+}
+
 
 /// val = S_in * S_in but only at spatial time t
 template<typename floatT, bool onDevice,size_t HaloDepthSpin>
@@ -440,6 +454,68 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
 }
 
 template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                 int timeIn, int colIn ,int savePos,int nMomentum,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+    CC[savePos] =  CC[savePos]+ COMPLEX(floatT)(real(buf[0]),imag(buf[0]));
+
+ //   spinor_device = spinor_host;
+    delete[] buf;
+    delete[] buf2;
+
+ //   spinor_device.updateAll();
+
+}
+
+
+template<typename floatT, size_t HaloDepthSpin>
 void loadWavePos(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
                                  Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
                                  size_t posX, size_t posY, size_t posZ,
@@ -587,7 +663,13 @@ void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int 
 
 //////////template declarations
 
-template void fourier3D(Spinorfield<double, true, All, 2, 12, 12> & spinor_out,Spinorfield<double, true, All, 2, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,CommunicationBase & commBase);
+template void fourier3D(Spinorfield<double, true, All, 2, 12, 12> & spinor_out,Spinorfield<double, true, All, 2, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin);
+
+
+template void tr_spinorXspinor(
+        Spinorfield<double, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
 
 template COMPLEX(double) sumXYZ_TrMdaggerM(int t,
         const Spinorfield<double, true, All, 2, 12, 12> & spinorInDagger,
@@ -615,4 +697,7 @@ template void makeWaveSource(Spinorfield<double, true, All, 2, 12, 12> & spinorI
 template void moveWave(Spinorfield<double, true, All, 2, 3,1> & spinor_device,Spinorfield<double, false, All, 2, 3,1> & spinor_host,
                                  int posX, int posY, int posZ,
                                  int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
+
+template void gatherMomentum(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
+                                 int timeIn, int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
 

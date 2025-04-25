@@ -8,7 +8,12 @@
 // functions definitions
 
 template<class floatT, size_t HaloDepth>
-void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBaseDevice,LatticeContainer<false,COMPLEX(floatT)> & redBaseHost,CommunicationBase & commBase);
+void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBaseDevice,LatticeContainer<false,COMPLEX(floatT)> & redBaseHost,CommunicationBase & commBase, int sign = 1,int maxColorSpin = 12);
+
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+void tr_spinorXspinor(
+        Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn);
 
 template<typename floatT, bool onDevice, size_t HaloDepthSpin>
 COMPLEX(floatT) sumXYZ_TrMdaggerM(int t,
@@ -43,6 +48,11 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
                                  int posX, int posY, int posZ,
                                  int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
 
+
+template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                 int timeIn, int colIn,int savePos,int nMomentum ,CommunicationBase & commBase);
+
 template<typename floatT>
 void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase);
 
@@ -52,7 +62,7 @@ void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int 
 // gpu functions
 
 template<class floatT,int direction>
-__global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAccessor _redBaseIn, const size_t size,const size_t lx,const size_t ly,const size_t lz,const size_t lt,size_t lsIn) {
+__global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAccessor _redBaseIn, const size_t size,const size_t lx,const size_t ly,const size_t lz,const size_t lt,size_t lsIn, int sign = 1) {
 
     size_t site = blockDim.x * blockIdx.x + threadIdx.x;
     if (site >= size) {
@@ -97,7 +107,7 @@ __global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAc
        for(int k =0; k < ls ; k++){
           COMPLEX(floatT) sum = 0.0;
           for(int z =0; z < ls ; z++){
-             sum = sum + v0[z*hf+i]*COMPLEX(floatT)(cos(2.0*k*z*M_PI/ls),sin(2.0*k*z*M_PI/ls));
+             sum = sum + v0[z*hf+i]*COMPLEX(floatT)(cos(sign*2.0*k*z*M_PI/ls),sin(sign*2.0*k*z*M_PI/ls));
           }
           v[i+k*hf] = sum;
        }
@@ -114,7 +124,7 @@ __global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAc
        for(int s =0; s < hf ; s++){
           for(int k =0; k < ls/2 ; k++){
 
-             COMPLEX(floatT) phase = COMPLEX(floatT)(cos(2.0*k*M_PI/ls),sin(2.0*k*M_PI/ls));
+             COMPLEX(floatT) phase = COMPLEX(floatT)(cos(sign*2.0*k*M_PI/ls),sin(sign*2.0*k*M_PI/ls));
 
              COMPLEX(floatT) even = v0[s + k*hf*2];
              COMPLEX(floatT) odd  = v0[s + k*hf*2 + hf];
@@ -386,6 +396,59 @@ struct SumXYZ_TrMdaggerMwave{
 //        }
 
         return temp;
+    }
+};
+
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct SpinorXdaggerwave{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+    SpinorColorAcc<floatT> _spinorIn;
+    Vect3ArrayAcc<floatT> _spinor_wave;
+    int _time, _col;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SpinorXdaggerwave( const SpinorRHS_t &spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave, int time, int col)
+          :   _spinorIn(spinorIn.getAccessor()),
+                   _spinor_wave(spinor_wave.getAccessor()), _time(time), _col(col)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ Vect12<floatT>  operator()(gSiteStack site){
+
+	sitexyzt coords=site.coord;
+
+        return conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])*_spinorIn.template getElement<double>(site);
+    }
+};
+
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct Tr_SpinorXspinor{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+    SpinorColorAcc<floatT> _spinorInDagger;
+    SpinorColorAcc<floatT> _spinorIn;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    Tr_SpinorXspinor(SpinorRHS_t &spinorInDagger, const SpinorRHS_t &spinorIn)
+          :  _spinorInDagger(spinorInDagger.getAccessor()),  _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ void  operator()(gSite site){
+
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(site,stack)) *
+                                 _spinorIn.template getElement<double>(GInd::getSiteStack(site,stack));
+        }
+        Vect12<floatT> tmp(0.0);
+	tmp.data[0] = temp;
+
+        _spinorInDagger.setElement(site,tmp);
     }
 };
 

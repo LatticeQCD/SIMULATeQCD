@@ -1126,8 +1126,8 @@ template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepth
 class DWilsonInverseShurComplement {
 private:
     // operators
-    //ConjugateGradient<floatT, NStacks> cg;
-    bicgstab<floatT, NStacks> cg;
+    ConjugateGradient<floatT, NStacks> cg;
+    //bicgstab<floatT, NStacks> cg;
 
     DWilsonEvenOdd<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> dslash;
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> & _gauge;
