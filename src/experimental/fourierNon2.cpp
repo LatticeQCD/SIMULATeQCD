@@ -520,7 +520,7 @@ void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDep
 
 template<typename floatT, size_t HaloDepthSpin>
 void gatherMomentumT(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
-                                  int colIn ,int savePos,int nP,CommunicationBase & commBase){
+                                  int colIn ,int savePos,int nP, int post,CommunicationBase & commBase){
     typedef GIndexer<All, HaloDepthSpin> GInd;
 
 
@@ -576,7 +576,7 @@ void gatherMomentumT(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDe
     for(int ky = -nP; ky < nP+1; ky ++){
     for(int kx = -nP; kx < nP+1; kx ++){
     ktotal++;
-        CC[t+glt*ktotal + savePos] =  CC[t+glt*ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
+        CC[(t-post+glt)%(glt)+glt*ktotal + savePos] =  CC[(t-post+glt)%(glt)+glt*ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
                                                                                           imag(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]));
     }}}
 
@@ -775,5 +775,5 @@ template void gatherMomentum(COMPLEX(double) * CC, Spinorfield<double, true, All
                                  int timeIn, int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
 
 template void gatherMomentumT(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
-                                 int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
+                                 int colIn,int savePos ,int nP,int post,CommunicationBase & commBase);
 
