@@ -45,6 +45,14 @@ struct wilsonParam : LatticeParameters {
     Parameter <std::string> source4_file;
     Parameter <std::string> source4F_file;
 
+    Parameter<int,1> nP;
+    Parameter<int,1> measure_I;
+    Parameter<int,1> measure_g5;
+    Parameter<int,1> measure_gi;
+    Parameter<int,1> measure_gig5;
+    Parameter<int,1> measure_g4;
+    Parameter<int,1> measure_gig4;
+
 
     wilsonParam() {
         add(gauge_file, "gauge_file");
@@ -81,7 +89,13 @@ struct wilsonParam : LatticeParameters {
         add(source4_file, "source4_file");
         add(source4F_file, "source4F_file");
         
-
+        add(nP,"nP");
+        add(measure_I,"measure_I");
+        add(measure_g5,"measure_g5");
+        add(measure_gi,"measure_gi");
+        add(measure_gig5,"measure_gig5");
+        add(measure_g4,"measure_g4");
+        add(measure_gig4,"measure_gig4");
 
     }
 };
@@ -118,6 +132,13 @@ int main(int argc, char *argv[]) {
     sourcePos[1]=param.sourcePos()[1];
     sourcePos[2]=param.sourcePos()[2];
     sourcePos[3]=param.sourcePos()[3];
+
+    int measure_I = param.measure_I();
+    int measure_g5 = param.measure_g5();
+    int measure_gi = param.measure_gi();
+    int measure_gig5 = param.measure_gig5();
+    int measure_g4 = param.measure_g4();
+    int measure_gig4 = param.measure_gig4();
 
     PREC lambda1 = param.smear1();
     int smearSteps1 = param.smearSteps1();
@@ -280,7 +301,8 @@ int main(int argc, char *argv[]) {
     timer.reset();
     timer.start();
 
-    int nMomentum = 3*3*3;
+    int nP = param.nP();
+    int nMomentum = (2*nP+1)*(2*nP+1)*(2*nP+1);
 
     // dont split the t direction
     size_t lt = GInd::getLatData().globLT;
@@ -293,7 +315,7 @@ int main(int argc, char *argv[]) {
 
 
     //initialise results
-    for (int t=0; t<nWave*nWave*GInd::getLatData().globLT; t++){
+    for (int t=0; t<nWave*nWave*GInd::getLatData().globLT*nMomentum; t++){
         CC_I[t] = 0.0;
         CC_g5[t] = 0.0;
         CC_gi[t] = 0.0;
@@ -361,6 +383,7 @@ int main(int argc, char *argv[]) {
 
                      /////////pion
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
+		     if(measure_g5 == 1){
 		     spinor_in = spinor_delta;
                      tr_spinorXspinor(spinor_in,spinor_wave);
 
@@ -368,14 +391,17 @@ int main(int argc, char *argv[]) {
                      //tr_spinorXspinor(spinor_in,spinor_delta);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
                       
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			     rootLogger.info( "check 4" , ss, ss2,t);
-                         gatherMomentum(CC_g5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_g5,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+			     rootLogger.info( "check 4" , ss, ss2);
+                     //    gatherMomentum(CC_g5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+                     //}
                      }
+
 
                      /////////rho
                      // tr( (g5*M^d*g5) gi M gi )
-    
+                     if(measure_gi == 1){
                      //x direction
                      spinor_in = spinor_delta;    
                      source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
@@ -387,10 +413,11 @@ int main(int argc, char *argv[]) {
                      tr_spinorXspinor(spinor_in,spinor_wave);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gi,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);    
+		     gatherMomentumT(CC_gi,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gi,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);    
                          //CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
+                 //    }
                      //y direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
@@ -402,10 +429,11 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
                      fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gi,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gi,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gi,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
+                 //    }
                      //z direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
@@ -417,16 +445,17 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gi,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gi,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+			// gatherMomentum(CC_gi,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                    // }
                      }
-
-                     if(0==1){
 
 
                      //  scalar
                      // tr( (g5*M^d*g5) M )
+		     if(measure_I == 1){
                      spinor_in = spinor_delta; 
                      source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
@@ -434,14 +463,15 @@ int main(int argc, char *argv[]) {
                      tr_spinorXspinor(spinor_in,spinor_wave);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_I,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_I,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+//                     for (int t=0; t<GInd::getLatData().globLT; t++){
+//			 gatherMomentum(CC_I,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_I[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+//                     }
                      }
-
                      // Axial vector
                      // tr( (g5*M^d*g5) gi g5 M gi g5 )
-
+                     if(measure_gig5 == 1){
                      //x direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
@@ -450,10 +480,11 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gig5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gig5,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gig5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                        //  CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
+                  //   }
                      //y direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
@@ -462,10 +493,11 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
                      fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gig5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gig5,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gig5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
+                  //   }
                      //z direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
@@ -474,13 +506,15 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
                      fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gig5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gig5,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gig5,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                  //   }
+
                      }
-
-
                      // tr( (g5*M^d*g5) g4 M g4 )
+		     if(measure_g4 == 1){
                      spinor_in = spinor_delta;
 
                      source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
@@ -492,14 +526,15 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_g4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_g4,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_g4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_g4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     
+                  //   }
+		     }
 
                      // tr( (g5*M^d*g5) gi g4 M gi g4 )
-
+                     if(measure_gig4 == 1){
                      //x direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
@@ -514,10 +549,11 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
 		     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gig4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gig4,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gig4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
+                  //   }
                      //y direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
@@ -532,10 +568,11 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
                      fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gig4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gig4,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gig4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
+                  //   }
                      //z direction
                      spinor_in = spinor_delta;
                      source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
@@ -550,13 +587,13 @@ int main(int argc, char *argv[]) {
 		     tr_spinorXspinor(spinor_in,spinor_wave);
                      fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
 
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-			 gatherMomentum(CC_gig4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
+		     gatherMomentumT(CC_gig4,spinor_in,spinor_host12, 0 ,GInd::getLatData().globLT*nMomentum*(ss+nWave*(ss2)),nP,commBase);
+                     //for (int t=0; t<GInd::getLatData().globLT; t++){
+		//	 gatherMomentum(CC_gig4,spinor_in,spinor_host12,t, 0 ,nMomentum*(ss+nWave*(ss2+nWave*t)),nMomentum,commBase);
                          //CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                  //   }
                      }
-
-		     }
- 
+  
                    }}
                 }
             }
@@ -567,30 +604,37 @@ int main(int argc, char *argv[]) {
 
     fileOut << "Average Plaquette " << AveragePlaq << "\n";
  
-    fileOut << "time source_i source_j real(phi_j(r)*Gdelta(x+r)^dagger*G_i(x)) real(phi_j(r)^dagger*Gdelta(x)^dagger*G_i(x+r))" << "\n";
-    fileOut << "states " << " " << "real(I)"     << " " << "real(I)"     <<
-                            " " << "real(g5)"    << " " << "real(g5)"    <<
-                            " " << "real(gi)"    << " " << "real(gi)"    <<
-                            " " << "real(gi g5)" << " " << "real(gi g5)" <<
-                            " " << "real(g4)"    << " " << "real(g4)"    <<
-                            " " << "real(g4 )"   << " " << "real(g4 )"   << 
-                            " " << "real(gi g4)" << " " << "real(gi g4)" << "\n";
+    fileOut << "time source_i source_j kx ky kz real(phi_j(r)*Gdelta(x+r)^dagger*G_i(x)) imag(phi_j(r)^dagger*Gdelta(x)^dagger*G_i(x+r))" << "\n";
+    fileOut << "states ";
+    if(measure_I == 1){     fileOut << " " << "real(I)"        << " " << "imag(I)";}
+    if(measure_g5 == 1){    fileOut << " " << "real(g5)"       << " " << "imag(g5)";}
+    if(measure_gi == 1){    fileOut << " " << "real(gi)"       << " " << "imag(gi)";}
+    if(measure_gig5 == 1){  fileOut << " " << "real(gig5)"     << " " << "imag(gig5)";}
+    if(measure_g4 == 1){    fileOut << " " << "real(g4)"       << " " << "imag(g4)";}
+    if(measure_gig4 == 1){  fileOut << " " << "real(gig4)"     << " " << "imag(gig4)";}    
+    fileOut << "\n";
 
     PREC norm = GInd::getLatData().globLX*GInd::getLatData().globLY*GInd::getLatData().globLZ;
 
     fileOut << "mass1" << "\n";
+    int ktotal = -1;
+    for(int kz = -nP; kz < nP+1; kz ++){
+    for(int ky = -nP; ky < nP+1; ky ++){
+    for(int kx = -nP; kx < nP+1; kx ++){
+    ktotal++;
     for(int ss = 0; ss < nWave; ss ++){
        for(int ss2 = 0; ss2 < nWave; ss2 ++){
        for (int t=0; t<lt; t++){   
-        fileOut << t << " " << ss << " " << ss2 << 
-                        " " << norm*real(CC_I[ss+nWave*(ss2+nWave*t)])    << " " << norm*imag(CC_I[ss+nWave*(ss2+nWave*t)])    <<
-                        " " << norm*real(CC_g5[ss+nWave*(ss2+nWave*t)])   << " " << norm*imag(CC_g5[ss+nWave*(ss2+nWave*t)])   <<
-                        " " << norm*real(CC_gi[ss+nWave*(ss2+nWave*t)])   << " " << norm*imag(CC_gi[ss+nWave*(ss2+nWave*t)])   <<
-                        " " << norm*real(CC_gig5[ss+nWave*(ss2+nWave*t)]) << " " << norm*imag(CC_gig5[ss+nWave*(ss2+nWave*t)]) <<
-                        " " << norm*real(CC_g4[ss+nWave*(ss2+nWave*t)])   << " " << norm*imag(CC_g4[ss+nWave*(ss2+nWave*t)])   <<
-                        " " << norm*real(CC_gig4[ss+nWave*(ss2+nWave*t)]) << " " << norm*imag(CC_gig4[ss+nWave*(ss2+nWave*t)]) << "\n";
+        fileOut << t << " " << ss << " " << ss2 << " " << kx  << " " << ky << " " << kz;
+                    if(measure_I == 1){    fileOut << " " << norm*real(CC_I[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])    << " " << norm*imag(CC_I[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])    ;}
+                    if(measure_g5 == 1){   fileOut << " " << norm*real(CC_g5[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])   << " " << norm*imag(CC_g5[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])   ;}
+                    if(measure_gi == 1){   fileOut << " " << norm*real(CC_gi[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])   << " " << norm*imag(CC_gi[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])   ;}
+                    if(measure_gig5 == 1){ fileOut << " " << norm*real(CC_gig5[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))]) << " " << norm*imag(CC_gig5[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))]) ;}
+                    if(measure_g4 == 1){   fileOut << " " << norm*real(CC_g4[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])   << " " << norm*imag(CC_g4[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))])   ;}
+                    if(measure_gig4 == 1){ fileOut << " " << norm*real(CC_gig4[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))]) << " " << norm*imag(CC_gig4[t+lt*(ktotal+nMomentum*(ss+nWave*(ss2)))]) ;}
+        fileOut << "\n";
     }}}
-
+    }}}
     for (int i = 0; i < nWave; i++) {
         delete spinor_out[i];
     }

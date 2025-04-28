@@ -503,14 +503,87 @@ void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDep
             buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
         }
     }
-
-    CC[savePos] =  CC[savePos]+ COMPLEX(floatT)(real(buf[0]),imag(buf[0]));
-
- //   spinor_device = spinor_host;
+    
+    int ktotal = -1;
+    for(int kz = -1; kz < 2; kz ++){
+    for(int ky = -1; ky < 2; ky ++){
+    for(int kx = -1; kx < 2; kx ++){
+    ktotal++;
+        CC[ktotal + savePos] =  CC[ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
+			                                                                  imag(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]));
+    }}}
+    
     delete[] buf;
     delete[] buf2;
 
- //   spinor_device.updateAll();
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentumT(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                  int colIn ,int savePos,int nP,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+    for (int t=0; t<glt; t++){
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, t))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, t))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+    int ktotal = -1;
+    for(int kz = -nP; kz < nP+1; kz ++){
+    for(int ky = -nP; ky < nP+1; ky ++){
+    for(int kx = -nP; kx < nP+1; kx ++){
+    ktotal++;
+        CC[t+glt*ktotal + savePos] =  CC[t+glt*ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
+                                                                                          imag(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]));
+    }}}
+
+    }
+
+    delete[] buf;
+    delete[] buf2;
 
 }
 
@@ -700,4 +773,7 @@ template void moveWave(Spinorfield<double, true, All, 2, 3,1> & spinor_device,Sp
 
 template void gatherMomentum(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
                                  int timeIn, int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
+
+template void gatherMomentumT(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
+                                 int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
 
