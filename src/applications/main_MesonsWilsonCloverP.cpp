@@ -124,10 +124,23 @@ int main(int argc, char *argv[]) {
 
 
     // file write
-    std::string Name = "Mesons_m";
+    std::string Name = "MesonsS_m";
     Name.append(std::to_string(param.mass()));
     Name.append("_c");
     Name.append(std::to_string(param.csw()));
+    Name.append("_nS");
+    Name.append(std::to_string(param.sources()[0]));
+    Name.append(std::to_string(param.sources()[1]));
+    Name.append(std::to_string(param.sources()[2]));
+    Name.append(std::to_string(param.sources()[3]));
+    Name.append("_Sp");
+    Name.append(std::to_string(param.sourcePos()[0]));
+    Name.append("_");
+    Name.append(std::to_string(param.sourcePos()[1]));
+    Name.append("_");
+    Name.append(std::to_string(param.sourcePos()[2]));
+    Name.append("_");
+    Name.append(std::to_string(param.sourcePos()[3]));
     Name.append("_"); 
     Name.append(param.gauge_file());
     Name.append(".txt");
