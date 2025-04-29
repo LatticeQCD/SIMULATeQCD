@@ -64,9 +64,9 @@ int main(int argc, char **argv) {
 
     
     // Read the Eigenvalues and Eigenvectors
-    eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
+    Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
-    eigenpairs.read_evnersc(param.num_toread_vectors(), param.eigen_file());
+    eigenpairs.readEvNersc(param.num_toread_vectors(), param.eigen_file());
     eigenpairs.updateAll();
 
     // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);

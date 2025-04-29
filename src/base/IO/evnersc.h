@@ -12,7 +12,7 @@
 class evNerscHeader : virtual private ParameterList {
 private:
     const CommunicationBase &comm;
-    int header_size;
+    int _stream_position;
 
     // Reads a double value from the input stream
     bool read(std::istream &in, double *lambda) {
@@ -28,19 +28,19 @@ private:
             return false;
         }
 
-        header_size = static_cast<int>(in.tellg());
+        _stream_position = static_cast<int>(in.tellg());
         return true;
     }
 
 public:
     explicit evNerscHeader(const CommunicationBase &_comm) 
-        : comm(_comm), header_size(0) {}
+        : comm(_comm), _stream_position(0) {}
 
     template <size_t HaloDepth>
     friend class evNerscFormat;
 
     size_t size() const {
-        return header_size;
+        return _stream_position;
     }
 
     // Reads the header from the input stream
@@ -54,7 +54,7 @@ public:
         if (!comm.single()) {
             comm.root2all(success);
             if (success) {
-                comm.root2all(header_size);
+                comm.root2all(_stream_position);
                 comm.root2all(content);
             }
         }
@@ -136,7 +136,7 @@ public:
         }
     }
 
-    size_t header_size() {
+    size_t displacement() {
         return header.size();
     }
 
