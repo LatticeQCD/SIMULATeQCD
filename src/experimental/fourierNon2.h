@@ -55,7 +55,7 @@ void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDep
 
 template<typename floatT, size_t HaloDepthSpin>
 void gatherMomentumT(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
-                                 int colIn,int savePos,int nP, int post ,CommunicationBase & commBase);
+                                 int colIn,int savePos,int nP, int * pos ,CommunicationBase & commBase);
 
 template<typename floatT>
 void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase);
