@@ -203,22 +203,20 @@ int main(int argc, char *argv[]) {
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_out(commBase);
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_in(commBase);
 
-    Spinorfield<PREC, true, All, HaloDepth, 12, 12> * spinor_out_s;
 
+
+    Spinorfield<PREC, true, All, HaloDepth, 12, 12> * spinor_out_s;
     if(param.use_mass2()>0){
          spinor_out_s = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>(commBase);
     }
-
     LatticeContainer<true,COMPLEX(PREC)> redBaseDevice(commBase);
     LatticeContainer<false,COMPLEX(PREC)> redBaseHost(commBase);
     Spinorfield<PREC, false, All, HaloDepth, 12, 12> spinor_host12(commBase);
 
 
-
     //calculate plaq
     GaugeAction<PREC, true, HaloDepth, R18> gaugeaction(gauge);
     PREC AveragePlaq = gaugeaction.plaquette();
-
 
     // make source class used to manipulate or create the source
     Source source;
@@ -226,30 +224,28 @@ int main(int argc, char *argv[]) {
     // start timer
     timer.reset();
     timer.start();
-
     // dont split the t direction
     size_t lt = GInd::getLatData().globLT;
-    COMPLEX(PREC) CC_l_I[lt*nMomentum];
-    COMPLEX(PREC) CC_l_g5[lt*nMomentum];
-    COMPLEX(PREC) CC_l_gi[lt*nMomentum];
-    COMPLEX(PREC) CC_l_gig5[lt*nMomentum];
-    COMPLEX(PREC) CC_l_g4[lt*nMomentum];
-    COMPLEX(PREC) CC_l_gig4[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_I = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_g5 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_gi = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_gig5 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_g4 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_gig4 = new COMPLEX(PREC)[lt*nMomentum];
 
-    COMPLEX(PREC) CC_s_I[lt*nMomentum];
-    COMPLEX(PREC) CC_s_g5[lt*nMomentum];
-    COMPLEX(PREC) CC_s_gi[lt*nMomentum];
-    COMPLEX(PREC) CC_s_gig5[lt*nMomentum];
-    COMPLEX(PREC) CC_s_g4[lt*nMomentum];
-    COMPLEX(PREC) CC_s_gig4[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_I = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_g5 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_gi = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_gig5 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_g4 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_gig4 = new COMPLEX(PREC)[lt*nMomentum];
 
-    COMPLEX(PREC) CC_ls_I[lt*nMomentum];
-    COMPLEX(PREC) CC_ls_g5[lt*nMomentum];
-    COMPLEX(PREC) CC_ls_gi[lt*nMomentum];
-    COMPLEX(PREC) CC_ls_gig5[lt*nMomentum];
-    COMPLEX(PREC) CC_ls_g4[lt*nMomentum];
-    COMPLEX(PREC) CC_ls_gig4[lt*nMomentum];
-
+    COMPLEX(PREC) * CC_ls_I = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_ls_g5 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_ls_gi = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_ls_gig5 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_ls_g4 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_ls_gig4 = new COMPLEX(PREC)[lt*nMomentum];
 
 
     //initialise results
@@ -276,7 +272,6 @@ int main(int argc, char *argv[]) {
         CC_ls_gig4[t] = 0.0;
 
     }
-
    // make class for inversion
    DWilsonInverseShurComplement<PREC,true,HaloDepth,HaloDepth,mrhs> _dslashinverseSC4(gauge,mass,csw);
 
@@ -284,7 +279,6 @@ int main(int argc, char *argv[]) {
         for (int py=0; py<GInd::getLatData().globLY; py+= GInd::getLatData().globLY/(param.sources()[1])){
             for (int pz=0; pz<GInd::getLatData().globLZ; pz+= GInd::getLatData().globLZ/(param.sources()[2])){
                 for (int pt=0; pt<GInd::getLatData().globLT; pt+= GInd::getLatData().globLT/(param.sources()[3])){
-
                      int pos[4];
                      pos[0] = (sourcePos[0]+px)%GInd::getLatData().globLX;
                      pos[1] = (sourcePos[1]+py)%GInd::getLatData().globLY;
@@ -307,7 +301,6 @@ int main(int argc, char *argv[]) {
                        }
                        _dslashinverseSC4.antiperiodicBoundaries();
 
-
                     if(param.use_mass2()>0){
                         // heavier mass
                         _dslashinverseSC4.setMass(mass2);
@@ -323,7 +316,7 @@ int main(int argc, char *argv[]) {
                        }
                        _dslashinverseSC4.antiperiodicBoundaries();
                     }
-
+		    
                      /////////pion
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
                      if(measure_g5 == 1){
@@ -944,6 +937,7 @@ int main(int argc, char *argv[]) {
                      //}
                      }
                     }//end check for use of mass2
+		     
                 }
             }
         }
@@ -1019,6 +1013,29 @@ int main(int argc, char *argv[]) {
         }
     }}}
     }
+
+
+    delete [] CC_l_I;
+    delete [] CC_l_g5;
+    delete [] CC_l_gi;
+    delete [] CC_l_gig5;
+    delete [] CC_l_g4;
+    delete [] CC_l_gig4;
+
+    delete [] CC_s_I;
+    delete [] CC_s_g5;
+    delete [] CC_s_gi;
+    delete [] CC_s_gig5;
+    delete [] CC_s_g4;
+    delete [] CC_s_gig4;
+
+    delete [] CC_ls_I;
+    delete [] CC_ls_g5;
+    delete [] CC_ls_gi;
+    delete [] CC_ls_gig5;
+    delete [] CC_ls_g4;
+    delete [] CC_ls_gig4;
+
 
     if(param.use_mass2()>0){
         delete spinor_out_s;

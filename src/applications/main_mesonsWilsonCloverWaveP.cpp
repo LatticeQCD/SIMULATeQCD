@@ -319,12 +319,12 @@ int main(int argc, char *argv[]) {
 
     // dont split the t direction
     size_t lt = GInd::getLatData().globLT;
-    COMPLEX(PREC) CC_I[lt*nWave*nWave*nMomentum];
-    COMPLEX(PREC) CC_g5[lt*nWave*nWave*nMomentum];
-    COMPLEX(PREC) CC_gi[lt*nWave*nWave*nMomentum];
-    COMPLEX(PREC) CC_gig5[lt*nWave*nWave*nMomentum];
-    COMPLEX(PREC) CC_g4[lt*nWave*nWave*nMomentum];
-    COMPLEX(PREC) CC_gig4[lt*nWave*nWave*nMomentum];
+    COMPLEX(PREC) * CC_I = new COMPLEX(PREC)[lt*nWave*nWave*nMomentum];
+    COMPLEX(PREC) * CC_g5 = new COMPLEX(PREC)[lt*nWave*nWave*nMomentum];
+    COMPLEX(PREC) * CC_gi = new COMPLEX(PREC)[lt*nWave*nWave*nMomentum];
+    COMPLEX(PREC) * CC_gig5 = new COMPLEX(PREC)[lt*nWave*nWave*nMomentum];
+    COMPLEX(PREC) * CC_g4 = new COMPLEX(PREC)[lt*nWave*nWave*nMomentum];
+    COMPLEX(PREC) * CC_gig4 = new COMPLEX(PREC)[lt*nWave*nWave*nMomentum];
 
 
     //initialise results
@@ -652,5 +652,14 @@ int main(int argc, char *argv[]) {
         delete spinor_out[i];
     }
     delete spinor_out;
+
+    delete [] CC_I;
+    delete [] CC_g5;
+    delete [] CC_gi;
+    delete [] CC_gig5;
+    delete [] CC_g4;
+    delete [] CC_gig4;
+
+
     return 0;
 }
