@@ -17,13 +17,11 @@ int main(int argc, char **argv) {
     stdLogger.setVerbosity(INFO);
 
     TaylorMeasurementParameters param;
-    // eigenpairsParameters eigenparam;
     CommunicationBase commBase(&argc, &argv);
     
     // try reading parameter file from the same directory 
     rootLogger.info("Reading parameter file \"TaylorMeasurement.param\" from the current working directory.");
     param.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
-    // eigenparam.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
 
 
     commBase.init(param.nodeDim());
@@ -66,7 +64,7 @@ int main(int argc, char **argv) {
     // Read the Eigenvalues and Eigenvectors
     Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
-    eigenpairs.readEvNersc(param.num_toread_vectors(), param.eigen_file());
+    eigenpairs.readEvNersc(param.eigen_file(), param.num_toread_vectors());
     eigenpairs.updateAll();
 
     // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);

@@ -32,6 +32,24 @@ private:
         return true;
     }
 
+    // Write a double value from the input stream
+    bool write(std::ostream &out, double *lambda) {
+        if (out.fail()) {
+            rootLogger.error("Failed to open input stream for reading.");
+            out.clear(); // Clear the stream state
+            return false;
+        }
+
+        out.write(reinterpret_cast<char*>(lambda), sizeof(double));
+        if (out.fail()) {
+            rootLogger.error("Failed to read double value from input stream.");
+            return false;
+        }
+
+        // _stream_position = static_cast<int>(out.tellg());
+        return true;
+    }
+
 public:
     explicit evNerscHeader(const CommunicationBase &_comm) 
         : comm(_comm), _stream_position(0) {}
@@ -49,6 +67,25 @@ public:
 
         if (comm.IamRoot()) {
             success = read(in, &content);
+        }
+
+        if (!comm.single()) {
+            comm.root2all(success);
+            if (success) {
+                comm.root2all(_stream_position);
+                comm.root2all(content);
+            }
+        }
+
+        return success;
+    }
+
+    // Reads the header from the input stream
+    bool write(std::ostream &out, double &content) {
+        bool success = true;
+
+        if (comm.IamRoot()) {
+            success = write(out, &content);
         }
 
         if (!comm.single()) {
@@ -123,9 +160,22 @@ public:
         index = 0;
     }
 
-    bool read_header(std::istream &in, double &content) {
+    bool read_double(std::istream &in, double &content) {
         if (!header.read(in, content)){
             rootLogger.error("header.read() failed!");
+            return false;
+        } else {
+
+            buf.resize(GInd::getLatData().vol4 * local_size);
+            index = buf.size();
+
+            return true;
+        }
+    }
+
+    bool write_double(std::ofstream &out, double &content) {
+        if (!header.write(out, content)){
+            rootLogger.error("header.write() failed!");
             return false;
         } else {
 
@@ -162,6 +212,14 @@ public:
         computed_checksum += checksum(buf.size());
         index = 0;
     }
+
+    void process_write_data() {
+        if (switch_endian)
+            byte_swap();
+        computed_checksum += checksum(buf.size());
+        index = 0;
+    }
+
     template<class floatT>
     Vect3<floatT> get() {
         char *start = &buf[index];

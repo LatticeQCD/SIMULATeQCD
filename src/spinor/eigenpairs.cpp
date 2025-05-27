@@ -1,40 +1,121 @@
 #include "eigenpairs.h"
 #include "../base/IO/evnersc.h"
-// #include "../base/IO/nersc.h"
-// #include "../base/latticeParameters.h"
+#include "../base/math/random.h"
 #include "../modules/hisq/hisqSmearing.h"
 #include "../modules/dslash/dslash.h"
 #include <fstream>
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readEvNersc(const int &num_vec_in, const std::string &fname) 
-{   
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::fillRandom(const int &num_vec_in) {
+    lambda_vec.clear();
+    spinor_vec.clear();
     vector_len = num_vec_in;
-    lambda_vec.reserve(vector_len);
+    lambda_vec.resize(vector_len);
 
-    double lambda_host;
+    grnd_state<false> h_rand;
+    h_rand.make_rng_state(1234);
+
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(this->getComm());
+    double lambda_host =  0xFFFFFFFFFFFFFFFF;
+    for (int n = 0; n < vector_len; n++) {
+        spinor_host.gauss(h_rand.state);
 
-    if(onDevice) {
-        for (int n = 0; n < vector_len; n++) {
-            spinor_vec.emplace_back(this->getComm());
-            readEvNerscHost(spinor_host.getAccessor(), n, lambda_host, fname);
-            spinor_vec[n] = spinor_host;
-            lambda_vec[n] = lambda_host;
-        }
-    } 
+        spinor_vec.emplace_back(this->getComm());
+        spinor_vec[n] = spinor_host;
+
+        // lambda_host = get_rand<double>(h_rand.state);
+        lambda_host = (double)(rand()) / (double)(rand());
+        lambda_vec[n] = lambda_host;
+    }
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readEvNerscHost(Vect3arrayAcc<floatT> spinor_accessor, int vector_idx, double &lambda, const std::string &fname)
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEvNersc(const std::string &fname) 
+{
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(this->getComm());
+    double lambda_host;
+
+    for (int n = 0; n < vector_len; n++) {
+        lambda_host = lambda_vec[n];
+        spinor_host = spinor_vec[n];
+        writeEvNerscHost(spinor_host.getAccessor(), lambda_host, fname, n);
+    }
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEvNerscHost(Vect3arrayAcc<floatT> spinor_accessor, double &lambda, const std::string &fname, int vector_idx)
+{   
+    evNerscFormat<HaloDepthSpin> evnersc(this->getComm());
+    typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
+
+    int sizeh=GInd::getLatData().sizeh;
+    int displacement_local=(evnersc.bytes_per_site()*sizeh+sizeof(double))*vector_idx;
+    this->getComm().SetFileView(displacement_local);
+
+    std::ofstream out;
+    if (this->getComm().IamRoot()) {
+        out.open(fname.c_str());
+    }
+
+    if (!evnersc.template write_double(out, lambda)) {
+      throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
+    }
+
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+
+
+    this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.displacement(), global, local, WRITE);
+
+    
+    for (size_t t = 0; t < GInd::getLatData().lt; t++)
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        if ((x+y+z+t)%2==0){
+            gSite site = GInd::getSite(x,y,z,t);
+
+            if (evnersc.end_of_buffer()) {
+                evnersc.process_write_data();
+                this->getComm().writeBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
+            }
+        }
+    }
+    this->getComm().closeIOBinary();
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readEvNersc(const std::string &fname, const int &num_vec_in) 
+{   
+    lambda_vec.clear();
+    spinor_vec.clear();
+    vector_len = num_vec_in;
+    lambda_vec.resize(vector_len);
+
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(this->getComm());
+    double lambda_host;
+
+    for (int n = 0; n < vector_len; n++) {
+        spinor_vec.emplace_back(this->getComm());
+        readEvNerscHost(spinor_host.getAccessor(), lambda_host, fname, n);
+        spinor_vec[n] = spinor_host;
+        lambda_vec[n] = lambda_host;
+    }
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readEvNerscHost(Vect3arrayAcc<floatT> spinor_accessor, double &lambda, const std::string &fname, int vector_idx)
 {
     evNerscFormat<HaloDepthSpin> evnersc(this->getComm());
     typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
 
     int sizeh=GInd::getLatData().sizeh;
-    int displacement_local=(evnersc.bytes_per_site()*sizeh+sizeof(double))*vector_idx;            
+    int displacement_local=(evnersc.bytes_per_site()*sizeh+sizeof(double))*vector_idx;
     this->getComm().SetFileView(displacement_local);
 
     std::ifstream in;
@@ -43,7 +124,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     }
     in.ignore(displacement_local);
 
-    if (!evnersc.read_header(in, lambda)) {
+    if (!evnersc.read_double(in, lambda)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 

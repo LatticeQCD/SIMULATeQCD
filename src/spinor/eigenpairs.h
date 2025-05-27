@@ -71,8 +71,16 @@ public:
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepthSpin>(comm),
             _spinor_lattice(comm) { }
 
-    void readEvNersc(const int &numVecIn, const std::string &fname);
-    void readEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, int idxvec, double &lambda, const std::string &fname);
+    
+
+    void writeEvNersc(const std::string &fname);
+    void writeEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, int idxvec);
+
+    void fillRandom(const int &num_vec_in);
+
+    void readEvNersc(const std::string &fname, const int &num_vec_in);
+    void readEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, int idxvec);
+    
     void tester(CommunicationBase &commBase, Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
     void startVector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);
     void startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS);
