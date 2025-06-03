@@ -7,6 +7,107 @@
 
 // functions definitions
 
+// dslash wilson, no clover
+template<typename floatT>
+class FourierClass{
+
+	//CommunicationBase & _commBase;
+	MPI_Comm commX, commY, commZ, commT;
+	size_t lx, ly, lz, lt;
+        size_t lxL, lyL, lzL, ltL;
+	size_t lsX, lsY, lsZ, lsT;
+	int mycoords[4];
+	int nodes[4];
+
+public:
+    FourierClass(CommunicationBase & commBase) 
+              {
+	   
+	        int remain[4];
+                remain[0] = 1;
+                remain[1] = 0;
+                remain[2] = 0;
+                remain[3] = 0;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commX);
+                remain[0] = 0;
+                remain[1] = 1;
+                remain[2] = 0;
+                remain[3] = 0;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commY);
+                remain[0] = 0;
+                remain[1] = 0;
+                remain[2] = 1;
+                remain[3] = 0;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commZ);
+                remain[0] = 0;
+                remain[1] = 0;
+                remain[2] = 0;
+                remain[3] = 1;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commT);
+
+
+                mycoords[0] = commBase.mycoords()[0];
+                mycoords[1] = commBase.mycoords()[1];
+                mycoords[2] = commBase.mycoords()[2];
+                mycoords[3] = commBase.mycoords()[3];
+
+                nodes[0] = commBase.nodes()[0];
+                nodes[1] = commBase.nodes()[1];
+		nodes[2] = commBase.nodes()[2];
+		nodes[3] = commBase.nodes()[3];
+
+
+                typedef GIndexer<All,0> GInd;
+
+                lx = GInd::getLatData().lx;
+                ly = GInd::getLatData().ly;
+                lz = GInd::getLatData().lz;
+                lt = GInd::getLatData().lt;
+
+
+                lxL = GInd::getLatData().globLX;
+                lyL = GInd::getLatData().globLY;
+                lzL = GInd::getLatData().globLZ;
+                ltL = GInd::getLatData().globLT;
+
+                lsX = lxL;
+                lsY = lyL;
+                lsZ = lzL;
+                lsT = ltL;
+                while(abs(round(  ((floatT)lsX)/2.0 )-(floatT)(lsX/2)  ) < 0.00001){
+                      lsX = lsX/2;
+                }
+                while(abs(round(  ((floatT)lsY)/2.0 )-(floatT)(lsY/2)  ) < 0.00001){
+                      lsY = lsY/2;
+                }
+                while(abs(round(  ((floatT)lsZ)/2.0 )-(floatT)(lsZ/2)  ) < 0.00001){
+                      lsZ = lsZ/2;
+                }
+                while(abs(round(  ((floatT)lsT)/2.0 )-(floatT)(lsT/2)  ) < 0.00001){
+                      lsT = lsT/2;
+                }
+
+	    
+
+	    }
+
+
+    template<size_t HaloDepth>
+    void moveSpinor1212ToContainer(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+    template<size_t HaloDepth,int dir>
+    void moveContainerToSpinor1212Direction(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+    template<int dir>
+    void performFourierTransformDirection(LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign);
+
+    template<size_t HaloDepth>
+    void performFourier3DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin);
+
+
+};
+
+
 template<class floatT, size_t HaloDepth>
 void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBaseDevice,LatticeContainer<false,COMPLEX(floatT)> & redBaseHost,CommunicationBase & commBase, int sign = 1,int maxColorSpin = 12);
 
@@ -63,6 +164,9 @@ void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase);
 template<typename floatT,int direction>
 void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int glz);
 
+template<typename floatT,int direction>
+void gatherHostXYZT(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int glz,int glt);
+
 // gpu functions
 
 template<class floatT,int direction>
@@ -103,6 +207,12 @@ __global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAc
         v[z] = _redBaseOut.getElement<COMPLEX(floatT)>(ix+lx*(iy+ly*(z+lz*it)));
        }
     }
+    if(direction == 3){
+       for(int z =0; z < lz ; z++){
+        v[z] = _redBaseOut.getElement<COMPLEX(floatT)>(ix+lx*(iy+ly*(it+lt*z)));
+       }
+    }
+
     // standard fourier transformation
     for(int z =0; z < lz ; z++){
        v0[z] = v[z];
@@ -154,6 +264,10 @@ __global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAc
         // printf("i  %d %d %d %f %f \n",(int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
          _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(z+lz*it)),v[z]);
       }
+      if(direction == 3){
+         _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(it+lt*z)),v[z]);
+      }
+
    }
     
 
