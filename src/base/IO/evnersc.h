@@ -129,6 +129,17 @@ private:
         return U;
     }
 
+    template<class floatT>
+    void to_buf(floatT *buf, const Vect3<floatT> &U) const {
+        int i = 0;
+        buf[i++] = real(U.getElement0());
+        buf[i++] = imag(U.getElement0());
+        buf[i++] = real(U.getElement1());
+        buf[i++] = imag(U.getElement1());
+        buf[i++] = real(U.getElement2());
+        buf[i++] = imag(U.getElement2());
+    }
+
     void byte_swap() {
         for (size_t i = 0; i < buf.size(); i += float_size) {
             std::reverse(buf.begin() + i, buf.begin() + i + float_size);
@@ -226,6 +237,13 @@ public:
         Vect3<floatT> ret = from_buf<floatT>((floatT *) start);
         index += local_size;
         return ret;
+    }
+
+    template<class floatT>
+    void put(Vect3<floatT> vec) {
+        char *start = &buf[index];
+        to_buf((floatT *) start, vec);
+        index += local_size;
     }
 
     bool checksums_match() {

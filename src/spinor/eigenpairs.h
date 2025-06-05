@@ -74,7 +74,7 @@ public:
     
 
     void writeEvNersc(const std::string &fname);
-    void writeEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, int idxvec);
+    void writeEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, std::ofstream &out, int idxvec);
 
     void fillRandom(const int &num_vec_in);
 

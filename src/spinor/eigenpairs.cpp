@@ -37,16 +37,22 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(this->getComm());
     double lambda_host;
 
+    std::ofstream out;
+    if (this->getComm().IamRoot()) {
+        out.open(fname.c_str());
+    }
+
     for (int n = 0; n < vector_len; n++) {
         lambda_host = lambda_vec[n];
         spinor_host = spinor_vec[n];
-        writeEvNerscHost(spinor_host.getAccessor(), lambda_host, fname, n);
+        writeEvNerscHost(spinor_host.getAccessor(), lambda_host, fname, out, n);
     }
+    this->getComm().closeIOBinary();
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEvNerscHost(Vect3arrayAcc<floatT> spinor_accessor, double &lambda, const std::string &fname, int vector_idx)
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEvNerscHost(Vect3arrayAcc<floatT> spinor_accessor, double &lambda, const std::string &fname, std::ofstream &out, int vector_idx)
 {   
     evNerscFormat<HaloDepthSpin> evnersc(this->getComm());
     typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
@@ -54,11 +60,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     int sizeh=GInd::getLatData().sizeh;
     int displacement_local=(evnersc.bytes_per_site()*sizeh+sizeof(double))*vector_idx;
     this->getComm().SetFileView(displacement_local);
-
-    std::ofstream out;
-    if (this->getComm().IamRoot()) {
-        out.open(fname.c_str());
-    }
 
     if (!evnersc.template write_double(out, lambda)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
@@ -68,23 +69,26 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     LatticeDimensions local = GInd::getLatData().localLattice();
 
 
-    this->getComm().initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.displacement(), global, local, WRITE);
 
-    
+    const size_t filesize = (evnersc.bytes_per_site()*sizeh+sizeof(double)) * (1 + vector_len);
+    this->getComm().initIOBinary(fname, filesize, evnersc.bytes_per_site(), evnersc.displacement(), global, local, WRITE);
+
     for (size_t t = 0; t < GInd::getLatData().lt; t++)
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        if ((x+y+z+t)%2==0){
+        // if ((x+y+z+t)%2==0){
             gSite site = GInd::getSite(x,y,z,t);
+            
+            Vect3<floatT> tmp = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+            evnersc.put(tmp);
 
             if (evnersc.end_of_buffer()) {
                 evnersc.process_write_data();
                 this->getComm().writeBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
             }
-        }
+        // }
     }
-    this->getComm().closeIOBinary();
 }
 
 
@@ -142,7 +146,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        if ((x+y+z+t)%2==0){
+        // if ((x+y+z+t)%2==0){
             gSite site = GInd::getSite(x,y,z,t);
 
             if (evnersc.end_of_buffer()) {
@@ -151,8 +155,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             }
             Vect3<floatT> ret = evnersc.template get<floatT>();
             spinor_accessor.setElement(GInd::getSiteMu(site, 0), ret);
-    
-        }
+        // }
     }
 }
 
