@@ -132,12 +132,16 @@ private:
     template<class floatT>
     void to_buf(floatT *buf, const Vect3<floatT> &U) const {
         int i = 0;
-        buf[i++] = real(U.getElement0());
-        buf[i++] = imag(U.getElement0());
-        buf[i++] = real(U.getElement1());
-        buf[i++] = imag(U.getElement1());
-        buf[i++] = real(U.getElement2());
-        buf[i++] = imag(U.getElement2());
+        COMPLEX(floatT) v0 = U.getElement0();
+        COMPLEX(floatT) v1 = U.getElement1();
+        COMPLEX(floatT) v2 = U.getElement2();
+
+        buf[i++] = real(v0);
+        buf[i++] = imag(v0);
+        buf[i++] = real(v1);
+        buf[i++] = imag(v1);
+        buf[i++] = real(v2);
+        buf[i++] = imag(v2);
     }
 
     void byte_swap() {
