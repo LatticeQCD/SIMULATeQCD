@@ -69,6 +69,8 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> topCharge_imp_block;
     Parameter<bool> topCharge_imp_imp_block;
     Parameter<bool> shear_bulk_corr_block;
+    Parameter<bool> energyMomentumTensorTraceless;
+    Parameter<bool> energyMomentumTensorTracefull;
     Parameter<bool> energyMomentumTensorTracelessTimeSlices;
     Parameter<bool> energyMomentumTensorTracefullTimeSlices;
     Parameter<int> binsize; //! the binsize used in the blocking method
@@ -127,6 +129,8 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(weinberg_imp_imp, "Weinberg_imp_imp", false);
         addDefault(weinbergTimeSlices_imp_imp, "WeinbergTimeSlices_imp_imp", false);
         addDefault(shear_bulk_corr_block, "shear_bulk_corr_block", false);
+        addDefault(energyMomentumTensorTraceless, "energyMomentumTensorTraceless", false);
+        addDefault(energyMomentumTensorTracefull, "energyMomentumTensorTracefull", false);
         addDefault(energyMomentumTensorTracelessTimeSlices, "energyMomentumTensorTracelessTimeSlices", false);
         addDefault(energyMomentumTensorTracefullTimeSlices, "energyMomentumTensorTracefullTimeSlices", false);
         addDefault(ColorElectricCorrTimeSlices_naive, "ColorElectricCorrTimeSlices_naive", false);
@@ -171,7 +175,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
             datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
-            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTUTimeSlices, datNameEMTETimeSlices,
+            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices,
             datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
             datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
     // fill stream with 0's
@@ -209,6 +213,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datName_normEMT << lp.measurements_dir() << prefix.str() << "_NormEMT" << lp.fileExt();
     datNameColElecCorrSlices_clover << lp.measurements_dir() << prefix.str() << "_ColElecCorrTimeSlices_clover" << lp.fileExt();
     datNameColMagnCorrSlices_clover << lp.measurements_dir() << prefix.str() << "_ColMagnCorrTimeSlices_clover" << lp.fileExt();
+    datNameEMTU << lp.measurements_dir() << prefix.str() << "_EMTU" << lp.fileExt();
+    datNameEMTE << lp.measurements_dir() << prefix.str() << "_EMTE" << lp.fileExt();
     datNameEMTUTimeSlices << lp.measurements_dir() << prefix.str() << "_EMTUTimeSlices" << lp.fileExt();
     datNameEMTETimeSlices << lp.measurements_dir() << prefix.str() << "_EMTETimeSlices" << lp.fileExt();
     FileWriter file(gauge.getComm(), lp, datName.str());
@@ -243,6 +249,22 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         LineFormatter header_BlockBulk = file_BlockBulk.header();
         header_BlockBulk<< "#flowtime tau/a=0: #r/a1 #corr1 #r/a2 #corr2.... tau/a=1: #r/a1 #corr1...." << "\n";
         header_BlockBulk.endLine();
+    }
+
+    FileWriter file_EMTE(gauge.getComm(), lp);
+    if (lp.energyMomentumTensorTracefull()) {
+        file_EMTE.createFile(datNameEMTE.str());
+        LineFormatter header_EMTE = file_EMTE.header();
+        header_EMTE << "#flowtime E" << "\n";
+        header_EMTE.endLine();
+    }
+
+    FileWriter file_EMTU(gauge.getComm(), lp);
+    if (lp.energyMomentumTensorTraceless()) {
+        file_EMTU.createFile(datNameEMTU.str());
+        LineFormatter header_EMTU = file_EMTU.header();
+        header_EMTU << "#flowtime U00 U11 U22 U33 U01 U02 U03 U12 U13 U23" << "\n";
+        header_EMTU.endLine();
     }
 
     FileWriter file_EMTUTimeSlices(gauge.getComm(), lp);
@@ -467,7 +489,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     //! -------------------------------variables for the observables----------------------------------------------------
 
-    floatT plaq, clov, topChar, wb;
+    floatT plaq, clov, topChar, wb, resultEMTE;
+    Matrix4x4Sym<floatT> resultEMTU;
     std::vector<floatT> resultClSl, resultThSl, resultThSl_imp, resultThSl_imp_imp, resultEMTETimeSlices;
     std::vector<Matrix4x4Sym<floatT>> resultEMTUTimeSlices;
     std::vector<COMPLEX(floatT)> resultColElecCorSl_naive, resultColMagnCorSl_naive, resultColElecCorSl_clover,
@@ -680,7 +703,22 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             weinberg.recomputeField();
         }
 
+        if (lp.energyMomentumTensorTracefull() && gradFlow.checkIfnecessaryTime()) {
+            LineFormatter newLineEMTE = file_EMTE.tag("");
+            EMT.EMTEAveraged(resultEMTE);
+            newLineEMTE << flow_time << " ";
+            newLineEMTE << std::scientific << std::setprecision(15) << resultEMTE << " ";
+        }
 
+        if (lp.energyMomentumTensorTraceless() && gradFlow.checkIfnecessaryTime()) {
+            LineFormatter newLineEMTU = file_EMTU.tag("");
+            EMT.EMTUAveraged(resultEMTU);
+            newLineEMTU << flow_time << " ";
+            newLineEMTU << std::scientific << std::setprecision(15) << resultEMTU.elems[0] << " "
+                        << resultEMTU.elems[1] << " " << resultEMTU.elems[2] << " " << resultEMTU.elems[3] << " "
+                        << resultEMTU.elems[4] << " " << resultEMTU.elems[5] << " " << resultEMTU.elems[6] << " "
+                        << resultEMTU.elems[7] << " " << resultEMTU.elems[8] << " " << resultEMTU.elems[9] << " ";
+        }
 
         if (lp.energyMomentumTensorTracelessTimeSlices() && gradFlow.checkIfnecessaryTime()) {
             LineFormatter newLineEMTUTimeSlices = file_EMTUTimeSlices.tag("");
