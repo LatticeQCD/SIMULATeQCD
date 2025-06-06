@@ -18,6 +18,8 @@ template<class floatT, bool onDevice, size_t HaloDepth>
 class EnergyMomentumTensor {
 protected:
     LatticeContainer<onDevice, Matrix4x4Sym<floatT> > _redBaseU;
+    LatticeContainer<onDevice, Matrix4x4Sym<floatT> > _redBaseEMTU;
+    LatticeContainer<onDevice, floatT > _redBaseEMTE;
     LatticeContainer<onDevice, Matrix4x4Sym<floatT> > _redBaseEMTUTimeSlices;
     LatticeContainer<onDevice, floatT > _redBaseEMTETimeSlices;
     LatticeContainer<onDevice, floatT> _redBaseE;
@@ -30,10 +32,12 @@ private:
 
 public:
     EnergyMomentumTensor(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield)
-            : _redBaseU(gaugefield.getComm()), _redBaseEMTUTimeSlices(gaugefield.getComm()), _redBaseEMTETimeSlices(gaugefield.getComm()), _redBaseE(gaugefield.getComm()), _redBase(gaugefield.getComm()),
+            : _redBaseU(gaugefield.getComm()), _redBaseEMTUTimeSlices(gaugefield.getComm()), _redBaseEMTU(gaugefield.getComm()), _redBaseEMTE(gaugefield.getComm()), _redBaseEMTETimeSlices(gaugefield.getComm()), _redBaseE(gaugefield.getComm()), _redBase(gaugefield.getComm()),
               _gauge(gaugefield),
               recompute(true) {
         _redBaseU.adjustSize(GInd::getLatData().vol3);
+        _redBaseEMTU.adjustSize(GInd::getLatData().vol4);
+        _redBaseEMTE.adjustSize(GInd::getLatData().vol4);
         _redBaseEMTUTimeSlices.adjustSize(GInd::getLatData().vol4);
         _redBaseEMTETimeSlices.adjustSize(GInd::getLatData().vol4);
         _redBaseE.adjustSize(GInd::getLatData().vol3);
@@ -47,6 +51,8 @@ public:
     COMPLEX(floatT) getFtau2PlusMinusFsigma2();
 
     //same as emTimeSlices but doesn't save data in memory for later use
+    void EMTUAveraged(Matrix4x4Sym<floatT> &result);
+    void EMTEAveraged(floatT &result);
     void EMTUTimeSlices(std::vector<Matrix4x4Sym<floatT>> &result);
     void EMTETimeSlices(std::vector<floatT> &result);
 };
@@ -301,6 +307,20 @@ COMPLEX(floatT) EnergyMomentumTensor<floatT, onDevice, HaloDepth>::getFtau2PlusM
     COMPLEX(floatT) result = 0;
     _redBase.reduce(result, GInd::getLatData().vol4);
     return result/GInd::getLatData().globvol4;
+}
+
+template<class floatT, bool onDevice, size_t HaloDepth>
+void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::EMTUAveraged(Matrix4x4Sym<floatT> &result) {
+
+    _redBaseEMTU.template iterateOverBulk<All, HaloDepth>(EMTtraceless<floatT, onDevice, HaloDepth>(_gauge.getAccessor()));
+    _redBaseEMTU.reduce(result, GInd::getLatData().vol4);
+}
+
+template<class floatT, bool onDevice, size_t HaloDepth>
+void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::EMTEAveraged(floatT &result) {
+
+    _redBaseEMTE.template iterateOverBulk<All, HaloDepth>(EMTtrace<floatT, onDevice, HaloDepth>(_gauge.getAccessor()));
+    _redBaseEMTE.reduce(result, GInd::getLatData().vol4);
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth>
