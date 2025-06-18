@@ -77,7 +77,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        // if ((x+y+z+t)%2==0){
+        if ((x+y+z+t)%2==0){
             gSite site = GInd::getSite(x,y,z,t);
             
             Vect3<floatT> tmp = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
@@ -87,7 +87,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
                 evnersc.process_write_data();
                 this->getComm().writeBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
             }
-        // }
+        }
     }
 }
 
@@ -126,7 +126,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     if (this->getComm().IamRoot()) {
       in.open(fname.c_str());
     }
-    in.ignore(displacement_local);
+    // in.ignore(displacement_local);
 
     if (!evnersc.read_double(in, lambda)) {
       throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
@@ -146,7 +146,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        // if ((x+y+z+t)%2==0){
+        if ((x+y+z+t)%2==0){
             gSite site = GInd::getSite(x,y,z,t);
 
             if (evnersc.end_of_buffer()) {
@@ -155,7 +155,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             }
             Vect3<floatT> ret = evnersc.template get<floatT>();
             spinor_accessor.setElement(GInd::getSiteMu(site, 0), ret);
-        // }
+        }
     }
 }
 

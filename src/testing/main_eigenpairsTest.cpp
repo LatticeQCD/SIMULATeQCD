@@ -26,9 +26,19 @@ int main(int argc, char *argv[]){
     initIndexer(HaloDepthGauge, param, commBase);
 
     Eigenpairs<PREC,true,All,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs0(commBase);
-    eigenpairs0.fillRandom(numVec);
-    eigenpairs0.writeEvNersc("testEvFile");
+    eigenpairs0.readEvNersc(param.eigen_file(), numVec);
+    // eigenpairs0.fillRandom(numVec);
     eigenpairs0.updateAll();
+    eigenpairs0.writeEvNersc("testEvFile");
+
+
+    // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
+    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge(commBase);  
+    // naik_epsilon(use_naik_epsilon ? get_naik_epsilon_from_amc(mass) : 0.0);  /// gauge field
+    rootLogger.info("Read configuration from ", param.GaugefileName());
+    gauge.readconf_nersc(param.GaugefileName());
+    gauge.updateAll();
+    eigenpairs0.tester(commBase, gauge);
 
 
     Eigenpairs<PREC,true,All,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs1(commBase);

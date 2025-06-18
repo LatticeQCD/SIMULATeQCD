@@ -121,7 +121,7 @@ private:
     Vect3<floatT> from_buf(floatT *buf) const {
         int i = 0;
         Vect3<floatT> U;
-        for (int k = 0; k < 3; k++) {
+        for (int k = 0; k < 1; k++) {
             floatT re = buf[i++];
             floatT im = buf[i++];
             U(k) = COMPLEX(floatT)(re, im);
@@ -133,15 +133,16 @@ private:
     void to_buf(floatT *buf, const Vect3<floatT> &U) const {
         int i = 0;
         COMPLEX(floatT) v0 = U.getElement0();
-        COMPLEX(floatT) v1 = U.getElement1();
-        COMPLEX(floatT) v2 = U.getElement2();
+        buf[i++] = v0.cREAL;
+        buf[i++] = v0.cIMAG;
 
-        buf[i++] = real(v0);
-        buf[i++] = imag(v0);
-        buf[i++] = real(v1);
-        buf[i++] = imag(v1);
-        buf[i++] = real(v2);
-        buf[i++] = imag(v2);
+        // COMPLEX(floatT) v1 = U.getElement1();
+        // buf[i++] = v1.cREAL;
+        // buf[i++] = v1.cIMAG;
+
+        // COMPLEX(floatT) v2 = U.getElement2();
+        // buf[i++] = v2.cREAL;
+        // buf[i++] = v2.cIMAG;
     }
 
     void byte_swap() {
@@ -168,7 +169,7 @@ public:
     evNerscFormat(const CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
-        local_size = 8 * float_size;
+        local_size = 2 * float_size;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;
