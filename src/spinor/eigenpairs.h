@@ -2,50 +2,8 @@
 
 #include "../base/latticeContainer.h"
 #include "../modules/inverter/inverter.h"
+#include "../base/IO/evnersc.h"
 #include "spinorfield.h"
-
-/// Abstract base class for all kind of linear operators that shall enter the inversion
-// template <typename Vector>
-// class LinearOperator{
-// public:
-//     virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
-// };
-
-// class eigenpairsParameters : public LatticeParameters {
-//     public:
-//         DynamicParameter<long> operator_ids;
-//         DynamicParameter<double> valence_masses;
-
-//         Parameter<int> num_random_vectors;
-//         Parameter<int> num_toread_vectors;
-//         Parameter<int> seed;
-
-//         // Dslash related values
-//         Parameter<double> mu_f;
-//         Parameter<bool> use_naik_epsilon;
-//         Parameter<double> residue;
-//         Parameter<int> cgMax;
-
-//         Parameter<std::string> eigen_file;
-//         Parameter<std::string> output_file;
-//         Parameter<std::string> collected_output_file;
-
-//         eigenpairsParameters() {
-//             add(operator_ids, "operator_ids");
-//             add(valence_masses, "valence_masses");
-//             add(num_random_vectors, "num_random_vectors");
-//             add(num_toread_vectors, "num_toread_vectors");
-//             addDefault(seed, "seed", 0);
-//             addOptional(eigen_file, "eigen_file");
-//             addOptional(output_file, "output_file");
-//             addOptional(collected_output_file, "collected_output_file");
-
-//             addDefault(mu_f, "mu0", 0.0);
-//             add(use_naik_epsilon, "use_naik_epsilon"); // No default to make this very clear in usage!
-//             addDefault(residue, "residue", 1e-12);
-//             addDefault(cgMax, "cgMax", 20000);
-//         }
-// };
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
@@ -62,8 +20,11 @@ private:
 public:
     typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
 
+    // Use pairs of doubles for lambda_vec when LatticeLayout == All, otherwise use single double
     std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>> spinor_vec;
-    std::vector<double> lambda_vec;
+    using LambdaType = typename std::conditional<LatticeLayout == All, std::array<double, 2>, double>::type;
+        std::vector<LambdaType> lambda_vec;
+
     int vector_len;
 
 
@@ -71,13 +32,15 @@ public:
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepthSpin>(comm),
             _spinor_lattice(comm) { }
 
-    
 
     void writeEvNersc(const std::string &fname);
-    void writeEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, std::ofstream &out, int idxvec);
+    void writeSpinor(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> evnersc);
 
     void fillRandom(const int &num_vec_in);
 
+    void readEvNerscNew(const std::string &fname, const int &num_vec_in);
+    void readSpinor(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, evNerscFormat<HaloDepthSpin> evnersc, int idxvec);
+    
     void readEvNersc(const std::string &fname, const int &num_vec_in);
     void readEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, int idxvec);
     

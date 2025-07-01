@@ -136,13 +136,13 @@ private:
         buf[i++] = v0.cREAL;
         buf[i++] = v0.cIMAG;
 
-        // COMPLEX(floatT) v1 = U.getElement1();
-        // buf[i++] = v1.cREAL;
-        // buf[i++] = v1.cIMAG;
+        COMPLEX(floatT) v1 = U.getElement1();
+        buf[i++] = v1.cREAL;
+        buf[i++] = v1.cIMAG;
 
-        // COMPLEX(floatT) v2 = U.getElement2();
-        // buf[i++] = v2.cREAL;
-        // buf[i++] = v2.cIMAG;
+        COMPLEX(floatT) v2 = U.getElement2();
+        buf[i++] = v2.cREAL;
+        buf[i++] = v2.cIMAG;
     }
 
     void byte_swap() {
@@ -169,7 +169,7 @@ public:
     evNerscFormat(const CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
-        local_size = 2 * float_size;
+        local_size = 6 * float_size;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;

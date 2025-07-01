@@ -19,51 +19,44 @@ int main(int argc, char *argv[]){
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
     const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
-    const int numVec = 1;
+    const int numVec = 2;
     typedef float floatT; // Define the precision here
     typedef float PREC;
 
     initIndexer(HaloDepthGauge, param, commBase);
 
-    Eigenpairs<PREC,true,All,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs0(commBase);
-    eigenpairs0.readEvNersc(param.eigen_file(), numVec);
-    // eigenpairs0.fillRandom(numVec);
-    eigenpairs0.updateAll();
-    eigenpairs0.writeEvNersc("testEvFile");
+    Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
+    eigenpairsWrite.fillRandom(numVec);
+    eigenpairsWrite.updateAll();
+    eigenpairsWrite.writeEvNersc("testEvFile");
 
 
-    // Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge(commBase);  
-    // naik_epsilon(use_naik_epsilon ? get_naik_epsilon_from_amc(mass) : 0.0);  /// gauge field
-    rootLogger.info("Read configuration from ", param.GaugefileName());
-    gauge.readconf_nersc(param.GaugefileName());
-    gauge.updateAll();
-    eigenpairs0.tester(commBase, gauge);
+    Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
+    eigenpairsRead.readEvNerscNew("testEvFile", numVec);
+    eigenpairsRead.updateAll();
 
-
-    Eigenpairs<PREC,true,All,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs1(commBase);
-    eigenpairs1.readEvNersc("testEvFile", numVec);
-    eigenpairs1.updateAll();
-
-    double lambda_diff;
-    Spinorfield<floatT,true,All,HaloDepthSpin,NStacks> spinor0(commBase);
-    Spinorfield<floatT,true,All,HaloDepthSpin,NStacks> spinor1(commBase);
-    Spinorfield<floatT,true,All,HaloDepthSpin,NStacks> spinor_diff(commBase);
+    double lambdaDiff;
+    Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorDiff(commBase);
 
     for (int idx = 0; idx < numVec; idx++) {
         rootLogger.info("pair ", idx);
 
-        spinor0 = eigenpairs0.spinor_vec[idx];
-        rootLogger.info("spinor0= ", spinor0.realdotProduct(spinor0));
+        spinorDiff = eigenpairsWrite.spinor_vec[idx];
+        rootLogger.info("spinorWrite=", spinorDiff.realdotProduct(spinorDiff));
 
-        spinor1 = eigenpairs1.spinor_vec[idx];
-        rootLogger.info("spinor1= ", spinor1.realdotProduct(spinor1));
+        spinorDiff = eigenpairsRead.spinor_vec[idx];
+        rootLogger.info("spinorRead=", spinorDiff.realdotProduct(spinorDiff));
 
-        spinor_diff = spinor0;
-        spinor_diff -= spinor1;
-        rootLogger.info("spinor_diff= ", spinor_diff.realdotProduct(spinor_diff));
+        spinorDiff -= eigenpairsWrite.spinor_vec[idx];
+        rootLogger.info("spinorDiff=", spinorDiff.realdotProduct(spinorDiff));
 
-        lambda_diff = eigenpairs0.lambda_vec[idx] - eigenpairs1.lambda_vec[idx];
-        rootLogger.info("lambda_diff= ", lambda_diff);
+        lambdaDiff = eigenpairsWrite.lambda_vec[idx];
+        rootLogger.info("lambdaWrite=", lambdaDiff);
+
+        lambdaDiff = eigenpairsRead.lambda_vec[idx];
+        rootLogger.info("lambdaRead=", lambdaDiff);
+
+        lambdaDiff -= eigenpairsWrite.lambda_vec[idx];
+        rootLogger.info("lambdaDiff=", lambdaDiff);
     }
 }
