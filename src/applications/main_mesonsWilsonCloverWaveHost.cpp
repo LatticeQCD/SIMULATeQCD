@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
 
     stdLogger.setVerbosity(DEBUG);
 
-    const size_t mrhs = 4;
+    const size_t mrhs = 2;
 
     wilsonParam<PREC> param;
 
@@ -137,12 +137,26 @@ int main(int argc, char *argv[]) {
     Name.append(std::to_string(param.mass()));
     Name.append("_c");
     Name.append(std::to_string(param.csw()));
+    Name.append("_nS");
+    Name.append(std::to_string(param.sources()[0]));
+    Name.append(std::to_string(param.sources()[1]));
+    Name.append(std::to_string(param.sources()[2]));
+    Name.append(std::to_string(param.sources()[3]));
+    Name.append("_Sp");
+    Name.append(std::to_string(param.sourcePos()[0]));
+    Name.append("_");
+    Name.append(std::to_string(param.sourcePos()[1]));
+    Name.append("_");
+    Name.append(std::to_string(param.sourcePos()[2]));
+    Name.append("_");
+    Name.append(std::to_string(param.sourcePos()[3]));
+
     Name.append(".txt");
     FileWriter fileOut(commBase, param, Name);
 
     // timer
-    StopWatch<true> timer;
-    timer.start();
+    //StopWatch<true> timer;
+    //timer.start();
 
     // set up containers
     Gaugefield<PREC, true,HaloDepth> gauge(commBase);
@@ -227,12 +241,18 @@ int main(int argc, char *argv[]) {
 
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> ** spinor_out;
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_in(commBase);
+    Spinorfield<PREC, false, All, HaloDepth, 12, 12> ** spinor_store;
 
-
-    spinor_out = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>*[nWave];
-    for (int i = 0; i < nWave; i++) {
+    spinor_out = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>*[1];
+    for (int i = 0; i < 1; i++) {
        spinor_out[i] = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>(commBase); 
     }
+
+    spinor_store = new Spinorfield<PREC, false, All, HaloDepth, 12, 12>*[nWave-1];
+    for (int i = 0; i < nWave-1; i++) {
+       spinor_store[i] = new Spinorfield<PREC, false, All, HaloDepth, 12, 12>(commBase);
+    }
+
 
     LatticeContainer<true,COMPLEX(PREC)> redBaseDevice(commBase);
     LatticeContainer<false,COMPLEX(PREC)> redBaseHost(commBase);
@@ -275,7 +295,8 @@ int main(int argc, char *argv[]) {
     Source source;
 
     // start timer
-    timer.reset();
+    StopWatch<true> timer;
+    //timer.reset();
     timer.start();
 
     // dont split the t direction
@@ -320,7 +341,7 @@ int main(int argc, char *argv[]) {
 
                      //version that gives the correlator from input spinor only (spinorAll inside class instead)
                      
-                     for(int ss = 0; ss < nWave; ss ++){
+                     for(int ss = nWave-1; ss > -1; ss --){
 
                         _dslashinverseSC4.setMass(mass);
                             if(pos[0] == 0 && pos[1] == 0 && pos[2] == 0){
@@ -332,160 +353,40 @@ int main(int argc, char *argv[]) {
                            }                        
  
                        _dslashinverseSC4.antiperiodicBoundaries();
-                       _dslashinverseSC4.correlator(spinor_out[ss][0],spinor_in,maxiter,tolerance);
+                       _dslashinverseSC4.correlator(spinor_out[0][0],spinor_in,maxiter,tolerance);
                        _dslashinverseSC4.antiperiodicBoundaries();
 
-                       fourier3D(spinor_out[ss][0],spinor_out[ss][0],redBaseDevice,redBaseHost,commBase);
+                       fourier3D(spinor_out[0][0],spinor_out[0][0],redBaseDevice,redBaseHost,commBase);
                        //fourierClass.performFourier3DSpinor1212<HaloDepth>(spinor_out[ss][0],spinor_out[ss][0],redBaseDevice,redBaseHost,1,12);
-                     }
+                       if(ss>0){
+			   spinor_store[ss-1][0] = spinor_out[0][0];
+		       }
+
+		     }
 
 		     
 
                      for(int ss = 0; ss < nWave; ss ++){
-                         for(int ss2 = 0; ss2 < nWave; ss2 ++){
-                     
+
+
+                     if(ss==0){
+                           spinor_in = spinor_out[0][0];
+                       }
+                       else{
+                           spinor_in = spinor_store[ss-1][0];
+                       }
+
+		       for(int ss2 = 0; ss2 < nWave; ss2 ++){
+
                      /////////pion
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_out[ss][0],spinor_device,redBaseDevice,2*ss2+1,0,2);
+                         CC_g5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
 
-                     }
-
-                     /////////rho
-                     // tr( (g5*M^d*g5) gi M gi )
-    
-                     //x direction
-                     spinor_in = spinor_out[ss][0];    
-                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     //y direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     //z direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-
-                     //  scalar
-                     // tr( (g5*M^d*g5) M )
-                     spinor_in = spinor_out[ss][0]; 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_I[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-
-                     // Axial vector
-                     // tr( (g5*M^d*g5) gi g5 M gi g5 )
-
-                     //x direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     //y direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     //z direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-
-
-                     // tr( (g5*M^d*g5) g4 M g4 )
-                     spinor_in = spinor_out[ss][0];
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_g4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     
-
-                     // tr( (g5*M^d*g5) gi g4 M gi g4 )
-
-                     //x direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     //y direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
-                     }
-                     //z direction
-                     spinor_in = spinor_out[ss][0];
-                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
-
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
 
                      // tr( (g5*M^d*g5) g5g4 M g4g5 )
-                     spinor_in = spinor_out[ss][0];
+                     //spinor_in = spinor_out[1][0];
 
                      source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
                      source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
@@ -493,7 +394,170 @@ int main(int argc, char *argv[]) {
                      for (int t=0; t<GInd::getLatData().globLT; t++){
                          CC_g5g4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
                      }
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+
+                     //  scalar
+                     // tr( (g5*M^d*g5) M )
+                     //spinor_in = spinor_out[1][0]; 
+                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+
+		     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_I[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+
+
+                     // Axial vector
+                     // tr( (g5*M^d*g5) gi g5 M gi g5 )
+
+                     //x direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+		     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+
+                     //y direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+		     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+
+                     //z direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gig5[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+		     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+
+
+                     // tr( (g5*M^d*g5) g4 M g4 )
+                     //spinor_in = spinor_out[1][0];
+
+                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+		     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_g4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+                     /////////rho
+                     // tr( (g5*M^d*g5) gi M gi )
+
+                     //x direction
+                     //spinor_in = spinor_out[1][0];    
+
+
+                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+
+                     //y direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+		     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
                      
+
+                     //z direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gi[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+		     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+ 
+
+                     // tr( (g5*M^d*g5) gi g4 M gi g4 )
+
+                     //x direction
+                     //spinor_in = spinor_out[1][0];
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+
+                     //y direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+		     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+
+                     //z direction
+                     //spinor_in = spinor_out[1][0];
+                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+
+                     for (int t=0; t<GInd::getLatData().globLT; t++){
+                         CC_gig4[ss+nWave*(ss2+nWave*t)] += sumXYZ_TrMdaggerMwave((int)((t+pos[3])%(lt)),spinor_out[0][0],spinor_in,spinor_device,redBaseDevice,2*ss2+1,0,2);
+                     }
+
+		     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+
+		     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
  
                    }}
 
@@ -538,10 +602,16 @@ int main(int argc, char *argv[]) {
 		        " " << norm*real(CC_g5g4[ss+nWave*(ss2+nWave*t)]) << " " << norm*imag(CC_g5g4[ss+nWave*(ss2+nWave*t)]) <<	"\n";
     }}}
 
-    for (int i = 0; i < nWave; i++) {
+    for (int i = 0; i < 1; i++) {
         delete spinor_out[i];
     }
     delete spinor_out;
+
+    for (int i = 0; i < nWave-1; i++) {
+        delete spinor_store[i];
+    }    
+    delete spinor_store;
+
 
     return 0;
 }

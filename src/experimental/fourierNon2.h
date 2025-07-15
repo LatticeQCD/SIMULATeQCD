@@ -144,6 +144,12 @@ template<typename floatT, size_t HaloDepth>
 void makeWaveSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave,
                       size_t time, size_t col,size_t post);
 
+template<typename floatT,typename floatT2, size_t HaloDepth>
+void copySpinorToSpinor(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorOut, Spinorfield<floatT2, true, All, HaloDepth, 12, 12> & spinorIn);
+
+template<typename floatT,typename floatT2, size_t HaloDepth>
+void copyGaugeToGauge(Gaugefield<floatT,true,HaloDepth,R18> &gaugeOut,Gaugefield<floatT2,true,HaloDepth,R18> &gaugeIn);
+
 template<typename floatT, size_t HaloDepthSpin>
 void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
                                  int posX, int posY, int posZ,
@@ -443,15 +449,15 @@ struct SumXYZ_TrMdaggerM2{
     { }
 
     //This is the operator that is called inside the Kernel
-    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+    __device__ __host__ COMPLEX(floatT)  operator()(gSite site){
 
         sitexyzt coords=site.coord;
         gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
 
-        COMPLEX(double) temp(0.0,0.0);
+        COMPLEX(floatT) temp(0.0,0.0);
         for (size_t stack = 0; stack < NStacks; stack++) {
-            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
-                                 _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
+            temp  = temp + _spinorInDagger.template getElement<floatT>(GInd::getSiteStack(siteT,stack)) *
+                                 _spinorIn.template getElement<floatT>(GInd::getSiteStack(siteT,stack));
         }
 
 //        printf("tr %d %d %d %f %f \n", coords.x,coords.y,coords.z,temp.cREAL, temp.cIMAG);
@@ -478,25 +484,30 @@ struct SumXYZ_TrMdaggerMwave{
     { }
 
     //This is the operator that is called inside the Kernel
-    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+    __device__ __host__ COMPLEX(floatT)  operator()(gSite site){
+
+        COMPLEX(floatT) temp(0.0,0.0);
 
         sitexyzt coords=site.coord;
-        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
+        sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+       
+        if(coord.t <= _t && (coord.t+GInd::getLatData().lt) > _t){
 
-        COMPLEX(double) temp(0.0,0.0);
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, (_t)%(GInd::getLatData().lt) );
+
         for (size_t stack = 0; stack < NStacks; stack++) {
-            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
-                                 _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
+            temp  = temp + _spinorInDagger.template getElement<floatT>(GInd::getSiteStack(siteT,stack)) *
+                                 _spinorIn.template getElement<floatT>(GInd::getSiteStack(siteT,stack));
         }
         if (conjON == 2){
-            temp = COMPLEX(double)((    temp*((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL,
-                                   (temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL);
+            temp = COMPLEX(floatT)((    temp*((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL,
+                                   (temp*conj((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL);
         }
         else if (conjON == 1){
-            temp = temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
+            temp = temp*conj((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
         }
         else{
-            temp = temp*((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);  
+            temp = temp*((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);  
         }
 
       //  temp = (_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[col];
@@ -512,6 +523,9 @@ struct SumXYZ_TrMdaggerMwave{
 //        printf("psi %d %d %d %f %f \n", coords.x,coords.y,coords.z,tmp4.cREAL, tmp4.cIMAG);
 //
 //        }
+//
+
+	}
 
         return temp;
     }
@@ -537,7 +551,7 @@ struct SpinorXdaggerwave{
 
 	sitexyzt coords=site.coord;
 
-        return conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])*_spinorIn.template getElement<double>(site);
+        return conj((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])*_spinorIn.template getElement<floatT>(site);
     }
 };
 
@@ -558,10 +572,10 @@ struct Tr_SpinorXspinor{
     __device__ __host__ void  operator()(gSite site){
 
 
-        COMPLEX(double) temp(0.0,0.0);
+        COMPLEX(floatT) temp(0.0,0.0);
         for (size_t stack = 0; stack < NStacks; stack++) {
-            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(site,stack)) *
-                                 _spinorIn.template getElement<double>(GInd::getSiteStack(site,stack));
+            temp  = temp + _spinorInDagger.template getElement<floatT>(GInd::getSiteStack(site,stack)) *
+                                 _spinorIn.template getElement<floatT>(GInd::getSiteStack(site,stack));
         }
         Vect12<floatT> tmp(0.0);
 	tmp.data[0] = temp;
@@ -596,8 +610,9 @@ struct MakeWaveSource12{
 
             sitexyzt coords=site.coord;
             gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _time);
-            if(coords[3] == _post ){
-                tmp.data[stack] = (_spinor_wave.template getElement<double>(siteT)).data[_col];
+	    sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+            if(coord[3] == _post ){
+                tmp.data[stack] = (_spinor_wave.template getElement<floatT>(siteT)).data[_col];
             }
 
             //if(_time == 0 && coords.y == 0 && coords.x == 0)
@@ -609,5 +624,57 @@ struct MakeWaveSource12{
         }
     }
 };
+
+template<class floatT,class floatT2, size_t HaloDepth>
+struct CopySpinorToSpinor{
+
+    // accessor to access the spinor field
+    Vect12ArrayAcc<floatT> _spinorOut;
+    Vect12ArrayAcc<floatT2> _spinorIn;
+
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    CopySpinorToSpinor(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorOut,Spinorfield<floatT2, true, All, HaloDepth, 12, 12> & spinorIn)
+                : _spinorOut(spinorOut.getAccessor()),_spinorIn(spinorIn.getAccessor()) { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ Vect12<floatT>  operator()(gSiteStack site){
+
+
+        Vect12<floatT2> tmp2 = _spinorIn.template getElement<floatT2>(site);
+        Vect12<floatT> tmp;
+	tmp = tmp2;
+	//_spinorOut.setElement(site,tmp);
+        return tmp;
+
+    }
+};
+
+template<class floatT,class floatT2, size_t HaloDepth>
+struct CopyGaugeToGauge{
+
+    // accessor to access the spinor field
+    SU3Accessor<floatT2> _SU3AccessorIn;    
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    CopyGaugeToGauge(Gaugefield<floatT2,true,HaloDepth,R18> &gaugeIn)
+                :  _SU3AccessorIn(gaugeIn.getAccessor()) { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ SU3<floatT>  operator()(gSiteMu site){
+
+
+        SU3<floatT2> tmp2 = _SU3AccessorIn.getLink(site);
+        SU3<floatT> tmp;
+        tmp = tmp2;
+        //_spinorOut.setElement(site,tmp);
+        return tmp;
+
+    }
+};
+
+
 
 

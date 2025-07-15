@@ -70,7 +70,7 @@ struct SmearSource{
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
 
-        ColorVect<floatT> tmp = (1.0-3*2.0*_smear)*_spinorIn.getColorVect(site);
+        ColorVect<floatT> tmp = floatT(1.0-3*2.0*_smear)*_spinorIn.getColorVect(site);
 
         for(int dir=0; dir < 3; dir ++){
             tmp = tmp + _smear*_SU3Accessor.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site,dir)))*
@@ -220,7 +220,8 @@ struct SumXYZ_TrM{
 
         COMPLEX(double) temp(0.0,0.0);
         for (size_t stack = 0; stack < NStacks; stack++) {
-            temp  = temp + _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack)).data[stack];
+	    COMPLEX(floatT) temp2 = _spinorIn.template getElement<floatT>(GInd::getSiteStack(siteT,stack)).data[stack];
+            temp  = temp + COMPLEX(double)(temp2.cREAL,temp2.cIMAG);
         }
 
         return temp;

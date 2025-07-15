@@ -210,7 +210,7 @@ void FourierClass<floatT>::performFourierTransformDirection(LatticeContainer<tru
 
    if (dir ==3){
       elems = lx*ly*lz*lt;
-      if( nodes[2] > 1 ){
+      if( nodes[3] > 1 ){
 
          gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
 
@@ -261,14 +261,20 @@ void FourierClass<floatT>::performFourier3DSpinor1212(Spinorfield<floatT, true, 
 
           moveSpinor1212ToContainer(spinor_in,redBase,spincolor1,spincolor2);
           performFourierTransformDirection<0>(redBase,redBase2,sign);
-          moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
 
-          moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
-          performFourierTransformDirection<1>(redBase,redBase2,sign);
-          moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+	  if( nodes[0] > 1 || nodes[1] > 1 ){
+             moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+             moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          }
 
-          moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
-          performFourierTransformDirection<2>(redBase,redBase2,sign);
+	  performFourierTransformDirection<1>(redBase,redBase2,sign);
+
+          if( nodes[1] > 1 || nodes[2] > 1 ){
+	     moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+             moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          }
+
+	  performFourierTransformDirection<2>(redBase,redBase2,sign);
           moveContainerToSpinor1212Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
 
 
@@ -285,7 +291,7 @@ void FourierClass<floatT>::performFourier3DSpinor1212(Spinorfield<floatT, true, 
 template<class floatT, size_t HaloDepth>
 void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin){
 
-    StopWatch<true> timer;
+    //StopWatch<true> timer;
 
     MPI_Comm commX, commY, commZ;
     int remain[4];
@@ -600,7 +606,7 @@ COMPLEX(floatT) sumXYZ_TrMdaggerM(int t,
 
         typedef GIndexer<All, HaloDepthSpin> GInd;
 
-        COMPLEX(double) result = 0;
+        COMPLEX(floatT) result = 0;
 
         size_t elems_ = GInd::getLatData().vol3;
 
@@ -624,7 +630,7 @@ COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
 
         typedef GIndexer<All, HaloDepthSpin> GInd;
 
-        COMPLEX(double) result = 0;
+        COMPLEX(floatT) result = 0;
 
         size_t elems_ = GInd::getLatData().vol3;
 
@@ -657,10 +663,18 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     global[3] = 1;
     local[3] = 1;
 
-    commBase.initIOBinary(fname, 0, 2*sizeof(floatT), 0, global, local, READ);
+    MPI_Comm commXYZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 1;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commXYZ);
+
+    commBase.initIOBinarySub(fname, 0, 2*sizeof(double), 0, global, local, READ,commXYZ);
 
     std::vector<char> buf;
-    buf.resize(local[0]*local[1]*local[2]*2*sizeof(floatT));
+    buf.resize(local[0]*local[1]*local[2]*2*sizeof(double));
     commBase.readBinary(&buf[0], local[0]*local[1]*local[2]);
     int ps = 0;
     Vect3<floatT> tmp3;
@@ -670,10 +684,10 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     for (size_t z = 0; z < GInd::getLatData().lz; z++)
     for (size_t y = 0; y < GInd::getLatData().ly; y++)
     for (size_t x = 0; x < GInd::getLatData().lx; x++) {
-        floatT *dataRe = (floatT *) &buf[ps];
-        ps += sizeof(floatT);
-        floatT *dataIm = (floatT *) &buf[ps];
-        ps += sizeof(floatT);
+        double *dataRe = (double *) &buf[ps];
+        ps += sizeof(double);
+        double *dataIm = (double *) &buf[ps];
+        ps += sizeof(double);
         tmp3.data[col] = COMPLEX(floatT)(dataRe[0],dataIm[0]);
         //std::cout << "data " << data[0] << std::endl;
         spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
@@ -692,6 +706,14 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
     typedef GIndexer<All, HaloDepthSpin> GInd;
 
 
+    MPI_Comm commXYZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 1;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commXYZ);
+
     int coord[4];
     //all gather 4d
     int glx = GInd::getLatData().globLX;
@@ -703,8 +725,8 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
     int glt = GInd::getLatData().globLT;
     int lt  = GInd::getLatData().lt;
     int myrank, rankSize;
-    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
-    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+    MPI_Comm_rank(commXYZ, &myrank);
+    MPI_Comm_size(commXYZ, &rankSize);
 
     std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
     std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
@@ -720,15 +742,15 @@ void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device
 
 
     if(std::is_same<floatT,double>::value){
-        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commXYZ );
     }
     else if(std::is_same<floatT,float>::value){
-        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commXYZ );
     }
     
 
     for (int r=0; r<rankSize; r++){
-    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+    MPI_Cart_coords(commXYZ, r,4, coord);
    //     for (int t=0; t<lt; t++)
         for (int z=0; z<lz; z++)
         for (int y=0; y<ly; y++)
@@ -950,6 +972,36 @@ void makeWaveSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn
 
 }
 
+template<typename floatT,typename floatT2, size_t HaloDepth>
+void copySpinorToSpinor(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorOut, Spinorfield<floatT2, true, All, HaloDepth, 12, 12> & spinorIn){
+
+    //typedef GIndexer<All, HaloDepth> GInd;
+    //size_t _elems = GInd::getLatData().vol4;
+    //ReadIndex<All,HaloDepth> index;
+
+    //iterateFunctorNoReturn<true,BLOCKSIZE>(CopySpinorToSpinor<floatT,floatT2,HaloDepth>( spinorOut,spinorIn),index,_elems);
+
+    spinorOut.template iterateOverFull<BLOCKSIZE>(CopySpinorToSpinor<floatT,floatT2,HaloDepth>( spinorOut,spinorIn));
+
+    spinorOut.updateAll();
+
+}
+
+
+template<typename floatT,typename floatT2, size_t HaloDepth>
+void copyGaugeToGauge(Gaugefield<floatT,true,HaloDepth,R18> &gaugeOut,Gaugefield<floatT2,true,HaloDepth,R18> &gaugeIn){
+
+
+    gaugeOut.template iterateOverBulkAtMu<0,BLOCKSIZE>(CopyGaugeToGauge<floatT,floatT2,HaloDepth>(gaugeIn));
+    gaugeOut.template iterateOverBulkAtMu<1,BLOCKSIZE>(CopyGaugeToGauge<floatT,floatT2,HaloDepth>(gaugeIn));
+    gaugeOut.template iterateOverBulkAtMu<2,BLOCKSIZE>(CopyGaugeToGauge<floatT,floatT2,HaloDepth>(gaugeIn));
+    gaugeOut.template iterateOverBulkAtMu<3,BLOCKSIZE>(CopyGaugeToGauge<floatT,floatT2,HaloDepth>(gaugeIn));
+
+    gaugeOut.updateAll();
+
+}
+
+
 template<typename floatT>
 void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase){
 
@@ -1009,7 +1061,7 @@ void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int 
     MPI_Comm_rank(comm, &myrank);
     MPI_Comm_size(comm, &rankSize);
 
-    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*glt];
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*lt];
     
     if(std::is_same<floatT,double>::value){
         MPI_Allgather(in, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX, buf, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX,comm );
@@ -1153,4 +1205,74 @@ template void gatherMomentum(COMPLEX(double) * CC, Spinorfield<double, true, All
 
 template void gatherMomentumT(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
                                  int colIn,int savePos ,int nP,int * pos,CommunicationBase & commBase);
+
+///float
+
+template class FourierClass<float>;
+
+template void FourierClass<float>::moveSpinor1212ToContainer<2>(Spinorfield<float, true, All, 2, 12, 12> & spinor_in, LatticeContainer<true,COMPLEX(float)> & redBase,int spincolor1, int spincolor2);
+
+template void FourierClass<float>::moveContainerToSpinor1212Direction<2,0>(Spinorfield<float, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(float)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<float>::moveContainerToSpinor1212Direction<2,1>(Spinorfield<float, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(float)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<float>::moveContainerToSpinor1212Direction<2,2>(Spinorfield<float, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(float)> & redBase,int spincolor1, int spincolor2);
+
+template void FourierClass<float>::performFourierTransformDirection<0>(LatticeContainer<true,COMPLEX(float)> & redBase,LatticeContainer<false,COMPLEX(float)> & redBase2,int sign);
+template void FourierClass<float>::performFourierTransformDirection<1>(LatticeContainer<true,COMPLEX(float)> & redBase,LatticeContainer<false,COMPLEX(float)> & redBase2,int sign);
+template void FourierClass<float>::performFourierTransformDirection<2>(LatticeContainer<true,COMPLEX(float)> & redBase,LatticeContainer<false,COMPLEX(float)> & redBase2,int sign);
+template void FourierClass<float>::performFourierTransformDirection<3>(LatticeContainer<true,COMPLEX(float)> & redBase,LatticeContainer<false,COMPLEX(float)> & redBase2,int sign);
+
+template void FourierClass<float>::performFourier3DSpinor1212<2>(Spinorfield<float, true, All, 2, 12, 12> & spinor_in,Spinorfield<float, true, All, 2, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(float)> & redBase,LatticeContainer<false,COMPLEX(float)> & redBase2,int sign,int maxColorSpin);
+
+////
+
+template void fourier3D(Spinorfield<float, true, All, 2, 12, 12> & spinor_out,Spinorfield<float, true, All, 2, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(float)> & redBase,LatticeContainer<false,COMPLEX(float)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin);
+
+
+template void tr_spinorXspinor(
+        Spinorfield<float, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<float, true, All, 2, 12, 12> & spinorIn);
+
+
+template COMPLEX(float) sumXYZ_TrMdaggerM(int t,
+        const Spinorfield<float, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<float, true, All, 2, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(float)> & _redBase);
+
+template COMPLEX(float) sumXYZ_TrMdaggerMwave(int t,
+        const Spinorfield<float, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<float, true, All, 2, 12, 12> & spinorIn,
+        const Spinorfield<float, true, All, 2, 3 ,  1> & spinor_wave,
+        LatticeContainer<true,COMPLEX(float)> & _redBase, int time, int col, int conjON);
+
+template void loadWave(std::string fname, Spinorfield<float, true , All, 2, 3,1> & spinor_device,
+                                          Spinorfield<float, false, All, 2, 3,1> & spinor_host,
+                                          int time, int col,CommunicationBase & commBase);
+
+template void loadWavePos(std::string fname, Spinorfield<float, true , All, 2, 3,1> & spinor_device,
+                                             Spinorfield<float, false, All, 2, 3,1> & spinor_host,
+                                             size_t posX, size_t posY, size_t posZ,
+                                             int time, int col,CommunicationBase & commBase);
+
+template void makeWaveSource(Spinorfield<float, true, All, 2, 12, 12> & spinorIn, const Spinorfield<float, true, All, 2, 3,1> &spinor_wave,
+                      size_t time, size_t col,size_t post);
+
+template void moveWave(Spinorfield<float, true, All, 2, 3,1> & spinor_device,Spinorfield<float, false, All, 2, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
+
+template void gatherMomentum(COMPLEX(float) * CC, Spinorfield<float, true, All, 2, 12,12> & spinor_device,Spinorfield<float, false, All, 2, 12,12> & spinor_host,
+                                 int timeIn, int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
+
+template void gatherMomentumT(COMPLEX(float) * CC, Spinorfield<float, true, All, 2, 12,12> & spinor_device,Spinorfield<float, false, All, 2, 12,12> & spinor_host,
+                                 int colIn,int savePos ,int nP,int * pos,CommunicationBase & commBase);
+
+
+
+
+//// mix
+template void copySpinorToSpinor(Spinorfield<double, true, All, 2, 12, 12> & spinorOut, Spinorfield<float , true, All, 2, 12, 12> & spinorIn);
+template void copySpinorToSpinor(Spinorfield<float , true, All, 2, 12, 12> & spinorOut, Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+template void copyGaugeToGauge(Gaugefield<float,true,2,R18> &gaugeOut,Gaugefield<double,true,2,R18> &gaugeIn);
+
 

@@ -76,10 +76,10 @@ template <class floatT>
 __host__ __device__ auto GammaYMultVec( const ColorVect<floatT>& ob1)->ColorVect<floatT> {
     ColorVect<floatT> res;
 
-    res[0] = (-1.0)*ob1[3];
+    res[0] = floatT(-1.0)*ob1[3];
     res[1] =        ob1[2];
     res[2] =        ob1[1];
-    res[3] = (-1.0)*ob1[0];
+    res[3] = floatT(-1.0)*ob1[0];
 
     return res;
 }
@@ -131,8 +131,8 @@ __host__ __device__ auto Gamma5MultVec( const ColorVect<floatT>& ob1)->ColorVect
 
     res[0] = ob1[0];
     res[1] = ob1[1];
-    res[2] = (-1.0)*ob1[2];
-    res[3] = (-1.0)*ob1[3];
+    res[2] = floatT(-1.0)*ob1[2];
+    res[3] = floatT(-1.0)*ob1[3];
 
     return res;
 }

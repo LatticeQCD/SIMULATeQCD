@@ -60,7 +60,7 @@ private:
 
 public:
     DWilsonInverse(Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge,
-                      floatT mass, floatT csw = 0.0) :
+                      floatT mass, floatT csw = floatT(0.0)) :
                       dslash(gauge, mass, csw), _redBase(gauge.getComm()), _mass(mass), _csw(csw) {
         _redBase.adjustSize(GIndexer<All, HaloDepthGauge>::getLatData().vol3 * NStacks);
     }
@@ -102,7 +102,7 @@ struct gamma5DiracWilson{
         SU3<floatT> link;
 
         ColorVect<floatT> spinCol = _SpinorColorAccessor.getColorVect(site);
-        ColorVect<floatT> outSC   = 2.0*_mass*spinCol;
+        ColorVect<floatT> outSC   = floatT(2.0*_mass)*spinCol;
         ColorVect<floatT> temp;
 
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
@@ -136,7 +136,7 @@ struct gamma5DiracWilson{
         outSC = outSC - temp - GammaTMultVec(temp);
 
 
-        outSC = 0.5*outSC;
+        outSC = floatT(0.5)*outSC;
 
         outSC = Gamma5MultVec(outSC);
 
@@ -164,7 +164,7 @@ struct gamma5DiracWilson2{
     //This is the operator that is called inside the Kernel
     __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
 
-        ColorVect<floatT> outSC   = 2.0*_mass*_SpinorColorAccessor.getColorVect(site);
+        ColorVect<floatT> outSC   = floatT(2.0*_mass)*_SpinorColorAccessor.getColorVect(site);
         ColorVect<floatT> temp, temp2;
 
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
@@ -189,7 +189,7 @@ struct gamma5DiracWilson2{
         temp2 = _SU3Accessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site, 3),3))*_SpinorColorAccessor.getColorVect(GInd::site_dn(site, 3));
         outSC = outSC - temp-temp2 + GammaTMultVec(temp-temp2);
 
-        outSC = 0.5*Gamma5MultVec(outSC);
+        outSC = floatT(0.5)*Gamma5MultVec(outSC);
 
         return convertColorVectToVect12(outSC);
     }
@@ -227,7 +227,7 @@ struct gamma5DiracWilsonStack{
 
     #pragma unroll NStacks
     for (size_t stack = 0; stack < NStacks; stack++) {
-        outSC[stack]   = 2.0*_mass*_spinorIn.getColorVect(GInd::getSiteStack(site,stack));
+        outSC[stack]   = floatT(2.0*_mass)*_spinorIn.getColorVect(GInd::getSiteStack(site,stack));
 
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
         // might be better to combine plus and minus direction before multiplying by gamma_mu
@@ -259,7 +259,7 @@ struct gamma5DiracWilsonStack{
         temp[stack] = _SU3Accessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site, 3),3))*_spinorIn.getColorVect(GInd::site_dn(GInd::getSiteStack(site,stack), 3));
         outSC[stack] = outSC[stack] - temp[stack] - GammaTMultVec(temp[stack]);
 
-        outSC[stack] = 0.5*outSC[stack];
+        outSC[stack] = floatT(0.5)*outSC[stack];
         outSC[stack] = Gamma5MultVec(outSC[stack]);
 
     }
@@ -308,7 +308,7 @@ struct gamma5DiracWilsonStack2{
     #pragma unroll NStacks
     for (size_t stack = 0; stack < NStacks; stack++) {
         siteV[stack] = GInd::getSiteStack(site,stack);
-        outSC[stack]   = 2.0*_mass*_spinorIn.getColorVect(siteV[stack]);
+        outSC[stack]   = floatT(2.0*_mass)*_spinorIn.getColorVect(siteV[stack]);
     }
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
         // might be better to combine plus and minus direction before multiplying by gamma_mu
@@ -380,7 +380,7 @@ struct gamma5DiracWilsonStack2{
 
     #pragma unroll NStacks
     for (size_t stack = 0; stack < NStacks; stack++) {
-        outSC[stack] = 0.5*outSC[stack];
+        outSC[stack] = floatT(0.5)*outSC[stack];
         outSC[stack] = Gamma5MultVec(outSC[stack]);
 
     }
@@ -426,7 +426,7 @@ struct gamma5DiracWilsonStack3{
 
     #pragma unroll NStacks
     for (size_t stack = 0; stack < NStacks; stack++) {
-        outSC[stack]   = 2.0*_mass*_spinorIn.getColorVect(GInd::getSiteStack(site,stack));
+        outSC[stack]   = floatT(2.0*_mass)*_spinorIn.getColorVect(GInd::getSiteStack(site,stack));
          ColorVect<floatT> temp, temp2;
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
         // might be better to combine plus and minus direction before multiplying by gamma_mu
@@ -450,7 +450,7 @@ struct gamma5DiracWilsonStack3{
         temp2 = _SU3Accessor.getLinkDagger(GInd::getSiteMu(GInd::site_dn(site, 3),3))*_spinorIn.getColorVect(GInd::site_dn(GInd::getSiteStack(site,stack), 3));
         outSC[stack] = outSC[stack] - temp-temp2 + GammaTMultVec(temp-temp2);
 
-        outSC[stack] = 0.5*outSC[stack];
+        outSC[stack] = floatT(0.5)*outSC[stack];
         outSC[stack] = Gamma5MultVec(outSC[stack]);
 
     }
@@ -727,10 +727,10 @@ struct DiracWilsonEvenOdd{
    ColorVect<floatT> outSC;
 
     if(LatLayoutLHS == LatLayoutRHS){
-        outSC   = 2.0*_mass*_SpinorColorAccessor.getColorVect(site);
+        outSC   = floatT(2.0*_mass)*_SpinorColorAccessor.getColorVect(site);
     }
     else{
-        outSC = 0.0*outSC;
+        outSC = floatT(0.0)*outSC;
         ColorVect<floatT> temp, temp2;
 
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
@@ -757,7 +757,7 @@ struct DiracWilsonEvenOdd{
         outSC = outSC - temp-temp2 + GammaTMultVec(temp-temp2);
     }
 
-        outSC = 0.5*outSC;
+        outSC = floatT(0.5)*outSC;
         
         if(g5){
              outSC = Gamma5MultVec(outSC);
@@ -790,7 +790,7 @@ struct DiracWilsonEvenOdd2{
 
    ColorVect<floatT> outSC;
 
-        outSC = 0.0*outSC;
+        outSC = floatT(0.0)*outSC;
         ColorVect<floatT> temp, temp2;
 
         // simple implementation for (1-gamma_mu)Umu(x)psi(x+mu) + (1+gamma_mu)Umu(x-mu)^dagger*psi(x-mu)
@@ -815,7 +815,7 @@ struct DiracWilsonEvenOdd2{
         temp2 = _SU3Accessor.getLinkDagger(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, 3),3)))*_SpinorColorAccessor.getColorVect(GInd::site_dn(site, 3));
         outSC = outSC - temp-temp2 + GammaTMultVec(temp-temp2);
 
-        outSC = 0.5*outSC;
+        outSC = floatT(0.5)*outSC;
         // multiply by gamma 5 when needed
         if(g5){
              outSC = Gamma5MultVec(outSC);
@@ -837,11 +837,13 @@ struct setAntiPeriodicBoundary{
     
     __device__ __host__ void operator()(gSite site) {
 
-        SU3<floatT> tmp = (-1.0)*_SU3Accessor.getLink(GInd::getSiteMu(site,3));
+        SU3<floatT> tmp = floatT(-1.0)*_SU3Accessor.getLink(GInd::getSiteMu(site,3));
 
-        size_t lt = GIndexer<All, HaloDepthGauge>::getLatData().lt;
+        size_t lt = GIndexer<All, HaloDepthGauge>::getLatData().globLT;
 
-        if(site.coord[3] == (lt-1) ){
+        sitexyzt coord = GIndexer<All, HaloDepthGauge>::getLatData().globalPos(site.coord);
+
+        if(coord.t == (lt-1) ){
             _SU3Accessor.setLink(GInd::getSiteMu(site,3),tmp);
         }
 
@@ -956,7 +958,7 @@ struct preCalcFmunu{
         ///add mass and csw parameters
         for(int i=0; i < 6; i++){
             for(int j=0; j < 6; j++){
-                M6x6.val[i][j]    = -0.5*_csw*M6x6.val[i][j];
+                M6x6.val[i][j]    = floatT(-0.5)*_csw*M6x6.val[i][j];
             }
         }
 
@@ -1051,7 +1053,7 @@ struct preCalcFmunu{
         ///add mass and csw parameters
         for(int i=0; i < 6; i++){
             for(int j=0; j < 6; j++){
-                M6x6.val[i][j]    = -0.5*_csw*M6x6.val[i][j];
+                M6x6.val[i][j]    = floatT(-0.5)*_csw*M6x6.val[i][j];
             }
         }
 /*
@@ -1128,7 +1130,7 @@ private:
     // operators
     ConjugateGradient<floatT, NStacks> cg;
     //bicgstab<floatT, NStacks> cg;
-
+    public:
     DWilsonEvenOdd<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> dslash;
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> & _gauge;
 
@@ -1173,19 +1175,19 @@ public:
         // compute the inverse 
 
         (spinorOut.even).template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Even,Odd,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.odd,_mass,_csw));
-        spinorOut.even = spinorIn.even-(1.0/_mass)*spinorOut.even;
+        spinorOut.even = spinorIn.even-floatT(1.0/_mass)*spinorOut.even;
         spinorOut.odd  = spinorIn.odd;
         (spinorOut.even).template iterateOverBulk<BLOCKSIZE>(gamma5<floatT,Even,HaloDepthSpin,NStacks>(spinorOut.even));
         spinorOut.updateAll();
        
 
         cg.invert(dslash, spinorIn.even, spinorOut.even, cgMax, residue);
-        spinorIn.odd  = (1.0/_mass)*spinorOut.odd;
+        spinorIn.odd  = floatT(1.0/_mass)*spinorOut.odd;
         spinorIn.updateAll();
         
         spinorIn.even = spinorIn.even;
         (spinorOut.odd).template iterateOverBulk<BLOCKSIZE>(DiracWilsonEvenOdd<floatT,Odd,Even,HaloDepthGauge,HaloDepthSpin,NStacks,false>(_gauge, spinorIn.even,_mass,_csw));
-        spinorOut.odd = spinorIn.odd-(1.0/_mass)*spinorOut.odd;
+        spinorOut.odd = spinorIn.odd-floatT(1.0/_mass)*spinorOut.odd;
         spinorOut.even  = spinorIn.even;
 
         spinorOut.updateAll();

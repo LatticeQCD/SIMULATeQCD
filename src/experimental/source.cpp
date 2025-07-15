@@ -211,3 +211,72 @@ template void Source::copyAllFromHalf<double,2,4>(Spinorfield<double, true, All,
                              int offset);
 
 
+
+template void Source::copyHalfFromAll<double,2,2>(SpinorfieldAll<double, true, 2, 12, 2> &spinorIn,
+                             Spinorfield<double, true, All, 2, 12, 12     > &spinorInAll,
+                             int offset);
+template void Source::copyAllFromHalf<double,2,2>(Spinorfield<double, true, All, 2, 12, 12     > &spinorInAll,
+                             SpinorfieldAll<double, true, 2, 12, 2> &spinorIn,
+                             int offset);
+
+
+//// float
+
+template void Source::shiftSource1t<float,2,2,12>(Gaugefield<float,true,2,R18> &gauge,
+                         Spinorfield<float, true ,All, 2, 12, 12> & spinorOut,
+                         Spinorfield<float, true ,All, 2, 12, 12> & spinorIn);
+
+template void Source::smearSource(Gaugefield<float,true,2,R18> &gauge,
+                         Spinorfield<float, true,All ,2, 12, 12> & spinorOut,
+                         Spinorfield<float, true,All ,2, 12, 12> & spinorIn,
+                         float lambda, int steps);
+
+template void Source::gammaMu<float,All,2, 12, 0>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<float,All,2, 12, 1>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<float,All,2, 12, 2>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<float,All,2, 12, 3>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMu<float,All,2, 12, 5>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+
+
+
+template void Source::gammaMuRight<float,All,2, 0>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<float,All,2, 1>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<float,All,2, 2>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<float,All,2, 3>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::gammaMuRight<float,All,2, 5>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+
+template void Source::daggerSource<float,All,2>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+template void Source::conjugateSource<float,All,2>(Spinorfield<float,true,All,2, 12, 12> &spinorIn);
+
+
+template void Source::makePointSource<float,2>(Spinorfield<float, true, All, 2, 12, 12> & spinorIn,
+                      size_t posx, size_t posy,size_t posz,size_t post);
+
+
+template void Source::copyHalfFromAll<float,2,12>(SpinorfieldAll<float, true, 2, 12, 12> &spinorIn,
+                             Spinorfield<float, true, All, 2, 12, 12     > &spinorInAll,
+                             int offset);
+template void Source::copyAllFromHalf<float,2,12>(Spinorfield<float, true, All, 2, 12, 12     > &spinorInAll,
+                             SpinorfieldAll<float, true, 2, 12, 12> &spinorIn,
+                             int offset);
+
+
+
+template void Source::copyHalfFromAll<float,2,1>(SpinorfieldAll<float, true, 2, 12, 1> &spinorIn,
+                             Spinorfield<float, true, All, 2, 12, 12     > &spinorInAll,
+                             int offset);
+template void Source::copyAllFromHalf<float,2,1>(Spinorfield<float, true, All, 2, 12, 12     > &spinorInAll,
+                             SpinorfieldAll<float, true, 2, 12, 1> &spinorIn,
+                             int offset);
+
+
+template void Source::copyHalfFromAll<float,2,4>(SpinorfieldAll<float, true, 2, 12, 4> &spinorIn,
+                             Spinorfield<float, true, All, 2, 12, 12     > &spinorInAll,
+                             int offset);
+template void Source::copyAllFromHalf<float,2,4>(Spinorfield<float, true, All, 2, 12, 12     > &spinorInAll,
+                             SpinorfieldAll<float, true, 2, 12, 4> &spinorIn,
+                             int offset);
+
+
+
+

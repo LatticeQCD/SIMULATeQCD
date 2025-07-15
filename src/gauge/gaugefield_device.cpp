@@ -99,7 +99,7 @@ __host__ __device__ SU3<floatT> inline su3unitarize_project(SU3Accessor<floatT,c
   temp_guess += gAcc_base.getLink(GInd::getSiteMu(origin,mu));
 
   if(std::isnan(real(temp(0,0)))) return temp;
-  int status = su3unitarize_hits(&temp_guess, &temp, 9, 0.);
+  int status = su3unitarize_hits(&temp_guess, &temp, 9, floatT(0.));
   assert(!status);
 
   return temp_guess;

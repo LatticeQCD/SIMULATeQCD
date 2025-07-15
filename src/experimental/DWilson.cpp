@@ -225,6 +225,9 @@ template class DWilsonInverseShurComplement<double,true,2,2,12>;
 template class DWilsonEvenOdd<double,true,Even,2,2,4>;
 template class DWilsonInverseShurComplement<double,true,2,2,4>;
 
+template class DWilsonEvenOdd<double,true,Even,2,2,2>;
+template class DWilsonInverseShurComplement<double,true,2,2,2>;
+
 
 
 template void dslash<double,true,All,2,2,12>(Gaugefield<double, true, 2, R18> & _gauge,
@@ -254,4 +257,35 @@ INIT_PHHSN(DSLASH_INIT)
   template class DWilsonInverseShurComplement<floatT,true,HaloDepth,HaloDepthSpin,NStacks>;\
 INIT_PHHSN(DSLASHINV_INIT)
 */
+
+
+////// float 
+
+template class DWilson<float,true,All,2,2,1>;
+
+template class DWilson<float,true,All,2,2,12>;
+
+template class DWilsonInverse<float,true,2,2,1>;
+template class DWilsonInverse<float,true,2,2,12>;
+
+template class DWilsonEvenOdd<float,true,Even,2,2,1>;
+template class DWilsonInverseShurComplement<float,true,2,2,1>;
+
+template class DWilsonEvenOdd<float,true,Even,2,2,12>;
+template class DWilsonInverseShurComplement<float,true,2,2,12>;
+
+template class DWilsonEvenOdd<float,true,Even,2,2,4>;
+template class DWilsonInverseShurComplement<float,true,2,2,4>;
+
+
+
+template void dslash<float,true,All,2,2,12>(Gaugefield<float, true, 2, R18> & _gauge,
+            Spinorfield<float, true,All, 2, 12, 12> & spinorOut,
+            Spinorfield<float, true,All, 2, 12, 12> & spinorTmp,
+      const Spinorfield<float, true,All, 2, 12, 12> & spinorIn,
+            Spinorfield<float, true,All, 2, 18, 1> & FmunuUpper,
+            Spinorfield<float, true,All, 2, 18, 1> & FmunuLower);
+
+
+
 

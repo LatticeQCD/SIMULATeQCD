@@ -16,11 +16,11 @@ struct wilsonParam : LatticeParameters {
     Parameter<double,1>  csw;
     Parameter<int, 4> sourcePos;
     Parameter<int, 4> sources;
-    Parameter<double,1>  smear1;
+    Parameter<floatT,1>  smear1;
     Parameter<int,1>  smearSteps1;
-    Parameter<double,1>  smear2;
+    Parameter<floatT,1>  smear2;
     Parameter<int,1>  smearSteps2;
-    Parameter<double,1> tolerance;
+    Parameter<floatT,1> tolerance;
     Parameter<int,1> maxiter;
     Parameter<int,1> use_hyp;
     Parameter<int,1> use_mass2;
@@ -55,9 +55,9 @@ struct wilsonParam : LatticeParameters {
         addDefault (use_hyp,"use_hyp",0);
         add(use_mass2, "use_mass2");
         addDefault (use_wilson,"use_wilson",0);
-        addDefault (wilson_step,"wilson_step",0.0);
-        addDefault (wilson_start,"wilson_start",0.0);
-        addDefault (wilson_stop,"wilson_stop",0.0);
+        addDefault (wilson_step,"wilson_step",floatT(0.0));
+        addDefault (wilson_start,"wilson_start",floatT(0.0));
+        addDefault (wilson_stop,"wilson_stop",floatT(0.0));
 
         add(nP,"nP");
         add(measure_I,"measure_I");
@@ -274,6 +274,23 @@ int main(int argc, char *argv[]) {
     }
    // make class for inversion
    DWilsonInverseShurComplement<PREC,true,HaloDepth,HaloDepth,mrhs> _dslashinverseSC4(gauge,mass,csw);
+
+   /* 
+   _dslashinverseSC4.setMass(mass);
+   source.makePointSource(spinor_in,0,0,0,0);
+   _dslashinverseSC4.antiperiodicBoundaries();
+
+   _dslashinverseSC4.correlator(spinor_out,spinor_in,maxiter,tolerance);
+   dslash<double,true,All,2,2,12>(gauge,spinor_in,*spinor_out_s,spinor_out,_dslashinverseSC4.dslash.FmunuUpper,_dslashinverseSC4.dslash.FmunuLower);
+   _dslashinverseSC4.antiperiodicBoundaries();
+
+   for (int t=0; t<GInd::getLatData().globLT; t++){
+       COMPLEX(PREC) ttmmpp =  _dslashinverseSC4.sumXYZ_TrMdaggerM((t)%(lt),spinor_in,spinor_in);
+       rootLogger.info( "test" , ttmmpp );
+   }
+   */
+
+
 
     for (int px=0; px<GInd::getLatData().globLX; px+= GInd::getLatData().globLX/(param.sources()[0])){
         for (int py=0; py<GInd::getLatData().globLY; py+= GInd::getLatData().globLY/(param.sources()[1])){
