@@ -9,8 +9,12 @@
 #include "../indexer/bulkIndexer.h"
 #include <iostream>
 
-class evNerscHeader : virtual private ParameterList {
+class iOStreamHandler : virtual private ParameterList {
 private:
+    // Prevent copying to avoid deprecated copy constructor usage
+    iOStreamHandler(const iOStreamHandler&) = delete;
+    iOStreamHandler& operator=(const iOStreamHandler&) = delete;
+
     const CommunicationBase &comm;
     int _stream_position;
 
@@ -51,7 +55,7 @@ private:
     }
 
 public:
-    explicit evNerscHeader(const CommunicationBase &_comm) 
+    explicit iOStreamHandler(const CommunicationBase &_comm) 
         : comm(_comm), _stream_position(0) {}
 
     template <size_t HaloDepth>
@@ -105,7 +109,7 @@ class evNerscFormat {
 private:
 
     const CommunicationBase &comm;
-    evNerscHeader header;
+    iOStreamHandler header;
     typedef GIndexer<All,HaloDepth> GInd;
     int rows;
     int float_size;
@@ -169,7 +173,7 @@ public:
     evNerscFormat(const CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
-        local_size = 6 * float_size;
+        local_size = 2 * float_size;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;

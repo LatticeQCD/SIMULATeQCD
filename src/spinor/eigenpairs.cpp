@@ -100,7 +100,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeSpinor(Vect3arrayAcc<floatT> spinor_accessor, const std::string &fname, evNerscFormat<HaloDepthSpin> evnersc) {   
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeSpinor(Vect3arrayAcc<floatT> spinor_accessor, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc) {   
     typedef GIndexer<All, HaloDepthSpin> GInd;
     LatticeDimensions global = GInd::getLatData().globalLattice();
     LatticeDimensions local = GInd::getLatData().localLattice();
@@ -118,7 +118,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
         if (evnersc.end_of_buffer()) {
             evnersc.process_write_data();
-            rootLogger.info("elemcount to write: ", evnersc.buf_size() / evnersc.bytes_per_site());
             this->getComm().writeBinary(evnersc.buf_ptr(), evnersc.buf_size() / evnersc.bytes_per_site());
         }
     }
@@ -141,7 +140,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     }
 
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(this->getComm());
-    double lambda_host;
 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
@@ -158,7 +156,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
                 }
             }
 
-            readSpinor(spinor_host.getAccessor(), lambda_host, fname, evnersc, n);
+            readSpinor(spinor_host.getAccessor(), fname, evnersc);
             spinor_split = spinor_host;
 
             spinor_even = spinor_split.even;
@@ -179,7 +177,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readSpinor(Vect3arrayAcc<floatT> spinor_accessor, double &lambda, const std::string &fname, evNerscFormat<HaloDepthSpin> evnersc, int vector_idx) {
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readSpinor(Vect3arrayAcc<floatT> spinor_accessor, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc) {
     typedef GIndexer<All, HaloDepthSpin> GInd;
     LatticeDimensions global = GInd::getLatData().globalLattice();
     LatticeDimensions local = GInd::getLatData().localLattice();
@@ -200,6 +198,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         if (norm2(tmp)!=0) {
             rootLogger.info("something was read: ", norm2(tmp));
         }
+        
         spinor_accessor.setElement(GInd::getSiteMu(site, 0), tmp);
     }
     this->getComm().closeIOBinary();
