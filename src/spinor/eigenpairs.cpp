@@ -102,6 +102,12 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeSpinorFile(const std::string &fname) 
 {
+    std::ofstream out;
+    if (this->getComm().IamRoot()) {
+        out.open(fname.c_str());
+        out.close();
+    }
+
     evNerscFormat<HaloDepthSpin> evnersc(this->getComm());
 
     typedef GIndexer<All, HaloDepthSpin> GInd;
