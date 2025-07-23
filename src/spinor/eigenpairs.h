@@ -34,12 +34,16 @@ public:
 
 
     void writeEvNersc(const std::string &fname);
-    void writeSpinor(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc);
+    void writeSpinorAlt(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc);
+
+    void writeSpinorFile(const std::string &fname);
+    void writeLambdaFile(const std::string &fname);
 
     void fillRandom(const int &num_vec_in);
 
-    void readEvNerscNew(const std::string &fname, const int &num_vec_in);
-    void readSpinor(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc);
+    void readLambdaFile(const std::string &fname, const int &num_vec_in);
+    void readSpinorFile(const std::string &fname, const int &num_vec_in);
+    void readSpinorAlt(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc);
     
     void readEvNersc(const std::string &fname, const int &num_vec_in);
     void readEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, int idxvec);

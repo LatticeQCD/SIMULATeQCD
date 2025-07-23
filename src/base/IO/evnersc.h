@@ -125,7 +125,7 @@ private:
     Vect3<floatT> from_buf(floatT *buf) const {
         int i = 0;
         Vect3<floatT> U;
-        for (int k = 0; k < 1; k++) {
+        for (int k = 0; k < 3; k++) {
             floatT re = buf[i++];
             floatT im = buf[i++];
             U(k) = COMPLEX(floatT)(re, im);
@@ -173,11 +173,12 @@ public:
     evNerscFormat(const CommunicationBase &comm) : comm(comm), header(comm) {
         rows = 0;
         float_size = sizeof(float_t);
-        local_size = 2 * float_size;
+        local_size = 6 * float_size;
+        buf.resize(GInd::getLatData().vol4 * local_size);
+        index = 0;
         switch_endian = false;
         stored_checksum = 0;
         computed_checksum = 0;
-        index = 0;
     }
 
     bool read_double(std::istream &in, double &content) {
@@ -185,10 +186,6 @@ public:
             rootLogger.error("header.read() failed!");
             return false;
         } else {
-
-            buf.resize(GInd::getLatData().vol4 * local_size);
-            index = buf.size();
-
             return true;
         }
     }
@@ -198,10 +195,6 @@ public:
             rootLogger.error("header.write() failed!");
             return false;
         } else {
-
-            buf.resize(GInd::getLatData().vol4 * local_size);
-            index = buf.size();
-
             return true;
         }
     }
@@ -242,6 +235,10 @@ public:
 
     template<class floatT>
     Vect3<floatT> get() {
+        if (index + local_size > buf.size()) {
+            rootLogger.error("Buffer overrun in get()");
+            throw std::out_of_range("Buffer overrun in get()");
+        }
         char *start = &buf[index];
         Vect3<floatT> ret = from_buf<floatT>((floatT *) start);
         index += local_size;
@@ -250,6 +247,10 @@ public:
 
     template<class floatT>
     void put(Vect3<floatT> vec) {
+        if (index + local_size > buf.size()) {
+            rootLogger.error("Buffer overrun in put()");
+            throw std::out_of_range("Buffer overrun in put()");
+        }
         char *start = &buf[index];
         to_buf((floatT *) start, vec);
         index += local_size;

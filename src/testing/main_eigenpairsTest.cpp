@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
     const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
-    const int numVec = 2;
+    const int numVec = 6;
     typedef float floatT; // Define the precision here
     typedef float PREC;
 
@@ -27,12 +27,14 @@ int main(int argc, char *argv[]){
 
     Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     eigenpairsWrite.fillRandom(numVec);
+    eigenpairsWrite.writeSpinorFile("testSpinorFile");
+    eigenpairsWrite.writeLambdaFile("testLambdaFile");
     eigenpairsWrite.updateAll();
-    eigenpairsWrite.writeEvNersc("testEvFile");
 
 
     Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
-    eigenpairsRead.readEvNerscNew("testEvFile", numVec);
+    eigenpairsRead.readSpinorFile("testSpinorFile", numVec);
+    eigenpairsRead.readLambdaFile("testLambdaFile", numVec);
     eigenpairsRead.updateAll();
 
     double lambdaDiff;
