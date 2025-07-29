@@ -8,8 +8,7 @@
 #       format: Format of the binary file.
 #   endianness: For output storage.
 #
-testmode = 1
-use_unit_conf = 1
+use_unit_conf = 0
 
 Lattice = 32 32 32 8
 Nodes = 1 1 1 1
@@ -20,9 +19,10 @@ format = nersc
 endianness = auto
 measurements_dir = ./
 action = HISQ
+correlator_axes = z t
 
-masses = 0.1
-mass_labels = l
+masses = 0.1 0.5
+mass_labels = l s
 source_type = point
 source_coords = 0 0 0 0
 
@@ -32,7 +32,6 @@ source_coords = 0 0 0 0
 
 cg_residue = 1e-26
 cg_max_iter = 1000
-measure_mesons = 1
 
 # naik_epsilons_individual =
 # cg_residues_individual = #use -1 for default
