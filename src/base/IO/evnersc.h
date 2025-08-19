@@ -1,5 +1,5 @@
 /*
- * nersc.h
+ * evnersc.h
  *
  */
 
@@ -9,120 +9,119 @@
 #include "../indexer/bulkIndexer.h"
 #include <iostream>
 
-class iOStreamHandler : virtual private ParameterList {
+class EigenHeader : virtual private ParameterList {
 private:
-    // Prevent copying to avoid deprecated copy constructor usage
-    iOStreamHandler(const iOStreamHandler&) = delete;
-    iOStreamHandler& operator=(const iOStreamHandler&) = delete;
-
     const CommunicationBase &comm;
-    int _stream_position;
+    int header_size;
 
-    // Reads a double value from the input stream
-    bool read(std::istream &in, double *lambda) {
+    Parameter<std::string> dattype;
+    Parameter<int> dim[4];
+    Parameter<std::string> floatingpoint;
+
+
+    bool read(std::istream &in, std::string &content) {
         if (in.fail()) {
-            rootLogger.error("Failed to open input stream for reading.");
-            in.clear(); // Clear the stream state
+            rootLogger.error("Could not open file.");
+            return false;
+        }
+        std::string line;
+
+        getline(in, line);
+        if (line != "BEGIN_HEADER") {
+            rootLogger.error("BEGIN_HEADER not found!");
             return false;
         }
 
-        in.read(reinterpret_cast<char*>(lambda), sizeof(double));
+        while (!in.fail()) {
+            getline(in, line);
+            if (line == "END_HEADER")
+                break;
+            content.append(line + '\n');
+        }
         if (in.fail()) {
-            rootLogger.error("Failed to read double value from input stream.");
+            rootLogger.error("END_HEADER not found!");
             return false;
         }
-
-        _stream_position = static_cast<int>(in.tellg());
+        header_size = in.tellg();
         return true;
     }
 
-    // Write a double value from the input stream
-    bool write(std::ostream &out, double *lambda) {
-        if (out.fail()) {
-            rootLogger.error("Failed to open input stream for reading.");
-            out.clear(); // Clear the stream state
-            return false;
-        }
+    EigenHeader(const CommunicationBase &_comm) : comm(_comm) {
+        header_size = 0;
 
-        out.write(reinterpret_cast<char*>(lambda), sizeof(double));
-        if (out.fail()) {
-            rootLogger.error("Failed to read double value from input stream.");
-            return false;
-        }
-
-        // _stream_position = static_cast<int>(out.tellg());
-        return true;
+        add(dattype, "DATATYPE");
+        add(dim[0], "DIMENSION_1");
+        add(dim[1], "DIMENSION_2");
+        add(dim[2], "DIMENSION_3");
+        add(dim[3], "DIMENSION_4");
+        addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
     }
 
-public:
-    explicit iOStreamHandler(const CommunicationBase &_comm) 
-        : comm(_comm), _stream_position(0) {}
 
     template <size_t HaloDepth>
-    friend class evNerscFormat;
+    friend class EigenFormat;
 
+public:
     size_t size() const {
-        return _stream_position;
+        return header_size;
     }
 
-    // Reads the header from the input stream
-    bool read(std::istream &in, double &content) {
+    // called from all nodes, but only root node has already opened file
+    bool read(std::istream &in) {
+        std::string content;
         bool success = true;
-
-        if (comm.IamRoot()) {
-            success = read(in, &content);
-        }
+        if (comm.IamRoot())
+            success = read(in, content);
 
         if (!comm.single()) {
             comm.root2all(success);
             if (success) {
-                comm.root2all(_stream_position);
+                comm.root2all(header_size);
                 comm.root2all(content);
             }
         }
-
-        return success;
+        if (!success)
+            return false;
+        std::istringstream str(content);
+        return readstream(str, "NERSC", true);
     }
 
-    // Reads the header from the input stream
-    bool write(std::ostream &out, double &content) {
+    bool write(std::ostream &out) {
         bool success = true;
-
         if (comm.IamRoot()) {
-            success = write(out, &content);
+            out.precision(10);
+            out << "BEGIN_HEADER" << std::endl
+                << (*this)
+                << "END_HEADER" << std::endl;
+            header_size = out.tellp();
+            success = !out.fail();
         }
-
         if (!comm.single()) {
+            comm.root2all(header_size);
             comm.root2all(success);
-            if (success) {
-                comm.root2all(_stream_position);
-                comm.root2all(content);
-            }
         }
-
         return success;
     }
 };
 
 template<size_t HaloDepth>
-class evNerscFormat {
+class EigenFormat {
 private:
 
     const CommunicationBase &comm;
-    iOStreamHandler header;
+    EigenHeader header;
     typedef GIndexer<All,HaloDepth> GInd;
     int rows;
     int float_size;
     bool switch_endian;
-    uint32_t stored_checksum, computed_checksum;
-    int local_size;
+    int vector_size;
     size_t index; //position in buffer
-    // static const bool sep_lines = false; // make the buffer smaller and read each xline separately
-    //                                      // (slow on large lattices, but needs less memory)
+    static const bool sep_lines = false; // make the buffer smaller and read each xline separately
+                                         // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
     template<class floatT>
-    Vect3<floatT> from_buf(floatT *buf) const {
+    Vect3<floatT> from_buf_vector(floatT *buf) const {
         int i = 0;
         Vect3<floatT> U;
         for (int k = 0; k < 3; k++) {
@@ -134,7 +133,7 @@ private:
     }
 
     template<class floatT>
-    void to_buf(floatT *buf, const Vect3<floatT> &U) const {
+    void to_buf_vector(floatT *buf, const Vect3<floatT> &U) const {
         int i = 0;
         COMPLEX(floatT) v0 = U.getElement0();
         buf[i++] = v0.cREAL;
@@ -149,57 +148,123 @@ private:
         buf[i++] = v2.cIMAG;
     }
 
-    void byte_swap() {
-        for (size_t i = 0; i < buf.size(); i += float_size) {
-            std::reverse(buf.begin() + i, buf.begin() + i + float_size);
-        }
+    template<class floatT>
+    floatT from_buf_scalar(floatT *buf) const {
+        return buf[0];
     }
 
-    //compute checksum of 'bytes' bytes at beginning of buffer
-    uint32_t checksum(size_t bytes) {
-        if (bytes % 4 != 0) {
-            rootLogger.error("Checksum size must be a multiple of 4.");
-            return 0;
-        }
-        uint32_t result = 0;
-        uint32_t *dat = (uint32_t *) &buf[0];
-        for (size_t i = 0; i < bytes / 4; i++)
-            result += dat[i];
-        return result;
+    template<class floatT>
+    void to_buf_scalar(floatT *buf, floatT value) const {
+        buf[0] = value;
+    }
+
+    void byte_swap() {
+        const long count = buf.size() / float_size;
+        for (long i = 0; i < count; i++)
+            Byte_swap(&buf[i * float_size], float_size);
     }
 
 public:
 
-    evNerscFormat(const CommunicationBase &comm) : comm(comm), header(comm) {
+    EigenFormat(const CommunicationBase &comm)
+            : comm(comm), header(comm) {
         rows = 0;
-        float_size = sizeof(float_t);
-        local_size = 6 * float_size;
-        buf.resize(GInd::getLatData().vol4 * local_size);
-        index = 0;
+        float_size = 0;
+        vector_size = 0;
         switch_endian = false;
-        stored_checksum = 0;
-        computed_checksum = 0;
+        index = 0;
     }
 
-    bool read_double(std::istream &in, double &content) {
-        if (!header.read(in, content)){
+    bool read_header(std::istream &in) {
+        rootLogger.push_verbosity(OFF);
+        if (!header.read(in)){
             rootLogger.error("header.read() failed!");
             return false;
-        } else {
-            return true;
         }
+
+        bool error = false;
+        for (int mu = 0; mu < 4; mu++) {
+            if (header.dim[mu]() != GInd::getLatData().globalLattice()[mu]) {
+                rootLogger.error( "Stored extension N_", mu," = ",header.dim[mu](),
+                                  " not equal to expected extension N_", mu," = ",GInd::getLatData().globalLattice()[mu] );
+                error = true;
+            }
+        }
+
+        if (header.dattype() != "EIGEN") {
+            rootLogger.error("DATATYPE = " ,  header.dattype() ,  "not recognized.");
+            error = true;
+        }
+
+        Endianness disken = ENDIAN_AUTO;
+        if (header.floatingpoint() == "IEEE32BIG" || header.floatingpoint() == "IEEE32") {
+            float_size = 4;
+            disken = ENDIAN_BIG;
+        } else if (header.floatingpoint() == "IEEE64BIG") {
+            float_size = 8;
+            disken = ENDIAN_BIG;
+        } else if (header.floatingpoint() == "IEEE32LITTLE" || header.floatingpoint() == "IEEE32BE") {
+            float_size = 4;
+            disken = ENDIAN_LITTLE;
+        } else if (header.floatingpoint() == "IEEE64LITTLE" || header.floatingpoint() == "IEEE64LE") {
+            float_size = 8;
+            disken = ENDIAN_LITTLE;
+        } else {
+            rootLogger.error("Unrecognized FLOATING_POINT " ,  header.floatingpoint());
+            error = true;
+        }
+        switch_endian = switch_endianness(disken);
+
+        vector_size = 6 * float_size;
+        buf.resize(GInd::getLatData().vol4 * vector_size + 2 * float_size);
+        index = buf.size();
+
+        return !error;
     }
 
-    bool write_double(std::ofstream &out, double &content) {
-        if (!header.write(out, content)){
-            rootLogger.error("header.write() failed!");
+    template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+    bool write_header(int diskprec, Endianness en, std::ostream &out) {
+        
+        if (diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)))
+            float_size = 4;
+        else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double)))
+            float_size = 8;
+        else {
+            rootLogger.error("diskprec should be 0, 1 or 2.");
             return false;
-        } else {
-            return true;
         }
+        vector_size = 6 * float_size;
+    
+        buf.resize(GInd::getLatData().vol4 * vector_size + 2 * float_size);
+
+        if (en == ENDIAN_AUTO)
+            en = get_endianness(false); //use system endianness
+        switch_endian = switch_endianness(en);
+
+        for (int mu = 0; mu < 4; mu++)
+            header.dim[mu].set(GInd::getLatData().globalLattice()[mu]);
+
+        header.dattype.set("EIGEN");
+
+        std::string fp;
+        if (float_size == 4)
+            fp = "IEEE32";
+        else if (float_size == 8)
+            fp = "IEEE64";
+        else {
+            rootLogger.error("NERSC format must store single or double precision.");
+            return false;
+        }
+        if (en == ENDIAN_LITTLE)
+            fp += "LITTLE";
+        else
+            fp += "BIG";
+        header.floatingpoint.set(fp);
+
+        return header.write(out);
     }
 
-    size_t displacement() {
+    size_t header_size() {
         return header.size();
     }
 
@@ -212,7 +277,7 @@ public:
     }
 
     size_t bytes_per_site() const {
-        return local_size;
+        return vector_size;
     }
 
     bool end_of_buffer() const {
@@ -222,49 +287,57 @@ public:
     void process_read_data() {
         if (switch_endian)
             byte_swap();
-        computed_checksum += checksum(buf.size());
         index = 0;
     }
 
     void process_write_data() {
         if (switch_endian)
             byte_swap();
-        computed_checksum += checksum(buf.size());
         index = 0;
     }
 
     template<class floatT>
-    Vect3<floatT> get() {
-        if (index + local_size > buf.size()) {
-            rootLogger.error("Buffer overrun in get()");
-            throw std::out_of_range("Buffer overrun in get()");
+    Vect3<floatT> get_vector() {
+        if (index + vector_size > buf.size()) {
+            rootLogger.error("Buffer overrun in get_vector()");
+            throw std::out_of_range("Buffer overrun in get_vector()");
         }
         char *start = &buf[index];
-        Vect3<floatT> ret = from_buf<floatT>((floatT *) start);
-        index += local_size;
+        Vect3<floatT> ret = from_buf_vector<floatT>((floatT *) start);
+        index += vector_size;
         return ret;
     }
 
     template<class floatT>
-    void put(Vect3<floatT> vec) {
-        if (index + local_size > buf.size()) {
-            rootLogger.error("Buffer overrun in put()");
-            throw std::out_of_range("Buffer overrun in put()");
+    void put_vector(Vect3<floatT> vec) {
+        if (index + vector_size > buf.size()) {
+            rootLogger.error("Buffer overrun in put_vector()");
+            throw std::out_of_range("Buffer overrun in put_vector()");
         }
         char *start = &buf[index];
-        to_buf((floatT *) start, vec);
-        index += local_size;
+        to_buf_vector((floatT *) start, vec);
+        index += vector_size;
     }
 
-    bool checksums_match() {
-        uint32_t checksum = comm.reduce(computed_checksum);
-        if (stored_checksum != checksum) {
-            rootLogger.error("Checksum mismatch! "
-                               ,  std::hex ,  stored_checksum ,  " != "
-                               ,  std::hex ,  checksum);
-            return false;
+    template<class floatT>
+    floatT get_scalar() {
+        if (index + sizeof(floatT) > buf.size()) {
+            rootLogger.error("Buffer overrun in get_scalar()");
+            throw std::out_of_range("Buffer overrun in get_scalar()");
         }
-        return true;
+        floatT ret = from_buf_scalar<floatT>((floatT *) &buf[index]);
+        index += sizeof(floatT);
+        return ret;
+    }
+
+    template<class floatT>
+    void put_scalar(floatT value) {
+        if (index + sizeof(floatT) > buf.size()) {
+            rootLogger.error("Buffer overrun in put_scalar()");
+            throw std::out_of_range("Buffer overrun in put_scalar()");
+        }
+        to_buf_scalar<floatT>((floatT *) &buf[index], value);
+        index += sizeof(floatT);
     }
 };
 

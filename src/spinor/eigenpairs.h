@@ -32,22 +32,14 @@ public:
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepthSpin>(comm),
             _spinor_lattice(comm) { }
 
-
-    void writeEvNersc(const std::string &fname);
-    void writeSpinorAlt(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc);
-
-    void writeSpinorFile(const std::string &fname);
-    void writeLambdaFile(const std::string &fname);
-
     void fillRandom(const int &num_vec_in);
 
-    void readLambdaFile(const std::string &fname, const int &num_vec_in);
-    void readSpinorFile(const std::string &fname, const int &num_vec_in);
-    void readSpinorAlt(Vect3arrayAcc<floatT> Vect3arrayAcc, const std::string &fname, evNerscFormat<HaloDepthSpin> &evnersc);
-    
-    void readEvNersc(const std::string &fname, const int &num_vec_in);
-    void readEvNerscHost(Vect3arrayAcc<floatT> Vect3arrayAcc, double &lambda, const std::string &fname, int idxvec);
-    
+    void writeEigenpairsFile(const std::string &fname, int diskprec, Endianness en);
+    void writeEigenpairsFileHost(const std::string &fname, int diskprec, Endianness en);
+
+    void readEigenpairsFile(const std::string &fname);
+    void readEigenpairsFileHost(const std::string &fname);
+
     void tester(CommunicationBase &commBase, Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
     void startVector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);
     void startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS);
