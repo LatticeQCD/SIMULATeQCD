@@ -23,9 +23,9 @@ public:
     // Use pairs of doubles for lambda_vec when LatticeLayout == All, otherwise use single double
     std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>> spinor_vec;
     using LambdaType = typename std::conditional<LatticeLayout == All, std::array<double, 2>, double>::type;
-        std::vector<LambdaType> lambda_vec;
+    std::vector<LambdaType> lambda_vec;
 
-    int vector_len;
+    int spinor_count;
 
 
     explicit Eigenpairs(CommunicationBase &comm) :

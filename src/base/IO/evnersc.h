@@ -16,6 +16,7 @@ private:
 
     Parameter<std::string> dattype;
     Parameter<int> dim[4];
+    Parameter<int> spinor_count;
     Parameter<std::string> floatingpoint;
 
 
@@ -54,6 +55,7 @@ private:
         add(dim[1], "DIMENSION_2");
         add(dim[2], "DIMENSION_3");
         add(dim[3], "DIMENSION_4");
+        add(spinor_count, "VECTOR_LENGTH");
         addDefault(floatingpoint, "FLOATING_POINT", std::string("IEEE32BIG"));
     }
 
@@ -114,7 +116,7 @@ private:
     int rows;
     int float_size;
     bool switch_endian;
-    int vector_size;
+    int spinor_size;
     size_t index; //position in buffer
     static const bool sep_lines = false; // make the buffer smaller and read each xline separately
                                          // (slow on large lattices, but needs less memory)
@@ -170,13 +172,12 @@ public:
             : comm(comm), header(comm) {
         rows = 0;
         float_size = 0;
-        vector_size = 0;
+        spinor_size = 0;
         switch_endian = false;
         index = 0;
     }
 
     bool read_header(std::istream &in) {
-        rootLogger.push_verbosity(OFF);
         if (!header.read(in)){
             rootLogger.error("header.read() failed!");
             return false;
@@ -215,16 +216,16 @@ public:
         }
         switch_endian = switch_endianness(disken);
 
-        vector_size = 6 * float_size;
-        buf.resize(GInd::getLatData().vol4 * vector_size + 2 * float_size);
+        spinor_size = 6 * float_size;
+        buf.resize(GInd::getLatData().vol4 * spinor_size + 4 * float_size);
         index = buf.size();
 
         return !error;
     }
 
     template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-    bool write_header(int diskprec, Endianness en, std::ostream &out) {
-        
+    bool write_header(int diskprec, int spinor_count, Endianness en, std::ostream &out) {
+
         if (diskprec == 1 || (diskprec == 0 && sizeof(floatT) == sizeof(float)))
             float_size = 4;
         else if (diskprec == 2 || (diskprec == 0 && sizeof(floatT) == sizeof(double)))
@@ -233,9 +234,9 @@ public:
             rootLogger.error("diskprec should be 0, 1 or 2.");
             return false;
         }
-        vector_size = 6 * float_size;
-    
-        buf.resize(GInd::getLatData().vol4 * vector_size + 2 * float_size);
+
+        spinor_size = 6 * float_size;
+        buf.resize(GInd::getLatData().vol4 * spinor_size + 4 * float_size);
 
         if (en == ENDIAN_AUTO)
             en = get_endianness(false); //use system endianness
@@ -261,11 +262,17 @@ public:
             fp += "BIG";
         header.floatingpoint.set(fp);
 
+        header.spinor_count.set(spinor_count);
+
         return header.write(out);
     }
 
     size_t header_size() {
         return header.size();
+    }
+
+    size_t spinor_count() {
+        return header.spinor_count();
     }
 
     char *buf_ptr() {
@@ -277,7 +284,7 @@ public:
     }
 
     size_t bytes_per_site() const {
-        return vector_size;
+        return spinor_size;
     }
 
     bool end_of_buffer() const {
@@ -298,31 +305,28 @@ public:
 
     template<class floatT>
     Vect3<floatT> get_vector() {
-        if (index + vector_size > buf.size()) {
-            rootLogger.error("Buffer overrun in get_vector()");
+        if (index + spinor_size > buf.size()) {
             throw std::out_of_range("Buffer overrun in get_vector()");
         }
         char *start = &buf[index];
         Vect3<floatT> ret = from_buf_vector<floatT>((floatT *) start);
-        index += vector_size;
+        index += spinor_size;
         return ret;
     }
 
     template<class floatT>
     void put_vector(Vect3<floatT> vec) {
-        if (index + vector_size > buf.size()) {
-            rootLogger.error("Buffer overrun in put_vector()");
+        if (index + spinor_size > buf.size()) {
             throw std::out_of_range("Buffer overrun in put_vector()");
         }
         char *start = &buf[index];
         to_buf_vector((floatT *) start, vec);
-        index += vector_size;
+        index += spinor_size;
     }
 
     template<class floatT>
     floatT get_scalar() {
         if (index + sizeof(floatT) > buf.size()) {
-            rootLogger.error("Buffer overrun in get_scalar()");
             throw std::out_of_range("Buffer overrun in get_scalar()");
         }
         floatT ret = from_buf_scalar<floatT>((floatT *) &buf[index]);
@@ -333,7 +337,6 @@ public:
     template<class floatT>
     void put_scalar(floatT value) {
         if (index + sizeof(floatT) > buf.size()) {
-            rootLogger.error("Buffer overrun in put_scalar()");
             throw std::out_of_range("Buffer overrun in put_scalar()");
         }
         to_buf_scalar<floatT>((floatT *) &buf[index], value);
