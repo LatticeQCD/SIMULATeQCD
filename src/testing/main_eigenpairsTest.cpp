@@ -5,9 +5,9 @@ int main(int argc, char *argv[]){
 
     stdLogger.setVerbosity(INFO);
 
-    LatticeParameters param;
+    TaylorMeasurementParameters param;
     CommunicationBase commBase(&argc, &argv);
-    param.readfile(commBase, "../parameter/tests/dslashTest.param", argc, argv);
+    param.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
     
     commBase.init(param.nodeDim());
 
@@ -20,7 +20,13 @@ int main(int argc, char *argv[]){
 
     initIndexer(HaloDepthGauge, param, commBase);
 
+    Gaugefield<floatT,true,HaloDepthGauge> gauge(commBase);      /// gauge field
+    rootLogger.info("Read configuration from ", param.GaugefileName());
+    gauge.readconf_nersc(param.GaugefileName());
+    gauge.updateAll();
+
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
+    eigenpairsWrite.lanczos(gauge, numVec, 0, 0, false);
     eigenpairsWrite.fillRandom(numVec);
     eigenpairsWrite.writeEigenpairsFile("testEigenpairsFile", 0, ENDIAN_AUTO);
     eigenpairsWrite.updateAll();

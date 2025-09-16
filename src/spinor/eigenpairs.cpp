@@ -34,50 +34,46 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     }
 }
 
-// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-// void lanczos(const Gaugefield<floatT,onDevice,HaloDepthGauge,R18>& H, const Gaugefield<floatT,onDevice,HaloDepthGauge,R18>& v0, Gaugefield<floatT,onDevice,HaloDepthGauge,R18>& v1) {
-    
-//     typedef Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> Dmatrix;
-//     typedef Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> Smatrix;
-    
-    
-//     int n = v0.rows();
-//     Dmatrix A = H * v0 * v0.adjoint() / n;
-//     Dmatrix w = (H * v0).diagonal().array().real();
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter, const double &tol, const bool &useCheby) {
+    double ktest;
+    double normsq;
+    float fnormsq;
 
-//     // Residual vector r = Hv - w*v
-//     Smatrix r = H * v0 - std::complex<double>(w(0)) * v0;
+    int m1, k1, h2, diff,low;
 
-//     // Normalize residual vector to get b
-//     double norm_r = std::sqrt(r.adjoint() * r);
-//     if (norm_r > 1e-12) {
-//         Smatrix b = r / norm_r;
-//         // Orthogonalization step: find alpha and v'
-//         for (int i = 1; i < n; ++i) {
-//             Dmatrix A_new = H * b - std::complex<double>(w(i)) * b.asDiagonal() - A * b.adjoint();
-//             double alpha = (b.transpose() * A_new * b).real();
+    ConjugateGradient<floatT, NStacks> cg;
 
-//             Smatrix v_prime = A_new * v0 - alpha * b;
-//             v0 = v_prime;
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_tmp(this->getComm());
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_start(this->getComm());
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_rhs(this->getComm());
 
-//             // Update w and b, and check if we converged
-//             Dmatrix Aw = (A_new * v_prime).diagonal().array().real();
-//             w.segment(i + 1) = Aw - w(i);
-//             r = H * v_prime - (std::complex<double>(w(i + 1)) * v_prime + std::complex<double>(Aw) * v0);
-//             if (r.adjoint() * r < 1e-12) {
-//                 norm_r = 0;
-//                 break;
-//             }
-//             b = r / norm_r;
-//         }
-//     }
+    Gaugefield<floatT,onDevice,HaloDepthGauge,R18> gauge_smeared(this->getComm());
+    Gaugefield<floatT,onDevice,HaloDepthGauge,U3R14> gauge_Naik(this->getComm());
+    HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    // smearing.SmearAll();
 
-//     // Normalize the new vector v1 to unit length
-//     double norm_v1 = std::sqrt(v1.adjoint() * v1);
-//     if (norm_v1 > 0) {
-//         v1 /= norm_v1;
-//     }
-// }
+    HisqDSlash<floatT,onDevice,LatticeLayout,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+    if(spinor_count==0) {
+        rootLogger.info("Initializing eigenpair calculation");
+        // spinor_start.resize(num_vec_in)
+    }
+    for (int n = 0; n < spinor_count; n++) {
+        rootLogger.info("Calculating eigenpair ", n+1, "/", spinor_count);
+
+        // Create random rhs vector
+        if constexpr (onDevice) {
+            grnd_state<false> d_rand;
+            d_rand.make_rng_state(5678 + n);
+            spinor_rhs.gauss(d_rand.state);
+        } else {
+            grnd_state<false> h_rand;
+            h_rand.make_rng_state(5678 + n);
+            spinor_rhs.gauss(h_rand.state);
+        }
+        // cg.invert(dslash, spinor_tmp, spinor_start, 20000, 1e-08);
+    }
+}
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>

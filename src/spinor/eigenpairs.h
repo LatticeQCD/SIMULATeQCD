@@ -33,6 +33,7 @@ public:
             _spinor_lattice(comm) { }
 
     void fillRandom(const int &num_vec_in);
+    void lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter, const double &tol, const bool &useCheby);
 
     void writeEigenpairsFile(const std::string &fname, int diskprec, Endianness en);
     void writeEigenpairsFileHost(const std::string &fname, int diskprec, Endianness en);
