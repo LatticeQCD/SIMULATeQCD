@@ -57,7 +57,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     std::vector<std::vector<floatT>> H(max_iter+1, std::vector<floatT>(max_iter+1));
 
-    std::vector<double> alpha(max_iter+1, 0.0);
+    std::vector<floatT> alpha(max_iter+1, 0.0);
     std::vector<floatT> beta(max_iter+1, 0.0);
 
     // Initialize q with random Gaussian
