@@ -8,73 +8,98 @@
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::fillRandom(const int &num_vec_in) {
+    // Setup
     lambda_vec.clear();
     spinor_vec.clear();
     spinor_count = num_vec_in;
+    lambda_vec.resize(spinor_count);
 
+    CommunicationBase &commBase = this->getComm();
+
+    // Allocate vectors
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+
+    // Initialize q with random Gaussian
     grnd_state<false> h_rand;
     h_rand.make_rng_state(1234);
-
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(this->getComm());
-
-    static std::mt19937 gen(1234);
-    static std::uniform_real_distribution<double> dist(0.0, 1.0);
+    spinor_host.gauss(h_rand.state);
 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
-        lambda_vec.resize(spinor_count);
         for (int n = 0; n < spinor_count; n++) {
-            spinor_host.gauss(h_rand.state);
-
-            spinor_vec.emplace_back(this->getComm());
+            spinor_vec.emplace_back(commBase);
             spinor_vec[n] = spinor_host;
-            lambda_vec[n] = dist(gen);
+            lambda_vec[n] = get_rand<floatT>(h_rand.state);
         }
     }
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter, const double &tol, const bool &useCheby) {
-    double ktest;
-    double normsq;
-    float fnormsq;
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter) {
+    // Setup
+    spinor_count = num_vec_in;
+    lambda_vec.resize(spinor_count);
+    // spinor_vec.resize(spinor_count);
 
-    int m1, k1, h2, diff,low;
+    CommunicationBase &commBase = this->getComm();
 
-    ConjugateGradient<floatT, NStacks> cg;
-
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_tmp(this->getComm());
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_start(this->getComm());
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_rhs(this->getComm());
-
-    Gaugefield<floatT,onDevice,HaloDepthGauge,R18> gauge_smeared(this->getComm());
-    Gaugefield<floatT,onDevice,HaloDepthGauge,U3R14> gauge_Naik(this->getComm());
+    Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
+    Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
     HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    // smearing.SmearAll();
 
-    HisqDSlash<floatT,onDevice,LatticeLayout,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
-    if(spinor_count==0) {
-        rootLogger.info("Initializing eigenpair calculation");
-        // spinor_start.resize(num_vec_in)
-    }
-    for (int n = 0; n < spinor_count; n++) {
-        rootLogger.info("Calculating eigenpair ", n+1, "/", spinor_count);
+    HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-        // Create random rhs vector
-        if constexpr (onDevice) {
-            grnd_state<false> d_rand;
-            d_rand.make_rng_state(5678 + n);
-            spinor_rhs.gauss(d_rand.state);
-        } else {
-            grnd_state<false> h_rand;
-            h_rand.make_rng_state(5678 + n);
-            spinor_rhs.gauss(h_rand.state);
+    // Allocate vectors
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> q(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> q_prev(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> q_next(commBase);
+
+    std::vector<std::vector<floatT>> H(max_iter+1, std::vector<floatT>(max_iter+1));
+
+    std::vector<double> alpha(max_iter+1, 0.0);
+    std::vector<floatT> beta(max_iter+1, 0.0);
+
+    // Initialize q with random Gaussian
+    grnd_state<false> h_rand;
+    h_rand.make_rng_state(1234);
+    q.gauss(h_rand.state);
+
+    // Normalize q
+    floatT norm = sqrt(q.realdotProduct(q));
+    q *= (1.0 / norm);
+
+    // Main Lanczos loop
+    for (int k = 0; k < max_iter; ++k) {
+        // Apply operator (e.g., D†D)
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> Aq(commBase);
+        dslash.applyMdaggM(Aq, q, true);
+
+        // Orthogonalize
+        if (k > 0) {
+            Aq.axpyThisB(-beta[k], q_prev);
         }
-        // cg.invert(dslash, spinor_tmp, spinor_start, 20000, 1e-08);
-    }
-}
+        alpha[k] = Aq.realdotProduct(q);
+        Aq.axpyThisB(-alpha[k], q);
 
+        // Reorthogonalize (optional, for numerical stability)
+        // ... (implement if needed) ...
+
+        // Compute beta
+        beta[k+1] = sqrt(Aq.realdotProduct(Aq));
+        if (beta[k+1] < 1e-12) break; // Converged
+
+        // Prepare next vector
+        q_prev = q;
+        q = Aq;
+        q *= (1.0 / beta[k+1]);
+    }
+
+    // Build tridiagonal matrix T from alpha/beta
+
+    // Compute eigenvalues/eigenvectors (e.g., using a library or custom routine)
+    // Fill lambda_vec and spinor_vec with results
+}
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEigenpairsFile(const std::string &fname, int diskprec, Endianness en) 
