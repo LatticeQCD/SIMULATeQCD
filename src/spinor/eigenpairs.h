@@ -34,6 +34,8 @@ public:
 
     void fillRandom(const int &num_vec_in);
     void lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter);
+    void QRDecomposition(int n, std::vector<std::vector<floatT>>& A, std::vector<std::vector<floatT>>& Q);
+
 
     void writeEigenpairsFile(const std::string &fname, int diskprec, Endianness en);
     void writeEigenpairsFileHost(const std::string &fname, int diskprec, Endianness en);

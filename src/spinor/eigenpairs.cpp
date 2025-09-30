@@ -5,7 +5,6 @@
 #include "../modules/dslash/dslash.h"
 #include <fstream>
 
-
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::fillRandom(const int &num_vec_in) {
     // Setup
@@ -56,6 +55,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> q_next(commBase);
 
     std::vector<std::vector<floatT>> H(max_iter+1, std::vector<floatT>(max_iter+1));
+    std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>> lanczos_vecs;
 
     std::vector<floatT> alpha(max_iter+1, 0.0);
     std::vector<floatT> beta(max_iter+1, 0.0);
@@ -68,6 +68,9 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     // Normalize q
     floatT norm = sqrt(q.realdotProduct(q));
     q *= (1.0 / norm);
+
+    lanczos_vecs.emplace_back(commBase);
+    lanczos_vecs[0] = q;
 
     // Main Lanczos loop
     for (int k = 0; k < max_iter; ++k) {
@@ -82,9 +85,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         alpha[k] = Aq.realdotProduct(q);
         Aq.axpyThisB(-alpha[k], q);
 
-        // Reorthogonalize (optional, for numerical stability)
-        // ... (implement if needed) ...
-
         // Compute beta
         beta[k+1] = sqrt(Aq.realdotProduct(Aq));
         if (beta[k+1] < 1e-12) break; // Converged
@@ -93,12 +93,81 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         q_prev = q;
         q = Aq;
         q *= (1.0 / beta[k+1]);
+
+        lanczos_vecs.emplace_back(commBase);
+        lanczos_vecs[k+1] = q;
     }
 
     // Build tridiagonal matrix T from alpha/beta
+    for (int i = 0; i <= max_iter; ++i) {
+        H[i][i] = alpha[i];
+        if (i > 0) {
+            H[i-1][i] = beta[i];
+            H[i][i-1] = beta[i];
+        }
+    }
 
-    // Compute eigenvalues/eigenvectors (e.g., using a library or custom routine)
-    // Fill lambda_vec and spinor_vec with results
+    // QR algorithm to compute eigenvalues
+    int max_iter_qr = 1000; // Maximum number of iterations for QR algorithm
+    floatT tolerance = 1e-8;
+    std::vector<std::vector<floatT>> Q(max_iter+2, std::vector<floatT>(max_iter+1));
+    std::vector<std::vector<floatT>> R(max_iter+1, std::vector<floatT>(max_iter+2));
+
+    for (int k = 0; k < max_iter + 2; ++k) {
+        Q[k][k] = 1.0;
+    }
+
+    for (int iter = 0; iter < max_iter_qr; ++iter) {
+        std::copy(H.begin(), H.end(), R.begin());
+        QRDecomposition(max_iter+1, R, Q);
+        std::copy(Q.begin(), Q.end(), H.begin());
+
+        // Check convergence
+        floatT max_off_diagonal = 0.0;
+        for (int i = 0; i < max_iter; ++i) {
+            max_off_diagonal = std::max(max_off_diagonal, std::abs(H[i][i+1]));
+        }
+        if (max_off_diagonal < tolerance) break;
+    }
+
+    // auto tmp = H[0][0];
+
+    // // Extract eigenvalues and eigenvectors from H
+    // for (int i = 0; i <= max_iter; ++i) {
+    //     tmp = H[i][i];
+    //     // lambda_vec[i] = tmp;
+    //     // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> eigenvector(commBase);
+    //     // for (int j = 0; j <= max_iter; ++j) {
+    //     //     eigenvector.axpyThisB(Q[j][i], lanczos_vecs[j]);
+    //     // }
+    //     // spinor_vec.emplace_back(commBase);
+    //     // spinor_vec[i] = eigenvector;
+    // }
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::QRDecomposition(int n, std::vector<std::vector<floatT>>& A, std::vector<std::vector<floatT>>& Q) {
+    for (int i = 0; i < n; ++i) {
+        // Compute Householder vector
+        floatT alpha = 0.0;
+        for (int j = i; j < n; ++j) alpha += A[j][i] * A[j][i];
+        alpha = std::sqrt(alpha);
+        if (A[i][i] > 0) alpha *= -1;
+
+        Q[i][i] = 1.0;
+        for (int j = i+1; j < n; ++j) Q[i][j] = A[j][i] / alpha;
+
+        // Apply Householder transformation
+        floatT beta = 2.0 * alpha * alpha;
+        for (int j = i; j < n; ++j) {
+            A[i][j] = 0.0;
+            for (int k = i+1; k < n; ++k) {
+                A[j][k] -= Q[i][j] * Q[k][i] * beta * A[i][k];
+                A[k][j] -= Q[i][k] * Q[j][i] * beta * A[i][j];
+            }
+        }
+    }
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
