@@ -107,28 +107,28 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         }
     }
 
-    // QR algorithm to compute eigenvalues
-    int max_iter_qr = 1000; // Maximum number of iterations for QR algorithm
-    floatT tolerance = 1e-8;
-    std::vector<std::vector<floatT>> Q(max_iter+2, std::vector<floatT>(max_iter+1));
-    std::vector<std::vector<floatT>> R(max_iter+1, std::vector<floatT>(max_iter+2));
+    // // QR algorithm to compute eigenvalues
+    // int max_iter_qr = 1000; // Maximum number of iterations for QR algorithm
+    // floatT tolerance = 1e-8;
+    // std::vector<std::vector<floatT>> Q(max_iter+2, std::vector<floatT>(max_iter+1));
+    // std::vector<std::vector<floatT>> R(max_iter+1, std::vector<floatT>(max_iter+2));
 
-    for (int k = 0; k < max_iter + 2; ++k) {
-        Q[k][k] = 1.0;
-    }
+    // for (int k = 0; k < max_iter + 2; ++k) {
+    //     Q[k][k] = 1.0;
+    // }
 
-    for (int iter = 0; iter < max_iter_qr; ++iter) {
-        std::copy(H.begin(), H.end(), R.begin());
-        QRDecomposition(max_iter+1, R, Q);
-        std::copy(Q.begin(), Q.end(), H.begin());
+    // for (int iter = 0; iter < max_iter_qr; ++iter) {
+    //     std::copy(H.begin(), H.end(), R.begin());
+    //     QRDecomposition(max_iter+1, R, Q);
+    //     std::copy(Q.begin(), Q.end(), H.begin());
 
-        // Check convergence
-        floatT max_off_diagonal = 0.0;
-        for (int i = 0; i < max_iter; ++i) {
-            max_off_diagonal = std::max(max_off_diagonal, std::abs(H[i][i+1]));
-        }
-        if (max_off_diagonal < tolerance) break;
-    }
+    //     // Check convergence
+    //     floatT max_off_diagonal = 0.0;
+    //     for (int i = 0; i < max_iter; ++i) {
+    //         max_off_diagonal = std::max(max_off_diagonal, std::abs(H[i][i+1]));
+    //     }
+    //     if (max_off_diagonal < tolerance) break;
+    // }
 
     // auto tmp = H[0][0];
 
