@@ -38,10 +38,8 @@ public:
 
 
     void writeEigenpairsFile(const std::string &fname, int diskprec, Endianness en);
-    void writeEigenpairsFileHost(const std::string &fname, int diskprec, Endianness en);
 
     void readEigenpairsFile(const std::string &fname);
-    void readEigenpairsFileHost(const std::string &fname);
 
     void tester(CommunicationBase &commBase, Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
     void startVector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);

@@ -9,10 +9,10 @@
 #include "../indexer/bulkIndexer.h"
 #include <iostream>
 
-class EigenHeader : virtual private ParameterList {
+class EigenHeader : private ParameterList {
 private:
     const CommunicationBase &comm;
-    int header_size;
+    size_t header_size;
 
     Parameter<std::string> dattype;
     Parameter<int> dim[4];
@@ -21,20 +21,17 @@ private:
 
 
     bool read(std::istream &in, std::string &content) {
-        if (in.fail()) {
-            rootLogger.error("Could not open file.");
+        std::string line;
+        if (!getline(in, line)) {
+            rootLogger.error("Failed to read BEGIN_HEADER line.");
             return false;
         }
-        std::string line;
-
-        getline(in, line);
         if (line != "BEGIN_HEADER") {
             rootLogger.error("BEGIN_HEADER not found!");
             return false;
         }
 
-        while (!in.fail()) {
-            getline(in, line);
+        while (getline(in, line)) {
             if (line == "END_HEADER")
                 break;
             content.append(line + '\n');
@@ -114,19 +111,19 @@ private:
     EigenHeader header;
     typedef GIndexer<All,HaloDepth> GInd;
     int rows;
-    int float_size;
+    size_t float_size;
     bool switch_endian;
-    int spinor_size;
-    size_t index; //position in buffer
+    size_t spinor_size;
+    size_t index = std::numeric_limits<size_t>::max(); //position in buffer
     static const bool sep_lines = false; // make the buffer smaller and read each xline separately
                                          // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
 
     template<class floatT>
     Vect3<floatT> from_buf_vector(floatT *buf) const {
-        int i = 0;
+        size_t i = 0;
         Vect3<floatT> U;
-        for (int k = 0; k < 3; k++) {
+        for (size_t k = 0; k < 3; k++) {
             floatT re = buf[i++];
             floatT im = buf[i++];
             U(k) = COMPLEX(floatT)(re, im);
@@ -136,7 +133,7 @@ private:
 
     template<class floatT>
     void to_buf_vector(floatT *buf, const Vect3<floatT> &U) const {
-        int i = 0;
+        size_t i = 0;
         COMPLEX(floatT) v0 = U.getElement0();
         buf[i++] = v0.cREAL;
         buf[i++] = v0.cIMAG;
@@ -184,7 +181,7 @@ public:
         }
 
         bool error = false;
-        for (int mu = 0; mu < 4; mu++) {
+        for (size_t mu = 0; mu < 4; mu++) {
             if (header.dim[mu]() != GInd::getLatData().globalLattice()[mu]) {
                 rootLogger.error( "Stored extension N_", mu," = ",header.dim[mu](),
                                   " not equal to expected extension N_", mu," = ",GInd::getLatData().globalLattice()[mu] );
@@ -242,7 +239,7 @@ public:
             en = get_endianness(false); //use system endianness
         switch_endian = switch_endianness(en);
 
-        for (int mu = 0; mu < 4; mu++)
+        for (size_t mu = 0; mu < 4; mu++)
             header.dim[mu].set(GInd::getLatData().globalLattice()[mu]);
 
         header.dattype.set("EIGEN");
@@ -341,6 +338,23 @@ public:
         }
         to_buf_scalar<floatT>((floatT *) &buf[index], value);
         index += sizeof(floatT);
+    }
+
+    double get_double() {
+        if (index + sizeof(double) > buf.size()) {
+            throw std::out_of_range("Buffer overrun in get_scalar()");
+        }
+        double ret = from_buf_scalar<double>((double *) &buf[index]);
+        index += sizeof(double);
+        return ret;
+    }
+
+    void put_double(double value) {
+        if (index + sizeof(double) > buf.size()) {
+            throw std::out_of_range("Buffer overrun in put_scalar()");
+        }
+        to_buf_scalar<double>((double *) &buf[index], value);
+        index += sizeof(double);
     }
 };
 

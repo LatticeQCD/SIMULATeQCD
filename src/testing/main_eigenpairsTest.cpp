@@ -25,36 +25,36 @@ int main(int argc, char *argv[]){
     gauge.updateAll();
 
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
-    eigenpairsWrite.lanczos(gauge, numVec, 0);
+    // eigenpairsWrite.lanczos(gauge, numVec, 0);
     eigenpairsWrite.fillRandom(numVec);
-    // eigenpairsWrite.writeEigenpairsFile("testEigenpairsFile", 0, ENDIAN_AUTO);
+    eigenpairsWrite.writeEigenpairsFile("testEigenpairsFile", 0, ENDIAN_AUTO);
 
-    // Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
-    // eigenpairsRead.readEigenpairsFile("testEigenpairsFile");
-    // eigenpairsRead.updateAll();
+    Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
+    eigenpairsRead.readEigenpairsFile("testEigenpairsFile");
+    eigenpairsRead.updateAll();
 
-    // floatT lambdaDiff;
-    // Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorDiff(commBase);
+    floatT lambdaDiff;
+    Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorDiff(commBase);
 
-    // for (int idx = 0; idx < numVec; idx++) {
-    //     rootLogger.info("pair ", idx+1);
+    for (int idx = 0; idx < numVec; idx++) {
+        rootLogger.info("pair ", idx+1);
 
-    //     spinorDiff = eigenpairsWrite.spinor_vec[idx];
-    //     rootLogger.info("spinorWrite=", spinorDiff.realdotProduct(spinorDiff));
+        spinorDiff = eigenpairsWrite.spinor_vec[idx];
+        rootLogger.info("spinorWrite=", spinorDiff.realdotProduct(spinorDiff));
 
-    //     spinorDiff = eigenpairsRead.spinor_vec[idx];
-    //     rootLogger.info("spinorRead=", spinorDiff.realdotProduct(spinorDiff));
+        spinorDiff = eigenpairsRead.spinor_vec[idx];
+        rootLogger.info("spinorRead=", spinorDiff.realdotProduct(spinorDiff));
 
-    //     spinorDiff -= eigenpairsWrite.spinor_vec[idx];
-    //     rootLogger.info("spinorDiff=", spinorDiff.realdotProduct(spinorDiff));
+        spinorDiff -= eigenpairsWrite.spinor_vec[idx];
+        rootLogger.info("spinorDiff=", spinorDiff.realdotProduct(spinorDiff));
 
-    //     lambdaDiff = eigenpairsWrite.lambda_vec[idx];
-    //     rootLogger.info("lambdaWrite=", lambdaDiff);
+        lambdaDiff = eigenpairsWrite.lambda_vec[idx];
+        rootLogger.info("lambdaWrite=", lambdaDiff);
 
-    //     lambdaDiff = eigenpairsRead.lambda_vec[idx];
-    //     rootLogger.info("lambdaRead=", lambdaDiff);
+        lambdaDiff = eigenpairsRead.lambda_vec[idx];
+        rootLogger.info("lambdaRead=", lambdaDiff);
 
-    //     lambdaDiff -= eigenpairsWrite.lambda_vec[idx];
-    //     rootLogger.info("lambdaDiff=", lambdaDiff);
-    // }
+        lambdaDiff -= eigenpairsWrite.lambda_vec[idx];
+        rootLogger.info("lambdaDiff=", lambdaDiff);
+    }
 }
