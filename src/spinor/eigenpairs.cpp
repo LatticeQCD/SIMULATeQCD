@@ -191,7 +191,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         out.close();
     }
 
-    this->getComm().initIOBinary(fname, 20000, evnersc.bytes_per_site(), evnersc.header_size(), global, local, WRITE);
+    
+    size_t spinor_size = GInd::getLatData().vol4 * evnersc.bytes_per_site();
+    size_t file_size = (spinor_size + 16) * spinor_count + evnersc.header_size();
+
+    this->getComm().initIOBinary(fname, file_size, evnersc.bytes_per_site(), evnersc.header_size(), global, local, WRITE);
     
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor(this->getComm());
     Spinorfield<floatT, false, Even, HaloDepthSpin, NStacks> spinor_even(this->getComm());
