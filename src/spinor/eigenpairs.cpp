@@ -311,9 +311,13 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             throw std::runtime_error(stdLogger.fatal("Error writing header of " + std::string(fname)));
         }
 
-        // Write eigenvalues
-        for (size_t i = 0; i < even_len; ++i) {
-            out.write(reinterpret_cast<const char*>(&lambda_vec[i]), sizeof(floatT));
+        if constexpr (LatticeLayout == Layout::All) {
+            // TODO
+        }   else {
+            // Write eigenvalues
+            for (int i = 0; i < even_len; ++i) {
+                out.write(reinterpret_cast<const char*>(&lambda_vec[i]), sizeof(double));
+            }
         }
 
         out.close();
@@ -461,17 +465,37 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     EigenFormat<HaloDepthSpin> evnersc(commBase);
 
-    std::ifstream in;
-    if (commBase.IamRoot()) {
-        in.open(fname.c_str());
-    }
-    if (!evnersc.read_header(in)) {
-        throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
-    }
-    in.close();
-
     int spinor_count = evnersc.spinor_count();
     int even_len = spinor_count - (spinor_count % 2);
+
+    if (commBase.IamRoot()) {
+        std::ifstream in(fname.c_str());
+        if (!in.is_open()) {
+            throw std::runtime_error(stdLogger.fatal("Could not open file ", fname));
+        }
+
+        // Read header
+        if (!evnersc.read_header(in)) {
+            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
+        }
+
+        if constexpr (LatticeLayout == Layout::All) {
+            // TODO
+        }   else {
+            spinor_count = evnersc.spinor_count();
+            even_len = spinor_count - (spinor_count % 2);
+            lambda_vec.clear();
+
+            // Read eigenvalues
+            for (int i = 0; i < even_len; ++i) {
+                double lambda;
+                in.read(reinterpret_cast<char*>(&lambda), sizeof(double));
+                lambda_vec.emplace_back(lambda);
+            }
+        }
+
+        in.close();
+    }
 
 
     size_t displacement = 16 * spinor_count + evnersc.header_size();
