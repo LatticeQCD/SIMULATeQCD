@@ -114,7 +114,7 @@ private:
     size_t float_size;
     bool switch_endian;
     size_t coordinate_size;
-    size_t index = std::numeric_limits<size_t>::max(); //position in buffer
+    size_t index; //position in buffer
     static const bool sep_lines = false; // make the buffer smaller and read each xline separately
                                          // (slow on large lattices, but needs less memory)
     std::vector<char> buf;
@@ -123,7 +123,7 @@ private:
     Vect3<floatT> from_buf_vector(floatT *buf) const {
         size_t i = 0;
         Vect3<floatT> U;
-        for (size_t k = 0; k < 3; k++) {
+        for (int k = 0; k < 3; k++) {
             floatT re = buf[i++];
             floatT im = buf[i++];
             U(k) = COMPLEX(floatT)(re, im);
