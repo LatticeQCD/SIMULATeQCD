@@ -37,13 +37,13 @@ public:
     void QRDecomposition(int n, std::vector<std::vector<floatT>>& A, std::vector<std::vector<floatT>>& Q);
 
 
-    void writeEigenpairsFile(const std::string &fname, int diskprec, Endianness en);
-    void writeEigenpairsFileSequential(const std::string &fname, int diskprec, Endianness en);
+    void writeEigenpairsAlternating(const std::string &fname, int diskprec, Endianness en);
+    void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
 
-    void readEigenpairsFile(const std::string &fname);
-    void readEigenpairsFileSequential(const std::string &fname);
+    void readEigenpairsAlternating(const std::string &fname);
+    void readEigenpairsSequential(const std::string &fname);
 
-    void tester(CommunicationBase &commBase, Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
+    void tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
     void startVector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);
     void startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS);
 

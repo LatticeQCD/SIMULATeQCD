@@ -113,7 +113,7 @@ private:
     int rows;
     size_t float_size;
     bool switch_endian;
-    size_t spinor_size;
+    size_t coordinate_size;
     size_t index = std::numeric_limits<size_t>::max(); //position in buffer
     static const bool sep_lines = false; // make the buffer smaller and read each xline separately
                                          // (slow on large lattices, but needs less memory)
@@ -169,7 +169,7 @@ public:
             : comm(comm), header(comm) {
         rows = 0;
         float_size = 0;
-        spinor_size = 0;
+        coordinate_size = 0;
         switch_endian = false;
         index = 0;
     }
@@ -213,8 +213,8 @@ public:
         }
         switch_endian = switch_endianness(disken);
 
-        spinor_size = 6 * float_size;
-        buf.resize(GInd::getLatData().vol4 * spinor_size);
+        coordinate_size = 6 * float_size;
+        buf.resize(GInd::getLatData().vol4 * coordinate_size);
         index = buf.size();
 
         return !error;
@@ -232,8 +232,8 @@ public:
             return false;
         }
 
-        spinor_size = 6 * float_size;
-        buf.resize(GInd::getLatData().vol4 * spinor_size + 4 * float_size);
+        coordinate_size = 6 * float_size;
+        buf.resize(GInd::getLatData().vol4 * coordinate_size);
 
         if (en == ENDIAN_AUTO)
             en = get_endianness(false); //use system endianness
@@ -281,7 +281,7 @@ public:
     }
 
     size_t bytes_per_site() const {
-        return spinor_size;
+        return coordinate_size;
     }
 
     bool end_of_buffer() const {
@@ -302,23 +302,23 @@ public:
 
     template<class floatT>
     Vect3<floatT> get_vector() {
-        if (index + spinor_size > buf.size()) {
+        if (index + coordinate_size > buf.size()) {
             throw std::out_of_range("Buffer overrun in get_vector()");
         }
         char *start = &buf[index];
         Vect3<floatT> ret = from_buf_vector<floatT>((floatT *) start);
-        index += spinor_size;
+        index += coordinate_size;
         return ret;
     }
 
     template<class floatT>
     void put_vector(Vect3<floatT> vec) {
-        if (index + spinor_size > buf.size()) {
+        if (index + coordinate_size > buf.size()) {
             throw std::out_of_range("Buffer overrun in put_vector()");
         }
         char *start = &buf[index];
         to_buf_vector((floatT *) start, vec);
-        index += spinor_size;
+        index += coordinate_size;
     }
 
     template<class floatT>
@@ -342,7 +342,7 @@ public:
 
     double get_double() {
         if (index + sizeof(double) > buf.size()) {
-            throw std::out_of_range("Buffer overrun in get_scalar()");
+            throw std::out_of_range("Buffer overrun in get_double()");
         }
         double ret = from_buf_scalar<double>((double *) &buf[index]);
         index += sizeof(double);
@@ -351,7 +351,7 @@ public:
 
     void put_double(double value) {
         if (index + sizeof(double) > buf.size()) {
-            throw std::out_of_range("Buffer overrun in put_scalar()");
+            throw std::out_of_range("Buffer overrun in put_double()");
         }
         to_buf_scalar<double>((double *) &buf[index], value);
         index += sizeof(double);
