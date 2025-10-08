@@ -214,7 +214,7 @@ public:
         switch_endian = switch_endianness(disken);
 
         spinor_size = 6 * float_size;
-        buf.resize(GInd::getLatData().vol4 * spinor_size + 4 * float_size);
+        buf.resize(GInd::getLatData().vol4 * spinor_size);
         index = buf.size();
 
         return !error;
