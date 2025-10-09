@@ -311,14 +311,14 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             throw std::runtime_error(stdLogger.fatal("Error writing header of " + std::string(fname)));
         }
 
-        if constexpr (LatticeLayout == Layout::All) {
-            // TODO
-        }   else {
-            // Write eigenvalues
-            for (int i = 0; i < even_len; ++i) {
-                out.write(reinterpret_cast<const char*>(&lambda_vec[i]), sizeof(double));
-            }
-        }
+        // if constexpr (LatticeLayout == Layout::All) {
+        //     // TODO
+        // }   else {
+        //     // Write eigenvalues
+        //     for (int i = 0; i < even_len; ++i) {
+        //         out.write(reinterpret_cast<const char*>(&lambda_vec[i]), sizeof(double));
+        //     }
+        // }
 
         out.close();
     }
@@ -327,7 +327,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     size_t displacement = 16 * spinor_count + evnersc.header_size();
     size_t file_size = spinor_size * spinor_count + displacement;
 
-    commBase.initIOBinary(fname, file_size, evnersc.bytes_per_site(), displacement, global, local, WRITE);
+    commBase.initIOBinary(fname, file_size, evnersc.bytes_per_site(), evnersc.header_size(), global, local, WRITE);
     
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor(commBase);
     Spinorfield<floatT, false, Even, HaloDepthSpin, NStacks> spinor_even(commBase);
@@ -479,20 +479,20 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
         }
 
-        if constexpr (LatticeLayout == Layout::All) {
-            // TODO
-        }   else {
-            spinor_count = evnersc.spinor_count();
-            even_len = spinor_count - (spinor_count % 2);
-            lambda_vec.clear();
+        // if constexpr (LatticeLayout == Layout::All) {
+        //     // TODO
+        // }   else {
+        //     spinor_count = evnersc.spinor_count();
+        //     even_len = spinor_count - (spinor_count % 2);
+        //     lambda_vec.clear();
 
-            // Read eigenvalues
-            for (int i = 0; i < even_len; ++i) {
-                double lambda;
-                in.read(reinterpret_cast<char*>(&lambda), sizeof(double));
-                lambda_vec.emplace_back(lambda);
-            }
-        }
+        //     // Read eigenvalues
+        //     for (int i = 0; i < even_len; ++i) {
+        //         double lambda;
+        //         in.read(reinterpret_cast<char*>(&lambda), sizeof(double));
+        //         lambda_vec.emplace_back(lambda);
+        //     }
+        // }
 
         in.close();
     }
@@ -500,7 +500,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     size_t displacement = 16 * spinor_count + evnersc.header_size();
 
-    commBase.initIOBinary(fname, 0, evnersc.bytes_per_site(), displacement, global, local, READ);
+    commBase.initIOBinary(fname, 0, evnersc.bytes_per_site(), evnersc.header_size(), global, local, READ);
 
     spinor_vec.clear();
     lambda_vec.reserve(even_len);
