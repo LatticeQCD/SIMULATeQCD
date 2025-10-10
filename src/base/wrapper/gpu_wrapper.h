@@ -11,7 +11,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda_fp16.h>
 #include <utility>
-#include "nvToolsExt.h"
+#include "nvtx3/nvToolsExt.h"
 
 
 #define gpuError_t                       cudaError_t
