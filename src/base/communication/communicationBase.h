@@ -35,6 +35,8 @@
 #include "../IO/misc.h"
 #include "haloOffsetInfo.h"
 #include "../math/matrix4x4.h"
+#include "../math/matrix4x4SymComplex.h"
+#include "../math/tensor4x4Symx4x4SymComplex.h"
 #ifdef USE_NCCL
 #include <rccl.h>
 #endif
@@ -222,6 +224,18 @@ public:
 
     void root2all(Matrix4x4Sym<double> &) const EMPTY_IF_SCALAR;
 
+    void root2all(Matrix4x4Sym<COMPLEX(float)> &) const EMPTY_IF_SCALAR;
+
+    void root2all(Matrix4x4Sym<COMPLEX(double)> &) const EMPTY_IF_SCALAR;
+
+    void root2all(Matrix4x4SymComplex<float> &) const EMPTY_IF_SCALAR;
+
+    void root2all(Matrix4x4SymComplex<double> &) const EMPTY_IF_SCALAR;
+
+    void root2all(Tensor4x4Symx4x4SymComplex<float> &) const EMPTY_IF_SCALAR;
+
+    void root2all(Tensor4x4Symx4x4SymComplex<double> &) const EMPTY_IF_SCALAR;
+
     void root2all(SU3<float> &) const EMPTY_IF_SCALAR;
 
     void root2all(SU3<double> &) const EMPTY_IF_SCALAR;
@@ -278,6 +292,21 @@ public:
 
     void reduce(Matrix4x4Sym<double> *, int) const EMPTY_IF_SCALAR;
 
+    /// Reduce (summing up) an array of matrix values, replacing values
+    void reduce(Matrix4x4Sym<COMPLEX(float)> *, int) const EMPTY_IF_SCALAR;
+
+    void reduce(Matrix4x4Sym<COMPLEX(double)> *, int) const EMPTY_IF_SCALAR;
+
+    /// Reduce (summing up) an array of matrix values, replacing values
+    void reduce(Matrix4x4SymComplex<float> *, int) const EMPTY_IF_SCALAR;
+
+    void reduce(Matrix4x4SymComplex<double> *, int) const EMPTY_IF_SCALAR;
+
+    /// Reduce (summing up) an array of tensor values, replacing values
+    void reduce(Tensor4x4Symx4x4SymComplex<float> *, int) const EMPTY_IF_SCALAR;
+
+    void reduce(Tensor4x4Symx4x4SymComplex<double> *, int) const EMPTY_IF_SCALAR;
+
     /// Reduce (summing up) an array of SU3(double) values, replacing values
     void reduce(SU3<float> *, int) const EMPTY_IF_SCALAR;
 
@@ -292,6 +321,20 @@ public:
     Matrix4x4Sym<float> reduce(Matrix4x4Sym<float> a) const RETa_IF_SCALAR;
 
     Matrix4x4Sym<double> reduce(Matrix4x4Sym<double> a) const RETa_IF_SCALAR;
+
+    Matrix4x4Sym<COMPLEX(float)> reduce(Matrix4x4Sym<COMPLEX(float)> a) const RETa_IF_SCALAR;
+
+    Matrix4x4Sym<COMPLEX(double)> reduce(Matrix4x4Sym<COMPLEX(double)> a) const RETa_IF_SCALAR;
+
+    /// Reduce (summing up) a Matrix4x4SymComplex value
+    Matrix4x4SymComplex<float> reduce(Matrix4x4SymComplex<float> a) const RETa_IF_SCALAR;
+
+    Matrix4x4SymComplex<double> reduce(Matrix4x4SymComplex<double> a) const RETa_IF_SCALAR;
+
+    /// Reduce (summing up) a Tensor4x4Symx4x4SymComplex value
+    Tensor4x4Symx4x4SymComplex<float> reduce(Tensor4x4Symx4x4SymComplex<float> a) const RETa_IF_SCALAR;
+
+    Tensor4x4Symx4x4SymComplex<double> reduce(Tensor4x4Symx4x4SymComplex<double> a) const RETa_IF_SCALAR;
 
     /// Reduce (summing up) a SU3 value
     SU3<float> reduce(SU3<float> a) const RETa_IF_SCALAR;

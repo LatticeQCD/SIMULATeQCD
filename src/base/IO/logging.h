@@ -21,8 +21,8 @@
 #include "stringFunctions.h"
 
 
-enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF };
-static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL", "OFF"};
+enum LogLevel { ALL, ALLOC, TRACE, DEBUG, INFO, TESTPASSED, WARN, ERROR, FATAL, OFF };
+static const char *LogLevelStr[] = {"ALL",  "ALLOC", "TRACE", "DEBUG", "INFO", "TESTPASSED", "WARN", "ERROR", "FATAL", "OFF"};
 
 class Logger {
 private:
@@ -65,6 +65,10 @@ public:
         std::ostringstream prefix, loginfo, postfix;
 
         bool resetColor = false;
+        if (colorized_output && level == TESTPASSED){
+            prefix << COLORS::green;
+            resetColor = true;
+        }
         if (colorized_output && level == WARN){
             prefix << COLORS::yellow;
             resetColor = true;
@@ -100,6 +104,9 @@ public:
 
     template <typename... Args> inline std::string info(Args&&... args) {
         return message<INFO>(std::forward<Args>(args)...);
+    };
+    template <typename... Args> inline std::string testpassed(Args&&... args) {
+        return message<TESTPASSED>(std::forward<Args>(args)...);
     };
     template <typename... Args> inline std::string trace(Args&&... args) {
         return message<TRACE>(std::forward<Args>(args)...);

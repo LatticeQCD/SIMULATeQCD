@@ -31,10 +31,16 @@ private:
     typedef GIndexer<All, HaloDepth> GInd;
 
 public:
-    EnergyMomentumTensor(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield)
-            : _redBaseU(gaugefield.getComm()), _redBaseEMTUTimeSlices(gaugefield.getComm()), _redBaseEMTU(gaugefield.getComm()), _redBaseEMTE(gaugefield.getComm()), _redBaseEMTETimeSlices(gaugefield.getComm()), _redBaseE(gaugefield.getComm()), _redBase(gaugefield.getComm()),
-              _gauge(gaugefield),
-              recompute(true) {
+    EnergyMomentumTensor(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield):
+        _redBaseU(gaugefield.getComm()),
+        _redBaseEMTU(gaugefield.getComm()),
+        _redBaseEMTE(gaugefield.getComm()),
+        _redBaseEMTUTimeSlices(gaugefield.getComm()),
+        _redBaseEMTETimeSlices(gaugefield.getComm()),
+        _redBaseE(gaugefield.getComm()),
+        _redBase(gaugefield.getComm()),
+        _gauge(gaugefield),
+        recompute(true) {
         _redBaseU.adjustSize(GInd::getLatData().vol3);
         _redBaseEMTU.adjustSize(GInd::getLatData().vol4);
         _redBaseEMTE.adjustSize(GInd::getLatData().vol4);
@@ -133,9 +139,9 @@ struct energyMomentumTensorEKernel {
     int pz;
     int real_imag;
     floatT displacement;
-    energyMomentumTensorEKernel(Gaugefield<floatT, onDevice, HaloDepth> &gauge, MemoryAccessor sub_E_gpu, int tau, int pz,
-                                int real_imag, floatT displacement = 0) : gAcc(gauge.getAccessor()), sub_E_gpu(sub_E_gpu), EMTE(gAcc, sub_E_gpu),
-                                tau(tau), pz(pz), real_imag(real_imag), displacement(displacement) {}
+
+    energyMomentumTensorEKernel(Gaugefield<floatT, onDevice, HaloDepth> &gauge, MemoryAccessor sub_E_gpu, int tau, int pz, int real_imag, floatT displacement = 0)
+        : gAcc(gauge.getAccessor()), sub_E_gpu(sub_E_gpu), EMTE(gAcc, sub_E_gpu), tau(tau), pz(pz), real_imag(real_imag), displacement(displacement) {}
 
     __device__ __host__ inline floatT operator()(gSite site) {
 
@@ -238,8 +244,8 @@ struct energyMomentumTensorUKernel {
     int pz;
     int real_imag;
 
-    energyMomentumTensorUKernel(Gaugefield<floatT, onDevice, HaloDepth> &gauge, MemoryAccessor sub_E_gpu, MemoryAccessor sub_U_gpu, int tau, int pz, int real_imag) :
-    gAcc(gauge.getAccessor()), sub_E_gpu(sub_E_gpu), sub_U_gpu(sub_U_gpu), EMTU(gAcc,sub_E_gpu,sub_U_gpu), tau(tau), pz(pz), real_imag(real_imag) {}
+    energyMomentumTensorUKernel(Gaugefield<floatT, onDevice, HaloDepth> &gauge, MemoryAccessor sub_E_gpu, MemoryAccessor sub_U_gpu, int tau, int pz, int real_imag)
+        : gAcc(gauge.getAccessor()), sub_E_gpu(sub_E_gpu), sub_U_gpu(sub_U_gpu), EMTU(gAcc,sub_E_gpu,sub_U_gpu), tau(tau), pz(pz), real_imag(real_imag) {}
 
     typedef GIndexer<All, HaloDepth> GInd;
 
@@ -302,8 +308,7 @@ void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::emTimeSlices(std::vector
 template<class floatT, bool onDevice, size_t HaloDepth>
 COMPLEX(floatT) EnergyMomentumTensor<floatT, onDevice, HaloDepth>::getFtau2PlusMinusFsigma2() {
 
-    _redBase.template iterateOverBulk<All, HaloDepth>(
-             Ftau2PlusMinusFsigma2Elements<floatT, onDevice, HaloDepth, R18>(_gauge));
+    _redBase.template iterateOverBulk<All, HaloDepth>(Ftau2PlusMinusFsigma2Elements<floatT, onDevice, HaloDepth, R18>(_gauge));
     COMPLEX(floatT) result = 0;
     _redBase.reduce(result, GInd::getLatData().vol4);
     return result/GInd::getLatData().globvol4;

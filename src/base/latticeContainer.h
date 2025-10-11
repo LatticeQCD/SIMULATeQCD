@@ -253,6 +253,9 @@ public:
 
     void reduce(elemType &value, size_t size, bool rootToAll = false) {
         markerBegin("reduce", "Reduction");
+        // How does this work with Matrix4x4Sym<double> and not with Matrix4x4Sym<COMPLEX(double)>?
+        // Because you can't initialize Matrix4x4Sym<COMPLEX(double)> with a double as you'd need a COMPLEX(double), which is not the case for 0
+        // It does work with Matrix4x4SymComplex<double>
         elemType result = 0;
         
 
@@ -283,7 +286,7 @@ public:
             // accRes.getValue((size_t) 0, result);
             result = *(ReductionResultHost->template getPointer<elemType>());
             markerEnd();
-        } else{
+        } else {
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
                 result += acc.getElement<elemType>(i);
@@ -398,9 +401,10 @@ public:
     void iterateOverTimeslices(Functor op);
 
     template<Layout LatticeLayout, size_t HaloDepth, unsigned BlockSize = DEFAULT_NBLOCKS, typename Functor>
-
     void iterateOverSpatialBulk(Functor op);
 
+    template<bool onDeviceRHS>
+    void copyFromLatticeContainer(LatticeContainer<onDeviceRHS, elemType> &latticeContainerRHS);
 
     /// Access to private pointers and references.
     const gMemoryPtr<onDevice>& get_ContainerArrayPtr() const { return ContainerArray; }
@@ -540,3 +544,8 @@ void LatticeContainer<onDevice, elemType>::iterateOverSpatialBulk(Functor op) {
     this->template iterateFunctor<BlockSize>(op, calcGSiteSpatial, writeAtRead, elems);
 }
 
+template<bool onDevice, typename elemType>
+template<bool onDeviceRHS>
+void LatticeContainer<onDevice, elemType>::copyFromLatticeContainer(LatticeContainer<onDeviceRHS, elemType> &latticeContainerRHS) {
+    this->ContainerArray->copyFrom(latticeContainerRHS.get_ContainerArrayPtr(), latticeContainerRHS.get_ContainerArrayPtr()->getSize());
+}

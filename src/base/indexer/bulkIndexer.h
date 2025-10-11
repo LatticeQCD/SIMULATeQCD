@@ -239,6 +239,33 @@ struct LatticeData {
         return coord;
     }
 
+    __device__ __host__ sitexyzt globalPosRelativeToOrigin(sitexyzt n) {
+
+        sitexyzt globalCoord = globalPos(n);
+
+        for (int i = 0; i<4; i++) {
+            if (globalCoord[i] > globalLatticeXYZT()[i]/2) globalCoord[i] -= globalLatticeXYZT()[i];
+        }
+
+        return globalCoord;
+
+    }
+
+    __device__ __host__ int globalPosRelativeToOriginAbsoluteValueSquared(sitexyzt n) {
+
+        sitexyzt globalRelativePos = globalPosRelativeToOrigin(n);
+
+        int r2 = 0;
+
+        r2 += globalRelativePos.x * globalRelativePos.x;
+        r2 += globalRelativePos.y * globalRelativePos.y;
+        r2 += globalRelativePos.z * globalRelativePos.z;
+        r2 += globalRelativePos.t * globalRelativePos.t;
+
+        return r2;
+
+    }
+
     __device__ __host__ bool isLocal(sitexyzt globalsite){
         //! make sure globalsite is valid, i.e. not negative or greater than lattice extents!
 

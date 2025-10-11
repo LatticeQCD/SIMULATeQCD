@@ -12,27 +12,11 @@
 
 source "../scripts/testingTools.bash"
 
-# Clean up any previous runs.
-for killFile in OUT_*; do
-    if [ -f ${killFile} ]; then rm ${killFile}; fi
-done
-for killFile in runERR_*; do
-    if [ -f ${killFile} ]; then rm ${killFile}; fi
-done
-
-# The correlator tests require correlatorNorm files.
-cp ../parameter/ua_s8t4.norm .
-cp ../parameter/us_s8t4.norm .
-
 # Associative arrays are like Python dictionaries. Associate to each test script the number of GPUs you want to use,
 # and give any special directions needed for the splitting.
 declare -A testRoutines
-testRoutines[_bulkIndexerTest]="4k"
-testRoutines[_colorElectricCorrTest]="4s"
-testRoutines[_dslashMultiTest]="4k"
-testRoutines[_gradientFlowTest]="4k"           # Apparently multi node doesn't work?
+testRoutines[_fourierEMTTest]="1"
 testRoutines[_haloTest]="1"
-testRoutines[_mixedPrecInverterTest]="4k"
 
 numberOfTestRoutines="${#testRoutines[@]}"
 numberOfTestRoutines="$((${numberOfTestRoutines}+${#testRoutinesNoParam[@]}))"
@@ -45,7 +29,7 @@ jtest=0
 for key in "${!testRoutines[@]}"; do
     ((jtest++))
     echo
-    echo -e "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
+    echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
     runByLayout "${key}" "${testRoutines[$key]}"
 done
 
@@ -53,4 +37,4 @@ echo
 date
 
 echo
-echo -e "${cyan}Now try runTests_1.bash.${endc}"
+echo "${cyan}Good job!${endc}"

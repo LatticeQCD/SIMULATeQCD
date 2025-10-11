@@ -55,6 +55,18 @@ CLASS_INIT(Matrix4x4Sym<double>)
 
 CLASS_INIT(Matrix4x4Sym<float>)
 
+CLASS_INIT(Matrix4x4Sym<COMPLEX(double)>)
+
+CLASS_INIT(Matrix4x4Sym<COMPLEX(float)>)
+
+CLASS_INIT(Matrix4x4SymComplex<double>)
+
+CLASS_INIT(Matrix4x4SymComplex<float>)
+
+// CLASS_INIT(Tensor4x4Symx4x4SymComplex<double>)
+
+// CLASS_INIT(Tensor4x4Symx4x4SymComplex<float>)
+
 CLASS_INIT(SU3<double>)
 
 CLASS_INIT(SU3<float>)

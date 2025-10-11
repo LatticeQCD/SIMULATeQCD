@@ -133,6 +133,7 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(energyMomentumTensorTracefull, "energyMomentumTensorTracefull", false);
         addDefault(energyMomentumTensorTracelessTimeSlices, "energyMomentumTensorTracelessTimeSlices", false);
         addDefault(energyMomentumTensorTracefullTimeSlices, "energyMomentumTensorTracefullTimeSlices", false);
+        addDefault(energyMomentumTensorTracelessFourier, "energyMomentumTensorTracefullFourier", false);
         addDefault(ColorElectricCorrTimeSlices_naive, "ColorElectricCorrTimeSlices_naive", false);
         addDefault(ColorElectricCorrTimeSlices_clover, "ColorElectricCorrTimeSlices_clover", false);
         addDefault(ColorMagneticCorrTimeSlices_naive, "ColorMagneticCorrTimeSlices_naive", false);
@@ -175,7 +176,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
             datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
-            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices,
+            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices, datNameEMTUFourier,
             datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
             datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
     // fill stream with 0's
@@ -217,6 +218,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datNameEMTE << lp.measurements_dir() << prefix.str() << "_EMTE" << lp.fileExt();
     datNameEMTUTimeSlices << lp.measurements_dir() << prefix.str() << "_EMTUTimeSlices" << lp.fileExt();
     datNameEMTETimeSlices << lp.measurements_dir() << prefix.str() << "_EMTETimeSlices" << lp.fileExt();
+    datNameEMTUFourier << lp.measurements_dir() << prefix.str() << "_EMTUFourier" << lp.fileExt();
     FileWriter file(gauge.getComm(), lp, datName.str());
 
     //! write header
@@ -232,6 +234,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     if (lp.weinberg_imp_imp()) header << "O(a^6) Impr. Weinberg ";
     header.endLine();
 
+    // TODO: Why always .getComm instead of using the commBase?
     FileWriter file_BlockTopCharge(gauge.getComm(), lp);
     FileWriter file_normEMT(gauge.getComm(), lp);
     FileWriter file_BlockShear(gauge.getComm(), lp);
@@ -281,6 +284,14 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         LineFormatter header_EMTETimeSlices = file_EMTETimeSlices.header();
         header_EMTETimeSlices << "#flowtime E for tau=0, ... for tau=1 ..." << "\n";
         header_EMTETimeSlices.endLine();
+    }
+
+    FileWriter file_EMTUFourier(gauge.getComm(), lp);
+    if (lp.energyMomentumTensorTracelessFourier()) {
+        file_EMTUFourier.createFile(datNameEMTUFourier.str());
+        LineFormatter header_EMTUFourier = file_EMTUFourier.header();
+        header_EMTUFourier << "#flowtime U00 U11 U22 U33 U01 U02 U03 U12 U13 U23" << "\n";
+        header_EMTUFourier.endLine();
     }
 
     if (lp.topCharge_imp_block()) {
@@ -738,6 +749,18 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             newLineEMTETimeSlices << flow_time << " ";
             for (auto &elem : resultEMTETimeSlices) {
                 newLineEMTETimeSlices << std::scientific << std::setprecision(15) << elem << " ";
+            }
+        }
+
+        if (lp.energyMomentumTensorTracelessFourier() && gradFlow.checkIfnecessaryTime()) {
+            LineFormatter newLineEMTUFourier = file_EMTUFourier.tag("");
+            EMT.EMTUFourierAveraged(resultEMTUFourier);
+            newLineEMTUFourier << flow_time << " ";
+            for (auto &elem : resultEMTUFourier) {
+                newLineEMTUFourier << std::scientific << std::setprecision(15) << elem.elems[0] << " "
+                                   << elem.elems[1] << " " << elem.elems[2] << " " << elem.elems[3] << " "
+                                   << elem.elems[4] << " " << elem.elems[5] << " " << elem.elems[6] << " "
+                                   << elem.elems[7] << " " << elem.elems[8] << " " << elem.elems[9] << " ";
             }
         }
 
