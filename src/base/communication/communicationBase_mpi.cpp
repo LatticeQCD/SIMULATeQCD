@@ -304,6 +304,30 @@ void CommunicationBase::root2all(Matrix4x4Sym<double> &value) const {
     MPI_Bcast(&value, 10, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
 
+void CommunicationBase::root2all(Matrix4x4Sym<COMPLEX(float)> &value) const {
+    MPI_Bcast(&value, 10, MPI_COMPLEX, 0, MPI_COMM_WORLD);
+}
+
+void CommunicationBase::root2all(Matrix4x4Sym<COMPLEX(double)> &value) const {
+    MPI_Bcast(&value, 10, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+}
+
+void CommunicationBase::root2all(Matrix4x4SymComplex<float> &value) const {
+    MPI_Bcast(&value, 10, MPI_COMPLEX, 0, MPI_COMM_WORLD);
+}
+
+void CommunicationBase::root2all(Matrix4x4SymComplex<double> &value) const {
+    MPI_Bcast(&value, 10, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+}
+
+void CommunicationBase::root2all(Tensor4x4Symx4x4SymComplex<float> &value) const {
+    MPI_Bcast(&value, 100, MPI_COMPLEX, 0, MPI_COMM_WORLD);
+}
+
+void CommunicationBase::root2all(Tensor4x4Symx4x4SymComplex<double> &value) const {
+    MPI_Bcast(&value, 100, MPI_DOUBLE_COMPLEX, 0, MPI_COMM_WORLD);
+}
+
 void CommunicationBase::root2all(SU3<float> &value) const {
     MPI_Bcast(&value, 9, MPI_COMPLEX, 0, MPI_COMM_WORLD);
 }
@@ -418,6 +442,42 @@ Matrix4x4Sym<double> CommunicationBase::reduce(Matrix4x4Sym<double> in) const {
     return recv;
 }
 
+Matrix4x4Sym<COMPLEX(float)> CommunicationBase::reduce(Matrix4x4Sym<COMPLEX(float)> in) const {
+    Matrix4x4Sym<COMPLEX(float)> recv;
+    MPI_Allreduce(&in, &recv, 10, MPI_COMPLEX, MPI_SUM, cart_comm);
+    return recv;
+}
+
+Matrix4x4Sym<COMPLEX(double)> CommunicationBase::reduce(Matrix4x4Sym<COMPLEX(double)> in) const {
+    Matrix4x4Sym<COMPLEX(double)> recv;
+    MPI_Allreduce(&in, &recv, 10, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
+    return recv;
+}
+
+Matrix4x4SymComplex<float> CommunicationBase::reduce(Matrix4x4SymComplex<float> in) const {
+    Matrix4x4SymComplex<float> recv;
+    MPI_Allreduce(&in, &recv, 10, MPI_COMPLEX, MPI_SUM, cart_comm);
+    return recv;
+}
+
+Matrix4x4SymComplex<double> CommunicationBase::reduce(Matrix4x4SymComplex<double> in) const {
+    Matrix4x4SymComplex<double> recv;
+    MPI_Allreduce(&in, &recv, 10, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
+    return recv;
+}
+
+Tensor4x4Symx4x4SymComplex<float> CommunicationBase::reduce(Tensor4x4Symx4x4SymComplex<float> in) const {
+    Tensor4x4Symx4x4SymComplex<float> recv;
+    MPI_Allreduce(&in, &recv, 100, MPI_COMPLEX, MPI_SUM, cart_comm);
+    return recv;
+}
+
+Tensor4x4Symx4x4SymComplex<double> CommunicationBase::reduce(Tensor4x4Symx4x4SymComplex<double> in) const {
+    Tensor4x4Symx4x4SymComplex<double> recv;
+    MPI_Allreduce(&in, &recv, 100, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
+    return recv;
+}
+
 SU3<float> CommunicationBase::reduce(SU3<float> in) const {
     SU3<float> recv;
     MPI_Allreduce(&in, &recv, 9, MPI_COMPLEX, MPI_SUM, cart_comm);
@@ -479,6 +539,50 @@ void CommunicationBase::reduce(Matrix4x4Sym<double> *in, int nr) const {
     Matrix4x4Sym<double> *buf = new Matrix4x4Sym<double>[nr];
     MPI_Allreduce(reinterpret_cast<double *>(in), reinterpret_cast<double *>(buf), nr * 10, MPI_DOUBLE, MPI_SUM,
             cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
+void CommunicationBase::reduce(Matrix4x4Sym<COMPLEX(float)> *in, int nr) const {
+    Matrix4x4Sym<COMPLEX(float)> *buf = new Matrix4x4Sym<COMPLEX(float)>[nr];
+    MPI_Allreduce(reinterpret_cast<float *>(in), reinterpret_cast<float *>(buf), nr * 10, MPI_COMPLEX, MPI_SUM,
+            cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
+void CommunicationBase::reduce(Matrix4x4Sym<COMPLEX(double)> *in, int nr) const {
+    Matrix4x4Sym<COMPLEX(double)> *buf = new Matrix4x4Sym<COMPLEX(double)>[nr];
+    MPI_Allreduce(reinterpret_cast<double *>(in), reinterpret_cast<double *>(buf), nr * 10, MPI_DOUBLE_COMPLEX, MPI_SUM,
+            cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
+void CommunicationBase::reduce(Matrix4x4SymComplex<float> *in, int nr) const {
+    Matrix4x4SymComplex<float> *buf = new Matrix4x4SymComplex<float>[nr];
+    MPI_Allreduce(reinterpret_cast<float *>(in), reinterpret_cast<float *>(buf), nr * 10, MPI_COMPLEX, MPI_SUM,cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
+void CommunicationBase::reduce(Matrix4x4SymComplex<double> *in, int nr) const {
+    Matrix4x4SymComplex<double> *buf = new Matrix4x4SymComplex<double>[nr];
+    MPI_Allreduce(reinterpret_cast<double *>(in), reinterpret_cast<double *>(buf), nr * 10, MPI_DOUBLE_COMPLEX, MPI_SUM,cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
+void CommunicationBase::reduce(Tensor4x4Symx4x4SymComplex<float> *in, int nr) const {
+    Tensor4x4Symx4x4SymComplex<float> *buf = new Tensor4x4Symx4x4SymComplex<float>[nr];
+    MPI_Allreduce(reinterpret_cast<float *>(in), reinterpret_cast<float *>(buf), nr * 100, MPI_COMPLEX, MPI_SUM,cart_comm);
+    for (int i = 0; i < nr; i++) in[i] = buf[i];
+    delete[] buf;
+}
+
+void CommunicationBase::reduce(Tensor4x4Symx4x4SymComplex<double> *in, int nr) const {
+    Tensor4x4Symx4x4SymComplex<double> *buf = new Tensor4x4Symx4x4SymComplex<double>[nr];
+    MPI_Allreduce(reinterpret_cast<double *>(in), reinterpret_cast<double *>(buf), nr * 100, MPI_DOUBLE_COMPLEX, MPI_SUM,cart_comm);
     for (int i = 0; i < nr; i++) in[i] = buf[i];
     delete[] buf;
 }

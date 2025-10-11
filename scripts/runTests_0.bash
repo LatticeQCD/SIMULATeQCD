@@ -45,7 +45,7 @@ jtest=0
 for key in "${!testRoutines[@]}"; do
     ((jtest++))
     echo
-    echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
+    echo -e "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
     runByLayout "${key}" "${testRoutines[$key]}"
 done
 
@@ -53,4 +53,4 @@ echo
 date
 
 echo
-echo "${cyan}Now try runTests_1.bash.${endc}"
+echo -e "${cyan}Now try runTests_1.bash.${endc}"

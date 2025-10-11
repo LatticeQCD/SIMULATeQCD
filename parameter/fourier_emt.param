@@ -1,0 +1,10 @@
+Lattice       = 32 32 32 8
+Nodes         = 1 1 1 1
+# Shift         = 0 0 0
+beta          = 7.544
+gauge_file = conf_s032t08_b0754400_a_U000000500
+gauge_file_folder = /work/CONF/jwinter/8x32x32x32_b7.544_shift0x0x0/standard_configuration_run/
+format        = nersc
+endianness    = auto
+use_unit_conf = 0
+conf_nr       = 500

@@ -534,6 +534,12 @@ set_SIMULATeQCD_property(dslashMultiTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "te
 SIMULATeQCD_target_compile_definitions(dslashMultiTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 SINGLEPREC=1 NSTACKS_1=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests dslashMultiTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_fourierEMTTest.cpp src/experimental/fourierNon2.cpp)
+add_SIMULATeQCD_executable(fourierEMTTest src/testing/main_fourierEMTTest.cpp src/experimental/fourierNon2.cpp)
+set_SIMULATeQCD_property(fourierEMTTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(fourierEMTTest PRIVATE HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(tests fourierEMTTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_generalFunctorTest.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(generalFunctorTest src/testing/main_generalFunctorTest.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(generalFunctorTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -966,6 +972,12 @@ set_SIMULATeQCD_property(maximalCenterGaugeFixing PROPERTIES RUNTIME_OUTPUT_DIRE
 SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixing PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 FIXED_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(applications maximalCenterGaugeFixing)
 
+
+set_SIMULATeQCD_gpu_backend(src/applications/main_fourier_emt.cpp src/experimental/fourierNon2.cpp)
+add_SIMULATeQCD_executable(fourier_emt src/applications/main_fourier_emt.cpp src/experimental/fourierNon2.cpp)
+set_SIMULATeQCD_property(fourier_emt PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+SIMULATeQCD_target_compile_definitions(fourier_emt PRIVATE HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_LAYOUTS})
+add_to_compound_SIMULATeQCD_target(applications fourier_emt)
 
 #-----------------------------------------------------------------------------------------COMPILATION DEFINITIONS: TOOLS
 

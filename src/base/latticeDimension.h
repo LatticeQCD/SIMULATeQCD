@@ -169,5 +169,12 @@ public :
         return res;
     }
 
+    // __host__ int absoluteValueSquared() const {
+    //     int res = 0;
+    //     for (int i = 0; i < 4; i++)
+    //         res += c[i]*c[i];
+    //     return res;
+    // }
+
 };
 
