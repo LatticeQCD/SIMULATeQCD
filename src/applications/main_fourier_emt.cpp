@@ -24,43 +24,9 @@ void customTest(bool boolean, std::string name) {
     }
 }
 
-enum Summation {
-    SpatialAndTemporal, Spatial
+enum Projector {
+    LL
 };
-
-typedef int (* vFunctionCall)(int args);
-
-template<Summation summation, typename type>
-__device__ __host__ type reduceIndices(sitexyzt rt, vFunctionCall func) {
-    
-    int maxIndex = 0;
-
-    if (summation == SpatialAndTemporal) {
-        maxIndex = 4;
-    } else if (summation == Spatial) {
-        maxIndex = 3;
-    }
-
-    type result = 0;
-
-    for (int i = 0; i < maxIndex; i++) {
-        result += func(rt[i]);
-    }
-
-    return result;
-}
-
-__device__ __host__ int squareCoord(int coord) {
-    return coord * coord;
-}
-
-template<Summation summation>
-__device__ __host__ int r2(sitexyzt rt) {
-
-    return reduceIndices<summation, int>(rt, squareCoord);
-
-}
-
 
 // define functor for combining two EMTs to one 4x4Symx4x4Sym
 template<class floatT>
@@ -74,32 +40,6 @@ struct EMTtimesEMT {
 
     __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
 
-        // int xCheck = 1;
-        // int xCheck2 = 30;
-
-        // bool check = (site.coord[0] == xCheck || site.coord[0] == xCheck2) && site.coord[1] == 0 && site.coord[2] == 0 && site.coord[3] == 1;
-
-        // if (check) {
-        //     printGSite(site);
-        // }
-
-        // sitexyzt globalCoord = GInd::getLatData().globalPos(site.coord);
-
-        // if (check) {
-        //     printf("Global Coordinates: %i, %i, %i, %i\n", globalCoord[0], globalCoord[1], globalCoord[2], globalCoord[3]);
-        // }
-
-        // sitexyzt globalCoordRelativeToOrigin = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
-
-        // if (check) {
-        //     printf("Global Coordinates relative to the origin: %i, %i, %i, %i\n", globalCoordRelativeToOrigin[0], globalCoordRelativeToOrigin[1], globalCoordRelativeToOrigin[2], globalCoordRelativeToOrigin[3]);
-        // }
-
-        // if (check) {
-        //     int r2Value = r2<Spatial>(globalCoordRelativeToOrigin);
-        //     printf("r^2: %i\n", r2Value);
-        // }
-        
         Matrix4x4SymComplex<floatT> firstElement(_firstAccessor.getElement<Matrix4x4SymComplex<floatT>>(site));
         Matrix4x4SymComplex<floatT> secondElement(_secondAccessor.getElement<Matrix4x4SymComplex<floatT>>(site));
 
@@ -110,8 +50,102 @@ struct EMTtimesEMT {
 
 };
 
-// define functor to contract tensor indices
+__device__ __host__ inline int rSquared(sitexyzt r) {
+    int r2 = 0;
+    for (int i = 0; i <= 3; i++) {
+        r2 += r[i] * r[i];
+    }
+    return r2;
+}
+
+__device__ __host__ inline int delta(int mu, int nu) {
+    if (mu == nu) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 template<class floatT>
+__device__ __host__ inline floatT projectorLLFunction(sitexyzt r, int mu, int nu, int rho, int sigma) {
+
+    if (rSquared(r) == 0) return 0.0;
+
+    floatT r2 = rSquared(r);
+
+    floatT result = (3.0/2.0)*(r[mu]*r[nu]/r2 - (1.0/3.0)*delta(mu, nu))*(r[rho]*r[sigma]/r2 - (1.0/3.0)*delta(rho, sigma));
+
+    return result;
+
+}
+
+template<class floatT>
+__device__ __host__ inline floatT projectorLTFunction(sitexyzt r, int mu, int nu, int rho, int sigma) {
+    
+    if (rSquared(r) == 0) return 0.0;
+
+    floatT r2 = rSquared(r);
+
+    floatT result = (1.0/2.0) * (
+        (
+            r[mu]*r[rho]*delta(nu, sigma)
+            +r[mu]*r[sigma]*delta(nu, rho)
+            +r[nu]*r[rho]*delta(mu, sigma)
+            +r[nu]*r[sigma]*delta(mu, rho)
+        )/r2
+        -4.0*(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2)
+    );
+
+    return result;
+
+}
+
+template<class floatT>
+__device__ __host__ inline floatT projectorTTFunction(sitexyzt r, int mu, int nu, int rho, int sigma) {
+    
+    if (rSquared(r) == 0) return 0.0;
+
+    floatT r2 = rSquared(r);
+
+    floatT result = (1.0/2.0) * (
+        delta(mu, rho)*delta(nu, sigma)
+        +delta(mu, sigma)*delta(nu, rho)
+        -delta(mu, nu)*delta(rho, sigma)
+        +(
+            r[mu]*r[nu]*delta(rho, sigma)
+            +r[rho]*r[sigma]*delta(mu, nu)
+        )/r2
+        -(
+            r[mu]*r[rho]*delta(nu, sigma)
+            +r[mu]*r[sigma]*delta(nu, rho)
+            +r[nu]*r[rho]*delta(mu, sigma)
+            +r[nu]*r[sigma]*delta(mu, rho)
+        )/r2
+        +(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2)
+    );
+
+    return result;
+
+}
+
+template<class floatT>
+__device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> projectorLL(sitexyzt r) {
+
+    Tensor4x4Symx4x4SymComplex<floatT> projector;
+
+    for (int mu = 0; mu <= 3; mu++)
+    for (int nu = 0; nu <= mu; nu++)
+    for (int rho = 0; rho <= 3; rho++)
+    for (int sigma = 0; sigma <= rho; sigma++) {
+        COMPLEX(floatT) value = projectorLLFunction<floatT>(r, mu, nu, rho, sigma);
+        projector(mu, nu, rho, sigma, value);
+    }
+
+    return projector;
+}
+
+// define functor to contract tensor indices
+template<class floatT, Projector projector>
 struct ContractGTensor {
 
     LatticeContainerAccessor _GAccessor;
@@ -121,22 +155,23 @@ struct ContractGTensor {
 
     __device__ __host__ inline COMPLEX(floatT) operator()(gSite site) {
 
-        // define projector components
-        // for (int mu = 0; mu <= 3; mu++)
-        // for (int nu = 0; nu <= mu; nu++)
-        // for (int rho = 0; rho <= 3; rho++)
-        // for (int sigma = 0; sigma <= rho; sigma++) {
-        //     projector(mu, nu, rho, sigma, projector_function(site, mu, nu, rho, sigma));
-        // }
+        // get global position relative to the origin
+        sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
 
-        // get element at the site
-        Tensor4x4Symx4x4SymComplex tensor4x4Symx4x4SymComplexAtSite = _GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
+        // get desired projector value for the global position
+        Tensor4x4Symx4x4SymComplex<floatT> projectorAtSite;
+        if (projector == LL) {
+            projectorAtSite = projectorLL<floatT>(r);
+        }
 
+        // get correlator value at the site
+        Tensor4x4Symx4x4SymComplex<floatT> tensor4x4Symx4x4SymComplexAtSite = _GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
+
+        // contract projector value with correlator value
         COMPLEX(floatT) result = 0.0;
-
         for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
             for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-                result += tensor4x4Symx4x4SymComplexAtSite.elems[firstIndexPair][secondIndexPair];
+                result += projectorAtSite.elems[firstIndexPair][secondIndexPair] * tensor4x4Symx4x4SymComplexAtSite.elems[firstIndexPair][secondIndexPair];
             }
         }
 
@@ -224,11 +259,11 @@ int main(int argc, char *argv[]) {
     gaugeHost.updateAll();
     
     // create lattice containers for EMT fields
-    LatticeContainer<false, Matrix4x4SymComplex<PREC> > _redBaseEMTUComplexHost(commBase, "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST");
-    LatticeContainer<true, Matrix4x4SymComplex<PREC> > _redBaseEMTUComplexDevice(commBase, "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE");
-    LatticeContainer<true, Matrix4x4SymComplex<PREC> > _redBaseEMTUFourierTransformedForwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS");
-    LatticeContainer<true, Matrix4x4SymComplex<PREC> > _redBaseEMTUFourierTransformedBackwards(commBase, "EMTU_FOURIER_TRANSFORMED_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_BACKWARDS");
-    LatticeContainer<true, Matrix4x4SymComplex<PREC> > _redBaseEMTUFourierTransformedForwardsBackwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS");
+    LatticeContainer<false, Matrix4x4SymComplex<PREC>> _redBaseEMTUComplexHost(commBase, "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST");
+    LatticeContainer<true, Matrix4x4SymComplex<PREC>> _redBaseEMTUComplexDevice(commBase, "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE");
+    LatticeContainer<true, Matrix4x4SymComplex<PREC>> _redBaseEMTUFourierTransformedForwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS");
+    LatticeContainer<true, Matrix4x4SymComplex<PREC>> _redBaseEMTUFourierTransformedBackwards(commBase, "EMTU_FOURIER_TRANSFORMED_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_BACKWARDS");
+    LatticeContainer<true, Matrix4x4SymComplex<PREC>> _redBaseEMTUFourierTransformedForwardsBackwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS");
     
     // adjust their size
     _redBaseEMTUComplexHost.adjustSize(GInd::getLatData().vol4);
@@ -332,7 +367,7 @@ int main(int argc, char *argv[]) {
     _redBaseGLLHost.adjustSize(GInd::getLatData().vol4);
     
     // contract 4x4x4x4 tensor
-    _redBaseGLLDevice.template iterateOverBulk<All, 0>(ContractGTensor<PREC>(_redBaseGTensorFourierTransformedBackwards.getAccessor()));
+    _redBaseGLLDevice.template iterateOverBulk<All, 0>(ContractGTensor<PREC, Projector::LL>(_redBaseGTensorFourierTransformedBackwards.getAccessor()));
     
     // create host field from device field
     _redBaseGLLHost.copyFromLatticeContainer<true>(_redBaseGLLDevice);
@@ -375,8 +410,25 @@ int main(int argc, char *argv[]) {
     for (int z = 0; z < lz; z++)
     for (int t = 0; t < lt; t++) {
         sitexyzt site(x, y, z, t);
-        int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site); 
-        if (x == 0 && y == 0 && t == 0) rootLogger.info("Site at x=", x, " y=", y, " z=", z, " t=", t, " with absolute value: ", r2);
+        int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
+        if (x == 0 && y == 0 && t == 1) {
+            sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site);
+            rootLogger.info("Site ", site, " with global position relative to the origin r=", r, " with absolute value: ", r2);
+
+            if (z == 3) {
+                for (int mu = 0; mu <= 3; mu++)
+                for (int nu = 0; nu <= mu; nu++)
+                for (int rho = 0; rho <= 3; rho++)
+                for (int sigma = 0; sigma <= rho; sigma++) {
+                    PREC projectorLL = projectorLLFunction<PREC>(r, mu, nu, rho, sigma);
+                    PREC projectorLT = projectorLTFunction<PREC>(r, mu, nu, rho, sigma);
+                    PREC projectorTT = projectorTTFunction<PREC>(r, mu, nu, rho, sigma);
+                    PREC sum = projectorLL + projectorLT + projectorTT;
+                    PREC rhs = (1.0/2.0)*(delta(mu, rho)*delta(nu, sigma) + delta(mu, sigma)*delta(nu, rho) - (2.0/3.0)*delta(mu, nu)*delta(rho, sigma));
+                    rootLogger.info("Sum of projectors at ", mu, nu, rho, sigma, ": ", sum, " = ", rhs);
+                }
+            }
+        }
         
         GLLarray[r2] += GLLAccessor.getElement<COMPLEX(PREC)>(GInd::getSite(x,y,z,t));
         Counts[r2] += 1;

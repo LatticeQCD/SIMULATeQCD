@@ -15,7 +15,7 @@ enum indices4x4Sym {
 // index00, index11, index22, index33, index01, index02, index03, index12, index13, index23
 //    0        1        2        3        4        5        6        7        8        9
 // e.g. mu,nu=1,3 to index13=8 and mu,nu=2,0 to index02=5
-inline int twoIndicesToIndexPairIndex(int mu, int nu) {
+__device__ __host__ inline int twoIndicesToIndexPairIndex(int mu, int nu) {
 
     if (mu == 0 && nu == 0) return index00;
     if (mu == 0 && nu == 1) return index01;
