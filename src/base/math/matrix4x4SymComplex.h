@@ -103,9 +103,16 @@ struct Matrix4x4SymComplex {
 
     __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator+=(const Matrix4x4SymComplex<floatT> &y)
     {
-
         for(int i = 0; i<10;i++){
             elems[i]+=y.elems[i];
+        }
+        return *this;
+    }
+
+    __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator-=(const Matrix4x4SymComplex<floatT> &y)
+    {
+        for(int i = 0; i<10;i++){
+            elems[i]-=y.elems[i];
         }
         return *this;
     }
@@ -124,6 +131,17 @@ struct Matrix4x4SymComplex {
             elems[i]*=y;
         }
         return *this;
+    }
+
+    __device__ __host__ friend Matrix4x4SymComplex<floatT> operator-(
+        const Matrix4x4SymComplex<floatT> &left,
+        const Matrix4x4SymComplex<floatT> &right
+    ) {
+        Matrix4x4SymComplex<floatT> result;
+        for (int i = 0; i < 10; i++) {
+            result.elems[i] = left.elems[i] - right.elems[i];
+        }
+        return result;
     }
 
     __host__ inline void printIndexPair() {
@@ -163,9 +181,55 @@ struct Matrix4x4SymComplex {
 
 template<class floatT>
 __device__ __host__ inline Matrix4x4SymComplex<floatT> operator+(const Matrix4x4SymComplex<floatT> &x, const Matrix4x4SymComplex<floatT> &y) {
-    return Matrix4x4SymComplex<floatT>(x.elems[0]+ y.elems[0], x.elems[1]+y.elems[1], x.elems[2]+y.elems[2], x.elems[3]+y.elems[3],
-                                x.elems[4]+y.elems[4], x.elems[5]+y.elems[5], x.elems[6]+y.elems[6],
-                                x.elems[7]+y.elems[7], x.elems[8]+y.elems[8], x.elems[9]+y.elems[9]);
+    return Matrix4x4SymComplex<floatT>(
+        x.elems[0]+ y.elems[0], x.elems[1]+y.elems[1], x.elems[2]+y.elems[2], x.elems[3]+y.elems[3],
+        x.elems[4]+y.elems[4], x.elems[5]+y.elems[5], x.elems[6]+y.elems[6],
+        x.elems[7]+y.elems[7], x.elems[8]+y.elems[8], x.elems[9]+y.elems[9]
+    );
+}
+
+
+template<class floatT>
+__device__ __host__ inline floatT abs(const Matrix4x4SymComplex<floatT> &matrix) {
+    floatT square;
+    for (int i = 0; i < 10; i++) {
+        square += abs2(matrix.elems[i]);
+    }
+    return sqrtf(square);
+}
+
+
+template<class floatT>
+__host__ inline std::ostream &operator<<(std::ostream &s, Matrix4x4SymComplex<floatT> matrix) {
+    for (int i = 0; i < 10; i++) {
+        s << matrix.elems[i];
+    }
+    return s;
+}
+
+
+template<class floatT>
+__device__ __host__ inline Matrix4x4SymComplex<floatT> elementwise_division(
+    const Matrix4x4SymComplex<floatT> &x,
+    const Matrix4x4SymComplex<floatT> &y
+) {
+    Matrix4x4SymComplex<floatT> result;
+    for (int i = 0; i < 10; i++) {
+        result.elems[i] = x.elems[i]/y.elems[i];
+    }
+    return result;
+}
+
+template<class floatT>
+__device__ __host__ inline bool cmp_all_elements_prec(
+    const Matrix4x4SymComplex<floatT> &x,
+    const Matrix4x4SymComplex<floatT> &y,
+    const floatT prec
+) {
+    for (int i = 0; i < 10; i++) {
+        if (!compareCOMPLEX(x.elems[i], y.elems[i], prec)) return false;
+    }
+    return true;
 }
 
 

@@ -6,6 +6,12 @@
 #include "../../define.h"
 #include "indices4x4Sym.h"
 
+enum PrintComplex {
+    complex_both,
+    complex_real,
+    complex_imag
+};
+
 // can't define this up here
 // template<class floatT>
 // typedef void (* twoIndexedVoid)(Tensor4x4Symx4x4SymComplex<floatT> tensor, int first, int second);
@@ -105,6 +111,15 @@ struct Tensor4x4Symx4x4SymComplex {
         return *this;
     }
 
+    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT>& operator/=(const floatT &y){
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                elems[firstIndexPair][secondIndexPair] /= y;
+            }
+        }
+        return *this;
+    }
+
     __host__ inline void printIndexPairs() {
         std::cout << std::scientific << std::showpos << std::setprecision(8);
         std::cout << "Components of Tensor4x4Symx4x4SymComplex:" << std::endl;
@@ -119,7 +134,6 @@ struct Tensor4x4Symx4x4SymComplex {
     
     __host__ inline void printFourIndices() {
         std::cout << std::scientific << std::showpos << std::setprecision(8);
-        std::cout << "Components of Tensor4x4Symx4x4SymComplex:" << std::endl;
         for (int mu = 0; mu <= 3; mu++)
         for (int nu = 0; nu <= mu; nu++)
         for (int rho = 0; rho <= 3; rho++)
@@ -134,17 +148,77 @@ struct Tensor4x4Symx4x4SymComplex {
         }
     }
 
+    template<PrintComplex printComplex = complex_both>
     __host__ inline void printMatrix10x10() {
         std::cout << std::scientific << std::showpos << std::setprecision(4);
-        std::cout << "Components of Tensor4x4Symx4x4SymComplex:" << std::endl;
         for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
             for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-                std::cout << elems[firstIndexPair][secondIndexPair] << " ";
+                switch (printComplex) {
+                    case complex_both:
+                        std::cout << elems[firstIndexPair][secondIndexPair] << " ";
+                        break;
+                    case complex_real:
+                        std::cout << real(elems[firstIndexPair][secondIndexPair]) << " ";
+                        break;
+                    case complex_imag:
+                        std::cout << imag(elems[firstIndexPair][secondIndexPair]) << " ";
+                        break;
+                }
             }
             std::cout << std::endl;
         }
     }
 
+    template<PrintComplex printComplex = complex_both>
+    __host__ inline void printMatrix4x4FirstSubMatrix(int mu, int nu) {
+        std::cout << std::scientific << std::showpos << std::setprecision(4);
+        
+        int firstIndexPair = twoIndicesToIndexPairIndex(mu, nu);
+        for (int rho = 0; rho <= 3; rho++) {
+            for (int sigma = 0; sigma <= 3; sigma++) {
+                int secondIndexPair = twoIndicesToIndexPairIndex(rho, sigma);
+                switch (printComplex) {
+                    case complex_both:
+                        std::cout << elems[firstIndexPair][secondIndexPair] << " ";
+                        break;
+                    case complex_real:
+                        std::cout << real(elems[firstIndexPair][secondIndexPair]) << " ";
+                        break;
+                    case complex_imag:
+                        std::cout << imag(elems[firstIndexPair][secondIndexPair]) << " ";
+                        break;
+                }
+            }
+            std::cout << std::endl;
+        }
+
+    }
+
+    template<PrintComplex printComplex = complex_both>
+    __host__ inline void printMatrix4x4SecondSubMatrix(int rho, int sigma) {
+        std::cout << std::scientific << std::showpos << std::setprecision(4);
+        
+        int secondIndexPair = twoIndicesToIndexPairIndex(rho, sigma);
+        for (int mu = 0; mu <= 3; mu++) {
+            for (int nu = 0; nu <= 3; nu++) {
+                int firstIndexPair = twoIndicesToIndexPairIndex(mu, nu);
+                switch (printComplex) {
+                    case complex_both:
+                        std::cout << elems[firstIndexPair][secondIndexPair] << " ";
+                        break;
+                    case complex_real:
+                        std::cout << real(elems[firstIndexPair][secondIndexPair]) << " ";
+                        break;
+                    case complex_imag:
+                        std::cout << imag(elems[firstIndexPair][secondIndexPair]) << " ";
+                        break;
+                }
+            }
+            std::cout << std::endl;
+        }
+
+    }
+    
 };
 
 
@@ -156,6 +230,16 @@ __device__ __host__ inline bool compareTensor4x4Symx4x4SymComplex(Tensor4x4Symx4
         }
     }
     return true;
+}
+
+template<class floatT>
+__host__ inline std::ostream &operator<<(std::ostream &s, Tensor4x4Symx4x4SymComplex<floatT> tensor) {
+    for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+            s << tensor.elems[firstIndexPair][secondIndexPair];
+        }
+    }
+    return s;
 }
 
 // template<class floatT>
@@ -178,3 +262,32 @@ __device__ __host__ inline bool compareTensor4x4Symx4x4SymComplex(Tensor4x4Symx4
 //         }
 //     }
 // }
+
+template<class floatT>
+__device__ __host__ inline bool cmp_all_elements_prec(
+    const Tensor4x4Symx4x4SymComplex<floatT> &x,
+    const Tensor4x4Symx4x4SymComplex<floatT> &y,
+    const floatT prec
+) {
+    for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+            if (!compareCOMPLEX(x.elems[firstIndexPair][secondIndexPair], y.elems[firstIndexPair][secondIndexPair], prec)) return false;
+        }
+    }
+    return true;
+}
+
+template<class floatT>
+__device__ __host__ inline bool cmp_all_elements_prec_to_value(
+    const Tensor4x4Symx4x4SymComplex<floatT> &x,
+    const floatT value,
+    const floatT prec
+) {
+    for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+            COMPLEX(floatT) complexValue = value;
+            if (!compareCOMPLEX(x.elems[firstIndexPair][secondIndexPair], complexValue, prec)) return false;
+        }
+    }
+    return true;
+}

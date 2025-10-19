@@ -549,3 +549,50 @@ template<bool onDeviceRHS>
 void LatticeContainer<onDevice, elemType>::copyFromLatticeContainer(LatticeContainer<onDeviceRHS, elemType> &latticeContainerRHS) {
     this->ContainerArray->copyFrom(latticeContainerRHS.get_ContainerArrayPtr(), latticeContainerRHS.get_ContainerArrayPtr()->getSize());
 }
+
+template<typename elemType>
+struct compareLatticeContainers {
+    LatticeContainerAccessor _leftAccessor;
+    LatticeContainerAccessor _rightAccessor;
+    double _prec;
+    typedef GIndexer<All> GInd;
+
+    compareLatticeContainers(LatticeContainerAccessor leftAccessor, LatticeContainerAccessor rightAccessor, double prec) : _leftAccessor(leftAccessor), _rightAccessor(rightAccessor), _prec(prec) {}
+
+    __device__ __host__ inline int operator()(gSite site) {
+        elemType leftElement = _leftAccessor.getElement<elemType>(site);
+        elemType rightElement = _rightAccessor.getElement<elemType>(site);
+
+        bool correct = cmp_all_elements_prec<double>(leftElement, rightElement, _prec);
+
+        if (correct) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+};
+
+template<typename elemType>
+struct compareLatticeContainerToValue {
+    LatticeContainerAccessor leftAccessor;
+    elemType value;
+    double prec;
+    typedef GIndexer<All> GInd;
+
+    compareLatticeContainerToValue(LatticeContainerAccessor _leftAccessor, elemType _value, double _prec) : leftAccessor(_leftAccessor), value(_value), prec(_prec) {}
+
+    __device__ __host__ inline int operator()(gSite site) {
+        elemType leftElement = leftAccessor.getElement<elemType>(site);
+
+        bool correct = cmp_all_elements_prec<double>(leftElement, value, prec);
+
+        if (correct) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+};
