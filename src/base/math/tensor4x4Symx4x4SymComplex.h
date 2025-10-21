@@ -34,29 +34,6 @@ struct Tensor4x4Symx4x4SymComplex {
 
     COMPLEX(floatT) elems[10][10];
 
-    constexpr Tensor4x4Symx4x4SymComplex(const Tensor4x4Symx4x4SymComplex<floatT>&) = default;
-
-    // type for a function that takes two integers and returns nothing
-    // unused, doesn't work right now
-    // TODO: Do this another time.
-    // typedef __device__ __host__ void (* twoIndexedVoid)(int first, int second);
-
-    // __device__ __host__ void setComponentIndexPairsToValue(int first, int second, COMPLEX(floatT) value) {
-    //     elems[first][second] = value;
-    // }
-
-    // __device__ __host__ void setComponentIndexPairsToZero(int first, int second) {
-    //     setComponentIndexPairsToValue(first, second, 0.0);
-    // }
-
-    // __device__ __host__ void doVoidTwoIndexed(twoIndexedVoid func) {
-    //     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
-    //         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-    //             func(firstIndexPair, secondIndexPair);
-    //         }
-    //     }
-    // }
-
     // TODO: Difference between ordering of __device__ and __host__?
     __device__ __host__ Tensor4x4Symx4x4SymComplex() {
         for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
@@ -82,7 +59,7 @@ struct Tensor4x4Symx4x4SymComplex {
         }
     }
 
-    __device__ __host__ inline COMPLEX(floatT) operator()(int firstIndexPair, int secondIndexPair) {
+    __device__ __host__ inline COMPLEX(floatT) operator()(int firstIndexPair, int secondIndexPair) const {
         return elems[firstIndexPair][secondIndexPair];
     }
 
@@ -90,7 +67,7 @@ struct Tensor4x4Symx4x4SymComplex {
         elems[firstIndexPair][secondIndexPair] = value;
     }
 
-    __device__ __host__ inline COMPLEX(floatT) operator()(int mu, int nu, int rho, int sigma) {
+    __device__ __host__ inline COMPLEX(floatT) operator()(int mu, int nu, int rho, int sigma) const {
         int firstIndexPair = twoIndicesToIndexPairIndex(mu, nu);
         int secondIndexPair = twoIndicesToIndexPairIndex(rho, sigma);
         return elems[firstIndexPair][secondIndexPair];
@@ -120,7 +97,7 @@ struct Tensor4x4Symx4x4SymComplex {
         return *this;
     }
 
-    __host__ inline void printIndexPairs() {
+    __host__ void printIndexPairs() const {
         std::cout << std::scientific << std::showpos << std::setprecision(8);
         std::cout << "Components of Tensor4x4Symx4x4SymComplex:" << std::endl;
         for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
@@ -132,7 +109,7 @@ struct Tensor4x4Symx4x4SymComplex {
         }
     }
     
-    __host__ inline void printFourIndices() {
+    __host__ void printFourIndices() const {
         std::cout << std::scientific << std::showpos << std::setprecision(8);
         for (int mu = 0; mu <= 3; mu++)
         for (int nu = 0; nu <= mu; nu++)
@@ -141,7 +118,7 @@ struct Tensor4x4Symx4x4SymComplex {
             int firstIndexPair = twoIndicesToIndexPairIndex(mu, nu);
             int secondIndexPair = twoIndicesToIndexPairIndex(rho, sigma);
             std::cout <<
-                "Tensor_{" <<
+                "tensor_{" <<
                 mu << "," << nu << "," << rho << "," << sigma <<
                 "}=" << elems[firstIndexPair][secondIndexPair] <<
             std::endl;
@@ -149,7 +126,7 @@ struct Tensor4x4Symx4x4SymComplex {
     }
 
     template<PrintComplex printComplex = complex_both>
-    __host__ inline void printMatrix10x10() {
+    __host__ inline void printMatrix10x10() const {
         std::cout << std::scientific << std::showpos << std::setprecision(4);
         for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
             for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
@@ -170,7 +147,7 @@ struct Tensor4x4Symx4x4SymComplex {
     }
 
     template<PrintComplex printComplex = complex_both>
-    __host__ inline void printMatrix4x4FirstSubMatrix(int mu, int nu) {
+    __host__ inline void printMatrix4x4FirstSubMatrix(int mu, int nu) const {
         std::cout << std::scientific << std::showpos << std::setprecision(4);
         
         int firstIndexPair = twoIndicesToIndexPairIndex(mu, nu);
@@ -195,7 +172,7 @@ struct Tensor4x4Symx4x4SymComplex {
     }
 
     template<PrintComplex printComplex = complex_both>
-    __host__ inline void printMatrix4x4SecondSubMatrix(int rho, int sigma) {
+    __host__ inline void printMatrix4x4SecondSubMatrix(int rho, int sigma) const {
         std::cout << std::scientific << std::showpos << std::setprecision(4);
         
         int secondIndexPair = twoIndicesToIndexPairIndex(rho, sigma);
@@ -221,47 +198,15 @@ struct Tensor4x4Symx4x4SymComplex {
     
 };
 
-
 template<class floatT>
-__device__ __host__ inline bool compareTensor4x4Symx4x4SymComplex(Tensor4x4Symx4x4SymComplex<floatT> a, Tensor4x4Symx4x4SymComplex<floatT> b, floatT tol) {
+__host__ inline std::ostream &operator<<(std::ostream &s, const Tensor4x4Symx4x4SymComplex<floatT> &tensor) {
     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-            if (!compareCOMPLEX(a.elems[firstIndexPair][secondIndexPair], b.elems[firstIndexPair][secondIndexPair], tol)) return false;
-        }
-    }
-    return true;
-}
-
-template<class floatT>
-__host__ inline std::ostream &operator<<(std::ostream &s, Tensor4x4Symx4x4SymComplex<floatT> tensor) {
-    for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
-        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-            s << tensor.elems[firstIndexPair][secondIndexPair];
+            s << tensor(firstIndexPair, secondIndexPair) << " ";
         }
     }
     return s;
 }
-
-// template<class floatT>
-// void inline printTensor4x4Symx4x4SymComplexComponentIndexPairs(Tensor4x4Symx4x4SymComplex<floatT> tensor, int firstIndexPair, int secondIndexPair) {
-//     std::cout <<
-//         "firstIndexPair=" << firstIndexPair <<", " <<
-//         "secondIndexPair=" << secondIndexPair << ", " <<
-//         "component=" << tensor.elems[firstIndexPair][secondIndexPair] <<
-//     std::endl;
-// }
-
-// // debugging functions
-// // __device__ left out because of std::cout
-// template<class floatT>
-// __attribute__((unused)) void  __host__ inline printTensor4x4Symx4x4SymComplexIndexPairs(const Tensor4x4Symx4x4SymComplex<floatT> &tensor) {
-//     std::cout << "Components of Tensor4x4Symx4x4SymComplex:\n" << std::endl;
-//     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
-//         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-//             printTensor4x4Symx4x4SymComplexComponentIndexPairs<floatT>(tensor, firstIndexPair, secondIndexPair);
-//         }
-//     }
-// }
 
 template<class floatT>
 __device__ __host__ inline bool cmp_all_elements_prec(
@@ -271,22 +216,7 @@ __device__ __host__ inline bool cmp_all_elements_prec(
 ) {
     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-            if (!compareCOMPLEX(x.elems[firstIndexPair][secondIndexPair], y.elems[firstIndexPair][secondIndexPair], prec)) return false;
-        }
-    }
-    return true;
-}
-
-template<class floatT>
-__device__ __host__ inline bool cmp_all_elements_prec_to_value(
-    const Tensor4x4Symx4x4SymComplex<floatT> &x,
-    const floatT value,
-    const floatT prec
-) {
-    for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
-        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
-            COMPLEX(floatT) complexValue = value;
-            if (!compareCOMPLEX(x.elems[firstIndexPair][secondIndexPair], complexValue, prec)) return false;
+            if (!compareCOMPLEX(x(firstIndexPair, secondIndexPair), y(firstIndexPair, secondIndexPair), prec)) return false;
         }
     }
     return true;

@@ -17,12 +17,22 @@ struct Matrix4x4Sym {
 
     constexpr Matrix4x4Sym(const Matrix4x4Sym<floatT>&) = default;
     __device__ __host__ Matrix4x4Sym(floatT a) : elems{a, a, a, a, a, a, a, a, a, a} {}
+    // __device__ __host__ Matrix4x4Sym(float a) : elems{a, a, a, a, a, a, a, a, a, a} {}
+    // __device__ __host__ Matrix4x4Sym(double a) : elems{a, a, a, a, a, a, a, a, a, a} {}
     __device__ __host__ Matrix4x4Sym() : elems{0, 0, 0, 0, 0, 0, 0, 0, 0, 0} {}
 
     __device__ __host__ Matrix4x4Sym(floatT e00, floatT e11, floatT e22, floatT e33, floatT e01, floatT e02, floatT e03, floatT e12,
                                      floatT e13, floatT e23) :
             elems{e00, e11, e22, e33, e01, e02, e03, e12, e13, e23} {}
 
+    __device__ __host__ floatT operator()(int indexPair) const {
+        return elems[indexPair];
+    }
+
+    __device__ __host__ void operator()(int indexPair, floatT value) {
+        elems[indexPair] = value;
+    }
+    
     __device__ __host__ inline floatT operator()(int mu, int nu) {
         if (mu == 0 && nu == 0) return elems[entry::e00];
         else if (mu == 1 && nu == 1) return elems[entry::e11];
@@ -113,4 +123,12 @@ __device__ __host__ inline Matrix4x4Sym<floatT> operator+(const Matrix4x4Sym<flo
     return Matrix4x4Sym<floatT>(x.elems[0]+ y.elems[0], x.elems[1]+y.elems[1], x.elems[2]+y.elems[2], x.elems[3]+y.elems[3],
                                 x.elems[4]+y.elems[4], x.elems[5]+y.elems[5], x.elems[6]+y.elems[6],
                                 x.elems[7]+y.elems[7], x.elems[8]+y.elems[8], x.elems[9]+y.elems[9]);
+}
+
+template<class floatT>
+__host__ inline std::ostream &operator<<(std::ostream &s, const Matrix4x4Sym<floatT> matrix) {
+    for (int i = 0; i < 10; i++) {
+        s << matrix(i) << " ";
+    }
+    return s;
 }

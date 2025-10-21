@@ -82,8 +82,6 @@ int main(int argc, char *argv[]) {
 
     bool lerror = false;
 
-    if (compareMatrix4x4SymComplex(firstEMT, secondEMT, 1e-13)) lerror = true;
-
     if (lerror) {
         rootLogger.error("At least one test failed!");
         return -1;

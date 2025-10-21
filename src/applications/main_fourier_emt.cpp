@@ -637,6 +637,7 @@ int main(int argc, char *argv[]) {
     // Second Step: Combine Fourier-Transformed EMT Fields
     
     // create lattice containers for EMT fields
+    LatticeContainer<true, Matrix4x4Sym<COMPLEX(PREC)>> EMTUComplex(commBase, "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX");
     LatticeContainer<false, Matrix4x4SymComplex<PREC>> EMTUComplexHost(commBase, "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUComplexDevice(commBase, "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUFourierTransformedForwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS");
@@ -644,6 +645,7 @@ int main(int argc, char *argv[]) {
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUFourierTransformedForwardsBackwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS");
     
     // adjust their size
+    EMTUComplex.adjustSize(GInd::getLatData().vol4);
     EMTUComplexHost.adjustSize(GInd::getLatData().vol4);
     EMTUComplexDevice.adjustSize(GInd::getLatData().vol4);
     EMTUFourierTransformedForwards.adjustSize(GInd::getLatData().vol4);
@@ -651,22 +653,24 @@ int main(int argc, char *argv[]) {
     EMTUFourierTransformedForwardsBackwards.adjustSize(GInd::getLatData().vol4);
     
     // calculate EMT on one of them
+    EMTUComplex.template iterateOverBulk<All, HaloDepth>(EMTtraceless<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
     EMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
     EMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
     // EMTUFourier.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplexZero<PREC, true, HaloDepth>(gauge.getAccessor()));
     // EMTUFourierTransformedForwardsBackwards.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplexZero<PREC, true, HaloDepth>(gauge.getAccessor()));
     
     Matrix4x4Sym<PREC> resultEMTU;
-    Matrix4x4SymComplex<PREC> resultEMTUComplexDevice;
+    Matrix4x4Sym<COMPLEX(PREC)> resultEMTUComplex;
     Matrix4x4SymComplex<PREC> resultEMTUComplexHost;
+    Matrix4x4SymComplex<PREC> resultEMTUComplexDevice;
     Matrix4x4SymComplex<PREC> resultEMTUFourierTransformedForwards;
     Matrix4x4SymComplex<PREC> resultEMTUFourierTransformedForwardsBackwards;
     
     // // create emt observable object
-    // EnergyMomentumTensor<PREC, USE_GPU, HaloDepth> EMT(gauge);
+    EnergyMomentumTensor<PREC, USE_GPU, HaloDepth> EMT(gaugeDevice);
 
     // // standard EMT averaging
-    // EMT.EMTUAveraged(resultEMTU);
+    EMT.EMTUAveraged(resultEMTU);
 
     // create Fourier class
     FourierClass<PREC> fourierClass(gaugeDevice.getComm());
@@ -683,26 +687,33 @@ int main(int argc, char *argv[]) {
     fourierClass.performFourier3DEMT(EMTUComplexDevice, EMTUFourierTransformedBackwards, -1.0);
     // perform Fourier transformation backwards after the forwards
     fourierClass.performFourier3DEMT(EMTUFourierTransformedForwards, EMTUFourierTransformedForwardsBackwards, -1.0);
-
+    
+    EMTUComplex.reduce(resultEMTUComplex, GInd::getLatData().vol4);
     EMTUComplexDevice.reduce(resultEMTUComplexDevice, GInd::getLatData().vol4);
     EMTUComplexHost.reduce(resultEMTUComplexHost, GInd::getLatData().vol4);
     EMTUFourierTransformedForwards.reduce(resultEMTUFourierTransformedForwards, GInd::getLatData().vol4);
     EMTUFourierTransformedForwardsBackwards.reduce(resultEMTUFourierTransformedForwardsBackwards, GInd::getLatData().vol4);
     
     LatticeContainerAccessor EMTUHostAccessor(EMTUComplexHost.getAccessor());
-
+    
     Matrix4x4SymComplex<PREC> complexAtZero = EMTUHostAccessor.getElement<Matrix4x4SymComplex<PREC>>(GInd::getSite(0,0,0,0));
-
+    
     // resize value by sqrt(V_4)
     complexAtZero *= sqrt(GInd::getLatData().vol4);
+    
+    rootLogger.info("Test EMT complex and standard:");
+    rootLogger.info("Matrix4x4Sym<PREC>:          ∫T_munu(r) = ", resultEMTU);
+    rootLogger.info("Matrix4x4Sym<COMPLEX(PREC)>: ∫T_munu(r) = ", resultEMTUComplexHost);
+    rootLogger.info("Matrix4x4SymComplex<PREC>:   ∫T_munu(r) = ", resultEMTUComplexDevice);
+    // compare_elementwise_prec(resultEMTUComplexHost, resultEMTUComplexDevice, 1e-12, 1e-12, "EMT_complex = EMT_standard:");
 
     // compare T_munu at r=0 and integrated FFT(T_munu) over all p
     rootLogger.info("Test FFT via ∫dp T_munu(p) = T_munu(r=0):");
-    compare_elementwise_prec(complexAtZero, resultEMTUFourierTransformedForwards, 1e-12, 1e-12, "Comparison of T_munu(r=0) and integrated T_munu(p) elementwise");
+    compare_elementwise_prec(complexAtZero, resultEMTUFourierTransformedForwards, 1e-12, 1e-12, "T_munu(r=0) = ∫T_munu(p)");
     
     // compare integrated T_munu(r) with integrated FFT^{-1}(FFT(T_munu))(r)
     rootLogger.info("Test FFT invertibility:");
-    compare_lattice_containers_elementwise_prec<true, Matrix4x4SymComplex<PREC>>(EMTUComplexDevice, EMTUFourierTransformedForwardsBackwards, 1e-14, "Comparison of T_munu(r) and FFT^{-1}(FFT(T_munu))(r) site by site");
+    compare_lattice_containers_elementwise_prec<true, Matrix4x4SymComplex<PREC>>(EMTUComplexDevice, EMTUFourierTransformedForwardsBackwards, 1e-14, "T_munu(r) = FFT^{-1}(FFT(T_munu))(r) site by site");
 
     // -----------------------------------------------------------------------
     // Second Step: Combine Fourier-Transformed EMT Fields
@@ -882,6 +893,8 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Test full orthogonality of projector P_SL with projectors P_LT, P_TT:");
     compare_lattice_container_elementwise_prec_to_value(projectorProductSSLT, zeroTensor, 1e-12, "P_SL@P_LT = 0.");
     compare_lattice_container_elementwise_prec_to_value(projectorProductSSTT, zeroTensor, 1e-12, "P_SL@P_TT = 0.");
+
+    std::cout << "Zero tensor: " << zeroTensor << std::endl;
     
     // -----------------------------------------------------------------------
     // Fourth Step: Reduce field to array of radii
