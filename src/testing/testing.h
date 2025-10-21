@@ -10,12 +10,6 @@
 #include "../define.h"
 #include "../gauge/gauge_kernels.cpp"
 
-// __device__ __host__ bool all(const bool* array) {
-//     for (int i = 0; i < sizeof(array); i++) {
-//         if (!array[i]) return false;
-//     }
-//     return true;
-// }
 
 void check(bool condition, const std::string text) {
     if (condition) {
@@ -51,8 +45,6 @@ template<typename T>
 void compare_elementwise_prec(const T &ref, const T &res, const double rel, const double prec, const std::string text) {
     if (cmp_all_elements_prec(ref, res, prec)) {
         rootLogger.info(CoutColors::green, "TEST PASSED: ", CoutColors::reset, text);
-        // rootLogger.info(ref ,  " vs");
-        // rootLogger.info(res);
     } else {
         rootLogger.error(CoutColors::red, "TEST FAILED: ", CoutColors::reset, text);
         rootLogger.error(ref, " vs");
