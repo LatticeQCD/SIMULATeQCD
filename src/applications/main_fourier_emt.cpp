@@ -637,7 +637,6 @@ int main(int argc, char *argv[]) {
     // Second Step: Combine Fourier-Transformed EMT Fields
     
     // create lattice containers for EMT fields
-    LatticeContainer<true, Matrix4x4Sym<COMPLEX(PREC)>> EMTUComplex(commBase, "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX");
     LatticeContainer<false, Matrix4x4SymComplex<PREC>> EMTUComplexHost(commBase, "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUComplexDevice(commBase, "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUFourierTransformedForwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS");
@@ -645,7 +644,6 @@ int main(int argc, char *argv[]) {
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUFourierTransformedForwardsBackwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS_BACKWARDS");
     
     // adjust their size
-    EMTUComplex.adjustSize(GInd::getLatData().vol4);
     EMTUComplexHost.adjustSize(GInd::getLatData().vol4);
     EMTUComplexDevice.adjustSize(GInd::getLatData().vol4);
     EMTUFourierTransformedForwards.adjustSize(GInd::getLatData().vol4);
@@ -653,14 +651,10 @@ int main(int argc, char *argv[]) {
     EMTUFourierTransformedForwardsBackwards.adjustSize(GInd::getLatData().vol4);
     
     // calculate EMT on one of them
-    EMTUComplex.template iterateOverBulk<All, HaloDepth>(EMTtraceless<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
     EMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
     EMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
-    // EMTUFourier.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplexZero<PREC, true, HaloDepth>(gauge.getAccessor()));
-    // EMTUFourierTransformedForwardsBackwards.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplexZero<PREC, true, HaloDepth>(gauge.getAccessor()));
     
     Matrix4x4Sym<PREC> resultEMTU;
-    Matrix4x4Sym<COMPLEX(PREC)> resultEMTUComplex;
     Matrix4x4SymComplex<PREC> resultEMTUComplexHost;
     Matrix4x4SymComplex<PREC> resultEMTUComplexDevice;
     Matrix4x4SymComplex<PREC> resultEMTUFourierTransformedForwards;
@@ -688,7 +682,6 @@ int main(int argc, char *argv[]) {
     // perform Fourier transformation backwards after the forwards
     fourierClass.performFourier3DEMT(EMTUFourierTransformedForwards, EMTUFourierTransformedForwardsBackwards, -1.0);
     
-    EMTUComplex.reduce(resultEMTUComplex, GInd::getLatData().vol4);
     EMTUComplexDevice.reduce(resultEMTUComplexDevice, GInd::getLatData().vol4);
     EMTUComplexHost.reduce(resultEMTUComplexHost, GInd::getLatData().vol4);
     EMTUFourierTransformedForwards.reduce(resultEMTUFourierTransformedForwards, GInd::getLatData().vol4);
@@ -701,12 +694,6 @@ int main(int argc, char *argv[]) {
     // resize value by sqrt(V_4)
     complexAtZero *= sqrt(GInd::getLatData().vol4);
     
-    rootLogger.info("Test EMT complex and standard:");
-    rootLogger.info("Matrix4x4Sym<PREC>:          ∫T_munu(r) = ", resultEMTU);
-    rootLogger.info("Matrix4x4Sym<COMPLEX(PREC)>: ∫T_munu(r) = ", resultEMTUComplexHost);
-    rootLogger.info("Matrix4x4SymComplex<PREC>:   ∫T_munu(r) = ", resultEMTUComplexDevice);
-    // compare_elementwise_prec(resultEMTUComplexHost, resultEMTUComplexDevice, 1e-12, 1e-12, "EMT_complex = EMT_standard:");
-
     // compare T_munu at r=0 and integrated FFT(T_munu) over all p
     rootLogger.info("Test FFT via ∫dp T_munu(p) = T_munu(r=0):");
     compare_elementwise_prec(complexAtZero, resultEMTUFourierTransformedForwards, 1e-12, 1e-12, "T_munu(r=0) = ∫T_munu(p)");
