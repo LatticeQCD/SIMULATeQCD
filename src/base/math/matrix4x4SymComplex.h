@@ -6,6 +6,7 @@
 #include "../../define.h"
 #include "complex.h"
 #include "indices4x4Sym.h"
+#include "matrix4x4.h"
 
 
 // Symmetric COMPLEX 4x4 Matrix
@@ -142,9 +143,12 @@ struct Matrix4x4SymComplex {
         return *this;
     }
 
+    __host__ void printName(std::string str) {
+        std::cout << str << std::endl;
+    }
+
     __host__ void printIndexPair() const {
         std::cout << std::scientific << std::showpos << std::setprecision(8);
-        std::cout << "Components of Matrix4x4SymComplex:" << std::endl;
         for (int i = 0; i < 10; i++) {
             std::cout << "tensor[" << i << "]=" << elems[i] << std::endl;
         }
@@ -152,11 +156,10 @@ struct Matrix4x4SymComplex {
 
     __host__ void printMatrix4x4Triangle() const {
         std::cout << std::scientific << std::showpos << std::setprecision(4);
-        std::cout << "Components of Matrix4x4SymComplex:" << std::endl;
         for (int mu = 0; mu <= 3; mu++) {
             for (int nu = 0; nu <= mu; nu++) {
                 int indexPair = twoIndicesToIndexPairIndex(mu, nu);
-                std::cout << elems[indexPair];
+                std::cout << elems[indexPair] << " ";
             }
             std::cout << std::endl;
         }
@@ -164,11 +167,10 @@ struct Matrix4x4SymComplex {
 
     __host__ void printMatrix4x4Full() const {
         std::cout << std::scientific << std::showpos << std::setprecision(4);
-        std::cout << "Components of Matrix4x4SymComplex:" << std::endl;
         for (int mu = 0; mu <= 3; mu++) {
             for (int nu = 0; nu <= 3; nu++) {
                 int indexPair = twoIndicesToIndexPairIndex(mu, nu);
-                std::cout << elems[indexPair];
+                std::cout << elems[indexPair] << " ";
             }
             std::cout << std::endl;
         }
@@ -221,6 +223,30 @@ template<class floatT>
 __device__ __host__ inline bool cmp_all_elements_prec(
     const Matrix4x4SymComplex<floatT> &x,
     const Matrix4x4SymComplex<floatT> &y,
+    const floatT prec
+) {
+    for (int i = 0; i < 10; i++) {
+        if (!compareCOMPLEX(x(i), y(i), prec)) return false;
+    }
+    return true;
+}
+
+template<class floatT>
+__device__ __host__ inline bool cmp_all_elements_prec(
+    const Matrix4x4Sym<COMPLEX(floatT)> &x,
+    const Matrix4x4SymComplex<floatT> &y,
+    const floatT prec
+) {
+    for (int i = 0; i < 10; i++) {
+        if (!compareCOMPLEX(x(i), y(i), prec)) return false;
+    }
+    return true;
+}
+
+template<class floatT>
+__device__ __host__ inline bool cmp_all_elements_prec(
+    const Matrix4x4SymComplex<floatT> &x,
+    const Matrix4x4Sym<COMPLEX(floatT)> &y,
     const floatT prec
 ) {
     for (int i = 0; i < 10; i++) {

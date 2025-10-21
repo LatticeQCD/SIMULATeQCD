@@ -67,6 +67,15 @@ public:
    * Utility constructor, creates class from real value, assumes imaginary value
    * to be zero.
    */
+  __host__ __device__ GPUcomplex(const int &real) {
+    c.x = (floatT) real;
+    c.y = 0.0f;
+  };
+
+  /**
+   * Utility constructor, creates class from real value, assumes imaginary value
+   * to be zero.
+   */
   __host__ __device__ GPUcomplex(const floatT &real) {
     c.x = real;
     c.y = 0.0f;

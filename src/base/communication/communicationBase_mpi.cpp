@@ -443,15 +443,31 @@ Matrix4x4Sym<double> CommunicationBase::reduce(Matrix4x4Sym<double> in) const {
 }
 
 Matrix4x4Sym<COMPLEX(float)> CommunicationBase::reduce(Matrix4x4Sym<COMPLEX(float)> in) const {
-    Matrix4x4Sym<COMPLEX(float)> recv;
+    Matrix4x4Sym<std::complex<float>> recv;
     MPI_Allreduce(&in, &recv, 10, MPI_COMPLEX, MPI_SUM, cart_comm);
-    return recv;
+    std::cout << "Reduce Matrix4x4Sym<COMPLEX(float)>" << std::endl;
+    Matrix4x4Sym<COMPLEX(float)> result;
+    for (int i = 0; i < 10; i++) {
+        std::cout << i << " " << recv.elems[i] << std::endl;
+        // std::complex<float> valueStd = recv.elems[i];
+        // COMPLEX(float) value(real(valueStd.cREAL), valueStd.cIMAG);
+        result(i, recv.elems[i]);
+    }
+    return result;
 }
 
 Matrix4x4Sym<COMPLEX(double)> CommunicationBase::reduce(Matrix4x4Sym<COMPLEX(double)> in) const {
-    Matrix4x4Sym<COMPLEX(double)> recv;
+    Matrix4x4Sym<std::complex<double>> recv;
     MPI_Allreduce(&in, &recv, 10, MPI_DOUBLE_COMPLEX, MPI_SUM, cart_comm);
-    return recv;
+    std::cout << "Reduce Matrix4x4Sym<COMPLEX(double)>" << std::endl;
+    Matrix4x4Sym<COMPLEX(double)> result;
+    for (int i = 0; i < 10; i++) {
+        std::cout << i << " " << recv.elems[i] << std::endl;
+        // std::complex<double> valueStd = recv.elems[i];
+        // COMPLEX(double) value(valueStd.cREAL, valueStd.cIMAG);
+        result(i, recv.elems[i]);
+    }
+    return result;
 }
 
 Matrix4x4SymComplex<float> CommunicationBase::reduce(Matrix4x4SymComplex<float> in) const {

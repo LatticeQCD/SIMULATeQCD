@@ -1,5 +1,6 @@
 #include "../simulateqcd.h"
 #include "../experimental/fourierNon2.h"
+#include "../base/math/matrix4x4.h"
 #include "../base/math/matrix4x4SymComplex.h"
 #include "../base/math/tensor4x4Symx4x4SymComplex.h"
 #include "../modules/observables/energyMomentumTensor.h"
@@ -637,7 +638,7 @@ int main(int argc, char *argv[]) {
     // Second Step: Combine Fourier-Transformed EMT Fields
     
     // create lattice containers for EMT fields
-    LatticeContainer<true, Matrix4x4Sym<COMPLEX(PREC)>> EMTUComplex(commBase, "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX");
+    LatticeContainer<false, Matrix4x4Sym<COMPLEX(PREC)>> EMTUComplex(commBase, "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX", "EMTU_COMPLEX");
     LatticeContainer<false, Matrix4x4SymComplex<PREC>> EMTUComplexHost(commBase, "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUComplexDevice(commBase, "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUFourierTransformedForwards(commBase, "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS", "EMTU_FOURIER_TRANSFORMED_FORWARDS");
@@ -653,7 +654,7 @@ int main(int argc, char *argv[]) {
     EMTUFourierTransformedForwardsBackwards.adjustSize(GInd::getLatData().vol4);
     
     // calculate EMT on one of them
-    EMTUComplex.template iterateOverBulk<All, HaloDepth>(EMTtraceless<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
+    EMTUComplex.template iterateOverBulk<All, HaloDepth>(EMTtraceless<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
     EMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
     EMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
     // EMTUFourier.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplexZero<PREC, true, HaloDepth>(gauge.getAccessor()));
@@ -689,23 +690,30 @@ int main(int argc, char *argv[]) {
     fourierClass.performFourier3DEMT(EMTUFourierTransformedForwards, EMTUFourierTransformedForwardsBackwards, -1.0);
     
     EMTUComplex.reduce(resultEMTUComplex, GInd::getLatData().vol4);
-    EMTUComplexDevice.reduce(resultEMTUComplexDevice, GInd::getLatData().vol4);
+    // EMTUComplexDevice.reduce(resultEMTUComplexDevice, GInd::getLatData().vol4);
     EMTUComplexHost.reduce(resultEMTUComplexHost, GInd::getLatData().vol4);
-    EMTUFourierTransformedForwards.reduce(resultEMTUFourierTransformedForwards, GInd::getLatData().vol4);
-    EMTUFourierTransformedForwardsBackwards.reduce(resultEMTUFourierTransformedForwardsBackwards, GInd::getLatData().vol4);
+    // EMTUFourierTransformedForwards.reduce(resultEMTUFourierTransformedForwards, GInd::getLatData().vol4);
+    // EMTUFourierTransformedForwardsBackwards.reduce(resultEMTUFourierTransformedForwardsBackwards, GInd::getLatData().vol4);
     
+    LatticeContainerAccessor EMTUComplexAccessor(EMTUComplex.getAccessor());
     LatticeContainerAccessor EMTUHostAccessor(EMTUComplexHost.getAccessor());
     
+    Matrix4x4Sym<COMPLEX(PREC)> complexNewAtZero = EMTUComplexAccessor.getElement<Matrix4x4Sym<COMPLEX(PREC)>>(GInd::getSite(0,0,0,0));
     Matrix4x4SymComplex<PREC> complexAtZero = EMTUHostAccessor.getElement<Matrix4x4SymComplex<PREC>>(GInd::getSite(0,0,0,0));
     
     // resize value by sqrt(V_4)
+    complexNewAtZero *= sqrt(GInd::getLatData().vol4);
     complexAtZero *= sqrt(GInd::getLatData().vol4);
     
     rootLogger.info("Test EMT complex and standard:");
-    rootLogger.info("Matrix4x4Sym<PREC>:          ∫T_munu(r) = ", resultEMTU);
-    rootLogger.info("Matrix4x4Sym<COMPLEX(PREC)>: ∫T_munu(r) = ", resultEMTUComplexHost);
-    rootLogger.info("Matrix4x4SymComplex<PREC>:   ∫T_munu(r) = ", resultEMTUComplexDevice);
-    // compare_elementwise_prec(resultEMTUComplexHost, resultEMTUComplexDevice, 1e-12, 1e-12, "EMT_complex = EMT_standard:");
+    rootLogger.info("Matrix4x4Sym<PREC>:                 ∫T_munu(r) = ", resultEMTU);
+    rootLogger.info("Matrix4x4Sym<COMPLEX(PREC)>:        ∫T_munu(r) = ", resultEMTUComplex);
+    rootLogger.info("Matrix4x4SymComplex<PREC> (Host):   ∫T_munu(r) = ", resultEMTUComplexHost);
+    rootLogger.info("Matrix4x4SymComplex<PREC> (Device): ∫T_munu(r) = ", resultEMTUComplexDevice);
+    rootLogger.info("");
+    rootLogger.info("Matrix4x4Sym<COMPLEX(PREC)>:        T_munu(r=0) = ", complexNewAtZero);
+    rootLogger.info("Matrix4x4SymComplex<PREC> (Host):   T_munu(r=0) = ", complexAtZero);
+    compare_lattice_containers_different_types_elementwise_prec(EMTUComplex, EMTUComplexHost, 1e-12, "EMT_complex = EMT_standard");
 
     // compare T_munu at r=0 and integrated FFT(T_munu) over all p
     rootLogger.info("Test FFT via ∫dp T_munu(p) = T_munu(r=0):");

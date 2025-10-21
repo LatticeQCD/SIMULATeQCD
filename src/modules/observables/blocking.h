@@ -135,14 +135,14 @@ struct EMTtraceless {
 
         SU3<floatT> FS01, FS02, FS03, FS12, FS13, FS23;
 
-        floatT FsigmaSquare = 0;
+        floatT FsigmaSquare = 0.0;
         FS01 = FT(site, 0, 1);
         FsigmaSquare += tr_d(FS01 * FS01);
         FS02 = FT(site, 0, 2);
         FsigmaSquare += tr_d(FS02 * FS02);
         FS12 = FT(site, 1, 2);
         FsigmaSquare += tr_d(FS12 * FS12);
-        floatT FtauSquare = 0;
+        floatT FtauSquare = 0.0;
         FS03 = FT(site, 0, 3);
         FtauSquare += tr_d(FS03 * FS03);
         FS13 = FT(site, 1, 3);
@@ -160,7 +160,7 @@ struct EMTtraceless {
         FS[7] = FS13;
         FS[11] = FS23;
 
-        floatT factor = -1;
+        floatT factor = -1.0;
         for (size_t mu=1;mu<4;mu++) {
             for(size_t nu=0;nu<mu;nu++) {
                 FS[mu*4+nu] = factor*FS[nu*4+mu];
@@ -175,7 +175,7 @@ struct EMTtraceless {
                 FS1 = su3_zero<floatT>();
                 FS2 = su3_zero<floatT>();
                 FS3 = su3_zero<floatT>();
-                floatT result = 0;
+                floatT result = 0.0;
                 for (size_t sigma = 0; sigma < 4; sigma++) {
                     FS1 += FS[mu*4+sigma] * FS[nu*4+sigma];
                 }
@@ -186,6 +186,11 @@ struct EMTtraceless {
                 }
                 emTensor(mu, nu, result);
             }
+        }
+        sitexyzt coords = site.coord;
+        if (coords.x == 0 && coords.y == 0 && coords.z == 4 && coords.t == 4) {
+            emTensor.printName("EMTtraceless");
+            emTensor.printMatrix4x4Full();
         }
         return emTensor;
     }
@@ -255,6 +260,12 @@ struct EMTtracelessComplex {
                 }
                 emTensor(mu, nu, result);
             }
+        }
+
+        sitexyzt coords = site.coord;
+        if (coords.x == 0 && coords.y == 0 && coords.z == 4 && coords.t == 4) {
+            emTensor.printName("EMTtracelessComplex");
+            emTensor.printMatrix4x4Full();
         }
         return emTensor;
     }

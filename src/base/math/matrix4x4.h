@@ -4,6 +4,7 @@
 
 #pragma once
 #include "../../define.h"
+#include "indices4x4Sym.h"
 
 
 // Symmetric 4x4 Matrix
@@ -76,13 +77,20 @@ struct Matrix4x4Sym {
         else if (nu == 2 && mu == 3) elems[entry::e23] = value;
     }
 
-   /* __device__ __host__ inline Matrix4x4Sym<floatT>& operator=(const floatT &y)
-    {
-        for(int i = 0; i<10;i++){
-            elems[i]=y;
+    // __device__ __host__ inline Matrix4x4Sym<floatT>& operator=(const int &y){
+    //     for(int i = 0; i < 10; i++) {
+    //         elems[i] = (floatT) y;
+    //     }
+    //     return *this;
+    // }
+
+    __device__ __host__ inline Matrix4x4Sym<floatT>& operator=(const floatT &y){
+        for(int i = 0; i < 10; i++) {
+            elems[i] = y;
         }
         return *this;
-    }*/
+    }
+
     __device__ __host__ inline Matrix4x4Sym<floatT>& operator=(const Matrix4x4Sym<floatT> &y)
     {
         for(int i = 0; i<10;i++){
@@ -113,6 +121,39 @@ struct Matrix4x4Sym {
             elems[i]*=y;
         }
         return *this;
+    }
+
+    __host__ void printName(std::string str) {
+        std::cout << str << std::endl;
+    }
+
+    __host__ void printIndexPair() const {
+        std::cout << std::scientific << std::showpos << std::setprecision(8);
+        for (int i = 0; i < 10; i++) {
+            std::cout << "tensor[" << i << "]=" << elems[i] << std::endl;
+        }
+    }
+
+    __host__ void printMatrix4x4Triangle() const {
+        std::cout << std::scientific << std::showpos << std::setprecision(4);
+        for (int mu = 0; mu <= 3; mu++) {
+            for (int nu = 0; nu <= mu; nu++) {
+                int indexPair = twoIndicesToIndexPairIndex(mu, nu);
+                std::cout << elems[indexPair] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    __host__ void printMatrix4x4Full() const {
+        std::cout << std::scientific << std::showpos << std::setprecision(4);
+        for (int mu = 0; mu <= 3; mu++) {
+            for (int nu = 0; nu <= 3; nu++) {
+                int indexPair = twoIndicesToIndexPairIndex(mu, nu);
+                std::cout << elems[indexPair] << " ";
+            }
+            std::cout << std::endl;
+        }
     }
 
 };

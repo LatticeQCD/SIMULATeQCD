@@ -256,7 +256,7 @@ public:
         // How does this work with Matrix4x4Sym<double> and not with Matrix4x4Sym<COMPLEX(double)>?
         // Because you can't initialize Matrix4x4Sym<COMPLEX(double)> with a double as you'd need a COMPLEX(double), which is not the case for 0
         // It does work with Matrix4x4SymComplex<double>
-        elemType result;
+        elemType result(0);
 
         if (onDevice) {
             ReductionResultHost->template adjustSize<elemType>(1);
@@ -286,10 +286,23 @@ public:
             result = *(ReductionResultHost->template getPointer<elemType>());
             markerEnd();
         } else {
+            std::cout << "Reduce before Reduction" << std::endl;
+            std::cout << result << std::endl;
             LatticeContainerAccessor acc = getAccessor();
             for (size_t i = 0; i < size; i++){
-                result += acc.getElement<elemType>(i);
+                elemType element = acc.getElement<elemType>(i);
+                if (i == 0) {
+                    std::cout << "Reduce first add" << std::endl;
+                    std::cout << element << std::endl;
+                }
+                result += element;
+                if (i == 0) {
+                    std::cout << "Reduce after one Reduction Step" << std::endl;
+                    std::cout << result << std::endl;
+                }
             }
+            std::cout << "Reduce before MPI" << std::endl;
+            std::cout << result << std::endl;
         }
         markerBegin("MPI reduce", "Reduction");
         value = comm.reduce(result);
@@ -561,6 +574,30 @@ struct compareLatticeContainers {
     __device__ __host__ inline int operator()(gSite site) {
         elemType leftElement = _leftAccessor.getElement<elemType>(site);
         elemType rightElement = _rightAccessor.getElement<elemType>(site);
+
+        bool correct = cmp_all_elements_prec<double>(leftElement, rightElement, _prec);
+
+        if (correct) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+};
+
+template<typename elemTypeLeft, typename elemTypeRight>
+struct compareLatticeContainersDifferentTypes {
+    LatticeContainerAccessor _leftAccessor;
+    LatticeContainerAccessor _rightAccessor;
+    double _prec;
+    typedef GIndexer<All> GInd;
+
+    compareLatticeContainersDifferentTypes(LatticeContainerAccessor leftAccessor, LatticeContainerAccessor rightAccessor, double prec) : _leftAccessor(leftAccessor), _rightAccessor(rightAccessor), _prec(prec) {}
+
+    __device__ __host__ inline int operator()(gSite site) {
+        elemTypeLeft leftElement = _leftAccessor.getElement<elemTypeLeft>(site);
+        elemTypeRight rightElement = _rightAccessor.getElement<elemTypeRight>(site);
 
         bool correct = cmp_all_elements_prec<double>(leftElement, rightElement, _prec);
 

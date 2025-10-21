@@ -82,6 +82,36 @@ void compare_lattice_containers_elementwise_prec(
 
 }
 
+template<bool onDevice, typename elemTypeLeft, typename elemTypeRight>
+void compare_lattice_containers_different_types_elementwise_prec(
+    LatticeContainer<onDevice, elemTypeLeft> &lattice_left,
+    LatticeContainer<onDevice, elemTypeRight> &lattice_right,
+    double prec,
+    const std::string text
+) {
+    // create dummy array to store site-by-site comparisons in
+    const size_t elems = GIndexer<All>::getLatData().vol4;
+    LatticeContainer<true, int> comparison_lattice(lattice_left.get_CommBase());
+    comparison_lattice.adjustSize(elems);
+
+    // site-by-site comparison
+    comparison_lattice.template iterateOverBulk<All, 0>(compareLatticeContainersDifferentTypes<elemTypeLeft, elemTypeRight>(lattice_left.getAccessor(), lattice_right.getAccessor(), prec));
+
+    // reduce number of faults
+    int counts = 0;
+    comparison_lattice.reduce(counts, elems);
+
+    // print results
+    if (counts > 0) {
+        rootLogger.error(counts, " faults detected!");
+        rootLogger.error(CoutColors::red, "TEST FAILED: ", CoutColors::reset, text);
+    } else {
+        // rootLogger.info(counts, " faults detected!");
+        rootLogger.info(CoutColors::green, "TEST PASSED: ", CoutColors::reset, text);
+    }
+
+}
+
 template<bool onDevice, typename elemType>
 void compare_lattice_container_elementwise_prec_to_value(
     LatticeContainer<onDevice, elemType> &lattice,
