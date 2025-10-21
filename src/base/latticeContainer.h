@@ -256,7 +256,7 @@ public:
         // How does this work with Matrix4x4Sym<double> and not with Matrix4x4Sym<COMPLEX(double)>?
         // Because you can't initialize Matrix4x4Sym<COMPLEX(double)> with a double as you'd need a COMPLEX(double), which is not the case for 0
         // It does work with Matrix4x4SymComplex<double>
-        elemType result;
+        elemType result = 0;
 
         if (onDevice) {
             ReductionResultHost->template adjustSize<elemType>(1);
