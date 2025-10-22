@@ -653,7 +653,7 @@ bool Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     double global_sum = commBase.reduce(local_val);
     
     // Expected sum for N ranks is (N-1)*N/2
-    int num_ranks = commBase.WorldSize();
+    int num_ranks = commBase.getNumberProcesses();
     double expected_sum = (num_ranks - 1.0) * num_ranks / 2.0;
     
     // Verify result
