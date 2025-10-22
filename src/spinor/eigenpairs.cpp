@@ -642,6 +642,40 @@ returnEigen<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NSta
         _gAcc(spinorIn.getAccessor()) {
 }
 
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+bool Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::testMPI() {
+    // Get communicator 
+    CommunicationBase &commBase = this->getComm();
+    
+    // Test global reduction
+    double local_val = commBase.MyRank();
+    double global_sum = commBase.reduce(local_val);
+    
+    // Expected sum for N ranks is (N-1)*N/2
+    int num_ranks = commBase.WorldSize();
+    double expected_sum = (num_ranks - 1.0) * num_ranks / 2.0;
+    
+    // Verify result
+    bool test_passed = (std::abs(global_sum - expected_sum) < 1e-10);
+    
+    // Only root prints results
+    if (commBase.IamRoot()) {
+        if (test_passed) {
+            rootLogger.info("MPI Test PASSED: Global sum = ", global_sum);
+        } else {
+            rootLogger.error("MPI Test FAILED: Global sum = ", global_sum, 
+                           ", Expected = ", expected_sum);
+        }
+    }
+
+    // Sync all processes
+    commBase.globalBarrier();
+    
+    return test_passed;
+}
+
+
 #define EIGEN_INIT_PLHHSN(floatT,LO,HaloDepth, HaloDepthSpin,STACKS)\
 template class Eigenpairs<floatT,false,LO,HaloDepth, HaloDepthSpin,STACKS>;\
 template struct returnEigen<floatT,false,LO,HaloDepth, HaloDepthSpin,STACKS>;
