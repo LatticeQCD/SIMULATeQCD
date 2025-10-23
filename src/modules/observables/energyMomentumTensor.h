@@ -40,7 +40,8 @@ public:
         _redBaseE(gaugefield.getComm()),
         _redBase(gaugefield.getComm()),
         _gauge(gaugefield),
-        recompute(true) {
+        recompute(true)
+    {
         _redBaseU.adjustSize(GInd::getLatData().vol3);
         _redBaseEMTU.adjustSize(GInd::getLatData().vol4);
         _redBaseEMTE.adjustSize(GInd::getLatData().vol4);

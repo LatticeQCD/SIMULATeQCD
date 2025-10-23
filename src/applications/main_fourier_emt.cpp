@@ -3,6 +3,8 @@
 #include "../base/math/matrix4x4SymComplex.h"
 #include "../base/math/tensor4x4Symx4x4SymComplex.h"
 #include "../modules/observables/energyMomentumTensor.h"
+#include "../modules/observables/energyMomentumTensorCorrelator.h"
+#include "../modules/tensor_decomposition/tensorDecomposition.h"
 #include "../modules/observables/blocking.h"
 #include "../testing/testing.h"
 
@@ -15,227 +17,201 @@
     #define PREC double
 #endif
 
-enum Summation {
-    Spatial,
-    SpatialTemporal
-};
+// enum Summation {
+//     Spatial,
+//     SpatialTemporal
+// };
 
-enum Projector {
-    SS, SL, LL, LT, TT
-};
+// enum Projector {
+//     SS, SL, LL, LT, TT
+// };
 
 // define functor for combining two EMTs to one 4x4Symx4x4Sym
-template<class floatT>
-struct EMTtimesEMT {
+// template<class floatT>
+// struct EMTtimesEMT {
 
-    LatticeContainerAccessor _firstAccessor;
-    LatticeContainerAccessor _secondAccessor;
-    typedef GIndexer<All> GInd;
+//     LatticeContainerAccessor _firstAccessor;
+//     LatticeContainerAccessor _secondAccessor;
+//     typedef GIndexer<All> GInd;
 
-    EMTtimesEMT(LatticeContainerAccessor firstAccessor, LatticeContainerAccessor secondAccessor) : _firstAccessor(firstAccessor), _secondAccessor(secondAccessor) {}
+//     EMTtimesEMT(LatticeContainerAccessor firstAccessor, LatticeContainerAccessor secondAccessor) : _firstAccessor(firstAccessor), _secondAccessor(secondAccessor) {}
 
-    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
+//     __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
 
-        Matrix4x4SymComplex<floatT> firstElement(_firstAccessor.getElement<Matrix4x4SymComplex<floatT>>(site));
-        Matrix4x4SymComplex<floatT> secondElement(_secondAccessor.getElement<Matrix4x4SymComplex<floatT>>(site));
+//         Matrix4x4SymComplex<floatT> firstElement(_firstAccessor.getElement<Matrix4x4SymComplex<floatT>>(site));
+//         Matrix4x4SymComplex<floatT> secondElement(_secondAccessor.getElement<Matrix4x4SymComplex<floatT>>(site));
 
-        Tensor4x4Symx4x4SymComplex<floatT> result(firstElement, secondElement);
+//         Tensor4x4Symx4x4SymComplex<floatT> result(firstElement, secondElement);
 
-        return result;
-    }
+//         return result;
+//     }
 
-};
+// };
 
-__device__ __host__ inline int getDimensionFunction(Summation summation) {
-    switch (summation) {
-        case Spatial:
-            return 3;
-            break;
-        case SpatialTemporal:
-            return 4;
-            break;
-        default:
-            return 4;
-    }
-}
+// template<Summation summation>
+// __device__ __host__ inline int rSquared(sitexyzt r) {
+//     int indexMax = indexMaxFunction(summation);
+//     int r2 = 0;
+//     for (int i = 0; i <= indexMax; i++) {
+//         r2 += r[i] * r[i];
+//     }
+//     return r2;
+// }
 
-__device__ __host__ inline int indexMaxFunction(Summation summation) {
-    switch (summation) {
-        case Spatial:
-            return 2;
-            break;
-        case SpatialTemporal:
-            return 3;
-            break;
-        default:
-            return 3;
-    }
-}
+// __device__ __host__ inline int delta(int mu, int nu) {
+//     if (mu == nu) {
+//         return 1;
+//     } else {
+//         return 0;
+//     }
+// }
 
-template<Summation summation>
-__device__ __host__ inline int rSquared(sitexyzt r) {
-    int indexMax = indexMaxFunction(summation);
-    int r2 = 0;
-    for (int i = 0; i <= indexMax; i++) {
-        r2 += r[i] * r[i];
-    }
-    return r2;
-}
+// template<class floatT, Summation summation>
+// __device__ __host__ inline floatT deltaT(sitexyzt r, int mu, int nu) {
+//     int d = getDimensionFunction(summation);
+//     floatT r2 = rSquared<summation>(r);
 
-__device__ __host__ inline int delta(int mu, int nu) {
-    if (mu == nu) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
+//     if (r2 == 0) {
+//         return (1.0-(1.0/d))*delta(mu,nu); // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
+//     } else {
+//         return delta(mu, nu) - r[mu]*r[nu]/r2;
+//     }
+// }
 
-template<class floatT, Summation summation>
-__device__ __host__ inline floatT deltaT(sitexyzt r, int mu, int nu) {
-    int d = getDimensionFunction(summation);
-    floatT r2 = rSquared<summation>(r);
+// template<class floatT, Summation summation>
+// __device__ __host__ inline floatT deltaHat(sitexyzt r, int mu, int nu) {
+//     int d = getDimensionFunction(summation);
+//     floatT r2 = rSquared<summation>(r);
 
-    if (r2 == 0) {
-        return (1.0-(1.0/d))*delta(mu,nu); // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
-    } else {
-        return delta(mu, nu) - r[mu]*r[nu]/r2;
-    }
-}
+//     if (r2 == 0) {
+//         return 0.0; // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
+//     } else {
+//         return delta(mu, nu) - d*r[mu]*r[nu]/r2;
+//     }
+// }
 
-template<class floatT, Summation summation>
-__device__ __host__ inline floatT deltaHat(sitexyzt r, int mu, int nu) {
-    int d = getDimensionFunction(summation);
-    floatT r2 = rSquared<summation>(r);
-
-    if (r2 == 0) {
-        return 0.0; // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
-    } else {
-        return delta(mu, nu) - d*r[mu]*r[nu]/r2;
-    }
-}
-
-template<class floatT, Projector projector, Summation summation>
-__device__ __host__ inline floatT projectorFunction(sitexyzt r, int mu, int nu, int rho, int sigma) {
+// template<class floatT, Projector projector, Summation summation>
+// __device__ __host__ inline floatT projectorFunction(sitexyzt r, int mu, int nu, int rho, int sigma) {
     
-    floatT result = 0.0;
+//     floatT result = 0.0;
 
-    // add r-independent part
-    // switch(projector) {
-    //     case LL:
-    //         result += (1.0/6.0)*delta(mu, nu)*delta(rho, sigma);
-    //         break;
-    //     // there is not r-independent part for LT
-    //     case TT:
-    //         result += (1.0/2.0) * (
-    //             delta(mu, rho)*delta(nu, sigma)
-    //             +delta(mu, sigma)*delta(nu, rho)
-    //             -delta(mu, nu)*delta(rho, sigma)
-    //         );
-    //         break;
-    // }
+//     // add r-independent part
+//     // switch(projector) {
+//     //     case LL:
+//     //         result += (1.0/6.0)*delta(mu, nu)*delta(rho, sigma);
+//     //         break;
+//     //     // there is not r-independent part for LT
+//     //     case TT:
+//     //         result += (1.0/2.0) * (
+//     //             delta(mu, rho)*delta(nu, sigma)
+//     //             +delta(mu, sigma)*delta(nu, rho)
+//     //             -delta(mu, nu)*delta(rho, sigma)
+//     //         );
+//     //         break;
+//     // }
 
-    int d = getDimensionFunction(summation);
-    floatT r2 = rSquared<summation>(r);
+//     int d = getDimensionFunction(summation);
+//     floatT r2 = rSquared<summation>(r);
 
-    // if r!=0, add r-dependent part
-    if (r2 != 0) {
-        switch (projector) {
-            case SS:
-                result += (1.0/d) * delta(mu, nu) * delta(rho, sigma);
-                break;
-            case SL:
-                result += (1.0/(d*sqrt(d-1))) * (
-                    deltaHat<floatT, summation>(r, mu, nu) * delta(rho, sigma)
-                    + delta(mu, nu) * deltaHat<floatT, summation>(r, rho, sigma)
-                );
-                break;
-            case LL:
-                result += (1.0/(d*(d-1))) * deltaHat<floatT, summation>(r, mu, nu) * deltaHat<floatT, summation>(r, rho, sigma);
-                // result += (1.0/6.0)*delta(mu, nu)*delta(rho, sigma)
-                //     -(1.0/2.0)*(
-                //         r[mu]*r[nu]*delta(rho, sigma)
-                //         +r[rho]*r[sigma]*delta(mu, nu)
-                //     )/r2
-                //     +(3.0/2.0)*(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2);
-                break;
-            case LT:
-                result += (
-                    r[mu]*r[rho]*deltaT<floatT, summation>(r, nu, sigma)
-                    +r[mu]*r[sigma]*deltaT<floatT, summation>(r, nu, rho)
-                    +r[nu]*r[rho]*deltaT<floatT, summation>(r, mu, sigma)
-                    +r[nu]*r[sigma]*deltaT<floatT, summation>(r, mu, rho)
-                )/(2*r2);
-                // result += (1.0/2.0) * (
-                //     (
-                //         r[mu]*r[rho]*delta(nu, sigma)
-                //         +r[mu]*r[sigma]*delta(nu, rho)
-                //         +r[nu]*r[rho]*delta(mu, sigma)
-                //         +r[nu]*r[sigma]*delta(mu, rho)
-                //     )/r2
-                //     -4.0*(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2)
-                // );
-                break;
-            case TT:
-                result += (1.0/2.0) * (
-                    deltaT<floatT, summation>(r, mu, rho) * deltaT<floatT, summation>(r, nu, sigma)
-                    +deltaT<floatT, summation>(r, mu, sigma) * deltaT<floatT, summation>(r, nu, rho)
-                )
-                - (1.0/(d-1)) * deltaT<floatT, summation>(r, mu, nu) * deltaT<floatT, summation>(r, rho, sigma);
-                // result += (1.0/2.0) * (
-                //         delta(mu, rho)*delta(nu, sigma)
-                //         +delta(mu, sigma)*delta(nu, rho)
-                //         -delta(mu, nu)*delta(rho, sigma)
-                //     )
-                //     +(1.0/2.0) * (
-                //     (
-                //         r[mu]*r[nu]*delta(rho, sigma)
-                //         +r[rho]*r[sigma]*delta(mu, nu)
-                //     )/r2
-                //     -(
-                //         r[mu]*r[rho]*delta(nu, sigma)
-                //         +r[mu]*r[sigma]*delta(nu, rho)
-                //         +r[nu]*r[rho]*delta(mu, sigma)
-                //         +r[nu]*r[sigma]*delta(mu, rho)
-                //     )/r2
-                //     +(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2)
-                // );
-                break;
-        }
-    } else {
-        switch (projector) {
-            case SS:
-                result += (1.0/d) * delta(mu, nu) * delta(rho, sigma);
-                break;
-            case SL:
-                result += 0.0;
-                break;
-            case LL:
-                result += (1.0/((d+2)*(d-1))) * (
-                    delta(mu, rho) * delta(nu, sigma)
-                    + delta(mu, sigma) * delta(nu, rho)
-                    - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
-                );
-                break;
-            case LT:
-                result += (1.0/(d+2)) * (
-                    delta(mu, rho) * delta(nu, sigma)
-                    + delta(mu, sigma) * delta(nu, rho)
-                    - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
-                );
-                break;
-            case TT:
-                result += ((floatT) (d+1)*(d-2)/(2*(d+2)*(d-1))) * (
-                    delta(mu, rho) * delta(nu, sigma)
-                    + delta(mu, sigma) * delta(nu, rho)
-                    - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
-                );
-                break;
-        }
-    }
+//     // if r!=0, add r-dependent part
+//     if (r2 != 0) {
+//         switch (projector) {
+//             case SS:
+//                 result += (1.0/d) * delta(mu, nu) * delta(rho, sigma);
+//                 break;
+//             case SL:
+//                 result += (1.0/(d*sqrt(d-1))) * (
+//                     deltaHat<floatT, summation>(r, mu, nu) * delta(rho, sigma)
+//                     + delta(mu, nu) * deltaHat<floatT, summation>(r, rho, sigma)
+//                 );
+//                 break;
+//             case LL:
+//                 result += (1.0/(d*(d-1))) * deltaHat<floatT, summation>(r, mu, nu) * deltaHat<floatT, summation>(r, rho, sigma);
+//                 // result += (1.0/6.0)*delta(mu, nu)*delta(rho, sigma)
+//                 //     -(1.0/2.0)*(
+//                 //         r[mu]*r[nu]*delta(rho, sigma)
+//                 //         +r[rho]*r[sigma]*delta(mu, nu)
+//                 //     )/r2
+//                 //     +(3.0/2.0)*(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2);
+//                 break;
+//             case LT:
+//                 result += (
+//                     r[mu]*r[rho]*deltaT<floatT, summation>(r, nu, sigma)
+//                     +r[mu]*r[sigma]*deltaT<floatT, summation>(r, nu, rho)
+//                     +r[nu]*r[rho]*deltaT<floatT, summation>(r, mu, sigma)
+//                     +r[nu]*r[sigma]*deltaT<floatT, summation>(r, mu, rho)
+//                 )/(2*r2);
+//                 // result += (1.0/2.0) * (
+//                 //     (
+//                 //         r[mu]*r[rho]*delta(nu, sigma)
+//                 //         +r[mu]*r[sigma]*delta(nu, rho)
+//                 //         +r[nu]*r[rho]*delta(mu, sigma)
+//                 //         +r[nu]*r[sigma]*delta(mu, rho)
+//                 //     )/r2
+//                 //     -4.0*(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2)
+//                 // );
+//                 break;
+//             case TT:
+//                 result += (1.0/2.0) * (
+//                     deltaT<floatT, summation>(r, mu, rho) * deltaT<floatT, summation>(r, nu, sigma)
+//                     +deltaT<floatT, summation>(r, mu, sigma) * deltaT<floatT, summation>(r, nu, rho)
+//                 )
+//                 - (1.0/(d-1)) * deltaT<floatT, summation>(r, mu, nu) * deltaT<floatT, summation>(r, rho, sigma);
+//                 // result += (1.0/2.0) * (
+//                 //         delta(mu, rho)*delta(nu, sigma)
+//                 //         +delta(mu, sigma)*delta(nu, rho)
+//                 //         -delta(mu, nu)*delta(rho, sigma)
+//                 //     )
+//                 //     +(1.0/2.0) * (
+//                 //     (
+//                 //         r[mu]*r[nu]*delta(rho, sigma)
+//                 //         +r[rho]*r[sigma]*delta(mu, nu)
+//                 //     )/r2
+//                 //     -(
+//                 //         r[mu]*r[rho]*delta(nu, sigma)
+//                 //         +r[mu]*r[sigma]*delta(nu, rho)
+//                 //         +r[nu]*r[rho]*delta(mu, sigma)
+//                 //         +r[nu]*r[sigma]*delta(mu, rho)
+//                 //     )/r2
+//                 //     +(r[mu]*r[nu]*r[rho]*r[sigma])/(r2*r2)
+//                 // );
+//                 break;
+//         }
+//     } else {
+//         switch (projector) {
+//             case SS:
+//                 result += (1.0/d) * delta(mu, nu) * delta(rho, sigma);
+//                 break;
+//             case SL:
+//                 result += 0.0;
+//                 break;
+//             case LL:
+//                 result += (1.0/((d+2)*(d-1))) * (
+//                     delta(mu, rho) * delta(nu, sigma)
+//                     + delta(mu, sigma) * delta(nu, rho)
+//                     - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
+//                 );
+//                 break;
+//             case LT:
+//                 result += (1.0/(d+2)) * (
+//                     delta(mu, rho) * delta(nu, sigma)
+//                     + delta(mu, sigma) * delta(nu, rho)
+//                     - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
+//                 );
+//                 break;
+//             case TT:
+//                 result += ((floatT) (d+1)*(d-2)/(2*(d+2)*(d-1))) * (
+//                     delta(mu, rho) * delta(nu, sigma)
+//                     + delta(mu, sigma) * delta(nu, rho)
+//                     - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
+//                 );
+//                 break;
+//         }
+//     }
 
-    return result;
+//     return result;
 
-}
+// }
 
 template<class floatT, Summation summation>
 struct ProjectorSumLHS {
@@ -467,32 +443,32 @@ struct ProjectorProductRHSSLSL {
 
 };
 
-template<class floatT, Projector projector, Summation summation>
-struct ProjectorField {
+// template<class floatT, Projector projector, Summation summation>
+// struct ProjectorField {
     
-    typedef GIndexer<All> GInd;
+//     typedef GIndexer<All> GInd;
 
-    ProjectorField() {}
+//     ProjectorField() {}
 
-    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
-        // get global position relative to the origin
-        sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
+//     __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
+//         // get global position relative to the origin
+//         sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
 
-        int indexMax = indexMaxFunction(summation);
+//         int indexMax = indexMaxFunction(summation);
 
-        // get desired projector value for the global position
-        Tensor4x4Symx4x4SymComplex<floatT> projectorAtSite;
-        for (int mu = 0; mu <= indexMax; mu++)
-        for (int nu = 0; nu <= mu; nu++)
-        for (int rho = 0; rho <= indexMax; rho++)
-        for (int sigma = 0; sigma <= rho; sigma++) {
-            COMPLEX(floatT) value = 0.0;
-            value = projectorFunction<floatT, projector, summation>(r, mu, nu, rho, sigma);
-            projectorAtSite(mu, nu, rho, sigma, value);
-        }
-        return projectorAtSite;
-    }
-};
+//         // get desired projector value for the global position
+//         Tensor4x4Symx4x4SymComplex<floatT> projectorAtSite;
+//         for (int mu = 0; mu <= indexMax; mu++)
+//         for (int nu = 0; nu <= mu; nu++)
+//         for (int rho = 0; rho <= indexMax; rho++)
+//         for (int sigma = 0; sigma <= rho; sigma++) {
+//             COMPLEX(floatT) value = 0.0;
+//             value = projectorFunction<floatT, projector, summation>(r, mu, nu, rho, sigma);
+//             projectorAtSite(mu, nu, rho, sigma, value);
+//         }
+//         return projectorAtSite;
+//     }
+// };
 
 // template<class floatT>
 // __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> projectorLL(sitexyzt r) {
@@ -511,70 +487,39 @@ struct ProjectorField {
 // }
 
 // define functor to contract tensor indices
-template<class floatT, Projector projector, Summation summation>
-struct ContractGTensor {
+// template<class floatT, Projector projector, Summation summation>
+// struct ContractGTensor {
 
-    LatticeContainerAccessor _GAccessor;
-    typedef GIndexer<All> GInd;
+//     LatticeContainerAccessor _GAccessor;
+//     typedef GIndexer<All> GInd;
 
-    ContractGTensor(LatticeContainerAccessor GAccessor) : _GAccessor(GAccessor) {}
+//     ContractGTensor(LatticeContainerAccessor GAccessor) : _GAccessor(GAccessor) {}
 
-    __device__ __host__ inline COMPLEX(floatT) operator()(gSite site) {
+//     __device__ __host__ inline COMPLEX(floatT) operator()(gSite site) {
 
-        // get global position relative to the origin
-        sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
+//         // get global position relative to the origin
+//         sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
 
-        int indexMax = indexMaxFunction(summation);
+//         int indexMax = indexMaxFunction(summation);
 
-        // get desired projector value for the global position
-        Tensor4x4Symx4x4SymComplex<floatT> projectorAtSite;
+//         // get correlator value at the site
+//         Tensor4x4Symx4x4SymComplex<floatT> tensor4x4Symx4x4SymComplexAtSite = _GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
 
-        for (int mu = 0; mu <= indexMax; mu++)
-        for (int nu = 0; nu <= mu; nu++)
-        for (int rho = 0; rho <= indexMax; rho++)
-        for (int sigma = 0; sigma <= rho; sigma++) {
-            COMPLEX(floatT) value = projectorFunction<floatT, LL, summation>(r, mu, nu, rho, sigma);
-            projectorAtSite(mu, nu, rho, sigma, value);
-        }
-
-        // get correlator value at the site
-        Tensor4x4Symx4x4SymComplex<floatT> tensor4x4Symx4x4SymComplexAtSite = _GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
-
-        // contract projector value with correlator value
-        COMPLEX(floatT) result = 0.0;
+//         // contract projector value with correlator value
+//         COMPLEX(floatT) result = 0.0;
         
-        for (int mu = 0; mu <= indexMax; mu++)
-        for (int nu = 0; nu <= mu; nu++)
-        for (int rho = 0; rho <= indexMax; rho++)
-        for (int sigma = 0; sigma <= rho; sigma++) {
-            result += projectorAtSite(mu, nu, rho, sigma) * tensor4x4Symx4x4SymComplexAtSite(mu, nu, rho, sigma);
-        }
+//         for (int mu = 0; mu <= indexMax; mu++)
+//         for (int nu = 0; nu <= indexMax; nu++)
+//         for (int rho = 0; rho <= indexMax; rho++)
+//         for (int sigma = 0; sigma <= indexMax; sigma++) {
+//             result += projectorFunction<floatT, LL, summation>(r, mu, nu, rho, sigma) * tensor4x4Symx4x4SymComplexAtSite(mu, nu, rho, sigma);
+//         }
 
-        return result;
+//         return result;
 
-    }
+//     }
 
-};
-
-
-// define functor to copy from device to host
-template<class floatT>
-struct CopyField {
-
-    LatticeContainerAccessor _GAccessor;
-    typedef GIndexer<All> GInd;
-
-    CopyField(LatticeContainerAccessor GAccessor) : _GAccessor(GAccessor) {}
-
-    __device__ __host__ inline floatT operator()(gSite site) {
-
-        floatT elementDevice = _GAccessor.getElement<floatT>(site);
-
-        return elementDevice;
-
-    }
-
-};
+// };
 
 
 template<class floatT>
@@ -633,9 +578,13 @@ int main(int argc, char *argv[]) {
     gaugeDevice.updateAll();
     gaugeHost.updateAll();
 
+    // create EMT_Correlator class
+    EnergyMomentumTensorCorrelator<PREC, HaloDepth> EMT_Corr(commBase);
+    TensorDecomposition<PREC, HaloDepth> tensor_decomposition(commBase);
+
     // -----------------------------------------------------------------------
     // Second Step: Combine Fourier-Transformed EMT Fields
-    
+    /*
     // create lattice containers for EMT fields
     LatticeContainer<false, Matrix4x4SymComplex<PREC>> EMTUComplexHost(commBase, "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST", "EMTU_COMPLEX_HOST");
     LatticeContainer<true, Matrix4x4SymComplex<PREC>> EMTUComplexDevice(commBase, "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE", "EMTU_COMPLEX_DEVICE");
@@ -660,10 +609,10 @@ int main(int argc, char *argv[]) {
     Matrix4x4SymComplex<PREC> resultEMTUFourierTransformedForwards;
     Matrix4x4SymComplex<PREC> resultEMTUFourierTransformedForwardsBackwards;
     
-    // // create emt observable object
+    // create emt observable object
     EnergyMomentumTensor<PREC, USE_GPU, HaloDepth> EMT(gaugeDevice);
 
-    // // standard EMT averaging
+    // standard EMT averaging
     EMT.EMTUAveraged(resultEMTU);
 
     // create Fourier class
@@ -694,21 +643,27 @@ int main(int argc, char *argv[]) {
     // resize value by sqrt(V_4)
     complexAtZero *= sqrt(GInd::getLatData().vol4);
     
+    rootLogger.info("Result before FFT-FFT: ", resultEMTUComplexDevice);
+    rootLogger.info("Result before FFT-FFT: ", resultEMTUComplexHost);
+    rootLogger.info("Result after FFT-FFT: ", resultEMTUFourierTransformedForwardsBackwards);
+
     // compare T_munu at r=0 and integrated FFT(T_munu) over all p
     rootLogger.info("Test FFT via ∫dp T_munu(p) = T_munu(r=0):");
     compare_elementwise_prec(complexAtZero, resultEMTUFourierTransformedForwards, 1e-12, 1e-12, "T_munu(r=0) = ∫T_munu(p)");
     
     // compare integrated T_munu(r) with integrated FFT^{-1}(FFT(T_munu))(r)
     rootLogger.info("Test FFT invertibility:");
-    compare_lattice_containers_elementwise_prec<true, Matrix4x4SymComplex<PREC>>(EMTUComplexDevice, EMTUFourierTransformedForwardsBackwards, 1e-14, "T_munu(r) = FFT^{-1}(FFT(T_munu))(r) site by site");
+    compare_lattice_containers_elementwise_prec<true, Matrix4x4SymComplex<PREC>>(EMTUComplexDevice, EMTUFourierTransformedForwardsBackwards, 1e-14, "T_munu(r) = FFT^{-1}(FFT(T_munu))(r) site by site"); 
 
     // -----------------------------------------------------------------------
     // Second Step: Combine Fourier-Transformed EMT Fields
     
     // define lattice containers for products
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> GTensor(commBase, "GTensor", "GTensor", "GTensor", "GTensor");
+    */
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> GTensorFourierTransformedBackwards(commBase, "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads");
     
+    /*
     // adjust their sizes
     GTensor.adjustSize(GInd::getLatData().vol4);
     GTensorFourierTransformedBackwards.adjustSize(GInd::getLatData().vol4);
@@ -718,6 +673,9 @@ int main(int argc, char *argv[]) {
     
     // FFT the product back
     fourierClass.performFourier3DTensor4x4Symx4x4SymComplex(GTensor, GTensorFourierTransformedBackwards, -1.0);
+    */
+
+    EMT_Corr.EMTU_Corr(gaugeDevice, GTensorFourierTransformedBackwards);
     
     // -----------------------------------------------------------------------
     // Third Step: Reduce 4x4x4x4 tensor field
@@ -729,13 +687,16 @@ int main(int argc, char *argv[]) {
     // adjust the sizes
     GLLDevice.adjustSize(GInd::getLatData().vol4);
     GLLHost.adjustSize(GInd::getLatData().vol4);
+
+    tensor_decomposition.getTensorFunction<true, LL>(GTensorFourierTransformedBackwards, GLLDevice);
     
     // contract 4x4x4x4 tensor
-    GLLDevice.template iterateOverBulk<All, 0>(ContractGTensor<PREC, LL, Spatial>(GTensorFourierTransformedBackwards.getAccessor()));
+    // GLLDevice.template iterateOverBulk<All, 0>(ContractGTensor<PREC, LL, Spatial>(GTensorFourierTransformedBackwards.getAccessor()));
     
     // create host field from device field
     GLLHost.copyFromLatticeContainer<true>(GLLDevice);
     
+    /*
     // test projector sum
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> projectorSumLHS(commBase, "projectorSumLHS", "projectorSumLHS", "projectorSumLHS", "projectorSumLHS");
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> projectorSumRHS(commBase, "projectorSumRHS", "projectorSumRHS", "projectorSumRHS", "projectorSumRHS");
@@ -880,9 +841,8 @@ int main(int argc, char *argv[]) {
     rootLogger.info("Test full orthogonality of projector P_SL with projectors P_LT, P_TT:");
     compare_lattice_container_elementwise_prec_to_value(projectorProductSSLT, zeroTensor, 1e-12, "P_SL@P_LT = 0.");
     compare_lattice_container_elementwise_prec_to_value(projectorProductSSTT, zeroTensor, 1e-12, "P_SL@P_TT = 0.");
+    */
 
-    std::cout << "Zero tensor: " << zeroTensor << std::endl;
-    
     // -----------------------------------------------------------------------
     // Fourth Step: Reduce field to array of radii
     
@@ -902,9 +862,7 @@ int main(int argc, char *argv[]) {
     r2max += globLX * globLX + globLY * globLY + globLZ * globLZ + globLT * globLT;
     r2max /= 4;
     
-    rootLogger.info("r2max = ", r2max);
-    
-    COMPLEX(PREC) GLLarray[r2max+1] = {};
+    COMPLEX(PREC)* GLLarray = new COMPLEX(PREC)[r2max+1];
     int Counts[r2max+1] = {};
     
     for (int x = 0; x < lx; x++)
@@ -936,10 +894,8 @@ int main(int argc, char *argv[]) {
         
         GLLarray[r2] += GLLAccessor.getElement<COMPLEX(PREC)>(GInd::getSite(x,y,z,t));
         Counts[r2] += 1;
-    
-    }
 
-    rootLogger.info("For r2=1: GLL(r^2=1)=", GLLarray[2], " with ", Counts[2], " counts.");
+    }
 
     // -----------------------------------------------------------------------
     // Fifth Step: Write into file

@@ -55,6 +55,10 @@ enum CommSync {
     COMM_OVERLAP = 64
 };
 
+enum Summation {
+    Spatial,
+    SpatialTemporal
+};
 
 
 const HaloSegment AllHaloSegments[] = {HaloSegment::X, HaloSegment::Y, HaloSegment::Z, HaloSegment::T,
