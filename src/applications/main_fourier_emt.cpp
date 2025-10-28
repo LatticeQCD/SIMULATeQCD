@@ -580,7 +580,7 @@ int main(int argc, char *argv[]) {
 
     // create EMT_Correlator class
     EnergyMomentumTensorCorrelator<PREC, HaloDepth> EMT_Corr(commBase);
-    TensorDecomposition<PREC, HaloDepth> tensor_decomposition(commBase);
+    // TensorDecomposition<PREC, HaloDepth> tensor_decomposition(commBase);
 
     // -----------------------------------------------------------------------
     // Second Step: Combine Fourier-Transformed EMT Fields
@@ -661,8 +661,12 @@ int main(int argc, char *argv[]) {
     // define lattice containers for products
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> GTensor(commBase, "GTensor", "GTensor", "GTensor", "GTensor");
     */
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> GTensorFourierTransformedBackwards(commBase, "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads");
+    // LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> GTensorFourierTransformedBackwards(commBase, "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads", "GTensorFourierTransformedBackwads");
+    // LatticeContainer<false, Tensor4x4Symx4x4SymComplex<PREC>> GTensorFourierTransformedBackwardsHost(commBase, "GTensorFourierTransformedBackwadsHost", "GTensorFourierTransformedBackwadsHost", "GTensorFourierTransformedBackwadsHost", "GTensorFourierTransformedBackwadsHost");
     
+    // GTensorFourierTransformedBackwards.adjustSize(GInd::getLatData().vol4);
+    // GTensorFourierTransformedBackwardsHost.adjustSize(GInd::getLatData().vol4);
+
     /*
     // adjust their sizes
     GTensor.adjustSize(GInd::getLatData().vol4);
@@ -675,27 +679,35 @@ int main(int argc, char *argv[]) {
     fourierClass.performFourier3DTensor4x4Symx4x4SymComplex(GTensor, GTensorFourierTransformedBackwards, -1.0);
     */
 
-    EMT_Corr.EMTU_Corr(gaugeDevice, GTensorFourierTransformedBackwards);
+    // EMT_Corr.EMTU_Corr(gaugeDevice, GTensorFourierTransformedBackwards);
     
     // -----------------------------------------------------------------------
     // Third Step: Reduce 4x4x4x4 tensor field
     
     // define lattice container for tensor-reduced field
-    LatticeContainer<true, COMPLEX(PREC)> GLLDevice(commBase, "GLL", "GLL", "GLL", "GLL");
-    LatticeContainer<false, COMPLEX(PREC)> GLLHost(commBase, "GLL_Host", "GLL_Host", "GLL_Host", "GLL_Host");
+    // LatticeContainer<true, COMPLEX(PREC)> GLLDevice(commBase, "GLL", "GLL", "GLL", "GLL");
+    // LatticeContainer<false, COMPLEX(PREC)> GLLHost(commBase, "GLL_Host", "GLL_Host", "GLL_Host", "GLL_Host");
     
     // adjust the sizes
-    GLLDevice.adjustSize(GInd::getLatData().vol4);
-    GLLHost.adjustSize(GInd::getLatData().vol4);
+    // GLLDevice.adjustSize(GInd::getLatData().vol4);
+    // GLLHost.adjustSize(GInd::getLatData().vol4);
 
-    tensor_decomposition.getTensorFunction<true, LL>(GTensorFourierTransformedBackwards, GLLDevice);
-    
     // contract 4x4x4x4 tensor
     // GLLDevice.template iterateOverBulk<All, 0>(ContractGTensor<PREC, LL, Spatial>(GTensorFourierTransformedBackwards.getAccessor()));
     
     // create host field from device field
-    GLLHost.copyFromLatticeContainer<true>(GLLDevice);
+    // GLLHost.copyFromLatticeContainer<true>(GLLDevice);
+    // GTensorFourierTransformedBackwardsHost.copyFromLatticeContainer<true>(GTensorFourierTransformedBackwards);
+
+    int r2max = EMT_Corr.get_r2max();
     
+    std::vector<COMPLEX(PREC)> vec_GLL = std::vector<COMPLEX(PREC)>(r2max+1);
+    std::vector<int> vec_counts = std::vector<int>(r2max+1);
+
+    EMT_Corr.EMTU_Corr_Gs(gaugeDevice, vec_GLL, vec_counts);
+
+    // tensor_decomposition.getTensorFunction<true, LL>(GTensorFourierTransformedBackwards, vec_GLL, vec_counts);
+
     /*
     // test projector sum
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<PREC>> projectorSumLHS(commBase, "projectorSumLHS", "projectorSumLHS", "projectorSumLHS", "projectorSumLHS");
@@ -846,56 +858,56 @@ int main(int argc, char *argv[]) {
     // -----------------------------------------------------------------------
     // Fourth Step: Reduce field to array of radii
     
-    LatticeContainerAccessor GLLAccessor(GLLHost.getAccessor());
+    // LatticeContainerAccessor GLLAccessor(GLLHost.getAccessor());
     
-    int globLX = GInd::getLatData().globLX;
-    int globLY = GInd::getLatData().globLY;
-    int globLZ = GInd::getLatData().globLZ;
-    int globLT = GInd::getLatData().globLT;
+    // int globLX = GInd::getLatData().globLX;
+    // int globLY = GInd::getLatData().globLY;
+    // int globLZ = GInd::getLatData().globLZ;
+    // int globLT = GInd::getLatData().globLT;
     
-    int lx = GInd::getLatData().lx;
-    int ly = GInd::getLatData().ly;
-    int lz = GInd::getLatData().lz;
-    int lt = GInd::getLatData().lt;
+    // int lx = GInd::getLatData().lx;
+    // int ly = GInd::getLatData().ly;
+    // int lz = GInd::getLatData().lz;
+    // int lt = GInd::getLatData().lt;
     
-    int r2max = 0;
-    r2max += globLX * globLX + globLY * globLY + globLZ * globLZ + globLT * globLT;
-    r2max /= 4;
+    // int r2max = 0;
+    // r2max += globLX * globLX + globLY * globLY + globLZ * globLZ + globLT * globLT;
+    // r2max /= 4;
     
-    COMPLEX(PREC)* GLLarray = new COMPLEX(PREC)[r2max+1];
-    int Counts[r2max+1] = {};
+    // COMPLEX(PREC)* GLLarray = new COMPLEX(PREC)[r2max+1];
+    // int Counts[r2max+1] = {};
     
-    for (int x = 0; x < lx; x++)
-    for (int y = 0; y < ly; y++)
-    for (int z = 0; z < lz; z++)
-    for (int t = 0; t < lt; t++) {
-        sitexyzt site(x, y, z, t);
-        int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
-        // if (x == 0 && y == 0 && t == 1) {
-        //     sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site);
-        //     rootLogger.info("Site ", site, " with global position relative to the origin r=", r, " with absolute value: ", r2);
+    // for (int x = 0; x < lx; x++)
+    // for (int y = 0; y < ly; y++)
+    // for (int z = 0; z < lz; z++)
+    // for (int t = 0; t < lt; t++) {
+    //     sitexyzt site(x, y, z, t);
+    //     int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
+    //     // if (x == 0 && y == 0 && t == 1) {
+    //     //     sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site);
+    //     //     rootLogger.info("Site ", site, " with global position relative to the origin r=", r, " with absolute value: ", r2);
 
-        //     if (z == 3) {
-        //         for (int mu = 0; mu <= 3; mu++)
-        //         for (int nu = 0; nu <= mu; nu++)
-        //         for (int rho = 0; rho <= 3; rho++)
-        //         for (int sigma = 0; sigma <= rho; sigma++) {
-        //             PREC projectorLL = projectorFunction<PREC, LL, Spatial>(r, mu, nu, rho, sigma);
-        //             PREC projectorLT = projectorFunction<PREC, LT, Spatial>(r, mu, nu, rho, sigma);
-        //             PREC projectorTT = projectorFunction<PREC, TT, Spatial>(r, mu, nu, rho, sigma);
-        //             int d = getDimensionFunction(Spatial);
-        //             PREC sum = projectorLL + projectorLT + projectorTT;
-        //             PREC rhs = (1.0/2.0)*(delta(mu, rho)*delta(nu, sigma) + delta(mu, sigma)*delta(nu, rho) - (2.0/d)*delta(mu, nu)*delta(rho, sigma));
-        //             rootLogger.info("Sum of projectors at ", mu, nu, rho, sigma, ": ", sum, " = ", rhs);
-        //             rootLogger.info("P_LL=", projectorLL, " P_LT=", projectorLT, " P_TT=", projectorTT);
-        //         }
-        //     }
-        // }
+    //     //     if (z == 3) {
+    //     //         for (int mu = 0; mu <= 3; mu++)
+    //     //         for (int nu = 0; nu <= mu; nu++)
+    //     //         for (int rho = 0; rho <= 3; rho++)
+    //     //         for (int sigma = 0; sigma <= rho; sigma++) {
+    //     //             PREC projectorLL = projectorFunction<PREC, LL, Spatial>(r, mu, nu, rho, sigma);
+    //     //             PREC projectorLT = projectorFunction<PREC, LT, Spatial>(r, mu, nu, rho, sigma);
+    //     //             PREC projectorTT = projectorFunction<PREC, TT, Spatial>(r, mu, nu, rho, sigma);
+    //     //             int d = getDimensionFunction(Spatial);
+    //     //             PREC sum = projectorLL + projectorLT + projectorTT;
+    //     //             PREC rhs = (1.0/2.0)*(delta(mu, rho)*delta(nu, sigma) + delta(mu, sigma)*delta(nu, rho) - (2.0/d)*delta(mu, nu)*delta(rho, sigma));
+    //     //             rootLogger.info("Sum of projectors at ", mu, nu, rho, sigma, ": ", sum, " = ", rhs);
+    //     //             rootLogger.info("P_LL=", projectorLL, " P_LT=", projectorLT, " P_TT=", projectorTT);
+    //     //         }
+    //     //     }
+    //     // }
         
-        GLLarray[r2] += GLLAccessor.getElement<COMPLEX(PREC)>(GInd::getSite(x,y,z,t));
-        Counts[r2] += 1;
+    //     GLLarray[r2] += GLLAccessor.getElement<COMPLEX(PREC)>(GInd::getSite(x,y,z,t));
+    //     Counts[r2] += 1;
 
-    }
+    // }
 
     // -----------------------------------------------------------------------
     // Fifth Step: Write into file
@@ -906,13 +918,23 @@ int main(int argc, char *argv[]) {
     FileWriter file_GLL(commBase, param);
     file_GLL.createFile(datNameGLL.str());
     LineFormatter header_GLL = file_GLL.header();
-    header_GLL << "r2" << "GLL.real" << "GLL.imag" << "Count";
+    header_GLL << "r2";
     header_GLL.endLine();
+    
+    LineFormatter newLineGLL = file_GLL.tag("");
+    for (int r2 = 0; r2 < r2max + 1; r2++) {
+        if (vec_counts[r2] != 0) {
+            newLineGLL << r2;
+        }
+    }
+    newLineGLL.endLine();
+    
+    // header_GLL << "GLL.real";
+    // header_GLL.endLine();
 
     for (int r2 = 0; r2 < r2max + 1; r2++) {
-        if (Counts[r2] != 0) {
-            LineFormatter newLineGLL = file_GLL.tag("");
-            newLineGLL << r2 << GLLarray[r2].cREAL << GLLarray[r2].cIMAG << Counts[r2];
+        if (vec_counts[r2] != 0) {
+            newLineGLL << vec_GLL[r2];
         }
     }
 

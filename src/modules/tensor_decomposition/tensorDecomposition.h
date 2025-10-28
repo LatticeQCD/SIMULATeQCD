@@ -235,11 +235,17 @@ class TensorDecomposition {
     private:
         typedef GIndexer<All, HaloDepth> GInd;
     public:
+        // standard constructor
         TensorDecomposition(CommunicationBase& commBase) {
+
+            // create lattice containers for all projector fields, adjust sizes and fill them
             for (int projector = 0; projector <= TT; projector++) {
                 std::string name = "P" + std::to_string(projector);
                 projectorField.emplace_back(std::move(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>(commBase, name, name, name, name)));
                 projectorField.back().adjustSize(GInd::getLatData().vol4);
+
+                // doesn't work because projector in ProjectorField<floatT, projector, Spatial>() must be a projector, not a int
+                // projectorField[projector].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, projector, Spatial>());
             }
             
             projectorField[SS].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, SS, Spatial>());
@@ -249,6 +255,17 @@ class TensorDecomposition {
             projectorField[TT].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, TT, Spatial>());
         }
 
+        int get_r2max() {
+
+            typedef GIndexer<All> GInd;
+
+            sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
+
+            int r2max = rSquared<SpatialTemporal>(globL) / 4.0;
+
+            return r2max;
+        }
+
         template<Projector projector>
         const LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& getProjector() {
             return projectorField[projector];
@@ -256,16 +273,77 @@ class TensorDecomposition {
 
         template<bool onDevice, Projector projector>
         void getTensorFunction(
-            const LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-            LatticeContainer<onDevice, COMPLEX(floatT)>& tensor_function_field
+            LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
+            std::vector<COMPLEX(floatT)>& array,
+            std::vector<int>& counts
+        );
+
+        template<Summation summation>
+        void reduceR2(
+            LatticeContainerAccessor latticeAccessor,
+            std::vector<COMPLEX(floatT)>& array,
+            std::vector<int>& counts
         );
 };
 
 template<class floatT, size_t HaloDepth>
 template<bool onDevice, Projector projector>
 void TensorDecomposition<floatT, HaloDepth>::getTensorFunction(
-    const LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-    LatticeContainer<onDevice, COMPLEX(floatT)>& tensor_function_field
+    LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
+    std::vector<COMPLEX(floatT)>& array,
+    std::vector<int>& counts
 ) {
+
+    LatticeContainer<onDevice, COMPLEX(floatT)> tensor_function_field(tensor_field.get_CommBase(), "tensor_function_field", "tensor_function_field", "tensor_function_field", "tensor_function_field");
+    LatticeContainer<false, COMPLEX(floatT)> tensor_function_field_host(tensor_field.get_CommBase(), "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host");
+    tensor_function_field.adjustSize(GInd::getLatData().vol4);
+    tensor_function_field_host.adjustSize(GInd::getLatData().vol4);
+
     tensor_function_field.template iterateOverBulk<All, HaloDepth>(ContractTensor<floatT, onDevice, Spatial>(tensor_field, this->getProjector<projector>()));
+
+    tensor_function_field_host.copyFromLatticeContainer(tensor_function_field);
+
+    this->reduceR2<SpatialTemporal>(tensor_function_field_host.getAccessor(), array, counts);
+}
+
+template<class floatT, size_t HaloDepth>
+template<Summation summation>
+void TensorDecomposition<floatT, HaloDepth>::reduceR2(
+    LatticeContainerAccessor latticeAccessor,
+    std::vector<COMPLEX(floatT)>& array,
+    std::vector<int>& counts
+) {
+
+    typedef GIndexer<All> GInd;
+
+    // LatticeContainerAccessor latticeAccessor(lattice.getAccessor());
+
+    // sitexyzt glob = GInd::getLatData().globalLatticeXYZT();
+
+    int lx = GInd::getLatData().lx;
+    int ly = GInd::getLatData().ly;
+    int lz = GInd::getLatData().lz;
+    int lt = GInd::getLatData().lt;
+
+    // int r2max = rSquared<SpatialTemporal>()
+
+    int r2max = get_r2max();
+
+    // set array to zero initially
+    for (int r2 = 0; r2 < r2max + 1; r2++) {
+        array[r2] = 0.0;
+    }
+
+    // array = new COMPLEX(floatT)[r2max+1];
+
+    for (int x = 0; x < lx; x++)
+    for (int y = 0; y < ly; y++)
+    for (int z = 0; z < lz; z++)
+    for (int t = 0; t < lt; t++) {
+        sitexyzt site(x, y, z, t);
+        int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
+        array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
+        counts[r2] += 1;
+    }
+
 }
