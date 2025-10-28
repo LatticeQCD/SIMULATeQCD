@@ -16,6 +16,7 @@
 #include "../modules/observables/weinberg.h"
 #include "../modules/observables/blocking.h"
 #include "../modules/observables/energyMomentumTensor.h"
+#include "../modules/observables/energyMomentumTensorCorrelator.h"
 #include "../modules/observables/colorElectricCorr.h"
 #include "../modules/observables/colorMagneticCorr.h"
 #include "../modules/gaugeFixing/gfix.h"
@@ -73,6 +74,7 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> energyMomentumTensorTracefull;
     Parameter<bool> energyMomentumTensorTracelessTimeSlices;
     Parameter<bool> energyMomentumTensorTracefullTimeSlices;
+    Parameter<bool> energyMomentumTensorTracelessCorrelatorTensorDecomposition;
     Parameter<int> binsize; //! the binsize used in the blocking method
 
     Parameter<bool> PolyakovLoopCorrelator;
@@ -133,7 +135,7 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(energyMomentumTensorTracefull, "energyMomentumTensorTracefull", false);
         addDefault(energyMomentumTensorTracelessTimeSlices, "energyMomentumTensorTracelessTimeSlices", false);
         addDefault(energyMomentumTensorTracefullTimeSlices, "energyMomentumTensorTracefullTimeSlices", false);
-        addDefault(energyMomentumTensorTracelessFourier, "energyMomentumTensorTracefullFourier", false);
+        addDefault(energyMomentumTensorTracelessCorrelatorTensorDecomposition, "energyMomentumTensorTracelessCorrelatorTensorDecomposition", false);
         addDefault(ColorElectricCorrTimeSlices_naive, "ColorElectricCorrTimeSlices_naive", false);
         addDefault(ColorElectricCorrTimeSlices_clover, "ColorElectricCorrTimeSlices_clover", false);
         addDefault(ColorMagneticCorrTimeSlices_naive, "ColorMagneticCorrTimeSlices_naive", false);
@@ -176,7 +178,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
             datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
-            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices, datNameEMTUFourier,
+            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices,
+            datNameEMTUCorr_LL,
             datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
             datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
     // fill stream with 0's
@@ -218,7 +221,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datNameEMTE << lp.measurements_dir() << prefix.str() << "_EMTE" << lp.fileExt();
     datNameEMTUTimeSlices << lp.measurements_dir() << prefix.str() << "_EMTUTimeSlices" << lp.fileExt();
     datNameEMTETimeSlices << lp.measurements_dir() << prefix.str() << "_EMTETimeSlices" << lp.fileExt();
-    datNameEMTUFourier << lp.measurements_dir() << prefix.str() << "_EMTUFourier" << lp.fileExt();
+    datNameEMTUCorr_LL << lp.measurements_dir() << prefix.str() << "_EMTUCorr_LL" << lp.fileExt();
     FileWriter file(gauge.getComm(), lp, datName.str());
 
     //! write header
@@ -286,12 +289,12 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         header_EMTETimeSlices.endLine();
     }
 
-    FileWriter file_EMTUFourier(gauge.getComm(), lp);
-    if (lp.energyMomentumTensorTracelessFourier()) {
-        file_EMTUFourier.createFile(datNameEMTUFourier.str());
-        LineFormatter header_EMTUFourier = file_EMTUFourier.header();
-        header_EMTUFourier << "#flowtime U00 U11 U22 U33 U01 U02 U03 U12 U13 U23" << "\n";
-        header_EMTUFourier.endLine();
+    FileWriter file_EMTUCorr_LL(gauge.getComm(), lp);
+    if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
+        file_EMTUCorr_LL.createFile(datNameEMTUCorr_LL.str());
+        LineFormatter header_EMTUCorr_LL = file_EMTUCorr_LL.header();
+        header_EMTUCorr_LL << "#flowtime and G_LL for all reached r2 values" << "\n";
+        header_EMTUCorr_LL.endLine();
     }
 
     if (lp.topCharge_imp_block()) {
@@ -486,6 +489,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
     Weinberg<floatT, USE_GPU, HaloDepth> weinberg(gauge);
     EnergyMomentumTensor<floatT, USE_GPU, HaloDepth> EMT(gauge);
+    EnergyMomentumTensorCorrelator<floatT, HaloDepth> EMT_Corr(commBase);
 
     BlockingMethod<floatT, true, HaloDepth, floatT, topChargeDens_imp<floatT, HaloDepth, true>, CorrType<floatT>> BlockTopChDens(gauge);
     BlockingMethod<floatT, true, HaloDepth, floatT, EMTtrace<floatT, true, HaloDepth>, CorrType<floatT>> BlockBulk(gauge);
@@ -518,6 +522,13 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         vec_factor = std::vector<int>(corrTools.distmax);
         vec_weight = std::vector<int>(corrTools.distmax);
         corrTools.getFactorArray(vec_factor, vec_weight);
+    }
+
+    std::vector<COMPLEX(PREC)> vec_EMTU_LL;
+    std::vector<int> vec_counts;
+    if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
+        vec_EMTU_LL = std::vector<COMPLEX(PREC)>(EMT_Corr.get_r2max()+1);
+        vec_counts = std::vector<int>(EMT_Corr.get_r2max()+1);
     }
 
     std::vector<Matrix4x4Sym<floatT>> EMTUBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
@@ -752,15 +763,15 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.energyMomentumTensorTracelessFourier() && gradFlow.checkIfnecessaryTime()) {
-            LineFormatter newLineEMTUFourier = file_EMTUFourier.tag("");
-            EMT.EMTUFourierAveraged(resultEMTUFourier);
-            newLineEMTUFourier << flow_time << " ";
-            for (auto &elem : resultEMTUFourier) {
-                newLineEMTUFourier << std::scientific << std::setprecision(15) << elem.elems[0] << " "
-                                   << elem.elems[1] << " " << elem.elems[2] << " " << elem.elems[3] << " "
-                                   << elem.elems[4] << " " << elem.elems[5] << " " << elem.elems[6] << " "
-                                   << elem.elems[7] << " " << elem.elems[8] << " " << elem.elems[9] << " ";
+        if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition() && gradFlow.checkIfnecessaryTime()) {
+            LineFormatter newLineEMTUCorr_LL = file_EMTUCorr_LL.tag("");
+            int r2max = EMT_Corr.get_r2max();
+            EMT_Corr.EMTU_Corr_Gs(gauge, vec_EMTU_LL, vec_counts);
+            newLineEMTUCorr_LL << flow_time << " ";
+            for (int r2 = 0; r2 < r2max + 1; r2++) {
+                if (vec_counts[r2] != 0) {
+                    newLineEMTUCorr_LL << vec_EMTU_LL[r2];
+                }
             }
         }
 

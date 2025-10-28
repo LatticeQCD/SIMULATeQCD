@@ -227,7 +227,8 @@ set(SOURCE_FILES_GFLOW
     src/modules/observables/weinberg.cpp
     src/modules/observables/blocking.cpp
     src/modules/observables/colorElectricCorr.cpp
-    src/modules/observables/colorMagneticCorr.cpp)
+    src/modules/observables/colorMagneticCorr.cpp
+    src/experimental/fourierNon2.cpp)
 set(SOURCE_FILES_GETMAGICTRACEANOMALY
     src/modules/gauge_updates/subLatMeas_device.cpp)
 set(SOURCE_FILES_MEASUREHADRONS
