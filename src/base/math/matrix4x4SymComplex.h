@@ -201,6 +201,15 @@ __device__ __host__ Matrix4x4SymComplex<floatT> operator-(
 }
 
 template<class floatT>
+__host__ __device__ inline Matrix4x4SymComplex<floatT> conj(const Matrix4x4SymComplex<floatT> &op) {
+    Matrix4x4SymComplex<floatT> result;
+    for (int i = 0; i < 10; i++) {
+        result(i, conj(op(i)));
+    }
+    return result;
+}
+
+template<class floatT>
 __device__ __host__ inline floatT abs(const Matrix4x4SymComplex<floatT> &matrix) {
     floatT square;
     for (int i = 0; i < 10; i++) {

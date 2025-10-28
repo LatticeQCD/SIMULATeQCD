@@ -57,7 +57,8 @@ enum CommSync {
 
 enum Summation {
     Spatial,
-    SpatialTemporal
+    SpatialTemporal,
+    Temporal
 };
 
 
