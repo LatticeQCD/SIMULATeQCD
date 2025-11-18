@@ -31,6 +31,7 @@ testRoutinesNoParam[_rndSingleTest]="1"
 testRoutinesNoParam[_simpleFunctorTest]="1"
 testRoutinesNoParam[_utimesUdaggerTest]="1"
 testRoutinesNoParam[_taylorMeasurementTest]="4"
+testRoutinesNoParam[_eigenpairTest]="1"
 testRoutinesNoParam[_weinbergTopTest]="1"
 
 testRoutinesNoParam[_wilsonLinesCorrelatorTest]="1"

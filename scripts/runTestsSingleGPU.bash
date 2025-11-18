@@ -216,6 +216,12 @@ echo Running Test: ./_simpleFunctorTest
 echo ==========================================================================================================
 ${prefix} ./_simpleFunctorTest
 
+echo ""
+echo ==========================================================================================================
+echo Running Test: ./_eigenpairTest ../parameter/tests/eigenpairTest.param Nodes="${nodes}"
+echo ==========================================================================================================
+${prefix} ./_eigenpairTest ../parameter/tests/eigenpairTest.param Nodes="${nodes}"
+
 if [[ $nodes != "1 1 1 1" ]]
 then
     echo ""

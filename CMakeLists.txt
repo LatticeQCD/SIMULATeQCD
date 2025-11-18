@@ -719,16 +719,7 @@ add_to_compound_SIMULATeQCD_target(tests cudaAwareMPITest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_eigenpairsTest.cpp)
 add_SIMULATeQCD_executable(eigenpairsTest src/testing/main_eigenpairsTest.cpp ${SOURCE_FILES_TAYLORMEASUREMENT})
-# add_SIMULATeQCD_executable(eigenpairsTest src/testing/main_eigenpairsTest.cpp ${SOURCE_FILES_TAYLORMEASUREMENT})
-# set(SOURCE_FILES_TAYLORMEASUREMENT
-#     src/modules/dslash/dslash.cpp
-#     src/modules/inverter/inverter.cpp
-#     src/modules/hisq/hisqSmearing.cpp
-#     src/spinor/spinorfield.cpp
-#     src/spinor/eigenpairs.cpp
-#     src/modules/observables/dslashDerivative.cpp)
 set_SIMULATeQCD_property(eigenpairsTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-# SIMULATeQCD_target_compile_definitions(eigenpairsTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1)
 SIMULATeQCD_target_compile_definitions(eigenpairsTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 ${ALL_NSTACK} NSTACKS_32=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests eigenpairsTest)
 
