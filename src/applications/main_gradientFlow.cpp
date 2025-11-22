@@ -550,10 +550,10 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     }
 
     hsize_t r2max = EMT_Corr.get_r2max();
-    std::vector<COMPLEX(PREC)> vec_EMTU_LL;
+    std::vector<std::vector<COMPLEX(PREC)>> vec_EMT_corr;
     std::vector<int> vec_counts;
     if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
-        vec_EMTU_LL = std::vector<COMPLEX(PREC)>(r2max+1);
+        vec_EMT_corr = std::vector<std::vector<COMPLEX(PREC)>>(5, std::vector<COMPLEX(PREC)>(r2max+1));
         vec_counts = std::vector<int>(r2max+1);
 
         EMT_Corr.get_r2Counts(vec_counts);
@@ -641,9 +641,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
             if (lp.useHDF5()) {
                 hdf5_file.writePlaquette(plaq);
-            } else {
-                newLine << plaq;
             }
+            newLine << plaq;
 
             logStream << std::fixed << std::setprecision(6) << "   Plaquette = " << plaq;
         }
@@ -844,22 +843,23 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition() && gradFlow.checkIfnecessaryTime()) {
             LineFormatter newLineEMTUCorr_LL = file_EMTUCorr_LL.tag("");
-            EMT_Corr.EMTU_Corr_Gs(gauge, vec_EMTU_LL);
+            EMT_Corr.EMTU_Corr_Gs(gauge, vec_EMT_corr);
             newLineEMTUCorr_LL << flow_time << " ";
             for (int r2 = 0; r2 < r2max + 1; r2++) {
                 if (vec_counts[r2] != 0) {
-                    newLineEMTUCorr_LL << vec_EMTU_LL[r2];
+                    newLineEMTUCorr_LL << vec_EMT_corr[0][r2];
                 }
             }
 
             if (lp.useHDF5()) {
+                hdf5_file.writeLL(vec_EMT_corr[0]);
                 hdf5_file.writeFlowTimeNecessary(flow_time);
-                hdf5_file.writeEMTUCorrData(vec_EMTU_LL);
+                hdf5_file.writeEMTUCorrData(vec_EMT_corr);
             }
 
-            // std::vector<ComplexData<PREC>> vec_EMTU_LL_data(r2max+1);
+            // std::vector<ComplexData<PREC>> vec_EMT_corr_data(r2max+1);
             // for (int r2 = 0; r2 < r2max + 1; r2++) {
-            //     vec_EMTU_LL_data[r2] = {real(vec_EMTU_LL[r2]), imag(vec_EMTU_LL[r2])};
+            //     vec_EMT_corr_data[r2] = {real(vec_EMT_corr[r2]), imag(vec_EMT_corr[r2])};
             // }
 
             // // initial dimension of the array
@@ -880,7 +880,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
             // if (commBase.IamRoot()) {
             //     dataset->write(vec_counts.data(), PredType::NATIVE_INT, *memoryspace, *filespace);
-            //     dataset_LL->write(vec_EMTU_LL_data.data(), cType, *memoryspace, *filespace);
+            //     dataset_LL->write(vec_EMT_corr_data.data(), cType, *memoryspace, *filespace);
             // }
 
             // h5_flowtime_counter++;
