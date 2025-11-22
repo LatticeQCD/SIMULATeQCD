@@ -37,6 +37,7 @@
 #include "base/indexer/haloIndexer.h"
 
 #include "base/IO/fileWriter.h"
+#include "base/IO/hdf5fileWriter.h"
 #include "base/IO/logging.h"
 #include "base/IO/milc.h"
 #include "base/IO/misc.h"

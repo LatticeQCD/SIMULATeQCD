@@ -11,6 +11,7 @@
  */
 
 #include "../simulateqcd.h"
+// #include "H5Cpp.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/observables/topology.h"
 #include "../modules/observables/weinberg.h"
@@ -22,6 +23,8 @@
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
 
+// using namespace H5;
+
 
 #define USE_GPU true
 //define precision
@@ -30,6 +33,18 @@
 #else
 #define PREC double
 #endif
+
+
+// template<class floatT>
+// struct ComplexData {
+//     floatT real;
+//     floatT imag;
+// };
+
+// template<class floatT>
+// inline ComplexData<floatT> pack(const COMPLEX(floatT) complexNumber) {
+//     return ComplexData<floatT>(real(complexNumber), imag(complexNumber));
+// }
 
 
 template<class floatT>
@@ -43,6 +58,7 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<floatT> accuracy; //! only used for adaptive stepsize. difference between 2nd and 3rd order RK
     DynamicParameter<floatT> necessary_flow_times; //! these flow times will not be skipped over in the integration
     Parameter<floatT, 2> measurement_intervall; //! measurement_intervall[0]: start, [1]: stop
+    Parameter<bool> useHDF5; //! whether to use HDF5 file output
 
     //! ---------------------------------which observables should be measured on the flowed configuration?--------------
 
@@ -113,6 +129,8 @@ struct gradientFlowParam : LatticeParameters {
 
         add(measurement_intervall, "measurement_intervall");
 
+        addDefault(useHDF5, "useHDF5", false);
+
         addDefault(plaquette, "plaquette", true);
         addDefault(clover, "clover", false);
         addDefault(cloverTimeSlices, "cloverTimeSlices", false);
@@ -180,6 +198,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
             datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices,
             datNameEMTUCorr_LL,
+            datNameHDF5,
             datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
             datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
     // fill stream with 0's
@@ -222,6 +241,9 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datNameEMTUTimeSlices << lp.measurements_dir() << prefix.str() << "_EMTUTimeSlices" << lp.fileExt();
     datNameEMTETimeSlices << lp.measurements_dir() << prefix.str() << "_EMTETimeSlices" << lp.fileExt();
     datNameEMTUCorr_LL << lp.measurements_dir() << prefix.str() << "_EMTUCorr_LL" << lp.fileExt();
+
+    datNameHDF5 << lp.measurements_dir() << prefix.str() << lp.fileExt() << ".h5";
+    
     FileWriter file(gauge.getComm(), lp, datName.str());
 
     //! write header
@@ -463,6 +485,9 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         headerColMagnCorrSl_clover.endLine();
     }
 
+    // hdf5 file for correlators and other quantities
+    HDF5FileWriter<PREC> hdf5_file(commBase, lp, datNameHDF5.str());
+
     //! -------------------------------read in configuration------------------------------------------------------------
 
     if (lp.use_unit_conf()){
@@ -524,12 +549,51 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         corrTools.getFactorArray(vec_factor, vec_weight);
     }
 
+    hsize_t r2max = EMT_Corr.get_r2max();
     std::vector<COMPLEX(PREC)> vec_EMTU_LL;
     std::vector<int> vec_counts;
     if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
-        vec_EMTU_LL = std::vector<COMPLEX(PREC)>(EMT_Corr.get_r2max()+1);
-        vec_counts = std::vector<int>(EMT_Corr.get_r2max()+1);
+        vec_EMTU_LL = std::vector<COMPLEX(PREC)>(r2max+1);
+        vec_counts = std::vector<int>(r2max+1);
+
+        EMT_Corr.get_r2Counts(vec_counts);
+
+        if (lp.useHDF5()) {
+            hdf5_file.writeR2Counts(vec_counts);
+        }
     }
+
+    
+    // -----------------------------------------------------------------------------------------------------------------
+    // // initial dimensions of the hdf5 dataset
+    // hsize_t dims[2] = {0, r2max+1};
+    // // maximum size
+    // hsize_t maxdims[2] = {H5S_UNLIMITED, r2max+1};
+    // // chuck size (one flow time row with r2max+1 values)
+    // hsize_t chunksize[2] = {1, r2max+1};
+
+    // // create dataspace
+    // DataSpace *dataspace = new DataSpace(2, dims, maxdims);
+
+    // DSetCreatPropList prop;
+    // prop.setChunk(2, chunksize);
+
+    // const H5std_string datasetEMTUCorr("EMTU Correlator");
+    // const H5std_string dataset_Name_EMTUCorr("EMTU Correlator LL");
+    
+    // DataSet *dataset = new DataSet(file_EMTUCorr.createDataSet(datasetEMTUCorr, PredType::NATIVE_INT, *dataspace, prop));
+    
+    // // create compound data type for storing complex numbers
+    // CompType cType(sizeof(ComplexData<PREC>));
+    // cType.insertMember("real", HOFFSET(ComplexData<PREC>, real), PredType::NATIVE_DOUBLE);
+    // cType.insertMember("imag", HOFFSET(ComplexData<PREC>, imag), PredType::NATIVE_DOUBLE);
+
+    // // create dataset for complex numbers
+    // DataSet *dataset_LL = new DataSet(file_EMTUCorr.createDataSet(dataset_Name_EMTUCorr, cType, *dataspace, prop));
+
+    // hsize_t h5_flowtime_counter = 0;
+
+    // -----------------------------------------------------------------------------------------------------------------
 
     std::vector<Matrix4x4Sym<floatT>> EMTUBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
     std::vector<floatT> EMTEBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
@@ -568,10 +632,20 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time));
         }
 
+        if (lp.useHDF5()) {
+            hdf5_file.writeFlowTime(flow_time);
+        }
+
         if (lp.plaquette()) {
             plaq = gAction.plaquette();
+
+            if (lp.useHDF5()) {
+                hdf5_file.writePlaquette(plaq);
+            } else {
+                newLine << plaq;
+            }
+
             logStream << std::fixed << std::setprecision(6) << "   Plaquette = " << plaq;
-            newLine << plaq;
         }
 
         if (lp.cloverTimeSlices()) {
@@ -604,9 +678,14 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         if (lp.topCharge()) {
             topChar = topology.topCharge();
             logStream << std::scientific << std::setprecision(14) << "   topCharge = " << topChar;
-//            logStream << std::fixed << std::setprecision(6) << "   topCharge = " << topChar;
-            newLine << topChar;
+            // logStream << std::fixed << std::setprecision(6) << "   topCharge = " << topChar;
             topology.recomputeField();
+
+            if (lp.useHDF5()) {
+                hdf5_file.writeTopologicalCharge(topChar);
+            } else {
+                newLine << topChar;
+            }
         }
 
         if (lp.topChargeTimeSlices_imp()) {
@@ -765,14 +844,47 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition() && gradFlow.checkIfnecessaryTime()) {
             LineFormatter newLineEMTUCorr_LL = file_EMTUCorr_LL.tag("");
-            int r2max = EMT_Corr.get_r2max();
-            EMT_Corr.EMTU_Corr_Gs(gauge, vec_EMTU_LL, vec_counts);
+            EMT_Corr.EMTU_Corr_Gs(gauge, vec_EMTU_LL);
             newLineEMTUCorr_LL << flow_time << " ";
             for (int r2 = 0; r2 < r2max + 1; r2++) {
                 if (vec_counts[r2] != 0) {
                     newLineEMTUCorr_LL << vec_EMTU_LL[r2];
                 }
             }
+
+            if (lp.useHDF5()) {
+                hdf5_file.writeFlowTimeNecessary(flow_time);
+                hdf5_file.writeEMTUCorrData(vec_EMTU_LL);
+            }
+
+            // std::vector<ComplexData<PREC>> vec_EMTU_LL_data(r2max+1);
+            // for (int r2 = 0; r2 < r2max + 1; r2++) {
+            //     vec_EMTU_LL_data[r2] = {real(vec_EMTU_LL[r2]), imag(vec_EMTU_LL[r2])};
+            // }
+
+            // // initial dimension of the array
+            // hsize_t offset[2] = {h5_flowtime_counter, 0};
+            // hsize_t amount[2] = {1, r2max+1};
+
+            // hsize_t newsize[2] = {h5_flowtime_counter+1, r2max+1};
+            // dataset->extend(newsize);
+            // dataset_LL->extend(newsize);
+
+            // // get the dataspace from the file
+            // DataSpace *filespace = new DataSpace(dataset->getSpace());
+            // // locate the needed space in the dataspace
+            // filespace->selectHyperslab(H5S_SELECT_SET, amount, offset);
+
+            // // // create memory space
+            // DataSpace *memoryspace = new DataSpace(2, amount, NULL);
+
+            // if (commBase.IamRoot()) {
+            //     dataset->write(vec_counts.data(), PredType::NATIVE_INT, *memoryspace, *filespace);
+            //     dataset_LL->write(vec_EMTU_LL_data.data(), cType, *memoryspace, *filespace);
+            // }
+
+            // h5_flowtime_counter++;
+
         }
 
         if (lp.shear_bulk_corr_block() && gradFlow.checkIfnecessaryTime()) {

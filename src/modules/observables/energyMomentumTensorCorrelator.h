@@ -35,7 +35,10 @@ class EnergyMomentumTensorCorrelator {
 
         void EMTU_Corr_Gs(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
-            std::vector<COMPLEX(floatT)>& array,
+            std::vector<COMPLEX(floatT)>& array
+        );
+
+        void get_r2Counts(
             std::vector<int>& counts
         );
 
@@ -94,8 +97,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTU_Corr(
 template<class floatT, size_t HaloDepth>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTU_Corr_Gs(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
-    std::vector<COMPLEX(floatT)>& array,
-    std::vector<int>& counts
+    std::vector<COMPLEX(floatT)>& array
 ) {
 
     // create lattice container for G tensor
@@ -105,8 +107,14 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTU_Corr_Gs(
     // calculate EMT correlator into G tensor
     this->EMTU_Corr(gaugefield, G_tensor);
 
-    tensor_decomposition.template getTensorFunction<true, LL>(G_tensor, array, counts);
+    tensor_decomposition.template getTensorFunction<true, LL>(G_tensor, array);
 
 }
 
 
+template<class floatT, size_t HaloDepth>
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::get_r2Counts(
+    std::vector<int>& counts
+) {
+    tensor_decomposition.get_r2Counts(counts);
+}
