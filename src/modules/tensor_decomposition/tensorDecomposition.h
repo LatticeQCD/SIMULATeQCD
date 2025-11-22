@@ -274,14 +274,16 @@ class TensorDecomposition {
         template<bool onDevice, Projector projector>
         void getTensorFunction(
             LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-            std::vector<COMPLEX(floatT)>& array,
-            std::vector<int>& counts
+            std::vector<COMPLEX(floatT)>& array
         );
 
         template<Summation summation>
         void reduceR2(
             LatticeContainerAccessor latticeAccessor,
-            std::vector<COMPLEX(floatT)>& array,
+            std::vector<COMPLEX(floatT)>& array
+        );
+
+        void get_r2Counts(
             std::vector<int>& counts
         );
 };
@@ -290,8 +292,7 @@ template<class floatT, size_t HaloDepth>
 template<bool onDevice, Projector projector>
 void TensorDecomposition<floatT, HaloDepth>::getTensorFunction(
     LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-    std::vector<COMPLEX(floatT)>& array,
-    std::vector<int>& counts
+    std::vector<COMPLEX(floatT)>& array
 ) {
 
     LatticeContainer<onDevice, COMPLEX(floatT)> tensor_function_field(tensor_field.get_CommBase(), "tensor_function_field", "tensor_function_field", "tensor_function_field", "tensor_function_field");
@@ -303,15 +304,14 @@ void TensorDecomposition<floatT, HaloDepth>::getTensorFunction(
 
     tensor_function_field_host.copyFromLatticeContainer(tensor_function_field);
 
-    this->reduceR2<SpatialTemporal>(tensor_function_field_host.getAccessor(), array, counts);
+    this->reduceR2<SpatialTemporal>(tensor_function_field_host.getAccessor(), array);
 }
 
 template<class floatT, size_t HaloDepth>
 template<Summation summation>
 void TensorDecomposition<floatT, HaloDepth>::reduceR2(
     LatticeContainerAccessor latticeAccessor,
-    std::vector<COMPLEX(floatT)>& array,
-    std::vector<int>& counts
+    std::vector<COMPLEX(floatT)>& array
 ) {
 
     typedef GIndexer<All> GInd;
@@ -343,7 +343,34 @@ void TensorDecomposition<floatT, HaloDepth>::reduceR2(
         sitexyzt site(x, y, z, t);
         int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
         array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
-        counts[r2] += 1;
     }
 
+}
+
+template<class floatT, size_t HaloDepth>
+void TensorDecomposition<floatT, HaloDepth>::get_r2Counts(
+    std::vector<int>& counts
+) {
+    typedef GIndexer<All> GInd;
+
+    int lx = GInd::getLatData().lx;
+    int ly = GInd::getLatData().ly;
+    int lz = GInd::getLatData().lz;
+    int lt = GInd::getLatData().lt;
+
+    int r2max = get_r2max();
+
+    // set counts to zero initially
+    for (int r2 = 0; r2 < r2max + 1; r2++) {
+        counts[r2] = 0;
+    }
+
+    for (int x = 0; x < lx; x++)
+    for (int y = 0; y < ly; y++)
+    for (int z = 0; z < lz; z++)
+    for (int t = 0; t < lt; t++) {
+        sitexyzt site(x, y, z, t);
+        int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
+        counts[r2] += 1;
+    }
 }
