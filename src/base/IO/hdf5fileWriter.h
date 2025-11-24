@@ -98,14 +98,14 @@ class HDF5FileWriter {
             // set initial dimension to zero for flow time, r2max+1 for separations
             initDims_flowTimeQuantity[0] = 0;
             initDims_r2Counts[0] = r2max + 1;
-            initDims_corr[0] = 5;
+            initDims_corr[0] = 10;
             initDims_corr[1] = 0;
             initDims_corr[2] = r2max + 1;
 
             // set maximum dimensions, unlimited for flow time, r2max+1 for separations
             maxDims_flowTimeQuantity[0] = H5S_UNLIMITED;
             maxDims_r2Counts[0] = r2max + 1;
-            maxDims_corr[0] = 5;
+            maxDims_corr[0] = 10;
             maxDims_corr[1] = H5S_UNLIMITED;
             maxDims_corr[2] = r2max + 1;
 
@@ -208,18 +208,18 @@ class HDF5FileWriter {
             const std::vector<std::vector<COMPLEX(floatT)>>& vec_EMTU_corr_COMPLEX
         ) {
             // create vector of ComplexData instead of COMPLEX(floatT)
-            std::vector<std::vector<ComplexData<floatT>>> vec_EMTU_LL_complex_data(5, std::vector<ComplexData<floatT>>(r2max+1));
-            for (int i = 0; i < 5; i++) {
+            std::vector<std::vector<ComplexData<floatT>>> vec_EMT_corr_complex_data(10, std::vector<ComplexData<floatT>>(r2max+1));
+            for (int i = 0; i < 10; i++) {
                 for (int r2 = 0; r2 < r2max + 1; r2++) {
-                    vec_EMTU_LL_complex_data[i][r2] = {real(vec_EMTU_corr_COMPLEX[i][r2]), imag(vec_EMTU_corr_COMPLEX[i][r2])};
+                    vec_EMT_corr_complex_data[i][r2] = {real(vec_EMTU_corr_COMPLEX[i][r2]), imag(vec_EMTU_corr_COMPLEX[i][r2])};
                 }
             }
 
             // flatten array
-            std::vector<ComplexData<floatT>> vec_EMTU_LL_complex_data_flat(5 * (r2max + 1));
-            for (int i = 0; i < 5; i++) {
+            std::vector<ComplexData<floatT>> vec_EMT_corr_complex_data_flat(10 * (r2max + 1));
+            for (int i = 0; i < 10; i++) {
                 for (int r2 = 0; r2 < r2max + 1; r2++) {
-                    vec_EMTU_LL_complex_data_flat[i * (r2max + 1) + r2] = vec_EMTU_LL_complex_data[i][r2];
+                    vec_EMT_corr_complex_data_flat[i * (r2max + 1) + r2] = vec_EMT_corr_complex_data[i][r2];
                 }
             }
 
@@ -235,8 +235,8 @@ class HDF5FileWriter {
 
             // set offset, amount and new size
             hsize_t offset[3] = {0, currentDims[1], 0};
-            hsize_t amount[3] = {5, 1, currentDims[2]};
-            hsize_t newsize[3] = {5, currentDims[1]+1, currentDims[2]};
+            hsize_t amount[3] = {10, 1, currentDims[2]};
+            hsize_t newsize[3] = {10, currentDims[1]+1, currentDims[2]};
             dataSet_corr->extend(newsize);
             
             // select hyperslab in file
@@ -248,7 +248,7 @@ class HDF5FileWriter {
             
             if (IamRoot()) {
                 // write complex data
-                dataSet_corr->write(vec_EMTU_LL_complex_data_flat.data(), *compTypeComplex, *memoryspace, *filespace_corr);
+                dataSet_corr->write(vec_EMT_corr_complex_data_flat.data(), *compTypeComplex, *memoryspace, *filespace_corr);
             }
         }
 

@@ -553,7 +553,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     std::vector<std::vector<COMPLEX(PREC)>> vec_EMT_corr;
     std::vector<int> vec_counts;
     if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
-        vec_EMT_corr = std::vector<std::vector<COMPLEX(PREC)>>(5, std::vector<COMPLEX(PREC)>(r2max+1));
+        vec_EMT_corr = std::vector<std::vector<COMPLEX(PREC)>>(10, std::vector<COMPLEX(PREC)>(r2max+1));
         vec_counts = std::vector<int>(r2max+1);
 
         EMT_Corr.get_r2Counts(vec_counts);

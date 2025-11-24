@@ -84,13 +84,13 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTU_Corr(
     EMTU_FT.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<floatT, true, HaloDepth>(gaugefield.getAccessor()));
 
     // FFT it, store it in the same Container
-    fourierClass.template performFourier3DEMT<SpatialTemporal>(EMTU_FT, EMTU_FT, 1.0);
+    fourierClass.template performFourier3DEMT<SpatialTemporal::Both>(EMTU_FT, EMTU_FT, 1.0);
 
     // create product out of the two FFTed EMTs, store it in G
     G.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(EMTU_FT.getAccessor(), EMTU_FT.getAccessor()));
 
     // FFT the product back, store it in G again
-    fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal>(G, G, -1.0);
+    fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(G, G, -1.0);
 
 }
 
