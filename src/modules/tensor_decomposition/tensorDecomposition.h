@@ -6,34 +6,70 @@
 #include "../../base/math/tensor4x4Symx4x4SymComplex.h"
 
 enum class Projector {
-    LL, LT, TT, SS, SL
+    TT, LT,
+    T, L,
+    SS, LL, WW,
+    SL, SW, LW
 };
 
-constexpr std::array<Projector, 5> allProjectors{{
-    Projector::SS, Projector::SL, Projector::LL, Projector::LT, Projector::TT
-    // Projector::LL
+enum class HalfProjector {
+    S, L, W
+};
+
+constexpr std::array<Projector, 10> allProjectors{{
+    Projector::TT, Projector::LT,
+    Projector::T, Projector::L,
+    Projector::SS, Projector::LL, Projector::WW,
+    Projector::SL, Projector::SW, Projector::LW
 }};
 
 
-__device__ __host__ inline int getDimensionFunction(Summation summation) {
-    switch (summation) {
-        case Spatial:
-            return 3;
-            break;
-        case SpatialTemporal:
-            return 4;
-            break;
-        default:
-            return 4;
-    }
-}
-
-__device__ __host__ inline int indexMaxFunction(Summation summation) {
-    switch (summation) {
-        case Spatial:
+__device__ __host__ inline int multiplicity(Projector projector) {
+    switch (projector) {
+        case Projector::TT:
             return 2;
             break;
-        case SpatialTemporal:
+        case Projector::LT:
+            return 2;
+            break;
+        case Projector::T:
+            return 2;
+            break;
+        case Projector::L:
+            return 1;
+            break;
+        case Projector::SS:
+            return 1;
+            break;
+        case Projector::LL:
+            return 1;
+            break;
+        case Projector::WW:
+            return 1;
+            break;
+        case Projector::SL:
+            return 2;
+            break;
+        case Projector::SW:
+            return 2;
+            break;
+        case Projector::LW:
+            return 2;
+            break;
+        default:
+            return 1;
+    }
+}
+
+__device__ __host__ inline int indexMaxFunction(SpatialTemporal spatialTemporal) {
+    switch (spatialTemporal) {
+        case SpatialTemporal::Spatial:
+            return 2;
+            break;
+        case SpatialTemporal::Temporal:
+            return 0;
+            break;
+        case SpatialTemporal::Both:
             return 3;
             break;
         default:
@@ -41,12 +77,27 @@ __device__ __host__ inline int indexMaxFunction(Summation summation) {
     }
 }
 
-template<Summation summation>
-__device__ __host__ inline int rSquared(sitexyzt r) {
-    int indexMax = indexMaxFunction(summation);
+__device__ __host__ inline int getDimensionFunction(SpatialTemporal spatialTemporal) {
+    switch (spatialTemporal) {
+        case SpatialTemporal::Spatial:
+            return 3;
+            break;
+        case SpatialTemporal::Temporal:
+            return 1;
+            break;
+        case SpatialTemporal::Both:
+            return 4;
+            break;
+        default:
+            return 4;
+    }
+}
+
+// helper function: compute spatial r^2=x^2+y^2+z^2 for a site (x,y,z,t)
+__device__ __host__ inline int rSquared(sitexyzt rt) {
     int r2 = 0;
-    for (int i = 0; i <= indexMax; i++) {
-        r2 += r[i] * r[i];
+    for (int i = 0; i <= 2; i++) {
+        r2 += rt[i] * rt[i];
     }
     return r2;
 }
@@ -59,97 +110,158 @@ __device__ __host__ inline int delta(int mu, int nu) {
     }
 }
 
-template<class floatT, Summation summation>
-__device__ __host__ inline floatT deltaT(sitexyzt r, int mu, int nu) {
-    int d = getDimensionFunction(summation);
-    floatT r2 = rSquared<summation>(r);
+__device__ __host__ inline int delta_spatial(int mu, int nu) {
+    sitexyzt u = {0,0,0,1};
+    return delta(mu, nu) - u[mu]*u[nu];
+}
+
+// helper function: purely-spatial transversal delta function
+template<class floatT>
+__device__ __host__ inline floatT delta_transverse(sitexyzt r, int mu, int nu) {
+    floatT r2 = rSquared(r);
+    int D = 3;
 
     if (r2 == 0) {
-        return (1.0-(1.0/d))*delta(mu,nu); // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
+        return delta_spatial(mu,nu) - delta(mu, nu)/((floatT) D); // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
     } else {
-        return delta(mu, nu) - r[mu]*r[nu]/r2;
+        return delta_spatial(mu, nu) - r[mu]*r[nu]/r2;
     }
 }
 
-template<class floatT, Summation summation>
+template<class floatT>
 __device__ __host__ inline floatT deltaHat(sitexyzt r, int mu, int nu) {
-    int d = getDimensionFunction(summation);
-    floatT r2 = rSquared<summation>(r);
-
-    if (r2 == 0) {
-        return 0.0; // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
-    } else {
-        return delta(mu, nu) - d*r[mu]*r[nu]/r2;
-    }
+    int r2 = rSquared(r);
+    return r[mu]*r[nu]/((floatT) r2) - (1.0/3.0) * delta_spatial(mu, nu);
 }
 
-template<class floatT, Projector projector, Summation summation>
-__device__ __host__ inline floatT projectorFunction(sitexyzt r, int mu, int nu, int rho, int sigma) {
-    
+template<class floatT, HalfProjector halfProjector>
+__device__ __host__ inline floatT C(sitexyzt rt, int mu, int nu) {
+    // only spatial part
+    sitexyzt r = {rt[0], rt[1], rt[2], 0};
+
+    sitexyzt u = {0,0,0,1};
+
     floatT result = 0.0;
 
-    int d = getDimensionFunction(summation);
-    floatT r2 = rSquared<summation>(r);
+    switch (halfProjector) {
+        case HalfProjector::S:
+            result += (1.0/2.0) * delta(mu, nu);
+            break;
+        case HalfProjector::L:
+            result += sqrt(3.0/2.0) * deltaHat<floatT>(r, mu, nu);
+            break;
+        case HalfProjector::W:
+            result += sqrt(1.0/12.0) * (delta_spatial(mu, nu) - 3.0 * u[mu] * u[nu]);
+            break;
+    }
+
+    return result;
+}
+
+template<class floatT, Projector projector>
+__device__ __host__ inline floatT projectorFunction(sitexyzt rt, int mu, int nu, int rho, int sigma) {
+    // only spatial part
+    sitexyzt r = {rt[0], rt[1], rt[2], 0};
+
+    sitexyzt u = {0,0,0,1};
+
+    // spatial dimension
+    int Ds = 3;
+    // calculate r^2 beforehand
+    floatT r2 = rSquared(r);
+    
+    floatT result = 0.0;
 
     // if r!=0, add r-dependent part
     if (r2 != 0) {
         switch (projector) {
-            case Projector::SS:
-                result += (1.0/d) * delta(mu, nu) * delta(rho, sigma);
-                break;
-            case Projector::SL:
-                result += (1.0/(d*sqrt(d-1))) * (
-                    deltaHat<floatT, summation>(r, mu, nu) * delta(rho, sigma)
-                    + delta(mu, nu) * deltaHat<floatT, summation>(r, rho, sigma)
-                );
-                break;
-            case Projector::LL:
-                result += (1.0/(d*(d-1))) * deltaHat<floatT, summation>(r, mu, nu) * deltaHat<floatT, summation>(r, rho, sigma);
+            case Projector::TT:
+                result += (1.0/2.0) * (
+                    delta_transverse<floatT>(r, mu, rho) * delta_transverse<floatT>(r, nu, sigma)
+                    + delta_transverse<floatT>(r, mu, sigma) * delta_transverse<floatT>(r, nu, rho)
+                )
+                - (1.0/(Ds-1)) * delta_transverse<floatT>(r, mu, nu) * delta_transverse<floatT>(r, rho, sigma);
                 break;
             case Projector::LT:
                 result += (
-                    r[mu]*r[rho]*deltaT<floatT, summation>(r, nu, sigma)
-                    +r[mu]*r[sigma]*deltaT<floatT, summation>(r, nu, rho)
-                    +r[nu]*r[rho]*deltaT<floatT, summation>(r, mu, sigma)
-                    +r[nu]*r[sigma]*deltaT<floatT, summation>(r, mu, rho)
-                )/(2*r2);
+                    r[mu]*r[rho]*delta_transverse<floatT>(r, nu, sigma)
+                    + r[mu]*r[sigma]*delta_transverse<floatT>(r, nu, rho)
+                    + r[nu]*r[rho]*delta_transverse<floatT>(r, mu, sigma)
+                    + r[nu]*r[sigma]*delta_transverse<floatT>(r, mu, rho)
+                )/(2.0*r2);
                 break;
-            case Projector::TT:
-                result += (1.0/2.0) * (
-                    deltaT<floatT, summation>(r, mu, rho) * deltaT<floatT, summation>(r, nu, sigma)
-                    +deltaT<floatT, summation>(r, mu, sigma) * deltaT<floatT, summation>(r, nu, rho)
-                )
-                - (1.0/(d-1)) * deltaT<floatT, summation>(r, mu, nu) * deltaT<floatT, summation>(r, rho, sigma);
+            case Projector::T:
+                result += (
+                    delta_transverse<floatT>(r, mu, rho) * u[nu] * u[sigma]
+                    + delta_transverse<floatT>(r, mu, sigma) * u[nu] * u[rho]
+                    + delta_transverse<floatT>(r, nu, rho) * u[mu] * u[sigma]
+                    + delta_transverse<floatT>(r, nu, sigma) * u[mu] * u[rho]
+                ) / 2.0;
+                break;
+            case Projector::L:
+                result += (
+                    (r[mu] * u[nu] + r[nu] * u[mu]) * (r[rho] * u[sigma] + r[sigma] * u[rho])
+                ) / (2.0 * r2);
+                break;
+            case Projector::SS:
+                result += C<floatT, HalfProjector::S>(r, mu, nu) * C<floatT, HalfProjector::S>(r, rho, sigma);
+                break;
+            case Projector::LL:
+                result += C<floatT, HalfProjector::L>(r, mu, nu) * C<floatT, HalfProjector::L>(r, rho, sigma);
+                break;
+            case Projector::WW:
+                result += C<floatT, HalfProjector::W>(r, mu, nu) * C<floatT, HalfProjector::W>(r, rho, sigma);
+                break;
+            case Projector::SL:
+                result += (
+                    C<floatT, HalfProjector::S>(r, mu, nu) * C<floatT, HalfProjector::L>(r, rho, sigma)
+                    + C<floatT, HalfProjector::L>(r, mu, nu) * C<floatT, HalfProjector::S>(r, rho, sigma)
+                );
+                break;
+            case Projector::SW:
+                result += (
+                    C<floatT, HalfProjector::S>(r, mu, nu) * C<floatT, HalfProjector::W>(r, rho, sigma)
+                    + C<floatT, HalfProjector::W>(r, mu, nu) * C<floatT, HalfProjector::S>(r, rho, sigma)
+                );
+                break;
+            case Projector::LW:
+                result += (
+                    C<floatT, HalfProjector::L>(r, mu, nu) * C<floatT, HalfProjector::W>(r, rho, sigma)
+                    + C<floatT, HalfProjector::W>(r, mu, nu) * C<floatT, HalfProjector::L>(r, rho, sigma)
+                );
                 break;
         }
     } else {
         switch (projector) {
-            case Projector::SS:
-                result += (1.0/d) * delta(mu, nu) * delta(rho, sigma);
+            case Projector::TT:
+                result += ((floatT) (Ds+1)*(Ds-2)/(2*(Ds+2)*(Ds-1))) * (
+                    delta(mu, rho) * delta(nu, sigma)
+                    + delta(mu, sigma) * delta(nu, rho)
+                    - (2.0/Ds) * delta(mu, nu) * delta(rho, sigma)
+                );
+                break;
+            case Projector::LT:
+                result += (1.0/(Ds+2)) * (
+                    delta(mu, rho) * delta(nu, sigma)
+                    + delta(mu, sigma) * delta(nu, rho)
+                    - (2.0/Ds) * delta(mu, nu) * delta(rho, sigma)
+                );
+                break;
+            case Projector::LL:
+                result += (1.0/((Ds+2)*(Ds-1))) * (
+                    delta(mu, rho) * delta(nu, sigma)
+                    + delta(mu, sigma) * delta(nu, rho)
+                    - (2.0/Ds) * delta(mu, nu) * delta(rho, sigma)
+                );
                 break;
             case Projector::SL:
                 result += 0.0;
                 break;
-            case Projector::LL:
-                result += (1.0/((d+2)*(d-1))) * (
-                    delta(mu, rho) * delta(nu, sigma)
-                    + delta(mu, sigma) * delta(nu, rho)
-                    - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
-                );
+            case Projector::SS:
+                result += (1.0/Ds) * delta(mu, nu) * delta(rho, sigma);
                 break;
-            case Projector::LT:
-                result += (1.0/(d+2)) * (
-                    delta(mu, rho) * delta(nu, sigma)
-                    + delta(mu, sigma) * delta(nu, rho)
-                    - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
-                );
-                break;
-            case Projector::TT:
-                result += ((floatT) (d+1)*(d-2)/(2*(d+2)*(d-1))) * (
-                    delta(mu, rho) * delta(nu, sigma)
-                    + delta(mu, sigma) * delta(nu, rho)
-                    - (2.0/d) * delta(mu, nu) * delta(rho, sigma)
-                );
+            default:
+                result += 0.0;
                 break;
         }
     }
@@ -158,9 +270,8 @@ __device__ __host__ inline floatT projectorFunction(sitexyzt r, int mu, int nu, 
 
 }
 
-template<class floatT, Projector projector, Summation summation>
+template<class floatT, Projector projector>
 struct ProjectorField {
-    
     typedef GIndexer<All> GInd;
 
     ProjectorField() {}
@@ -169,30 +280,28 @@ struct ProjectorField {
         // get global position relative to the origin
         sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
 
-        int indexMax = indexMaxFunction(summation);
-
         // get desired projector value for the global position
         Tensor4x4Symx4x4SymComplex<floatT> projectorAtSite;
-        for (int mu = 0; mu <= indexMax; mu++)
+        for (int mu = 0; mu <= 3; mu++)
         for (int nu = 0; nu <= mu; nu++)
-        for (int rho = 0; rho <= indexMax; rho++)
+        for (int rho = 0; rho <= 3; rho++)
         for (int sigma = 0; sigma <= rho; sigma++) {
             COMPLEX(floatT) value = 0.0;
-            value = projectorFunction<floatT, projector, summation>(r, mu, nu, rho, sigma);
+            value = projectorFunction<floatT, projector>(r, mu, nu, rho, sigma);
             projectorAtSite(mu, nu, rho, sigma, value);
         }
         return projectorAtSite;
     }
 };
 
-template<class floatT, bool onDevice, Summation summation>
-struct ContractTensor {
+template<class floatT, bool onDevice, Projector projector>
+struct TensorFunctionField {
 
     LatticeContainerAccessor GAccessor;
     LatticeContainerAccessor PAccessor;
     typedef GIndexer<All> GInd;
 
-    ContractTensor(
+    TensorFunctionField(
         const LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& G,
         const LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& P
     ) : GAccessor(G.getAccessor()), PAccessor(P.getAccessor()) {}
@@ -202,8 +311,6 @@ struct ContractTensor {
         // get global position relative to the origin
         sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
 
-        int indexMax = indexMaxFunction(summation);
-
         // get correlator value at the site
         Tensor4x4Symx4x4SymComplex<floatT> G_at_site = GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
         Tensor4x4Symx4x4SymComplex<floatT> P_at_site = PAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
@@ -211,12 +318,14 @@ struct ContractTensor {
         // contract projector value with correlator value
         COMPLEX(floatT) result = 0.0;
         
-        for (int mu = 0; mu <= indexMax; mu++)
-        for (int nu = 0; nu <= indexMax; nu++)
-        for (int rho = 0; rho <= indexMax; rho++)
-        for (int sigma = 0; sigma <= indexMax; sigma++) {
+        for (int mu = 0; mu <= 3; mu++)
+        for (int nu = 0; nu <= 3; nu++)
+        for (int rho = 0; rho <= 3; rho++)
+        for (int sigma = 0; sigma <= 3; sigma++) {
             result += P_at_site(mu, nu, rho, sigma) * G_at_site(mu, nu, rho, sigma);
         }
+
+        result /= ((floatT) multiplicity(projector));
 
         return result;
 
@@ -228,76 +337,30 @@ template<class floatT, size_t HaloDepth>
 class TensorDecomposition {
     protected:
         std::vector<LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>> projectorField;
+    
     private:
         typedef GIndexer<All, HaloDepth> GInd;
-    public:
-        // standard constructor
-        TensorDecomposition(CommunicationBase& commBase) {
-            // create lattice containers for all projector fields
-            for (Projector projector: allProjectors) {
-                std::string name = "P" + std::to_string((int)projector);
-                projectorField.emplace_back(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>(commBase, name, name, name, name));
-                projectorField.back().adjustSize(GInd::getLatData().vol4);
-            }
 
-            loopInitProjectorFields(std::make_index_sequence<allProjectors.size()>{});
-            // projectorField[(int)Projector::LL].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, Projector::LL, Spatial>());
-            // projectorField[(int)Projector::LT].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, Projector::LT, Spatial>());
-            // projectorField[(int)Projector::TT].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, Projector::TT, Spatial>());
-            // projectorField[(int)Projector::SL].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, Projector::SL, Spatial>());
-            // projectorField[(int)Projector::SS].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, Projector::SS, Spatial>());
-        }
-
-        template<std::size_t... I>
-        void loopInitProjectorFields(std::index_sequence<I ...>) {
-            (initProjectorField<static_cast<Projector>(I)>(), ...);
-        }
-
-        template<Projector projector>
-        void initProjectorField() {
-            projectorField[(int)projector].adjustSize(GInd::getLatData().vol4);
-            projectorField[(int)projector].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, projector, Spatial>());
-        }
-
-        static int get_r2max() {
-
-            typedef GIndexer<All> GInd;
-
-            sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
-
-            int r2max = rSquared<SpatialTemporal>(globL) / 4.0;
-
-            return r2max;
-        }
-
+        // helper function: get the projector field for a given projector
         template<Projector projector>
         const LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& getProjector() {
             return projectorField[(int)projector];
         }
 
-        template<bool onDevice>
-        void getAllTensorFunctions(
-            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-            std::vector<std::vector<COMPLEX(floatT)>>& array
-        ) {
-            loopGetTensorFunction<onDevice>(std::make_index_sequence<allProjectors.size()>{}, tensor_field, array);
-            // getTensorFunction<onDevice, Projector::LL>(tensor_field, array);
-
-            // // create lattice containers for the function fields
-            // LatticeContainer<onDevice, COMPLEX(floatT)> tensor_function_field(tensor_field.get_CommBase(), "tensor_function_field", "tensor_function_field", "tensor_function_field", "tensor_function_field");
-            // LatticeContainer<false, COMPLEX(floatT)> tensor_function_field_host(tensor_field.get_CommBase(), "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host");
-            
-            // // adjust their sizes
-            // tensor_function_field.adjustSize(GInd::getLatData().vol4);
-            // tensor_function_field_host.adjustSize(GInd::getLatData().vol4);
-
-            // tensor_function_field.template iterateOverBulk<All, HaloDepth>(ContractTensor<floatT, onDevice, Spatial>(tensor_field, getProjector<Projector::LL>()));
-
-            // tensor_function_field_host.copyFromLatticeContainer(tensor_function_field);
-
-            // reduceR2<SpatialTemporal>(tensor_function_field_host.getAccessor(), array);
+        // helper function: loop over all projectors and initialize their fields
+        template<std::size_t... I>
+        void loopInitProjectorFields(std::index_sequence<I ...>) {
+            (initProjectorField<static_cast<Projector>(I)>(), ...);
         }
-        
+    
+        // helper function: initialize the projector field for a given projector
+        template<Projector projector>
+        void initProjectorField() {
+            projectorField[(int)projector].adjustSize(GInd::getLatData().vol4);
+            projectorField[(int)projector].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, projector>());
+        }
+
+        // helper function: loop over all projectors and get the corresponding tensor functions
         template<bool onDevice, std::size_t... I>
         void loopGetTensorFunction(
             std::index_sequence<I ...>,
@@ -306,88 +369,126 @@ class TensorDecomposition {
         ) {
             (getTensorFunction<onDevice, static_cast<Projector>(I)>(tensor_field, array), ...);
         }
-
+    
+        // helper function: get the r^2-dependent tensor function for a given projector
         template<bool onDevice, Projector projector>
         void getTensorFunction(
             LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-            std::vector<std::vector<COMPLEX(floatT)>>& array
+            std::vector<std::vector<COMPLEX(floatT)>>& tensor_functions
         ) {
-            // create lattice containers for the function fields
+            // create lattice containers for the tensor function fields
             LatticeContainer<onDevice, COMPLEX(floatT)> tensor_function_field(tensor_field.get_CommBase(), "tensor_function_field", "tensor_function_field", "tensor_function_field", "tensor_function_field");
             LatticeContainer<false, COMPLEX(floatT)> tensor_function_field_host(tensor_field.get_CommBase(), "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host");
             
             // adjust their sizes
             tensor_function_field.adjustSize(GInd::getLatData().vol4);
             tensor_function_field_host.adjustSize(GInd::getLatData().vol4);
-
-            tensor_function_field.template iterateOverBulk<All, HaloDepth>(ContractTensor<floatT, onDevice, Spatial>(tensor_field, getProjector<projector>()));
-
+    
+            // get the tensor function field by contracting with the projector
+            tensor_function_field.template iterateOverBulk<All, HaloDepth>(TensorFunctionField<floatT, onDevice, projector>(tensor_field, getProjector<projector>()));
+    
+            // copy to host for upcoming reduction
             tensor_function_field_host.copyFromLatticeContainer(tensor_function_field);
-
-            reduceR2<SpatialTemporal>(tensor_function_field_host.getAccessor(), array[(int)projector]);
+    
+            // reduce to r^2-dependent function and store in array
+            reduceR2(tensor_function_field_host.getAccessor(), tensor_functions[(int)projector]);
         }
-
-        template<Summation summation>
+    
+        // helper function: reduce a lattice container to an r^2-dependent (spatial) array, ignore time coordinate
         void reduceR2(
             LatticeContainerAccessor latticeAccessor,
             std::vector<COMPLEX(floatT)>& array
         ) {
             typedef GIndexer<All> GInd;
-
+    
             // LatticeContainerAccessor latticeAccessor(lattice.getAccessor());
-
+    
             // sitexyzt glob = GInd::getLatData().globalLatticeXYZT();
-
+    
             int lx = GInd::getLatData().lx;
             int ly = GInd::getLatData().ly;
             int lz = GInd::getLatData().lz;
             int lt = GInd::getLatData().lt;
-
+    
             // int r2max = rSquared<SpatialTemporal>()
-
+    
             int r2max = get_r2max();
-
+    
             // set array to zero initially
             for (int r2 = 0; r2 < r2max + 1; r2++) {
                 array[r2] = 0.0;
             }
-
+    
             // array = new COMPLEX(floatT)[r2max+1];
-
+    
             for (int x = 0; x < lx; x++)
             for (int y = 0; y < ly; y++)
             for (int z = 0; z < lz; z++)
             for (int t = 0; t < lt; t++) {
                 sitexyzt site(x, y, z, t);
-                int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
+                sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
+                int r2 = rSquared(rt);
                 array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
             }
         }
+    
+    public:
+        // standard constructor
+        TensorDecomposition(CommunicationBase& commBase) {
+            // create lattice containers for all projector fields
+            for (Projector projector: allProjectors) {
+                // create unique name for each projector field
+                std::string name = "P" + std::to_string((int)projector);
+                // create the lattice container object and place it at the end of the vector
+                projectorField.emplace_back(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>(commBase, name, name, name, name));
+            }
 
+            // initialize all projector fields
+            loopInitProjectorFields(std::make_index_sequence<allProjectors.size()>{});
+        }
+
+        // main function: get maximum r^2 value for spatial coordinates
+        static int get_r2max() {
+            typedef GIndexer<All> GInd;
+            sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
+
+            // maximum spatial r^2 value is (glx/2)^2 + (gly/2)^2 + (glz/2)^2 with global extents glx, gly, glz
+            return rSquared(globL) / 4.0;
+        }
+
+        // main function: get all r^2-dependent tensor functions for all projectors
+        template<bool onDevice>
+        void getAllTensorFunctions(
+            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
+            std::vector<std::vector<COMPLEX(floatT)>>& array
+        ) {
+            loopGetTensorFunction<onDevice>(std::make_index_sequence<allProjectors.size()>{}, tensor_field, array);
+        }
+
+        // main function: get the counts of sites for each r^2 (spatial) value
         void get_r2Counts(
-            std::vector<int>& counts
+            std::vector<int>& r2_counts
         ) {
             typedef GIndexer<All> GInd;
 
             int lx = GInd::getLatData().lx;
             int ly = GInd::getLatData().ly;
             int lz = GInd::getLatData().lz;
-            int lt = GInd::getLatData().lt;
 
             int r2max = get_r2max();
 
-            // set counts to zero initially
+            // set r2_counts to zero initially
             for (int r2 = 0; r2 < r2max + 1; r2++) {
-                counts[r2] = 0;
+                r2_counts[r2] = 0;
             }
 
             for (int x = 0; x < lx; x++)
             for (int y = 0; y < ly; y++)
-            for (int z = 0; z < lz; z++)
-            for (int t = 0; t < lt; t++) {
-                sitexyzt site(x, y, z, t);
-                int r2 = GInd::getLatData().globalPosRelativeToOriginAbsoluteValueSquared(site);
-                counts[r2] += 1;
+            for (int z = 0; z < lz; z++) {
+                sitexyzt site(x, y, z, 0); // t is irrelevant for r^2
+                sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
+                int r2 = rSquared(rt);
+                r2_counts[r2] += 1;
             }
         }
         

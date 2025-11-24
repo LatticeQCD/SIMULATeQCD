@@ -155,14 +155,14 @@ public:
         int sign, int maxColorSpin
     );
 
-    template<Summation summation>
+    template<SpatialTemporal spatialTemporal>
     void performFourier3DEMT(
         LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emt_in,
         LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emt_out,
         int sign
     );
 
-    template<Summation summation>
+    template<SpatialTemporal spatialTemporal>
     void performFourier3DTensor4x4Symx4x4SymComplex(
         LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensor_in,
         LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensor_out,

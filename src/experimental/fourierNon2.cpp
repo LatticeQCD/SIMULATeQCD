@@ -494,7 +494,7 @@ void FourierClass<floatT>::performFourier3DSpinor1212(
 }
 
 template<typename floatT>
-template<Summation summation>
+template<SpatialTemporal spatialTemporal>
 void FourierClass<floatT>::performFourier3DEMT(
     LatticeContainer<true, Matrix4x4SymComplex<floatT>> &emt_in,
     LatticeContainer<true, Matrix4x4SymComplex<floatT>> &emt_out,
@@ -509,7 +509,7 @@ void FourierClass<floatT>::performFourier3DEMT(
 
     for (int emt_component = 0; emt_component < 10; emt_component++) {
 
-        if (summation == Spatial || summation == SpatialTemporal) {
+        if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
             moveEMTComponentToContainer(emt_intermediate, _redBaseDevice, emt_component);
             performFourierTransformDirection<0>(_redBaseDevice, _redBaseHost, sign);
             moveContainerToEMTDirection<0>(_redBaseDevice, emt_intermediate, emt_component);
@@ -523,7 +523,7 @@ void FourierClass<floatT>::performFourier3DEMT(
             moveContainerToEMTDirection<2>(_redBaseDevice, emt_intermediate, emt_component);
         }
 
-        if (summation == Temporal || summation == SpatialTemporal) {
+        if (spatialTemporal == SpatialTemporal::Temporal || spatialTemporal == SpatialTemporal::Both) {
             moveEMTComponentToContainer(emt_intermediate, _redBaseDevice, emt_component);
             performFourierTransformDirection<3>(_redBaseDevice, _redBaseHost, sign);
             moveContainerToEMTDirection<3>(_redBaseDevice, emt_intermediate, emt_component);
@@ -537,7 +537,7 @@ void FourierClass<floatT>::performFourier3DEMT(
 
 
 template<typename floatT>
-template<Summation summation>
+template<SpatialTemporal spatialTemporal>
 void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &tensor_in,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &tensor_out,
@@ -553,7 +553,7 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
 
-            if (summation == Spatial || summation == SpatialTemporal) {
+            if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensor_intermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
                 performFourierTransformDirection<0>(_redBaseDevice, _redBaseHost, sign);
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<0>(_redBaseDevice, tensor_intermediate, firstIndexPair, secondIndexPair);
@@ -567,7 +567,7 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<2>(_redBaseDevice, tensor_intermediate, firstIndexPair, secondIndexPair);
             }
 
-            if (summation == Temporal || summation == SpatialTemporal) {
+            if (spatialTemporal == SpatialTemporal::Temporal || spatialTemporal == SpatialTemporal::Both) {
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensor_intermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
                 performFourierTransformDirection<3>(_redBaseDevice, _redBaseHost, sign);
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<3>(_redBaseDevice, tensor_intermediate, firstIndexPair, secondIndexPair);
@@ -1446,21 +1446,21 @@ template void FourierClass<double>::performFourier3DSpinor1212<2>( // what is th
     int sign, int maxColorSpin
 );
 
-template void FourierClass<double>::performFourier3DEMT<Spatial>(
+template void FourierClass<double>::performFourier3DEMT<SpatialTemporal::Spatial>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emt_in,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emt_out,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
     // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
-template void FourierClass<double>::performFourier3DEMT<SpatialTemporal>(
+template void FourierClass<double>::performFourier3DEMT<SpatialTemporal::Both>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emt_in,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emt_out,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
     // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
-template void FourierClass<double>::performFourier3DEMT<Temporal>(
+template void FourierClass<double>::performFourier3DEMT<SpatialTemporal::Temporal>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emt_in,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emt_out,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
@@ -1468,21 +1468,21 @@ template void FourierClass<double>::performFourier3DEMT<Temporal>(
     int sign
 );
 
-template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<Spatial>(
+template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Spatial>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emt_in,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emt_out,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
     // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
-template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal>(
+template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emt_in,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emt_out,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
     // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
-template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<Temporal>(
+template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Temporal>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emt_in,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emt_out,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,

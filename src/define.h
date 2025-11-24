@@ -55,10 +55,10 @@ enum CommSync {
     COMM_OVERLAP = 64
 };
 
-enum Summation {
+enum class SpatialTemporal {
     Spatial,
-    SpatialTemporal,
-    Temporal
+    Temporal,
+    Both
 };
 
 
