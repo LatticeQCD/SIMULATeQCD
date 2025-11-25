@@ -300,15 +300,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     int even_len = spinor_count - (spinor_count % 2);
 
+    std::ofstream out;
     if (commBase.IamRoot()) {
-        std::ofstream out(fname.c_str());
+        out.open(fname.c_str());
         if (!out.is_open()) {
             throw std::runtime_error(stdLogger.fatal("Could not open file ", fname));
-        }
-        
-        // Write header
-        if (!evnersc.template write_header<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>(diskprec, spinor_count, en, out)) {
-            throw std::runtime_error(stdLogger.fatal("Error writing header of " + std::string(fname)));
         }
 
         // if constexpr (LatticeLayout == Layout::All) {
@@ -320,7 +316,12 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         //     }
         // }
 
-        out.close();
+        // out.close();
+    }
+    // Write header
+    if (!evnersc.template write_header<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>(diskprec, spinor_count, en, out)) {
+        rootLogger.error("Unable to write EVNERSC file: ", fname);
+        return;
     }
 
     size_t spinor_size = GInd::getLatData().globvol4 * evnersc.bytes_per_site();
@@ -468,15 +469,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     int spinor_count = evnersc.spinor_count();
     int even_len = spinor_count - (spinor_count % 2);
 
+    std::ifstream in;
     if (commBase.IamRoot()) {
-        std::ifstream in(fname.c_str());
+        in.open(fname.c_str());
         if (!in.is_open()) {
             throw std::runtime_error(stdLogger.fatal("Could not open file ", fname));
-        }
-
-        // Read header
-        if (!evnersc.read_header(in)) {
-            throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
         }
 
         // if constexpr (LatticeLayout == Layout::All) {
@@ -494,7 +491,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         //     }
         // }
 
-        in.close();
+        // in.close();
+    }
+    // Read header
+    if (!evnersc.read_header(in)) {
+        throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
     }
 
 

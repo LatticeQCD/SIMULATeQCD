@@ -695,6 +695,15 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
         LatticeDimensions globalLattice, LatticeDimensions localLattice, IO_Mode mode) {
 
     LatticeDimensions offset = mycoords() * localLattice;
+    stdLogger.debug("initIOBinary: bytesPerSite=", bytesPerSite, " displacement=", displacement,
+                " globalLattice=", globalLattice, " localLattice=", localLattice, " offset=", offset);
+
+    if (bytesPerSite == 0) {
+        throw std::runtime_error("initIOBinary: bytesPerSite is zero!");
+    }
+    if (displacement < 0) {
+        throw std::runtime_error("initIOBinary: displacement is negative!");
+    }
 
     MPI_Type_contiguous(bytesPerSite, MPI_BYTE, &basetype);
     MPI_Type_commit(&basetype);
