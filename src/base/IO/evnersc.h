@@ -9,7 +9,7 @@
 #include "../indexer/bulkIndexer.h"
 #include <iostream>
 
-class EigenHeader : private ParameterList {
+class EigenHeader : virtual private ParameterList {
 private:
     const CommunicationBase &comm;
     size_t header_size;
