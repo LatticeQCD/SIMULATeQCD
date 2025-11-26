@@ -64,12 +64,12 @@ int main(int argc, char **argv) {
     // Read the Eigenvalues and Eigenvectors
     Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
-    eigenpairs.readEvNersc(param.eigen_file(), param.num_toread_vectors());
+    eigenpairs.readEigenpairsSequential(param.eigen_file());
     eigenpairs.updateAll();
 
     // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-    eigenpairs.tester(commBase, gauge);
+    eigenpairs.tester(gauge);
 
 
     if (param.valence_masses.numberValues() == 0) {

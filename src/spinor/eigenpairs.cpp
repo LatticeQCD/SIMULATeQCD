@@ -504,7 +504,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     commBase.initIOBinary(fname, 0, evnersc.bytes_per_site(), displacement, global, local, READ);
 
     spinor_vec.clear();
-    lambda_vec.reserve(even_len);
 
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor(commBase);
     Spinorfield<floatT, false, Even, HaloDepthSpin, NStacks> spinor_even(commBase);
