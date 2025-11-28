@@ -37,10 +37,7 @@ public:
     void QRDecomposition(int n, std::vector<std::vector<floatT>>& A, std::vector<std::vector<floatT>>& Q);
 
 
-    void writeEigenpairsAlternating(const std::string &fname, int diskprec, Endianness en);
     void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
-
-    void readEigenpairsAlternating(const std::string &fname);
     void readEigenpairsSequential(const std::string &fname);
 
     void tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
