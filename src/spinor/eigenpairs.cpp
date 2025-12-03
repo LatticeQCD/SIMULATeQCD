@@ -250,7 +250,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             if (evnersc.end_of_buffer()) {
                 evnersc.process_write_data();
                 commBase.writeBinary(evnersc.buf_ptr(), GInd::getLatData().vol4);
-                rootLogger.info("Writing spinor", n, " data to file ", fname.c_str());
             }
         }
     }
@@ -300,7 +299,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     }
 
 
-    size_t displacement = 16 * spinor_count + evnersc.header_size();
+    size_t displacement = sizeof(double) * spinor_count + evnersc.header_size();
 
     commBase.initIOBinary(fname, 0, evnersc.bytes_per_site(), displacement, global, local, READ);
 
