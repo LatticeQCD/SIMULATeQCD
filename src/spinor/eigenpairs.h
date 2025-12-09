@@ -25,7 +25,7 @@ public:
     using LambdaType = typename std::conditional<LatticeLayout == All, std::array<double, 2>, double>::type;
     std::vector<LambdaType> lambda_vec;
 
-    int spinor_count;
+    int spinor_count = 0;
 
 
     explicit Eigenpairs(CommunicationBase &comm) :

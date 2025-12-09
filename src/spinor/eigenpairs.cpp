@@ -360,6 +360,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
+    typedef GIndexer<All, HaloDepthSpin> GInd;
 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
@@ -372,6 +373,23 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             rootLogger.info("lambda=", lambda);
             
             vr = spinorIn;
+            
+            Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+            spinor_host = spinorIn;
+            Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
+
+            gSite site = GInd::getSite(0,0,0,0);
+            Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+            rootLogger.info("Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
+            
+            site = GInd::getSite(
+                GInd::getLatData().lx-1,
+                GInd::getLatData().ly-1,
+                GInd::getLatData().lz-1,
+                GInd::getLatData().lt-1
+            );
+            vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+            rootLogger.info("Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
             
             dslash.applyMdaggM(vr, spinorIn, true);
 
