@@ -34,7 +34,6 @@ public:
 
     void fillRandom(const int &num_vec_in);
     void lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter);
-    void QRDecomposition(int n, std::vector<std::vector<floatT>>& A, std::vector<std::vector<floatT>>& Q);
 
 
     void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
@@ -44,7 +43,6 @@ public:
     void startVector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);
     void startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS);
 
-    bool testMPI();
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };

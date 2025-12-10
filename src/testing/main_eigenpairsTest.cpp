@@ -25,8 +25,9 @@ int main(int argc, char *argv[]){
     gauge.updateAll();
 
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
-    // // eigenpairsWrite.lanczos(gauge, numVec, 0);
-    eigenpairsWrite.fillRandom(numVec);
+    eigenpairsWrite.lanczos(gauge, numVec, 0);
+    eigenpairsWrite.tester(gauge);
+    // eigenpairsWrite.fillRandom(numVec);
     eigenpairsWrite.writeEigenpairsSequential("testEigenpairsFile", 0, ENDIAN_AUTO);
 
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
