@@ -205,7 +205,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     int even_len = spinor_count - (spinor_count % 2);
     rootLogger.info("Reading ", fname, " with ", spinor_count, " spinors");
     // Read Eigenvalues
-    if (commBase.IamRoot()) {
+    // if (commBase.IamRoot()) {
         if constexpr (LatticeLayout == Layout::All) {
             // TODO
         }   else {
@@ -218,7 +218,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         }
 
         in.close();
-    }
+    // }
 
 
     size_t displacement = sizeof(double) * spinor_count + evnersc.header_size();
@@ -278,11 +278,9 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
     HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    // smearing.SmearAll();
 
     HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-    typedef GIndexer<All, HaloDepthSpin> GInd;
 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
@@ -295,6 +293,8 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             rootLogger.info("lambda=", lambda);
             
             vr = spinorIn;
+            // spinorIn.updateAll();
+            // vr.updateAll();
             
             // Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
             // spinor_host = spinorIn;
@@ -313,7 +313,9 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             // vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
             // rootLogger.info("Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
             
+            // this->updateAll(All);
             dslash.applyMdaggM(vr, spinorIn, true);
+
 
             vr.template axpyThisB<64>(lambda, spinorIn);
             rootLogger.info("norm(Ax-µx)**2=", vr.realdotProduct(vr));
