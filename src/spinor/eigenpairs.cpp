@@ -38,19 +38,33 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter) {
     // Setup
-    fillRandom(num_vec_in);
+    lambda_vec.clear();
+    spinor_vec.clear();
+    spinor_count = num_vec_in;
+    spinor_vec.reserve(spinor_count);
+    lambda_vec.reserve(spinor_count);
     CommunicationBase &commBase = this->getComm();
-    Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
-    Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
-    HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
-
 
     // Allocate vectors
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_dslash(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_tmp(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_tmp1(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_tmp2(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_start(commBase);
+
+    // Allocate scalars
+    double normsq;
+    int m1;
+
+    // 
+
+
+
+    // Initialize startvector with random Gaussian
+    grnd_state<false> h_rand;
+    h_rand.make_rng_state(1234);
+    spinor_start.gauss(h_rand.state);
+
+    normsq = spinor_start.realdotProduct(spinor_start);
+    spinor_start *= static_cast<floatT>(1.0) / normsq;
+    spinor_vec[0] = spinor_start;
+
     
     // Lanczos iteration
             
@@ -58,39 +72,45 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
-        for (int iter = 0; iter < max_iter; iter++) {
-            for (int n = 0; n < spinor_count; n++) {
-                // Apply Dslash
-                dslash.applyMdaggM(spinor_dslash, spinor_vec[n], true);
+        m1 = FLan();
 
-                // Orthogonalize against previous vectors
-                for (int m = 0; m < n; m++) {
-                    spinor_tmp2 = spinor_vec[m];
-                    floatT overlap = -1.0 * spinor_dslash.realdotProduct(spinor_tmp2);
-                    spinor_dslash.template axpyThisB<64>(overlap, spinor_tmp2);
-                }
+        // for (int iter = 0; iter < max_iter; iter++) {
+        //     for (int n = 0; n < spinor_count; n++) {
+        //         // Apply Dslash
+        //         dslash.applyMdaggM(spinor_dslash, spinor_vec[n], true);
 
-                // Normalize
-                floatT norm = sqrt(spinor_dslash.realdotProduct(spinor_dslash));
-                if (norm > static_cast<floatT>(1e-12)) {
-                    spinor_dslash *= static_cast<floatT>(1.0) / norm;
-                } else {
-                    // Reinitialize if norm is too small
-                    grnd_state<onDevice> h_rand;
-                    h_rand.make_rng_state(1234);
-                    spinor_dslash.gauss(h_rand.state);
-                }
+        //         // Orthogonalize against previous vectors
+        //         for (int m = 0; m < n; m++) {
+        //             spinor_tmp2 = spinor_vec[m];
+        //             floatT overlap = -1.0 * spinor_dslash.realdotProduct(spinor_tmp2);
+        //             spinor_dslash.template axpyThisB<64>(overlap, spinor_tmp2);
+        //         }
 
-                // Update vector
-                spinor_vec[n] = spinor_dslash;
+        //         // Normalize
+        //         floatT norm = sqrt(spinor_dslash.realdotProduct(spinor_dslash));
+        //         if (norm > static_cast<floatT>(1e-12)) {
+        //             spinor_dslash *= static_cast<floatT>(1.0) / norm;
+        //         } else {
+        //             // Reinitialize if norm is too small
+        //             spinor_dslash.gauss(h_rand.state);
+        //         }
 
-                // Update eigenvalue estimate
-                dslash.applyMdaggM(spinor_tmp, spinor_vec[n], true);
-                lambda_vec[n] = spinor_tmp.realdotProduct(spinor_vec[n]);
+        //         // Update vector
+        //         spinor_vec[n] = spinor_dslash;
+
+        //         // Update eigenvalue estimate
+        //         dslash.applyMdaggM(spinor_tmp, spinor_vec[n], true);
+        //         lambda_vec[n] = spinor_tmp.realdotProduct(spinor_vec[n]);
                 
-            }
-        }
+        //     }
+        // }
     }
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+int Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::FLan() {
+
 }
 
 

@@ -34,7 +34,7 @@ public:
 
     void fillRandom(const int &num_vec_in);
     void lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter);
-
+    int FLan();
 
     void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
     void readEigenpairsSequential(const std::string &fname);
