@@ -211,8 +211,9 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     EigenFormat<HaloDepthSpin> evnersc(commBase);
 
     std::ifstream in;
+    in.open(fname.c_str());
+
     if (commBase.IamRoot()) {
-        in.open(fname.c_str());
         if (!in.is_open()) {
             throw std::runtime_error(stdLogger.fatal("Could not open file ", fname));
         }
@@ -225,10 +226,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     int even_len = spinor_count - (spinor_count % 2);
     rootLogger.info("Reading ", fname, " with ", spinor_count, " spinors");
     // Read Eigenvalues
-    // if (commBase.IamRoot()) {
-        if constexpr (LatticeLayout == Layout::All) {
-            // TODO
-        }   else {
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        lambda_vec.reserve(spinor_count);
+        if (commBase.IamRoot()) {
             lambda_vec.clear();
             for (int i = 0; i < even_len; ++i) {
                 double lambda;
@@ -236,9 +238,14 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
                 lambda_vec.emplace_back(lambda);
             }
         }
+            
 
-        in.close();
-    // }
+        if (!commBase.single()) {
+            commBase.root2all(lambda_vec);
+        }
+    }
+
+    in.close();
 
 
     size_t displacement = sizeof(double) * spinor_count + evnersc.header_size();
