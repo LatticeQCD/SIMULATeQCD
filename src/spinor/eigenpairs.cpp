@@ -36,7 +36,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge, const int &num_vec_in, const int &max_iter) {
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(const int &num_vec_in) {
     // Setup
     lambda_vec.clear();
     spinor_vec.clear();
@@ -45,72 +45,71 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     lambda_vec.reserve(spinor_count);
     CommunicationBase &commBase = this->getComm();
 
-    // Allocate vectors
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinor_start(commBase);
+    // Allocate spinorfields
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vec(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> q_m1(commBase);
 
     // Allocate scalars
     double normsq;
-    int m1;
+    int m1, k1, diff;
 
-    // 
-
-
+    // old Alg class variables 
+    int m_lan, k_lan;
 
     // Initialize startvector with random Gaussian
     grnd_state<false> h_rand;
     h_rand.make_rng_state(1234);
-    spinor_start.gauss(h_rand.state);
+    vec.gauss(h_rand.state);
 
-    normsq = spinor_start.realdotProduct(spinor_start);
-    spinor_start *= static_cast<floatT>(1.0) / normsq;
-    spinor_vec[0] = spinor_start;
+    normsq = vec.realdotProduct(vec);
+    vec *= static_cast<floatT>(1.0) / normsq;
+    m1 = 0;
 
-    
-    // Lanczos iteration
-            
-
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        m1 = FLan();
-
-        // for (int iter = 0; iter < max_iter; iter++) {
-        //     for (int n = 0; n < spinor_count; n++) {
-        //         // Apply Dslash
-        //         dslash.applyMdaggM(spinor_dslash, spinor_vec[n], true);
-
-        //         // Orthogonalize against previous vectors
-        //         for (int m = 0; m < n; m++) {
-        //             spinor_tmp2 = spinor_vec[m];
-        //             floatT overlap = -1.0 * spinor_dslash.realdotProduct(spinor_tmp2);
-        //             spinor_dslash.template axpyThisB<64>(overlap, spinor_tmp2);
-        //         }
-
-        //         // Normalize
-        //         floatT norm = sqrt(spinor_dslash.realdotProduct(spinor_dslash));
-        //         if (norm > static_cast<floatT>(1e-12)) {
-        //             spinor_dslash *= static_cast<floatT>(1.0) / norm;
-        //         } else {
-        //             // Reinitialize if norm is too small
-        //             spinor_dslash.gauss(h_rand.state);
-        //         }
-
-        //         // Update vector
-        //         spinor_vec[n] = spinor_dslash;
-
-        //         // Update eigenvalue estimate
-        //         dslash.applyMdaggM(spinor_tmp, spinor_vec[n], true);
-        //         lambda_vec[n] = spinor_tmp.realdotProduct(spinor_vec[n]);
-                
-        //     }
-        // }
-    }
+    diff = m_lan - k_lan;
+    k1 = m1 - diff;
 }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-int Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::FLan() {
+int Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::FLan(double *b,
+			Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> *q_m1,
+			Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> *vec,
+			double *beta_m, int m_lan, int k_lan) {
+    CommunicationBase &commBase = this->getComm();
 
+    int   m1, k, p;
+    double s, r;
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> R(commBase);
+
+    m1 = 0;
+
+    // int vsizeh = 0;
+
+    //monitor the dynamical reduction of Ritz vectors
+    p=m_lan+1;
+    k=0;
+
+    while(k < m_lan){
+        s = vec->realdotProduct(*vec);
+        b[k+1]=sqrt(s);
+        if(b[k+1]>1e-8){
+            r = 1.0/sqrt(s);
+
+            k++;
+        } else {
+            p = k;
+            k = m_lan;
+        }
+    }
+    if(p==m_lan+1){
+        m1=m_lan;
+    } else{
+        m1=p-1;
+        // q_m1->copyFrom(*R, vsizeh, (p-1)*vsizeh, 0);
+        *beta_m=b[p];
+    }
+
+    return m1;
 }
 
 
