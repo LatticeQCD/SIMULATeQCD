@@ -33,11 +33,6 @@ public:
             _spinor_lattice(comm) { }
 
     void fillRandom(const int &num_vec_in);
-    void lanczos(const int &num_vec_in);
-    int FLan(double *b,
-			Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> *q_m1,
-			Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> *vec,
-			double *beta_m, int m_lan, int k_lan);
 
     void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
     void readEigenpairsSequential(const std::string &fname);
