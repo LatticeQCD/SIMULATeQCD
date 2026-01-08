@@ -235,34 +235,12 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         // TODO
     }   else {
         for (int i = 0; i < spinor_count; i++) {
-            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = spinor_vec[i];
-            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
+            Spinor_t &spinorIn = spinor_vec[i];
+            Spinor_t vr(commBase);
             
             floatT lambda = lambda_vec[i];
             rootLogger.info("lambda=", lambda);
             
-            vr = spinorIn;
-            // spinorIn.updateAll();
-            // vr.updateAll();
-            
-            // Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
-            // spinor_host = spinorIn;
-            // Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
-
-            // gSite site = GInd::getSite(0,0,0,0);
-            // Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            // rootLogger.info("Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-            // site = GInd::getSite(
-            //     GInd::getLatData().lx-1,
-            //     GInd::getLatData().ly-1,
-            //     GInd::getLatData().lz-1,
-            //     GInd::getLatData().lt-1
-            // );
-            // vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            // rootLogger.info("Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-            // this->updateAll(All);
             dslash.applyMdaggM(vr, spinorIn, true);
 
 
@@ -274,10 +252,10 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVector(double mass, Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn) {
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVector(double mass, Spinor_t& spinorOut, const Spinor_t& spinorIn) {
     CommunicationBase &commBase = this->getComm();
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorSum(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
+    Spinor_t spinorSum(commBase);
+    Spinor_t spinorEv(commBase);
 
     double lambda;
     COMPLEX(double) factorDouble;
@@ -305,11 +283,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS) {
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS) {
     CommunicationBase &commBase = this->getComm();
 
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(commBase);
+    Spinor_t vr(commBase);
+    Spinor_t va(commBase);
     va = spinorRHS;
 
     dslash.applyMdaggM(vr, spinorStart, true);
@@ -320,7 +298,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     COMPLEX(double) sum1 = va.dotProduct(vr);
     
     for (int i =0; i < spinor_count; i++) {
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorEv = spinor_vec[i];
+        Spinor_t &spinorEv = spinor_vec[i];
         vr = spinorEv;
         sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
     }

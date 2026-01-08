@@ -9,8 +9,11 @@
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class Eigenpairs : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepthSpin>
 {
+
+    using Spinor_t = Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>;
+
 protected:
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> _spinor_lattice;
+    Spinor_t _spinor_lattice;
 
 private:
 
@@ -21,7 +24,7 @@ public:
     typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
 
     // Use pairs of doubles for lambda_vec when LatticeLayout == All, otherwise use single double
-    std::vector<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>> spinor_vec;
+    std::vector<Spinor_t> spinor_vec;
     using LambdaType = typename std::conditional<LatticeLayout == All, std::array<double, 2>, double>::type;
     std::vector<LambdaType> lambda_vec;
 
@@ -38,8 +41,8 @@ public:
     void readEigenpairsSequential(const std::string &fname);
 
     void tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
-    void startVector(double mass,  Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorOut, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn);
-    void startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS);
+    void startVector(double mass,  Spinor_t& spinorOut, const Spinor_t& spinorIn);
+    void startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS);
 
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;
