@@ -73,8 +73,8 @@ class gradientFlow<floatT, HaloDepth, fixed_stepsize, wilson>
     using Z_i = Z_i_wilson<floatT, HaloDepth, true>;
 public:
     gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
-                   std::vector<floatT> necessaryFlowTime, floatT dummy_accuracy = 0)
-            : su3rungeKutta3<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop, necessaryFlowTime) {}
+                   std::vector<floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT dummy_accuracy = 0)
+            : su3rungeKutta3<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop, necessaryFlowTime, measuredFlowTimes) {}
 
 };
 #endif
@@ -88,9 +88,9 @@ class gradientFlow<floatT, HaloDepth, adaptive_stepsize, wilson>
 public:
     gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                 floatT stepSize, floatT start, floatT stop,
-                             std::vector<floatT> necessaryFlowTime, floatT accuracy)
+                             std::vector<floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT accuracy)
             : su3rungeKutta3AdStepSize<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
-                             necessaryFlowTime, accuracy) {}
+                             necessaryFlowTime, measuredFlowTimes, accuracy) {}
 };
 
 template<class floatT, const size_t HaloDepth>
@@ -101,9 +101,9 @@ class gradientFlow<floatT, HaloDepth, adaptive_stepsize_allgpu, wilson>
 public:
     gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                floatT stepSize, floatT start, floatT stop,
-               std::vector<floatT> necessaryFlowTime, floatT accuracy)
+               std::vector<floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT accuracy)
             : su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
-                                                               necessaryFlowTime, accuracy) {}
+                                                               necessaryFlowTime, measuredFlowTimes, accuracy) {}
 };
 #endif
 #endif
@@ -148,8 +148,8 @@ class gradientFlow<floatT, HaloDepth, fixed_stepsize, zeuthen>
     using Z_i = Z_i_zeuthen<floatT, HaloDepth, true>;
 public:
     gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
-                   std::vector<floatT> necessaryFlowTime, floatT dummy_accuracy = 0)
-            : su3rungeKutta3<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop, necessaryFlowTime) {}
+                   std::vector<floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT dummy_accuracy = 0)
+            : su3rungeKutta3<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop, necessaryFlowTime, measuredFlowTimes) {}
 
 };
 #endif
@@ -163,9 +163,9 @@ class gradientFlow<floatT, HaloDepth, adaptive_stepsize, zeuthen>
 public:
     gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                  floatT stepSize, floatT start, floatT stop,
-                             std::vector<floatT> necessaryFlowTime, floatT accuracy)
+                             std::vector<floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT accuracy)
             : su3rungeKutta3AdStepSize<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
-                             necessaryFlowTime, accuracy) {}
+                             necessaryFlowTime, measuredFlowTimes, accuracy) {}
 
 };
 
@@ -177,9 +177,9 @@ class gradientFlow<floatT, HaloDepth, adaptive_stepsize_allgpu, zeuthen>
 public:
     gradientFlow(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                 floatT stepSize, floatT start, floatT stop,
-                std::vector<floatT> necessaryFlowTime, floatT accuracy)
+                std::vector<floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT accuracy)
             : su3rungeKutta3AdStepSizeAllGPU<floatT, HaloDepth, Z_i>(inGaugeA, stepSize, start, stop,
-                                                               necessaryFlowTime, accuracy) {}
+                                                               necessaryFlowTime, measuredFlowTimes, accuracy) {}
 
 };
 #endif

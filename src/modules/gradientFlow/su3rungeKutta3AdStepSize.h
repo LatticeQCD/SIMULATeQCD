@@ -24,8 +24,9 @@ protected:
 public:
     su3rungeKutta3AdStepSize(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                               floatT stepSize, floatT start, floatT stop,
-                             std::vector<floatT> necessaryFlowTime, floatT accuracy) :
-            su3rungeKutta3<floatT, HaloDepth, Zi>(inGaugeA, stepSize, start, stop, necessaryFlowTime),
+                             std::vector<floatT> necessaryFlowTime,
+                             std::vector<floatT> measuredFlowTimes, floatT accuracy) :
+            su3rungeKutta3<floatT, HaloDepth, Zi>(inGaugeA, stepSize, start, stop, necessaryFlowTime, measuredFlowTimes),
             _gaugeA_host(this->_gaugeA_device.getComm()),
             _gaugeB_host(this->_gaugeA_device.getComm()),
             _gaugeC_host(this->_gaugeA_device.getComm()),
