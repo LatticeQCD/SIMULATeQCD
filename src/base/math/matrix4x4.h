@@ -115,6 +115,10 @@ struct Matrix4x4Sym {
         return *this;
     }
 
+    __host__ inline std::vector<floatT> toStdVector() const {
+        return std::vector<floatT>(elems, elems + 10);
+    }
+
 };
 
 
