@@ -495,12 +495,14 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         //! -------------------------------calculate observables on flowed field----------------------------------------
 
-        if (lp.save_conf() && gradFlow.checkIfnecessaryTime()){
+        if (lp.save_conf() && gradFlow.checkIfMeasuredTime()){
             gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time));
         }
 
         if (lp.useHDF5()) {
-            hdf5_file.writeFlowTime(flow_time);
+            hdf5File.writeObservable<HDF5_Observable::FlowTime>(flow_time);
+            if (gradFlow.checkIfMeasuredTime()) {
+                hdf5File.writeFlowTime(flow_time);
         }
 
         if (lp.plaquette()) {
@@ -687,7 +689,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
                         << resultEMTU.elems[7] << " " << resultEMTU.elems[8] << " " << resultEMTU.elems[9] << " ";
         }
 
-        if (lp.energyMomentumTensorTracelessTimeSlices() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.energyMomentumTensorTracelessTimeSlices() && gradFlow.checkIfMeasuredTime()) {
             LineFormatter newLineEMTUTimeSlices = file_EMTUTimeSlices.tag("");
             EMT.EMTUTimeSlices(resultEMTUTimeSlices);
             newLineEMTUTimeSlices << flow_time << " ";
@@ -699,7 +701,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.energyMomentumTensorTracefullTimeSlices() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.energyMomentumTensorTracefullTimeSlices() && gradFlow.checkIfMeasuredTime()) {
             LineFormatter newLineEMTETimeSlices = file_EMTETimeSlices.tag("");
             EMT.EMTETimeSlices(resultEMTETimeSlices);
             newLineEMTETimeSlices << flow_time << " ";
@@ -708,53 +710,14 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition() && gradFlow.checkIfnecessaryTime()) {
-            LineFormatter newLineEMTUCorr_LL = file_EMTUCorr_LL.tag("");
-            EMT_Corr.EMTU_Corr_Gs(gauge, vec_EMT_corr);
-            newLineEMTUCorr_LL << flow_time << " ";
-            for (int r2 = 0; r2 < r2max + 1; r2++) {
-                if (vec_counts[r2] != 0) {
-                    newLineEMTUCorr_LL << vec_EMT_corr[0][r2];
-                }
-            }
-
-            if (lp.useHDF5()) {
-                hdf5_file.writeLL(vec_EMT_corr[0]);
-                hdf5_file.writeFlowTimeNecessary(flow_time);
-                hdf5_file.writeEMTUCorrData(vec_EMT_corr);
-            }
-
-            // std::vector<ComplexData<PREC>> vec_EMT_corr_data(r2max+1);
-            // for (int r2 = 0; r2 < r2max + 1; r2++) {
-            //     vec_EMT_corr_data[r2] = {real(vec_EMT_corr[r2]), imag(vec_EMT_corr[r2])};
-            // }
-
-            // // initial dimension of the array
-            // hsize_t offset[2] = {h5_flowtime_counter, 0};
-            // hsize_t amount[2] = {1, r2max+1};
-
-            // hsize_t newsize[2] = {h5_flowtime_counter+1, r2max+1};
-            // dataset->extend(newsize);
-            // dataset_LL->extend(newsize);
-
-            // // get the dataspace from the file
-            // DataSpace *filespace = new DataSpace(dataset->getSpace());
-            // // locate the needed space in the dataspace
-            // filespace->selectHyperslab(H5S_SELECT_SET, amount, offset);
-
-            // // // create memory space
-            // DataSpace *memoryspace = new DataSpace(2, amount, NULL);
-
-            // if (commBase.IamRoot()) {
-            //     dataset->write(vec_counts.data(), PredType::NATIVE_INT, *memoryspace, *filespace);
-            //     dataset_LL->write(vec_EMT_corr_data.data(), cType, *memoryspace, *filespace);
-            // }
-
-            // h5_flowtime_counter++;
-
+        if (lp.energyMomentumTensorCorrFunctions() && gradFlow.checkIfMeasuredTime()) {
+            EMTCorr.EMTCorrGFunctions(gauge, vecEMTCorr);
+            
+            // write data in hdf5 file anyway (regardless of useHDF5 setting)
+            hdf5File.writeEMTCorrData(vecEMTCorr);
         }
 
-        if (lp.shear_bulk_corr_block() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.shear_bulk_corr_block() && gradFlow.checkIfMeasuredTime()) {
 
             EnergyDensity = BlockBulk.updateBlock(EMTEBlock, lp.binsize());
             BulkCorr = BlockBulk.getCorr(EMTEBlock, lp.binsize());
@@ -785,7 +748,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
                             << EMTensorTraceless.elems[7] << " " << EMTensorTraceless.elems[8] << " " << EMTensorTraceless.elems[9] <<"\n";
         }
 
-        if (lp.ColorElectricCorrTimeSlices_naive() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.ColorElectricCorrTimeSlices_naive() && gradFlow.checkIfMeasuredTime()) {
             //! print naive discretization for ce
             LineFormatter newLineColEl_naive = fileColElecCorrSl_naive.tag("");
             resultPoly = poly.getPolyakovLoop();
@@ -801,7 +764,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.ColorElectricCorrTimeSlices_clover() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.ColorElectricCorrTimeSlices_clover() && gradFlow.checkIfMeasuredTime()) {
             //! print clover discretization for ce
             LineFormatter newLineColEl_clover = fileColElecCorrSl_clover.tag("");
             resultPoly = poly.getPolyakovLoop();
@@ -817,7 +780,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.ColorMagneticCorrTimeSlices_naive() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.ColorMagneticCorrTimeSlices_naive() && gradFlow.checkIfMeasuredTime()) {
             //! print naive discretization for cm
             LineFormatter newLineColMa_naive = fileColMagnCorrSl_naive.tag("");
             resultPoly = poly.getPolyakovLoop();
@@ -833,7 +796,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.ColorMagneticCorrTimeSlices_clover() && gradFlow.checkIfnecessaryTime()) {
+        if (lp.ColorMagneticCorrTimeSlices_clover() && gradFlow.checkIfMeasuredTime()) {
             //! print clover discretization for cm
             LineFormatter newLineColMa_clover = fileColMagnCorrSl_clover.tag("");
             resultPoly = poly.getPolyakovLoop();
@@ -849,7 +812,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if ((lp.PolyakovLoopCorrelator() && gradFlow.checkIfnecessaryTime())) {
+        if ((lp.PolyakovLoopCorrelator() && gradFlow.checkIfMeasuredTime())) {
             Gaugefield<floatT, false, HaloDepth> gauge_host(gauge.getComm());
             gauge_host = gauge;
             int ngfstep=0;
