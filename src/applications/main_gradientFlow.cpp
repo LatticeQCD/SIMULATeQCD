@@ -10,6 +10,7 @@
  *
  */
 
+#include <filesystem> 
 #include "../simulateqcd.h"
 #include "../modules/gradientFlow/gradientFlowParameters.h"
 #include "../modules/gradientFlow/gradientFlow.h"
@@ -23,8 +24,7 @@
 #include "../modules/gaugeFixing/gfix.h"
 #include "../modules/gaugeFixing/polyakovLoopCorrelator.h"
 
-// using namespace H5;
-
+namespace fs = std::filesystem;
 
 #define USE_GPU true
 //define precision
@@ -60,16 +60,16 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     //! -------------------------------prepare file output--------------------------------------------------------------
 
-    std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
-            datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
-            datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
-            datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices,
-            datNameEMTUCorr_LL,
-            datNameHDF5,
-            datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
-            datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
+    std::stringstream prefix;
+    // std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
+    //         datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
+    //         datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
+    //         datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTU, datNameEMTE, datNameEMTUTimeSlices, datNameEMTETimeSlices,
+    //         // datNameHDF5,
+    //         datNameRenormPolySuscA, datNameRenormPolySuscL, datNameRenormPolySuscT,
+    //         datNameWeinbergSlices, datNameWeinbergSlices_imp, datNameWeinbergSlices_imp_imp;
     // fill stream with 0's
-    datName.fill('0');
+    // datName.fill('0');
     // get the data file name
     if ( lp.RK_method() == "adaptive_stepsize" || lp.RK_method() == "adaptive_stepsize_allgpu" )
         prefix << lp.force() << "Flow_acc" << std::fixed << std::setprecision(6)
@@ -80,51 +80,53 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             prefix << "_sts" << std::fixed << std::setprecision(6) << lp.start_step_size();
         }
     }
-    datName << lp.measurements_dir() << prefix.str() << lp.fileExt();
-    datNameConf << lp.measurements_dir()<< "conf_" << prefix.str() << lp.fileExt();
-    datNameCloverSlices << lp.measurements_dir() << prefix.str() << "_CloverTimeSlices" << lp.fileExt();
-    datNameTopChSlices << lp.measurements_dir() << prefix.str() << "_TopChTimeSlices" << lp.fileExt();
-    datNameTopChSlices_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImp" << lp.fileExt();
-    datNameTopChSlices_imp_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImpImp" << lp.fileExt();
-    datNameWeinbergSlices << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlices" << lp.fileExt();
-    datNameWeinbergSlices_imp << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlicesImp" << lp.fileExt();
-    datNameWeinbergSlices_imp_imp << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlicesImpImp" << lp.fileExt();
-    datNameColElecCorrSlices_naive << lp.measurements_dir() << prefix.str() << "_ColElecCorrTimeSlices_naive" << lp.fileExt();
-    datNameColMagnCorrSlices_naive << lp.measurements_dir() << prefix.str() << "_ColMagnCorrTimeSlices_naive" << lp.fileExt();
-    datNamePolyCorrSinglet << lp.measurements_dir() << prefix.str() << "_PolyakovCorrSinglet" << lp.fileExt();
-    datNamePolyCorrOctet << lp.measurements_dir() << prefix.str() << "_PolyakovCorrOctet" << lp.fileExt();
-    datNamePolyCorrAverage << lp.measurements_dir() << prefix.str() << "_PolyakovCorrAverage" << lp.fileExt();
-    datNameRenormPolySuscA << lp.measurements_dir() << prefix.str() << "_RenormPolySuscA" << lp.fileExt();
-    datNameRenormPolySuscL << lp.measurements_dir() << prefix.str() << "_RenormPolySuscL" << lp.fileExt();
-    datNameRenormPolySuscT << lp.measurements_dir() << prefix.str() << "_RenormPolySuscT" << lp.fileExt();
-    datNameBlockTopCharge << lp.measurements_dir() << prefix.str() << "_BlockTopCharge" << lp.fileExt();
-    datNameBlockShear << lp.measurements_dir() << prefix.str() << "_BlockShear" << lp.fileExt();
-    datNameBlockBulk << lp.measurements_dir() << prefix.str() << "_BlockBulk" << lp.fileExt();
-    datName_normEMT << lp.measurements_dir() << prefix.str() << "_NormEMT" << lp.fileExt();
-    datNameColElecCorrSlices_clover << lp.measurements_dir() << prefix.str() << "_ColElecCorrTimeSlices_clover" << lp.fileExt();
-    datNameColMagnCorrSlices_clover << lp.measurements_dir() << prefix.str() << "_ColMagnCorrTimeSlices_clover" << lp.fileExt();
-    datNameEMTU << lp.measurements_dir() << prefix.str() << "_EMTU" << lp.fileExt();
-    datNameEMTE << lp.measurements_dir() << prefix.str() << "_EMTE" << lp.fileExt();
-    datNameEMTUTimeSlices << lp.measurements_dir() << prefix.str() << "_EMTUTimeSlices" << lp.fileExt();
-    datNameEMTETimeSlices << lp.measurements_dir() << prefix.str() << "_EMTETimeSlices" << lp.fileExt();
-    datNameEMTUCorr_LL << lp.measurements_dir() << prefix.str() << "_EMTUCorr_LL" << lp.fileExt();
-
-    datNameHDF5 << lp.measurements_dir() << prefix.str() << lp.fileExt() << ".h5";
+    fs::path datName = fs::path(lp.measurements_dir()) / (prefix.str() + lp.fileExt());
+    fs::path datNameConf = fs::path(lp.measurements_dir()) / ("conf_" + prefix.str() + lp.fileExt());
+    fs::path datNameCloverSlices = fs::path(lp.measurements_dir()) / (prefix.str() + "_CloverTimeSlices" + lp.fileExt());
+    fs::path datNameTopChSlices = fs::path(lp.measurements_dir()) / (prefix.str() + "_TopChTimeSlices" + lp.fileExt());
+    fs::path datNameTopChSlices_imp = fs::path(lp.measurements_dir()) / (prefix.str() + "_TopChTimeSlicesImp" + lp.fileExt());
+    fs::path datNameTopChSlices_imp_imp = fs::path(lp.measurements_dir()) / (prefix.str() + "_TopChTimeSlicesImpImp" + lp.fileExt());
+    fs::path datNameWeinbergSlices = fs::path(lp.measurements_dir()) / (prefix.str() + "_WeinbergTimeSlices" + lp.fileExt());
+    fs::path datNameWeinbergSlices_imp = fs::path(lp.measurements_dir()) / (prefix.str() + "_WeinbergTimeSlicesImp" + lp.fileExt());
+    fs::path datNameWeinbergSlices_imp_imp = fs::path(lp.measurements_dir()) / (prefix.str() + "_WeinbergTimeSlicesImpImp" + lp.fileExt());
+    fs::path datNameColElecCorrSlices_naive = fs::path(lp.measurements_dir()) / (prefix.str() + "_ColElecCorrTimeSlices_naive" + lp.fileExt());
+    fs::path datNameColMagnCorrSlices_naive = fs::path(lp.measurements_dir()) / (prefix.str() + "_ColMagnCorrTimeSlices_naive" + lp.fileExt());
+    fs::path datNamePolyCorrSinglet = fs::path(lp.measurements_dir()) / (prefix.str() + "_PolyakovCorrSinglet" + lp.fileExt());
+    fs::path datNamePolyCorrOctet = fs::path(lp.measurements_dir()) / (prefix.str() + "_PolyakovCorrOctet" + lp.fileExt());
+    fs::path datNamePolyCorrAverage = fs::path(lp.measurements_dir()) / (prefix.str() + "_PolyakovCorrAverage" + lp.fileExt());
+    fs::path datNameRenormPolySuscA = fs::path(lp.measurements_dir()) / (prefix.str() + "_RenormPolySuscA" + lp.fileExt());
+    fs::path datNameRenormPolySuscL = fs::path(lp.measurements_dir()) / (prefix.str() + "_RenormPolySuscL" + lp.fileExt());
+    fs::path datNameRenormPolySuscT = fs::path(lp.measurements_dir()) / (prefix.str() + "_RenormPolySuscT" + lp.fileExt());
+    fs::path datNameBlockTopCharge = fs::path(lp.measurements_dir()) / (prefix.str() + "_BlockTopCharge" + lp.fileExt());
+    fs::path datNameBlockShear = fs::path(lp.measurements_dir()) / (prefix.str() + "_BlockShear" + lp.fileExt());
+    fs::path datNameBlockBulk = fs::path(lp.measurements_dir()) / (prefix.str() + "_BlockBulk" + lp.fileExt());
+    fs::path datName_normEMT = fs::path(lp.measurements_dir()) / (prefix.str() + "_NormEMT" + lp.fileExt());
+    fs::path datNameColElecCorrSlices_clover = fs::path(lp.measurements_dir()) / (prefix.str() + "_ColElecCorrTimeSlices_clover" + lp.fileExt());
+    fs::path datNameColMagnCorrSlices_clover = fs::path(lp.measurements_dir()) / (prefix.str() + "_ColMagnCorrTimeSlices_clover" + lp.fileExt());
+    fs::path datNameEMTU = fs::path(lp.measurements_dir()) / (prefix.str() + "_EMTU" + lp.fileExt());
+    fs::path datNameEMTE = fs::path(lp.measurements_dir()) / (prefix.str() + "_EMTE" + lp.fileExt());
+    fs::path datNameEMTUTimeSlices = fs::path(lp.measurements_dir()) / (prefix.str() + "_EMTUTimeSlices" + lp.fileExt());
+    fs::path datNameEMTETimeSlices = fs::path(lp.measurements_dir()) / (prefix.str() + "_EMTETimeSlices" + lp.fileExt());
+    fs::path datNameHDF5 = fs::path(lp.measurements_dir()) / (prefix.str() + lp.fileExt() + ".h5");
     
-    FileWriter file(gauge.getComm(), lp, datName.str());
+    FileWriter file(gauge.getComm(), lp);
 
-    //! write header
-    LineFormatter header = file.header();
-    header << "Flow time ";
-    if (lp.plaquette()) header << "Plaquette ";
-    if (lp.clover()) header << "Clover ";
-    if (lp.topCharge()) header << "Top. Charge ";
-    if (lp.topCharge_imp() || lp.topCharge_imp_block()) header << "Impr. top. Charge ";
-    if (lp.topCharge_imp_imp() || lp.topCharge_imp_imp_block()) header << "O(a^6) Impr. top. Charge ";
-    if (lp.weinberg()) header << "Weinberg ";
-    if (lp.weinberg_imp()) header << "Impr. Weinberg ";
-    if (lp.weinberg_imp_imp()) header << "O(a^6) Impr. Weinberg ";
-    header.endLine();
+    if (!lp.useHDF5()) {
+        file.createFile(datName.string());
+
+        //! write header
+        LineFormatter header = file.header();
+        header << "Flow time ";
+        if (lp.plaquette()) header << "Plaquette ";
+        if (lp.clover()) header << "Clover ";
+        if (lp.topCharge()) header << "Top. Charge ";
+        if (lp.topCharge_imp() || lp.topCharge_imp_block()) header << "Impr. top. Charge ";
+        if (lp.topCharge_imp_imp() || lp.topCharge_imp_imp_block()) header << "O(a^6) Impr. top. Charge ";
+        if (lp.weinberg()) header << "Weinberg ";
+        if (lp.weinberg_imp()) header << "Impr. Weinberg ";
+        if (lp.weinberg_imp_imp()) header << "O(a^6) Impr. Weinberg ";
+        header.endLine();
+    }
 
     // TODO: Why always .getComm instead of using the commBase?
     FileWriter file_BlockTopCharge(gauge.getComm(), lp);
@@ -132,9 +134,9 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     FileWriter file_BlockShear(gauge.getComm(), lp);
     FileWriter file_BlockBulk(gauge.getComm(), lp);
     if (lp.shear_bulk_corr_block()) {
-        file_normEMT.createFile(datName_normEMT.str());
-        file_BlockShear.createFile(datNameBlockShear.str());
-        file_BlockBulk.createFile(datNameBlockBulk.str());
+        file_normEMT.createFile(datName_normEMT.string());
+        file_BlockShear.createFile(datNameBlockShear.string());
+        file_BlockBulk.createFile(datNameBlockBulk.string());
         LineFormatter header_normEMT = file_normEMT.header();
         header_normEMT << "#flowtime E U00 U11 U22 U33 U01 U02 U03 U12 U13 U23" << "\n";
         header_normEMT.endLine();
@@ -147,16 +149,16 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     }
 
     FileWriter file_EMTE(gauge.getComm(), lp);
-    if (lp.energyMomentumTensorTracefull()) {
-        file_EMTE.createFile(datNameEMTE.str());
+    if (lp.energyMomentumTensorTracefull() && !lp.useHDF5()) {
+        file_EMTE.createFile(datNameEMTE.string());
         LineFormatter header_EMTE = file_EMTE.header();
         header_EMTE << "#flowtime E" << "\n";
         header_EMTE.endLine();
     }
 
     FileWriter file_EMTU(gauge.getComm(), lp);
-    if (lp.energyMomentumTensorTraceless()) {
-        file_EMTU.createFile(datNameEMTU.str());
+    if (lp.energyMomentumTensorTraceless() && !lp.useHDF5()) {
+        file_EMTU.createFile(datNameEMTU.string());
         LineFormatter header_EMTU = file_EMTU.header();
         header_EMTU << "#flowtime U00 U11 U22 U33 U01 U02 U03 U12 U13 U23" << "\n";
         header_EMTU.endLine();
@@ -164,7 +166,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter file_EMTUTimeSlices(gauge.getComm(), lp);
     if (lp.energyMomentumTensorTracelessTimeSlices()) {
-        file_EMTUTimeSlices.createFile(datNameEMTUTimeSlices.str());
+        file_EMTUTimeSlices.createFile(datNameEMTUTimeSlices.string());
         LineFormatter header_EMTUTimeSlices = file_EMTUTimeSlices.header();
         header_EMTUTimeSlices << "#flowtime U00 U11 U22 U33 U01 U02 U03 U12 U13 U23 for tau=0, ... for tau=1 ..." << "\n";
         header_EMTUTimeSlices.endLine();
@@ -172,22 +174,14 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter file_EMTETimeSlices(gauge.getComm(), lp);
     if (lp.energyMomentumTensorTracefullTimeSlices()) {
-        file_EMTETimeSlices.createFile(datNameEMTETimeSlices.str());
+        file_EMTETimeSlices.createFile(datNameEMTETimeSlices.string());
         LineFormatter header_EMTETimeSlices = file_EMTETimeSlices.header();
         header_EMTETimeSlices << "#flowtime E for tau=0, ... for tau=1 ..." << "\n";
         header_EMTETimeSlices.endLine();
     }
 
-    FileWriter file_EMTUCorr_LL(gauge.getComm(), lp);
-    if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
-        file_EMTUCorr_LL.createFile(datNameEMTUCorr_LL.str());
-        LineFormatter header_EMTUCorr_LL = file_EMTUCorr_LL.header();
-        header_EMTUCorr_LL << "#flowtime and G_LL for all reached r2 values" << "\n";
-        header_EMTUCorr_LL.endLine();
-    }
-
     if (lp.topCharge_imp_block()) {
-        file_BlockTopCharge.createFile(datNameBlockTopCharge.str());
+        file_BlockTopCharge.createFile(datNameBlockTopCharge.string());
         LineFormatter header_BlockTopCharge = file_BlockTopCharge.header();
         header_BlockTopCharge<< "#flow time tau/a=0: #r/a1 #corr1 #r/a2 #corr2.... tau/a=1: #r/a1 #corr1...." << "\n";
         header_BlockTopCharge.endLine();
@@ -197,23 +191,23 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     FileWriter filePolyCorrOctet(gauge.getComm(), lp);
     FileWriter filePolyCorrAverage(gauge.getComm(), lp);
     if (lp.PolyakovLoopCorrelator()) {
-        filePolyCorrSinglet.createFile(datNamePolyCorrSinglet.str());
-        filePolyCorrOctet.createFile(datNamePolyCorrOctet.str());
-        filePolyCorrAverage.createFile(datNamePolyCorrAverage.str());
+        filePolyCorrSinglet.createFile(datNamePolyCorrSinglet.string());
+        filePolyCorrOctet.createFile(datNamePolyCorrOctet.string());
+        filePolyCorrAverage.createFile(datNamePolyCorrAverage.string());
     }
 
     FileWriter fileRenormPolySuscA(gauge.getComm(), lp);
     FileWriter fileRenormPolySuscL(gauge.getComm(), lp);
     FileWriter fileRenormPolySuscT(gauge.getComm(), lp);
     if (lp.RenormPolyakovSusc()) {
-        fileRenormPolySuscA.createFile(datNameRenormPolySuscA.str());
-        fileRenormPolySuscL.createFile(datNameRenormPolySuscL.str());
-        fileRenormPolySuscT.createFile(datNameRenormPolySuscT.str());
+        fileRenormPolySuscA.createFile(datNameRenormPolySuscA.string());
+        fileRenormPolySuscL.createFile(datNameRenormPolySuscL.string());
+        fileRenormPolySuscT.createFile(datNameRenormPolySuscT.string());
     }
 
     FileWriter fileCloverSl(gauge.getComm(), lp);
     if (lp.cloverTimeSlices()) {
-        fileCloverSl.createFile(datNameCloverSlices.str());
+        fileCloverSl.createFile(datNameCloverSlices.string());
         LineFormatter headerClSl = fileCloverSl.header();
         headerClSl << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -224,7 +218,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileTopChSl(gauge.getComm(), lp);
     if (lp.topChargeTimeSlices()) {
-        fileTopChSl.createFile(datNameTopChSlices.str());
+        fileTopChSl.createFile(datNameTopChSlices.string());
         LineFormatter headerThSl = fileTopChSl.header();
         headerThSl << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -235,7 +229,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileTopChSl_imp(gauge.getComm(), lp);
     if (lp.topChargeTimeSlices_imp()) {
-        fileTopChSl_imp.createFile(datNameTopChSlices_imp.str());
+        fileTopChSl_imp.createFile(datNameTopChSlices_imp.string());
         LineFormatter headerThSl_imp = fileTopChSl_imp.header();
         headerThSl_imp << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -246,7 +240,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileTopChSl_imp_imp(gauge.getComm(), lp);
     if (lp.topChargeTimeSlices_imp_imp()) {
-        fileTopChSl_imp_imp.createFile(datNameTopChSlices_imp_imp.str());
+        fileTopChSl_imp_imp.createFile(datNameTopChSlices_imp_imp.string());
         LineFormatter headerThSl_imp_imp = fileTopChSl_imp_imp.header();
         headerThSl_imp_imp << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -257,7 +251,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileWeinbergSl(gauge.getComm(), lp);
     if (lp.weinbergTimeSlices()) {
-        fileWeinbergSl.createFile(datNameWeinbergSlices.str());
+        fileWeinbergSl.createFile(datNameWeinbergSlices.string());
         LineFormatter headerThSl = fileWeinbergSl.header();
         headerThSl << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -268,7 +262,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     
     FileWriter fileWeinbergSl_imp(gauge.getComm(), lp);
     if (lp.weinbergTimeSlices_imp()) {
-        fileWeinbergSl_imp.createFile(datNameWeinbergSlices_imp.str());
+        fileWeinbergSl_imp.createFile(datNameWeinbergSlices_imp.string());
         LineFormatter headerThSl_imp = fileWeinbergSl_imp.header();
         headerThSl_imp << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -279,7 +273,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileWeinbergSl_imp_imp(gauge.getComm(), lp);
     if (lp.weinbergTimeSlices_imp_imp()) {
-        fileWeinbergSl_imp_imp.createFile(datNameWeinbergSlices_imp_imp.str());
+        fileWeinbergSl_imp_imp.createFile(datNameWeinbergSlices_imp_imp.string());
         LineFormatter headerThSl_imp_imp = fileWeinbergSl_imp_imp.header();
         headerThSl_imp_imp << "Flow time ";
         for (int nt = 0; nt < lp.latDim[3]; nt++) {
@@ -290,7 +284,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     
     FileWriter fileColElecCorrSl_naive(gauge.getComm(), lp);
     if (lp.ColorElectricCorrTimeSlices_naive()) {
-        fileColElecCorrSl_naive.createFile(datNameColElecCorrSlices_naive.str());
+        fileColElecCorrSl_naive.createFile(datNameColElecCorrSlices_naive.string());
         LineFormatter headerColElecCorrSl_naive = fileColElecCorrSl_naive.header();
         headerColElecCorrSl_naive << "Flow time ";
         headerColElecCorrSl_naive << "Re(PolyLoop) ";
@@ -306,7 +300,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileColMagnCorrSl_naive(gauge.getComm(), lp);
     if (lp.ColorMagneticCorrTimeSlices_naive()) {
-        fileColMagnCorrSl_naive.createFile(datNameColMagnCorrSlices_naive.str());
+        fileColMagnCorrSl_naive.createFile(datNameColMagnCorrSlices_naive.string());
         LineFormatter headerColMagnCorrSl_naive = fileColMagnCorrSl_naive.header();
         headerColMagnCorrSl_naive << "Flow time ";
         headerColMagnCorrSl_naive << "Re(PolyLoop) ";
@@ -322,7 +316,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileColElecCorrSl_clover(gauge.getComm(), lp);
     if (lp.ColorElectricCorrTimeSlices_clover()) {
-        fileColElecCorrSl_clover.createFile(datNameColElecCorrSlices_clover.str());
+        fileColElecCorrSl_clover.createFile(datNameColElecCorrSlices_clover.string());
         LineFormatter headerColElecCorrSl_clover = fileColElecCorrSl_clover.header();
         headerColElecCorrSl_clover << "Flow time ";
         headerColElecCorrSl_clover << "Re(PolyLoop) ";
@@ -338,7 +332,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     FileWriter fileColMagnCorrSl_clover(gauge.getComm(), lp);
     if (lp.ColorMagneticCorrTimeSlices_clover()) {
-        fileColMagnCorrSl_clover.createFile(datNameColMagnCorrSlices_clover.str());
+        fileColMagnCorrSl_clover.createFile(datNameColMagnCorrSlices_clover.string());
         LineFormatter headerColMagnCorrSl_clover = fileColMagnCorrSl_clover.header();
         headerColMagnCorrSl_clover << "Flow time ";
         headerColMagnCorrSl_clover << "Re(PolyLoop) ";
@@ -353,7 +347,9 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     }
 
     // hdf5 file for correlators and other quantities
-    HDF5FileWriter<PREC> hdf5_file(commBase, lp, datNameHDF5.str());
+    HDF5FileWriter<PREC> hdf5File(commBase, lp, datNameHDF5.string());
+
+    hdf5File.writeAttributes(lp);
 
     //! -------------------------------read in configuration------------------------------------------------------------
 
@@ -381,7 +377,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     Topology<floatT, USE_GPU, HaloDepth> topology(gauge);
     Weinberg<floatT, USE_GPU, HaloDepth> weinberg(gauge);
     EnergyMomentumTensor<floatT, USE_GPU, HaloDepth> EMT(gauge);
-    EnergyMomentumTensorCorrelator<floatT, HaloDepth> EMT_Corr(commBase);
+    EnergyMomentumTensorCorrelator<floatT, HaloDepth> EMTCorr(commBase);
 
     BlockingMethod<floatT, true, HaloDepth, floatT, topChargeDens_imp<floatT, HaloDepth, true>, CorrType<floatT>> BlockTopChDens(gauge);
     BlockingMethod<floatT, true, HaloDepth, floatT, EMTtrace<floatT, true, HaloDepth>, CorrType<floatT>> BlockBulk(gauge);
@@ -416,51 +412,20 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         corrTools.getFactorArray(vec_factor, vec_weight);
     }
 
-    hsize_t r2max = EMT_Corr.get_r2max();
-    std::vector<std::vector<COMPLEX(PREC)>> vec_EMT_corr;
-    std::vector<int> vec_counts;
-    if (lp.energyMomentumTensorTracelessCorrelatorTensorDecomposition()) {
-        vec_EMT_corr = std::vector<std::vector<COMPLEX(PREC)>>(10, std::vector<COMPLEX(PREC)>(r2max+1));
-        vec_counts = std::vector<int>(r2max+1);
+    std::vector<std::vector<COMPLEX(PREC)>> vecEMTCorr;
+    std::vector<int> vecCounts;
+    if (lp.energyMomentumTensorCorrFunctions()) {
+        hsize_t r2max = EMTCorr.getR2max();
 
-        EMT_Corr.get_r2Counts(vec_counts);
+        vecEMTCorr = std::vector<std::vector<COMPLEX(PREC)>>(10, std::vector<COMPLEX(PREC)>(r2max+1));
+        vecCounts = std::vector<int>(r2max+1);
+
+        EMTCorr.getR2Counts(vecCounts);
 
         if (lp.useHDF5()) {
-            hdf5_file.writeR2Counts(vec_counts);
+            hdf5File.writeR2Counts(vecCounts);
         }
     }
-
-    
-    // -----------------------------------------------------------------------------------------------------------------
-    // // initial dimensions of the hdf5 dataset
-    // hsize_t dims[2] = {0, r2max+1};
-    // // maximum size
-    // hsize_t maxdims[2] = {H5S_UNLIMITED, r2max+1};
-    // // chuck size (one flow time row with r2max+1 values)
-    // hsize_t chunksize[2] = {1, r2max+1};
-
-    // // create dataspace
-    // DataSpace *dataspace = new DataSpace(2, dims, maxdims);
-
-    // DSetCreatPropList prop;
-    // prop.setChunk(2, chunksize);
-
-    // const H5std_string datasetEMTUCorr("EMTU Correlator");
-    // const H5std_string dataset_Name_EMTUCorr("EMTU Correlator LL");
-    
-    // DataSet *dataset = new DataSet(file_EMTUCorr.createDataSet(datasetEMTUCorr, PredType::NATIVE_INT, *dataspace, prop));
-    
-    // // create compound data type for storing complex numbers
-    // CompType cType(sizeof(ComplexData<PREC>));
-    // cType.insertMember("real", HOFFSET(ComplexData<PREC>, real), PredType::NATIVE_DOUBLE);
-    // cType.insertMember("imag", HOFFSET(ComplexData<PREC>, imag), PredType::NATIVE_DOUBLE);
-
-    // // create dataset for complex numbers
-    // DataSet *dataset_LL = new DataSet(file_EMTUCorr.createDataSet(dataset_Name_EMTUCorr, cType, *dataspace, prop));
-
-    // hsize_t h5_flowtime_counter = 0;
-
-    // -----------------------------------------------------------------------------------------------------------------
 
     std::vector<Matrix4x4Sym<floatT>> EMTUBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
     std::vector<floatT> EMTEBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
@@ -490,28 +455,33 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         logStream.str("");
         logStream << std::fixed << std::setprecision(7) << "   t = " << flow_time << ": ";
-        LineFormatter newLine = file.tag("");
-        newLine << flow_time;
 
         //! -------------------------------calculate observables on flowed field----------------------------------------
 
         if (lp.save_conf() && gradFlow.checkIfMeasuredTime()){
-            gauge.writeconf_nersc( datNameConf.str() + "_FT" + std::to_string(flow_time));
+            gauge.writeconf_nersc( datNameConf.string() + "_FT" + std::to_string(flow_time));
         }
 
+        LineFormatter newLine = file.tag("");
+        
+        // write flow time
         if (lp.useHDF5()) {
             hdf5File.writeObservable<HDF5_Observable::FlowTime>(flow_time);
             if (gradFlow.checkIfMeasuredTime()) {
-                hdf5File.writeFlowTime(flow_time);
+                hdf5File.writeObservable<HDF5_Observable::FlowTimeMeasured>(flow_time);
+            }
+        } else {
+            newLine << flow_time;
         }
 
         if (lp.plaquette()) {
             plaq = gAction.plaquette();
 
             if (lp.useHDF5()) {
-                hdf5_file.writePlaquette(plaq);
+                hdf5File.writeObservable<HDF5_Observable::Plaquette>(plaq);
+            } else {
+                newLine << plaq;
             }
-            newLine << plaq;
 
             logStream << std::fixed << std::setprecision(6) << "   Plaquette = " << plaq;
         }
@@ -528,8 +498,14 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         if (lp.clover()) {
             clov = gAction.clover();
+            
             logStream << std::fixed << std::setprecision(6) << "   Clover = " << clov;
-            newLine << clov;
+            if (lp.useHDF5()) {
+                hdf5File.writeObservable<HDF5_Observable::Clover>(clov);
+            } else {
+                newLine << clov;
+            }
+
             gAction.recomputeField();
         }
 
@@ -548,9 +524,9 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             logStream << std::scientific << std::setprecision(14) << "   topCharge = " << topChar;
             // logStream << std::fixed << std::setprecision(6) << "   topCharge = " << topChar;
             topology.recomputeField();
-
+            
             if (lp.useHDF5()) {
-                hdf5_file.writeTopologicalCharge(topChar);
+                hdf5File.writeObservable<HDF5_Observable::TopCharge>(topChar);
             } else {
                 newLine << topChar;
             }
@@ -570,9 +546,15 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         if (lp.topCharge_imp() && !lp.topCharge_imp_block()) {
             topChar = topology.template topCharge<true,false>();
+            
             logStream << std::scientific << std::setprecision(14) << "   topCharge_imp = " << topChar;
-//            logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
-            newLine << topChar;
+            // logStream << std::fixed << std::setprecision(6) << "   topCharge_imp = " << topChar;
+            if (lp.useHDF5()) {
+                hdf5File.writeObservable<HDF5_Observable::TopChargeImp>(topChar);
+            } else {
+                newLine << topChar;
+            }
+            
             topology.recomputeField();
         }
 
@@ -672,21 +654,30 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             weinberg.recomputeField();
         }
 
-        if (lp.energyMomentumTensorTracefull() && gradFlow.checkIfnecessaryTime()) {
-            LineFormatter newLineEMTE = file_EMTE.tag("");
+        if (lp.energyMomentumTensorTracefull()) {
             EMT.EMTEAveraged(resultEMTE);
-            newLineEMTE << flow_time << " ";
-            newLineEMTE << std::scientific << std::setprecision(15) << resultEMTE << " ";
+            if (lp.useHDF5()) {
+                hdf5File.writeObservable<HDF5_Observable::EMTE>(resultEMTE);
+            } else {
+                LineFormatter newLineEMTE = file_EMTE.tag("");
+                newLineEMTE << flow_time << " ";
+                newLineEMTE << std::scientific << std::setprecision(15) << resultEMTE << " ";
+            }
         }
 
-        if (lp.energyMomentumTensorTraceless() && gradFlow.checkIfnecessaryTime()) {
-            LineFormatter newLineEMTU = file_EMTU.tag("");
+        if (lp.energyMomentumTensorTraceless()) {
             EMT.EMTUAveraged(resultEMTU);
-            newLineEMTU << flow_time << " ";
-            newLineEMTU << std::scientific << std::setprecision(15) << resultEMTU.elems[0] << " "
-                        << resultEMTU.elems[1] << " " << resultEMTU.elems[2] << " " << resultEMTU.elems[3] << " "
-                        << resultEMTU.elems[4] << " " << resultEMTU.elems[5] << " " << resultEMTU.elems[6] << " "
-                        << resultEMTU.elems[7] << " " << resultEMTU.elems[8] << " " << resultEMTU.elems[9] << " ";
+
+            if (lp.useHDF5()) {
+                hdf5File.writeEMTU(resultEMTU.toStdVector());
+            } else {
+                LineFormatter newLineEMTU = file_EMTU.tag("");
+                newLineEMTU << flow_time << " ";
+                newLineEMTU << std::scientific << std::setprecision(15) << resultEMTU.elems[0] << " "
+                            << resultEMTU.elems[1] << " " << resultEMTU.elems[2] << " " << resultEMTU.elems[3] << " "
+                            << resultEMTU.elems[4] << " " << resultEMTU.elems[5] << " " << resultEMTU.elems[6] << " "
+                            << resultEMTU.elems[7] << " " << resultEMTU.elems[8] << " " << resultEMTU.elems[9] << " ";
+            }
         }
 
         if (lp.energyMomentumTensorTracelessTimeSlices() && gradFlow.checkIfMeasuredTime()) {
