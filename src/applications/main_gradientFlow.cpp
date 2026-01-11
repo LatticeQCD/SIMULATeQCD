@@ -702,10 +702,20 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         }
 
         if (lp.energyMomentumTensorCorrFunctions() && gradFlow.checkIfMeasuredTime()) {
+            StopWatch<true> emtCorrTimer;
+            StopWatch<true> hdf5Timer;
+
+
+            emtCorrTimer.start();
             EMTCorr.EMTCorrGFunctions(gauge, vecEMTCorr);
+            emtCorrTimer.stop();
+            rootLogger.info("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
             
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
+            hdf5Timer.start();
             hdf5File.writeEMTCorrData(vecEMTCorr);
+            hdf5Timer.stop();
+            rootLogger.info("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }
 
         if (lp.shear_bulk_corr_block() && gradFlow.checkIfMeasuredTime()) {
