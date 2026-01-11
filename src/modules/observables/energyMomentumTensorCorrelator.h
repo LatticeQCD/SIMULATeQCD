@@ -16,29 +16,30 @@ template<class floatT, size_t HaloDepth>
 class EnergyMomentumTensorCorrelator {
     protected:
         FourierClass<floatT> fourierClass;
-        TensorDecomposition<floatT, HaloDepth> tensor_decomposition;
+        TensorDecomposition<floatT, HaloDepth> tensorDecomposition;
     private:
         typedef GIndexer<All, HaloDepth> GInd;
     public:
-        EnergyMomentumTensorCorrelator(CommunicationBase& commBase) : fourierClass(commBase), tensor_decomposition(commBase) {}
+        EnergyMomentumTensorCorrelator(CommunicationBase& commBase) :
+            fourierClass(commBase), tensorDecomposition(commBase) {}
 
         ~EnergyMomentumTensorCorrelator() {}
 
-        int get_r2max() {
-            return tensor_decomposition.get_r2max();
+        int getR2max() {
+            return tensorDecomposition.getR2max();
         }
 
-        void EMTU_Corr(
+        void EMTCorrGTensor(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
             LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& field
         );
 
-        void EMTU_Corr_Gs(
+        void EMTCorrGFunctions(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
             std::vector<std::vector<COMPLEX(floatT)>>& array
         );
 
-        void get_r2Counts(
+        void getR2Counts(
             std::vector<int>& counts
         );
 
@@ -52,7 +53,8 @@ struct EMTtimesEMTStar {
     LatticeContainerAccessor _secondAccessor;
     typedef GIndexer<All> GInd;
 
-    EMTtimesEMTStar(LatticeContainerAccessor firstAccessor, LatticeContainerAccessor secondAccessor) : _firstAccessor(firstAccessor), _secondAccessor(secondAccessor) {}
+    EMTtimesEMTStar(LatticeContainerAccessor firstAccessor, LatticeContainerAccessor secondAccessor) :
+        _firstAccessor(firstAccessor), _secondAccessor(secondAccessor) {}
 
     __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
 
@@ -68,53 +70,54 @@ struct EMTtimesEMTStar {
 
 
 template<class floatT, size_t HaloDepth>
-void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTU_Corr(
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& G
 ) {
     // create helper lattice containers
-    LatticeContainer<true, Matrix4x4SymComplex<floatT>> EMTU_FT(gaugefield.getComm(), "EMTU_FT", "EMTU_FT", "EMTU_FT", "EMTU_FT");
+    LatticeContainer<true, Matrix4x4SymComplex<floatT>> emtFouriered(gaugefield.getComm(), "emtFT", "emtFT", "emtFT", "emtFT");
     // LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> G_FT(gaugefield.getComm(), "G_FT", "G_FT", "G_FT", "G_FT");
 
-    EMTU_FT.adjustSize(GInd::getLatData().vol4);
+    emtFouriered.adjustSize(GInd::getLatData().vol4);
     // G_FT.adjustSize(GInd::getLatData().vol4);
     G.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT
-    EMTU_FT.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<floatT, true, HaloDepth>(gaugefield.getAccessor()));
+    emtFouriered.template iterateOverBulk<All, HaloDepth>(EMTFullComplex<floatT, true, HaloDepth>(gaugefield.getAccessor()));
 
     // FFT it, store it in the same Container
-    fourierClass.template performFourier3DEMT<SpatialTemporal::Both>(EMTU_FT, EMTU_FT, 1.0);
+    fourierClass.template performFourier3DEMT<SpatialTemporal::Both>(emtFouriered, emtFouriered, 1.0);
 
     // create product out of the two FFTed EMTs, store it in G
-    G.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(EMTU_FT.getAccessor(), EMTU_FT.getAccessor()));
+    G.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(emtFouriered.getAccessor(), emtFouriered.getAccessor()));
 
     // FFT the product back, store it in G again
     fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(G, G, -1.0);
 
 }
 
+
 template<class floatT, size_t HaloDepth>
-void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTU_Corr_Gs(
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctions(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
     std::vector<std::vector<COMPLEX(floatT)>>& array
 ) {
 
     // create lattice container for G tensor
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> G_tensor(gaugefield.getComm(), "G_tensor", "G_tensor", "G_tensor", "G_tensor");
-    G_tensor.adjustSize(GInd::getLatData().vol4);
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> GTensor(gaugefield.getComm(), "GTensor", "GTensor", "GTensor", "GTensor");
+    GTensor.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT correlator into G tensor
-    this->EMTU_Corr(gaugefield, G_tensor);
+    this->EMTCorrGTensor(gaugefield, GTensor);
 
-    tensor_decomposition.template getAllTensorFunctions<true>(G_tensor, array);
+    tensorDecomposition.template getAllTensorFunctions<true>(GTensor, array);
 
 }
 
 
 template<class floatT, size_t HaloDepth>
-void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::get_r2Counts(
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::getR2Counts(
     std::vector<int>& counts
 ) {
-    tensor_decomposition.get_r2Counts(counts);
+    tensorDecomposition.getR2Counts(counts);
 }

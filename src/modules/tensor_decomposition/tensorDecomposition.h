@@ -110,28 +110,28 @@ __device__ __host__ inline int delta(int mu, int nu) {
     }
 }
 
-__device__ __host__ inline int delta_spatial(int mu, int nu) {
+__device__ __host__ inline int deltaSpatial(int mu, int nu) {
     sitexyzt u = {0,0,0,1};
     return delta(mu, nu) - u[mu]*u[nu];
 }
 
 // helper function: purely-spatial transversal delta function
 template<class floatT>
-__device__ __host__ inline floatT delta_transverse(sitexyzt r, int mu, int nu) {
+__device__ __host__ inline floatT deltaTransverse(sitexyzt r, int mu, int nu) {
     floatT r2 = rSquared(r);
     int D = 3;
 
     if (r2 == 0) {
-        return delta_spatial(mu,nu) - delta(mu, nu)/((floatT) D); // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
+        return deltaSpatial(mu,nu) - delta(mu, nu)/((floatT) D); // because r_mu*r_nu/r^2 approaches delta_munu/d at 0
     } else {
-        return delta_spatial(mu, nu) - r[mu]*r[nu]/r2;
+        return deltaSpatial(mu, nu) - r[mu]*r[nu]/r2;
     }
 }
 
 template<class floatT>
 __device__ __host__ inline floatT deltaHat(sitexyzt r, int mu, int nu) {
     int r2 = rSquared(r);
-    return r[mu]*r[nu]/((floatT) r2) - (1.0/3.0) * delta_spatial(mu, nu);
+    return r[mu]*r[nu]/((floatT) r2) - (1.0/3.0) * deltaSpatial(mu, nu);
 }
 
 template<class floatT, HalfProjector halfProjector>
@@ -151,7 +151,7 @@ __device__ __host__ inline floatT C(sitexyzt rt, int mu, int nu) {
             result += sqrt(3.0/2.0) * deltaHat<floatT>(r, mu, nu);
             break;
         case HalfProjector::W:
-            result += sqrt(1.0/12.0) * (delta_spatial(mu, nu) - 3.0 * u[mu] * u[nu]);
+            result += sqrt(1.0/12.0) * (deltaSpatial(mu, nu) - 3.0 * u[mu] * u[nu]);
             break;
     }
 
@@ -177,25 +177,25 @@ __device__ __host__ inline floatT projectorFunction(sitexyzt rt, int mu, int nu,
         switch (projector) {
             case Projector::TT:
                 result += (1.0/2.0) * (
-                    delta_transverse<floatT>(r, mu, rho) * delta_transverse<floatT>(r, nu, sigma)
-                    + delta_transverse<floatT>(r, mu, sigma) * delta_transverse<floatT>(r, nu, rho)
+                    deltaTransverse<floatT>(r, mu, rho) * deltaTransverse<floatT>(r, nu, sigma)
+                    + deltaTransverse<floatT>(r, mu, sigma) * deltaTransverse<floatT>(r, nu, rho)
                 )
-                - (1.0/(Ds-1)) * delta_transverse<floatT>(r, mu, nu) * delta_transverse<floatT>(r, rho, sigma);
+                - (1.0/(Ds-1)) * deltaTransverse<floatT>(r, mu, nu) * deltaTransverse<floatT>(r, rho, sigma);
                 break;
             case Projector::LT:
                 result += (
-                    r[mu]*r[rho]*delta_transverse<floatT>(r, nu, sigma)
-                    + r[mu]*r[sigma]*delta_transverse<floatT>(r, nu, rho)
-                    + r[nu]*r[rho]*delta_transverse<floatT>(r, mu, sigma)
-                    + r[nu]*r[sigma]*delta_transverse<floatT>(r, mu, rho)
+                    r[mu]*r[rho]*deltaTransverse<floatT>(r, nu, sigma)
+                    + r[mu]*r[sigma]*deltaTransverse<floatT>(r, nu, rho)
+                    + r[nu]*r[rho]*deltaTransverse<floatT>(r, mu, sigma)
+                    + r[nu]*r[sigma]*deltaTransverse<floatT>(r, mu, rho)
                 )/(2.0*r2);
                 break;
             case Projector::T:
                 result += (
-                    delta_transverse<floatT>(r, mu, rho) * u[nu] * u[sigma]
-                    + delta_transverse<floatT>(r, mu, sigma) * u[nu] * u[rho]
-                    + delta_transverse<floatT>(r, nu, rho) * u[mu] * u[sigma]
-                    + delta_transverse<floatT>(r, nu, sigma) * u[mu] * u[rho]
+                    deltaTransverse<floatT>(r, mu, rho) * u[nu] * u[sigma]
+                    + deltaTransverse<floatT>(r, mu, sigma) * u[nu] * u[rho]
+                    + deltaTransverse<floatT>(r, nu, rho) * u[mu] * u[sigma]
+                    + deltaTransverse<floatT>(r, nu, sigma) * u[mu] * u[rho]
                 ) / 2.0;
                 break;
             case Projector::L:
@@ -312,8 +312,8 @@ struct TensorFunctionField {
         sitexyzt r = GInd::getLatData().globalPosRelativeToOrigin(site.coord);
 
         // get correlator value at the site
-        Tensor4x4Symx4x4SymComplex<floatT> G_at_site = GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
-        Tensor4x4Symx4x4SymComplex<floatT> P_at_site = PAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
+        Tensor4x4Symx4x4SymComplex<floatT> G = GAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
+        Tensor4x4Symx4x4SymComplex<floatT> P = PAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site);
 
         // contract projector value with correlator value
         COMPLEX(floatT) result = 0.0;
@@ -322,7 +322,7 @@ struct TensorFunctionField {
         for (int nu = 0; nu <= 3; nu++)
         for (int rho = 0; rho <= 3; rho++)
         for (int sigma = 0; sigma <= 3; sigma++) {
-            result += P_at_site(mu, nu, rho, sigma) * G_at_site(mu, nu, rho, sigma);
+            result += P(mu, nu, rho, sigma) * G(mu, nu, rho, sigma);
         }
 
         result /= ((floatT) multiplicity(projector));
@@ -364,34 +364,34 @@ class TensorDecomposition {
         template<bool onDevice, std::size_t... I>
         void loopGetTensorFunction(
             std::index_sequence<I ...>,
-            LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
+            LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensorField,
             std::vector<std::vector<COMPLEX(floatT)>>& array
         ) {
-            (getTensorFunction<onDevice, static_cast<Projector>(I)>(tensor_field, array), ...);
+            (getTensorFunction<onDevice, static_cast<Projector>(I)>(tensorField, array), ...);
         }
     
         // helper function: get the r^2-dependent tensor function for a given projector
         template<bool onDevice, Projector projector>
         void getTensorFunction(
-            LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
-            std::vector<std::vector<COMPLEX(floatT)>>& tensor_functions
+            LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensorField,
+            std::vector<std::vector<COMPLEX(floatT)>>& tensorFunctions
         ) {
             // create lattice containers for the tensor function fields
-            LatticeContainer<onDevice, COMPLEX(floatT)> tensor_function_field(tensor_field.get_CommBase(), "tensor_function_field", "tensor_function_field", "tensor_function_field", "tensor_function_field");
-            LatticeContainer<false, COMPLEX(floatT)> tensor_function_field_host(tensor_field.get_CommBase(), "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host", "tensor_function_field_host");
+            LatticeContainer<onDevice, COMPLEX(floatT)> tensorFunctionField(tensorField.get_CommBase(), "tensorFunctionField", "tensorFunctionField", "tensorFunctionField", "tensorFunctionField");
+            LatticeContainer<false, COMPLEX(floatT)> tensorFunctionFieldHost(tensorField.get_CommBase(), "tensorFunctionFieldHost", "tensorFunctionFieldHost", "tensorFunctionFieldHost", "tensorFunctionFieldHost");
             
             // adjust their sizes
-            tensor_function_field.adjustSize(GInd::getLatData().vol4);
-            tensor_function_field_host.adjustSize(GInd::getLatData().vol4);
+            tensorFunctionField.adjustSize(GInd::getLatData().vol4);
+            tensorFunctionFieldHost.adjustSize(GInd::getLatData().vol4);
     
             // get the tensor function field by contracting with the projector
-            tensor_function_field.template iterateOverBulk<All, HaloDepth>(TensorFunctionField<floatT, onDevice, projector>(tensor_field, getProjector<projector>()));
+            tensorFunctionField.template iterateOverBulk<All, HaloDepth>(TensorFunctionField<floatT, onDevice, projector>(tensorField, getProjector<projector>()));
     
             // copy to host for upcoming reduction
-            tensor_function_field_host.copyFromLatticeContainer(tensor_function_field);
+            tensorFunctionFieldHost.copyFromLatticeContainer(tensorFunctionField);
     
             // reduce to r^2-dependent function and store in array
-            reduceR2(tensor_function_field_host.getAccessor(), tensor_functions[(int)projector]);
+            reduceR2(tensorFunctionFieldHost.getAccessor(), tensorFunctions[(int)projector]);
         }
     
         // helper function: reduce a lattice container to an r^2-dependent (spatial) array, ignore time coordinate
@@ -412,7 +412,7 @@ class TensorDecomposition {
     
             // int r2max = rSquared<SpatialTemporal>()
     
-            int r2max = get_r2max();
+            int r2max = getR2max();
     
             // set array to zero initially
             for (int r2 = 0; r2 < r2max + 1; r2++) {
@@ -448,7 +448,7 @@ class TensorDecomposition {
         }
 
         // main function: get maximum r^2 value for spatial coordinates
-        static int get_r2max() {
+        static int getR2max() {
             typedef GIndexer<All> GInd;
             sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
 
@@ -459,15 +459,15 @@ class TensorDecomposition {
         // main function: get all r^2-dependent tensor functions for all projectors
         template<bool onDevice>
         void getAllTensorFunctions(
-            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensor_field,
+            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensorField,
             std::vector<std::vector<COMPLEX(floatT)>>& array
         ) {
-            loopGetTensorFunction<onDevice>(std::make_index_sequence<allProjectors.size()>{}, tensor_field, array);
+            loopGetTensorFunction<onDevice>(std::make_index_sequence<allProjectors.size()>{}, tensorField, array);
         }
 
         // main function: get the counts of sites for each r^2 (spatial) value
-        void get_r2Counts(
-            std::vector<int>& r2_counts
+        void getR2Counts(
+            std::vector<int>& r2Counts
         ) {
             typedef GIndexer<All> GInd;
 
@@ -475,11 +475,11 @@ class TensorDecomposition {
             int ly = GInd::getLatData().ly;
             int lz = GInd::getLatData().lz;
 
-            int r2max = get_r2max();
+            int r2max = getR2max();
 
-            // set r2_counts to zero initially
+            // set r2Counts to zero initially
             for (int r2 = 0; r2 < r2max + 1; r2++) {
-                r2_counts[r2] = 0;
+                r2Counts[r2] = 0;
             }
 
             for (int x = 0; x < lx; x++)
@@ -488,7 +488,7 @@ class TensorDecomposition {
                 sitexyzt site(x, y, z, 0); // t is irrelevant for r^2
                 sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
                 int r2 = rSquared(rt);
-                r2_counts[r2] += 1;
+                r2Counts[r2] += 1;
             }
         }
         
