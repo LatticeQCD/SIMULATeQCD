@@ -23,8 +23,9 @@ protected:
 public:
     su3rungeKutta3AdStepSizeAllGPU(Gaugefield<floatT, true, HaloDepth> &inGaugeA,
                               floatT stepSize, floatT start, floatT stop,
-                             std::vector<floatT> necessaryFlowTime, floatT accuracy) :
-            su3rungeKutta3<floatT, HaloDepth, Zi>(inGaugeA, stepSize, start, stop, necessaryFlowTime),
+                             std::vector<floatT> necessaryFlowTime,
+                             std::vector<floatT> measuredFlowTimes, floatT accuracy) :
+            su3rungeKutta3<floatT, HaloDepth, Zi>(inGaugeA, stepSize, start, stop, necessaryFlowTime, measuredFlowTimes),
             _gaugeC_device(this->_gaugeA_device.getComm()),
             _gaugeD_device(this->_gaugeA_device.getComm()),
             _redBase(inGaugeA.getComm()),

@@ -46,9 +46,10 @@ protected:
     Gaugefield<floatT, true, HaloDepth> _gaugeB_device;
 
     std::vector <floatT> _necessary_flow_times;
+    std::vector<floatT> _measured_flow_times;
 public:
     su3rungeKutta3(Gaugefield<floatT, true, HaloDepth> &inGaugeA, floatT stepSize, floatT start, floatT stop,
-                   std::vector <floatT> necessaryFlowTime, floatT dummy_accuracy = 0) :
+                   std::vector <floatT> necessaryFlowTime, std::vector<floatT> measuredFlowTimes, floatT dummy_accuracy = 0) :
             _gaugeA_device(inGaugeA),
             _gaugeB_device(inGaugeA.getComm()) {
 
@@ -62,6 +63,7 @@ public:
         _gaugeB_device = _gaugeA_device;
 
         _necessary_flow_times = necessaryFlowTime;
+        _measured_flow_times = measuredFlowTimes;
 
         std::sort(_necessary_flow_times.begin(), _necessary_flow_times.end());
 
@@ -90,6 +92,15 @@ public:
 
     // Do a runge Kutta step and return the flow time
     floatT updateFlow();
+
+    bool checkIfMeasuredTime() {
+        for(int i = 0; i < _measured_flow_times.size(); i++) {
+            if (isApproximatelyEqual(_current_flow_time, _measured_flow_times[i], tolerance)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     bool checkIfnecessaryTime() {
         return isApproximatelyEqual(_current_flow_time,_necessary_flow_times[0],tolerance);
