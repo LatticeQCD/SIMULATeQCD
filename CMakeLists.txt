@@ -459,6 +459,7 @@ add_custom_target(examples)
 add_custom_target(experimental)
 add_custom_target(profilers)
 add_custom_target(tests)
+add_custom_target(mytests)
 add_custom_target(tools)
 add_custom_target(everything)
 add_dependencies(everything
@@ -467,6 +468,7 @@ add_dependencies(everything
     experimental
     profilers
     tests
+    mytests
     tools
     )
 
@@ -539,6 +541,7 @@ add_SIMULATeQCD_executable(fourierEMTTest src/testing/main_fourierEMTTest.cpp sr
 set_SIMULATeQCD_property(fourierEMTTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(fourierEMTTest PRIVATE HALODEPTH_2=1 DOUBLEPREC=1 COMP_R18=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests fourierEMTTest)
+add_to_compound_SIMULATeQCD_target(mytests fourierEMTTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_generalFunctorTest.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(generalFunctorTest src/testing/main_generalFunctorTest.cpp src/modules/dslash/dslash.cpp src/spinor/spinorfield.cpp)

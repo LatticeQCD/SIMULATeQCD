@@ -704,7 +704,7 @@ int main(int argc, char *argv[]) {
     std::vector<COMPLEX(PREC)> vec_GLL = std::vector<COMPLEX(PREC)>(r2max+1);
     std::vector<int> vec_counts = std::vector<int>(r2max+1);
 
-    EMT_Corr.EMTU_Corr_Gs(gaugeDevice, vec_GLL, vec_counts);
+    EMT_Corr.EMTU_Corr_Gs(gaugeDevice, vec_GLL);
 
     // tensor_decomposition.getTensorFunction<true, LL>(GTensorFourierTransformedBackwards, vec_GLL, vec_counts);
 
@@ -912,31 +912,31 @@ int main(int argc, char *argv[]) {
     // -----------------------------------------------------------------------
     // Fifth Step: Write into file
 
-    std::stringstream datNameGLL;
-    datNameGLL << "/home/jwinter/Github/SIMULATeQCD_build/GLL.out";
+    // std::stringstream datNameGLL;
+    // datNameGLL << "/home/jwinter/Github/SIMULATeQCD_build/GLL.out";
 
-    FileWriter file_GLL(commBase, param);
-    file_GLL.createFile(datNameGLL.str());
-    LineFormatter header_GLL = file_GLL.header();
-    header_GLL << "r2";
-    header_GLL.endLine();
+    // FileWriter file_GLL(commBase, param);
+    // file_GLL.createFile(datNameGLL.str());
+    // LineFormatter header_GLL = file_GLL.header();
+    // header_GLL << "r2";
+    // header_GLL.endLine();
     
-    LineFormatter newLineGLL = file_GLL.tag("");
-    for (int r2 = 0; r2 < r2max + 1; r2++) {
-        if (vec_counts[r2] != 0) {
-            newLineGLL << r2;
-        }
-    }
-    newLineGLL.endLine();
+    // LineFormatter newLineGLL = file_GLL.tag("");
+    // for (int r2 = 0; r2 < r2max + 1; r2++) {
+    //     if (vec_counts[r2] != 0) {
+    //         newLineGLL << r2;
+    //     }
+    // }
+    // newLineGLL.endLine();
     
     // header_GLL << "GLL.real";
     // header_GLL.endLine();
 
-    for (int r2 = 0; r2 < r2max + 1; r2++) {
-        if (vec_counts[r2] != 0) {
-            newLineGLL << vec_GLL[r2];
-        }
-    }
+    // for (int r2 = 0; r2 < r2max + 1; r2++) {
+    //     if (vec_counts[r2] != 0) {
+    //         newLineGLL << vec_GLL[r2];
+    //     }
+    // }
 
     return 0;
 

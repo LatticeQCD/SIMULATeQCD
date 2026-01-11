@@ -27,12 +27,13 @@ int main(int argc, char *argv[]) {
     param.readfile(commBase, "../parameter/tests/fourierEMTTest.param", argc, argv);
     commBase.init(param.nodeDim());
 
-    typedef GIndexer<All,HaloDepth> GInd;
+    typedef GIndexer<All, HaloDepth> GInd;
 
     // create gauge fields
     Gaugefield<PREC, false, HaloDepth> gaugeHost(commBase);
     Gaugefield<PREC, true, HaloDepth> gaugeDevice(commBase);
 
+    rootLogger.info("Reading gauge field from file: ", param.GaugefileName());
     gaugeHost.readconf_nersc(param.GaugefileName());
 
     gaugeHost.updateAll();
@@ -52,16 +53,16 @@ int main(int argc, char *argv[]) {
     _redBaseEMTUFourierTransformedForwardsBackwards.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT for the EMT-designated fields
-    _redBaseEMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
-    _redBaseEMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
+    _redBaseEMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTFullComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
+    _redBaseEMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTFullComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
 
     // create Fourier class
     FourierClass<PREC> fourierClass(gaugeDevice.getComm());
 
     // perform Fourier transformation forwards
-    fourierClass.performFourier3DEMT(_redBaseEMTUComplexDevice, _redBaseEMTUFourierTransformedForwards, 1.0);
+    fourierClass.template performFourier3DEMT<SpatialTemporal::Both>(_redBaseEMTUComplexDevice, _redBaseEMTUFourierTransformedForwards, 1.0);
     // perform Fourier transformation backwards after the backwards
-    fourierClass.performFourier3DEMT(_redBaseEMTUFourierTransformedForwards, _redBaseEMTUFourierTransformedForwardsBackwards, -1.0);
+    fourierClass.template performFourier3DEMT<SpatialTemporal::Both>(_redBaseEMTUFourierTransformedForwards, _redBaseEMTUFourierTransformedForwardsBackwards, -1.0);
 
     // variables for reduced fields
     Matrix4x4SymComplex<PREC> resultEMTUComplexDevice;
