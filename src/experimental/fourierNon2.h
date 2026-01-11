@@ -25,8 +25,8 @@ class FourierClass {
 
 public:
     FourierClass(CommunicationBase &commBase) :
-        _redBaseDevice(commBase, "Reduction_Base_Device", "Reduction_Base_Device", "Reduction_Base_Device", "Reduction_Base_Device"),
-        _redBaseHost(commBase, "Reduction_Base_Host", "Reduction_Base_Host", "Reduction_Base_Host", "Reduction_Base_Host") {
+        _redBaseDevice(commBase, "RedBaseDevice", "RedBaseDevice", "RedBaseDevice", "RedBaseDevice"),
+        _redBaseHost(commBase, "RedBaseHost", "RedBaseHost", "RedBaseHost", "RedBaseHost") {
 
         // _commBase = commBase;
 
@@ -157,15 +157,15 @@ public:
 
     template<SpatialTemporal spatialTemporal>
     void performFourier3DEMT(
-        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emt_in,
-        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emt_out,
+        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emtIn,
+        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emtOut,
         int sign
     );
 
     template<SpatialTemporal spatialTemporal>
     void performFourier3DTensor4x4Symx4x4SymComplex(
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensor_in,
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensor_out,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensorIn,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensorOut,
         int sign
     );
 
