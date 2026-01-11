@@ -193,12 +193,12 @@ struct EMTtraceless {
 
 
 template<class floatT, bool onDevice, size_t HaloDepth>
-struct EMTtracelessComplex {
+struct EMTFullComplex {
     SU3Accessor<floatT> _gAcc;
     FieldStrengthTensor<floatT, HaloDepth, onDevice, R18> FT;
     typedef GIndexer<All, HaloDepth> GInd;
 
-    EMTtracelessComplex(SU3Accessor<floatT> gAcc) : _gAcc(gAcc), FT(gAcc) {}
+    EMTFullComplex(SU3Accessor<floatT> gAcc) : _gAcc(gAcc), FT(gAcc) {}
 
     __device__ __host__ inline Matrix4x4SymComplex<floatT> operator()(gSite site) {
 
@@ -211,6 +211,7 @@ struct EMTtracelessComplex {
         FsigmaSquare += tr_d(FS02 * FS02);
         FS12 = FT(site, 1, 2);
         FsigmaSquare += tr_d(FS12 * FS12);
+
         floatT FtauSquare = 0;
         FS03 = FT(site, 0, 3);
         FtauSquare += tr_d(FS03 * FS03);
@@ -220,7 +221,7 @@ struct EMTtracelessComplex {
         FtauSquare += tr_d(FS23 * FS23);
 
         Matrix4x4SymComplex<floatT> emTensor;
-        SimpleArray<SU3<floatT>,16> FS(su3_zero<floatT>());
+        SimpleArray<SU3<floatT>, 16> FS(su3_zero<floatT>());
 
         FS[1] = FS01;
         FS[2] = FS02;
@@ -230,30 +231,29 @@ struct EMTtracelessComplex {
         FS[11] = FS23;
 
         floatT factor = -1;
-        for (size_t mu=1;mu<4;mu++) {
-            for(size_t nu=0;nu<mu;nu++) {
-                FS[mu*4+nu] = factor*FS[nu*4+mu];
+        for (size_t mu = 1; mu < 4; mu++) {
+            for (size_t nu = 0; nu < mu; nu++) {
+                FS[mu * 4 + nu] = factor * FS[nu * 4 + mu];
             }
         }
 
+        for (size_t mu = 0; mu < 4; mu++) {
+            for (size_t nu = mu; nu < 4; nu++) {
+                SU3<floatT> field_strength_product_sum;
+                field_strength_product_sum = su3_zero<floatT>();
 
-        for (size_t mu=0;mu<4;mu++) {
-            for(size_t nu=mu;nu<4;nu++) {
-
-                SU3<floatT> FS1, FS2, FS3;
-                FS1 = su3_zero<floatT>();
-                FS2 = su3_zero<floatT>();
-                FS3 = su3_zero<floatT>();
-                floatT result = 0;
+                floatT emt_component = 0;
                 for (size_t sigma = 0; sigma < 4; sigma++) {
-                    FS1 += FS[mu*4+sigma] * FS[nu*4+sigma];
+                    field_strength_product_sum += FS[mu * 4 + sigma] * FS[nu * 4 + sigma];
                 }
-                result = 2 * tr_d(FS1);
+                emt_component = 2 * tr_d(field_strength_product_sum);
 
-                if (mu == nu) {
-                    result -= FtauSquare+FsigmaSquare;
-                }
-                emTensor(mu, nu, result);
+                // subtract trace part for diagonal elements
+                // if (mu == nu) {
+                //     emt_component -= FtauSquare + FsigmaSquare;
+                // }
+
+                emTensor(mu, nu, emt_component);
             }
         }
         return emTensor;
