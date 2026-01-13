@@ -203,7 +203,7 @@ public:
 
         Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> spinorStart(spinorOut.even.getComm());
         eigenpair.startVector(mass, spinorStart, spinorOut.even);
-        eigenpair.startVectorTester(dslash_oe_inv, spinorStart, spinorOut.even);
+        eigenpair.startVectorTester(dslash_oe, spinorStart, spinorOut.even);
     
         // invert in place is possible since the CG copies the input early on
         cg.invert_deflation(dslash_oe_inv, spinorStart, spinorOut.even, cgMax, residue); //! this takes up most of the computation time
