@@ -146,6 +146,19 @@ public:
         int sign
     );
 
+    template<int dir, typename elemType>
+    void performFourierTransformDirectionPolymorph(
+        LatticeContainer<true, elemType> &redBase,
+        int sign
+    );
+
+    template<typename elemType, SpatialTemporal spatialTemporal>
+    void performFourier3DPolymorph(
+        LatticeContainer<true, elemType> &latticeIn,
+        LatticeContainer<true, elemType> &latticeOut,
+        int sign
+    );
+
     template<size_t HaloDepth>
     void performFourier3DSpinor1212(
         Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,
@@ -374,6 +387,118 @@ __global__ void fourier(
 
     // delete [] v;
     // delete [] v0;
+
+}
+
+template<class floatT, typename elemType, int direction>
+__global__ void fourierPolymorph(
+    LatticeContainerAccessor _redBaseOut,
+    LatticeContainerAccessor _redBaseIn,
+    const size_t size,
+    const size_t lx, const size_t ly, const size_t lz, const size_t lt,
+    size_t lsIn,
+    int sign = 1
+) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    int ix, iy, it;
+    int tmp;
+    int ls=lsIn;
+    int hf=lz/ls;
+
+    divmod(site, lx*ly, it, tmp);
+    divmod(tmp,  lx   , iy, ix );
+
+    elemType v[LZ];
+    elemType v0[LZ]; 
+
+    // COMPLEX(floatT) * v = new COMPLEX(floatT)[lz];
+
+    // fills the first lz values of the array v
+    if(direction == 0) {
+        for(int z = 0; z < lz ; z++) {
+            v[z] = _redBaseOut.getElement<elemType>(z+lz*(ix+lx*(iy+ly*it)));
+        }
+    }
+    if(direction == 1) {
+        for(int z = 0; z < lz ; z++) {
+            v[z] = _redBaseOut.getElement<elemType>(ix+lx*(z+lz*(iy+ly*it)));
+        }
+    }
+    if(direction == 2) {
+        for(int z = 0; z < lz ; z++) {
+            v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(z+lz*it)));
+        }
+    }
+    if(direction == 3) {
+        for(int z = 0; z < lz ; z++) {
+            v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(it+lt*z)));
+        }
+    }
+
+    // standard fourier transformation
+    // fills the first lz values of the array v0
+    for(int z = 0; z < lz ; z++) {
+        v0[z] = v[z];
+    }
+    
+    for(int i = 0; i < hf ; i++) {
+        for(int k = 0; k < ls ; k++) {
+            elemType sum = 0.0;
+            for(int z = 0; z < ls ; z++) {
+                sum = sum + v0[z*hf+i]*COMPLEX(floatT)(cos(sign*2.0*k*z*M_PI/ls), sin(sign*2.0*k*z*M_PI/ls));
+            }
+            v[i+k*hf] = sum;
+        }
+    }
+
+
+    // fast part
+    for(int j = 0; j < (int)(log2(lz/lsIn)+0.1) ; j++) { // what is j?
+        for(int z = 0; z < lz ; z++) {
+            v0[z] = v[z];
+        }
+        ls=ls*2;
+        hf=hf/2;
+        for(int s = 0; s < hf ; s++) {
+            for(int k = 0; k < ls/2 ; k++) {
+                COMPLEX(floatT) phase = COMPLEX(floatT)(cos(sign*2.0*k*M_PI/ls), sin(sign*2.0*k*M_PI/ls));
+
+                elemType even = v0[s + k*hf*2];
+                elemType odd  = v0[s + k*hf*2 + hf];
+
+                v[s + k*hf] = even + phase*odd;
+                v[s + k*hf + hf*ls/2] = even - phase*odd;
+            }
+        }
+    }
+    
+    delete [] v0;
+
+    for(int z = 0; z < lz ; z++) {
+        v[z] = v[z]/sqrt(lz);
+        // printf("%f %f \n", v[z].cREAL , v[z].cIMAG);
+        if(direction == 0) {
+            _redBaseOut.setValue<elemType>(z+lz*(ix+lx*(iy+ly*it)), v[z]);
+        }
+        if(direction == 1) {
+            _redBaseOut.setValue<elemType>(ix+lx*(z+lz*(iy+ly*it)), v[z]);
+        }
+        if(direction == 2) {
+            // if(it == 0 && ix == 0 && iy == 0)
+            // printf("i  %d %d %d %f %f \n", (int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
+            _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(z+lz*it)), v[z]);
+        }
+        if(direction == 3) {
+            _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(it+lt*z)), v[z]);
+        }
+    }
+
+    delete [] v;
 
 }
 

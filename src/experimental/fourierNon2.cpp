@@ -1,5 +1,6 @@
 #include "fourierNon2.h"
 #include "source.h"
+#include "../base/stopWatch.h"
 
 #ifdef USE_HIP_AMD
 #define BLOCKSIZE 64
@@ -459,6 +460,166 @@ void FourierClass<floatT>::performFourierTransformDirection(
 
 }
 
+template<typename floatT>
+template<int dir, typename elemType>
+void FourierClass<floatT>::performFourierTransformDirectionPolymorph(
+    LatticeContainer<true, elemType> &redBaseDevice,
+    int sign
+) {
+
+    gpuError_t gpuErr;
+
+    size_t elems;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    dim3 gridDim;
+
+    if (dir == 0) {
+
+        elems = lx*ly*lz*lt; // TODO: extractable
+
+        if (nodes[0] > 1) {
+
+            throw std::runtime_error(stdLogger.fatal("Function performFourierTransformDirectionPolymorph does only support gpu topology 1x1x1x1, not ", nodes[0], "x", nodes[1], "x", nodes[2], "x", nodes[3]));
+
+            // gpuMemcpy(redBaseHost.get_ContainerArrayPtr()->getPointer(), redBaseDevice.get_ContainerArrayPtr()->getPointer(), sizeof(elemType)*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+            // gatherHostXYZ<floatT, 0>((std::complex<floatT> *) redBaseHost.get_ContainerArrayPtr()->getPointer(), commX, lxL, ly, lz);
+
+            // gpuMemcpy(redBaseDevice.get_ContainerArrayPtr()->getPointer(), redBaseHost.get_ContainerArrayPtr()->getPointer(), sizeof(elemType)*nodes[0]*elems, gpuMemcpyHostToDevice);
+
+            // gpuErr = gpuGetLastError();
+            // if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+        }
+
+        // perform the fourier transformation in x direction
+        elems = ly*lz*lt;
+        gridDim = static_cast<int> (ceilf(static_cast<float> (elems) / static_cast<float> (blockDim.x)));
+
+        rootLogger.info("Got into performFourierTransformDirectionPolymorph for dir=0.");
+        
+        #ifdef USE_CUDA
+        fourierPolymorph<floatT, elemType, 0><<<gridDim, blockDim>>>(redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, ly, lz, lxL, lt, lsX, sign);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((fourierPolymorph<floatT, elemType, 0>), dim3(gridDim), dim3(blockDim), 0, 0, redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, ly, lz, lxL, lt, lsX, sign);
+        #endif
+
+        rootLogger.info("Got after fourierPolymorph for dir=0.");
+
+        gpuErr = gpuGetLastError(); // TODO: extractable
+        if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr); // TODO: extractable
+
+    }
+
+    if (dir == 1) {
+
+        elems = lx*ly*lz*lt;
+
+        if (nodes[1] > 1) {
+
+            throw std::runtime_error(stdLogger.fatal("Function performFourierTransformDirectionPolymorph does only support gpu topology 1x1x1x1, not ", nodes[0], "x", nodes[1], "x", nodes[2], "x", nodes[3]));
+
+            // gpuMemcpy(redBaseHost.get_ContainerArrayPtr()->getPointer(), redBaseDevice.get_ContainerArrayPtr()->getPointer(), sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+            // gatherHostXYZ<floatT, 1>((std::complex<floatT> *) redBaseHost.get_ContainerArrayPtr()->getPointer(), commY, lx, lyL, lz);
+
+            // gpuMemcpy(redBaseDevice.get_ContainerArrayPtr()->getPointer(), redBaseHost.get_ContainerArrayPtr()->getPointer(), sizeof(COMPLEX(floatT))*nodes[1]*elems, gpuMemcpyHostToDevice);
+
+            // gpuErr = gpuGetLastError();
+            // if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+        }
+
+        // perform the fourier transformation in y direction
+        elems = lx*lz*lt;
+        gridDim = static_cast<int> (ceilf(static_cast<float> (elems) / static_cast<float> (blockDim.x))); // TODO: why blockDim.x, not .y?
+        
+        #ifdef USE_CUDA
+            fourierPolymorph<floatT, elemType, 1><<<gridDim, blockDim>>>(redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, lx, lz, lyL, lt, lsY, sign);
+        #elif defined USE_HIP
+            hipLaunchKernelGGL((fourierPolymorph<floatT, elemType, 1>), dim3(gridDim), dim3(blockDim), 0, 0, redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, lx, lz, lyL, lt, lsY, sign);
+        #endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+    }
+
+    if (dir == 2) {
+
+        elems = lx*ly*lz*lt;
+        
+        if (nodes[2] > 1) {
+
+            throw std::runtime_error(stdLogger.fatal("Function performFourierTransformDirectionPolymorph does only support gpu topology 1x1x1x1, not ", nodes[0], "x", nodes[1], "x", nodes[2], "x", nodes[3]));
+
+            // gpuMemcpy(redBaseHost.get_ContainerArrayPtr()->getPointer(), redBaseDevice.get_ContainerArrayPtr()->getPointer(), sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+            // gatherHostXYZ<floatT, 2>((std::complex<floatT> *) redBaseHost.get_ContainerArrayPtr()->getPointer(), commZ, lx, ly, lzL);
+            // // gatherAllHost((std::complex<floatT> *) redBaseHost.get_ContainerArrayPtr() ->getPointer(), commBase); // Why is this here?
+
+            // gpuMemcpy(redBaseDevice.get_ContainerArrayPtr()->getPointer(), redBaseHost.get_ContainerArrayPtr()->getPointer(), sizeof(COMPLEX(floatT))*nodes[2]*elems, gpuMemcpyHostToDevice);
+
+            // gpuErr = gpuGetLastError();
+            // if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+        }
+
+        // perform the fourier transformation in z direction
+        elems = lx*ly*lt;
+        gridDim = static_cast<int> (ceilf(static_cast<float> (elems) / static_cast<float> (blockDim.x)));
+        
+        #ifdef USE_CUDA
+            fourierPolymorph<floatT, elemType, 2><<<gridDim, blockDim>>>(redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, lx, ly, lzL, lt, lsZ, sign);
+        #elif defined USE_HIP
+            hipLaunchKernelGGL((fourierPolymorph<floatT, elemType, 2>), dim3(gridDim), dim3(blockDim), 0, 0, redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, lx, ly, lzL, lt, lsZ, sign);
+        #endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+    }
+
+    if (dir == 3) {
+
+        elems = lx*ly*lz*lt;
+        
+        if (nodes[3] > 1) { // TODO: Not nodes nodes[3]? Done
+
+            throw std::runtime_error(stdLogger.fatal("Function performFourierTransformDirectionPolymorph does only support gpu topology 1x1x1x1, not ", nodes[0], "x", nodes[1], "x", nodes[2], "x", nodes[3]));
+
+            // gpuMemcpy(redBaseHost.get_ContainerArrayPtr()->getPointer(), redBaseDevice.get_ContainerArrayPtr()->getPointer(), sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+            // gatherHostXYZT<floatT, 3>((std::complex<floatT> *) redBaseHost.get_ContainerArrayPtr()->getPointer(), commT, lx, ly, lz, ltL);
+
+            // gpuMemcpy(redBaseDevice.get_ContainerArrayPtr()->getPointer(), redBaseHost.get_ContainerArrayPtr()->getPointer(), sizeof(COMPLEX(floatT))*nodes[3]*elems, gpuMemcpyHostToDevice);
+
+            // gpuErr = gpuGetLastError();
+            // if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+        }
+
+        // perform the fourier transformation in t direction
+        elems = lx*ly*lz;
+        gridDim = static_cast<int> (ceilf(static_cast<float> (elems) / static_cast<float> (blockDim.x)));
+
+        #ifdef USE_CUDA
+            fourierPolymorph<floatT, elemType, 3><<<gridDim, blockDim>>>(redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, lx, ly, ltL, lz, lsT, sign);
+        #elif defined USE_HIP
+            hipLaunchKernelGGL((fourierPolymorph<floatT, elemType, 3>), dim3(gridDim), dim3(blockDim), 0, 0, redBaseDevice.getAccessor(), redBaseDevice.getAccessor(), elems, lx, ly, ltL, lz, lsT, sign);
+        #endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr) GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+   }
+
+}
+
 
 template<typename floatT>
 template<size_t HaloDepth>
@@ -501,6 +662,9 @@ void FourierClass<floatT>::performFourier3DEMT(
     int sign
 ) {
 
+    std::vector<double> timePerComponent;
+    StopWatch<true> timer;
+
     typedef GIndexer<All> GInd;
 
     LatticeContainer<true, Matrix4x4SymComplex<floatT>> emtIntermediate(emtIn.get_CommBase(), "emtIntermediate", "emtIntermediate", "emtIntermediate", "emtIntermediate");
@@ -508,6 +672,8 @@ void FourierClass<floatT>::performFourier3DEMT(
     emtIntermediate.copyFromLatticeContainer(emtIn);
 
     for (int emtComponent = 0; emtComponent < 10; emtComponent++) {
+
+        timer.start();
 
         if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
             moveEMTComponentToContainer(emtIntermediate, _redBaseDevice, emtComponent);
@@ -529,7 +695,18 @@ void FourierClass<floatT>::performFourier3DEMT(
             moveContainerToEMTDirection<3>(_redBaseDevice, emtIntermediate, emtComponent);
         }
 
+        timer.stop();
+        timePerComponent.push_back(timer.seconds());
+        // rootLogger.info("       Fourier EMT took ", timer.seconds(), "s for one component.");
+
+        timer.reset();
+
     }
+
+    auto const count = static_cast<double>(timePerComponent.size());
+    double timePerComponentAverage = std::reduce(timePerComponent.begin(), timePerComponent.end()) / count;
+
+    rootLogger.info("       Fourier EMT took           ", timePerComponentAverage, "s on average over ", count, " components.");
 
     emtOut.copyFromLatticeContainer(emtIntermediate);
 
@@ -550,8 +727,13 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
     tensorIntermediate.adjustSize(GInd::getLatData().vol4);
     tensorIntermediate.copyFromLatticeContainer(tensorIn);
 
+    std::vector<double> timePerComponent;
+    StopWatch<true> timer;
+
     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+
+            timer.start();
 
             if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensorIntermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
@@ -573,10 +755,52 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<3>(_redBaseDevice, tensorIntermediate, firstIndexPair, secondIndexPair);
             }
         
+            timer.stop();
+            timePerComponent.push_back(timer.seconds());
+            // rootLogger.info("       Fourier 4x4Symx4x4Sym took ", timer.seconds(), "s for one component.");
+
+            timer.reset();
+
         }
     }
 
+    auto const count = static_cast<double>(timePerComponent.size());
+    double timePerComponentAverage = std::reduce(timePerComponent.begin(), timePerComponent.end()) / count;
+
+    rootLogger.info("       Fourier 4x4Symx4x4Sym took ", timePerComponentAverage, "s on average over ", count, " components.");
+
     tensorOut.copyFromLatticeContainer(tensorIntermediate);
+
+}
+
+template<typename floatT>
+template<typename elemType, SpatialTemporal spatialTemporal>
+void FourierClass<floatT>::performFourier3DPolymorph(
+    LatticeContainer<true, elemType> &latticeIn,
+    LatticeContainer<true, elemType> &latticeOut,
+    int sign
+) {
+
+    typedef GIndexer<All> GInd;
+
+    LatticeContainer<true, elemType> latticeIntermediate(latticeIn.get_CommBase(), "latticeIntermediate", "latticeIntermediate", "latticeIntermediate", "latticeIntermediate");
+    latticeIntermediate.adjustSize(GInd::getLatData().vol4);
+
+    latticeIntermediate.copyFromLatticeContainer(latticeIn);
+
+    rootLogger.info("latticeIntermediate initiated!");
+    
+    if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
+        performFourierTransformDirectionPolymorph<0, elemType>(latticeIntermediate, sign);
+        performFourierTransformDirectionPolymorph<1, elemType>(latticeIntermediate, sign);
+        performFourierTransformDirectionPolymorph<2, elemType>(latticeIntermediate, sign);
+    }
+    
+    if (spatialTemporal == SpatialTemporal::Temporal || spatialTemporal == SpatialTemporal::Both) {
+        performFourierTransformDirectionPolymorph<3, elemType>(latticeIntermediate, sign);
+    }
+
+    latticeOut.copyFromLatticeContainer(latticeIntermediate);
 
 }
 
@@ -1438,6 +1662,17 @@ template void FourierClass<double>::performFourierTransformDirection<1>(LatticeC
 template void FourierClass<double>::performFourierTransformDirection<2>(LatticeContainer<true, COMPLEX(double)> & redBase, LatticeContainer<false, COMPLEX(double)> & redBase2, int sign);
 template void FourierClass<double>::performFourierTransformDirection<3>(LatticeContainer<true, COMPLEX(double)> & redBase, LatticeContainer<false, COMPLEX(double)> & redBase2, int sign);
 
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<0, Matrix4x4SymComplex<double>>(LatticeContainer<true, Matrix4x4SymComplex<double>> & redBase, int sign);
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<1, Matrix4x4SymComplex<double>>(LatticeContainer<true, Matrix4x4SymComplex<double>> & redBase, int sign);
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<2, Matrix4x4SymComplex<double>>(LatticeContainer<true, Matrix4x4SymComplex<double>> & redBase, int sign);
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<3, Matrix4x4SymComplex<double>>(LatticeContainer<true, Matrix4x4SymComplex<double>> & redBase, int sign);
+
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<0, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<1, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<2, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+template void FourierClass<double>::performFourierTransformDirectionPolymorph<3, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+
+
 template void FourierClass<double>::performFourier3DSpinor1212<2>( // what is this last <2> here? because it's the standard HaloDepth
     Spinorfield<double, true, All, 2, 12, 12> & spinor_in,
     Spinorfield<double, true, All, 2, 12, 12> & spinor_out,
@@ -1485,6 +1720,20 @@ template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<S
 template void FourierClass<double>::performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Temporal>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtIn,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtOut,
+    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
+    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
+    int sign
+);
+template void FourierClass<double>::performFourier3DPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Both>(
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
+    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
+    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
+    int sign
+);
+template void FourierClass<double>::performFourier3DPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Both>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
     // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
     // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
