@@ -88,6 +88,33 @@ struct Tensor4x4Symx4x4SymComplex {
         return *this;
     }
 
+    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT>& operator-=(const Tensor4x4Symx4x4SymComplex<floatT> &y){
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                elems[firstIndexPair][secondIndexPair] -= y.elems[firstIndexPair][secondIndexPair];
+            }
+        }
+        return *this;
+    }
+
+    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT>& operator*=(const floatT &y){
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                elems[firstIndexPair][secondIndexPair] *= y;
+            }
+        }
+        return *this;
+    }
+
+    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT>& operator*=(const COMPLEX(floatT) &y){
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                elems[firstIndexPair][secondIndexPair] *= y;
+            }
+        }
+        return *this;
+    }
+
     __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT>& operator/=(const floatT &y){
         for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
             for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
@@ -95,6 +122,71 @@ struct Tensor4x4Symx4x4SymComplex {
             }
         }
         return *this;
+    }
+
+    __device__ __host__ friend Tensor4x4Symx4x4SymComplex<floatT> operator+(
+        const Tensor4x4Symx4x4SymComplex<floatT> &left,
+        const Tensor4x4Symx4x4SymComplex<floatT> &right
+    ) {
+        Tensor4x4Symx4x4SymComplex<floatT> result;
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                result(firstIndexPair, secondIndexPair, left(firstIndexPair, secondIndexPair) + right(firstIndexPair, secondIndexPair));
+            }
+        }
+        return result;
+    }
+
+    __device__ __host__ friend Tensor4x4Symx4x4SymComplex<floatT> operator-(
+        const Tensor4x4Symx4x4SymComplex<floatT> &left,
+        const Tensor4x4Symx4x4SymComplex<floatT> &right
+    ) {
+        Tensor4x4Symx4x4SymComplex<floatT> result;
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                result(firstIndexPair, secondIndexPair, left(firstIndexPair, secondIndexPair) - right(firstIndexPair, secondIndexPair));
+            }
+        }
+        return result;
+    }
+
+    __device__ __host__ friend Tensor4x4Symx4x4SymComplex<floatT> operator*(
+        const COMPLEX(floatT) &left,
+        const Tensor4x4Symx4x4SymComplex<floatT> &right
+    ) {
+        Tensor4x4Symx4x4SymComplex<floatT> result;
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                result(firstIndexPair, secondIndexPair, left * right(firstIndexPair, secondIndexPair));
+            }
+        }
+        return result;
+    }
+    
+    __device__ __host__ friend Tensor4x4Symx4x4SymComplex<floatT> operator*(
+        const Tensor4x4Symx4x4SymComplex<floatT> &left,
+        const COMPLEX(floatT) &right
+    ) {
+        Tensor4x4Symx4x4SymComplex<floatT> result;
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                result(firstIndexPair, secondIndexPair, left(firstIndexPair, secondIndexPair) * right);
+            }
+        }
+        return result;
+    }
+
+    __device__ __host__ friend Tensor4x4Symx4x4SymComplex<floatT> operator/(
+        const Tensor4x4Symx4x4SymComplex<floatT> &left,
+        const floatT &right
+    ) {
+        Tensor4x4Symx4x4SymComplex<floatT> result;
+        for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
+            for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+                result(firstIndexPair, secondIndexPair, left(firstIndexPair, secondIndexPair) / right);
+            }
+        }
+        return result;
     }
 
     __host__ void printIndexPairs() const {
