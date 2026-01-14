@@ -125,21 +125,62 @@ struct Matrix4x4SymComplex {
         }
         return *this;
     }
-
-    __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator/=(floatT y)
+    
+    __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator*=(floatT y)
     {
-        for(int i = 0; i<10;i++){
-            elems[i]/=y;
+        for (int i = 0; i<10; i++) {
+            elems[i] *= y;
+        }
+        return *this;
+    }
+    
+    __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator*=(COMPLEX(floatT) y)
+    {
+        for (int i = 0; i<10; i++) {
+            elems[i] *= y;
         }
         return *this;
     }
 
-    __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator*=(floatT y)
+    __device__ __host__ inline Matrix4x4SymComplex<floatT>& operator/=(floatT y)
     {
-        for(int i = 0; i<10;i++){
-            elems[i]*=y;
+        for (int i = 0; i<10; i++) {
+            elems[i] /= y;
         }
         return *this;
+    }
+    
+    __device__ __host__ friend Matrix4x4SymComplex<floatT> operator*(
+        const COMPLEX(floatT) &left,
+        const Matrix4x4SymComplex<floatT> &right
+    ) {
+        Matrix4x4SymComplex<floatT> result;
+        for (int i = 0; i < 10; i++) {
+            result(i, left * right(i));
+        }
+        return result;
+    }
+    
+    __device__ __host__ friend Matrix4x4SymComplex<floatT> operator*(
+        const Matrix4x4SymComplex<floatT> &left,
+        const COMPLEX(floatT) &right
+    ) {
+        Matrix4x4SymComplex<floatT> result;
+        for (int i = 0; i < 10; i++) {
+            result(i, left(i) * right);
+        }
+        return result;
+    }
+
+    __device__ __host__ friend Matrix4x4SymComplex<floatT> operator/(
+        const Matrix4x4SymComplex<floatT> &left,
+        const floatT &right
+    ) {
+        Matrix4x4SymComplex<floatT> result;
+        for (int i = 0; i < 10; i++) {
+            result(i, left(i) / right);
+        }
+        return result;
     }
 
     __host__ void printIndexPair() const {
