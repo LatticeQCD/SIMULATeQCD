@@ -80,10 +80,10 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
 
     // create helper lattice containers
     LatticeContainer<true, Matrix4x4SymComplex<floatT>> emtFouriered(gaugefield.getComm(), "emtFT", "emtFT", "emtFT", "emtFT");
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> G_FT(gaugefield.getComm(), "G_FT", "G_FT", "G_FT", "G_FT");
+    // LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> G_FT(gaugefield.getComm(), "G_FT", "G_FT", "G_FT", "G_FT");
 
     emtFouriered.adjustSize(GInd::getLatData().vol4);
-    G_FT.adjustSize(GInd::getLatData().vol4);
+    // G_FT.adjustSize(GInd::getLatData().vol4);
     G.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT
@@ -97,12 +97,12 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     rootLogger.info("   EMT Fourier took ", emtFourierTimer.seconds(), "s.");
     
     // create product out of the two FFTed EMTs, store it in G
-    G_FT.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(emtFouriered.getAccessor(), emtFouriered.getAccessor()));
+    G.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(emtFouriered.getAccessor(), emtFouriered.getAccessor()));
     
     // FFT the product back, store it in G again
     gFourierTimer.start();
-    fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(G_FT, G, -1.0);
-    // fourierClass.template performFourier3DPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G_FT, G, -1.0);
+    fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(G, G, -1.0);
+    // fourierClass.template performFourier3DPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G, G, -1.0);
     gFourierTimer.stop();
     rootLogger.info("   G Fourier took   ", gFourierTimer.seconds(), "s.");
 

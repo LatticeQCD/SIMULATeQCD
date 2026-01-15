@@ -667,8 +667,15 @@ void FourierClass<floatT>::performFourier3DEMT(
 
     typedef GIndexer<All> GInd;
 
+    LatticeContainer<true, COMPLEX(floatT)> _redBaseDevice(emtIn.get_CommBase(), "RedBaseDevice", "RedBaseDevice", "RedBaseDevice", "RedBaseDevice");
+    LatticeContainer<false, COMPLEX(floatT)> _redBaseHost(emtIn.get_CommBase(), "RedBaseHost", "RedBaseHost", "RedBaseHost", "RedBaseHost");
+
+    _redBaseDevice.adjustSize(lxL*lyL*lzL*ltL); // TODO: Not ltL?
+    _redBaseHost.adjustSize(lxL*lyL*lzL*ltL);
+
     LatticeContainer<true, Matrix4x4SymComplex<floatT>> emtIntermediate(emtIn.get_CommBase(), "emtIntermediate", "emtIntermediate", "emtIntermediate", "emtIntermediate");
     emtIntermediate.adjustSize(GInd::getLatData().vol4);
+
     emtIntermediate.copyFromLatticeContainer(emtIn);
 
     for (int emtComponent = 0; emtComponent < 10; emtComponent++) {
@@ -721,14 +728,21 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
     int sign
 ) {
 
+    std::vector<double> timePerComponent;
+    StopWatch<true> timer;
+
     typedef GIndexer<All> GInd;
+
+    LatticeContainer<true, COMPLEX(floatT)> _redBaseDevice(tensorIn.get_CommBase(), "RedBaseDevice", "RedBaseDevice", "RedBaseDevice", "RedBaseDevice");
+    LatticeContainer<false, COMPLEX(floatT)> _redBaseHost(tensorIn.get_CommBase(), "RedBaseHost", "RedBaseHost", "RedBaseHost", "RedBaseHost");
+
+    _redBaseDevice.adjustSize(lxL*lyL*lzL*ltL); // TODO: Not ltL?
+    _redBaseHost.adjustSize(lxL*lyL*lzL*ltL);
 
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> tensorIntermediate(tensorIn.get_CommBase(), "tensorIntermediate", "tensorIntermediate", "tensorIntermediate", "tensorIntermediate");
     tensorIntermediate.adjustSize(GInd::getLatData().vol4);
+    
     tensorIntermediate.copyFromLatticeContainer(tensorIn);
-
-    std::vector<double> timePerComponent;
-    StopWatch<true> timer;
 
     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {

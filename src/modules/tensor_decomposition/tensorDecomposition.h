@@ -336,29 +336,29 @@ struct TensorFunctionField {
 template<class floatT, size_t HaloDepth>
 class TensorDecomposition {
     protected:
-        std::vector<LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>> projectorField;
+        // std::vector<LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>> projectorField;
     
     private:
         typedef GIndexer<All, HaloDepth> GInd;
 
-        // helper function: get the projector field for a given projector
-        template<Projector projector>
-        const LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& getProjector() {
-            return projectorField[(int)projector];
-        }
+        // // helper function: get the projector field for a given projector
+        // template<Projector projector>
+        // const LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& getProjector() {
+        //     return projectorField[(int)projector];
+        // }
 
-        // helper function: loop over all projectors and initialize their fields
-        template<std::size_t... I>
-        void loopInitProjectorFields(std::index_sequence<I ...>) {
-            (initProjectorField<static_cast<Projector>(I)>(), ...);
-        }
+        // // helper function: loop over all projectors and initialize their fields
+        // template<std::size_t... I>
+        // void loopInitProjectorFields(std::index_sequence<I ...>) {
+        //     (initProjectorField<static_cast<Projector>(I)>(), ...);
+        // }
     
-        // helper function: initialize the projector field for a given projector
-        template<Projector projector>
-        void initProjectorField() {
-            projectorField[(int)projector].adjustSize(GInd::getLatData().vol4);
-            projectorField[(int)projector].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, projector>());
-        }
+        // // helper function: initialize the projector field for a given projector
+        // template<Projector projector>
+        // void initProjectorField() {
+        //     projectorField[(int)projector].adjustSize(GInd::getLatData().vol4);
+        //     projectorField[(int)projector].template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, projector>());
+        // }
 
         // helper function: loop over all projectors and get the corresponding tensor functions
         template<bool onDevice, std::size_t... I>
@@ -376,16 +376,21 @@ class TensorDecomposition {
             LatticeContainer<onDevice, Tensor4x4Symx4x4SymComplex<floatT>>& tensorField,
             std::vector<std::vector<COMPLEX(floatT)>>& tensorFunctions
         ) {
-            // create lattice containers for the tensor function fields
+            // create lattice containers for the tensor function fields and the projector
             LatticeContainer<onDevice, COMPLEX(floatT)> tensorFunctionField(tensorField.get_CommBase(), "tensorFunctionField", "tensorFunctionField", "tensorFunctionField", "tensorFunctionField");
             LatticeContainer<false, COMPLEX(floatT)> tensorFunctionFieldHost(tensorField.get_CommBase(), "tensorFunctionFieldHost", "tensorFunctionFieldHost", "tensorFunctionFieldHost", "tensorFunctionFieldHost");
+            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> projectorField(tensorField.get_CommBase(), "projectorField", "projectorField", "projectorField", "projectorField");
             
             // adjust their sizes
             tensorFunctionField.adjustSize(GInd::getLatData().vol4);
             tensorFunctionFieldHost.adjustSize(GInd::getLatData().vol4);
+            projectorField.adjustSize(GInd::getLatData().vol4);
+
+            // calculate projector
+            projectorField.template iterateOverBulk<All, HaloDepth>(ProjectorField<floatT, projector>());
     
             // get the tensor function field by contracting with the projector
-            tensorFunctionField.template iterateOverBulk<All, HaloDepth>(TensorFunctionField<floatT, onDevice, projector>(tensorField, getProjector<projector>()));
+            tensorFunctionField.template iterateOverBulk<All, HaloDepth>(TensorFunctionField<floatT, onDevice, projector>(tensorField, projectorField));
     
             // copy to host for upcoming reduction
             tensorFunctionFieldHost.copyFromLatticeContainer(tensorFunctionField);
@@ -435,16 +440,16 @@ class TensorDecomposition {
     public:
         // standard constructor
         TensorDecomposition(CommunicationBase& commBase) {
-            // create lattice containers for all projector fields
-            for (Projector projector: allProjectors) {
-                // create unique name for each projector field
-                std::string name = "P" + std::to_string((int)projector);
-                // create the lattice container object and place it at the end of the vector
-                projectorField.emplace_back(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>(commBase, name, name, name, name));
-            }
+            // // create lattice containers for all projector fields
+            // for (Projector projector: allProjectors) {
+            //     // create unique name for each projector field
+            //     std::string name = "P" + std::to_string((int)projector);
+            //     // create the lattice container object and place it at the end of the vector
+            //     projectorField.emplace_back(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>(commBase, name, name, name, name));
+            // }
 
-            // initialize all projector fields
-            loopInitProjectorFields(std::make_index_sequence<allProjectors.size()>{});
+            // // initialize all projector fields
+            // loopInitProjectorFields(std::make_index_sequence<allProjectors.size()>{});
         }
 
         // main function: get maximum r^2 value for spatial coordinates

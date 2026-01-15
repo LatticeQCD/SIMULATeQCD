@@ -20,13 +20,9 @@ class FourierClass {
     size_t lsX, lsY, lsZ, lsT; // global lattice sizes as halved as integerly possible, used for the FFT algorithm
     int mycoords[4]; // communication information (current (?) coordinate?)
     int nodes[4]; // communication information (number of nodes in direction?)
-    LatticeContainer<true, COMPLEX(floatT)> _redBaseDevice;
-    LatticeContainer<false, COMPLEX(floatT)> _redBaseHost;
 
 public:
-    FourierClass(CommunicationBase &commBase) :
-        _redBaseDevice(commBase, "RedBaseDevice", "RedBaseDevice", "RedBaseDevice", "RedBaseDevice"),
-        _redBaseHost(commBase, "RedBaseHost", "RedBaseHost", "RedBaseHost", "RedBaseHost") {
+    FourierClass(CommunicationBase &commBase) {
 
         // _commBase = commBase;
 
@@ -91,9 +87,6 @@ public:
         while(abs(round(((floatT)lsT)/2.0 )-(floatT)(lsT/2)) < 0.00001) {
             lsT = lsT/2;
         }
-
-        _redBaseDevice.adjustSize(lxL*lyL*lzL*ltL); // TODO: Not ltL?
-        _redBaseHost.adjustSize(lxL*lyL*lzL*ltL);
 
     }
 
@@ -400,6 +393,8 @@ __global__ void fourierPolymorph(
     int sign = 1
 ) {
 
+    typedef GIndexer<All> GInd;
+
     size_t site = blockDim.x * blockIdx.x + threadIdx.x;
     if (site >= size) {
         return;
@@ -421,22 +416,26 @@ __global__ void fourierPolymorph(
     // fills the first lz values of the array v
     if(direction == 0) {
         for(int z = 0; z < lz ; z++) {
-            v[z] = _redBaseOut.getElement<elemType>(z+lz*(ix+lx*(iy+ly*it)));
+            // v[z] = _redBaseOut.getElement<elemType>(z+lz*(ix+lx*(iy+ly*it)));
+            v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(z, ix, iy, it)));
         }
     }
     if(direction == 1) {
         for(int z = 0; z < lz ; z++) {
-            v[z] = _redBaseOut.getElement<elemType>(ix+lx*(z+lz*(iy+ly*it)));
+            // v[z] = _redBaseOut.getElement<elemType>(ix+lx*(z+lz*(iy+ly*it)));
+            v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(ix, z, iy, it)));
         }
     }
     if(direction == 2) {
         for(int z = 0; z < lz ; z++) {
-            v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(z+lz*it)));
+            // v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(z+lz*it)));
+            v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(ix, iy, z, it)));
         }
     }
     if(direction == 3) {
         for(int z = 0; z < lz ; z++) {
-            v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(it+lt*z)));
+            // v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(it+lt*z)));
+            v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(ix, iy, it, z)));
         }
     }
 
@@ -483,18 +482,22 @@ __global__ void fourierPolymorph(
         v[z] = v[z]/sqrt(lz);
         // printf("%f %f \n", v[z].cREAL , v[z].cIMAG);
         if(direction == 0) {
-            _redBaseOut.setValue<elemType>(z+lz*(ix+lx*(iy+ly*it)), v[z]);
+            // _redBaseOut.setValue<elemType>(z+lz*(ix+lx*(iy+ly*it)), v[z]);
+            _redBaseOut.setElement(GInd::getSite(sitexyzt(z, ix, iy, it)), v[z]);
         }
         if(direction == 1) {
-            _redBaseOut.setValue<elemType>(ix+lx*(z+lz*(iy+ly*it)), v[z]);
+            // _redBaseOut.setValue<elemType>(ix+lx*(z+lz*(iy+ly*it)), v[z]);
+            _redBaseOut.setElement(GInd::getSite(sitexyzt(ix, z, iy, it)), v[z]);
         }
         if(direction == 2) {
             // if(it == 0 && ix == 0 && iy == 0)
             // printf("i  %d %d %d %f %f \n", (int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
-            _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(z+lz*it)), v[z]);
+            // _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(z+lz*it)), v[z]);
+            _redBaseOut.setElement(GInd::getSite(sitexyzt(ix, iy, z, it)), v[z]);
         }
         if(direction == 3) {
-            _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(it+lt*z)), v[z]);
+            // _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(it+lt*z)), v[z]);
+            _redBaseOut.setElement(GInd::getSite(sitexyzt(ix, iy, it, z)), v[z]);
         }
     }
 
