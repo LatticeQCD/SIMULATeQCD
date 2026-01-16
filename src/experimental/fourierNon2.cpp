@@ -662,8 +662,12 @@ void FourierClass<floatT>::performFourier3DEMT(
     int sign
 ) {
 
-    std::vector<double> timePerComponent;
-    StopWatch<true> timer;
+    std::vector<double> timePerComponentMoveIn;
+    std::vector<double> timePerComponentFT;
+    std::vector<double> timePerComponentMoveOut;
+    StopWatch<true> timerMoveIn;
+    StopWatch<true> timerFT;
+    StopWatch<true> timerMoveOut;
 
     typedef GIndexer<All> GInd;
 
@@ -680,40 +684,72 @@ void FourierClass<floatT>::performFourier3DEMT(
 
     for (int emtComponent = 0; emtComponent < 10; emtComponent++) {
 
-        timer.start();
-
+        
         if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
+            timerMoveIn.start();
             moveEMTComponentToContainer(emtIntermediate, _redBaseDevice, emtComponent);
+            timerMoveIn.stop();
+            timerFT.start();
             performFourierTransformDirection<0>(_redBaseDevice, _redBaseHost, sign);
+            timerFT.stop();
+            timerMoveOut.start();
             moveContainerToEMTDirection<0>(_redBaseDevice, emtIntermediate, emtComponent);
-
+            timerMoveOut.stop();
+            
+            timerMoveIn.start();
             moveEMTComponentToContainer(emtIntermediate, _redBaseDevice, emtComponent);
+            timerMoveIn.stop();
+            timerFT.start();
             performFourierTransformDirection<1>(_redBaseDevice, _redBaseHost, sign);
+            timerFT.stop();
+            timerMoveOut.start();
             moveContainerToEMTDirection<1>(_redBaseDevice, emtIntermediate, emtComponent);
-
+            timerMoveOut.stop();
+            
+            timerMoveIn.start();
             moveEMTComponentToContainer(emtIntermediate, _redBaseDevice, emtComponent);
+            timerMoveIn.stop();
+            timerFT.start();
             performFourierTransformDirection<2>(_redBaseDevice, _redBaseHost, sign);
+            timerFT.stop();
+            timerMoveOut.start();
             moveContainerToEMTDirection<2>(_redBaseDevice, emtIntermediate, emtComponent);
+            timerMoveOut.stop();
         }
-
+        
         if (spatialTemporal == SpatialTemporal::Temporal || spatialTemporal == SpatialTemporal::Both) {
+            timerMoveIn.start();
             moveEMTComponentToContainer(emtIntermediate, _redBaseDevice, emtComponent);
+            timerMoveIn.stop();
+            timerFT.start();
             performFourierTransformDirection<3>(_redBaseDevice, _redBaseHost, sign);
+            timerFT.stop();
+            timerMoveOut.start();
             moveContainerToEMTDirection<3>(_redBaseDevice, emtIntermediate, emtComponent);
+            timerMoveOut.stop();
         }
 
-        timer.stop();
-        timePerComponent.push_back(timer.seconds());
+        timePerComponentMoveIn.push_back(timerMoveIn.seconds());
+        timePerComponentFT.push_back(timerFT.seconds());
+        timePerComponentMoveOut.push_back(timerMoveOut.seconds());
         // rootLogger.info("       Fourier EMT took ", timer.seconds(), "s for one component.");
 
-        timer.reset();
+        timerMoveIn.reset();
+        timerFT.reset();
+        timerMoveOut.reset();
 
     }
 
-    auto const count = static_cast<double>(timePerComponent.size());
-    double timePerComponentAverage = std::reduce(timePerComponent.begin(), timePerComponent.end()) / count;
+    auto const countMoveIn = static_cast<double>(timePerComponentMoveIn.size());
+    double timePerComponentAverageMoveIn = std::reduce(timePerComponentMoveIn.begin(), timePerComponentMoveIn.end()) / countMoveIn;
+    auto const countFT = static_cast<double>(timePerComponentFT.size());
+    double timePerComponentAverageFT = std::reduce(timePerComponentFT.begin(), timePerComponentFT.end()) / countFT;
+    auto const countMoveOut = static_cast<double>(timePerComponentMoveOut.size());
+    double timePerComponentAverageMoveOut = std::reduce(timePerComponentMoveOut.begin(), timePerComponentMoveOut.end()) / countMoveOut;
 
-    rootLogger.info("       Fourier EMT took           ", timePerComponentAverage, "s on average over ", count, " components.");
+    rootLogger.info("       Fourier EMT move-in   took           ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
+    rootLogger.info("       Fourier EMT scalar FT took           ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
+    rootLogger.info("       Fourier EMT move-out  took           ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
 
     emtOut.copyFromLatticeContainer(emtIntermediate);
 
@@ -728,8 +764,12 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
     int sign
 ) {
 
-    std::vector<double> timePerComponent;
-    StopWatch<true> timer;
+    std::vector<double> timePerComponentMoveIn;
+    std::vector<double> timePerComponentFT;
+    std::vector<double> timePerComponentMoveOut;
+    StopWatch<true> timerMoveIn;
+    StopWatch<true> timerFT;
+    StopWatch<true> timerMoveOut;
 
     typedef GIndexer<All> GInd;
 
@@ -747,41 +787,72 @@ void FourierClass<floatT>::performFourier3DTensor4x4Symx4x4SymComplex(
     for (int firstIndexPair = 0; firstIndexPair < 10; firstIndexPair++) {
         for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
 
-            timer.start();
-
             if (spatialTemporal == SpatialTemporal::Spatial || spatialTemporal == SpatialTemporal::Both) {
+                timerMoveIn.start();
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensorIntermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
+                timerMoveIn.stop();
+                timerFT.start();
                 performFourierTransformDirection<0>(_redBaseDevice, _redBaseHost, sign);
+                timerFT.stop();
+                timerMoveOut.start();
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<0>(_redBaseDevice, tensorIntermediate, firstIndexPair, secondIndexPair);
-    
+                timerMoveOut.stop();
+                
+                timerMoveIn.start();
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensorIntermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
+                timerMoveIn.stop();
+                timerFT.start();
                 performFourierTransformDirection<1>(_redBaseDevice, _redBaseHost, sign);
+                timerFT.stop();
+                timerMoveOut.start();
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<1>(_redBaseDevice, tensorIntermediate, firstIndexPair, secondIndexPair);
-    
+                timerMoveOut.stop();
+                
+                timerMoveIn.start();
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensorIntermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
+                timerMoveIn.stop();
+                timerFT.start();
                 performFourierTransformDirection<2>(_redBaseDevice, _redBaseHost, sign);
+                timerFT.stop();
+                timerMoveOut.start();
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<2>(_redBaseDevice, tensorIntermediate, firstIndexPair, secondIndexPair);
+                timerMoveOut.stop();
             }
-
+            
             if (spatialTemporal == SpatialTemporal::Temporal || spatialTemporal == SpatialTemporal::Both) {
+                timerMoveIn.start();
                 moveTensor4x4Symx4x4SymComplexComponentToContainer(tensorIntermediate, _redBaseDevice, firstIndexPair, secondIndexPair);
+                timerMoveIn.stop();
+                timerFT.start();
                 performFourierTransformDirection<3>(_redBaseDevice, _redBaseHost, sign);
+                timerFT.stop();
+                timerMoveOut.start();
                 moveContainerToTensor4x4Symx4x4SymComplexDirection<3>(_redBaseDevice, tensorIntermediate, firstIndexPair, secondIndexPair);
+                timerMoveOut.stop();
             }
         
-            timer.stop();
-            timePerComponent.push_back(timer.seconds());
+            timePerComponentMoveIn.push_back(timerMoveIn.seconds());
+            timePerComponentFT.push_back(timerFT.seconds());
+            timePerComponentMoveOut.push_back(timerMoveOut.seconds());
             // rootLogger.info("       Fourier 4x4Symx4x4Sym took ", timer.seconds(), "s for one component.");
 
-            timer.reset();
+            timerMoveIn.reset();
+            timerFT.reset();
+            timerMoveOut.reset();
 
         }
     }
 
-    auto const count = static_cast<double>(timePerComponent.size());
-    double timePerComponentAverage = std::reduce(timePerComponent.begin(), timePerComponent.end()) / count;
+    auto const countMoveIn = static_cast<double>(timePerComponentMoveIn.size());
+    double timePerComponentAverageMoveIn = std::reduce(timePerComponentMoveIn.begin(), timePerComponentMoveIn.end()) / countMoveIn;
+    auto const countFT = static_cast<double>(timePerComponentFT.size());
+    double timePerComponentAverageFT = std::reduce(timePerComponentFT.begin(), timePerComponentFT.end()) / countFT;
+    auto const countMoveOut = static_cast<double>(timePerComponentMoveOut.size());
+    double timePerComponentAverageMoveOut = std::reduce(timePerComponentMoveOut.begin(), timePerComponentMoveOut.end()) / countMoveOut;
 
-    rootLogger.info("       Fourier 4x4Symx4x4Sym took ", timePerComponentAverage, "s on average over ", count, " components.");
+    rootLogger.info("       Fourier 4x4symx4x4sym move-in   took ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
+    rootLogger.info("       Fourier 4x4symx4x4sym scalar FT took ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
+    rootLogger.info("       Fourier 4x4symx4x4sym move-out  took ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
 
     tensorOut.copyFromLatticeContainer(tensorIntermediate);
 
