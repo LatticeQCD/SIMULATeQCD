@@ -152,6 +152,13 @@ public:
         int sign
     );
 
+    template<SpatialTemporal spatialTemporal>
+    void performFourier3DHalfPolymorph(
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &latticeIn,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &latticeOut,
+        int sign
+    );
+
     template<size_t HaloDepth>
     void performFourier3DSpinor1212(
         Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,

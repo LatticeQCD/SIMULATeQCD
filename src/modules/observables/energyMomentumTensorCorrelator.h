@@ -101,7 +101,8 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     
     // FFT the product back, store it in G again
     gFourierTimer.start();
-    fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(G, G, -1.0);
+    // fourierClass.template performFourier3DTensor4x4Symx4x4SymComplex<SpatialTemporal::Both>(G, G, -1.0);
+    fourierClass.template performFourier3DHalfPolymorph<SpatialTemporal::Both>(G, G, -1.0);
     // fourierClass.template performFourier3DPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G, G, -1.0);
     gFourierTimer.stop();
     rootLogger.info("   G Fourier took   ", gFourierTimer.seconds(), "s.");

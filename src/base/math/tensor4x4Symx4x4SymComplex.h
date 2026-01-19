@@ -5,6 +5,7 @@
 #pragma once
 #include "../../define.h"
 #include "indices4x4Sym.h"
+#include "matrix4x4SymComplex.h"
 
 enum PrintComplex {
     complex_both,
@@ -56,6 +57,20 @@ struct Tensor4x4Symx4x4SymComplex {
             for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
                 elems[firstIndexPair][secondIndexPair] = firstEMT.elems[firstIndexPair] * secondEMT.elems[secondIndexPair];
             }
+        }
+    }
+
+    __device__ __host__ inline Matrix4x4SymComplex<floatT> getSecondMatrix4x4SymComplex(int firstIndexPair) {
+        Matrix4x4SymComplex<floatT> secondMatrix = Matrix4x4SymComplex<floatT>();
+        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+            secondMatrix(secondIndexPair, elems[firstIndexPair][secondIndexPair]);
+        }
+        return secondMatrix;
+    }
+
+    __device__ __host__ inline void setSecondMatrix4x4SymComplex(int firstIndexPair, Matrix4x4SymComplex<floatT> secondMatrix) {
+        for (int secondIndexPair = 0; secondIndexPair < 10; secondIndexPair++) {
+            elems[firstIndexPair][secondIndexPair] = secondMatrix(secondIndexPair);
         }
     }
 
