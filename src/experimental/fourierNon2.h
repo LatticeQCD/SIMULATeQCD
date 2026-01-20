@@ -98,15 +98,15 @@ public:
     );
 
     // template<size_t HaloDepth> // didn't need this
-    void moveEMTComponentToContainer(
-        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emt,
-        LatticeContainer<true, COMPLEX(floatT)> & redBase,
+    void moveMatrix4x4SymComponentToContainer(
+        LatticeContainer<true, Matrix4x4SymComplex<floatT>>& emt,
+        LatticeContainer<true, COMPLEX(floatT)>& redBase,
         int emt_component
     );
 
     void moveTensor4x4Symx4x4SymComplexComponentToContainer(
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensor,
-        LatticeContainer<true, COMPLEX(floatT)> & redBase,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensor,
+        LatticeContainer<true, COMPLEX(floatT)>& redBase,
         int firstIndexPair, int secondIndexPair
     );
 
@@ -119,43 +119,43 @@ public:
 
     template<int dir>
     // template<size_t HaloDepth, int dir> // didn't need the HaloDepth
-    void moveContainerToEMTDirection(
-        LatticeContainer<true, COMPLEX(floatT)> & redBase,
-        LatticeContainer<true, Matrix4x4SymComplex<floatT>> &emt,
+    void moveContainerToMatrix4x4SymDirection(
+        LatticeContainer<true, COMPLEX(floatT)>& redBase,
+        LatticeContainer<true, Matrix4x4SymComplex<floatT>>& emt,
         int emt_component
     );
     
     template<int dir>
     void moveContainerToTensor4x4Symx4x4SymComplexDirection(
-        LatticeContainer<true, COMPLEX(floatT)> & redBase,
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &tensor,
+        LatticeContainer<true, COMPLEX(floatT)>& redBase,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensor,
         int firstIndexPair, int secondIndexPair
     );
 
     template<int dir>
     void performFourierTransformDirection(
-        LatticeContainer<true, COMPLEX(floatT)> & redBase,
-        LatticeContainer<false, COMPLEX(floatT)> & redBase2,
+        LatticeContainer<true, COMPLEX(floatT)>& redBaseDevice,
+        LatticeContainer<false, COMPLEX(floatT)>& redBaseHost,
         int sign
     );
 
     template<int dir, typename elemType>
     void performFourierTransformDirectionPolymorph(
-        LatticeContainer<true, elemType> &redBase,
+        LatticeContainer<true, elemType>& redBase,
         int sign
     );
 
     template<typename elemType, SpatialTemporal spatialTemporal>
-    void performFourier3DPolymorph(
-        LatticeContainer<true, elemType> &latticeIn,
-        LatticeContainer<true, elemType> &latticeOut,
+    void performFourierTransformPolymorph(
+        LatticeContainer<true, elemType>& latticeIn,
+        LatticeContainer<true, elemType>& latticeOut,
         int sign
     );
 
     template<SpatialTemporal spatialTemporal>
-    void performFourier3DHalfPolymorph(
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &latticeIn,
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> &latticeOut,
+    void performFourierTransformTensor4x4Symx4x4SymHalfPolymorph(
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensorIn,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensorOut,
         int sign
     );
 
@@ -169,16 +169,16 @@ public:
     );
 
     template<SpatialTemporal spatialTemporal>
-    void performFourier3DEMT(
-        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emtIn,
-        LatticeContainer<true, Matrix4x4SymComplex<floatT>> & emtOut,
+    void performFourierTransformMatrix4x4SymComponentwise(
+        LatticeContainer<true, Matrix4x4SymComplex<floatT>>& matrixIn,
+        LatticeContainer<true, Matrix4x4SymComplex<floatT>>& matrixOut,
         int sign
     );
 
     template<SpatialTemporal spatialTemporal>
-    void performFourier3DTensor4x4Symx4x4SymComplex(
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensorIn,
-        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> & tensorOut,
+    void performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise(
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensorIn,
+        LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& tensorOut,
         int sign
     );
 
@@ -423,31 +423,26 @@ __global__ void fourierPolymorph(
     // fills the first lz values of the array v
     if(direction == 0) {
         for(int z = 0; z < lz ; z++) {
-            // v[z] = _redBaseOut.getElement<elemType>(z+lz*(ix+lx*(iy+ly*it)));
             v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(z, ix, iy, it)));
         }
     }
     if(direction == 1) {
         for(int z = 0; z < lz ; z++) {
-            // v[z] = _redBaseOut.getElement<elemType>(ix+lx*(z+lz*(iy+ly*it)));
             v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(ix, z, iy, it)));
         }
     }
     if(direction == 2) {
         for(int z = 0; z < lz ; z++) {
-            // v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(z+lz*it)));
             v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(ix, iy, z, it)));
         }
     }
     if(direction == 3) {
         for(int z = 0; z < lz ; z++) {
-            // v[z] = _redBaseOut.getElement<elemType>(ix+lx*(iy+ly*(it+lt*z)));
             v[z] = _redBaseOut.getElement<elemType>(GInd::getSite(sitexyzt(ix, iy, it, z)));
         }
     }
 
     // standard fourier transformation
-    // fills the first lz values of the array v0
     for(int z = 0; z < lz ; z++) {
         v0[z] = v[z];
     }
@@ -462,9 +457,8 @@ __global__ void fourierPolymorph(
         }
     }
 
-
     // fast part
-    for(int j = 0; j < (int)(log2(lz/lsIn)+0.1) ; j++) { // what is j?
+    for(int j = 0; j < (int)(log2(lz/lsIn)+0.1) ; j++) {
         for(int z = 0; z < lz ; z++) {
             v0[z] = v[z];
         }
@@ -487,28 +481,19 @@ __global__ void fourierPolymorph(
 
     for(int z = 0; z < lz ; z++) {
         v[z] = v[z]/sqrt(lz);
-        // printf("%f %f \n", v[z].cREAL , v[z].cIMAG);
         if(direction == 0) {
-            // _redBaseOut.setValue<elemType>(z+lz*(ix+lx*(iy+ly*it)), v[z]);
             _redBaseOut.setElement(GInd::getSite(sitexyzt(z, ix, iy, it)), v[z]);
         }
         if(direction == 1) {
-            // _redBaseOut.setValue<elemType>(ix+lx*(z+lz*(iy+ly*it)), v[z]);
             _redBaseOut.setElement(GInd::getSite(sitexyzt(ix, z, iy, it)), v[z]);
         }
         if(direction == 2) {
-            // if(it == 0 && ix == 0 && iy == 0)
-            // printf("i  %d %d %d %f %f \n", (int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
-            // _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(z+lz*it)), v[z]);
             _redBaseOut.setElement(GInd::getSite(sitexyzt(ix, iy, z, it)), v[z]);
         }
         if(direction == 3) {
-            // _redBaseOut.setValue<elemType>(ix+lx*(iy+ly*(it+lt*z)), v[z]);
             _redBaseOut.setElement(GInd::getSite(sitexyzt(ix, iy, it, z)), v[z]);
         }
     }
-
-    delete [] v;
 
 }
 
@@ -644,11 +629,11 @@ __global__ void copySpinorToContainerLocal(
 }
 
 template<class floatT>
-__global__ void copyEMTComponentToContainerLocal(
-    LatticeContainerAccessor _redBase,
-    LatticeContainerAccessor _emt,
+__global__ void copyMatrix4x4SymComponentToContainerLocal(
+    LatticeContainerAccessor redBaseAccessor,
+    LatticeContainerAccessor matrixAccessor,
     const size_t size,
-    int emt_component,
+    int index,
     int lx, int ly, int lz, int lt
 ) {
 
@@ -668,15 +653,15 @@ __global__ void copyEMTComponentToContainerLocal(
     divmod(tmp , lx*ly   , iz, tmp);
     divmod(tmp , lx      , iy, ix);
 
-    Matrix4x4SymComplex<floatT> tmpMat44 = _emt.getElement<Matrix4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
-    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)), tmpMat44.elems[emt_component]);
+    Matrix4x4SymComplex<floatT> tmpMat44 = matrixAccessor.getElement<Matrix4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
+    redBaseAccessor.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)), tmpMat44(index));
 
 }
 
 template<class floatT>
 __global__ void copyTensor4x4Symx4x4SymComplexComponentToContainerLocal(
-    LatticeContainerAccessor _redBase,
-    LatticeContainerAccessor _tensor,
+    LatticeContainerAccessor redBaseAccessor,
+    LatticeContainerAccessor tensorAccessor,
     const size_t size,
     int firstIndexPair, int secondIndexPair,
     int lx, int ly, int lz, int lt
@@ -698,8 +683,8 @@ __global__ void copyTensor4x4Symx4x4SymComplexComponentToContainerLocal(
     divmod(tmp , lx*ly   , iz, tmp);
     divmod(tmp , lx      , iy, ix);
 
-    Tensor4x4Symx4x4SymComplex<floatT> tmpMat44 = _tensor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
-    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)), tmpMat44.elems[firstIndexPair][secondIndexPair]);
+    Tensor4x4Symx4x4SymComplex<floatT> tmpMat44 = tensorAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
+    redBaseAccessor.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)), tmpMat44(firstIndexPair, secondIndexPair));
 
 }
 
@@ -740,11 +725,11 @@ __global__ void copyContainerToSpinor(
 
 
 template<class floatT>
-__global__ void copyContainerToEMT(
-    LatticeContainerAccessor _redBase,
-    LatticeContainerAccessor _emt,
+__global__ void copyContainerToMatrix4x4Local(
+    LatticeContainerAccessor redBaseAccessor,
+    LatticeContainerAccessor matrixAccessor,
     const size_t size,
-    int emt_component,
+    int index,
     int lx, int ly, int lz, int lt,
     const int xtopo, const int ytopo, const int ztopo, const int ttopo
 ) {
@@ -765,19 +750,19 @@ __global__ void copyContainerToEMT(
     divmod(tmp , GInd::getLatData().vol1, iy, ix);
 
     // expanded by ttopo
-    COMPLEX(floatT) val = _redBase.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
+    COMPLEX(floatT) val = redBaseAccessor.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
 
-    Matrix4x4SymComplex<floatT> tmpMat44 = _emt.getElement<Matrix4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
+    Matrix4x4SymComplex<floatT> tmpMat44 = matrixAccessor.getElement<Matrix4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
 
-    tmpMat44.elems[emt_component] = val;
-    _emt.setElement(GInd::getSite((size_t)ix, (size_t)iy, (size_t)iz, (size_t)(it)), tmpMat44);
+    tmpMat44(index, val);
+    matrixAccessor.setElement(GInd::getSite((size_t)ix, (size_t)iy, (size_t)iz, (size_t)(it)), tmpMat44);
 
 }
 
 template<class floatT>
-__global__ void copyContainerToTensor4x4Symx4x4SymComplex(
-    LatticeContainerAccessor _redBase,
-    LatticeContainerAccessor _tensor,
+__global__ void copyContainerToTensor4x4Symx4x4SymComplexLocal(
+    LatticeContainerAccessor redBaseAccessor,
+    LatticeContainerAccessor tensorAccessor,
     const size_t size,
     int firstIndexPair, int secondIndexPair,
     int lx, int ly, int lz, int lt,
@@ -800,12 +785,12 @@ __global__ void copyContainerToTensor4x4Symx4x4SymComplex(
     divmod(tmp , GInd::getLatData().vol1, iy, ix);
 
     // expanded by ttopo
-    COMPLEX(floatT) val = _redBase.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
+    COMPLEX(floatT) val = redBaseAccessor.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
 
-    Tensor4x4Symx4x4SymComplex<floatT> tmpTensor4444 = _tensor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
+    Tensor4x4Symx4x4SymComplex<floatT> tmpTensor4444 = tensorAccessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(GInd::getSite(ix, iy, iz, it));
 
-    tmpTensor4444.elems[firstIndexPair][secondIndexPair] = val;
-    _tensor.setElement(GInd::getSite((size_t)ix, (size_t)iy, (size_t)iz, (size_t)(it)), tmpTensor4444);
+    tmpTensor4444(firstIndexPair, secondIndexPair, val);
+    tensorAccessor.setElement(GInd::getSite((size_t)ix, (size_t)iy, (size_t)iz, (size_t)(it)), tmpTensor4444);
 
 }
 

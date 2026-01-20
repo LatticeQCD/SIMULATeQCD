@@ -59,9 +59,9 @@ int main(int argc, char *argv[]) {
     FourierClass<PREC> fourierClass(gaugeDevice.getComm());
 
     // perform Fourier transformation forwards
-    fourierClass.performFourier3DEMT(_redBaseEMTUComplexDevice, _redBaseEMTUFourierTransformedForwards, 1.0);
+    fourierClass.performFourierTransformMatrix4x4SymComponentwise(_redBaseEMTUComplexDevice, _redBaseEMTUFourierTransformedForwards, 1.0);
     // perform Fourier transformation backwards after the backwards
-    fourierClass.performFourier3DEMT(_redBaseEMTUFourierTransformedForwards, _redBaseEMTUFourierTransformedForwardsBackwards, -1.0);
+    fourierClass.performFourierTransformMatrix4x4SymComponentwise(_redBaseEMTUFourierTransformedForwards, _redBaseEMTUFourierTransformedForwardsBackwards, -1.0);
 
     // variables for reduced fields
     Matrix4x4SymComplex<PREC> resultEMTUComplexDevice;
