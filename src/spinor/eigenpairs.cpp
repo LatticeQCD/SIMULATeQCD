@@ -227,8 +227,14 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
     HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    smearing.SmearAll(floatT 0.0);
+    gauge.updateAll();
+    gauge_Naik.updateAll();
+    gauge_smeared.updateAll();
 
     HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+
+
 
 
     if constexpr (LatticeLayout == Layout::All) {
