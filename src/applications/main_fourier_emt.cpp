@@ -625,11 +625,11 @@ int main(int argc, char *argv[]) {
     // LatticeContainer<false, COMPLEX(PREC)> Host(commBase , "Reduction_Base_Host", "Reduction_Base_Host", "Reduction_Base_Host", "Reduction_Base_Host");
 
     // perform Fourier transformation forwards
-    fourierClass.performFourier3DEMT(EMTUComplexDevice, EMTUFourierTransformedForwards, 1.0);
+    fourierClass.performFourierTransformMatrix4x4SymComponentwise(EMTUComplexDevice, EMTUFourierTransformedForwards, 1.0);
     // perform Fourier transformation forwards
-    fourierClass.performFourier3DEMT(EMTUComplexDevice, EMTUFourierTransformedBackwards, -1.0);
+    fourierClass.performFourierTransformMatrix4x4SymComponentwise(EMTUComplexDevice, EMTUFourierTransformedBackwards, -1.0);
     // perform Fourier transformation backwards after the forwards
-    fourierClass.performFourier3DEMT(EMTUFourierTransformedForwards, EMTUFourierTransformedForwardsBackwards, -1.0);
+    fourierClass.performFourierTransformMatrix4x4SymComponentwise(EMTUFourierTransformedForwards, EMTUFourierTransformedForwardsBackwards, -1.0);
     
     EMTUComplexDevice.reduce(resultEMTUComplexDevice, GInd::getLatData().vol4);
     EMTUComplexHost.reduce(resultEMTUComplexHost, GInd::getLatData().vol4);
@@ -676,7 +676,7 @@ int main(int argc, char *argv[]) {
     GTensor.template iterateOverBulk<All, 0>(EMTtimesEMT<PREC>(EMTUFourierTransformedBackwards.getAccessor(), EMTUFourierTransformedForwards.getAccessor()));
     
     // FFT the product back
-    fourierClass.performFourier3DTensor4x4Symx4x4SymComplex(GTensor, GTensorFourierTransformedBackwards, -1.0);
+    fourierClass.performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise(GTensor, GTensorFourierTransformedBackwards, -1.0);
     */
 
     // EMT_Corr.EMTU_Corr(gaugeDevice, GTensorFourierTransformedBackwards);
