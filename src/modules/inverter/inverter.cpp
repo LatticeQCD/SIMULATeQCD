@@ -679,7 +679,9 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
 
 template<class floatT, size_t NStacks>
 template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
-void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS, 
+void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
+    const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, 
+    const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS, 
     const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
     CommunicationBase &commBase = spinorRHS.getComm();
 
@@ -689,7 +691,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
         // TODO
     }   else {
         for (int i = 0; i < eigenpair.spinor_count; i++) {
-            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = eigenpair.spinor_vec[i];
+            const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = eigenpair.spinor_vec[i];
             Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
             
             floatT lambda = eigenpair.lambda_vec[i];
@@ -721,7 +723,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
     COMPLEX(double) sum1 = va.dotProduct(vr);
     
     for (int i =0; i < eigenpair.spinor_count; i++) {
-        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorEv = eigenpair.spinor_vec[i];
+        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorEv = eigenpair.spinor_vec[i];
         vr = spinorEv;
         sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
     }
@@ -744,6 +746,9 @@ template void ConjugateGradient<floatT, STACKS>::invert_deflation(LinearOperator
 #define CLASSCG_STARTVECTOR_INIT(floatT,LO,HALOGAUGE,HALOSPIN,STACKS) \
 template void ConjugateGradient<floatT, STACKS>::startVector<true, LO, HALOGAUGE, HALOSPIN>(double, \
             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
+            const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
+template void ConjugateGradient<floatT, STACKS>::startVectorTester<true, LO, HALOGAUGE, HALOSPIN>(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
+            const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
             const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&);
 
 #define CLASSCG_FLOAT_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
