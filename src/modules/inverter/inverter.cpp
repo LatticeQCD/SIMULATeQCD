@@ -688,50 +688,45 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
     CommunicationBase &commBase = spinorRHS.getComm();
 
 
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorIn2(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
 
 
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        for (int i = 0; i < eigenpair.spinor_count; i++) {
-            spinorIn2 = eigenpair.spinor_vec[i];
+    // if constexpr (LatticeLayout == Layout::All) {
+    //     // TODO
+    // }   else {
+    //     for (int i = 0; i < eigenpair.spinor_count; i++) {
+    //         spinorEv = eigenpair.spinor_vec[i];
             
-            floatT lambda = eigenpair.lambda_vec[i];
-            rootLogger.info("startVectorTester:lambda=", lambda);
-            
-            vr = spinorIn2;
-            
-            spinor_host = spinorIn2;
-            Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
-            
-            spinorIn2.updateAll();
-            dslash.applyMdaggM(vr, spinorIn2, true);
+    //         floatT lambda = eigenpair.lambda_vec[i];
+    //         rootLogger.info("startVectorTester:lambda=", lambda);
+                        
+    //         spinorEv.updateAll();
+    //         dslash.applyMdaggM(spinorMdMx, spinorEv, true);
 
 
-            vr.template axpyThisB<64>(lambda, spinorIn2);
-            rootLogger.info("startVectorTester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
-        }
-    }
-
-    // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(commBase);
-    va = spinorRHS;
+    //         spinorMdMx.template axpyThisB<64>(lambda, spinorEv);
+    //         rootLogger.info("startVectorTester:norm(Ax-µx)**2=", spinorMdMx.realdotProduct(spinorMdMx));
+    //     }
+    // }
     
-    // spinorStart.updateAll();
-    dslash.applyMdaggM(vr, spinorStart, true);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorRHSLocal(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorStartLocal(commBase);
+    spinorRHSLocal = spinorRHS;
+    spinorStartLocal = spinorStart;
     
-    COMPLEX(double) sum0 = vr.dotProduct(vr)-va.dotProduct(vr);
-    rootLogger.info("startVectorTester:0=", sum0);
+    spinorStartLocal.updateAll();
+    dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
+    
+    COMPLEX(double) sum0 = spinorRHSLocal.dotProduct(spinorMdMx)-spinorMdMx.dotProduct(spinorMdMx);
+    rootLogger.info("      y*Ax-Ax*Ax      =", sum0);
 
-    COMPLEX(double) sum1 = va.dotProduct(vr);
+    COMPLEX(double) sum1 = spinorRHSLocal.dotProduct(spinorMdMx);
     for (int i =0; i < eigenpair.spinor_count; i++) {
-        vr  = eigenpair.spinor_vec[i];
-        sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
+        spinorEv  = eigenpair.spinor_vec[i];
+        sum1 -= spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);    
     }
-    rootLogger.info("startVectorTester:1=", sum1);
+    rootLogger.info("y*Ax-sum(y a_i*a_i y) =", sum1);
 }
 
 #define CLASSCG_INIT(floatT,STACKS) \
