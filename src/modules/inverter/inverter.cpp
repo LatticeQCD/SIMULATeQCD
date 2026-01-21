@@ -716,7 +716,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
         }
     }
 
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
+    // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(commBase);
     va = spinorRHS;
     
@@ -727,10 +727,8 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
     rootLogger.info("startVectorTester:0=", sum0);
 
     COMPLEX(double) sum1 = va.dotProduct(vr);
-    
     for (int i =0; i < eigenpair.spinor_count; i++) {
-        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorEv = eigenpair.spinor_vec[i];
-        vr = spinorEv;
+        vr  = eigenpair.spinor_vec[i];
         sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
     }
     rootLogger.info("startVectorTester:1=", sum1);
