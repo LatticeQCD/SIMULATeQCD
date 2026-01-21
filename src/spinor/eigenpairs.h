@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../base/latticeContainer.h"
-#include "../modules/inverter/inverter.h"
 #include "../base/IO/evnersc.h"
 #include "spinorfield.h"
 
@@ -35,16 +34,11 @@ public:
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepthSpin>(comm),
             _spinor_lattice(comm) { }
 
-    void fillRandom(const int &num_vec_in);
-
     void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
     void readEigenpairsSequential(const std::string &fname);
 
-    void tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge);
-    void startVector(double mass,  Spinor_t& spinorOut, const Spinor_t& spinorIn);
-    void startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS);
+    void fillRandom(const int &num_vec_in);
 
-    
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };
 

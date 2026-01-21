@@ -640,6 +640,94 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
 
 }
 
+
+template<class floatT, size_t NStacks>
+template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
+void ConjugateGradient<floatT, NStacks>::startVector(double mass, 
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart,
+    const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn, 
+    const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
+    CommunicationBase &commBase = spinorIn.getComm();
+
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorSum(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
+
+    double lambda;
+    COMPLEX(double) factorDouble;
+    COMPLEX(floatT) factorCompat;
+    
+
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        for (int i = 0; i < eigenpair.spinor_count; i++) {
+            spinorEv = eigenpair.spinor_vec[i];
+            lambda = mass*mass + eigenpair.lambda_vec[i];
+
+            factorDouble =  spinorEv.dotProduct(spinorIn);
+
+            factorDouble /= lambda;
+
+            factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
+
+            spinorSum.template axpyThisB<64>(factorCompat, spinorEv);
+        }
+        spinorStart = spinorSum;
+    }
+}
+
+
+template<class floatT, size_t NStacks>
+template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
+void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS, 
+    const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
+    CommunicationBase &commBase = spinorRHS.getComm();
+
+
+
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        for (int i = 0; i < eigenpair.spinor_count; i++) {
+            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = eigenpair.spinor_vec[i];
+            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
+            
+            floatT lambda = eigenpair.lambda_vec[i];
+            rootLogger.info("startVectorTester:lambda=", lambda);
+            
+            vr = spinorIn;
+            
+            Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+            spinor_host = spinorIn;
+            Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
+            
+            dslash.applyMdaggM(vr, spinorIn, true);
+
+
+            vr.template axpyThisB<64>(lambda, spinorIn);
+            rootLogger.info("startVectorTester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
+        }
+    }
+
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> va(commBase);
+    va = spinorRHS;
+
+    dslash.applyMdaggM(vr, spinorStart, true);
+    
+    COMPLEX(double) sum0 = vr.dotProduct(vr)-va.dotProduct(vr);
+    rootLogger.info("startVectorTester:0=", sum0);
+
+    COMPLEX(double) sum1 = va.dotProduct(vr);
+    
+    for (int i =0; i < eigenpair.spinor_count; i++) {
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorEv = eigenpair.spinor_vec[i];
+        vr = spinorEv;
+        sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
+    }
+    rootLogger.info("startVectorTester:1=", sum1);
+}
+
 #define CLASSCG_INIT(floatT,STACKS) \
 template class ConjugateGradient<floatT, STACKS>;
 
@@ -652,6 +740,11 @@ template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperat
                                                                     Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, double); \
 template void ConjugateGradient<floatT, STACKS>::invert_deflation(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
                                                             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
+
+#define CLASSCG_STARTVECTOR_INIT(floatT,LO,HALOGAUGE,HALOSPIN,STACKS) \
+template void ConjugateGradient<floatT, STACKS>::startVector<true, LO, HALOGAUGE, HALOSPIN>(double, \
+            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
+            const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&);
 
 #define CLASSCG_FLOAT_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
 template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);
@@ -670,6 +763,7 @@ template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinor
 
 INIT_PN(CLASSCG_INIT)
 INIT_PLHSN(CLASSCG_INV_INIT)
+INIT_PLHHSN(CLASSCG_STARTVECTOR_INIT)
 #if DOUBLEPREC == 1 && SINGLEPREC ==1
 INIT_PLHSN(CLASSCG_FLOAT_INV_INIT)
 #endif

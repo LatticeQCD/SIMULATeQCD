@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 
     // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-    eigenpairs.tester(gauge);
+    // eigenpairs.tester(gauge);
 
 
     if (param.valence_masses.numberValues() == 0) {

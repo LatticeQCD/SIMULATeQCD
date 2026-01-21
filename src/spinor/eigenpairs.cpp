@@ -5,36 +5,6 @@
 #include "../modules/dslash/dslash.h"
 #include <fstream>
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::fillRandom(const int &num_vec_in) {
-    // Setup
-    lambda_vec.clear();
-    spinor_vec.clear();
-    spinor_count = num_vec_in;
-    spinor_vec.reserve(spinor_count);
-    lambda_vec.reserve(spinor_count);
-    CommunicationBase &commBase = this->getComm();
-
-    // Allocate vectors
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
-
-    // Initialize q with random Gaussian
-    grnd_state<false> h_rand;
-    h_rand.make_rng_state(1234);
-
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        for (int n = 0; n < spinor_count; n++) {
-            spinor_host.gauss(h_rand.state);
-            // spinor_vec.emplace_back(spinor_host);
-            spinor_vec.emplace_back(commBase);
-            spinor_vec[n] = spinor_host;
-            lambda_vec.emplace_back(static_cast<double>(get_rand<floatT>(h_rand.state)));
-        }
-    }
-}
-
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en) 
@@ -219,158 +189,188 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 }
 
 
-
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge) 
-{    
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::fillRandom(const int &num_vec_in) {
+    // Setup
+    lambda_vec.clear();
+    spinor_vec.clear();
+    spinor_count = num_vec_in;
+    spinor_vec.reserve(spinor_count);
+    lambda_vec.reserve(spinor_count);
     CommunicationBase &commBase = this->getComm();
-    Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
-    Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
-    HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    smearing.SmearAll(floatT 0.0);
-    gauge.updateAll();
-    gauge_Naik.updateAll();
-    gauge_smeared.updateAll();
 
-    HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+    // Allocate vectors
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
 
-
-
+    // Initialize q with random Gaussian
+    grnd_state<false> h_rand;
+    h_rand.make_rng_state(1234);
 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
-        for (int i = 0; i < spinor_count; i++) {
-            Spinor_t &spinorIn = spinor_vec[i];
-            Spinor_t vr(commBase);
-            
-            floatT lambda = lambda_vec[i];
-            rootLogger.info("tester:lambda=", lambda);
-            
-            vr = spinorIn;
-            // spinorIn.updateAll();
-            // vr.updateAll();
-            
-            Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
-            spinor_host = spinorIn;
-            Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
-
-            gSite site = GInd::getSite(0,0,0,0);
-            Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            rootLogger.info("tester:Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-            site = GInd::getSite(
-                GInd::getLatData().lx-1,
-                GInd::getLatData().ly-1,
-                GInd::getLatData().lz-1,
-                GInd::getLatData().lt-1
-            );
-            vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            rootLogger.info("tester:Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-            // this->updateAll(All);
-            dslash.applyMdaggM(vr, spinorIn, true);
-
-
-            vr.template axpyThisB<64>(lambda, spinorIn);
-            rootLogger.info("tester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
+        for (int n = 0; n < spinor_count; n++) {
+            spinor_host.gauss(h_rand.state);
+            // spinor_vec.emplace_back(spinor_host);
+            spinor_vec.emplace_back(commBase);
+            spinor_vec[n] = spinor_host;
+            lambda_vec.emplace_back(static_cast<double>(get_rand<floatT>(h_rand.state)));
         }
     }
 }
 
 
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVector(double mass, Spinor_t& spinorOut, const Spinor_t& spinorIn) {
-    CommunicationBase &commBase = this->getComm();
-    Spinor_t spinorSum(commBase);
-    Spinor_t spinorEv(commBase);
+// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+// void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge) 
+// {    
+//     CommunicationBase &commBase = this->getComm();
+//     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
+//     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
+//     HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+//     // smearing.SmearAll(floatT 0.0);
+//     // gauge.updateAll();
+//     // gauge_Naik.updateAll();
+//     // gauge_smeared.updateAll();
 
-    double lambda;
-    COMPLEX(double) factorDouble;
-    COMPLEX(floatT) factorCompat;
+//     HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+
+
+
+
+//     if constexpr (LatticeLayout == Layout::All) {
+//         // TODO
+//     }   else {
+//         for (int i = 0; i < spinor_count; i++) {
+//             Spinor_t &spinorIn = spinor_vec[i];
+//             Spinor_t vr(commBase);
+            
+//             floatT lambda = lambda_vec[i];
+//             rootLogger.info("tester:lambda=", lambda);
+            
+//             vr = spinorIn;
+//             // spinorIn.updateAll();
+//             // vr.updateAll();
+            
+//             Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+//             spinor_host = spinorIn;
+//             Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
+
+//             gSite site = GInd::getSite(0,0,0,0);
+//             Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+//             rootLogger.info("tester:Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
+            
+//             site = GInd::getSite(
+//                 GInd::getLatData().lx-1,
+//                 GInd::getLatData().ly-1,
+//                 GInd::getLatData().lz-1,
+//                 GInd::getLatData().lt-1
+//             );
+//             vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+//             rootLogger.info("tester:Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
+            
+//             // this->updateAll(All);
+//             dslash.applyMdaggM(vr, spinorIn, true);
+
+
+//             vr.template axpyThisB<64>(lambda, spinorIn);
+//             rootLogger.info("tester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
+//         }
+//     }
+// }
+
+
+// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+// void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVector(double mass, Spinor_t& spinorOut, const Spinor_t& spinorIn) {
+//     CommunicationBase &commBase = this->getComm();
+//     Spinor_t spinorSum(commBase);
+//     Spinor_t spinorEv(commBase);
+
+//     double lambda;
+//     COMPLEX(double) factorDouble;
+//     COMPLEX(floatT) factorCompat;
     
 
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        for (int i = 0; i < spinor_count; i++) {
-            spinorEv = spinor_vec[i];
-            lambda = mass*mass + lambda_vec[i];
+//     if constexpr (LatticeLayout == Layout::All) {
+//         // TODO
+//     }   else {
+//         for (int i = 0; i < spinor_count; i++) {
+//             spinorEv = spinor_vec[i];
+//             lambda = mass*mass + lambda_vec[i];
 
-            factorDouble =  spinorEv.dotProduct(spinorIn);
+//             factorDouble =  spinorEv.dotProduct(spinorIn);
 
-            factorDouble /= lambda;
+//             factorDouble /= lambda;
 
-            factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
+//             factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
 
-            spinorSum.template axpyThisB<64>(factorCompat, spinorEv);
-        }
-        spinorOut = spinorSum;
-    }
-}
-
-
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS) {
-    CommunicationBase &commBase = this->getComm();
+//             spinorSum.template axpyThisB<64>(factorCompat, spinorEv);
+//         }
+//         spinorOut = spinorSum;
+//     }
+// }
 
 
+// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+// void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS) {
+//     CommunicationBase &commBase = this->getComm();
 
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        for (int i = 0; i < spinor_count; i++) {
-            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = spinor_vec[i];
-            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
+
+
+//     if constexpr (LatticeLayout == Layout::All) {
+//         // TODO
+//     }   else {
+//         for (int i = 0; i < spinor_count; i++) {
+//             Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> &spinorIn = spinor_vec[i];
+//             Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> vr(commBase);
             
-            floatT lambda = lambda_vec[i];
-            rootLogger.info("startVectorTester:lambda=", lambda);
+//             floatT lambda = lambda_vec[i];
+//             rootLogger.info("startVectorTester:lambda=", lambda);
             
-            vr = spinorIn;
+//             vr = spinorIn;
             
-            Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
-            spinor_host = spinorIn;
-            Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
+//             Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+//             spinor_host = spinorIn;
+//             Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
 
-            gSite site = GInd::getSite(0,0,0,0);
-            Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            rootLogger.info("startVectorTester:Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
+//             gSite site = GInd::getSite(0,0,0,0);
+//             Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+//             rootLogger.info("startVectorTester:Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
             
-            site = GInd::getSite(
-                GInd::getLatData().lx-1,
-                GInd::getLatData().ly-1,
-                GInd::getLatData().lz-1,
-                GInd::getLatData().lt-1
-            );
-            vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            rootLogger.info("startVectorTester:Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
+//             site = GInd::getSite(
+//                 GInd::getLatData().lx-1,
+//                 GInd::getLatData().ly-1,
+//                 GInd::getLatData().lz-1,
+//                 GInd::getLatData().lt-1
+//             );
+//             vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
+//             rootLogger.info("startVectorTester:Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
             
-            dslash.applyMdaggM(vr, spinorIn, true);
+//             dslash.applyMdaggM(vr, spinorIn, true);
 
 
-            vr.template axpyThisB<64>(lambda, spinorIn);
-            rootLogger.info("startVectorTester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
-        }
-    }
+//             vr.template axpyThisB<64>(lambda, spinorIn);
+//             rootLogger.info("startVectorTester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
+//         }
+//     }
 
-    Spinor_t vr(commBase);
-    Spinor_t va(commBase);
-    va = spinorRHS;
+//     Spinor_t vr(commBase);
+//     Spinor_t va(commBase);
+//     va = spinorRHS;
 
-    dslash.applyMdaggM(vr, spinorStart, true);
+//     dslash.applyMdaggM(vr, spinorStart, true);
     
-    COMPLEX(double) sum0 = vr.dotProduct(vr)-va.dotProduct(vr);
-    rootLogger.info("startVectorTester:0=", sum0);
+//     COMPLEX(double) sum0 = vr.dotProduct(vr)-va.dotProduct(vr);
+//     rootLogger.info("startVectorTester:0=", sum0);
 
-    COMPLEX(double) sum1 = va.dotProduct(vr);
+//     COMPLEX(double) sum1 = va.dotProduct(vr);
     
-    for (int i =0; i < spinor_count; i++) {
-        Spinor_t &spinorEv = spinor_vec[i];
-        vr = spinorEv;
-        sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
-    }
-    rootLogger.info("startVectorTester:1=", sum1);
-}
+//     for (int i =0; i < spinor_count; i++) {
+//         Spinor_t &spinorEv = spinor_vec[i];
+//         vr = spinorEv;
+//         sum1 -= va.dotProduct(vr) * vr.dotProduct(va);    
+//     }
+//     rootLogger.info("startVectorTester:1=", sum1);
+// }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>

@@ -7,7 +7,11 @@
 
 #include "../../gauge/gaugefield.h"
 #include "../../spinor/spinorfield.h"
+#include "../../spinor/eigenpairs.h"
 #include "../../base/math/simpleArray.h"
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+class Eigenpairs;
 
 /// Abstract base class for all kind of linear operators that shall enter the inversion
 template <typename Vector>
@@ -39,6 +43,18 @@ public:
     template <typename Spinor_t, typename Spinor_t_half>
     void invert_mixed(LinearOperator<Spinor_t>& dslash, LinearOperator<Spinor_t_half>& dslash_inner, Spinor_t& spinorOut, const Spinor_t& spinorIn,
                       const int max_iter, const double precision, double delta);
+
+    template <bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
+    void startVector(double mass, 
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, 
+        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn, 
+        const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>& eigenpair);
+
+    template <bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
+    void startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
+        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, 
+        const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS, 
+        const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>& eigenpair);
 };
 
 
