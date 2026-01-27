@@ -711,7 +711,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
 
 
             spinorMdMx.template axpyThisB(lambda, spinorEv);
-            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", spinorMdMx.dotProduct(spinorMdMx));
+            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
         }
     }
     
@@ -724,9 +724,9 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
     spinorStartLocal.updateAll();
     dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
     
-    COMPLEX(double) yAx = spinorRHSLocal.dotProduct(spinorMdMx);
-    COMPLEX(double) AxAx = spinorMdMx.dotProduct(spinorMdMx);
-    rootLogger.info("startVectorTester: b*Ax             =", yAx);
+    COMPLEX(double) bAx = spinorRHSLocal.dotProduct(spinorMdMx);
+    COMPLEX(double) AxAx = real(spinorMdMx.dotProduct(spinorMdMx));
+    rootLogger.info("startVectorTester: b*Ax             =", bAx);
     rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
 
     COMPLEX(double) sumEV;

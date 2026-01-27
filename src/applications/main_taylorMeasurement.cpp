@@ -55,10 +55,10 @@ int main(int argc, char **argv) {
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
-    // Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
-    // Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
-    // HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-    // smearing.SmearAll();
+    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
+    HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    smearing.SmearAll();
 
     
     // Read the Eigenvalues and Eigenvectors
@@ -67,9 +67,15 @@ int main(int argc, char **argv) {
     eigenpairs.readEigenpairsSequential(param.eigen_file());
     eigenpairs.updateAll();
 
-    // HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
+    HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
 
-    // eigenpairs.tester(gauge);
+    Spinorfield<PREC,true,Even,HaloDepthSpin,NStacks> spinorIn(commBase);
+    Spinorfield<PREC,true,Even,HaloDepthSpin,NStacks> spinorOut(commBase);
+
+    spinorIn.one();
+
+    eigenpairs.startVector(0.0, spinorOut, spinorIn);
+    eigenpairs.startVectorTester(dslash, spinorOut, spinorIn);
 
 
     if (param.valence_masses.numberValues() == 0) {

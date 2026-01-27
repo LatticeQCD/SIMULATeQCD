@@ -4,6 +4,13 @@
 #include "../base/IO/evnersc.h"
 #include "spinorfield.h"
 
+/// Abstract base class for all kind of linear operators that shall enter the inversion
+template <typename Vector>
+class LinearOperator{
+public:
+    virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
+};
+
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class Eigenpairs : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepthSpin>
@@ -38,6 +45,9 @@ public:
     void readEigenpairsSequential(const std::string &fname);
 
     void fillRandom(const int &num_vec_in);
+    
+    void startVector(double mass,  Spinor_t& spinorOut, const Spinor_t& spinorIn);
+    void startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS);
 
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };
