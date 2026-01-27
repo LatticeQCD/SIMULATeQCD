@@ -159,7 +159,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         for (size_t y = 0; y < GInd::getLatData().ly; y++)
         for (size_t x = 0; x < GInd::getLatData().lx; x++) {
             if (evnersc.end_of_buffer()) {
-                rootLogger.info("Reading spinor", n, " data from file ", fname.c_str());
                 commBase.readBinary(evnersc.buf_ptr(), GInd::getLatData().vol4);
                 evnersc.process_read_data();
             }
