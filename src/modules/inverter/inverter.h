@@ -6,7 +6,6 @@
 #pragma once
 
 #include "../../gauge/gaugefield.h"
-#include "../../spinor/spinorfield.h"
 #include "../../spinor/eigenpairs.h"
 #include "../../base/math/simpleArray.h"
 

@@ -6,7 +6,6 @@
 #pragma once
 
 #include "../inverter/inverter.h"
-#include "../../spinor/eigenpairs.h"
 
 #define C_1000 (0.5)
 

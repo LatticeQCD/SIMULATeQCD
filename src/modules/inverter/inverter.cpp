@@ -654,8 +654,8 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
 
     double lambda;
-    COMPLEX(double) factorDouble;
-    COMPLEX(floatT) factorCompat;
+    GPUcomplex<double> factorDouble;
+    GPUcomplex<floatT> factorCompat;
     
 
     if constexpr (LatticeLayout == Layout::All) {
@@ -671,7 +671,7 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
 
             factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
 
-            spinorSum.template axpyThisB<64>(factorCompat, spinorEv);
+            spinorSum.template axpyThisB(factorCompat, spinorEv);
         }
         spinorStart = spinorSum;
         spinorStart.updateAll();
@@ -692,41 +692,49 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
 
 
-    // if constexpr (LatticeLayout == Layout::All) {
-    //     // TODO
-    // }   else {
-    //     for (int i = 0; i < eigenpair.spinor_count; i++) {
-    //         spinorEv = eigenpair.spinor_vec[i];
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        int steps = 5;
+        double stepSize = static_cast<double>(eigenpair.spinor_count - 1) / (steps - 1);
+
+        for (int i = 0; i < steps; i++) {
+            int index = static_cast<int>(i * stepSize);
+
+            spinorEv = eigenpair.spinor_vec[index];
             
-    //         floatT lambda = eigenpair.lambda_vec[i];
-    //         rootLogger.info("startVectorTester:lambda=", lambda);
+            floatT lambda = eigenpair.lambda_vec[index];
+            rootLogger.info("startVectorTester: lambda         =", lambda);
                         
-    //         spinorEv.updateAll();
-    //         dslash.applyMdaggM(spinorMdMx, spinorEv, true);
+            spinorEv.updateAll();
+            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
 
 
-    //         spinorMdMx.template axpyThisB<64>(lambda, spinorEv);
-    //         rootLogger.info("startVectorTester:norm(Ax-µx)**2=", spinorMdMx.realdotProduct(spinorMdMx));
-    //     }
-    // }
+            spinorMdMx.template axpyThisB(lambda, spinorEv);
+            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", spinorMdMx.dotProduct(spinorMdMx));
+        }
+    }
     
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorRHSLocal(commBase);
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorStartLocal(commBase);
     spinorRHSLocal = spinorRHS;
     spinorStartLocal = spinorStart;
     
+    spinorRHSLocal.updateAll();
     spinorStartLocal.updateAll();
     dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
     
-    COMPLEX(double) sum0 = spinorRHSLocal.dotProduct(spinorMdMx)-spinorMdMx.dotProduct(spinorMdMx);
-    rootLogger.info("      y*Ax-Ax*Ax      =", sum0);
+    COMPLEX(double) yAx = spinorRHSLocal.dotProduct(spinorMdMx);
+    COMPLEX(double) AxAx = spinorMdMx.dotProduct(spinorMdMx);
+    rootLogger.info("startVectorTester: b*Ax             =", yAx);
+    rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
 
-    COMPLEX(double) sum1 = spinorRHSLocal.dotProduct(spinorMdMx);
+    COMPLEX(double) sumEV;
     for (int i =0; i < eigenpair.spinor_count; i++) {
         spinorEv  = eigenpair.spinor_vec[i];
-        sum1 -= spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);    
+        sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
     }
-    rootLogger.info("y*Ax-sum(y a_i*a_i y) =", sum1);
+    rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
 }
 
 #define CLASSCG_INIT(floatT,STACKS) \
