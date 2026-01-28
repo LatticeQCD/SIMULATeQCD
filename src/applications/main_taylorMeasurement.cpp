@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
         spinorIn.one();
 
         eigenpairs.startVector(mass, spinorOut, spinorIn);
-        eigenpairs.startVectorTester(dslash, spinorOut, spinorIn);
+        eigenpairs.startVectorTester(mass, dslash, spinorOut, spinorIn);
         
         TaylorMeasurement<floatT, true, HaloDepthGauge, HaloDepthSpin, NStacks> taylor_measurement(gauge, eigenpairs, param, mass, param.use_naik_epsilon(), d_rand);
         try {

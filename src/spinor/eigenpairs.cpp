@@ -311,7 +311,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS) {
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(double mass, LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS) {
     CommunicationBase &commBase = spinorRHS.getComm();
 
 
@@ -333,6 +333,9 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             
             floatT lambda = lambda_vec[index];
             rootLogger.info("startVectorTester: lambda         =", lambda);
+            
+            floatT massLambda = mass*mass + lambda;
+            rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
                         
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
 
@@ -340,7 +343,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             spinorMdMx.template axpyThisB(lambda, spinorEv);
             rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
             
-            Vect3arrayAcc<floatT> spinor_accessor = spinorEv.getAccessor();
+            // Vect3arrayAcc<floatT> spinor_accessor = spinorEv.getAccessor();
 
             // gSite site = GInd::getSite(0,0,0,0);
             // Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
@@ -374,6 +377,9 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     COMPLEX(double) sumEV;
     for (int i =0; i < spinor_count; i++) {
         spinorEv  = spinor_vec[i];
+        floatT lambda = lambda_vec[i];        
+        floatT massLambda = mass*mass + lambda;
+
         sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
     }
     rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);

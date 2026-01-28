@@ -681,7 +681,7 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
 
 template<class floatT, size_t NStacks>
 template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
-void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
+void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
     const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart, 
     const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorRHS, 
     const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
@@ -705,6 +705,9 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
             
             floatT lambda = eigenpair.lambda_vec[index];
             rootLogger.info("startVectorTester: lambda         =", lambda);
+            
+            floatT massLambda = mass*mass + lambda;
+            rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
                         
             spinorEv.updateAll();
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
@@ -732,6 +735,9 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(LinearOperator<Spinor
     COMPLEX(double) sumEV;
     for (int i =0; i < eigenpair.spinor_count; i++) {
         spinorEv  = eigenpair.spinor_vec[i];
+        floatT lambda = lambda_vec[i];        
+        floatT massLambda = mass*mass + lambda;
+        
         sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
     }
     rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
@@ -754,7 +760,8 @@ template void ConjugateGradient<floatT, STACKS>::invert_deflation(LinearOperator
 template void ConjugateGradient<floatT, STACKS>::startVector<true, LO, HALOGAUGE, HALOSPIN>(double, \
             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
             const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
-template void ConjugateGradient<floatT, STACKS>::startVectorTester<true, LO, HALOGAUGE, HALOSPIN>(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
+template void ConjugateGradient<floatT, STACKS>::startVectorTester<true, LO, HALOGAUGE, HALOSPIN>(double, \
+            LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
             const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
             const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&);
 
