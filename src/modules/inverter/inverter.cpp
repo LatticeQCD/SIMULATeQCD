@@ -334,9 +334,10 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     SimpleArray<COMPLEX(double), NStacks> dot(0.0);
 
     spinorResidual = spinorRHS;
+    spinorResidual.updateAll();
 
     spinorStart.updateAll(COMM_BOTH | Hyperplane);
-    dslash.applyMdaggM(spinorMdMx, spinorStart, false);
+    dslash.applyMdaggM(spinorMdMx, spinorStart, true);
 
     spinorResidual.axpyThisLoopd(-1.0 * stepSize, spinorMdMx, NStacks);
     
@@ -352,7 +353,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
         spinorSearch.updateAll(COMM_BOTH | Hyperplane);
 
-        dslash.applyMdaggM(spinorMdMx, spinorSearch, false);
+        dslash.applyMdaggM(spinorMdMx, spinorSearch, true);
 
         dot = spinorSearch.dotProductStacked(spinorMdMx);
         alpha = real<double>(dot);
@@ -702,24 +703,19 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
             int index = static_cast<int>(i * stepSize);
 
             spinorEv = eigenpair.spinor_vec[index];
+            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
             
             floatT lambda = eigenpair.lambda_vec[index];
             rootLogger.info("startVectorTester: lambda         =", lambda);
-                        
-            spinorEv.updateAll();
-            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
 
-
-            spinorMdMx.template axpyThisB(lambda, spinorEv);
+            spinorMdMx.template axpyThisB(-lambda, spinorEv);
             rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
+
+            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
             
-            floatT massLambda = mass*mass + lambda;
+            floatT massLambda = - mass*mass - lambda;
             rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
                         
-            spinorEv.updateAll();
-            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
-
-
             spinorMdMx.template axpyThisB(massLambda, spinorEv);
             rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
         }
@@ -727,11 +723,13 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
     
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorRHSLocal(commBase);
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorStartLocal(commBase);
+    
     spinorRHSLocal = spinorRHS;
     spinorStartLocal = spinorStart;
     
     spinorRHSLocal.updateAll();
     spinorStartLocal.updateAll();
+
     dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
     
     COMPLEX(double) bAx = spinorRHSLocal.dotProduct(spinorMdMx);
@@ -745,10 +743,8 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
     }   else {
         for (int i =0; i < eigenpair.spinor_count; i++) {
             spinorEv  = eigenpair.spinor_vec[i];
-            // floatT lambda = eigenpair.lambda_vec[i];        
-            // floatT massLambda = mass*mass + lambda;
             
-            sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
+            sumEV += spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
         }
     }
     rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
