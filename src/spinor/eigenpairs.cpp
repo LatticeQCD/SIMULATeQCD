@@ -333,6 +333,12 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             
             floatT lambda = lambda_vec[index];
             rootLogger.info("startVectorTester: lambda         =", lambda);
+                        
+            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
+
+
+            spinorMdMx.template axpyThisB(lambda, spinorEv);
+            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
             
             floatT massLambda = mass*mass + lambda;
             rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
@@ -340,25 +346,8 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
 
 
-            spinorMdMx.template axpyThisB(lambda, spinorEv);
-            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
-            
-            // Vect3arrayAcc<floatT> spinor_accessor = spinorEv.getAccessor();
-
-            // gSite site = GInd::getSite(0,0,0,0);
-            // Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            // rootLogger.info("startVectorTester:Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-            // site = GInd::getSite(
-            //     GInd::getLatData().lx-1,
-            //     GInd::getLatData().ly-1,
-            //     GInd::getLatData().lz-1,
-            //     GInd::getLatData().lt-1
-            // );
-            // vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            // rootLogger.info("startVectorTester:Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-            
+            spinorMdMx.template axpyThisB(massLambda, spinorEv);
+            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
         }
     }
     
@@ -375,12 +364,16 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
 
     COMPLEX(double) sumEV;
-    for (int i =0; i < spinor_count; i++) {
-        spinorEv  = spinor_vec[i];
-        floatT lambda = lambda_vec[i];        
-        floatT massLambda = mass*mass + lambda;
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        for (int i =0; i < spinor_count; i++) {
+            spinorEv  = spinor_vec[i];
+            // floatT lambda = lambda_vec[i];        
+            // floatT massLambda = mass*mass + lambda;
 
-        sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
+            sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
+        }
     }
     rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
 }

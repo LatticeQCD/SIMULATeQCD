@@ -705,6 +705,13 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
             
             floatT lambda = eigenpair.lambda_vec[index];
             rootLogger.info("startVectorTester: lambda         =", lambda);
+                        
+            spinorEv.updateAll();
+            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
+
+
+            spinorMdMx.template axpyThisB(lambda, spinorEv);
+            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
             
             floatT massLambda = mass*mass + lambda;
             rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
@@ -713,7 +720,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
 
 
-            spinorMdMx.template axpyThisB(lambda, spinorEv);
+            spinorMdMx.template axpyThisB(massLambda, spinorEv);
             rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
         }
     }
@@ -733,12 +740,16 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
     rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
 
     COMPLEX(double) sumEV;
-    for (int i =0; i < eigenpair.spinor_count; i++) {
-        spinorEv  = eigenpair.spinor_vec[i];
-        floatT lambda = lambda_vec[i];        
-        floatT massLambda = mass*mass + lambda;
-        
-        sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        for (int i =0; i < eigenpair.spinor_count; i++) {
+            spinorEv  = eigenpair.spinor_vec[i];
+            // floatT lambda = eigenpair.lambda_vec[i];        
+            // floatT massLambda = mass*mass + lambda;
+            
+            sumEV = spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
+        }
     }
     rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
 }

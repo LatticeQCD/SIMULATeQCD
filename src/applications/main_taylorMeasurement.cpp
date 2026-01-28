@@ -67,8 +67,7 @@ int main(int argc, char **argv) {
     eigenpairs.readEigenpairsSequential(param.eigen_file());
     eigenpairs.updateAll();
 
-    HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
-
+    
     
 
     if (param.valence_masses.numberValues() == 0) {
@@ -92,11 +91,13 @@ int main(int argc, char **argv) {
     for (double mass : param.valence_masses.get()) {
         rootLogger.info("Using mass ", mass);
         
+
         Spinorfield<PREC,true,Even,HaloDepthSpin,NStacks> spinorIn(commBase);
         Spinorfield<PREC,true,Even,HaloDepthSpin,NStacks> spinorOut(commBase);
 
         spinorIn.one();
 
+        HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, mass);
         eigenpairs.startVector(mass, spinorOut, spinorIn);
         eigenpairs.startVectorTester(mass, dslash, spinorOut, spinorIn);
         
