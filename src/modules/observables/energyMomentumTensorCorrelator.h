@@ -103,6 +103,8 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     gFourierTimer.stop();
     rootLogger.info("   G Fourier took            ", gFourierTimer.seconds(), "s.");
 
+    MemoryManagement::memorySummary();
+
 }
 
 
