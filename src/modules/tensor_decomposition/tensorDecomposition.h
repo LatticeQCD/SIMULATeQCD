@@ -258,7 +258,7 @@ __device__ __host__ inline floatT projectorFunction(sitexyzt rt, int mu, int nu,
                 result += 0.0;
                 break;
             case Projector::SS:
-                result += (1.0/Ds) * delta(mu, nu) * delta(rho, sigma);
+                result += (1.0/4.0) * delta(mu, nu) * delta(rho, sigma);
                 break;
             default:
                 result += 0.0;
@@ -397,6 +397,9 @@ class TensorDecomposition {
     
             // reduce to r^2-dependent function and store in array
             reduceR2(tensorFunctionFieldHost.getAccessor(), tensorFunctions[(int)projector]);
+
+            rootLogger.info("Memory inside getTensorFunction:");
+            MemoryManagement::memorySummary();
         }
     
         // helper function: reduce a lattice container to an r^2-dependent (spatial) array, ignore time coordinate
