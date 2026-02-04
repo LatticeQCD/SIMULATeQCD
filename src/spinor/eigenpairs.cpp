@@ -286,7 +286,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     Spinor_t spinorEv(commBase);
 
     double lambda;
-    COMPLEX(double) factorDouble;
+    SimpleArray<COMPLEX(double) factorDouble;
     GPUcomplex<floatT> factorCompat;
     
 
@@ -297,7 +297,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             spinorEv = spinor_vec[i];
             lambda = mass*mass + lambda_vec[i];
 
-            factorDouble =  spinorEv.dotProduct(spinorIn);
+            factorDouble =  spinorEv.dotProductStacked(spinorIn);
 
             factorDouble /= lambda;
 
@@ -328,23 +328,29 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
+            
+            floatT lambda = lambda_vec[index];
+            rootLogger.info("startVectorTester: lambda         =", lambda);
+        }
+
+        for (int i = 0; i < steps; i++) {
+            int index = static_cast<int>(i * stepSize);
+            
+            floatT lambda = lambda_vec[index];
+            floatT massLambda = - mass*mass - lambda;
+            rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
+        }
+
+        for (int i = 0; i < steps; i++) {
+            int index = static_cast<int>(i * stepSize);
 
             spinorEv = spinor_vec[index];
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
             
             floatT lambda = lambda_vec[index];
-            rootLogger.info("startVectorTester: lambda         =", lambda);
-                        
-            spinorMdMx.template axpyThisB(-lambda, spinorEv);
-            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
-            
-            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
-            
             floatT massLambda = - mass*mass - lambda;
-            rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
-                        
             spinorMdMx.template axpyThisB(massLambda, spinorEv);
-            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProduct(spinorMdMx)));
+            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProductStacked(spinorMdMx)));
         }
     }
     
@@ -356,19 +362,19 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     
     dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
     
-    COMPLEX(double) bAx = spinorRHSLocal.dotProduct(spinorMdMx);
-    COMPLEX(double) AxAx = real(spinorMdMx.dotProduct(spinorMdMx));
+    SimpleArray<COMPLEX(double) bAx = spinorRHSLocal.dotProductStacked(spinorMdMx);
+    SimpleArray<COMPLEX(double) AxAx = real(spinorMdMx.dotProductStacked(spinorMdMx));
     rootLogger.info("startVectorTester: b*Ax             =", bAx);
     rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
 
-    COMPLEX(double) sumEV;
+    SimpleArray<COMPLEX(double) sumEV;
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
         for (int i =0; i < spinor_count; i++) {
             spinorEv  = spinor_vec[i];
 
-            sumEV += spinorRHSLocal.dotProduct(spinorEv) * spinorEv.dotProduct(spinorRHSLocal);
+            sumEV += spinorRHSLocal.dotProductStacked(spinorEv) * spinorEv.dotProductStacked(spinorRHSLocal);
         }
     }
     rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
