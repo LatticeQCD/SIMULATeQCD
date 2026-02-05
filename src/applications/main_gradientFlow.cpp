@@ -709,13 +709,13 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             emtCorrTimer.start();
             EMTCorr.EMTCorrGFunctions(gauge, vecEMTCorr);
             emtCorrTimer.stop();
-            rootLogger.info("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
+            rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
             
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
             hdf5File.writeEMTCorrData(vecEMTCorr);
             hdf5Timer.stop();
-            rootLogger.info("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
+            rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }
 
         if (lp.shear_bulk_corr_block() && gradFlow.checkIfMeasuredTime()) {
@@ -916,7 +916,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 int main(int argc, char *argv[]) {
 
     try {
-        stdLogger.setVerbosity(DEBUG);
+        stdLogger.setVerbosity(INFO);
         CommunicationBase commBase(&argc, &argv);
         gradientFlowParam<PREC> lp;
         lp.readfile(commBase, "../parameter/applications/gradientFlow.param", argc, argv);
