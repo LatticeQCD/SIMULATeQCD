@@ -847,9 +847,9 @@ void FourierClass<floatT>::performFourierTransformMatrix4x4SymComponentwise(
     auto const countMoveOut = static_cast<double>(timePerComponentMoveOut.size());
     double timePerComponentAverageMoveOut = std::reduce(timePerComponentMoveOut.begin(), timePerComponentMoveOut.end()) / countMoveOut;
 
-    rootLogger.info("       Fourier EMT move-in   took           ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
-    rootLogger.info("       Fourier EMT scalar FT took           ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
-    rootLogger.info("       Fourier EMT move-out  took           ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
+    rootLogger.debug("       Fourier EMT move-in   took           ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
+    rootLogger.debug("       Fourier EMT scalar FT took           ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
+    rootLogger.debug("       Fourier EMT move-out  took           ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
 
     // copy working-base lattice container into output matrix
     matrixOut.copyFromLatticeContainer(matrixIntermediate);
@@ -949,9 +949,9 @@ void FourierClass<floatT>::performFourierTransformationTensor4x4Symx4x4SymComple
     auto const countMoveOut = static_cast<double>(timePerComponentMoveOut.size());
     double timePerComponentAverageMoveOut = std::reduce(timePerComponentMoveOut.begin(), timePerComponentMoveOut.end()) / countMoveOut;
 
-    rootLogger.info("       Fourier 4x4symx4x4sym move-in   took ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
-    rootLogger.info("       Fourier 4x4symx4x4sym scalar FT took ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
-    rootLogger.info("       Fourier 4x4symx4x4sym move-out  took ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
+    rootLogger.debug("       Fourier 4x4symx4x4sym move-in   took ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
+    rootLogger.debug("       Fourier 4x4symx4x4sym scalar FT took ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
+    rootLogger.debug("       Fourier 4x4symx4x4sym move-out  took ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
 
     tensorOut.copyFromLatticeContainer(tensorIntermediate);
 
@@ -1026,9 +1026,9 @@ void FourierClass<floatT>::performFourierTransformTensor4x4Symx4x4SymHalfPolymor
     auto const countMoveOut = static_cast<double>(timePerComponentMoveOut.size());
     double timePerComponentAverageMoveOut = std::reduce(timePerComponentMoveOut.begin(), timePerComponentMoveOut.end()) / countMoveOut;
 
-    rootLogger.info("       Fourier 4x4symx4x4sym move-in   took ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
-    rootLogger.info("       Fourier 4x4symx4x4sym scalar FT took ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
-    rootLogger.info("       Fourier 4x4symx4x4sym move-out  took ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
+    rootLogger.debug("       Fourier 4x4symx4x4sym move-in   took ", timePerComponentAverageMoveIn, "s on average over ", countMoveIn, " components.");
+    rootLogger.debug("       Fourier 4x4symx4x4sym scalar FT took ", timePerComponentAverageFT, "s on average over ", countFT, " components.");
+    rootLogger.debug("       Fourier 4x4symx4x4sym move-out  took ", timePerComponentAverageMoveOut, "s on average over ", countMoveOut, " components.");
 
     // copy working-base lattice container into output tensor
     tensorOut.copyFromLatticeContainer(tensorIntermediate);

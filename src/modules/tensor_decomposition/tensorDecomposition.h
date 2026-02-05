@@ -397,9 +397,6 @@ class TensorDecomposition {
     
             // reduce to r^2-dependent function and store in array
             reduceR2(tensorFunctionFieldHost.getAccessor(), tensorFunctions[(int)projector]);
-
-            rootLogger.info("Memory inside getTensorFunction:");
-            MemoryManagement::memorySummary();
         }
     
         // helper function: reduce a lattice container to an r^2-dependent (spatial) array, ignore time coordinate

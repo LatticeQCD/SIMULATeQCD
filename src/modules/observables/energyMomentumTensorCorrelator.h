@@ -90,7 +90,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     fourierClass.template performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Both>(emtFouriered, emtFouriered, 1.0);
     // fourierClass.template performFourierTransformPolymorph<Matrix4x4SymComplex<floatT>, SpatialTemporal::Both>(emtFouriered, emtFouriered, 1.0);
     emtFourierTimer.stop();
-    rootLogger.info("   EMT Fourier took          ", emtFourierTimer.seconds(), "s.");
+    rootLogger.debug("   EMT Fourier took          ", emtFourierTimer.seconds(), "s.");
     
     // create product out of the two FFTed EMTs, store it in G
     G.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(emtFouriered.getAccessor(), emtFouriered.getAccessor()));
@@ -101,9 +101,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     fourierClass.template performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(G, G, -1.0);
     // fourierClass.template performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G, G, -1.0);
     gFourierTimer.stop();
-    rootLogger.info("   G Fourier took            ", gFourierTimer.seconds(), "s.");
-
-    MemoryManagement::memorySummary();
+    rootLogger.debug("   G Fourier took            ", gFourierTimer.seconds(), "s.");
 
 }
 
@@ -127,7 +125,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctions(
     tensorDecomposition.template getAllTensorFunctions<true>(GTensor, array);
     tensorDecompositionTimer.stop();
 
-    rootLogger.info("   Tensor Decomposition took ", tensorDecompositionTimer.seconds(), "s.");
+    rootLogger.debug("   Tensor Decomposition took ", tensorDecompositionTimer.seconds(), "s.");
 
 }
 
