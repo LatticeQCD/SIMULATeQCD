@@ -4,6 +4,7 @@
 #include "../modules/hisq/hisqSmearing.h"
 #include "../modules/dslash/dslash.h"
 #include <fstream>
+// #define BLOCKSIZE 64
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
@@ -276,109 +277,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 //         }
 //     }
 // }
-
-
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVector(double mass, Spinor_t& spinorOut, const Spinor_t& spinorIn) {
-    CommunicationBase &commBase = spinorIn.getComm();
-
-    Spinor_t spinorSum(commBase);
-    Spinor_t spinorEv(commBase);
-
-    double lambda;
-    SimpleArray<COMPLEX(double) factorDouble;
-    GPUcomplex<floatT> factorCompat;
-    
-
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        for (int i = 0; i < spinor_count; i++) {
-            spinorEv = spinor_vec[i];
-            lambda = mass*mass + lambda_vec[i];
-
-            factorDouble =  spinorEv.dotProductStacked(spinorIn);
-
-            factorDouble /= lambda;
-
-            factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
-
-            spinorSum.template axpyThisB(factorCompat, spinorEv);
-        }
-        spinorOut = spinorSum;
-    }
-}
-
-
-template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::startVectorTester(double mass, LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS) {
-    CommunicationBase &commBase = spinorRHS.getComm();
-
-
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
-
-
-
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        int steps = 5;
-        double stepSize = static_cast<double>(spinor_count - 1) / (steps - 1);
-
-        for (int i = 0; i < steps; i++) {
-            int index = static_cast<int>(i * stepSize);
-            
-            floatT lambda = lambda_vec[index];
-            rootLogger.info("startVectorTester: lambda         =", lambda);
-        }
-
-        for (int i = 0; i < steps; i++) {
-            int index = static_cast<int>(i * stepSize);
-            
-            floatT lambda = lambda_vec[index];
-            floatT massLambda = - mass*mass - lambda;
-            rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
-        }
-
-        for (int i = 0; i < steps; i++) {
-            int index = static_cast<int>(i * stepSize);
-
-            spinorEv = spinor_vec[index];
-            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
-            
-            floatT lambda = lambda_vec[index];
-            floatT massLambda = - mass*mass - lambda;
-            spinorMdMx.template axpyThisB(massLambda, spinorEv);
-            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProductStacked(spinorMdMx)));
-        }
-    }
-    
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorRHSLocal(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorStartLocal(commBase);
-    
-    spinorRHSLocal = spinorRHS;
-    spinorStartLocal = spinorStart;
-    
-    dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
-    
-    SimpleArray<COMPLEX(double) bAx = spinorRHSLocal.dotProductStacked(spinorMdMx);
-    SimpleArray<COMPLEX(double) AxAx = real(spinorMdMx.dotProductStacked(spinorMdMx));
-    rootLogger.info("startVectorTester: b*Ax             =", bAx);
-    rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
-
-    SimpleArray<COMPLEX(double) sumEV;
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        for (int i =0; i < spinor_count; i++) {
-            spinorEv  = spinor_vec[i];
-
-            sumEV += spinorRHSLocal.dotProductStacked(spinorEv) * spinorEv.dotProductStacked(spinorRHSLocal);
-        }
-    }
-    rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
-}
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>

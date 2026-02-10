@@ -46,9 +46,6 @@ public:
 
     void fillRandom(const int &num_vec_in);
     
-    void startVector(double mass,  Spinor_t& spinorOut, const Spinor_t& spinorIn);
-    void startVectorTester(double mass, LinearOperator<Spinor_t>& dslash, const Spinor_t& spinorStart, const Spinor_t& spinorRHS);
-
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };
 

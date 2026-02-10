@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
 
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
-    const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
+    const size_t NStacks = 2; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
     typedef float PREC;
 
@@ -90,17 +90,7 @@ int main(int argc, char **argv) {
 
     for (double mass : param.valence_masses.get()) {
         rootLogger.info("Using mass ", mass);
-        
 
-        Spinorfield<PREC,true,Even,HaloDepthSpin,NStacks> spinorIn(commBase);
-        Spinorfield<PREC,true,Even,HaloDepthSpin,NStacks> spinorOut(commBase);
-
-        spinorIn.one();
-
-        HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, mass);
-        eigenpairs.startVector(mass, spinorOut, spinorIn);
-        eigenpairs.startVectorTester(mass, dslash, spinorOut, spinorIn);
-        
         TaylorMeasurement<floatT, true, HaloDepthGauge, HaloDepthSpin, NStacks> taylor_measurement(gauge, eigenpairs, param, mass, param.use_naik_epsilon(), d_rand);
         try {
             for (const auto& id : param.operator_ids.get()) {

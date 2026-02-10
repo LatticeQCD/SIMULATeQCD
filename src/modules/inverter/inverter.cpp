@@ -243,34 +243,34 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
         LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
         const int max_iter, const double precision)
 {
-    Spinor_t pi(spinorIn.getComm());
-    Spinor_t s(spinorIn.getComm());
-    Spinor_t r(spinorIn.getComm());
+    Spinor_t spinorSearch(spinorIn.getComm());
+    Spinor_t spinorMdMx(spinorIn.getComm());
+    Spinor_t spinorResidual(spinorIn.getComm());
 
 
     int cg = 0;
 
-    SimpleArray<double, NStacks> a(0.0);
-    SimpleArray<double, NStacks> nu(1.0);
-    SimpleArray<double, NStacks> norm_r2(0.0);
-    SimpleArray<double, NStacks> lambda2(0.0);
+    SimpleArray<double, NStacks> betaScale(0.0);
+    SimpleArray<double, NStacks> stepSize(1.0);
+    SimpleArray<double, NStacks> betaAlt(0.0);
+    SimpleArray<double, NStacks> beta(0.0);
     SimpleArray<double, NStacks> pAp(0.0);
 
     SimpleArray<COMPLEX(double), NStacks> dot(0.0);
     SimpleArray<COMPLEX(double), NStacks> dot2(0.0);
     SimpleArray<COMPLEX(double), NStacks> dot3(0.0);
 
-    r = spinorIn;
+    spinorResidual = spinorIn;
 
 
-    dot3 = r.dotProductStacked(r);
-    norm_r2 = real<double>(dot3);
+    dot3 = spinorResidual.dotProductStacked(spinorResidual);
+    betaAlt = real<double>(dot3);
 
-    SimpleArray<double, NStacks> in_norm(0.0);
+    SimpleArray<double, NStacks> betaStart(0.0);
 
-    in_norm = norm_r2;
+    betaStart = betaAlt;
 
-    pi = spinorIn;
+    spinorSearch = spinorIn;
 
     spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
@@ -278,29 +278,29 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     do {
         cg++;
 
-        pi.updateAll(COMM_BOTH | Hyperplane);
+        spinorSearch.updateAll(COMM_BOTH | Hyperplane);
 
-        dslash.applyMdaggM(s, pi, false);
+        dslash.applyMdaggM(spinorMdMx, spinorSearch, false);
 
-        dot = pi.dotProductStacked(s);
+        dot = spinorSearch.dotProductStacked(spinorMdMx);
 
         pAp = real<double>(dot);
 
-        nu = -1.0* norm_r2 / pAp;
+        stepSize = -1.0* betaAlt / pAp;
 
-        r.axpyThisLoopd(nu, s, NStacks);
+        spinorResidual.axpyThisLoopd(stepSize, spinorMdMx, NStacks);
 
-        dot2 = r.dotProductStacked(r);
+        dot2 = spinorResidual.dotProductStacked(spinorResidual);
 
-        lambda2 = real<double>(dot2);
-        a = lambda2 / norm_r2;
-        norm_r2 = lambda2;
+        beta = real<double>(dot2);
+        betaScale = beta / betaAlt;
+        betaAlt = beta;
 
-        spinorOut.axpyThisLoopd(-1.0*nu, pi, NStacks);
+        spinorOut.axpyThisLoopd(-1.0*stepSize, spinorSearch, NStacks);
 
-        pi.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(a, r);
+        spinorSearch.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(betaScale, spinorResidual);
 
-    } while ( (max(lambda2/in_norm) > precision) && (cg<max_iter) );
+    } while ( (max(beta/betaStart) > precision) && (cg<max_iter) );
 
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
@@ -365,15 +365,12 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
         spinorResidual.axpyThisLoopd(-1.0 * stepSize, spinorMdMx, NStacks);
 
         dot = spinorResidual.dotProductStacked(spinorResidual);
+        
         beta = real<double>(dot);
-
         betaScale = beta / betaAlt;
         betaAlt = beta;
 
         spinorSearch.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(betaScale, spinorResidual);
-
-        // rootLogger.info("residual=" ,  sqrt(max(beta/betaStart)));
-
 
     } while (( sqrt(max(beta/betaStart)) > precision) && (cg<max_iter) );
 
@@ -655,8 +652,8 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
 
     double lambda;
-    GPUcomplex<double> factorDouble;
-    GPUcomplex<floatT> factorCompat;
+    SimpleArray<double, NStacks> factorDouble(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
     
 
     if constexpr (LatticeLayout == Layout::All) {
@@ -666,13 +663,12 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
             spinorEv = eigenpair.spinor_vec[i];
             lambda = mass*mass + eigenpair.lambda_vec[i];
 
-            factorDouble =  spinorEv.dotProductStacked(spinorIn);
+            dot =  spinorEv.dotProductStacked(spinorIn);
+            factorDouble = real<double>(dot);
 
-            factorDouble /= lambda;
+            factorDouble = factorDouble / lambda;
 
-            factorCompat = GPUcomplex<floatT>(real(factorDouble), imag(factorDouble));
-
-            spinorSum.template axpyThisB(factorCompat, spinorEv);
+            spinorSum.axpyThisLoopd(factorDouble, spinorEv, NStacks);
         }
         spinorStart = spinorSum;
         spinorStart.updateAll();
@@ -688,9 +684,18 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
     const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
     CommunicationBase &commBase = spinorRHS.getComm();
 
-
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
+
+    double lambda;
+    double massLambda;
+
+    SimpleArray<double, NStacks> massLambdaArray(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+
+    SimpleArray<COMPLEX(double), NStacks> dot1_vec(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot2_vec(0.0);
+    SimpleArray<COMPLEX(double), NStacks> dot3_vec(0.0);
 
 
     if constexpr (LatticeLayout == Layout::All) {
@@ -702,16 +707,16 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
 
-            floatT lambda = eigenpair.lambda_vec[index];
+            lambda = eigenpair.lambda_vec[index];
             rootLogger.info("startVectorTester: lambda         =", lambda);
         }
 
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
             
-            floatT lambda = eigenpair.lambda_vec[index];
-            floatT massLambda = - mass*mass - lambda;
-            rootLogger.info("startVectorTester: mass2 + lambda =", massLambda);
+            lambda = eigenpair.lambda_vec[index];
+            massLambda = - mass*mass - lambda;
+            rootLogger.info("startVectorTester: - (m^2+λ) =", massLambda);
         }
 
         for (int i = 0; i < steps; i++) {
@@ -720,40 +725,51 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
             spinorEv = eigenpair.spinor_vec[index];
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
             
-            floatT lambda = eigenpair.lambda_vec[index];
-            floatT massLambda = - mass*mass - lambda;
-            spinorMdMx.template axpyThisB(massLambda, spinorEv);
-            rootLogger.info("startVectorTester: norm(Ax-µx)**2 =", real(spinorMdMx.dotProductStacked(spinorMdMx)));
+            lambda = eigenpair.lambda_vec[index];
+            massLambdaArray = - mass*mass - lambda;
+            
+            spinorMdMx.axpyThisLoopd(massLambdaArray, spinorEv, NStacks);
+
+            dot = spinorMdMx.dotProductStacked(spinorMdMx);
+
+            for (size_t j = 0; j < NStacks; j++) {
+                rootLogger.info("startVectorTester: norm((m^2+D†D)v - (m^2+λ)v)**2 =",  dot[j]);
+            }
         }
-    }
     
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorRHSLocal(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorStartLocal(commBase);
-    
-    spinorRHSLocal = spinorRHS;
-    spinorStartLocal = spinorStart;
-    
-    spinorRHSLocal.updateAll();
-    spinorStartLocal.updateAll();
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorRHSLocal(commBase);
+        Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorStartLocal(commBase);
+        
+        spinorRHSLocal = spinorRHS;
+        spinorStartLocal = spinorStart;
+        
+        spinorRHSLocal.updateAll();
+        spinorStartLocal.updateAll();
 
-    dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
-    
-    SimpleArray<COMPLEX(double) bAx = spinorRHSLocal.dotProductStacked(spinorMdMx);
-    SimpleArray<COMPLEX(double) AxAx = real(spinorMdMx.dotProductStacked(spinorMdMx));
-    rootLogger.info("startVectorTester: b*Ax             =", bAx);
-    rootLogger.info("startVectorTester: Ax*Ax            =", AxAx);
+        dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
 
-    SimpleArray<COMPLEX(double) sumEV;
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
+        dot1_vec = spinorRHSLocal.dotProductStacked(spinorMdMx);
+        for (size_t j = 0; j < NStacks; j++) {
+            rootLogger.info("startVectorTester: b*Ax             =", dot1_vec[j]);
+        }
+        dot2_vec = spinorMdMx.dotProductStacked(spinorMdMx);
+        for (size_t j = 0; j < NStacks; j++) {
+            rootLogger.info("startVectorTester: Ax*Ax            =", dot2_vec[j]);
+        }
+
+    
         for (int i =0; i < eigenpair.spinor_count; i++) {
             spinorEv  = eigenpair.spinor_vec[i];
-            
-            sumEV += spinorRHSLocal.dotProductStacked(spinorEv) * spinorEv.dotProductStacked(spinorRHSLocal);
+            dot1_vec = spinorRHSLocal.dotProductStacked(spinorEv);
+            dot2_vec = spinorEv.dotProductStacked(spinorRHSLocal);
+            for (size_t j = 0; j < NStacks; j++) {
+                dot3_vec[j] += dot1_vec[j] * dot2_vec[j];
+            }
+        }
+        for (size_t j = 0; j < NStacks; j++) {
+            rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", dot3_vec[j]);
         }
     }
-    rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV);
 }
 
 #define CLASSCG_INIT(floatT,STACKS) \
