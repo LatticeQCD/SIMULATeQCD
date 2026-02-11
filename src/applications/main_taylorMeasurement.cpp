@@ -18,13 +18,14 @@ int main(int argc, char **argv) {
 
     TaylorMeasurementParameters param;
     CommunicationBase commBase(&argc, &argv);
-    
+
     // try reading parameter file from the same directory 
     rootLogger.info("Reading parameter file \"TaylorMeasurement.param\" from the current working directory.");
     param.readfile(commBase, "../parameter/applications/TaylorMeasurement.param", argc, argv);
 
-
+    
     commBase.init(param.nodeDim());
+    commBase.forceHalos(true);
 
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;

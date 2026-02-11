@@ -684,8 +684,11 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
     const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
     CommunicationBase &commBase = spinorRHS.getComm();
 
+
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinorHost(commBase);
+
 
     double lambda;
     double massLambda;
@@ -734,6 +737,47 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
 
             for (size_t j = 0; j < NStacks; j++) {
                 rootLogger.info("startVectorTester: norm((m^2+D†D)v - (m^2+λ)v)**2 =",  dot[j]);
+            }
+        }
+
+        
+        spinorHost = eigenpair.spinor_vec[0];
+        spinorHost.updateAll();
+        Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
+
+        typedef GIndexer<All, HaloDepthSpin> GInd;
+        typedef GIndexer<Even, HaloDepthSpin> GIndEven;
+        typedef GIndexer<Odd, HaloDepthSpin> GIndOdd;
+
+        LatticeDimensions Halo = LatticeDimensions(HaloDepthSpin, HaloDepthSpin, HaloDepthSpin, HaloDepthSpin);
+        for (int x = -Halo[0]; x < (int) GInd::getLatData().lx + Halo[0]; x++) {
+            int y, z, t;
+            y = 0;
+            z = 0;
+            t = 0;
+            bool par = (bool) ((abs(x) + abs(y) + abs(z) + abs(t)) % 2);
+            bool even = (LatticeLayout == Even) && !par;
+            bool odd = (LatticeLayout == Odd) && par;
+
+            for (size_t stack = 0; stack < NStacks; stack++){
+
+                if (LatticeLayout == All || even || odd) {
+                    LatticeDimensions localCoord = LatticeDimensions(x, y, z, t);
+
+                    Vect3<floatT> tmpB;
+
+                    if (LatticeLayout == All) {
+                        gSiteStack site = GInd::getSiteStack(x, y, z, t, stack);
+                        tmpB = spinorAcc.getElement(site);
+                    } else if (LatticeLayout == Even) {
+                        gSiteStack site = GIndEven::getSiteStack(x, y, z, t, stack);
+                        tmpB = spinorAcc.getElement(site);
+                    } else if (LatticeLayout == Odd) {
+                        gSiteStack site = GIndOdd::getSiteStack(x, y, z, t, stack);
+                        tmpB = spinorAcc.getElement(site);
+                    }
+                    rootLogger.info("tester:Spinor element at first:", x, tmpB.getElement0(), tmpB.getElement1(), tmpB.getElement2());
+                }
             }
         }
     
