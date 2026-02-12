@@ -265,6 +265,10 @@ template<typename floatT>
 template<size_t HaloDepth>
 void FourierClass<floatT>::performFourier3DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin){
 
+    if(lxL > LZ || lyL > LZ || lzL > LZ ){
+            throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY and LZ"));
+    }
+
 
     redBase.adjustSize(lxL*lyL*lzL*lt);
     redBase2.adjustSize(lxL*lyL*lzL*lt);
@@ -298,6 +302,9 @@ template<typename floatT>
 template<size_t HaloDepth>
 void FourierClass<floatT>::performFourier4DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin){
 
+    if(lxL > LZ || lyL > LZ || lzL > LZ || ltL > LZ ){
+            throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY, LZ and LT"));
+    }
 
     redBase.adjustSize(lxL*lyL*lzL*lt);
     redBase2.adjustSize(lxL*lyL*lzL*lt);
@@ -404,6 +411,10 @@ void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Sp
     size_t lxL = GInd::getLatData().globLX;
     size_t lyL = GInd::getLatData().globLY;
     size_t lzL = GInd::getLatData().globLZ;
+
+    if(lxL > LZ || lyL > LZ || lzL > LZ ){
+	    throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY and LZ"));
+    }
 
     size_t lsX = lxL;
     size_t lsY = lyL;

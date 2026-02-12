@@ -26,6 +26,7 @@ struct wilsonParam : LatticeParameters {
     Parameter<floatT> wilson_start;
     Parameter<floatT> wilson_stop;
     Parameter<int,1> use_wilson;
+    Parameter<int,1> source_type;
 
 
     wilsonParam() {
@@ -48,6 +49,7 @@ struct wilsonParam : LatticeParameters {
         addDefault (wilson_step,"wilson_step",0.0);
         addDefault (wilson_start,"wilson_start",0.0);
         addDefault (wilson_stop,"wilson_stop",0.0);
+	addDefault (source_type,"source_type",0);
 
     }
 };
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]) {
 
 
 ////// wilson flow
-    if(param.use_wilson()){
+    if(param.use_wilson() == 1){
         rootLogger.info( "Start Wilson Flow"  );
 
         std::vector<PREC> flowTimes = {100000.0};
@@ -154,6 +156,28 @@ int main(int argc, char *argv[]) {
 
         rootLogger.info( "End Wilson Flow"  );
     }
+
+    if(param.use_wilson() == 2){
+        rootLogger.info( "Start Z Flow"  );
+
+        std::vector<PREC> flowTimes = {100000.0};
+        PREC start = param.wilson_start();
+        PREC stop  = param.wilson_stop();
+        PREC step_size = param.wilson_step();
+        const auto force = static_cast<Force>(static_cast<int>(1));
+        gradientFlow<PREC, HaloDepth, fixed_stepsize,force> gradFlow(gauge,step_size,start,stop,flowTimes,0.0001);
+
+        bool continueFlow =  gradFlow.continueFlow();
+        while (continueFlow) {
+            gradFlow.updateFlow();
+            continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
+        }
+
+        gauge.updateAll();
+
+        rootLogger.info( "End Z Flow"  );
+    }
+
 
 
 /// spinors after flow to save on maximum memory used
@@ -248,7 +272,12 @@ int main(int argc, char *argv[]) {
 
                         // light mass
                         _dslashinverseSC4.setMass(mass);
-                        source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+			if( param.source_type() == 0){
+                            source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+                        }
+		        else if( param.source_type() == 1){
+                             source.makeWallSource(spinor_in,pos[3]);
+			}
 
                        _dslashinverseSC4.antiperiodicBoundaries();
                        if(smearSteps1 > 0){
@@ -264,7 +293,13 @@ int main(int argc, char *argv[]) {
                     if(param.use_mass2()>0){
                         // heavier mass
                         _dslashinverseSC4.setMass(mass2);
-                        source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+                        if( param.source_type() == 0){
+                            source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
+                        }
+                        else if( param.source_type() == 1){
+                             source.makeWallSource(spinor_in,pos[3]);
+                        }
+                        //source.makePointSource(spinor_in,pos[0],pos[1],pos[2],pos[3]);
 
                        _dslashinverseSC4.antiperiodicBoundaries();
                        if(smearSteps2 > 0){

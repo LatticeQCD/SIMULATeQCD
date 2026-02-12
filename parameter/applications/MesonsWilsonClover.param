@@ -8,6 +8,8 @@
 #       format: Format of input configuration (ildg, milc, or nersc)
 #   format_out: Format of output configuration (ildg or nersc)
 #     prec_out: Precision of the output configuration, 1 for single and 2 for double
+#  source_type: 0 for point, 1 for wall
+#  use_wilson :1 wilson flow, 2 zeuthen flow, 0 turn off
 #
 Lattice       = 20 20 20 20
 Nodes         = 1 1 1 1
@@ -17,22 +19,23 @@ gauge_file    = l20t20b06498a_nersc.302500
 gauge_file_folder = ./
 format        = nersc
 endianness    = auto
-mass          = 3.5
-mass2         = 3.5
+mass          = 4.0
+mass2         = 4.0
 csw           = 0.5
 sourcePos     = 3 4 7 0
 sources       = 1 1 1 1
-smear1         = 2.0
-smearSteps1    = 50
+smear1         = 0.0
+smearSteps1    = 0
 smear2         = 2.0
 smearSteps2    = 20
 tolerance      = 1e-12
 maxiter        = 10000
 use_hyp        = 0
-use_mass2      = 1
+use_mass2      = 0
+source_type = 0
 
-use_wilson=0
-wilson_step=0.0001
+use_wilson=1
+wilson_step=0.001
 wilson_start=0.0
-wilson_stop=0.125
+wilson_stop=0.2
 

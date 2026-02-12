@@ -20,6 +20,20 @@ void Source::makePointSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> &
 
 }
 
+template<typename floatT, size_t HaloDepth>
+void Source::makeWallSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn,
+                      size_t post){
+
+    typedef GIndexer<All, HaloDepth> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+    ReadIndex<All,HaloDepth> index;
+
+    iterateFunctorNoReturn<true,BLOCKSIZE>(MakeWallSource12<floatT,HaloDepth>( spinorIn,post),index,_elems);
+
+    spinorIn.updateAll();
+
+}
+
 
 template<typename floatT, size_t HaloDepth, size_t NStacks>
 void Source::copyHalfFromAll(SpinorfieldAll<floatT, true,   HaloDepth, 12, NStacks> & spinorIn,
@@ -184,6 +198,9 @@ template void Source::conjugateSource<double,All,2>(Spinorfield<double,true,All,
 
 template void Source::makePointSource<double,2>(Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
                       size_t posx, size_t posy,size_t posz,size_t post);
+
+template void Source::makeWallSource<double,2>(Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
+                      size_t post);
 
 
 template void Source::copyHalfFromAll<double,2,12>(SpinorfieldAll<double, true, 2, 12, 12> &spinorIn,

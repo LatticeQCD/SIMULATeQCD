@@ -49,6 +49,41 @@ struct MakePointSource12{
 };
 
 
+template<class floatT, size_t HaloDepth>
+struct MakeWallSource12{
+
+    // accessor to access the spinor field
+    Vect12ArrayAcc<floatT> _spinorIn;
+
+    size_t _post;
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    MakeWallSource12(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn,
+                      size_t post)
+                : _spinorIn(spinorIn.getAccessor()),
+                  _post(post)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ void operator()(gSite site) {
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            Vect12<floatT> tmp(0.0);
+
+
+            // get global coordinates and set the source to idendity
+            sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+            if( coord[3] == _post ){
+                tmp.data[stack] = 1.0;
+            }
+            const gSiteStack writeSite = GInd::getSiteStack(site,stack);
+            _spinorIn.setElement(writeSite,tmp);
+
+        }
+    }
+};
+
 template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin>
 struct SmearSource{
 
@@ -261,6 +296,10 @@ public:
     template<typename floatT, size_t HaloDepth>
     void makePointSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn,
                       size_t posx, size_t posy,size_t posz,size_t post);
+
+    template<typename floatT, size_t HaloDepth>
+    void makeWallSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn,
+                      size_t post);
 
     template<typename floatT, size_t HaloDepth, size_t NStacks>
     void copyHalfFromAll(SpinorfieldAll<floatT, true,      HaloDepth, 12, NStacks> &spinorIn,

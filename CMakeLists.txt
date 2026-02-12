@@ -757,11 +757,11 @@ SIMULATeQCD_target_compile_definitions(maximalCenterGaugeFixingTest PRIVATE HALO
 add_to_compound_SIMULATeQCD_target(tests maximalCenterGaugeFixingTest)
 
 
-set_SIMULATeQCD_gpu_backend(src/testing/main_mesonsWilsonCloverWaveP_test.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp src/experimental/fourierNon2.cpp src/modules/gaugeFixing/gfix.cpp)
-add_SIMULATeQCD_executable(MesonsWilsonCloverWaveP_test src/testing/main_mesonsWilsonCloverWaveP_test.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp src/experimental/fourierNon2.cpp src/modules/gaugeFixing/gfix.cpp)
-set_SIMULATeQCD_property(MesonsWilsonCloverWaveP_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(MesonsWilsonCloverWaveP_test PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 WILSON_FLOW=1 FIXED_STEPSIZE=1 ${ALL_LAYOUTS})
-add_to_compound_SIMULATeQCD_target(applications MesonsWilsonCloverWaveP_test)
+#set_SIMULATeQCD_gpu_backend(src/testing/main_mesonsWilsonCloverWaveP_test.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp src/experimental/fourierNon2.cpp src/modules/gaugeFixing/gfix.cpp)
+#add_SIMULATeQCD_executable(MesonsWilsonCloverWaveP_test src/testing/main_mesonsWilsonCloverWaveP_test.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp src/experimental/fourierNon2.cpp src/modules/gaugeFixing/gfix.cpp)
+#set_SIMULATeQCD_property(MesonsWilsonCloverWaveP_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+#SIMULATeQCD_target_compile_definitions(MesonsWilsonCloverWaveP_test PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 WILSON_FLOW=1 FIXED_STEPSIZE=1 ${ALL_LAYOUTS})
+#add_to_compound_SIMULATeQCD_target(applications MesonsWilsonCloverWaveP_test)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_MesonsWilsonCloverP_test.cpp src/experimental/fourierNon2.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp)
 add_SIMULATeQCD_executable(MesonsWilsonCloverP_test src/testing/main_MesonsWilsonCloverP_test.cpp src/experimental/fourierNon2.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp)
@@ -1006,7 +1006,7 @@ add_to_compound_SIMULATeQCD_target(applications maximalCenterGaugeFixing)
 set_SIMULATeQCD_gpu_backend(src/applications/main_MesonsWilsonClover.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp)
 add_SIMULATeQCD_executable(MesonsWilsonClover src/applications/main_MesonsWilsonClover.cpp src/experimental/DWilson.cpp src/experimental/source.cpp src/spinor/spinorfield.cpp src/modules/inverter/inverter.cpp src/modules/hyp/hypSmearing.cpp)
 set_SIMULATeQCD_property(MesonsWilsonClover PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(MesonsWilsonClover PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 WILSON_FLOW=1 FIXED_STEPSIZE=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(MesonsWilsonClover PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_4=1 NSTACKS_12=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications MesonsWilsonClover)
 
 
