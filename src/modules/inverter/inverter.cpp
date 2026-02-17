@@ -660,8 +660,8 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
         // TODO
     }   else {
         for (int i = 0; i < eigenpair.spinor_count; i++) {
-            spinorEv = eigenpair.spinor_vec[i];
-            lambda = mass*mass + eigenpair.lambda_vec[i];
+            eigenpair.getEigenPair(spinorEv, lambda, i);
+            lambda = mass*mass + lambda;
 
             dot =  spinorEv.dotProductStacked(spinorIn);
             factorDouble = real<double>(dot);
@@ -710,14 +710,14 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
 
-            lambda = eigenpair.lambda_vec[index];
+            eigenpair.getEigenValue(lambda, index);
             rootLogger.info("startVectorTester: lambda         =", lambda);
         }
 
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
             
-            lambda = eigenpair.lambda_vec[index];
+            eigenpair.getEigenValue(lambda, index);
             massLambda = - mass*mass - lambda;
             rootLogger.info("startVectorTester: - (m^2+λ) =", massLambda);
         }
@@ -725,10 +725,9 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
 
-            spinorEv = eigenpair.spinor_vec[index];
+            eigenpair.getEigenPair(spinorEv, lambda, index);
+
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
-            
-            lambda = eigenpair.lambda_vec[index];
             massLambdaArray = - mass*mass - lambda;
             
             spinorMdMx.axpyThisLoopd(massLambdaArray, spinorEv, NStacks);
@@ -741,8 +740,8 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
         }
 
         for (int i = 0; i<2; i++) {
-        
-            spinorHost = eigenpair.spinor_vec[i];
+            eigenpair.getEigenSpinor(spinorEv, i);
+            spinorHost = spinorEv;
             spinorHost.updateAll();
             Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
 
@@ -808,7 +807,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
 
     
         for (int i =0; i < eigenpair.spinor_count; i++) {
-            spinorEv  = eigenpair.spinor_vec[i];
+            eigenpair.getEigenSpinor(spinorEv, i);
             dot1_vec = spinorRHSLocal.dotProductStacked(spinorEv);
             dot2_vec = spinorEv.dotProductStacked(spinorRHSLocal);
             for (size_t j = 0; j < NStacks; j++) {

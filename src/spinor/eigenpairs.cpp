@@ -52,23 +52,23 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     commBase.initIOBinary(fname, file_size, evnersc.bytes_per_site(), displacement, global, local, WRITE);
     
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor(commBase);
-    Spinorfield<floatT, false, Even, HaloDepthSpin, NStacks> spinor_even(commBase);
-    Spinorfield<floatT, false, Odd, HaloDepthSpin, NStacks> spinor_odd(commBase);
-    Spinorfield<floatT, false, All, HaloDepthSpin, NStacks> spinor_host(commBase);
-    SpinorfieldAll<floatT, false, HaloDepthSpin, NStacks> spinor_split(commBase);
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1> spinor(commBase);
+    Spinorfield<floatT, false, Even, HaloDepthSpin, 1> spinor_even(commBase);
+    Spinorfield<floatT, false, Odd, HaloDepthSpin, 1> spinor_odd(commBase);
+    Spinorfield<floatT, false, All, HaloDepthSpin, 1> spinor_host(commBase);
+    SpinorfieldAll<floatT, false, HaloDepthSpin, 1> spinor_split(commBase);
     Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
 
     for (int n = 0; n < even_len; n+=2) {
         spinor = spinor_vec[n];
         spinor_even.iterateOverBulk(
-            returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, NStacks>(spinor)
+            returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)
         );
         spinor_split.even = spinor_even;
 
         spinor = spinor_vec[n+1];
         spinor_odd.iterateOverBulk(
-            returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, NStacks>(spinor)
+            returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)
         );
         spinor_split.odd = spinor_odd;
 
@@ -147,11 +147,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     spinor_vec.clear();
 
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor(commBase);
-    Spinorfield<floatT, false, Even, HaloDepthSpin, NStacks> spinor_even(commBase);
-    Spinorfield<floatT, false, Odd, HaloDepthSpin, NStacks> spinor_odd(commBase);
-    Spinorfield<floatT, false, All, HaloDepthSpin, NStacks> spinor_host(commBase);
-    SpinorfieldAll<floatT, false, HaloDepthSpin, NStacks> spinor_split(commBase);
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1> spinor(commBase);
+    Spinorfield<floatT, false, Even, HaloDepthSpin, 1> spinor_even(commBase);
+    Spinorfield<floatT, false, Odd, HaloDepthSpin, 1> spinor_odd(commBase);
+    Spinorfield<floatT, false, All, HaloDepthSpin, 1> spinor_host(commBase);
+    SpinorfieldAll<floatT, false, HaloDepthSpin, 1> spinor_split(commBase);
     Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
 
     for (int n = 0; n < even_len; n+=2) {
@@ -173,14 +173,14 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
         spinor_even = spinor_split.even;
         spinor.iterateOverBulk(
-            returnSpinor<floatT, false, Even, HaloDepthSpin, NStacks>(spinor_even)
+            returnSpinor<floatT, false, Even, HaloDepthSpin, 1>(spinor_even)
         );
         spinor_vec.emplace_back(commBase);
         spinor_vec[n] = spinor;
 
         spinor_odd = spinor_split.odd;
         spinor.iterateOverBulk(
-            returnSpinor<floatT, false, Odd, HaloDepthSpin, NStacks>(spinor_odd)
+            returnSpinor<floatT, false, Odd, HaloDepthSpin, 1>(spinor_odd)
         );
         spinor_vec.emplace_back(commBase);
         spinor_vec[n+1] = spinor;
@@ -200,7 +200,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     CommunicationBase &commBase = this->getComm();
 
     // Allocate vectors
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
+    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1> spinor_host(commBase);
 
     // Initialize q with random Gaussian
     grnd_state<false> h_rand;
