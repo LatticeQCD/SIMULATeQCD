@@ -777,8 +777,10 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
                             gSiteStack site = GIndOdd::getSiteStack(x, y, z, t, stack);
                             tmpB = spinorAcc.getElement(site);
                         }
-                        int globalX = x + commBase.MyRank() * GInd::getLatData().lx;
-                        std::cout<<"tester:Eigenspinor " << i << " at Rank " << commBase.MyRank() << " at (" << globalX << ")(x="<< x << ")" << tmpB.getElement0() << tmpB.getElement1() << tmpB.getElement2() << std::endl;
+                        int globalX = (x + commBase.MyRank() * GInd::getLatData().lx) % GInd::getLatData().globLX;
+                        char buffer[256];
+                        sprintf(buffer, "tester:Eigenspinor %d at Rank %d(x=%2d)(%d,%2d)", i, commBase.MyRank(), x, i, globalX);
+                        std::cout << buffer << tmpB.getElement0() << tmpB.getElement1() << tmpB.getElement2() << std::endl;
                     }
                 }
             }
