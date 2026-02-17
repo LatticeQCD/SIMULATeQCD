@@ -740,43 +740,46 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
             }
         }
 
+        for (int i = 0; i<2; i++) {
         
-        spinorHost = eigenpair.spinor_vec[0];
-        spinorHost.updateAll();
-        Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
+            spinorHost = eigenpair.spinor_vec[i];
+            spinorHost.updateAll();
+            Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
 
-        typedef GIndexer<All, HaloDepthSpin> GInd;
-        typedef GIndexer<Even, HaloDepthSpin> GIndEven;
-        typedef GIndexer<Odd, HaloDepthSpin> GIndOdd;
+            typedef GIndexer<All, HaloDepthSpin> GInd;
+            typedef GIndexer<Even, HaloDepthSpin> GIndEven;
+            typedef GIndexer<Odd, HaloDepthSpin> GIndOdd;
 
-        LatticeDimensions Halo = LatticeDimensions(HaloDepthSpin, HaloDepthSpin, HaloDepthSpin, HaloDepthSpin);
-        for (int x = -Halo[0]; x < (int) GInd::getLatData().lx + Halo[0]; x++) {
-            int y, z, t;
-            y = 0;
-            z = 0;
-            t = 0;
-            bool par = (bool) ((abs(x) + abs(y) + abs(z) + abs(t)) % 2);
-            bool even = (LatticeLayout == Even) && !par;
-            bool odd = (LatticeLayout == Odd) && par;
+            LatticeDimensions Halo = LatticeDimensions(HaloDepthSpin, HaloDepthSpin, HaloDepthSpin, HaloDepthSpin);
+            for (int x = -Halo[0]; x < (int) GInd::getLatData().lx + Halo[0]; x++) {
+                int y, z, t;
+                y = 0;
+                z = 0;
+                t = 0;
+                bool par = (bool) ((abs(x) + abs(y) + abs(z) + abs(t)) % 2);
+                bool even = (LatticeLayout == Even) && !par;
+                bool odd = (LatticeLayout == Odd) && par;
 
-            for (size_t stack = 0; stack < NStacks; stack++){
+                for (size_t stack = 0; stack < 1; stack++){
 
-                if (LatticeLayout == All || even || odd) {
-                    LatticeDimensions localCoord = LatticeDimensions(x, y, z, t);
+                    if (LatticeLayout == All || even || odd) {
+                        LatticeDimensions localCoord = LatticeDimensions(x, y, z, t);
 
-                    Vect3<floatT> tmpB;
+                        Vect3<floatT> tmpB;
 
-                    if (LatticeLayout == All) {
-                        gSiteStack site = GInd::getSiteStack(x, y, z, t, stack);
-                        tmpB = spinorAcc.getElement(site);
-                    } else if (LatticeLayout == Even) {
-                        gSiteStack site = GIndEven::getSiteStack(x, y, z, t, stack);
-                        tmpB = spinorAcc.getElement(site);
-                    } else if (LatticeLayout == Odd) {
-                        gSiteStack site = GIndOdd::getSiteStack(x, y, z, t, stack);
-                        tmpB = spinorAcc.getElement(site);
+                        if (LatticeLayout == All) {
+                            gSiteStack site = GInd::getSiteStack(x, y, z, t, stack);
+                            tmpB = spinorAcc.getElement(site);
+                        } else if (LatticeLayout == Even) {
+                            gSiteStack site = GIndEven::getSiteStack(x, y, z, t, stack);
+                            tmpB = spinorAcc.getElement(site);
+                        } else if (LatticeLayout == Odd) {
+                            gSiteStack site = GIndOdd::getSiteStack(x, y, z, t, stack);
+                            tmpB = spinorAcc.getElement(site);
+                        }
+                        int globalX = x + commBase.MyRank() * GInd::getLatData().lx;
+                        std::cout<<"tester:Eigenspinor " << i << " at Rank " << commBase.MyRank() << " at (" << globalX << ")(x="<< x << ")" << tmpB.getElement0() << tmpB.getElement1() << tmpB.getElement2() << std::endl;
                     }
-                    rootLogger.info("tester:Spinor element at first:", x, tmpB.getElement0(), tmpB.getElement1(), tmpB.getElement2());
                 }
             }
         }
