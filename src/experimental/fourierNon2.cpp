@@ -42,6 +42,36 @@ void FourierClass<floatT>::moveSpinor1212ToContainer(Spinorfield<floatT, true, A
 
 
 template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::moveSpinor3ToContainer(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
+
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    size_t elems = lx*ly*lz*lt;
+    dim3 gridDim;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    #ifdef USE_CUDA
+    copySpinorToContainerLocal3<floatT,HaloDepth><<< gridDim, blockDim>>>(redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                        (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #elif defined USE_HIP
+    hipLaunchKernelGGL((copySpinorToContainerLocal3<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #endif
+
+    gpuErr = gpuGetLastError();
+    if (gpuErr)
+            GpuError("Failed to launch kernel", gpuErr);
+
+
+}
+
+template<typename floatT>
 template<size_t HaloDepth,int dir>
 void FourierClass<floatT>::moveContainerToSpinor1212Direction(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
 
@@ -112,6 +142,79 @@ void FourierClass<floatT>::moveContainerToSpinor1212Direction(Spinorfield<floatT
 
 
 }
+
+template<typename floatT>
+template<size_t HaloDepth,int dir>
+void FourierClass<floatT>::moveContainerToSpinor3Direction(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
+
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    size_t elems = lx*ly*lz*lt;
+    dim3 gridDim;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    if (dir ==0){
+       #ifdef USE_CUDA
+       copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       mycoords[0],0,0,0);
+       #elif defined USE_HIP
+       hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       mycoords[0],0,0,0);
+       #endif
+    }
+
+    if (dir ==1){
+        #ifdef USE_CUDA
+        copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                       0,mycoords[1],0,0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                      0,mycoords[1],0,0);
+        #endif
+    }
+
+    if (dir ==2){
+        #ifdef USE_CUDA
+        copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                       0,0,mycoords[2],0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                      0,0,mycoords[2],0);
+        #endif
+    }
+
+
+    if (dir ==3){
+        #ifdef USE_CUDA
+        copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2, (int)lx,(int)ly,(int)lz,(int)ltL,
+                                                                       0,0,0,mycoords[3]);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2, (int)lx,(int)ly,(int)lz,(int)ltL,
+                                                                      0,0,0,mycoords[3]);
+        #endif
+    }
+
+
+    gpuErr = gpuGetLastError();
+    if (gpuErr)
+            GpuError("Failed to launch kernel", gpuErr);
+
+
+}
+
 
 template<typename floatT>
 template<int dir>
@@ -296,6 +399,40 @@ void FourierClass<floatT>::performFourier3DSpinor1212(Spinorfield<floatT, true, 
 
 }
 
+template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::performFourier3DSpinor3(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin){
+
+    if(lxL > LZ || lyL > LZ || lzL > LZ ){
+            throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY and LZ"));
+    }
+
+
+    redBase.adjustSize(lxL*lyL*lzL*lt);
+    redBase2.adjustSize(lxL*lyL*lzL*lt);
+
+
+    for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
+       for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
+
+          moveSpinor3ToContainer(spinor_in,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<0>(redBase,redBase2,sign);
+          moveContainerToSpinor3Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+
+          moveSpinor3ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<1>(redBase,redBase2,sign);
+          moveContainerToSpinor3Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+
+          moveSpinor3ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<2>(redBase,redBase2,sign);
+          moveContainerToSpinor3Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
+
+
+       }
+    }
+
+
+}
 
 
 template<typename floatT>
@@ -1237,6 +1374,13 @@ template void FourierClass<double>::moveContainerToSpinor1212Direction<2,1>(Spin
 template void FourierClass<double>::moveContainerToSpinor1212Direction<2,2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
 template void FourierClass<double>::moveContainerToSpinor1212Direction<2,3>(Spinorfield<double, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
 
+template void FourierClass<double>::moveSpinor3ToContainer<2>(Spinorfield<double, true, All, 2, 3, 1> & spinor_in, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,0>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,1>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,2>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,3>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+
 
 template void FourierClass<double>::performFourierTransformDirection<0>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
 template void FourierClass<double>::performFourierTransformDirection<1>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
@@ -1244,7 +1388,9 @@ template void FourierClass<double>::performFourierTransformDirection<2>(LatticeC
 template void FourierClass<double>::performFourierTransformDirection<3>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
 
 template void FourierClass<double>::performFourier3DSpinor1212<2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_in,Spinorfield<double, true, All, 2, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign,int maxColorSpin);
+template void FourierClass<double>::performFourier3DSpinor3<2>(Spinorfield<double, true, All, 2, 3, 1> & spinor_in,Spinorfield<double, true, All, 2, 3, 1> & spinor_out,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign,int maxColorSpin);
 template void FourierClass<double>::performFourier4DSpinor1212<2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_in,Spinorfield<double, true, All, 2, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign,int maxColorSpin);
+
 
 ////
 

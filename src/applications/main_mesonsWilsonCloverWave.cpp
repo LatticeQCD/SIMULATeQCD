@@ -215,6 +215,8 @@ int main(int argc, char *argv[]) {
         rootLogger.info( "Gauge fixing finished in " , ngfstep , " steps, with gftheta = " , gftheta );
 //    }
 
+///make Fourier class that handles all fourier transformations
+FourierClass<PREC> fourierClass(commBase);
 
 
 /// spinors after flow to save on maximum memory used
@@ -237,31 +239,47 @@ int main(int argc, char *argv[]) {
     LatticeContainer<false,COMPLEX(PREC)> redBaseHost(commBase);
     Spinorfield<PREC, false, All, HaloDepth, 3, 1> spinor_host(commBase);
     Spinorfield<PREC, true, All, HaloDepth, 3, 1> spinor_device(commBase);
+    Spinorfield<PREC, true, All, HaloDepth, 3, 1> spinor_device_tmp(commBase);
 
     std::string fname = param.source1_file();
-    loadWave(fname, spinor_device,spinor_host,0, 0,commBase);
-
-    fname = param.source1F_file();
     loadWave(fname, spinor_device,spinor_host,1, 0,commBase);
 
     if(nWave > 1){
        fname = param.source2_file();
-       loadWave(fname, spinor_device,spinor_host,2, 0,commBase);
-       fname = param.source2F_file();
        loadWave(fname, spinor_device,spinor_host,3, 0,commBase);
     }
     if(nWave > 2){
        fname = param.source3_file();
-       loadWave(fname, spinor_device,spinor_host,4, 0,commBase);
-       fname = param.source3F_file();
        loadWave(fname, spinor_device,spinor_host,5, 0,commBase);
     }
     if(nWave > 3){
        fname = param.source4_file();
-       loadWave(fname, spinor_device,spinor_host,6, 0,commBase);
-       fname = param.source4F_file();
        loadWave(fname, spinor_device,spinor_host,7, 0,commBase);
     }
+
+    fourierClass.performFourier3DSpinor3<HaloDepth>(spinor_device_tmp,spinor_device,redBaseDevice,redBaseHost,-1,1);
+    spinor_device = spinor_device_tmp;
+    spinor_host = spinor_device_tmp;
+    spinor_device.updateAll();
+    spinor_host.updateAll();
+
+    fname = param.source1_file();
+    loadWave(fname, spinor_device,spinor_host,0, 0,commBase);
+
+    if(nWave > 1){
+       fname = param.source2_file();
+       loadWave(fname, spinor_device,spinor_host,2, 0,commBase);
+    }
+    if(nWave > 2){
+       fname = param.source3_file();
+       loadWave(fname, spinor_device,spinor_host,4, 0,commBase);
+    }
+    if(nWave > 3){
+       fname = param.source4_file();
+       loadWave(fname, spinor_device,spinor_host,6, 0,commBase);
+    }
+
+
 
 
     //calculate plaq

@@ -158,6 +158,11 @@ int main(int argc, char *argv[]) {
     }
 
     if(param.use_wilson() == 2){
+
+	if(HaloDepth < 3 ){
+            throw std::runtime_error(stdLogger.fatal("Error in Zeuthen flow: Zeuthen flow needs halo size 3, but rest of program is currently only initialized with halosize 2, sorry for inconvinience"));
+        }
+
         rootLogger.info( "Start Z Flow"  );
 
         std::vector<PREC> flowTimes = {100000.0};

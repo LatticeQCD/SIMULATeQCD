@@ -98,6 +98,13 @@ public:
     template<size_t HaloDepth,int dir>
     void moveContainerToSpinor1212Direction(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
 
+    template<size_t HaloDepth>
+    void moveSpinor3ToContainer(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinorIn, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+    template<size_t HaloDepth,int dir>
+    void moveContainerToSpinor3Direction(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+
     template<int dir>
     void performFourierTransformDirection(LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign);
 
@@ -106,6 +113,9 @@ public:
 
     template<size_t HaloDepth>
     void performFourier4DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin);
+
+    template<size_t HaloDepth>
+    void performFourier3DSpinor3(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in,Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_out,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin);
 
 
 };
@@ -406,6 +416,32 @@ __global__ void copySpinorToContainerLocal(MemoryAccessor _redBase, Vect12ArrayA
 }
 
 template<class floatT,size_t HaloDepth>
+__global__ void copySpinorToContainerLocal3(MemoryAccessor _redBase, Vect3ArrayAcc<floatT> _SpinorIn, const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, lx*ly*lz, it, tmp);
+    divmod(tmp , lx*ly   , iz, tmp);
+    divmod(tmp ,  lx     , iy, ix);
+
+    Vect3<floatT> tmp3 = _SpinorIn.getElement(GInd::getSiteStack(GInd::getSite(ix,iy, iz, it) , spincolor2));
+    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)),tmp3.data[spincolor1]);
+
+
+}
+
+
+template<class floatT,size_t HaloDepth>
 __global__ void copyContainerToSpinor(Vect12ArrayAcc<floatT> _SpinorOut,LatticeContainerAccessor _redBase,
                                       const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt,
                                       const int xtopo,const int ytopo,const int ztopo) {
@@ -465,6 +501,37 @@ __global__ void copyContainerToSpinorXYZT(Vect12ArrayAcc<floatT> _SpinorOut,Latt
     _SpinorOut.setElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2),tmp12);
 
 }
+
+template<class floatT,size_t HaloDepth>
+__global__ void copyContainerToSpinor3_XYZT(Vect3ArrayAcc<floatT> _SpinorOut,LatticeContainerAccessor _redBase,
+                                      const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt,
+                                      const int xtopo,const int ytopo,const int ztopo, const int ttopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, GInd::getLatData().vol3, it, tmp);
+    divmod(tmp , GInd::getLatData().vol2, iz, tmp);
+    divmod(tmp , GInd::getLatData().vol1, iy, ix);
+
+    COMPLEX(floatT) val = _redBase.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
+
+    Vect3<floatT> tmp3 = _SpinorOut.getElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2));
+
+    tmp3.data[spincolor1] = val;
+    _SpinorOut.setElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2),tmp3);
+
+}
+
 
 
 template<class floatT, size_t HaloDepth,size_t NStacks>
