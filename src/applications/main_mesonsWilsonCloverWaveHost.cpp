@@ -74,13 +74,13 @@ struct wilsonParam : LatticeParameters {
 
         add(nSources   ,"nSources"  );
         add(source1_file, "source1_file");
-        add(source1F_file, "source1F_file");
-        add(source2_file, "source2_file");
-        add(source2F_file, "source2F_file");
-        add(source3_file, "source3_file");
-        add(source3F_file, "source3F_file");
-        add(source4_file, "source4_file");
-        add(source4F_file, "source4F_file");
+        addDefault(source1F_file, "source1F_file", std::string("empty"));
+        addDefault(source2_file, "source2_file", std::string("empty"));
+        addDefault(source2F_file, "source2F_file", std::string("empty"));
+        addDefault(source3_file, "source3_file", std::string("empty"));
+        addDefault(source3F_file, "source3F_file", std::string("empty"));
+        addDefault(source4_file, "source4_file", std::string("empty"));
+        addDefault(source4F_file, "source4F_file", std::string("empty"));
         
 
 
@@ -304,7 +304,7 @@ int main(int argc, char *argv[]) {
     }
 
     FourierClass<PREC> fourierClass(commBase);
-    fourierClass.performFourier3DSpinor3<HaloDepth>(spinor_device,spinor_device,redBaseDevice,redBaseHost,-1,1);
+    fourierClass.performFourier3DSpinor3<HaloDepth>(spinor_device,spinor_device,redBaseDevice,redBaseHost,1,1);
     spinor_host = spinor_device;
     spinor_device.updateAll();
     spinor_host.updateAll();
@@ -411,7 +411,7 @@ int main(int argc, char *argv[]) {
                        _dslashinverseSC4.antiperiodicBoundaries();
 
                        fourier3D(spinor_out[0][0],spinor_out[0][0],redBaseDevice,redBaseHost,commBase);
-                       //fourierClass.performFourier3DSpinor1212<HaloDepth>(spinor_out[ss][0],spinor_out[ss][0],redBaseDevice,redBaseHost,1,12);
+                       //fourierClass.performFourier3DSpinor1212<HaloDepth>(spinor_out[0][0],spinor_out[0][0],redBaseDevice,redBaseHost,1,12);
                        if(ss>0){
 			   spinor_store[ss-1][0] = spinor_out[0][0];
 		       }

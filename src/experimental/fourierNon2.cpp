@@ -419,8 +419,8 @@ void FourierClass<floatT>::performFourier3DSpinor3(Spinorfield<floatT, true, All
 
 
     for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
-       for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
-
+       //for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
+          int spincolor2 =0;
           moveSpinor3ToContainer(spinor_in,redBase,spincolor1,spincolor2);
           performFourierTransformDirection<0>(redBase,redBase2,sign);
           moveContainerToSpinor3Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
@@ -434,7 +434,7 @@ void FourierClass<floatT>::performFourier3DSpinor3(Spinorfield<floatT, true, All
           moveContainerToSpinor3Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
 
 
-       }
+      // }
     }
 
 

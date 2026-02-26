@@ -3,7 +3,7 @@
 #include "../simulateqcd.h"
 #include "fullSpinor.h"
 
-#define LZ 64
+#define LZ 96
 
 // functions definitions
 
