@@ -228,3 +228,11 @@ template void Source::copyAllFromHalf<double,2,4>(Spinorfield<double, true, All,
                              int offset);
 
 
+template void Source::copyHalfFromAll<double,2,2>(SpinorfieldAll<double, true, 2, 12, 2> &spinorIn,
+                             Spinorfield<double, true, All, 2, 12, 12     > &spinorInAll,
+                             int offset);
+template void Source::copyAllFromHalf<double,2,2>(Spinorfield<double, true, All, 2, 12, 12     > &spinorInAll,
+                             SpinorfieldAll<double, true, 2, 12, 2> &spinorIn,
+                             int offset);
+
+

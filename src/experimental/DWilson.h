@@ -839,9 +839,11 @@ struct setAntiPeriodicBoundary{
 
         SU3<floatT> tmp = (-1.0)*_SU3Accessor.getLink(GInd::getSiteMu(site,3));
 
-        size_t lt = GIndexer<All, HaloDepthGauge>::getLatData().lt;
+        size_t lt = GIndexer<All, HaloDepthGauge>::getLatData().globLT;
+        
+	sitexyzt coord = GIndexer<All, HaloDepthGauge>::getLatData().globalPos(site.coord);
 
-        if(site.coord[3] == (lt-1) ){
+        if(coord.t == (lt-1) ){
             _SU3Accessor.setLink(GInd::getSiteMu(site,3),tmp);
         }
 

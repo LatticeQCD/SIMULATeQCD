@@ -225,6 +225,8 @@ template class DWilsonInverseShurComplement<double,true,2,2,12>;
 template class DWilsonEvenOdd<double,true,Even,2,2,4>;
 template class DWilsonInverseShurComplement<double,true,2,2,4>;
 
+template class DWilsonEvenOdd<double,true,Even,2,2,2>;
+template class DWilsonInverseShurComplement<double,true,2,2,2>;
 
 
 template void dslash<double,true,All,2,2,12>(Gaugefield<double, true, 2, R18> & _gauge,

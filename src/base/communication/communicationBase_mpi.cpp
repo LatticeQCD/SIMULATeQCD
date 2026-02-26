@@ -722,6 +722,39 @@ void CommunicationBase::initIOBinary(std::string fileName, size_t filesize, size
     MPI_File_set_view(fh, displacement, basetype, fvtype, fnative, MPI_INFO_NULL);
 }
 
+/// needed for loading in wave functions that are 3D, in case that t direction is split
+void CommunicationBase::initIOBinarySub(std::string fileName, size_t filesize, size_t bytesPerSite, size_t displacement,
+        LatticeDimensions globalLattice, LatticeDimensions localLattice, IO_Mode mode, MPI_Comm commSub) {
+
+    LatticeDimensions offset = mycoords() * localLattice;
+
+    MPI_Type_contiguous(bytesPerSite, MPI_BYTE, &basetype);
+    MPI_Type_commit(&basetype);
+
+    // create and set a view
+    MPI_Type_create_subarray(3, globalLattice, localLattice, offset, MPI_ORDER_FORTRAN, basetype, &fvtype);
+    MPI_Type_commit(&fvtype);
+
+    stdLogger.debug("MPI File [", Pad0(2, MyRank()), "] ", globalLattice, " ",
+            localLattice, " ", offset);
+
+    int mpi_mode = 0;
+    if (mode == READ) mpi_mode = MPI_MODE_RDONLY;
+    if (mode == WRITE) mpi_mode = MPI_MODE_WRONLY;
+    if (mode == READWRITE) mpi_mode = MPI_MODE_RDWR;
+
+    if (MPI_File_open(commSub, const_cast<char *>(fileName.c_str()),
+                mpi_mode, MPI_INFO_NULL, &fh) != MPI_SUCCESS) {
+        throw std::runtime_error(stdLogger.fatal("Unable to read/write binary file: ", fileName));
+    }
+
+    if (mode != READ) MPI_File_set_size(fh, filesize); //truncate if file exists and is too large
+
+    char fnative[10] = "native";
+    MPI_File_set_view(fh, displacement, basetype, fvtype, fnative, MPI_INFO_NULL);
+}
+
+
 void CommunicationBase::writeBinary(void *buffer, size_t elemCount) {
 
     MPI_File_write_all(fh, buffer, elemCount, basetype, MPI_STATUS_IGNORE);

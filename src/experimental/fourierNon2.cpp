@@ -382,13 +382,19 @@ void FourierClass<floatT>::performFourier3DSpinor1212(Spinorfield<floatT, true, 
 
           moveSpinor1212ToContainer(spinor_in,redBase,spincolor1,spincolor2);
           performFourierTransformDirection<0>(redBase,redBase2,sign);
-          moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
 
-          moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+	  if( nodes[0] > 1 || nodes[1] > 1 ){
+              moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+              moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+	  }
+
           performFourierTransformDirection<1>(redBase,redBase2,sign);
-          moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
 
-          moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+	  if( nodes[1] > 1 || nodes[2] > 1 ){
+              moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+              moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+	  }
+
           performFourierTransformDirection<2>(redBase,redBase2,sign);
           moveContainerToSpinor1212Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
 
@@ -509,7 +515,7 @@ void FourierClass<floatT>::performFourier4DSpinor1212(Spinorfield<floatT, true, 
 template<class floatT, size_t HaloDepth>
 void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin){
 
-    StopWatch<true> timer;
+    //StopWatch<true> timer;
 
     MPI_Comm commX, commY, commZ;
     int remain[4];
@@ -891,6 +897,53 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
     global[3] = 1;
     local[3] = 1;
 
+    MPI_Comm commXYZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 1;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commXYZ);
+
+    commBase.initIOBinarySub(fname, 0, 2*sizeof(double), 0, global, local, READ,commXYZ);
+
+    std::vector<char> buf;
+    buf.resize(local[0]*local[1]*local[2]*2*sizeof(double));
+    commBase.readBinary(&buf[0], local[0]*local[1]*local[2]);
+    int ps = 0;
+    Vect3<floatT> tmp3;
+ //   for ( int i = 0; i < 3; i ++){
+ //       tmp3.data[i] = 0.0;
+ //   }
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        double *dataRe = (double *) &buf[ps];
+        ps += sizeof(double);
+        double *dataIm = (double *) &buf[ps];
+        ps += sizeof(double);
+        tmp3.data[col] = COMPLEX(floatT)(dataRe[0],dataIm[0]);
+        //std::cout << "data " << data[0] << std::endl;
+        spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
+    }
+
+    commBase.closeIOBinary();
+
+    spinor_device = spinor_host;
+    spinor_device.updateAll();
+}
+
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWave_old(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
+                                 Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int time, int col,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+    global[3] = 1;
+    local[3] = 1;
+
     commBase.initIOBinary(fname, 0, 2*sizeof(floatT), 0, global, local, READ);
 
     std::vector<char> buf;
@@ -921,6 +974,88 @@ void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3
 
 template<typename floatT, size_t HaloDepthSpin>
 void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    MPI_Comm commXYZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 1;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commXYZ);
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commXYZ, &myrank);
+    MPI_Comm_size(commXYZ, &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commXYZ );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commXYZ );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commXYZ, r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            Vect3<floatT> tmp3 = spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeOut));
+            tmp3.data[colOut] = COMPLEX(floatT)(real(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]),
+                                                imag(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]));
+            spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, timeOut),tmp3);
+        }
+
+    spinor_device = spinor_host;
+    delete[] buf;
+    delete[] buf2;
+
+    spinor_device.updateAll();
+
+}
+
+
+template<typename floatT, size_t HaloDepthSpin>
+void moveWave_old(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
                                  int posX, int posY, int posZ,
                                  int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase){
     typedef GIndexer<All, HaloDepthSpin> GInd;
@@ -1278,7 +1413,7 @@ void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int 
     MPI_Comm_rank(comm, &myrank);
     MPI_Comm_size(comm, &rankSize);
 
-    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*glt];
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*lt];
     
     if(std::is_same<floatT,double>::value){
         MPI_Allgather(in, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX, buf, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX,comm );

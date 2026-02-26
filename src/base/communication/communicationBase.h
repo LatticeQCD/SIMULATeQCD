@@ -341,6 +341,10 @@ public:
     void initIOBinary(std::string fileName, size_t filesize, size_t bytesPerSite, size_t displacement,
                       LatticeDimensions globalLattice, LatticeDimensions localLattice, IO_Mode mode);
 
+    /// added to allow loading of 3d object when t direction is split
+    void initIOBinarySub(std::string fileName, size_t filesize, size_t bytesPerSite, size_t displacement,
+                      LatticeDimensions globalLattice, LatticeDimensions localLattice, IO_Mode mode,MPI_Comm commSub);
+
     void writeBinary(void *buffer, size_t elemCount);
 
     void readBinary(void *buffer, size_t elemCount);
