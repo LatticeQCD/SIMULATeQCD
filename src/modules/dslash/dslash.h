@@ -203,7 +203,7 @@ public:
         Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> spinorStart(spinorOut.even.getComm());
 
         cg.template startVector<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, spinorStart, spinorOut.even, eigenpair);
-        // cg.template checkEigenValueEquation<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, eigenpair);
+        cg.template checkEigenValueEquation<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, eigenpair);
         cg.template performSpinorDiagnostic<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(eigenpair);
         cg.template startVectorTester<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, spinorStart, spinorOut.even, eigenpair);
     

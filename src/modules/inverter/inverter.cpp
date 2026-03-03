@@ -903,6 +903,11 @@ template void ConjugateGradient<floatT, STACKS>::invert_deflation(LinearOperator
 template void ConjugateGradient<floatT, STACKS>::startVector<true, LO, HALOGAUGE, HALOSPIN>(double, \
             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
             const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
+template void ConjugateGradient<floatT, STACKS>::checkEigenValueEquation<true, LO, HALOGAUGE, HALOSPIN>(double, \
+            LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
+            const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
+template void ConjugateGradient<floatT, STACKS>::performSpinorDiagnostic<true, LO, HALOGAUGE, HALOSPIN>( \
+            const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
 template void ConjugateGradient<floatT, STACKS>::startVectorTester<true, LO, HALOGAUGE, HALOSPIN>(double, \
             LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
             const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
