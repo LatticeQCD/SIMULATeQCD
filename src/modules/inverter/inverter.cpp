@@ -652,8 +652,9 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
     Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
 
     double lambda;
-    SimpleArray<double, NStacks> factorDouble(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    double masslambda;
+    SimpleArray<COMPLEX(floatT), NStacks> factorCompat(0.0);
+    SimpleArray<COMPLEX(double), NStacks> factorDouble(0.0);
     
 
     if constexpr (LatticeLayout == Layout::All) {
@@ -661,14 +662,18 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
     }   else {
         for (int i = 0; i < eigenpair.spinor_count; i++) {
             eigenpair.getEigenPair(spinorEv, lambda, i);
-            lambda = mass*mass + lambda;
+            spinorEv.updateAll();
 
-            dot =  spinorEv.dotProductStacked(spinorIn);
-            factorDouble = real<double>(dot);
+            masslambda = mass*mass - lambda;
 
-            factorDouble = factorDouble / lambda;
+            factorDouble =  spinorEv.dotProductStacked(spinorIn);
+            // factorDouble = real<double>(dot);
+            for (size_t j = 0; j < NStacks; j++) {
+                factorDouble[j] = factorDouble[j] / masslambda;
+                factorCompat[j] = GPUcomplex<floatT>(real(factorDouble[j]), imag(factorDouble[j]));
+            }
 
-            spinorSum.axpyThisLoopd(factorDouble, spinorEv, NStacks);
+            spinorSum.axpyThisLoopd(factorCompat, spinorEv, NStacks);
         }
         spinorStart = spinorSum;
         spinorStart.updateAll();
@@ -682,9 +687,6 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
     const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
     CommunicationBase &commBase = eigenpair.getComm();
 
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
-
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
@@ -693,61 +695,53 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
 
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
+            rootLogger.info("checkEigenValueEquation: check Eigenpair with index " ,  index);
 
             double lambda;
-            eigenpair.getEigenValue(lambda, index);
-            rootLogger.info("checkEigenValueEquation: lambda         =", lambda);
-        }
+            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
+            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorMdMx(commBase);
+            Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorZero(commBase);
 
-        for (int i = 0; i < steps; i++) {
-            int index = static_cast<int>(i * stepSize);
-            
-            double lambda;
-            eigenpair.getEigenValue(lambda, index);
-            double massLambda = - mass*mass - lambda;
 
-            rootLogger.info("checkEigenValueEquation: - (m^2+λ) =", massLambda);
-        }
-
-        for (int i = 0; i < steps; i++) {
-            int index = static_cast<int>(i * stepSize);
-
-            double lambda;
             eigenpair.getEigenPair(spinorEv, lambda, index);
+            spinorEv.updateAll();
+
+            SimpleArray<double, NStacks> massLambdaArray(mass*mass + lambda);
 
             dslash.applyMdaggM(spinorMdMx, spinorEv, true);
+            spinorZero.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+            spinorZero.axpyThisLoopd(massLambdaArray, spinorEv, NStacks);
 
-            SimpleArray<double, NStacks> massLambdaArray( - mass*mass - lambda);
+            SimpleArray<double, NStacks> norm0(0.0);
+            SimpleArray<double, NStacks> norm1(0.0);
+            SimpleArray<double, NStacks> norm2(0.0);
+            SimpleArray<COMPLEX(double), NStacks> vDDv(0.0);
+            SimpleArray<COMPLEX(double), NStacks> lambda_RQ(0.0);
+
+            norm0 = spinorMdMx.realdotProductStacked(spinorMdMx);
+            norm1 = spinorZero.realdotProductStacked(spinorZero);
+            norm2 = spinorEv.realdotProductStacked(spinorEv);
+            vDDv = spinorEv.dotProductStacked(spinorMdMx);
+
             
-            spinorMdMx.axpyThisLoopd(massLambdaArray, spinorEv, NStacks);
-
-            SimpleArray<COMPLEX(double), NStacks> dot(0.0);
-            dot = spinorMdMx.dotProductStacked(spinorMdMx);
-
             for (size_t j = 0; j < NStacks; j++) {
-                rootLogger.info("checkEigenValueEquation: massLambdaArray =",  massLambdaArray[j]);
-                rootLogger.info("checkEigenValueEquation: norm((m^2+D†D)v - (m^2+λ)v)**2 =",  dot[j]);
+                rootLogger.info("checkEigenValueEquation: Check stack ",  j);
+                lambda_RQ[j] = vDDv[j] / norm2[j];
+
+                rootLogger.info("checkEigenValueEquation: norm((m^2+D†D)v)**2 =",  norm0[j]);
+                rootLogger.info("checkEigenValueEquation: norm((m^2+λ)v)**2   =",  norm1[j]);
+                rootLogger.info("checkEigenValueEquation: lambda_RQ**2        =",  abs2(lambda_RQ[j]));
+                rootLogger.info("checkEigenValueEquation: (m^2+λ)**2          =",  massLambdaArray[j]*massLambdaArray[j]);
             }
-        }
 
-        for (int i = 0; i < steps; i++) {
-            int index = static_cast<int>(i * stepSize);
+            SimpleArray<double, NStacks> minusMassLambdaArray(-1.0 * massLambdaArray);
+            spinorMdMx.axpyThisLoopd(minusMassLambdaArray, spinorEv, NStacks);
 
-            double lambda;
-            eigenpair.getEigenPair(spinorEv, lambda, index);
-
-            dslash.applyMdaggM(spinorMdMx, spinorEv, true);
-
-            SimpleArray<double, NStacks> massLambdaArray( mass*mass + lambda);
-            
-            spinorMdMx.axpyThisLoopd(massLambdaArray, spinorEv, NStacks);
-
-            SimpleArray<COMPLEX(double), NStacks> dot(0.0);
-            dot = spinorMdMx.dotProductStacked(spinorMdMx);
+            norm0 = spinorMdMx.realdotProductStacked(spinorMdMx);
 
             for (size_t j = 0; j < NStacks; j++) {
-                rootLogger.info("checkEigenValueEquation: massLambdaArray =",  massLambdaArray[j]);
-                rootLogger.info("checkEigenValueEquation: norm((m^2+D†D)v + (m^2+λ)v)**2 =",  dot[j]);
+                rootLogger.info("checkEigenValueEquation: Check stack ",  j);
+                rootLogger.info("checkEigenValueEquation: norm((M†M)v - (m^2+λ)v)**2 =",  norm0[j]);
             }
         }
     }
@@ -756,73 +750,73 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
 template<class floatT, size_t NStacks>
 template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
 void ConjugateGradient<floatT, NStacks>::performSpinorDiagnostic(const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
-    CommunicationBase &commBase = eigenpair.getComm();
+    // CommunicationBase &commBase = eigenpair.getComm();
 
 
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
-    Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinorHost(commBase);
+    // Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
+    // Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinorHost(commBase);
 
 
-    SimpleArray<COMPLEX(double), NStacks> dot(0.0);
+    // SimpleArray<COMPLEX(double), NStacks> dot(0.0);
 
-    SimpleArray<COMPLEX(double), NStacks> dot1_vec(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot2_vec(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot3_vec(0.0);
+    // SimpleArray<COMPLEX(double), NStacks> dot1_vec(0.0);
+    // SimpleArray<COMPLEX(double), NStacks> dot2_vec(0.0);
+    // SimpleArray<COMPLEX(double), NStacks> dot3_vec(0.0);
 
 
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        int steps = 5;
-        double stepSize = static_cast<double>(eigenpair.spinor_count - 1) / (steps - 1);
+    // if constexpr (LatticeLayout == Layout::All) {
+    //     // TODO
+    // }   else {
+    //     int steps = 5;
+    //     double stepSize = static_cast<double>(eigenpair.spinor_count - 1) / (steps - 1);
 
-        for (int i = 0; i<2; i++) {
-            eigenpair.getEigenSpinor(spinorEv, i);
-            spinorHost = spinorEv;
-            spinorHost.updateAll();
-            Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
+    //     for (int i = 0; i<2; i++) {
+    //         eigenpair.getEigenSpinor(spinorEv, i);
+    //         spinorHost = spinorEv;
+    //         spinorHost.updateAll();
+    //         Vect3arrayAcc<floatT> spinorAcc = spinorHost.getAccessor();
 
-            typedef GIndexer<All, HaloDepthSpin> GInd;
-            typedef GIndexer<Even, HaloDepthSpin> GIndEven;
-            typedef GIndexer<Odd, HaloDepthSpin> GIndOdd;
-            int lobXtest = GInd::getLatData().globLX;
+    //         typedef GIndexer<All, HaloDepthSpin> GInd;
+    //         typedef GIndexer<Even, HaloDepthSpin> GIndEven;
+    //         typedef GIndexer<Odd, HaloDepthSpin> GIndOdd;
+    //         int lobXtest = GInd::getLatData().globLX;
 
-            LatticeDimensions Halo = LatticeDimensions(HaloDepthSpin, HaloDepthSpin, HaloDepthSpin, HaloDepthSpin);
-            for (int x = -Halo[0]; x < (int) GInd::getLatData().lx + Halo[0]; x++) {
-                int y, z, t;
-                y = 0;
-                z = 0;
-                t = 0;
-                bool par = (bool) ((abs(x) + abs(y) + abs(z) + abs(t)) % 2);
-                bool even = (LatticeLayout == Even) && !par;
-                bool odd = (LatticeLayout == Odd) && par;
+    //         LatticeDimensions Halo = LatticeDimensions(HaloDepthSpin, HaloDepthSpin, HaloDepthSpin, HaloDepthSpin);
+    //         for (int x = -Halo[0]; x < (int) GInd::getLatData().lx + Halo[0]; x++) {
+    //             int y, z, t;
+    //             y = 0;
+    //             z = 0;
+    //             t = 0;
+    //             bool par = (bool) ((abs(x) + abs(y) + abs(z) + abs(t)) % 2);
+    //             bool even = (LatticeLayout == Even) && !par;
+    //             bool odd = (LatticeLayout == Odd) && par;
 
-                for (size_t stack = 0; stack < 1; stack++){
+    //             for (size_t stack = 0; stack < 1; stack++){
 
-                    if (LatticeLayout == All || even || odd) {
-                        LatticeDimensions localCoord = LatticeDimensions(x, y, z, t);
+    //                 if (LatticeLayout == All || even || odd) {
+    //                     LatticeDimensions localCoord = LatticeDimensions(x, y, z, t);
 
-                        Vect3<floatT> tmpB;
+    //                     Vect3<floatT> tmpB;
 
-                        if (LatticeLayout == All) {
-                            gSiteStack site = GInd::getSiteStack(x, y, z, t, stack);
-                            tmpB = spinorAcc.getElement(site);
-                        } else if (LatticeLayout == Even) {
-                            gSiteStack site = GIndEven::getSiteStack(x, y, z, t, stack);
-                            tmpB = spinorAcc.getElement(site);
-                        } else if (LatticeLayout == Odd) {
-                            gSiteStack site = GIndOdd::getSiteStack(x, y, z, t, stack);
-                            tmpB = spinorAcc.getElement(site);
-                        }
-                        int globalX = (x + commBase.MyRank() * GInd::getLatData().lx) % GInd::getLatData().globLX;
-                        char buffer[256];
-                        sprintf(buffer, "tester:Eigenspinor %d at Rank %d(x=%2d)(%d,%2d)", i, commBase.MyRank(), x, i, globalX);
-                        std::cout << buffer << tmpB.getElement0() << tmpB.getElement1() << tmpB.getElement2() << std::endl;
-                    }
-                }
-            }
-        }
-    }
+    //                     if (LatticeLayout == All) {
+    //                         gSiteStack site = GInd::getSiteStack(x, y, z, t, stack);
+    //                         tmpB = spinorAcc.getElement(site);
+    //                     } else if (LatticeLayout == Even) {
+    //                         gSiteStack site = GIndEven::getSiteStack(x, y, z, t, stack);
+    //                         tmpB = spinorAcc.getElement(site);
+    //                     } else if (LatticeLayout == Odd) {
+    //                         gSiteStack site = GIndOdd::getSiteStack(x, y, z, t, stack);
+    //                         tmpB = spinorAcc.getElement(site);
+    //                     }
+    //                     int globalX = (x + commBase.MyRank() * GInd::getLatData().lx) % GInd::getLatData().globLX;
+    //                     char buffer[256];
+    //                     sprintf(buffer, "tester:Eigenspinor %d at Rank %d(x=%2d)(%d,%2d)", i, commBase.MyRank(), x, i, globalX);
+    //                     std::cout << buffer << tmpB.getElement0() << tmpB.getElement1() << tmpB.getElement2() << std::endl;
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 template<class floatT, size_t NStacks>
@@ -840,9 +834,11 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
 
     SimpleArray<COMPLEX(double), NStacks> dot(0.0);
 
-    SimpleArray<COMPLEX(double), NStacks> dot1_vec(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot2_vec(0.0);
-    SimpleArray<COMPLEX(double), NStacks> dot3_vec(0.0);
+    SimpleArray<COMPLEX(double), NStacks> bAx(0.0);
+    SimpleArray<COMPLEX(double), NStacks> AxAx(0.0);
+    SimpleArray<COMPLEX(double), NStacks> bx(0.0);
+    SimpleArray<COMPLEX(double), NStacks> xb(0.0);
+    SimpleArray<COMPLEX(double), NStacks> sumEV(0.0);
 
 
     if constexpr (LatticeLayout == Layout::All) {
@@ -862,26 +858,25 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
 
         dslash.applyMdaggM(spinorMdMx, spinorStartLocal, true);
 
-        dot1_vec = spinorRHSLocal.dotProductStacked(spinorMdMx);
-        for (size_t j = 0; j < NStacks; j++) {
-            rootLogger.info("startVectorTester: b*Ax             =", dot1_vec[j]);
-        }
-        dot2_vec = spinorMdMx.dotProductStacked(spinorMdMx);
-        for (size_t j = 0; j < NStacks; j++) {
-            rootLogger.info("startVectorTester: Ax*Ax            =", dot2_vec[j]);
-        }
+        bAx = spinorRHSLocal.dotProductStacked(spinorMdMx);
+        AxAx = spinorMdMx.dotProductStacked(spinorMdMx);
 
     
         for (int i =0; i < eigenpair.spinor_count; i++) {
             eigenpair.getEigenSpinor(spinorEv, i);
-            dot1_vec = spinorRHSLocal.dotProductStacked(spinorEv);
-            dot2_vec = spinorEv.dotProductStacked(spinorRHSLocal);
+            spinorEv.updateAll();
+
+            bx = spinorRHSLocal.dotProductStacked(spinorEv);
+            xb = spinorEv.dotProductStacked(spinorRHSLocal);
             for (size_t j = 0; j < NStacks; j++) {
-                dot3_vec[j] += dot1_vec[j] * dot2_vec[j];
+                sumEV[j] += bx[j] * xb[j];
             }
         }
         for (size_t j = 0; j < NStacks; j++) {
-            rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", dot3_vec[j]);
+            rootLogger.info("startVectorTester: Check stack ",  j);
+            rootLogger.info("startVectorTester: b*Ax             =", bAx[j]);
+            rootLogger.info("startVectorTester: Ax*Ax            =", AxAx[j]);
+            rootLogger.info("startVectorTester: sum(b µ_i*µ_i b) =", sumEV[j]);
         }
     }
 }

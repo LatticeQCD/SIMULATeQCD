@@ -336,9 +336,16 @@ struct SpinorPlusConstTTimesSpinord{
                                   const_T val) : spinor1(spinor1), spinor2(spinor2), val(val){}
 
     __device__ __host__ Vect3<floatT> operator()(gSiteStack& site){
+        using val_site_t = typename std::decay<decltype(val(site))>::type;
         Vect3<floatT> Stmp;
-        Stmp = spinor1.template getElement<double>(site);
-        Stmp += val(site) * spinor2.template getElement<double>(site);
+
+        if constexpr (std::is_same<val_site_t, COMPLEX(floatT)>::value) {
+            Stmp = spinor1.getElement(site);
+            Stmp += val(site) * spinor2.getElement(site);
+        } else {
+            Stmp = spinor1.template getElement<double>(site);
+            Stmp += val(site) * spinor2.template getElement<double>(site);
+        }
 
         return Stmp;
     }
@@ -767,3 +774,9 @@ template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axpyThisLoopd<64>
 template struct returnSpinor<floatT,true,LO,HALOSPIN,STACKS>;\
 
 INIT_PLHSN_HALF(SPINOR_INIT_PLHSN_HALF)
+
+#define SPINOR_INIT_PLHSN_LOOPD_COMPLEX(floatT,LO,HALOSPIN,STACKS) \
+template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axpyThisLoopd<32>(const SimpleArray<COMPLEX(floatT), STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS> &y, size_t stack_entry); \
+template void Spinorfield<floatT, true, LO, HALOSPIN, STACKS>::axpyThisLoopd<64>(const SimpleArray<COMPLEX(floatT), STACKS> &x, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS> &y, size_t stack_entry);
+
+INIT_PLHSN(SPINOR_INIT_PLHSN_LOOPD_COMPLEX)

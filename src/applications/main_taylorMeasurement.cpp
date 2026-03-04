@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
 
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
-    const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
+    const size_t NStacks = 2; // NOTE: this only works for NStacks=8 after the blocksize fix
     typedef float floatT; // Define the precision here
     typedef float PREC;
 
