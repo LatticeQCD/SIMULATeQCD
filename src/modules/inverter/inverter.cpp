@@ -693,8 +693,7 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
         // TODO
     }   else {
         int steps = 5;
-        // double stepSize = static_cast<double>(eigenpair.spinor_count - 1) / (steps - 1);
-        double stepSize = 1.0;
+        double stepSize = static_cast<double>(eigenpair.spinor_count - 1) / (steps - 1);
 
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);

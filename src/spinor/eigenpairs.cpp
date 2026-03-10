@@ -122,13 +122,13 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
-        lambda_vec.reserve(spinor_count);
+        lambda_vec.clear();
+        lambda_vec.resize(even_len);
         if (commBase.IamRoot()) {
-            lambda_vec.clear();
             for (int i = 0; i < even_len; ++i) {
                 double lambda;
                 in.read(reinterpret_cast<char*>(&lambda), sizeof(double));
-                lambda_vec.emplace_back(lambda);
+                lambda_vec[i] = lambda;
             }
         }
             
