@@ -25,9 +25,9 @@ int main(int argc, char **argv) {
 
     
     commBase.init(param.nodeDim());
-    if (commBase.getNumberProcesses() == 1) {
-        commBase.forceHalos(true);
-    }
+    // if (commBase.getNumberProcesses() == 1) {
+    //     commBase.forceHalos(true);
+    // }
 
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
