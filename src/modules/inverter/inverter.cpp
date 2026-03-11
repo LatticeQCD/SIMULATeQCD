@@ -642,49 +642,6 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
 
 template<class floatT, size_t NStacks>
 template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
-void ConjugateGradient<floatT, NStacks>::startVector(double mass, 
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart,
-    const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn, 
-    const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
-    CommunicationBase &commBase = spinorIn.getComm();
-
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorSum(commBase);
-    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
-
-    double lambda;
-    double masslambda;
-    SimpleArray<COMPLEX(floatT), NStacks> factorCompat(0.0);
-    SimpleArray<COMPLEX(double), NStacks> factorDouble(0.0);
-    
-
-    if constexpr (LatticeLayout == Layout::All) {
-        // TODO
-    }   else {
-        spinorSum.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
-        spinorSum.updateAll();
-
-        for (int i = 0; i < eigenpair.spinor_count; i++) {
-            eigenpair.getEigenPair(spinorEv, lambda, i);
-            spinorEv.updateAll();
-
-            masslambda = mass*mass + lambda;
-
-            factorDouble =  spinorEv.dotProductStacked(spinorIn);
-            for (size_t j = 0; j < NStacks; j++) {
-                factorDouble[j] = factorDouble[j] / masslambda;
-                factorCompat[j] = GPUcomplex<floatT>(real(factorDouble[j]), imag(factorDouble[j]));
-            }
-
-            spinorSum.axpyThisLoopd(factorCompat, spinorEv, NStacks);
-        }
-        spinorStart = spinorSum;
-        spinorStart.updateAll();
-    }
-}
-
-
-template<class floatT, size_t NStacks>
-template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
 void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
     const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
     CommunicationBase &commBase = eigenpair.getComm();
@@ -726,6 +683,50 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
         }
     }
 }
+
+
+template<class floatT, size_t NStacks>
+template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
+void ConjugateGradient<floatT, NStacks>::startVector(double mass, 
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorStart,
+    const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>& spinorIn, 
+    const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
+    CommunicationBase &commBase = spinorIn.getComm();
+
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorSum(commBase);
+    Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
+
+    double lambda;
+    double masslambda;
+    SimpleArray<COMPLEX(floatT), NStacks> factorCompat(0.0);
+    SimpleArray<COMPLEX(double), NStacks> factorDouble(0.0);
+    
+
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        spinorSum.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
+        spinorSum.updateAll();
+
+        for (int i = 0; i < eigenpair.spinor_count; i++) {
+            eigenpair.getEigenPair(spinorEv, lambda, i);
+            spinorEv.updateAll();
+
+            masslambda = mass*mass + lambda;
+
+            factorDouble =  spinorEv.dotProductStacked(spinorIn);
+            for (size_t j = 0; j < NStacks; j++) {
+                factorDouble[j] = factorDouble[j] / masslambda;
+                factorCompat[j] = GPUcomplex<floatT>(real(factorDouble[j]), imag(factorDouble[j]));
+            }
+
+            spinorSum.axpyThisLoopd(factorCompat, spinorEv, NStacks);
+        }
+        spinorStart = spinorSum;
+        spinorStart.updateAll();
+    }
+}
+
 
 template<class floatT, size_t NStacks>
 template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
