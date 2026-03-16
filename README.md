@@ -43,6 +43,11 @@ To build the code, you then simply
    2. If you want to change where the code outputs to, you need to update OUTPUT_DIRECTORY in [config.yml](./podman-build/config.yml). It will create a folder called build in the specified folder.
 2. Run `chmod +x ./simulate_qcd.sh && ./simulate_qcd.sh build`
 
+
+### If the above container build fails, try this one
+
+Check the [Instruction](./podman_build_fixed/README.md), follow the steps to build from a ready-to-use image or from the NVIDIA CUDA image.
+
 ### Compile Manually
 
 The following software is required to manually compile SIMULATeQCD:
