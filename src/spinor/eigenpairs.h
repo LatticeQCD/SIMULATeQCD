@@ -27,6 +27,7 @@ private:
     Eigenpairs(const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &) = delete;
     std::vector<Spinor_internal> spinor_vec;
     std::vector<LambdaType> lambda_vec;
+    int spinor_count = 0;
 
 
 public:
@@ -34,7 +35,6 @@ public:
 
     // Use pairs of doubles for lambda_vec when LatticeLayout == All, otherwise use single double
 
-    int spinor_count = 0;
 
 
     explicit Eigenpairs(CommunicationBase &comm) :
@@ -67,8 +67,8 @@ public:
         spinor_count = 0;
     }
 
-    void SpinorCount(int &countOut) const {
-        countOut = spinor_count;
+    int SpinorCount() const {
+        return spinor_count;
     }
 
     void fillRandom(const int &num_vec_in);

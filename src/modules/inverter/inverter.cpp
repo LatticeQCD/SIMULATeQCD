@@ -650,7 +650,7 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
         // TODO
     }   else {
         int steps = 5;
-        double stepSize = static_cast<double>(eigenpair.spinor_count - 1) / (steps - 1);
+        double stepSize = static_cast<double>(eigenpair.SpinorCount() - 1) / (steps - 1);
 
         for (int i = 0; i < steps; i++) {
             int index = static_cast<int>(i * stepSize);
@@ -708,7 +708,7 @@ void ConjugateGradient<floatT, NStacks>::startVector(double mass,
         spinorSum.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
         spinorSum.updateAll();
 
-        for (int i = 0; i < eigenpair.spinor_count; i++) {
+        for (int i = 0; i < eigenpair.SpinorCount(); i++) {
             eigenpair.getEigenPair(spinorEv, lambda, i);
             spinorEv.updateAll();
 
@@ -764,7 +764,7 @@ void ConjugateGradient<floatT, NStacks>::startVectorTester(double mass, LinearOp
         AxAx = spinorMdMx.dotProductStacked(spinorMdMx);
 
     
-        for (int i =0; i < eigenpair.spinor_count; i++) {
+        for (int i =0; i < eigenpair.SpinorCount(); i++) {
             Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks> spinorEv(commBase);
             eigenpair.getEigenSpinor(spinorEv, i);
             spinorEv.updateAll();

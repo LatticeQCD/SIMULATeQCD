@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
     const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
-    const int numVec = 4;
+    const int numVec = 10;
     typedef float floatT; // Define the precision here
 
     initIndexer(HaloDepthGauge, param, commBase);
@@ -34,28 +34,31 @@ int main(int argc, char *argv[]){
     eigenpairsRead.readEigenpairsSequential("testEigenpairsFile");
     eigenpairsRead.updateAll();
 
-    floatT lambdaDiff;
+    double lambdaWrite;
+    double lambdaRead;
+    double lambdaDiff;
+    Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorWrite(commBase);
+    Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorRead(commBase);
     Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorDiff(commBase);
 
-    for (int idx = 0; idx < numVec; idx++) {
-        rootLogger.info("pair ", idx+1);
+    int steps = 5;
+    double stepSize = static_cast<double>(eigenpairsRead.SpinorCount() - 1) / (steps - 1);
 
-        spinorDiff = eigenpairsWrite.spinor_vec[idx];
-        rootLogger.info("spinorWrite=", spinorDiff.realdotProduct(spinorDiff));
+    for (int idx = 0; idx < steps; idx++) {
+        int index = static_cast<int>(idx * stepSize);
+        rootLogger.info("Check Eigenpair with index " ,  index);
 
-        spinorDiff = eigenpairsRead.spinor_vec[idx];
-        rootLogger.info("spinorRead=", spinorDiff.realdotProduct(spinorDiff));
+        eigenpairsWrite.getEigenPair(spinorWrite, lambdaWrite, idx);
+        rootLogger.info("spinorWrite=", spinorWrite.realdotProduct(spinorWrite));
+        rootLogger.info("lambdaWrite=", lambdaWrite);
 
-        spinorDiff -= eigenpairsWrite.spinor_vec[idx];
+        eigenpairsRead.getEigenPair(spinorRead, lambdaRead, idx);
+        rootLogger.info("spinorRead=", spinorRead.realdotProduct(spinorRead));
+        rootLogger.info("lambdaRead=", lambdaRead);
+
+        spinorDiff = spinorWrite - spinorRead;
+        lambdaDiff = lambdaWrite - lambdaRead;
         rootLogger.info("spinorDiff=", spinorDiff.realdotProduct(spinorDiff));
-
-        lambdaDiff = eigenpairsWrite.lambda_vec[idx];
-        rootLogger.info("lambdaWrite=", lambdaDiff);
-
-        lambdaDiff = eigenpairsRead.lambda_vec[idx];
-        rootLogger.info("lambdaRead=", lambdaDiff);
-
-        lambdaDiff -= eigenpairsWrite.lambda_vec[idx];
         rootLogger.info("lambdaDiff=", lambdaDiff);
     }
 }
