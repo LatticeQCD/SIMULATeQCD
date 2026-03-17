@@ -1123,6 +1123,138 @@ struct SumXYZ_TrMdaggerM{
 };
 
 
+template<class floatT, size_t HaloDepthSpin,int gammamu1, int gammamu2>
+struct SumXYZ_TrMdaggerGammaMGamma{
+
+    //input
+    Vect12ArrayAcc<floatT> _spinorIn;
+    int _t;
+
+    typedef GIndexer<All, HaloDepthSpin > GInd;
+    //Constructor to initialize all necessary members.
+    SumXYZ_TrMdaggerGammaMGamma(int t,const Spinorfield<floatT, true, All, HaloDepthSpin, 12, 12> &spinorIn)
+                : _t(t), _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    //__device__ __host__ Vect12<floatT> operator()(gSite site) {
+    __device__ __host__ COMPLEX(double) operator()(gSite site) {
+
+        sitexyzt coords=site.coord;
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
+
+        Vect12<floatT> tmp[12];
+        Vect12<floatT> tmp2[12];
+        for (size_t stack = 0; stack < 12; stack++) {
+            tmp[stack] = _spinorIn.getElement(GInd::getSiteStack(siteT,stack));
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            for (size_t stack2 = 0; stack2 < 12; stack2++) {
+                tmp2[stack2].data[stack] = conj(tmp[stack].data[stack2]);
+            }
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+
+            ColorVect<floatT> tmp3 = convertVect12ToColorVect(tmp2[stack]) ;
+            if(gammamu1 == 0){
+                tmp3 = GammaXMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu1 == 1){
+                tmp3 = GammaYMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu1 == 2){
+                tmp3 = GammaZMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu1 == 3){
+                tmp3 = GammaTMultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+            if(gammamu1 == 5){
+                tmp3 = Gamma5MultVec(convertVect12ToColorVect(tmp2[stack]));
+            }
+
+	    if(gammamu2 == 0){
+                tmp3 = GammaXMultVec(tmp3);
+            }
+            if(gammamu2 == 1){
+                tmp3 = GammaYMultVec(tmp3);
+            }
+            if(gammamu2 == 2){
+                tmp3 = GammaZMultVec(tmp3);
+            }
+            if(gammamu2 == 3){
+                tmp3 = GammaTMultVec(tmp3);
+            }
+            if(gammamu2 == 5){
+                tmp3 = Gamma5MultVec(tmp3);
+            }
+
+
+           tmp2[stack] = convertColorVectToVect12(tmp3);
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            for (size_t stack2 = 0; stack2 < 12; stack2++) {
+                tmp[stack2].data[stack] = conj(tmp2[stack].data[stack2]);
+            }
+        }
+
+        for (size_t stack = 0; stack < 12; stack++) {
+
+            ColorVect<floatT> tmp3 = convertVect12ToColorVect(tmp[stack]);
+            if(gammamu1 == 0){
+                tmp3 = GammaXMultVec(convertVect12ToColorVect(tmp[stack]));
+            }
+            if(gammamu1 == 1){
+                tmp3 = GammaYMultVec(convertVect12ToColorVect(tmp[stack]));
+            }
+            if(gammamu1 == 2){
+                tmp3 = GammaZMultVec(convertVect12ToColorVect(tmp[stack]));
+            }
+            if(gammamu1 == 3){
+                tmp3 = GammaTMultVec(convertVect12ToColorVect(tmp[stack]));
+            }
+            if(gammamu1 == 5){
+                tmp3 = Gamma5MultVec(convertVect12ToColorVect(tmp[stack]));
+            }
+
+            if(gammamu2 == 0){
+                tmp3 = GammaXMultVec(tmp3);
+            }
+            if(gammamu2 == 1){
+                tmp3 = GammaYMultVec(tmp3);
+            }
+            if(gammamu2 == 2){
+                tmp3 = GammaZMultVec(tmp3);
+            }
+            if(gammamu2 == 3){
+                tmp3 = GammaTMultVec(tmp3);
+            }
+            if(gammamu2 == 5){
+                tmp3 = Gamma5MultVec(tmp3);
+            }
+
+
+           tmp[stack] = convertColorVectToVect12(tmp3);
+        }
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < 12; stack++) {
+            temp  = temp + _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack)) *tmp[stack];
+        }
+
+        return temp;
+
+
+
+    }
+};
+
+
+
+
+
 // class that does the inversion
 template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class DWilsonInverseShurComplement {
@@ -1247,6 +1379,9 @@ public:
       COMPLEX(double) sumXYZ_TrMdaggerM(int t,const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorInDagger,
                                             const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
       COMPLEX(double) sumXYZ_TrM(int t, const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
+
+      template<int gammamu1,int gammamu2>
+      COMPLEX(double) sumXYZ_TrMdaggerGammaMGamma(int t,const  Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorIn);
 
       //function that takes in 12*12 source and computes correlator
       void correlator(Spinorfield<floatT, onDevice,All, HaloDepthSpin, 12, 12> &spinorOut,

@@ -187,10 +187,15 @@ int main(int argc, char *argv[]) {
 
 /// spinors after flow to save on maximum memory used
 
-    Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_out(commBase);
+    Spinorfield<PREC, true, All, HaloDepth, 12, 12> * spinor_out_tmp;
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> spinor_in(commBase);
 
+
     Spinorfield<PREC, true, All, HaloDepth, 12, 12> * spinor_out_s;
+
+    if(smearSteps1 > 0 || ( smearSteps2 > 0 && param.use_mass2()>0 ) ){
+        spinor_out_tmp = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>(commBase);
+    }
 
     if(param.use_mass2()>0){
          spinor_out_s = new Spinorfield<PREC, true, All, HaloDepth, 12, 12>(commBase);
@@ -217,7 +222,6 @@ int main(int argc, char *argv[]) {
     COMPLEX(PREC) CC_l_gig5[lt];
     COMPLEX(PREC) CC_l_g4[lt];
     COMPLEX(PREC) CC_l_gig4[lt];
-    COMPLEX(PREC) CC_l_g5g4[lt];
 
     COMPLEX(PREC) CC_s_I[lt];
     COMPLEX(PREC) CC_s_g5[lt];
@@ -225,7 +229,6 @@ int main(int argc, char *argv[]) {
     COMPLEX(PREC) CC_s_gig5[lt];
     COMPLEX(PREC) CC_s_g4[lt];
     COMPLEX(PREC) CC_s_gig4[lt];
-    COMPLEX(PREC) CC_s_g5g4[lt];
 
     COMPLEX(PREC) CC_ls_I[lt];
     COMPLEX(PREC) CC_ls_g5[lt];
@@ -233,7 +236,7 @@ int main(int argc, char *argv[]) {
     COMPLEX(PREC) CC_ls_gig5[lt];
     COMPLEX(PREC) CC_ls_g4[lt];
     COMPLEX(PREC) CC_ls_gig4[lt];
-    COMPLEX(PREC) CC_ls_g5g4[lt];
+
 
 
     //initialise results
@@ -244,7 +247,6 @@ int main(int argc, char *argv[]) {
         CC_l_gig5[t] = 0.0;
         CC_l_g4[t] = 0.0;
         CC_l_gig4[t] = 0.0;
-        CC_l_g5g4[t] = 0.0;
 
         CC_s_I[t] = 0.0;
         CC_s_g5[t] = 0.0;
@@ -252,7 +254,6 @@ int main(int argc, char *argv[]) {
         CC_s_gig5[t] = 0.0;
         CC_s_g4[t] = 0.0;
         CC_s_gig4[t] = 0.0;
-        CC_s_g5g4[t] = 0.0;
 
         CC_ls_I[t] = 0.0;
         CC_ls_g5[t] = 0.0;
@@ -260,7 +261,7 @@ int main(int argc, char *argv[]) {
         CC_ls_gig5[t] = 0.0;
         CC_ls_g4[t] = 0.0;
         CC_ls_gig4[t] = 0.0;
-        CC_ls_g5g4[t] = 0.0; 
+
     }
 
    // make class for inversion
@@ -289,16 +290,17 @@ int main(int argc, char *argv[]) {
 			}
 
                        _dslashinverseSC4.antiperiodicBoundaries();
-                       if(smearSteps1 > 0){
-                           source.smearSource(gauge,spinor_out,spinor_in,lambda1,smearSteps1);
-                       }
-                       _dslashinverseSC4.correlator(spinor_out,spinor_in,maxiter,tolerance);
-                       if(smearSteps1 > 0){
-                          source.smearSource(gauge,spinor_in,spinor_out,lambda1,smearSteps1);
-                       }
+               //        if(smearSteps1 > 0){
+               //            source.smearSource(gauge,spinor_out,spinor_in,lambda1,smearSteps1);
+               //        }
+                       _dslashinverseSC4.correlator(spinor_in,spinor_in,maxiter,tolerance);
+               //        if(smearSteps1 > 0){
+               //           source.smearSource(gauge,spinor_in,spinor_out,lambda1,smearSteps1);
+               //        }
                        _dslashinverseSC4.antiperiodicBoundaries();
 
 
+	       /*
                     if(param.use_mass2()>0){
                         // heavier mass
                         _dslashinverseSC4.setMass(mass2);
@@ -320,158 +322,164 @@ int main(int argc, char *argv[]) {
                        }
                        _dslashinverseSC4.antiperiodicBoundaries();
                     }
+             */
 
                      /////////pion
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_g5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_out);
+                       //  CC_l_g5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_in,spinor_in);
+			 CC_l_g5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<-1,-1>((t+pos[3])%(lt),spinor_in);
                      }
 
+		     
                      /////////rho
                      // tr( (g5*M^d*g5) gi M gi )
     
                      //x direction
-                     spinor_in = spinor_out;    
-                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+                     //spinor_in = spinor_out;    
+                     //source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gi[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
+                         //CC_l_gi[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
+			 CC_l_gi[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<0,5>((t+pos[3])%(lt),spinor_in);
                      }
                      //y direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gi[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
-                     }
+                         //CC_l_gi[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
+                         CC_l_gi[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<1,5>((t+pos[3])%(lt),spinor_in);
+		     }
                      //z direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gi[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
-                     }
+                         //CC_l_gi[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
+                         CC_l_gi[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<2,5>((t+pos[3])%(lt),spinor_in);
+		     }
 
                      //  scalar
                      // tr( (g5*M^d*g5) M )
-                     spinor_in = spinor_out; 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //spinor_in = spinor_out; 
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_I[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
-                     }
+                         //CC_l_I[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
+                         CC_l_I[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<-1,5>((t+pos[3])%(lt),spinor_in);
+		     }
 
                      // Axial vector
                      // tr( (g5*M^d*g5) gi g5 M gi g5 )
 
                      //x direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gig5[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
-                     }
+                         //CC_l_gig5[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
+                         CC_l_gig5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<0,-1>((t+pos[3])%(lt),spinor_in);
+		     }
                      //y direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gig5[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
-                     }
+                         //CC_l_gig5[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
+                         CC_l_gig5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<1,-1>((t+pos[3])%(lt),spinor_in);
+		     }
                      //z direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gig5[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
-                     }
+                         //CC_l_gig5[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
+                         CC_l_gig5[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<2,-1>((t+pos[3])%(lt),spinor_in);
+		     }
 
 
                      // tr( (g5*M^d*g5) g4 M g4 )
-                     spinor_in = spinor_out;
+                     //spinor_in = spinor_out;
 
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_g4[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
-                     }
+                         //CC_l_g4[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
+                         CC_l_g4[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<3,5>((t+pos[3])%(lt),spinor_in);
+		     }
                      
 
                      // tr( (g5*M^d*g5) gi g4 M gi g4 )
 
                      //x direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,0>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,0>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
-                     }
+                         //CC_l_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
+                         CC_l_gig4[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<1,2>((t+pos[3])%(lt),spinor_in);
+		     }
                      //y direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,1>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,1>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
-                     }
+                         //CC_l_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
+                         CC_l_gig4[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<2,0>((t+pos[3])%(lt),spinor_in);
+		     }
                      //z direction
-                     spinor_in = spinor_out;
-                     source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
+                     //spinor_in = spinor_out;
+                     //source.gammaMuRight<PREC,All,HaloDepth,2>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,2>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
 
-                     source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
-                     }
-
-                     // tr( (g5*M^d*g5) g5 g4 M g5 g4 )
-
-                     spinor_in = spinor_out;
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+                     //source.gammaMuRight<PREC,All,HaloDepth,5>(spinor_in);
+                     //source.gammaMu<PREC,All,HaloDepth,12,5>(spinor_in);
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_l_g5g4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
-                     }
+                         //CC_l_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),spinor_out,spinor_in);
+                         CC_l_gig4[t] +=  _dslashinverseSC4.sumXYZ_TrMdaggerGammaMGamma<0,1>((t+pos[3])%(lt),spinor_in);
+		     }
+                     
 
 
+
+                     /*
 /////////////////s quark
                      if(param.use_mass2()>0){
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
@@ -609,17 +617,6 @@ int main(int argc, char *argv[]) {
 
                      for (int t=0; t<GInd::getLatData().globLT; t++){
                          CC_s_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(GInd::getLatData().globLT),*spinor_out_s,spinor_in);
-                     }
-
-                     // tr( (g5*M^d*g5) g5 g4 M gi g4 )
-
-                     spinor_in = *spinor_out_s;
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_s_g5g4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),*spinor_out_s,spinor_in);
                      }
 
 
@@ -762,18 +759,10 @@ int main(int argc, char *argv[]) {
                          CC_ls_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
                      }
 
-                     // tr( (g5*M^d*g5) g5 g4 M g5 g4 )
-
-                     spinor_in = *spinor_out_s;
-
-                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
-                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
-
-                     for (int t=0; t<GInd::getLatData().globLT; t++){
-                         CC_ls_g5g4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
-                     }
-
                     }//end check for use of mass2
+
+
+		     */
                 }
             }
         }
@@ -783,14 +772,22 @@ int main(int argc, char *argv[]) {
 
     fileOut << "Average Plaquette " << AveragePlaq << "\n";
 
+   /*
+    fileOut << "t" << " " << "real(g5)"    << " " << "imag(g5)"    << "\n";
+
+    fileOut << "mass1" << "\n";
+    for (int t=0; t<lt; t++){
+        fileOut << t << " " << real(CC_l_g5[t])   << " " << imag(CC_l_g5[t])   << "\n";
+    }
+   */
+
 
     fileOut << "t" << " " << "real(I)"     << " " << "imag(I)"     <<
                       " " << "real(g5)"    << " " << "imag(g5)"    <<
                       " " << "real(gi)"    << " " << "imag(gi)"    <<
                       " " << "real(gi g5)" << " " << "imag(gi g5)" <<
-                      " " << "real(g4 )"   << " " << "imag(g4 )"   << 
-                      " " << "real(gi g4)" << " " << "imag(gi g4)" <<
-		      " " << "real(g5 g4)" << " " << "imag(g5 g4)" << "\n";
+                      " " << "real(g4)"    << " " << "imag(g4)"    <<
+                      " " << "real(gi g4)" << " " << "imag(gi g4)" << "\n";
 
     fileOut << "mass1" << "\n";
     for (int t=0; t<lt; t++){   
@@ -799,8 +796,7 @@ int main(int argc, char *argv[]) {
                         " " << real(CC_l_gi[t])   << " " << imag(CC_l_gi[t])   <<
                         " " << real(CC_l_gig5[t]) << " " << imag(CC_l_gig5[t]) <<
                         " " << real(CC_l_g4[t])   << " " << imag(CC_l_g4[t])   <<
-                        " " << real(CC_l_gig4[t]) << " " << imag(CC_l_gig4[t]) <<
-		        " " << real(CC_l_g5g4[t]) << " " << imag(CC_l_g5g4[t]) << "\n";
+                        " " << real(CC_l_gig4[t]) << " " << imag(CC_l_gig4[t]) << "\n";
     }
     if(param.use_mass2()>0){
     fileOut << "mass2" << "\n";
@@ -810,8 +806,7 @@ int main(int argc, char *argv[]) {
                         " " << real(CC_s_gi[t])   << " " << imag(CC_s_gi[t])   <<
                         " " << real(CC_s_gig5[t]) << " " << imag(CC_s_gig5[t]) <<
                         " " << real(CC_s_g4[t])   << " " << imag(CC_s_g4[t])   <<
-                        " " << real(CC_s_gig4[t]) << " " << imag(CC_s_gig4[t]) <<
-		        " " << real(CC_s_g5g4[t]) << " " << imag(CC_s_g5g4[t]) << "\n";
+                        " " << real(CC_s_gig4[t]) << " " << imag(CC_s_gig4[t]) << "\n";
     }
     fileOut << "mass to mass2" << "\n";
     for (int t=0; t<lt; t++){
@@ -820,8 +815,7 @@ int main(int argc, char *argv[]) {
                         " " << real(CC_ls_gi[t])   << " " << imag(CC_ls_gi[t])   <<
                         " " << real(CC_ls_gig5[t]) << " " << imag(CC_ls_gig5[t]) <<
                         " " << real(CC_ls_g4[t])   << " " << imag(CC_ls_g4[t])   <<
-                        " " << real(CC_ls_gig4[t]) << " " << imag(CC_ls_gig4[t]) <<
-		        " " << real(CC_ls_g5g4[t]) << " " << imag(CC_ls_g5g4[t]) << "\n";
+                        " " << real(CC_ls_gig4[t]) << " " << imag(CC_ls_gig4[t]) << "\n";
     }
     }
 

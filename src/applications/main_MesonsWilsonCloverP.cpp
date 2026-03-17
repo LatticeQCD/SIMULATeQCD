@@ -36,7 +36,7 @@ struct wilsonParam : LatticeParameters {
     Parameter<int,1> measure_gig5;
     Parameter<int,1> measure_g4;
     Parameter<int,1> measure_gig4;
-
+    Parameter<int,1> measure_g5g4;
 
     wilsonParam() {
         add(gauge_file, "gauge_file");
@@ -66,7 +66,7 @@ struct wilsonParam : LatticeParameters {
         add(measure_gig5,"measure_gig5");
         add(measure_g4,"measure_g4");
         add(measure_gig4,"measure_gig4");
-
+        add(measure_g5g4,"measure_g5g4");
 
     }
 };
@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
     int measure_gig5 = param.measure_gig5();
     int measure_g4 = param.measure_g4();
     int measure_gig4 = param.measure_gig4();
+    int measure_g5g4 = param.measure_g5g4();
 
     int nP = param.nP();
     int nMomentum = (2*nP+1)*(2*nP+1)*(2*nP+1);
@@ -232,6 +233,7 @@ int main(int argc, char *argv[]) {
     COMPLEX(PREC) * CC_l_gig5 = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_l_g4 = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_l_gig4 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_l_g5g4 = new COMPLEX(PREC)[lt*nMomentum];
 
     COMPLEX(PREC) * CC_s_I = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_s_g5 = new COMPLEX(PREC)[lt*nMomentum];
@@ -239,6 +241,7 @@ int main(int argc, char *argv[]) {
     COMPLEX(PREC) * CC_s_gig5 = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_s_g4 = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_s_gig4 = new COMPLEX(PREC)[lt*nMomentum];
+    COMPLEX(PREC) * CC_s_g5g4 = new COMPLEX(PREC)[lt*nMomentum];
 
     COMPLEX(PREC) * CC_ls_I = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_ls_g5 = new COMPLEX(PREC)[lt*nMomentum];
@@ -246,7 +249,7 @@ int main(int argc, char *argv[]) {
     COMPLEX(PREC) * CC_ls_gig5 = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_ls_g4 = new COMPLEX(PREC)[lt*nMomentum];
     COMPLEX(PREC) * CC_ls_gig4 = new COMPLEX(PREC)[lt*nMomentum];
-
+    COMPLEX(PREC) * CC_ls_g5g4 = new COMPLEX(PREC)[lt*nMomentum];
 
     //initialise results
     for (int t=0; t<GInd::getLatData().globLT*nMomentum; t++){
@@ -256,6 +259,7 @@ int main(int argc, char *argv[]) {
         CC_l_gig5[t] = 0.0;
         CC_l_g4[t] = 0.0;
         CC_l_gig4[t] = 0.0;
+        CC_l_g5g4[t] = 0.0;
 
         CC_s_I[t] = 0.0;
         CC_s_g5[t] = 0.0;
@@ -263,6 +267,7 @@ int main(int argc, char *argv[]) {
         CC_s_gig5[t] = 0.0;
         CC_s_g4[t] = 0.0;
         CC_s_gig4[t] = 0.0;
+        CC_s_g5g4[t] = 0.0;
 
         CC_ls_I[t] = 0.0;
         CC_ls_g5[t] = 0.0;
@@ -270,6 +275,7 @@ int main(int argc, char *argv[]) {
         CC_ls_gig5[t] = 0.0;
         CC_ls_g4[t] = 0.0;
         CC_ls_gig4[t] = 0.0;
+        CC_ls_g5g4[t] = 0.0;
 
     }
    // make class for inversion
@@ -524,6 +530,20 @@ int main(int argc, char *argv[]) {
                      //}
                      }
 
+                     // tr( (g5*M^d*g5) g5 g4 M g5 g4 )
+                     if(measure_g5g4 == 1){
+                     spinor_in = spinor_out;
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+                     tr_spinorXspinor(spinor_in,spinor_out);
+                     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
+
+                     gatherMomentumT(CC_l_g5g4,spinor_in,spinor_host12, 0 ,0,nP,pos,commBase);
+
+		     }
+
 /////////////////s quark
                      if(param.use_mass2()>0){
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
@@ -731,6 +751,20 @@ int main(int argc, char *argv[]) {
                      //}
                      }
 
+                     // tr( (g5*M^d*g5) g5 g4 M g5 g4 )
+                     if(measure_g5g4 == 1){
+                     spinor_in = *spinor_out_s;
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+                     tr_spinorXspinor(spinor_in,*spinor_out_s);
+                     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
+
+                     gatherMomentumT(CC_s_g5g4,spinor_in,spinor_host12, 0 ,0,nP,pos,commBase);
+
+		     }
+
 ///////////////  l s quarks
 
                      // tr( (g5*M^d*g5)*g5*M*g5) = tr(M^d *M)
@@ -936,6 +970,21 @@ int main(int argc, char *argv[]) {
                      //    CC_ls_gig4[t] +=_dslashinverseSC4.sumXYZ_TrMdaggerM((t+pos[3])%(lt),spinor_out,spinor_in);
                      //}
                      }
+
+		     // tr( (g5*M^d*g5) g5 g4 M g5 g4 )
+                     if(measure_g5g4 == 1){
+                     spinor_in = *spinor_out_s;
+
+                     source.gammaMuRight<PREC,All,HaloDepth,3>(spinor_in);
+                     source.gammaMu<PREC,All,HaloDepth,12,3>(spinor_in);
+
+                     tr_spinorXspinor(spinor_in,spinor_out);
+                     fourier3D(spinor_in,spinor_in,redBaseDevice,redBaseHost,commBase,1,1);
+
+                     gatherMomentumT(CC_ls_g5g4,spinor_in,spinor_host12, 0 ,0,nP,pos,commBase);
+
+		     }
+
                     }//end check for use of mass2
 		     
                 }
@@ -955,6 +1004,7 @@ int main(int argc, char *argv[]) {
     if(measure_gig5 == 1){ fileOut << " " << "real(gi g5)" << " " << "imag(gi g5)" ;}
     if(measure_g4   == 1){ fileOut << " " << "real(g4)"    << " " << "imag(g4)"    ;}
     if(measure_gig4 == 1){ fileOut << " " << "real(gi g4)" << " " << "imag(gi g4)" ;}
+    if(measure_g5g4 == 1){ fileOut << " " << "real(g5 g4)" << " " << "imag(g5 g4)" ;}
     fileOut << "\n";
 
     PREC norm = sqrt(1.0*GInd::getLatData().globLX*GInd::getLatData().globLY*GInd::getLatData().globLZ);
@@ -973,7 +1023,8 @@ int main(int argc, char *argv[]) {
             if(measure_gig5== 1){ fileOut << " " << norm*real(CC_l_gig5[t+lt*ktotal]) << " " << norm*imag(CC_l_gig5[t+lt*ktotal]) ;}
             if(measure_g4  == 1){ fileOut << " " << norm*real(CC_l_g4[t+lt*ktotal])   << " " << norm*imag(CC_l_g4[t+lt*ktotal])   ;}
             if(measure_gig4== 1){ fileOut << " " << norm*real(CC_l_gig4[t+lt*ktotal]) << " " << norm*imag(CC_l_gig4[t+lt*ktotal]) ;}
-            fileOut	<< "\n";
+            if(measure_g5g4== 1){ fileOut << " " << norm*real(CC_l_g5g4[t+lt*ktotal]) << " " << norm*imag(CC_l_g5g4[t+lt*ktotal]) ;}
+	    fileOut	<< "\n";
         }
     }}}
     
@@ -992,7 +1043,8 @@ int main(int argc, char *argv[]) {
             if(measure_gig5== 1){ fileOut << " " << norm*real(CC_s_gig5[t+lt*ktotal]) << " " << norm*imag(CC_s_gig5[t+lt*ktotal]) ;}
             if(measure_g4  == 1){ fileOut << " " << norm*real(CC_s_g4[t+lt*ktotal])   << " " << norm*imag(CC_s_g4[t+lt*ktotal])   ;}
             if(measure_gig4== 1){ fileOut << " " << norm*real(CC_s_gig4[t+lt*ktotal]) << " " << norm*imag(CC_s_gig4[t+lt*ktotal]) ;}
-            fileOut     << "\n";
+            if(measure_g5g4== 1){ fileOut << " " << norm*real(CC_s_g5g4[t+lt*ktotal]) << " " << norm*imag(CC_s_g5g4[t+lt*ktotal]) ;}
+	    fileOut     << "\n";
         }
     }}}
     fileOut << "mass to mass2" << "\n";
@@ -1009,7 +1061,8 @@ int main(int argc, char *argv[]) {
             if(measure_gig5== 1){ fileOut << " " << norm*real(CC_ls_gig5[t+lt*ktotal]) << " " << norm*imag(CC_ls_gig5[t+lt*ktotal]) ;}
             if(measure_g4  == 1){ fileOut << " " << norm*real(CC_ls_g4[t+lt*ktotal])   << " " << norm*imag(CC_ls_g4[t+lt*ktotal])   ;}
             if(measure_gig4== 1){ fileOut << " " << norm*real(CC_ls_gig4[t+lt*ktotal]) << " " << norm*imag(CC_ls_gig4[t+lt*ktotal]) ;}
-            fileOut     << "\n";
+            if(measure_g5g4== 1){ fileOut << " " << norm*real(CC_ls_g5g4[t+lt*ktotal]) << " " << norm*imag(CC_ls_g5g4[t+lt*ktotal]) ;}
+	    fileOut     << "\n";
         }
     }}}
     }
@@ -1021,6 +1074,7 @@ int main(int argc, char *argv[]) {
     delete [] CC_l_gig5;
     delete [] CC_l_g4;
     delete [] CC_l_gig4;
+    delete [] CC_l_g5g4;
 
     delete [] CC_s_I;
     delete [] CC_s_g5;
@@ -1028,6 +1082,7 @@ int main(int argc, char *argv[]) {
     delete [] CC_s_gig5;
     delete [] CC_s_g4;
     delete [] CC_s_gig4;
+    delete [] CC_s_g5g4;
 
     delete [] CC_ls_I;
     delete [] CC_ls_g5;
@@ -1035,7 +1090,7 @@ int main(int argc, char *argv[]) {
     delete [] CC_ls_gig5;
     delete [] CC_ls_g4;
     delete [] CC_ls_gig4;
-
+    delete [] CC_ls_g5g4;
 
     if(param.use_mass2()>0){
         delete spinor_out_s;

@@ -720,7 +720,6 @@ int main(int argc, char *argv[]) {
                             " " << "real(gi)"    << " " << "real(gi)"    <<
                             " " << "real(gi g5)" << " " << "real(gi g5)" <<
                             " " << "real(g4)"    << " " << "real(g4)"    <<
-                            " " << "real(g4 )"   << " " << "real(g4 )"   << 
                             " " << "real(gi g4)" << " " << "real(gi g4)" <<
 			    " " << "real(g5 g4)" << " " << "real(g5 g4)" << 
 			    " " << "real(g1 g2)" << " " << "real(g1 g2)" <<

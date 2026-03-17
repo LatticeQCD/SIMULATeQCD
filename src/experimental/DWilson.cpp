@@ -177,6 +177,27 @@ COMPLEX(double) DWilsonInverseShurComplement<floatT,onDevice,HaloDepthGauge,Halo
         return result;
 }
 
+/// val = S_in * Gamma*S_in*Gamma but only at spatial time t
+//template<int gammamu1,int gammamu2>
+template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+template<int gammamu1,int gammamu2>
+COMPLEX(double) DWilsonInverseShurComplement<floatT,onDevice,HaloDepthGauge,HaloDepthSpin,NStacks>::sumXYZ_TrMdaggerGammaMGamma<gammamu1,gammamu2>(int t,
+                                        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn){
+
+        COMPLEX(double) result = 0;
+
+        size_t elems_ = GInd::getLatData().vol3;
+
+        _redBase.adjustSize(elems_);
+
+        _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerGammaMGamma<floatT, HaloDepthSpin,gammamu1,gammamu2>(t,spinorIn));
+
+        _redBase.reduce(result, elems_);
+        return result;
+}
+
+
 template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 COMPLEX(double) DWilsonInverseShurComplement<floatT,onDevice,HaloDepthGauge,HaloDepthSpin,NStacks>::sumXYZ_TrM(int t,
         const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn){
@@ -237,6 +258,48 @@ template void dslash<double,true,All,2,2,12>(Gaugefield<double, true, 2, R18> & 
             Spinorfield<double, true,All, 2, 18, 1> & FmunuLower);
 
 
+/////contractions
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<-1,-1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<0,-1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<1,-1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<2,-1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<3,-1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<5,-1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<-1,0>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<0,0>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<1,0>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<2,0>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<3,0>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<5,0>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<-1,1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<0,1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<1,1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<2,1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<3,1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<5,1>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<-1,2>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<0,2>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<1,2>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<2,2>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<3,2>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<5,2>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<-1,3>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<0,3>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<1,3>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<2,3>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<3,3>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<5,3>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<-1,5>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<0,5>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<1,5>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<2,5>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<3,5>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+template COMPLEX(double) DWilsonInverseShurComplement<double,true,2,2,1>::sumXYZ_TrMdaggerGammaMGamma<5,5>(int t,const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
 
 
 
