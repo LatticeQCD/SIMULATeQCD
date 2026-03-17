@@ -73,7 +73,7 @@ public:
 
     void fillRandom(const int &num_vec_in);
 
-    
+    void lanczos(LinearOperator<Spinor_external> &op, const int &num_vec_in);
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };

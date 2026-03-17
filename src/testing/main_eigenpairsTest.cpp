@@ -19,14 +19,19 @@ int main(int argc, char *argv[]){
 
     initIndexer(HaloDepthGauge, param, commBase);
 
-    Gaugefield<floatT,true,HaloDepthGauge> gauge(commBase);      /// gauge field
+    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge(commBase);      /// gauge field
     rootLogger.info("Read configuration from ", param.GaugefileName());
     gauge.readconf_nersc(param.GaugefileName());
     gauge.updateAll();
 
+    Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
+    Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
+    HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    smearing.SmearAll();
+
+    HisqDSlashInverse<floatT,true,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0, 0.0);
+    
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
-    // eigenpairsWrite.lanczos(numVec);
-    // eigenpairsWrite.tester(gauge);
     eigenpairsWrite.fillRandom(numVec);
     eigenpairsWrite.writeEigenpairsToFile("testEigenpairsFile", 0, ENDIAN_AUTO);
 
