@@ -15,34 +15,34 @@ public:
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 class Eigenpairs : public SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>, 3, NStacks, LatticeLayout, HaloDepthSpin>
 {
-
-    using Spinor_external = Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>;
-    using Spinor_internal = Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, 1>;
-    using LambdaType = typename std::conditional<LatticeLayout == All, std::array<double, 2>, double>::type;
+    using Spinor_external = Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>; // Use the same template parameters as Eigenpairs for the external Spinorfield type
+    using Spinor_internal = Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, 1>; // Use single stack for internal Spinorfield type
+    using LambdaType = typename std::conditional<LatticeLayout == All, std::array<double, 2>, double>::type; // Use pairs of doubles for lambda_vec when LatticeLayout == All, otherwise use single double
 protected:
     Spinor_internal _spinor_lattice;
 
 private:
-
+    // Disable copy constructor and copy assignment operator to prevent accidental copying of Eigenpairs objects
     Eigenpairs(const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &) = delete;
+    Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> & operator=(const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &) = delete;
+
+    // Store eigenvectors and eigenvalues in separate vectors. The eigenvectors are stored as Spinor_internal objects, which use a single stack, while the eigenvalues are stored in a vector of LambdaType, which can be either double or std::array<double, 2> depending on the LatticeLayout.
     std::vector<Spinor_internal> spinor_vec;
     std::vector<LambdaType> lambda_vec;
+
+    // Store the number of eigenvectors currently stored in the spinor_vec and lambda_vec vectors. This is used to keep track of how many eigenvectors and eigenvalues have been computed and stored, and to ensure that the correct number of eigenvectors and eigenvalues are written to disk when the writeEigenpairsSequential function is called.
     int spinor_count = 0;
 
 
 public:
-    typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
-
-    // Use pairs of doubles for lambda_vec when LatticeLayout == All, otherwise use single double
-
-
+    // typedef GIndexer<LatticeLayout, HaloDepthSpin> GInd;
 
     explicit Eigenpairs(CommunicationBase &comm) :
             SiteComm<floatT, onDevice, Vect3arrayAcc<floatT>, Vect3<floatT>,3, NStacks, LatticeLayout, HaloDepthSpin>(comm),
             _spinor_lattice(comm) { }
 
-    void writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en);
-    void readEigenpairsSequential(const std::string &fname);
+    void writeEigenpairsToFile(const std::string &fname, int diskprec, Endianness en); // Write eigenpairs to file in EVNERSC format. The diskprec parameter specifies the precision to use when writing the eigenvalues and eigenvectors to disk, and can be either 32 or 64. The en parameter specifies the endianness to use when writing the eigenvalues and eigenvectors to disk, and can be either ENDIAN_LITTLE, ENDIAN_BIG, or ENDIAN_AUTO.
+    void readEigenpairsFromFile(const std::string &fname); // Read eigenpairs from file in EVNERSC format. This function reads the eigenvalues and eigenvectors from the specified file and stores them in the lambda_vec and spinor_vec vectors, respectively. The function assumes that the file is in EVNERSC format and that the eigenvalues and eigenvectors are stored in the same order as they were written by the writeEigenpairsToFile function.
 
     void getEigenPair(Spinor_external &spinorOut, LambdaType &lambdaOut, int index) const {
         for (size_t i = 0; i < NStacks; i++) {
@@ -57,8 +57,8 @@ public:
         }
     }
 
-    void getEigenValue(LambdaType &lambdaOut, int index) const {
-        lambdaOut = lambda_vec[index];
+    LambdaType getEigenValue(int index) const {
+        return lambda_vec[index];
     }
 
     void clearEigenpairs() {
@@ -72,6 +72,8 @@ public:
     }
 
     void fillRandom(const int &num_vec_in);
+
+    
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;
 };

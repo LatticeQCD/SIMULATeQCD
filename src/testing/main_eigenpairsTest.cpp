@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
     const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
-    const int numVec = 10;
+    const int numVec = 5;
     typedef float floatT; // Define the precision here
 
     initIndexer(HaloDepthGauge, param, commBase);
@@ -28,10 +28,10 @@ int main(int argc, char *argv[]){
     // eigenpairsWrite.lanczos(numVec);
     // eigenpairsWrite.tester(gauge);
     eigenpairsWrite.fillRandom(numVec);
-    eigenpairsWrite.writeEigenpairsSequential("testEigenpairsFile", 0, ENDIAN_AUTO);
+    eigenpairsWrite.writeEigenpairsToFile("testEigenpairsFile", 0, ENDIAN_AUTO);
 
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
-    eigenpairsRead.readEigenpairsSequential("testEigenpairsFile");
+    eigenpairsRead.readEigenpairsFromFile("testEigenpairsFile");
     eigenpairsRead.updateAll();
 
     double lambdaWrite;
@@ -41,12 +41,8 @@ int main(int argc, char *argv[]){
     Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorRead(commBase);
     Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorDiff(commBase);
 
-    int steps = 5;
-    double stepSize = static_cast<double>(eigenpairsRead.SpinorCount() - 1) / (steps - 1);
-
-    for (int idx = 0; idx < steps; idx++) {
-        int index = static_cast<int>(idx * stepSize);
-        rootLogger.info("Check Eigenpair with index " ,  index);
+    for (int idx = 0; idx < eigenpairsRead.SpinorCount(); idx++) {
+        rootLogger.info("Check Eigenpair with index " ,  idx);
 
         eigenpairsWrite.getEigenPair(spinorWrite, lambdaWrite, idx);
         rootLogger.info("spinorWrite=", spinorWrite.realdotProduct(spinorWrite));

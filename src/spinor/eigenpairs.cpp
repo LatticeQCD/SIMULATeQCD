@@ -8,7 +8,7 @@
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEigenpairsSequential(const std::string &fname, int diskprec, Endianness en) 
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEigenpairsToFile(const std::string &fname, int diskprec, Endianness en) 
 {    
     typedef GIndexer<All, HaloDepthSpin> GInd;
     LatticeDimensions global = GInd::getLatData().globalLattice();
@@ -27,19 +27,21 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             throw std::runtime_error(stdLogger.fatal("Could not open file ", fname));
         }
     }
+
     // Write header
     if (!evnersc.template write_header<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>(diskprec, spinor_count, en, out)) {
         rootLogger.error("Unable to write EVNERSC file: ", fname);
         return;
     }
+
     // Write Eigenvalues
     if (commBase.IamRoot()) {
         if constexpr (LatticeLayout == Layout::All) {
             // TODO
         }   else {
             // Write eigenvalues
-            for (int i = 0; i < even_len; ++i) {
-                out.write(reinterpret_cast<const char*>(&lambda_vec[i]), sizeof(double));
+            for (int i = 0; i < spinor_count; ++i) {
+                out.write(reinterpret_cast<const char*>(&lambda_vec[i]), sizeof(LambdaType));
             }
         }
 
@@ -47,7 +49,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     }
 
     size_t spinor_size = GInd::getLatData().globvol4 * evnersc.bytes_per_site();
-    size_t displacement = sizeof(double) * spinor_count + evnersc.header_size();
+    size_t displacement = sizeof(LambdaType) * spinor_count + evnersc.header_size();
     size_t file_size = spinor_size * spinor_count + displacement;
 
     commBase.initIOBinary(fname, file_size, evnersc.bytes_per_site(), displacement, global, local, WRITE);
@@ -59,14 +61,20 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     SpinorfieldAll<floatT, false, HaloDepthSpin, 1> spinor_split(commBase);
     Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
 
-    for (int n = 0; n < even_len; n+=2) {
+    for (int n = 0; n < spinor_count; n+=2) {
         spinor = spinor_vec[n];
         spinor_even.iterateOverBulk(
             returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)
         );
         spinor_split.even = spinor_even;
 
-        spinor = spinor_vec[n+1];
+        // If the number of spinors is odd, the last odd spinor will be a copy of the last even spinor. 
+        if (n+1 < even_len) {
+            spinor = spinor_vec[n+1];
+        } else {
+            spinor = spinor_vec[n]; 
+        }
+
         spinor_odd.iterateOverBulk(
             returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)
         );
@@ -93,7 +101,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readEigenpairsSequential(const std::string &fname) 
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::readEigenpairsFromFile(const std::string &fname) 
 {
     typedef GIndexer<All, HaloDepthSpin> GInd;
     LatticeDimensions global = GInd::getLatData().globalLattice();
@@ -111,6 +119,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             throw std::runtime_error(stdLogger.fatal("Could not open file ", fname));
         }
     }
+    
     // Read header
     if (!evnersc.read_header(in)) {
         throw std::runtime_error(stdLogger.fatal("Error reading header of ", fname.c_str()));
@@ -118,16 +127,17 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     spinor_count = evnersc.spinor_count();
     int even_len = spinor_count - (spinor_count % 2);
     rootLogger.info("Reading ", fname, " with ", spinor_count, " spinors");
+
     // Read Eigenvalues
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
     }   else {
         lambda_vec.clear();
-        lambda_vec.resize(even_len);
+        lambda_vec.resize(spinor_count);
         if (commBase.IamRoot()) {
-            for (int i = 0; i < even_len; ++i) {
-                double lambda;
-                in.read(reinterpret_cast<char*>(&lambda), sizeof(double));
+            for (int i = 0; i < spinor_count; ++i) {
+                LambdaType lambda;
+                in.read(reinterpret_cast<char*>(&lambda), sizeof(LambdaType));
                 lambda_vec[i] = lambda;
             }
         }
@@ -141,7 +151,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     in.close();
 
 
-    size_t displacement = sizeof(double) * spinor_count + evnersc.header_size();
+    size_t displacement = sizeof(LambdaType) * spinor_count + evnersc.header_size();
 
     commBase.initIOBinary(fname, 0, evnersc.bytes_per_site(), displacement, global, local, READ);
 
@@ -154,7 +164,7 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     SpinorfieldAll<floatT, false, HaloDepthSpin, 1> spinor_split(commBase);
     Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
 
-    for (int n = 0; n < even_len; n+=2) {
+    for (int n = 0; n < spinor_count; n+=2) {
         for (size_t t = 0; t < GInd::getLatData().lt; t++)
         for (size_t z = 0; z < GInd::getLatData().lz; z++)
         for (size_t y = 0; y < GInd::getLatData().ly; y++)
@@ -178,12 +188,15 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         spinor_vec.emplace_back(commBase);
         spinor_vec[n] = spinor;
 
-        spinor_odd = spinor_split.odd;
-        spinor.iterateOverBulk(
-            returnSpinor<floatT, false, Odd, HaloDepthSpin, 1>(spinor_odd)
-        );
-        spinor_vec.emplace_back(commBase);
-        spinor_vec[n+1] = spinor;
+        // If the number of spinors is odd, the last odd spinor will be omitted.
+        if (n+1 < even_len) {
+            spinor_odd = spinor_split.odd;
+            spinor.iterateOverBulk(
+                returnSpinor<floatT, false, Odd, HaloDepthSpin, 1>(spinor_odd)
+            );
+            spinor_vec.emplace_back(commBase);
+            spinor_vec[n+1] = spinor;
+        }
     }
     commBase.closeIOBinary();
 }
@@ -218,65 +231,6 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         }
     }
 }
-
-
-// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-// void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::tester(Gaugefield<floatT,onDevice,HaloDepthGauge,R18> &gauge) 
-// {    
-//     CommunicationBase &commBase = this->getComm();
-//     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared(commBase);
-//     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik(commBase);
-//     HisqSmearing<floatT, onDevice, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
-//     // smearing.SmearAll(floatT 0.0);
-//     // gauge.updateAll();
-//     // gauge_Naik.updateAll();
-//     // gauge_smeared.updateAll();
-
-//     HisqDSlash<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik, 0.0);
-
-
-
-
-//     if constexpr (LatticeLayout == Layout::All) {
-//         // TODO
-//     }   else {
-//         for (int i = 0; i < spinor_count; i++) {
-//             Spinor_t &spinorIn = spinor_vec[i];
-//             Spinor_t vr(commBase);
-            
-//             floatT lambda = lambda_vec[i];
-//             rootLogger.info("tester:lambda=", lambda);
-            
-//             vr = spinorIn;
-//             // spinorIn.updateAll();
-//             // vr.updateAll();
-            
-//             Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, NStacks> spinor_host(commBase);
-//             spinor_host = spinorIn;
-//             Vect3arrayAcc<floatT> spinor_accessor = spinor_host.getAccessor();
-
-//             gSite site = GInd::getSite(0,0,0,0);
-//             Vect3<floatT> vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-//             rootLogger.info("tester:Spinor element at 0,0,0,0", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-//             site = GInd::getSite(
-//                 GInd::getLatData().lx-1,
-//                 GInd::getLatData().ly-1,
-//                 GInd::getLatData().lz-1,
-//                 GInd::getLatData().lt-1
-//             );
-//             vec31 = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-//             rootLogger.info("tester:Spinor element at last:", vec31.getElement0(), vec31.getElement1(), vec31.getElement2());
-            
-//             // this->updateAll(All);
-//             dslash.applyMdaggM(vr, spinorIn, true);
-
-
-//             vr.template axpyThisB<64>(lambda, spinorIn);
-//             rootLogger.info("tester:norm(Ax-µx)**2=", vr.realdotProduct(vr));
-//         }
-//     }
-// }
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>

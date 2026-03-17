@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
     // Read the Eigenvalues and Eigenvectors
     Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
     rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
-    eigenpairs.readEigenpairsSequential(param.eigen_file());
+    eigenpairs.readEigenpairsFromFile(param.eigen_file());
     eigenpairs.updateAll();
 
     

@@ -9,16 +9,6 @@
 #include "../../spinor/eigenpairs.h"
 #include "../../base/math/simpleArray.h"
 
-// template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
-// class Eigenpairs;
-
-// /// Abstract base class for all kind of linear operators that shall enter the inversion
-// template <typename Vector>
-// class LinearOperator{
-// public:
-//     virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
-// };
-
 
 /// Class for multiple right hand side inversion. NStacks is the number of right hand sides. The objects to be inverted
 /// must have the member function vec.dotProductStacked(vec&) and must to be able to use the operator syntax.
