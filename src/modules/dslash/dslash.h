@@ -201,8 +201,8 @@ public:
         spinorOut.even = spinorIn.even * mass - spinorOut.even;
 
         Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> spinorStart(spinorOut.even.getComm());
-
-        cg.template checkEigenValueEquation<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, eigenpair);
+        
+        eigenpair.checkEigenValueEquation(dslash_oe_inv, mass, 1e-9);
         cg.template startVector<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, spinorStart, spinorOut.even, eigenpair);
         cg.template startVectorTester<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, spinorStart, spinorOut.even, eigenpair);
     
