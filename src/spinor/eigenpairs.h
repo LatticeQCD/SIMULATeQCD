@@ -71,6 +71,8 @@ public:
         return spinor_count;
     }
 
+    void checkEigenValueEquation(LinearOperator<Spinor_external> &op, double mass, double tol);
+
     void fillRandom(const int &num_vec_in);
 
     void lanczos(LinearOperator<Spinor_external> &op, const int &num_vec_in);

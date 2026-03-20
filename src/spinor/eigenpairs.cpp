@@ -203,6 +203,48 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::checkEigenValueEquation(LinearOperator<Spinor_external> &op, double mass, double tol) {
+    CommunicationBase &commBase = this->getComm();
+    
+    if constexpr (LatticeLayout == Layout::All) {
+        // TODO
+    }   else {
+        if (onDevice) {
+            for (int n = 0; n < spinor_count; n++) {
+
+                // get eigenvector and eigenvalue
+                Spinor_external spinorEv(commBase);
+                double lambda;
+                getEigenPair(spinorEv, lambda, n);
+
+                // compute m^2 + lambda for this eigenpair
+                SimpleArray<double, NStacks> minusMassLambdaArray(- mass*mass - lambda);
+
+
+                // compute M†Mv
+                Spinor_external spinorMdMx(commBase);
+                op.applyMdaggM(spinorMdMx, spinorEv, true);
+
+                // compute (M†M - (m^2+λ))v and its norm to check the eigenvalue equation
+                SimpleArray<double, NStacks> norm2(0.0);
+                spinorMdMx.axpyThisLoopd(minusMassLambdaArray, spinorEv, NStacks);
+                norm2 = spinorMdMx.realdotProductStacked(spinorMdMx);
+
+                if (commBase.IamRoot()) {
+                    if (max(norm2) > tol*tol) {
+                        rootLogger.error("Eigenpair ", n, " does not satisfy the eigenvalue equation within tolerance: ||M†Mv - (m^2+λ)v|| = ", sqrt(max(norm2)), " > ", tol);
+                    } else {
+                        rootLogger.info("Eigenpair ", n, " satisfies the eigenvalue equation within tolerance: ||M†Mv - (m^2+λ)v|| = ", sqrt(max(norm2)));
+                    }
+                }
+
+            }
+        }
+    }
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::fillRandom(const int &num_vec_in) {
     // Setup
     lambda_vec.clear();
