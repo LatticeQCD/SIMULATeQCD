@@ -33,7 +33,6 @@ int main(int argc, char *argv[]){
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     eigenpairsWrite.lanczos(dslash, numVec);
-    eigenpairsWrite.fillRandom(numVec);
     eigenpairsWrite.checkEigenValueEquation(dslash, 0.0, 1e-5);
     eigenpairsWrite.writeEigenpairsToFile("testEigenpairsFile", 0, ENDIAN_AUTO);
 

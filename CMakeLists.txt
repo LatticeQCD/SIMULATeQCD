@@ -260,6 +260,7 @@ set(SOURCE_FILES_RHMC
 set(SOURCE_FILES_TAYLORMEASUREMENT
     src/modules/dslash/dslash.cpp
     src/modules/inverter/inverter.cpp
+    src/modules/inverter/lanczos.cpp
     src/modules/hisq/hisqSmearing.cpp
     src/spinor/spinorfield.cpp
     src/spinor/eigenpairs.cpp
