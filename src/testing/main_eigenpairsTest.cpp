@@ -32,6 +32,7 @@ int main(int argc, char *argv[]){
     HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0, 0.0);
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
+    eigenpairsWrite.lanczos(dslash, numVec);
     eigenpairsWrite.fillRandom(numVec);
     eigenpairsWrite.checkEigenValueEquation(dslash, 0.0, 1e-5);
     eigenpairsWrite.writeEigenpairsToFile("testEigenpairsFile", 0, ENDIAN_AUTO);
@@ -39,28 +40,32 @@ int main(int argc, char *argv[]){
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);
     eigenpairsRead.readEigenpairsFromFile("testEigenpairsFile");
     eigenpairsRead.updateAll();
-
-    double lambdaWrite;
-    double lambdaRead;
-    double lambdaDiff;
+    
     Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorWrite(commBase);
     Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorRead(commBase);
     Spinorfield<floatT,true,Even,HaloDepthSpin,NStacks> spinorDiff(commBase);
 
     for (int idx = 0; idx < eigenpairsRead.SpinorCount(); idx++) {
-        rootLogger.info("Check Eigenpair with index " ,  idx);
-
-        eigenpairsWrite.getEigenPair(spinorWrite, lambdaWrite, idx);
-        rootLogger.info("spinorWrite=", spinorWrite.realdotProduct(spinorWrite));
-        rootLogger.info("lambdaWrite=", lambdaWrite);
-
-        eigenpairsRead.getEigenPair(spinorRead, lambdaRead, idx);
-        rootLogger.info("spinorRead=", spinorRead.realdotProduct(spinorRead));
-        rootLogger.info("lambdaRead=", lambdaRead);
+        eigenpairsWrite.getEigenSpinor(spinorWrite, idx);
+        eigenpairsRead.getEigenSpinor(spinorRead, idx);
 
         spinorDiff = spinorWrite - spinorRead;
-        lambdaDiff = lambdaWrite - lambdaRead;
-        rootLogger.info("spinorDiff=", spinorDiff.realdotProduct(spinorDiff));
-        rootLogger.info("lambdaDiff=", lambdaDiff);
+        if (spinorDiff.realdotProduct(spinorDiff) > 1e-10) {
+            rootLogger.warn("Eigenpair with index ", idx, " differs between written and read version! Norm of difference: ", spinorDiff.realdotProduct(spinorDiff));
+        } else {
+            rootLogger.info("Eigenpair with index ", idx, " matches between written and read version. Norm of difference: ", spinorDiff.realdotProduct(spinorDiff));
+        }
+    }
+
+    for (int idx = 0; idx < eigenpairsRead.SpinorCount(); idx++) {
+        double lambdaWrite = eigenpairsWrite.getEigenValue(idx);
+        double lambdaRead = eigenpairsRead.getEigenValue(idx);
+
+        double lambdaDiff = lambdaWrite - lambdaRead;
+        if (std::abs(lambdaDiff) > 1e-10) {
+            rootLogger.warn("Eigenvalue with index ", idx, " differs between written and read version! Difference: ", lambdaDiff);
+        } else {
+            rootLogger.info("Eigenvalue with index ", idx, " matches between written and read version. Difference: ", lambdaDiff);
+        }
     }
 }

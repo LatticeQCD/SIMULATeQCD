@@ -3,6 +3,7 @@
 #include "../base/math/random.h"
 #include "../modules/hisq/hisqSmearing.h"
 #include "../modules/dslash/dslash.h"
+#include "../modules/inverter/lanczos.h"
 #include <fstream>
 // #define BLOCKSIZE 64
 
@@ -271,6 +272,29 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             spinor_vec[n] = spinor_host;
             lambda_vec.emplace_back(static_cast<double>(get_rand<floatT>(h_rand.state)));
         }
+    }
+}
+
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(LinearOperator<Spinor_external> &op, const int &num_vec_in) {
+    spinor_vec.clear();
+    lambda_vec.clear();
+
+    CommunicationBase &commBase = this->getComm();
+
+    if constexpr (LatticeLayout == Layout::All) {
+        throw std::runtime_error(stdLogger.fatal("Eigenpairs::lanczos is currently implemented only for Even/Odd layout"));
+    } else {
+        TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::compute(
+            commBase,
+            op,
+            num_vec_in,
+            spinor_vec,
+            lambda_vec
+        );
+
+        spinor_count = static_cast<int>(spinor_vec.size());
     }
 }
 

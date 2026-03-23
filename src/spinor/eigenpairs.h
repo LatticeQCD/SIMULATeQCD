@@ -2,6 +2,7 @@
 
 #include "../base/latticeContainer.h"
 #include "../base/IO/evnersc.h"
+#include "../modules/inverter/lanczos.h"
 #include "spinorfield.h"
 
 /// Abstract base class for all kind of linear operators that shall enter the inversion
