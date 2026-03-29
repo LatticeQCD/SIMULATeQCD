@@ -12,14 +12,14 @@
 class EigenHeader : virtual private ParameterList {
 private:
     const CommunicationBase &comm;
-    size_t header_size;
+    size_t header_size; // The size of the header in bytes, which is determined when the header is read from or written to the file. This is used to calculate the correct displacement for reading/writing the eigenvalue and eigenvector data from/to the file, which comes after the header.
 
     Parameter<std::string> dattype;
-    Parameter<int> dim[4];
-    Parameter<int> spinor_count;
-    Parameter<std::string> floatingpoint;
+    Parameter<int> dim[4]; // The dimensions of the lattice, which are stored in the header and used to determine the size of the eigenvectors and the total file size when reading/writing the eigenpairs from/to the file.
+    Parameter<int> spinor_count; // The number of spinors (eigenvectors) stored in the file, which is stored in the header and used to determine how many eigenvectors and eigenvalues to read from/write to the file.
+    Parameter<std::string> floatingpoint; // The floating point format used for the vector data in the file, which is stored in the header and used to determine the size of the floating point type and to perform endianness conversion if necessary when reading/writing data from/to the file.
 
-
+    // This function reads the header from the input stream and stores the header parameters in the EigenHeader object. It first reads lines from the input stream until it finds the "BEGIN_HEADER" line, and then continues reading lines until it finds the "END_HEADER" line. The lines between "BEGIN_HEADER" and "END_HEADER" are stored in a string, which is then parsed to extract the header parameters. The function also keeps track of the size of the header in bytes, which is used to calculate the correct displacement for reading/writing the eigenvalue and eigenvector data from/to the file.
     bool read(std::istream &in, std::string &content) {
         std::string line;
         if (!getline(in, line)) {
@@ -43,7 +43,7 @@ private:
         header_size = in.tellg();
         return true;
     }
-
+    // This function writes the header to the output stream in the correct format for EVNERSC. It first writes the "BEGIN_HEADER" line, then writes the header parameters, and finally writes the "END_HEADER" line. The function also calculates the size of the header in bytes, which is used to calculate the correct displacement for reading/writing the eigenvalue and eigenvector data from/to the file.
     EigenHeader(const CommunicationBase &_comm) : comm(_comm) {
         header_size = 0;
 
@@ -65,7 +65,7 @@ public:
         return header_size;
     }
 
-    // called from all nodes, but only root node has already opened file
+    // This function should be called after all header parameters have been set to write the header to the file in the correct format for EVNERSC. It takes care of packing the header data into the buffer and writing it to the file, and also handles endianness conversion if necessary. After calling this function, the header will have been written to the file and the buffer will be ready for packing the eigenvalue and eigenvector data.
     bool read(std::istream &in) {
         std::string content;
         bool success = true;
@@ -85,6 +85,7 @@ public:
         return readstream(str, "NERSC", true);
     }
 
+    // This function should be called after all header parameters have been set to write the header to the file in the correct format for EVNERSC. It takes care of packing the header data into the buffer and writing it to the file, and also handles endianness conversion if necessary. After calling this function, the header will have been written to the file and the buffer will be ready for packing the eigenvalue and eigenvector data.
     bool write(std::ostream &out) {
         bool success = true;
         if (comm.IamRoot()) {
@@ -109,14 +110,13 @@ private:
 
     const CommunicationBase &comm;
     EigenHeader header;
-    typedef GIndexer<All,HaloDepth> GInd;
-    int rows;
-    size_t float_size;
-    bool switch_endian;
-    size_t coordinate_size;
-    size_t index; //position in buffer
-    static const bool sep_lines = false; // make the buffer smaller and read each xline separately
-                                         // (slow on large lattices, but needs less memory)
+    typedef GIndexer<All,HaloDepth> GInd; 
+    // int rows;
+    size_t float_size; // The size in bytes of the floating point type used for the vector data in the EVNERSC file, which is determined by the FLOATING_POINT field in the header. This is used to calculate the coordinate_size and to perform endianness conversion if necessary when reading/writing data from/to the file.
+    bool switch_endian; // Whether to switch endianness when reading/writing data, which is determined by comparing the endianness of the data on disk (as specified in the header) with the endianness of the machine running the code. If switch_endian is true, then byte swapping will be performed on the data as it is read from or written to the file to ensure that it is in the correct format for EVNERSC.
+    size_t coordinate_size; // The size in bytes of the vector data for a single site, which is 6 times the size of the floating point type (3 complex numbers per site, each with a real and imaginary part).
+    size_t index; // The current index in the buffer for reading/writing vector and scalar data. This index is used to keep track of where we are in the buffer when packing/unpacking data for EVNERSC format, and it is updated accordingly after each read/write operation.
+    // static const bool sep_lines = false; // Whether to separate spinors in the file with blank lines for readability. This is not recommended for large files as it increases the file size and can cause issues with binary I/O, but it can be useful for debugging or small test cases.
     std::vector<char> buf;
 
     template<class floatT>
@@ -167,7 +167,7 @@ public:
 
     EigenFormat(const CommunicationBase &comm)
             : comm(comm), header(comm) {
-        rows = 0;
+        // rows = 0;
         float_size = 0;
         coordinate_size = 0;
         switch_endian = false;
@@ -300,6 +300,7 @@ public:
         index = 0;
     }
 
+    // This function should be called for each vector element of the spinor to be read from the file. It takes care of unpacking the vector data from the buffer in the correct format for EVNERSC, and also handles endianness conversion if necessary. After calling this function for all vector elements of the spinor, the buffer will have been fully processed and ready for the next read.
     template<class floatT>
     Vect3<floatT> get_vector() {
         if (index + coordinate_size > buf.size()) {
@@ -311,6 +312,7 @@ public:
         return ret;
     }
 
+    // This function should be called for each vector element of the spinor to be written to the file. It takes care of packing the vector data into the buffer in the correct format for EVNERSC, and also handles endianness conversion if necessary. After calling this function for all vector elements of the spinor, the buffer will be ready to be written to the file.
     template<class floatT>
     void put_vector(Vect3<floatT> vec) {
         if (index + coordinate_size > buf.size()) {
@@ -321,6 +323,7 @@ public:
         index += coordinate_size;
     }
 
+    // This function should be called for each scalar element of the eigenvalues to be read from the file. It takes care of unpacking the scalar data from the buffer in the correct format for EVNERSC, and also handles endianness conversion if necessary. After calling this function for all scalar elements of the eigenvalues, the buffer will have been fully processed and ready for the next read.
     template<class floatT>
     floatT get_scalar() {
         if (index + sizeof(floatT) > buf.size()) {
@@ -331,6 +334,7 @@ public:
         return ret;
     }
 
+    // This function should be called for each scalar element of the eigenvalues to be written to the file. It takes care of packing the scalar data into the buffer in the correct format for EVNERSC, and also handles endianness conversion if necessary. After calling this function for all scalar elements of the eigenvalues, the buffer will be ready to be written to the file.
     template<class floatT>
     void put_scalar(floatT value) {
         if (index + sizeof(floatT) > buf.size()) {

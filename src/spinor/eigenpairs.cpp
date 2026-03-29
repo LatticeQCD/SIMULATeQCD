@@ -8,6 +8,7 @@
 // #define BLOCKSIZE 64
 
 
+// Write eigenpairs to file in EVNERSC format. The diskprec parameter specifies the precision to use when writing the eigenvalues and eigenvectors to disk, and can be either 32 or 64. The en parameter specifies the endianness to use when writing the eigenvalues and eigenvectors to disk, and can be either ENDIAN_LITTLE, ENDIAN_BIG, or ENDIAN_AUTO.
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::writeEigenpairsToFile(const std::string &fname, int diskprec, Endianness en) 
 {    
@@ -49,12 +50,12 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         out.close();
     }
 
-    size_t spinor_size = GInd::getLatData().globvol4 * evnersc.bytes_per_site();
-    size_t displacement = sizeof(LambdaType) * spinor_count + evnersc.header_size();
-    size_t file_size = spinor_size * spinor_count + displacement;
+    size_t spinor_size = GInd::getLatData().globvol4 * evnersc.bytes_per_site(); // The size in bytes of a single spinor.
+    size_t displacement = sizeof(LambdaType) * spinor_count + evnersc.header_size(); // The displacement in the file where the spinor data starts, which is after the header and the eigenvalues.
+    size_t file_size = spinor_size * spinor_count + displacement; // Total file size is the size of the header plus the size of the eigenvalues plus the size of all the spinors.
 
-    commBase.initIOBinary(fname, file_size, evnersc.bytes_per_site(), displacement, global, local, WRITE);
-    
+    commBase.initIOBinary(fname, file_size, evnersc.bytes_per_site(), displacement, global, local, WRITE); // Initialize binary I/O for writing the spinor data to the file, with the correct displacement to account for the header and eigenvalues.
+
     Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1> spinor(commBase);
     Spinorfield<floatT, false, Even, HaloDepthSpin, 1> spinor_even(commBase);
     Spinorfield<floatT, false, Odd, HaloDepthSpin, 1> spinor_odd(commBase);
@@ -64,10 +65,8 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
 
     for (int n = 0; n < spinor_count; n+=2) {
         spinor = spinor_vec[n];
-        spinor_even.iterateOverBulk(
-            returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)
-        );
-        spinor_split.even = spinor_even;
+        spinor_even.iterateOverBulk(returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)); // This will fill spinor_even with the even sites of the current spinor.
+        spinor_split.even = spinor_even; // Now spinor_split contains the even sites of the n-th eigenvector, and the odd sites are still uninitialized.
 
         // If the number of spinors is odd, the last odd spinor will be a copy of the last even spinor. 
         if (n+1 < even_len) {
@@ -76,12 +75,10 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
             spinor = spinor_vec[n]; 
         }
 
-        spinor_odd.iterateOverBulk(
-            returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)
-        );
-        spinor_split.odd = spinor_odd;
+        spinor_odd.iterateOverBulk(returnSpinor<floatT, false, LatticeLayout, HaloDepthSpin, 1>(spinor)); // This will fill spinor_odd with the odd sites of the current spinor. If n+1 < even_len, this will be the (n+1)-th eigenvector, otherwise it will be a copy of the n-th eigenvector.
+        spinor_split.odd = spinor_odd; // Now spinor_split contains the full spinor for the n-th eigenvector, and if n+1 < even_len, it contains the full spinor for the (n+1)-th eigenvector as well.
 
-        spinor_host = spinor_split;
+        spinor_host = spinor_split; // Now spinor_host contains the full spinor for the n-th eigenvector, and if n+1 < even_len, it contains the full spinor for the (n+1)-th eigenvector as well.
 
         for (size_t t = 0; t < GInd::getLatData().lt; t++)
         for (size_t z = 0; z < GInd::getLatData().lz; z++)
@@ -89,11 +86,11 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
         for (size_t x = 0; x < GInd::getLatData().lx; x++) {
             gSite site = GInd::getSite(x,y,z,t);
             Vect3<floatT> tmp = spinor_accessor.getElement(GInd::getSiteMu(site, 0));
-            evnersc.put_vector(tmp);
+            evnersc.put_vector(tmp); // This function should be called for each vector element of the spinor to be written to the file. It takes care of packing the vector data into the buffer in the correct format for EVNERSC, and also handles endianness conversion if necessary. After calling this function for all vector elements of the spinor, the buffer will be ready to be written to the file.
 
             if (evnersc.end_of_buffer()) {
-                evnersc.process_write_data();
-                commBase.writeBinary(evnersc.buf_ptr(), GInd::getLatData().vol4);
+                evnersc.process_write_data(); // This function should be called before writing to the file when the buffer is full. It processes the data in the buffer and prepares it for writing to the file.
+                commBase.writeBinary(evnersc.buf_ptr(), GInd::getLatData().vol4); // This function writes the data in the buffer to the file. It should be called after evnersc.process_write_data() when the buffer is full, and also after the loop to write any remaining data in the buffer to the file.
             }
         }
     }

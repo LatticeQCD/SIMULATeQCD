@@ -4,17 +4,13 @@
 #include "../../base/math/random.h"
 #include "../../spinor/eigenpairs.h"
 
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <stdexcept>
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::compute(
 	CommunicationBase &comm,
-	LinearOperator<SpinorExternal> &op,
+	LinearOperator<Spinor_external> &op,
 	int requestedEigenpairs,
-	std::vector<SpinorSingle> &eigenvectors,
+	std::vector<Spinor_internal> &eigenvectors,
 	std::vector<double> &eigenvalues,
 	int krylovDim,
 	double breakdownTol,
@@ -32,7 +28,7 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 
 	const int m = (krylovDim > 0) ? std::max(krylovDim, requestedEigenpairs + 2) : std::max(2 * requestedEigenpairs + 8, requestedEigenpairs + 2);
 
-	std::vector<SpinorSingle> q;
+	std::vector<Spinor_internal> q;
 	q.reserve(m);
 
 	std::vector<double> alpha(m, 0.0);
@@ -47,7 +43,7 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 
 	int usedDim = 1;
 	for (int j = 0; j < m; ++j) {
-		SpinorSingle w(comm);
+		Spinor_internal w(comm);
 		applyMdaggMSingle(comm, op, w, q[j]);
 
 		if (j > 0) {
@@ -79,12 +75,12 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::applyMdaggMSingle(
 	CommunicationBase &comm,
-	LinearOperator<SpinorExternal> &op,
-	SpinorSingle &out,
-	const SpinorSingle &in)
+	LinearOperator<Spinor_external> &op,
+	Spinor_internal &out,
+	const Spinor_internal &in)
 {
-	SpinorExternal inStacked(comm);
-	SpinorExternal outStacked(comm);
+	Spinor_external inStacked(comm);
+	Spinor_external outStacked(comm);
 
 	for (size_t stack = 0; stack < NStacks; ++stack) {
 		inStacked.copyFromStackToStack(in, stack, 0);
@@ -96,8 +92,8 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::fullReorthogonalize(
-	SpinorSingle &vec,
-	std::vector<SpinorSingle> &basis,
+	Spinor_internal &vec,
+	std::vector<Spinor_internal> &basis,
 	int nBasis)
 {
 	for (int i = 0; i < nBasis; ++i) {
@@ -108,7 +104,7 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::normalizeOrThrow(
-	SpinorSingle &vec,
+	Spinor_internal &vec,
 	const char *errorMsg)
 {
 	const double n2 = vec.realdotProduct(vec);
@@ -239,12 +235,12 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::solveProjectedSystem(
-	const std::vector<SpinorSingle> &basis,
+	const std::vector<Spinor_internal> &basis,
 	const std::vector<double> &alpha,
 	const std::vector<double> &beta,
 	int n,
 	int requestedEigenpairs,
-	std::vector<SpinorSingle> &eigenvectors,
+	std::vector<Spinor_internal> &eigenvectors,
 	std::vector<double> &eigenvalues,
 	CommunicationBase &comm)
 {
@@ -270,7 +266,7 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	eigenvalues.reserve(nKeep);
 
 	for (int ev = 0; ev < nKeep; ++ev) {
-		SpinorSingle ritz(comm);
+		Spinor_internal ritz(comm);
 		ritz = basis[0];
 		ritz *= COMPLEX(floatT)(static_cast<floatT>(0.0), static_cast<floatT>(0.0));
 
