@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 
         LatticeParameters param;
         CommunicationBase commBase(&argc, &argv, true);
-        param.readfile(commBase, "../parameter/tests/stackedSpinorTest.param", argc, argv);
+        param.readfile(commBase, "../parameter/tests/mdwfFifthDimTest.param", argc, argv);
         commBase.init(param.nodeDim());
 
         const int HaloDepth = 2;
