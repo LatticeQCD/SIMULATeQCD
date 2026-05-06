@@ -18,7 +18,7 @@ void run_func_nostacks(CommunicationBase &commBase) {
     grnd_state<onDevice> d_rand;
     initialize_rng(13333+2130, d_rand);
 
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 1> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 3, 1> spinorIn(commBase);
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
@@ -45,7 +45,7 @@ void run_func(CommunicationBase &commBase) {
     grnd_state<onDevice> d_rand;
     initialize_rng(13333+2130, d_rand);
 
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 3, NStacks> spinorIn(commBase);
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);

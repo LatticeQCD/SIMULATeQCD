@@ -1,0 +1,21 @@
+#
+# configConverter.param
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#    Gaugefile: Name of input gauge configuration
+#   endianness: Endianness of input configuration
+#       format: Format of input configuration (ildg, milc, or nersc)
+#   format_out: Format of output configuration (ildg or nersc)
+#     prec_out: Precision of the output configuration, 1 for single and 2 for double
+#
+Lattice       = 20 20 20 20
+Nodes         = 1 1 1 1
+beta          = 3.360
+Gaugefile     = ./l20t20b06498a_nersc.302500
+gauge_file    = l20t20b06498a_nersc.302500
+gauge_file_folder = ./
+format        = nersc
+endianness    = auto
+mass          = 2.0
+csw           = 1.0

@@ -62,33 +62,33 @@ __host__ bool operator==(const Vect3<floatT> &lhs, const Vect3<floatT> &rhs){
 
     floatT val_lhs, val_rhs;
 
-    val_lhs = lhs.getElement0().cREAL;
-    val_rhs = rhs.getElement0().cREAL;
+    val_lhs = lhs.getElement<0>().cREAL;
+    val_rhs = rhs.getElement<0>().cREAL;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement0().cIMAG;
-    val_rhs = rhs.getElement0().cIMAG;
+    val_lhs = lhs.getElement<0>().cIMAG;
+    val_rhs = rhs.getElement<0>().cIMAG;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement1().cREAL;
-    val_rhs = rhs.getElement1().cREAL;
+    val_lhs = lhs.getElement<1>().cREAL;
+    val_rhs = rhs.getElement<1>().cREAL;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement1().cIMAG;
-    val_rhs = rhs.getElement1().cIMAG;
+    val_lhs = lhs.getElement<1>().cIMAG;
+    val_rhs = rhs.getElement<1>().cIMAG;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement2().cREAL;
-    val_rhs = rhs.getElement2().cREAL;
+    val_lhs = lhs.getElement<2>().cREAL;
+    val_rhs = rhs.getElement<2>().cREAL;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
-    val_lhs = lhs.getElement2().cIMAG;
-    val_rhs = rhs.getElement2().cIMAG;
+    val_lhs = lhs.getElement<2>().cIMAG;
+    val_rhs = rhs.getElement<2>().cIMAG;
 
     ret = ret && cmp_rel(val_lhs, val_rhs, 1.e-4, 1e-4);
 
@@ -163,10 +163,10 @@ bool test_dslash2(CommunicationBase &commBase){
     d_rand = h_rand;
 
     rootLogger.info("Initialize spinors");
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
-    Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinorOut(commBase);
-    Spinorfield<floatT, false, LatLayout, HaloDepthSpin, NStacks> spinorOut2(commBase);
-    Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks> spinor(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks> spinorOut(commBase);
+    Spinorfield<floatT, false, LatLayout, HaloDepthSpin, 3, NStacks> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks> spinor(commBase);
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);

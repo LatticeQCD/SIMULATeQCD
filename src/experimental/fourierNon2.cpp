@@ -1,0 +1,1582 @@
+#include "fourierNon2.h"
+#include "source.h"
+
+#ifdef USE_HIP_AMD
+#define BLOCKSIZE 64
+#else
+#define BLOCKSIZE 32
+#endif
+
+
+///////////
+
+template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::moveSpinor1212ToContainer(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
+
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    size_t elems = lx*ly*lz*lt;
+    dim3 gridDim;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    #ifdef USE_CUDA
+    copySpinorToContainerLocal<floatT,HaloDepth><<< gridDim, blockDim>>>(redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                        (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #elif defined USE_HIP
+    hipLaunchKernelGGL((copySpinorToContainerLocal<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #endif
+
+    gpuErr = gpuGetLastError();
+    if (gpuErr)
+            GpuError("Failed to launch kernel", gpuErr);
+
+
+}
+
+
+template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::moveSpinor3ToContainer(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
+
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    size_t elems = lx*ly*lz*lt;
+    dim3 gridDim;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    #ifdef USE_CUDA
+    copySpinorToContainerLocal3<floatT,HaloDepth><<< gridDim, blockDim>>>(redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                        (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #elif defined USE_HIP
+    hipLaunchKernelGGL((copySpinorToContainerLocal3<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #endif
+
+    gpuErr = gpuGetLastError();
+    if (gpuErr)
+            GpuError("Failed to launch kernel", gpuErr);
+
+
+}
+
+template<typename floatT>
+template<size_t HaloDepth,int dir>
+void FourierClass<floatT>::moveContainerToSpinor1212Direction(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
+
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    size_t elems = lx*ly*lz*lt;
+    dim3 gridDim;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    if (dir ==0){
+       #ifdef USE_CUDA
+       copyContainerToSpinor<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       mycoords[0],0,0);
+       #elif defined USE_HIP
+       hipLaunchKernelGGL((copyContainerToSpinor<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       mycoords[0],0,0);
+       #endif
+    }
+
+    if (dir ==1){
+        #ifdef USE_CUDA
+        copyContainerToSpinor<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                       0,mycoords[1],0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                      0,mycoords[1],0);
+        #endif
+    }
+
+    if (dir ==2){
+        #ifdef USE_CUDA
+        copyContainerToSpinor<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                       0,0,mycoords[2]);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                      0,0,mycoords[2]);
+        #endif
+    }
+
+
+    if (dir ==3){
+        #ifdef USE_CUDA
+        copyContainerToSpinorXYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2, (int)lx,(int)ly,(int)lz,(int)ltL,
+                                                                       0,0,0,mycoords[3]);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinorXYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2, (int)lx,(int)ly,(int)lz,(int)ltL,
+                                                                      0,0,0,mycoords[3]);
+        #endif
+    }
+
+
+    gpuErr = gpuGetLastError();
+    if (gpuErr)
+            GpuError("Failed to launch kernel", gpuErr);
+
+
+}
+
+template<typename floatT>
+template<size_t HaloDepth,int dir>
+void FourierClass<floatT>::moveContainerToSpinor3Direction(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2){
+
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    size_t elems = lx*ly*lz*lt;
+    dim3 gridDim;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    if (dir ==0){
+       #ifdef USE_CUDA
+       copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       mycoords[0],0,0,0);
+       #elif defined USE_HIP
+       hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       mycoords[0],0,0,0);
+       #endif
+    }
+
+    if (dir ==1){
+        #ifdef USE_CUDA
+        copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                       0,mycoords[1],0,0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                      0,mycoords[1],0,0);
+        #endif
+    }
+
+    if (dir ==2){
+        #ifdef USE_CUDA
+        copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                       0,0,mycoords[2],0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                      0,0,mycoords[2],0);
+        #endif
+    }
+
+
+    if (dir ==3){
+        #ifdef USE_CUDA
+        copyContainerToSpinor3_XYZT<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2, (int)lx,(int)ly,(int)lz,(int)ltL,
+                                                                       0,0,0,mycoords[3]);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor3_XYZT<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2, (int)lx,(int)ly,(int)lz,(int)ltL,
+                                                                      0,0,0,mycoords[3]);
+        #endif
+    }
+
+
+    gpuErr = gpuGetLastError();
+    if (gpuErr)
+            GpuError("Failed to launch kernel", gpuErr);
+
+
+}
+
+
+template<typename floatT>
+template<int dir>
+void FourierClass<floatT>::performFourierTransformDirection(LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign){
+
+    gpuError_t gpuErr;
+
+    size_t elems;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    dim3 gridDim;
+
+   if (dir ==0){
+      elems = lx*ly*lz*lt;	   
+      if( nodes[0] > 1 ){
+
+         gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+         gatherHostXYZ<floatT,0>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commX,lxL,ly,lz);
+
+         gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*nodes[0]*elems, gpuMemcpyHostToDevice);
+
+         gpuErr = gpuGetLastError();
+           if (gpuErr)
+              GpuError("performFunctor: Failed to launch kernel", gpuErr);
+      }
+
+      // perform the fourier transformation in x direction
+      elems = ly*lz*lt;
+      gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+      #ifdef USE_CUDA
+      fourier<floatT,0><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX,sign);
+      #elif defined USE_HIP
+      hipLaunchKernelGGL((fourier<floatT,0>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX,sign);
+      #endif
+
+      gpuErr = gpuGetLastError();
+      if (gpuErr)
+          GpuError("performFunctor: Failed to launch kernel", gpuErr);
+   }
+   if (dir ==1){
+      elems = lx*ly*lz*lt;
+      if( nodes[1] > 1 ){
+
+         gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+         gatherHostXYZ<floatT,1>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commY,lx,lyL,lz);
+
+         gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*nodes[1]*elems, gpuMemcpyHostToDevice);
+
+         gpuErr = gpuGetLastError();
+            if (gpuErr)
+               GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+       }
+
+       // perform the fourier transformation in y direction
+       elems = lx*lz*lt;
+       gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+       #ifdef USE_CUDA
+       fourier<floatT,1><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY,sign);
+       #elif defined USE_HIP
+       hipLaunchKernelGGL((fourier<floatT,1>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY,sign);
+       #endif
+
+       gpuErr = gpuGetLastError();
+         if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+
+   }
+
+   if (dir ==2){
+      elems = lx*ly*lz*lt;
+      if( nodes[2] > 1 ){
+
+         gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+         gatherHostXYZ<floatT,2>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commZ,lx,ly,lzL);
+         //gatherAllHost((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commBase);
+
+         gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*nodes[2]*elems, gpuMemcpyHostToDevice);
+
+         gpuErr = gpuGetLastError();
+            if (gpuErr)
+               GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+      }
+
+      // perform the fourier transformation in z direction
+      elems = lx*ly*lt;
+      gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+      #ifdef USE_CUDA
+      fourier<floatT,2><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ,sign);
+      #elif defined USE_HIP
+      hipLaunchKernelGGL((fourier<floatT,2>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ,sign);
+      #endif
+
+      gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+
+   }
+
+   if (dir ==3){
+      elems = lx*ly*lz*lt;
+      if( nodes[3] > 1 ){
+
+         gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+         gatherHostXYZT<floatT,3>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commT,lx,ly,lz,ltL);
+
+         gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*nodes[3]*elems, gpuMemcpyHostToDevice);
+
+         gpuErr = gpuGetLastError();
+            if (gpuErr)
+               GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+      }
+
+      // perform the fourier transformation in t direction
+      elems = lx*ly*lz;
+      gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+      #ifdef USE_CUDA
+      fourier<floatT,3><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,ltL,lz,lsT,sign);
+      #elif defined USE_HIP
+      hipLaunchKernelGGL((fourier<floatT,3>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,ltL,lz,lsT,sign);
+      #endif
+
+      gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+
+
+   }
+
+
+
+}
+
+
+template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::performFourier3DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin){
+
+    if(lxL > LZ || lyL > LZ || lzL > LZ ){
+            throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY and LZ"));
+    }
+
+
+    redBase.adjustSize(lxL*lyL*lzL*lt);
+    redBase2.adjustSize(lxL*lyL*lzL*lt);
+
+
+    for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
+       for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
+
+          moveSpinor1212ToContainer(spinor_in,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<0>(redBase,redBase2,sign);
+
+	  if( nodes[0] > 1 || nodes[1] > 1 ){
+              moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+              moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+	  }
+
+          performFourierTransformDirection<1>(redBase,redBase2,sign);
+
+	  if( nodes[1] > 1 || nodes[2] > 1 ){
+              moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+              moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+	  }
+
+          performFourierTransformDirection<2>(redBase,redBase2,sign);
+          moveContainerToSpinor1212Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
+
+
+       }
+    }
+
+
+}
+
+template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::performFourier3DSpinor3(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin){
+
+    if(lxL > LZ || lyL > LZ || lzL > LZ ){
+            throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY and LZ"));
+    }
+
+
+    redBase.adjustSize(lxL*lyL*lzL*lt);
+    redBase2.adjustSize(lxL*lyL*lzL*lt);
+
+
+    for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
+       //for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
+          int spincolor2 =0;
+          moveSpinor3ToContainer(spinor_in,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<0>(redBase,redBase2,sign);
+          moveContainerToSpinor3Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+
+          moveSpinor3ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<1>(redBase,redBase2,sign);
+          moveContainerToSpinor3Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+
+          moveSpinor3ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<2>(redBase,redBase2,sign);
+          moveContainerToSpinor3Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
+
+
+      // }
+    }
+
+
+}
+
+
+template<typename floatT>
+template<size_t HaloDepth>
+void FourierClass<floatT>::performFourier4DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin){
+
+    if(lxL > LZ || lyL > LZ || lzL > LZ || ltL > LZ ){
+            throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY, LZ and LT"));
+    }
+
+    redBase.adjustSize(lxL*lyL*lzL*lt);
+    redBase2.adjustSize(lxL*lyL*lzL*lt);
+
+
+    for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
+       for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
+
+//          int spincolor1 = 0;
+//	  int spincolor2 = 0;
+
+
+//          COMPLEX(double) temp(0.0,0.0);
+//          temp = sumXYZT(spinor_in,redBase, spincolor1, spincolor2)/sqrt((floatT)(lx*ly*lz*lt));
+          //rootLogger.info( "sum before transformation" , temp );
+
+          //if(spincolor1 == 3 && spincolor2 == 1){
+          //printf("before %.16f + im* %.16f ,", temp.cREAL , temp.cIMAG );
+          //}
+	  // the printSpinors are for testing purposes, remove if you need to use a 4D fourier transform
+	  // printSpinor, prints out a row in x,y,z and t direction, such that one can check
+	  // that with another program that the 1D fourier transform was correct
+	  // works best with one GPU as it otherwise gets confusing, since each GPU writes this
+
+          if(spincolor1 == 3 && spincolor2 == 7){
+	  printSpinor(spinor_in, spincolor1, spincolor2);
+          }
+          moveSpinor1212ToContainer(spinor_in,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<0>(redBase,redBase2,sign);
+          moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+          if(spincolor1 == 3 && spincolor2 == 7){
+	  printSpinor(spinor_out, spincolor1, spincolor2);
+          }
+	  moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<1>(redBase,redBase2,sign);
+          moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+          if(spincolor1 == 3 && spincolor2 == 7){
+	  printSpinor(spinor_out, spincolor1, spincolor2);
+	  }
+          moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<2>(redBase,redBase2,sign);
+          moveContainerToSpinor1212Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
+          if(spincolor1 == 3 && spincolor2 == 7){
+	  printSpinor(spinor_out, spincolor1, spincolor2);
+          }
+          moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+          performFourierTransformDirection<3>(redBase,redBase2,sign);
+          moveContainerToSpinor1212Direction<HaloDepth,3>(spinor_out,redBase,spincolor1,spincolor2);
+          if(spincolor1 == 3 && spincolor2 == 7){
+	  printSpinor(spinor_out, spincolor1, spincolor2);
+          }
+//          temp = sumXYZT(spinor_out,redBase, spincolor1, spincolor2)/sqrt((floatT)(lx*ly*lz*lt));
+          //rootLogger.info( "sum after transformation" , temp );
+//          printf("after %.16f + im* %.16f ,", temp.cREAL , temp.cIMAG );
+       }
+    }
+
+
+}
+
+
+
+////////////
+
+template<class floatT, size_t HaloDepth>
+void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin){
+
+    //StopWatch<true> timer;
+
+    MPI_Comm commX, commY, commZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 0;
+    remain[2] = 0;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commX);
+    remain[0] = 0;
+    remain[1] = 1;
+    remain[2] = 0;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commY);
+    remain[0] = 0;
+    remain[1] = 0;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commZ);
+
+
+    typedef GIndexer<All,0> GInd;
+    size_t lx = GInd::getLatData().lx;
+    size_t ly = GInd::getLatData().ly;
+    size_t lz = GInd::getLatData().lz;
+    size_t lt = GInd::getLatData().lt;
+
+    size_t elems;
+    dim3 blockDim;
+    blockDim.x = 32;
+    blockDim.y = 1;
+    blockDim.z = 1;
+
+    dim3 gridDim;
+
+
+    size_t lxL = GInd::getLatData().globLX;
+    size_t lyL = GInd::getLatData().globLY;
+    size_t lzL = GInd::getLatData().globLZ;
+
+    if(lxL > LZ || lyL > LZ || lzL > LZ ){
+	    throw std::runtime_error(stdLogger.fatal("Error in fourier: constant LZ has to be atleast the size of globalLX, LY and LZ"));
+    }
+
+    size_t lsX = lxL;
+    size_t lsY = lyL;
+    size_t lsZ = lzL;
+    while(abs(round(  ((floatT)lsX)/2.0 )-(floatT)(lsX/2)  ) < 0.00001){
+        lsX = lsX/2;
+    }
+    while(abs(round(  ((floatT)lsY)/2.0 )-(floatT)(lsY/2)  ) < 0.00001){
+        lsY = lsY/2;
+    }
+    while(abs(round(  ((floatT)lsZ)/2.0 )-(floatT)(lsZ/2)  ) < 0.00001){
+        lsZ = lsZ/2;
+    }
+
+   // std::cout << "lsX " << lsX << " lsY " << lsY << " lsZ " << lsZ << std::endl;
+
+    redBase.adjustSize(lxL*lyL*lzL*lt);
+    redBase2.adjustSize(lxL*lyL*lzL*lt);
+
+    for(int spincolor1 =0; spincolor1 < maxColorSpin; spincolor1 ++){
+        for(int spincolor2 =0; spincolor2 < maxColorSpin; spincolor2 ++){
+
+    // start x direction
+    gpuError_t gpuErr;
+    // copy information from spinor over to redbase 
+    elems = lx*ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+  
+ //   printSpinor(spinor_in);
+
+
+    #ifdef USE_CUDA
+    copySpinorToContainerLocal<floatT,HaloDepth><<< gridDim, blockDim>>>(redBase.getAccessor(), spinor_in.getAccessor(), 
+                                                                        (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #elif defined USE_HIP
+    hipLaunchKernelGGL((copySpinorToContainerLocal<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(), spinor_in.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #endif
+     
+
+    //FourierClass<floatT> fourierClass(commBase);
+    //fourierClass.moveSpinor1212ToContainer(spinor_in,redBase,spincolor1,spincolor2);
+
+    
+    if( commBase.nodes()[0] > 1 ){
+
+       gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+       gatherHostXYZ<floatT,0>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commX,lxL,ly,lz);
+
+       gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*commBase.nodes()[0]*elems, gpuMemcpyHostToDevice);
+
+       gpuErr = gpuGetLastError();
+          if (gpuErr)
+             GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+    }
+
+
+    // perform the fourier transformation in x direction
+    elems = ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+#ifdef USE_CUDA
+    fourier<floatT,0><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX,sign);
+#elif defined USE_HIP
+    hipLaunchKernelGGL((fourier<floatT,0>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,ly,lz,lxL,lt,lsX,sign);
+#endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+
+    
+    //fourierClass.template performFourierTransformDirection<0>(redBase,redBase2,sign);
+
+    
+    // move back into spinor
+    elems = lx*ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+
+
+        #ifdef USE_CUDA
+        copyContainerToSpinor<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                       commBase.mycoords()[0],0,0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lxL,(int)ly,(int)lz,(int)lt,
+                                                                      commBase.mycoords()[0],0,0);
+        #endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+     //   printSpinor(spinor_in);
+
+   
+   //fourierClass.template moveContainerToSpinor1212Direction<HaloDepth,0>(spinor_out,redBase,spincolor1,spincolor2);
+	
+	
+    // start y direction
+
+    // copy information from spinor over to redbase 
+    elems = lx*ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    
+    #ifdef USE_CUDA
+    copySpinorToContainerLocal<floatT,HaloDepth><<< gridDim, blockDim>>>(redBase.getAccessor(), spinor_out.getAccessor(),
+                                                                        (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #elif defined USE_HIP
+    hipLaunchKernelGGL((copySpinorToContainerLocal<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(), spinor_out.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #endif
+    
+    //fourierClass.moveSpinor1212ToContainer(spinor_out,redBase,spincolor1,spincolor2);
+
+    
+    if( commBase.nodes()[1] > 1 ){
+
+       gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+       gatherHostXYZ<floatT,1>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commY,lx,lyL,lz);
+
+       gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*commBase.nodes()[1]*elems, gpuMemcpyHostToDevice);
+
+       gpuErr = gpuGetLastError();
+          if (gpuErr)
+             GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+    }
+
+    // perform the fourier transformation in y direction
+    elems = lx*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+#ifdef USE_CUDA
+    fourier<floatT,1><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY,sign);
+#elif defined USE_HIP
+    hipLaunchKernelGGL((fourier<floatT,1>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,lz,lyL,lt,lsY,sign);
+#endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+    
+    //fourierClass.template performFourierTransformDirection<1>(redBase,redBase2,sign);
+    
+    // move back into spinor
+    elems = lx*ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+
+
+        #ifdef USE_CUDA
+        copyContainerToSpinor<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                       0,commBase.mycoords()[1],0);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)lyL,(int)lz,(int)lt,
+                                                                      0,commBase.mycoords()[1],0);
+        #endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+   
+    // printSpinor(spinor_in);
+
+    //fourierClass.template moveContainerToSpinor1212Direction<HaloDepth,1>(spinor_out,redBase,spincolor1,spincolor2);
+
+    // start z direction
+
+    
+    // copy information from spinor over to redbase 
+    elems = lx*ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)/ static_cast<float> (blockDim.x)));
+
+    #ifdef USE_CUDA
+    copySpinorToContainerLocal<floatT,HaloDepth><<< gridDim, blockDim>>>(redBase.getAccessor(), spinor_out.getAccessor(),
+                                                                        (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #elif defined USE_HIP
+    hipLaunchKernelGGL((copySpinorToContainerLocal<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(), spinor_out.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lz,(int)lt);
+    #endif
+    
+    //fourierClass.moveSpinor1212ToContainer(spinor_in,redBase,spincolor1,spincolor2);
+
+    
+    if( commBase.nodes()[2] > 1 ){
+
+       gpuMemcpy(redBase2.get_ContainerArrayPtr()->getPointer(), redBase.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*(lx*ly*lz*lt), gpuMemcpyDeviceToHost);
+
+       gatherHostXYZ<floatT,2>((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commZ,lx,ly,lzL);
+       //gatherAllHost((std::complex<floatT> *)redBase2.get_ContainerArrayPtr()->getPointer(),commBase);
+
+       gpuMemcpy(redBase.get_ContainerArrayPtr()->getPointer(), redBase2.get_ContainerArrayPtr()->getPointer(),sizeof(COMPLEX(floatT))*commBase.nodes()[2]*elems, gpuMemcpyHostToDevice);
+
+       gpuErr = gpuGetLastError();
+          if (gpuErr)
+             GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+    }
+    
+    // perform the fourier transformation in z direction
+    elems = lx*ly*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+#ifdef USE_CUDA
+    fourier<floatT,2><<<gridDim, blockDim>>>(redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ,sign);
+#elif defined USE_HIP
+    hipLaunchKernelGGL((fourier<floatT,2>), dim3(gridDim), dim3(blockDim), 0, 0, redBase.getAccessor(),redBase.getAccessor(),elems,lx,ly,lzL,lt,lsZ,sign);
+#endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+    
+    //fourierClass.template performFourierTransformDirection<2>(redBase,redBase2,sign);
+    
+    // move back into spinor
+    elems = lx*ly*lz*lt;
+    gridDim = static_cast<int> (ceilf(static_cast<float> (elems)
+                    / static_cast<float> (blockDim.x)));
+
+
+        #ifdef USE_CUDA
+        copyContainerToSpinor<floatT,HaloDepth><<< gridDim, blockDim>>>(spinor_out.getAccessor(),redBase.getAccessor(),
+                                                                       (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                       0,0,commBase.mycoords()[2]);
+        #elif defined USE_HIP
+        hipLaunchKernelGGL((copyContainerToSpinor<floatT,HaloDepth>), dim3(gridDim), dim3(blockDim),0,0, spinor_out.getAccessor(),  redBase.getAccessor(),
+                                                                      (size_t)(lx*ly*lz*lt),spincolor1,spincolor2,(int)lx,(int)ly,(int)lzL,(int)lt,
+                                                                      0,0,commBase.mycoords()[2]);
+        #endif
+
+        gpuErr = gpuGetLastError();
+        if (gpuErr)
+            GpuError("performFunctor: Failed to launch kernel", gpuErr);
+
+      //  printSpinor(spinor_in);
+    
+    //fourierClass.template moveContainerToSpinor1212Direction<HaloDepth,2>(spinor_out,redBase,spincolor1,spincolor2);
+
+        }
+    }
+
+    //std::cout << "Finished " << std::endl;
+
+}
+
+
+////////////
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+void tr_spinorXspinor(
+        Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn){
+
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+    ReadIndex<All,HaloDepthSpin> index;
+
+
+    iterateFunctorNoReturn<true,BLOCKSIZE>(Tr_SpinorXspinor<floatT,HaloDepthSpin,12>(spinorInDagger, spinorIn),index,_elems);
+
+}
+
+
+/// val = S_in * S_in but only at spatial time t
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+COMPLEX(floatT) sumXYZ_TrMdaggerM(int t,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase){
+
+        typedef GIndexer<All, HaloDepthSpin> GInd;
+
+        COMPLEX(double) result = 0;
+
+        size_t elems_ = GInd::getLatData().vol3;
+
+        _redBase.adjustSize(elems_);
+
+        _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerM2<floatT, HaloDepthSpin,12>(t, spinorInDagger,spinorIn));
+
+        _redBase.reduce(result, elems_);
+        return result;
+}
+
+
+/// val = S_in * S_in but only at spatial time t
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 3,1> & spinor_wave,
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase, int time, int col, int conjON){
+
+        typedef GIndexer<All, HaloDepthSpin> GInd;
+
+        COMPLEX(double) result = 0;
+
+        size_t elems_ = GInd::getLatData().vol3;
+
+        _redBase.adjustSize(elems_);
+
+        if(conjON == 2){
+            _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,2>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
+        }
+        else if(conjON == 1){
+            _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,1>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
+        }
+        else{
+            _redBase.template iterateOverSpatialBulk<All, HaloDepthSpin>(
+                SumXYZ_TrMdaggerMwave<floatT, HaloDepthSpin,12,0>(t, spinorInDagger,spinorIn,spinor_wave,time,col));
+        }
+   
+        _redBase.reduce(result, elems_);
+        return result;
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
+                                 Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int time, int col,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+    global[3] = 1;
+    local[3] = 1;
+
+    MPI_Comm commXYZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 1;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commXYZ);
+
+    commBase.initIOBinarySub(fname, 0, 2*sizeof(double), 0, global, local, READ,commXYZ);
+
+    std::vector<char> buf;
+    buf.resize(local[0]*local[1]*local[2]*2*sizeof(double));
+    commBase.readBinary(&buf[0], local[0]*local[1]*local[2]);
+    int ps = 0;
+    Vect3<floatT> tmp3;
+ //   for ( int i = 0; i < 3; i ++){
+ //       tmp3.data[i] = 0.0;
+ //   }
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        double *dataRe = (double *) &buf[ps];
+        ps += sizeof(double);
+        double *dataIm = (double *) &buf[ps];
+        ps += sizeof(double);
+        tmp3.data[col] = COMPLEX(floatT)(dataRe[0],dataIm[0]);
+        //std::cout << "data " << data[0] << std::endl;
+        spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
+    }
+
+    commBase.closeIOBinary();
+
+    spinor_device = spinor_host;
+    spinor_device.updateAll();
+}
+
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWave_old(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
+                                 Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int time, int col,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+    global[3] = 1;
+    local[3] = 1;
+
+    commBase.initIOBinary(fname, 0, 2*sizeof(floatT), 0, global, local, READ);
+
+    std::vector<char> buf;
+    buf.resize(local[0]*local[1]*local[2]*2*sizeof(floatT));
+    commBase.readBinary(&buf[0], local[0]*local[1]*local[2]);
+    int ps = 0;
+    Vect3<floatT> tmp3;
+ //   for ( int i = 0; i < 3; i ++){
+ //       tmp3.data[i] = 0.0;
+ //   }
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        floatT *dataRe = (floatT *) &buf[ps];
+        ps += sizeof(floatT);
+        floatT *dataIm = (floatT *) &buf[ps];
+        ps += sizeof(floatT);
+        tmp3.data[col] = COMPLEX(floatT)(dataRe[0],dataIm[0]);
+        //std::cout << "data " << data[0] << std::endl;
+        spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
+    }
+
+    commBase.closeIOBinary();
+
+    spinor_device = spinor_host;
+    spinor_device.updateAll();
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    MPI_Comm commXYZ;
+    int remain[4];
+    remain[0] = 1;
+    remain[1] = 1;
+    remain[2] = 1;
+    remain[3] = 0;
+    MPI_Cart_sub(commBase.getCart_comm(),remain, &commXYZ);
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commXYZ, &myrank);
+    MPI_Comm_size(commXYZ, &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commXYZ );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commXYZ );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commXYZ, r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            Vect3<floatT> tmp3 = spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeOut));
+            tmp3.data[colOut] = COMPLEX(floatT)(real(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]),
+                                                imag(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]));
+            spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, timeOut),tmp3);
+        }
+
+    spinor_device = spinor_host;
+    delete[] buf;
+    delete[] buf2;
+
+    spinor_device.updateAll();
+
+}
+
+
+template<typename floatT, size_t HaloDepthSpin>
+void moveWave_old(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+    
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            Vect3<floatT> tmp3 = spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeOut));
+            tmp3.data[colOut] = COMPLEX(floatT)(real(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]),
+                                                imag(buf[((x+lx*commBase.mycoords()[0]+glx-posX)%glx)
+                                                   +glx*(((y+ly*commBase.mycoords()[1]+gly-posY)%gly)
+                                                   +gly*(((z+lz*commBase.mycoords()[2]+glz-posZ)%glz)))]));
+            spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, timeOut),tmp3);
+        }
+
+    spinor_device = spinor_host;
+    delete[] buf;
+    delete[] buf2;
+
+    spinor_device.updateAll();
+
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                 int timeIn, int colIn ,int savePos,int nMomentum,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, timeIn))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+    
+    int ktotal = -1;
+    for(int kz = -1; kz < 2; kz ++){
+    for(int ky = -1; ky < 2; ky ++){
+    for(int kx = -1; kx < 2; kx ++){
+    ktotal++;
+        CC[ktotal + savePos] =  CC[ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
+			                                                                  imag(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]));
+    }}}
+    
+    delete[] buf;
+    delete[] buf2;
+
+}
+
+template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentumT(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                  int colIn ,int savePos,int nP, int * pos,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+
+
+    int coord[4];
+    //all gather 4d
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz];
+    std::complex<floatT> *buf2 = new std::complex<floatT>[glx*gly*glz];
+
+        spinor_host = spinor_device;
+
+    for (int t=0; t<glt; t++){
+
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[x+lx*(y+ly*(z))] = std::complex<floatT>(((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, t))).data[colIn]).cREAL,
+                                   ((spinor_host.getAccessor().getElement(GInd::getSite(x,y, z, t))).data[colIn]).cIMAG);
+        }
+
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_DOUBLE_COMPLEX, buf2, lx*ly*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(buf, lx*ly*lz, MPI_COMPLEX, buf2, lx*ly*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+   //     for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            buf[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])))] = buf2[x+lx*(y+ly*(z+lz*(r)))];
+        }
+    }
+
+    int ktotal = -1;
+    for(int kz = -nP; kz < nP+1; kz ++){
+    for(int ky = -nP; ky < nP+1; ky ++){
+    for(int kx = -nP; kx < nP+1; kx ++){
+    ktotal++;
+        floatT phase = -2.0*M_PI*((floatT)(kx*pos[0])/glx+(floatT)(ky*pos[1])/gly+(floatT)(kz*pos[2])/glz);
+        CC[(t-pos[3]+glt)%(glt)+glt*ktotal + savePos] =  CC[(t-pos[3]+glt)%(glt)+glt*ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
+                                                                                                                        imag(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]))*
+	                                              	                                                                 COMPLEX(floatT)(cos(phase),sin(phase));
+     //   CC[(t-pos[3]+glt)%(glt)+glt*ktotal + savePos] =  CC[(t-pos[3]+glt)%(glt)+glt*ktotal + savePos]+ COMPLEX(floatT)(real(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]),
+     //                                                                                     imag(buf[(kx+glx)%glx+glx*((ky+gly)%gly+gly*((kz+glz)%glz))]));
+    }}}
+
+    }
+
+    delete[] buf;
+    delete[] buf2;
+
+}
+
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWavePos(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
+                                 Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 size_t posX, size_t posY, size_t posZ,
+                                 int time, int col,CommunicationBase & commBase){
+    typedef GIndexer<All, HaloDepthSpin> GInd;
+    LatticeDimensions global = GInd::getLatData().globalLattice();
+    LatticeDimensions local = GInd::getLatData().localLattice();
+    global[3] = 1;
+//    local[3] = 1;
+
+    commBase.initIOBinary(fname, 0, 2*sizeof(floatT), 0, global, global, READ);
+
+    std::vector<char> buf;
+    buf.resize(global[0]*global[1]*global[2]*2*sizeof(floatT));
+    commBase.readBinary(&buf[0], global[0]*global[1]*global[2]);
+    int ps = 0;
+    Vect3<floatT> tmp3;
+    for (size_t z = 0; z < GInd::getLatData().lz; z++)
+    for (size_t y = 0; y < GInd::getLatData().ly; y++)
+    for (size_t x = 0; x < GInd::getLatData().lx; x++) {
+        size_t xg = (x+commBase.mycoords()[0]*local[0]+posX)%global[0];
+        size_t yg = (y+commBase.mycoords()[1]*local[1]+posY)%global[1];
+        size_t zg = (z+commBase.mycoords()[2]*local[2]+posZ)%global[2];
+        ps = 2*sizeof(floatT)*(xg+global[0]*(yg+global[1]*(zg)));
+        floatT *dataRe = (floatT *) &buf[ps];
+        ps += sizeof(floatT);
+        floatT *dataIm = (floatT *) &buf[ps];
+        tmp3.data[col] = COMPLEX(floatT)(dataRe[0], dataIm[0] );
+        std::cout << "x "<< xg << " y "<< yg << " z "<< zg <<" dataRe " << dataRe[0] << " dataIm " << dataIm[0] << std::endl;
+        spinor_host.getAccessor().setElement(GInd::getSite(x,y, z, time),tmp3);
+    }
+
+    commBase.closeIOBinary();
+
+    spinor_device = spinor_host;
+
+}
+
+template<typename floatT, size_t HaloDepth>
+void makeWaveSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave,
+                      size_t time, size_t col,size_t post){
+
+    typedef GIndexer<All, HaloDepth> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+    ReadIndex<All,HaloDepth> index;
+
+    iterateFunctorNoReturn<true,BLOCKSIZE>(MakeWaveSource12<floatT,HaloDepth>( spinorIn, spinor_wave,time,col,post),index,_elems);
+
+    spinorIn.updateAll();
+
+}
+
+template<typename floatT, size_t HaloDepth>
+void printSpinor(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn,int spin1, int spin2){
+
+    typedef GIndexer<All, HaloDepth> GInd;
+    size_t _elems = GInd::getLatData().vol4;
+    ReadIndex<All,HaloDepth> index;
+
+    spinorIn.updateAll();
+
+    iterateFunctorNoReturn<true,BLOCKSIZE>(PrintSpinor<floatT,HaloDepth>(spinorIn,spin1,spin2),index,_elems);
+
+
+}
+
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+COMPLEX(floatT) sumXYZT(
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase,int spin1, int spin2){
+
+        typedef GIndexer<All, HaloDepthSpin> GInd;
+
+        COMPLEX(double) result = 0;
+
+        size_t elems_ = GInd::getLatData().vol4;
+
+        _redBase.adjustSize(elems_);
+
+        _redBase.template iterateOverBulk<All, HaloDepthSpin>(
+                SumXYZT<floatT, HaloDepthSpin,12>(spinorIn,spin1, spin2));
+
+        _redBase.reduce(result, elems_);
+        return result;
+}
+
+
+template<typename floatT>
+void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase){
+
+    int coord[4];
+    //all gather 4d
+    typedef GIndexer<All,0> GInd;
+    int glx = GInd::getLatData().globLX;
+    int lx  = GInd::getLatData().lx;
+    int gly = GInd::getLatData().globLY;
+    int ly  = GInd::getLatData().ly;
+    int glz = GInd::getLatData().globLZ;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(commBase.getCart_comm(), &myrank);
+    MPI_Comm_size(commBase.getCart_comm(), &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*glt];
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(in, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX, buf, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX,commBase.getCart_comm() );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(in, lx*ly*lt*lz, MPI_COMPLEX, buf, lx*ly*lt*lz, MPI_COMPLEX,commBase.getCart_comm() );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(commBase.getCart_comm(), r,4, coord);
+        for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            in[(x+lx*coord[0])+glx*((y+ly*coord[1])+gly*((z+lz*coord[2])+glz*((t+lt*coord[3]))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+        }
+    }
+
+    delete[] buf;
+
+
+}
+
+
+template<typename floatT,int direction>
+void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int glz){
+
+    int coord[1];
+    //gather 4d for extended directions
+    typedef GIndexer<All,0> GInd;
+    int lx  = GInd::getLatData().lx;
+    int ly  = GInd::getLatData().ly;
+    int lz  = GInd::getLatData().lz;
+    int glt = GInd::getLatData().globLT;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(comm, &myrank);
+    MPI_Comm_size(comm, &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*lt];
+    
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(in, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX, buf, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX,comm );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(in, lx*ly*lt*lz, MPI_COMPLEX, buf, lx*ly*lt*lz, MPI_COMPLEX,comm );
+    }
+
+    
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(comm, r,1, coord);
+        for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            if (direction == 0){
+                in[(x+lx*coord[0])+glx*((y)+gly*((z)+glz*((t))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            }
+            else if (direction == 1){
+                in[(x)+glx*((y+ly*coord[0])+gly*((z)+glz*((t))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            }
+            else if (direction == 2){
+                in[(x)+glx*((y)+gly*((z+lz*coord[0])+glz*((t))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            } 
+        }
+    }
+
+    delete[] buf;
+
+
+}
+
+template<typename floatT,int direction>
+void gatherHostXYZT(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int glz, int glt){
+
+    int coord[1];
+    //gather 4d for extended directions
+    typedef GIndexer<All,0> GInd;
+    int lx  = GInd::getLatData().lx;
+    int ly  = GInd::getLatData().ly;
+    int lz  = GInd::getLatData().lz;
+    int lt  = GInd::getLatData().lt;
+    int myrank, rankSize;
+    MPI_Comm_rank(comm, &myrank);
+    MPI_Comm_size(comm, &rankSize);
+
+    std::complex<floatT> *buf = new std::complex<floatT>[glx*gly*glz*glt];
+
+    if(std::is_same<floatT,double>::value){
+        MPI_Allgather(in, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX, buf, lx*ly*lt*lz, MPI_DOUBLE_COMPLEX,comm );
+    }
+    else if(std::is_same<floatT,float>::value){
+        MPI_Allgather(in, lx*ly*lt*lz, MPI_COMPLEX, buf, lx*ly*lt*lz, MPI_COMPLEX,comm );
+    }
+
+
+    for (int r=0; r<rankSize; r++){
+    MPI_Cart_coords(comm, r,1, coord);
+        for (int t=0; t<lt; t++)
+        for (int z=0; z<lz; z++)
+        for (int y=0; y<ly; y++)
+        for (int x=0; x<lx; x++){
+            if (direction == 0){
+                in[(x+lx*coord[0])+glx*((y)+gly*((z)+glz*((t))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            }
+            else if (direction == 1){
+                in[(x)+glx*((y+ly*coord[0])+gly*((z)+glz*((t))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            }
+            else if (direction == 2){
+                in[(x)+glx*((y)+gly*((z+lz*coord[0])+glz*((t))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            }
+	    else if (direction == 3){
+                in[(x)+glx*((y)+gly*((z)+glz*((t+lt*coord[0]))))] = buf[x+lx*(y+ly*(z+lz*(t+lt*r)))];
+            }
+        }
+    }
+
+    delete[] buf;
+
+
+}
+
+
+
+//////////template declarations
+
+template class FourierClass<double>;
+
+template void FourierClass<double>::moveSpinor1212ToContainer<2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_in, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+
+template void FourierClass<double>::moveContainerToSpinor1212Direction<2,0>(Spinorfield<double, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor1212Direction<2,1>(Spinorfield<double, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor1212Direction<2,2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor1212Direction<2,3>(Spinorfield<double, true, All, 2, 12, 12> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+
+template void FourierClass<double>::moveSpinor3ToContainer<2>(Spinorfield<double, true, All, 2, 3, 1> & spinor_in, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,0>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,1>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,2>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+template void FourierClass<double>::moveContainerToSpinor3Direction<2,3>(Spinorfield<double, true, All, 2, 3, 1> & spinor_out, LatticeContainer<true,COMPLEX(double)> & redBase,int spincolor1, int spincolor2);
+
+
+template void FourierClass<double>::performFourierTransformDirection<0>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
+template void FourierClass<double>::performFourierTransformDirection<1>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
+template void FourierClass<double>::performFourierTransformDirection<2>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
+template void FourierClass<double>::performFourierTransformDirection<3>(LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign);
+
+template void FourierClass<double>::performFourier3DSpinor1212<2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_in,Spinorfield<double, true, All, 2, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign,int maxColorSpin);
+template void FourierClass<double>::performFourier3DSpinor3<2>(Spinorfield<double, true, All, 2, 3, 1> & spinor_in,Spinorfield<double, true, All, 2, 3, 1> & spinor_out,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign,int maxColorSpin);
+template void FourierClass<double>::performFourier4DSpinor1212<2>(Spinorfield<double, true, All, 2, 12, 12> & spinor_in,Spinorfield<double, true, All, 2, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,int sign,int maxColorSpin);
+
+
+////
+
+template void fourier3D(Spinorfield<double, true, All, 2, 12, 12> & spinor_out,Spinorfield<double, true, All, 2, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(double)> & redBase,LatticeContainer<false,COMPLEX(double)> & redBase2,CommunicationBase & commBase, int sign,int maxColorSpin);
+
+
+template void tr_spinorXspinor(
+        Spinorfield<double, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorIn);
+
+
+template COMPLEX(double) sumXYZ_TrMdaggerM(int t,
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(double)> & _redBase);
+
+template COMPLEX(double) sumXYZT(
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(double)> & _redBase,int spin1, int spin2);
+
+template COMPLEX(double) sumXYZ_TrMdaggerMwave(int t,
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorInDagger,
+        const Spinorfield<double, true, All, 2, 12, 12> & spinorIn,
+        const Spinorfield<double, true, All, 2, 3 ,  1> & spinor_wave,
+        LatticeContainer<true,COMPLEX(double)> & _redBase, int time, int col, int conjON);
+
+template void loadWave(std::string fname, Spinorfield<double, true , All, 2, 3,1> & spinor_device,
+                                          Spinorfield<double, false, All, 2, 3,1> & spinor_host,
+                                          int time, int col,CommunicationBase & commBase);
+
+template void loadWavePos(std::string fname, Spinorfield<double, true , All, 2, 3,1> & spinor_device,
+                                             Spinorfield<double, false, All, 2, 3,1> & spinor_host,
+                                             size_t posX, size_t posY, size_t posZ,
+                                             int time, int col,CommunicationBase & commBase);
+
+template void makeWaveSource(Spinorfield<double, true, All, 2, 12, 12> & spinorIn, const Spinorfield<double, true, All, 2, 3,1> &spinor_wave,
+                      size_t time, size_t col,size_t post);
+
+template void moveWave(Spinorfield<double, true, All, 2, 3,1> & spinor_device,Spinorfield<double, false, All, 2, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
+
+template void gatherMomentum(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
+                                 int timeIn, int colIn,int savePos ,int nMomentum,CommunicationBase & commBase);
+
+template void gatherMomentumT(COMPLEX(double) * CC, Spinorfield<double, true, All, 2, 12,12> & spinor_device,Spinorfield<double, false, All, 2, 12,12> & spinor_host,
+                                 int colIn,int savePos ,int nP,int * pos,CommunicationBase & commBase);
+
+
+template void printSpinor(Spinorfield<double, true, All, 2, 12, 12> & spinorIn,int spin1, int spin2);
+
+
+
+

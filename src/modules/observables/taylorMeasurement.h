@@ -169,8 +169,8 @@ template<typename floatT, bool onDevice, size_t HaloDepthGauge, size_t HaloDepth
 class TaylorMeasurement
 {
 private:
-    std::vector<SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks>> spinors;
-    SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> random_vector;
+    std::vector<SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 3, NStacks>> spinors;
+    SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 3, NStacks> random_vector;
 
     Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> gauge_Naik;
     Gaugefield<floatT, onDevice, HaloDepthGauge, R18> gauge_smeared;
@@ -337,8 +337,8 @@ private:
         if (!operatorNode.hasNext())
             return;
 
-        SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn = spinors[depth];
-        SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut = spinors[depth + 1];
+        SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 3, NStacks> &spinorIn = spinors[depth];
+        SpinorfieldAll<floatT, onDevice, HaloDepthSpin, 3, NStacks> &spinorOut = spinors[depth + 1];
 
         // invert once for each tree node that gets traversed
         // cg uses dslash.applyMdaggM as the positive semidefinite matrix, so I need to solve MdaggM * x = Mdagg * b =? -M * b

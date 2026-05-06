@@ -44,9 +44,9 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
     rootLogger.info("Initialize spinors");
 
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorIn2(commBase);
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks * NStacks_cached> spinorOut2(commBase);
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks * NStacks_cached> spinorOut_ref(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks * NStacks_cached> spinorIn2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks * NStacks_cached> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks * NStacks_cached> spinorOut_ref(commBase);
     
     
     gpuErr = gpuGetLastError();
@@ -94,10 +94,10 @@ void test_dslash(CommunicationBase &commBase, int Vol){
          rootLogger.info("Testing for correctness: dot prod of difference = ", dot[i]);                                                                                                                           
      }    
    
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorIn(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorRef(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks * NStacks_cached> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks * NStacks_cached> spinorRef(commBase);
     
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks * NStacks_cached> spinorOut3(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks * NStacks_cached> spinorOut3(commBase);
     spinorIn.gauss(d_rand.state);
     timer.reset();        
     timer.start();

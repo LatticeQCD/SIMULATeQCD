@@ -40,10 +40,10 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     HisqDSlash<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_naik, param.m_ud());
     HisqDSlash<floatT_inner, onDevice, LayoutSwitcher<LatLayout>(), HaloDepth, HaloDepthSpin, NStacks> dslash_half(gauge_smeared_half, gauge_naik_half, param.m_ud());
 
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorIn(commBase);
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorOut(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 3, NStacks> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 3, NStacks> spinorOut(commBase);
 
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, NStacks> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayout>(), HaloDepthSpin, 3, NStacks> spinorOut2(commBase);
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);

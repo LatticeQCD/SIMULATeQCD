@@ -13,7 +13,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const{
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    Vect3<floatT> Stmp(0.0);
+    Vect<floatT,3> Stmp(0.0);
 
     #ifdef USE_HIP
     static_for<0,4>::apply([&](auto mu) {
@@ -33,6 +33,7 @@ __host__ __device__ auto HisqDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge,
     #else
     #pragma unroll
     for (int mu = 0; mu < 4; mu++) {
+
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
                                             * _spinorIn.getElement(GInd::site_up(site, mu));
 
@@ -54,7 +55,7 @@ template<bool onDevice, class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge
 __host__ __device__ void HisqDslashStackedFunctor<onDevice, floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::operator()(gSiteStack site) {
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
     size_t stack_offset = GInd::getStack(site);
-        SimpleArray<Vect3<floatT>, NStacks> Stmp((floatT)0.0);
+        SimpleArray<Vect<floatT,3>, NStacks> Stmp((floatT)0.0);
         
         #ifdef USE_HIP
         constexpr size_t Ntiles = NStacks/NStacks_blockdim;
@@ -128,7 +129,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ auto HisqMdaggMFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site){
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    Vect3<floatT> Stmp(0.0);
+    Vect<floatT,3> Stmp(0.0);
     for (int mu = 0; mu < 4; mu++) {
 
         Stmp += static_cast<floatT>(C_1000) * _gAcc_smeared.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, mu)))
@@ -233,7 +234,7 @@ void HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, N
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks, size_t NStacks_blockdim>
 template<Layout LatLayout>
-HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin> HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks>& rhs){
+HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin> HisqDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks, NStacks_blockdim>::getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks>& rhs){
     return HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>(rhs, _gauge_smeared, _gauge_Naik, _c_3000);
 }
 
@@ -243,7 +244,7 @@ template<class floatT, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDe
 __host__ __device__ auto stdStagDslashFunctor<floatT, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin>::operator()(gSiteStack site) const{
     typedef GIndexer<LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin> GInd;
 
-    Vect3<floatT> Stmp(0.0);
+    Vect<floatT,3> Stmp(0.0);
     floatT phase =1.0;
     floatT up_bound=1.0;
     floatT down_bound=1.0;
@@ -297,7 +298,7 @@ void stdStagDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin
 
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 template<Layout LatLayout>
-stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin> stdStagDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, NStacks>& rhs){
+stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin> stdStagDSlash<floatT, onDevice, LatLayoutRHS, HaloDepthGauge, HaloDepthSpin, NStacks>::getFunctor(const Spinorfield<floatT, onDevice, LatLayout, HaloDepthSpin, 3, NStacks>& rhs){
     return stdStagDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>(rhs, _gauge);
 }
 

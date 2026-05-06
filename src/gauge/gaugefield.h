@@ -62,6 +62,21 @@ public:
     void readconf_openqcd(const std::string &fname);
     void readconf_openqcd_host(SU3Accessor<floatT,comp> SU3Accessor, const std::string &fname);
 
+    void readconf(const std::string &fname, const std::string &format){
+        if (format == "nersc") {
+            readconf_nersc(fname);
+        } else if (format == "ildg") {
+            readconf_ildg(fname);
+        } else if (format == "milc") {
+            readconf_milc(fname);
+        } else if (format == "openqcd") {
+            readconf_openqcd(fname);
+        } else {
+            throw (std::runtime_error(rootLogger.fatal("Invalid specification for format ", format)));
+        }
+
+    };
+
     void writeconf_nersc(const std::string &fname, int rows = 2, int diskprec = 1, Endianness e = ENDIAN_BIG);
     void writeconf_nersc_host(SU3Accessor<floatT, comp> SU3Accessor, const std::string &fname, int rows = 2,
                               int diskprec = 1, Endianness e = ENDIAN_BIG);

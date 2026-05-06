@@ -1,0 +1,907 @@
+#pragma once
+
+#include "../simulateqcd.h"
+#include "fullSpinor.h"
+
+#define LZ 96
+
+// functions definitions
+
+// dslash wilson, no clover
+template<typename floatT>
+class FourierClass{
+
+	//CommunicationBase & _commBase;
+	MPI_Comm commX, commY, commZ, commT;
+	size_t lx, ly, lz, lt;
+        size_t lxL, lyL, lzL, ltL;
+	size_t lsX, lsY, lsZ, lsT;
+	int mycoords[4];
+	int nodes[4];
+
+public:
+    FourierClass(CommunicationBase & commBase) 
+              {
+	   
+	        int remain[4];
+                remain[0] = 1;
+                remain[1] = 0;
+                remain[2] = 0;
+                remain[3] = 0;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commX);
+                remain[0] = 0;
+                remain[1] = 1;
+                remain[2] = 0;
+                remain[3] = 0;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commY);
+                remain[0] = 0;
+                remain[1] = 0;
+                remain[2] = 1;
+                remain[3] = 0;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commZ);
+                remain[0] = 0;
+                remain[1] = 0;
+                remain[2] = 0;
+                remain[3] = 1;
+                MPI_Cart_sub(commBase.getCart_comm(),remain, &commT);
+
+
+                mycoords[0] = commBase.mycoords()[0];
+                mycoords[1] = commBase.mycoords()[1];
+                mycoords[2] = commBase.mycoords()[2];
+                mycoords[3] = commBase.mycoords()[3];
+
+                nodes[0] = commBase.nodes()[0];
+                nodes[1] = commBase.nodes()[1];
+		nodes[2] = commBase.nodes()[2];
+		nodes[3] = commBase.nodes()[3];
+
+
+                typedef GIndexer<All,0> GInd;
+
+                lx = GInd::getLatData().lx;
+                ly = GInd::getLatData().ly;
+                lz = GInd::getLatData().lz;
+                lt = GInd::getLatData().lt;
+
+
+                lxL = GInd::getLatData().globLX;
+                lyL = GInd::getLatData().globLY;
+                lzL = GInd::getLatData().globLZ;
+                ltL = GInd::getLatData().globLT;
+
+                lsX = lxL;
+                lsY = lyL;
+                lsZ = lzL;
+                lsT = ltL;
+                while(abs(round(  ((floatT)lsX)/2.0 )-(floatT)(lsX/2)  ) < 0.00001){
+                      lsX = lsX/2;
+                }
+                while(abs(round(  ((floatT)lsY)/2.0 )-(floatT)(lsY/2)  ) < 0.00001){
+                      lsY = lsY/2;
+                }
+                while(abs(round(  ((floatT)lsZ)/2.0 )-(floatT)(lsZ/2)  ) < 0.00001){
+                      lsZ = lsZ/2;
+                }
+                while(abs(round(  ((floatT)lsT)/2.0 )-(floatT)(lsT/2)  ) < 0.00001){
+                      lsT = lsT/2;
+                }
+
+	    
+
+	    }
+
+
+    template<size_t HaloDepth>
+    void moveSpinor1212ToContainer(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+    template<size_t HaloDepth,int dir>
+    void moveContainerToSpinor1212Direction(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+    template<size_t HaloDepth>
+    void moveSpinor3ToContainer(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinorIn, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+    template<size_t HaloDepth,int dir>
+    void moveContainerToSpinor3Direction(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in, LatticeContainer<true,COMPLEX(floatT)> & redBase,int spincolor1, int spincolor2);
+
+
+    template<int dir>
+    void performFourierTransformDirection(LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign);
+
+    template<size_t HaloDepth>
+    void performFourier3DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin);
+
+    template<size_t HaloDepth>
+    void performFourier4DSpinor1212(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin);
+
+    template<size_t HaloDepth>
+    void performFourier3DSpinor3(Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_in,Spinorfield<floatT, true, All, HaloDepth, 3, 1> & spinor_out,LatticeContainer<true,COMPLEX(floatT)> & redBase,LatticeContainer<false,COMPLEX(floatT)> & redBase2,int sign,int maxColorSpin);
+
+
+};
+
+
+template<class floatT, size_t HaloDepth>
+void fourier3D(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_out,Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinor_in,LatticeContainer<true,COMPLEX(floatT)> & redBaseDevice,LatticeContainer<false,COMPLEX(floatT)> & redBaseHost,CommunicationBase & commBase, int sign = 1,int maxColorSpin = 12);
+
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+void tr_spinorXspinor(
+        Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn);
+
+template<typename floatT, bool onDevice, size_t HaloDepthSpin>
+COMPLEX(floatT) sumXYZ_TrMdaggerM(int t,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase);
+
+template<typename floatT, bool onDevice,size_t HaloDepthSpin>
+COMPLEX(floatT) sumXYZ_TrMdaggerMwave(int t,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorInDagger,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 3,1> & spinor_wave,
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase, int time, int col, int conjON);
+
+template<typename floatT, bool onDevice, size_t HaloDepthSpin>
+COMPLEX(floatT) sumXYZT(
+        const Spinorfield<floatT, onDevice, All, HaloDepthSpin, 12, 12> & spinorIn,
+        LatticeContainer<true,COMPLEX(floatT)> & _redBase,int spin1, int spin2);
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWave(std::string fname, Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,
+                                 Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int time, int col,CommunicationBase & commBase);
+
+template<typename floatT, size_t HaloDepthSpin>
+void loadWavePos(std::string fname, Spinorfield<floatT, true , All, HaloDepthSpin, 3,1> & spinor_device,
+                                    Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                    size_t posX, size_t posY, size_t posZ,
+                                    int time, int col,CommunicationBase & commBase);
+
+template<typename floatT, size_t HaloDepth>
+void makeWaveSource(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave,
+                      size_t time, size_t col,size_t post);
+
+template<typename floatT, size_t HaloDepthSpin>
+void moveWave(Spinorfield<floatT, true, All, HaloDepthSpin, 3,1> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 3,1> & spinor_host,
+                                 int posX, int posY, int posZ,
+                                 int timeOut, int colOut,int timeIn, int colIn ,CommunicationBase & commBase);
+
+
+template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentum(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                 int timeIn, int colIn,int savePos,int nMomentum ,CommunicationBase & commBase);
+
+template<typename floatT, size_t HaloDepthSpin>
+void gatherMomentumT(COMPLEX(floatT) * CC, Spinorfield<floatT, true, All, HaloDepthSpin, 12,12> & spinor_device,Spinorfield<floatT, false, All, HaloDepthSpin, 12,12> & spinor_host,
+                                 int colIn,int savePos,int nP, int * pos ,CommunicationBase & commBase);
+
+template<typename floatT>
+void gatherAllHost(std::complex<floatT> *in,CommunicationBase & commBase);
+
+template<typename floatT,int direction>
+void gatherHostXYZ(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int glz);
+
+template<typename floatT,int direction>
+void gatherHostXYZT(std::complex<floatT> *in,MPI_Comm & comm,int glx,int gly,int glz,int glt);
+
+// gpu functions
+
+template<class floatT,int direction>
+__global__ void fourier(LatticeContainerAccessor _redBaseOut, LatticeContainerAccessor _redBaseIn, const size_t size,const size_t lx,const size_t ly,const size_t lz,const size_t lt,size_t lsIn, int sign = 1) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    int ix, iy, it;
+
+    int  tmp;
+
+    int ls=lsIn;
+    int hf=lz/ls;
+
+    divmod(site, lx*ly, it, tmp);
+    divmod(tmp,  lx   , iy, ix );
+
+   COMPLEX(floatT) v[LZ];
+   COMPLEX(floatT) v0[LZ]; 
+
+  //  COMPLEX(floatT) * v = new COMPLEX(floatT)[lz];
+    
+    if(direction == 0){
+       for(int z =0; z < lz ; z++){
+        v[z] = _redBaseOut.getElement<COMPLEX(floatT)>(z+lz*(ix+lx*(iy+ly*it)));
+       }
+    }
+    if(direction == 1){
+       for(int z =0; z < lz ; z++){
+        v[z] = _redBaseOut.getElement<COMPLEX(floatT)>(ix+lx*(z+lz*(iy+ly*it)));
+       }
+    }
+    if(direction == 2){
+       for(int z =0; z < lz ; z++){
+        v[z] = _redBaseOut.getElement<COMPLEX(floatT)>(ix+lx*(iy+ly*(z+lz*it)));
+       }
+    }
+    if(direction == 3){
+       for(int z =0; z < lz ; z++){
+        v[z] = _redBaseOut.getElement<COMPLEX(floatT)>(ix+lx*(iy+ly*(it+lt*z)));
+       }
+    }
+
+    // standard fourier transformation
+    for(int z =0; z < lz ; z++){
+       v0[z] = v[z];
+    }    
+    for(int i =0; i < hf ; i++){
+       for(int k =0; k < ls ; k++){
+          COMPLEX(floatT) sum = 0.0;
+          for(int z =0; z < ls ; z++){
+             sum = sum + v0[z*hf+i]*COMPLEX(floatT)(cos(sign*2.0*k*z*M_PI/ls),sin(sign*2.0*k*z*M_PI/ls));
+          }
+          v[i+k*hf] = sum;
+       }
+    }
+
+
+    //fast part
+    for(int j =0; j < (int)(log2(lz/lsIn)+0.1) ; j++){
+       for(int z =0; z < lz ; z++){
+          v0[z] = v[z];
+       }
+       ls=ls*2;
+       hf=hf/2;
+       for(int s =0; s < hf ; s++){
+          for(int k =0; k < ls/2 ; k++){
+
+             COMPLEX(floatT) phase = COMPLEX(floatT)(cos(sign*2.0*k*M_PI/ls),sin(sign*2.0*k*M_PI/ls));
+
+             COMPLEX(floatT) even = v0[s + k*hf*2];
+             COMPLEX(floatT) odd  = v0[s + k*hf*2 + hf];
+
+             v[s + k*hf] = even + phase*odd;
+             v[s + k*hf + hf*ls/2] = even - phase*odd;
+
+          }
+       }
+    }
+
+   for(int z =0; z < lz ; z++){
+      v[z] = v[z]/sqrt(lz);
+     // printf("%f %f \n", v[z].cREAL , v[z].cIMAG);
+      if(direction == 0){
+         _redBaseOut.setValue<COMPLEX(floatT)>(z+lz*(ix+lx*(iy+ly*it)),v[z]);
+      }
+      if(direction == 1){
+         _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(z+lz*(iy+ly*it)),v[z]);
+      }
+      if(direction == 2){
+        // if(it == 0 && ix == 0 && iy == 0)
+        // printf("i  %d %d %d %f %f \n",(int)ix, (int)iy, (int)z, v[z].cREAL , v[z].cIMAG);
+         _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(z+lz*it)),v[z]);
+      }
+      if(direction == 3){
+         _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(it+lt*z)),v[z]);
+      }
+
+   }
+    
+
+//   delete [] v;
+//   delete [] v0;
+   
+}
+
+
+
+template<class floatT>
+__global__ void setValues(MemoryAccessor _redBaseOut,const size_t size, const size_t lx,const size_t ly,const size_t lz){
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    int ix, iy, iz;
+
+    int  tmp;
+
+    divmod(site, lx*ly, iz, tmp);
+    divmod(tmp,  lx   , iy, ix );
+
+
+    for(int z =0; z < lz ; z++){
+      _redBaseOut.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*z),0.1*(z+1)+0.1*(iy)+0.1*(ix));
+   }
+
+
+
+
+}
+
+template<class floatT>
+__global__ void moveValues(LatticeContainerAccessor _redBaseOut, LatticeContainerAccessor _redBaseIn,const size_t size, const size_t lx,const size_t ly,const size_t lz, const size_t lx2, const size_t ly2, const size_t lz2,const size_t xtopo, const size_t ytopo, const size_t ztopo){
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    int ix, iy, iz;
+
+    int  tmp;
+
+    divmod(site, lx2*ly2, iz, tmp);
+    divmod(tmp,  lx2    , iy, ix );
+
+
+      size_t pos , pos2;
+      pos  = ix+lx2*(iy+ly2*iz);
+      pos2 = (ix-lx*xtopo)+lx*((iy-ly*ytopo)+ly*(iz-lz*ztopo));
+
+//      printf("%d %d %d %d %d %d %d \n", (int)site,(int)ix , (int)iy ,(int)iz, (int)(lz*(ztopo+1)), (int)(lz*ztopo), (int)(( ix >= lx*xtopo && ix < lx*(xtopo+1) && iy >= ly*ytopo && iy < ly*(ytopo+1) && iz >= lz*ztopo && iz < lz*(ztopo+1))));
+
+      if( ix >= lx*xtopo && ix < lx*(xtopo+1) && iy >= ly*ytopo && iy < ly*(ytopo+1) && iz >= lz*ztopo && iz < lz*(ztopo+1)){
+          printf("i  %d %d %d %d %d %f %f \n",(int)ix, (int)iy, (int)iz, (int)pos, (int)pos2,_redBaseIn.getElement<COMPLEX(floatT)>(pos2).cREAL , _redBaseIn.getElement<COMPLEX(floatT)>(pos2).cIMAG );
+          _redBaseOut.setValue<COMPLEX(floatT)>(pos,_redBaseIn.getElement<COMPLEX(floatT)>(pos2));
+      }
+      else{
+          printf("ii  %d %d %d %d \n",(int)ix, (int)iy, (int)iz, (int)pos);
+          _redBaseOut.setValue<COMPLEX(floatT)>(pos,0.0);
+      }
+
+}
+
+
+template<class floatT,size_t HaloDepth>
+__global__ void copySpinorToContainer(MemoryAccessor _redBase, Vect12ArrayAcc<floatT> _SpinorIn, const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt,
+                                      const int xtopo,const int ytopo,const int ztopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, lx*ly*lz, it, tmp);
+    divmod(tmp , lx*ly   , iz, tmp);
+    divmod(tmp ,  lx     , iy, ix);
+
+    if( ix >= xtopo*GInd::getLatData().lx && ix < (1+xtopo)*GInd::getLatData().lx &&
+        iy >= ytopo*GInd::getLatData().ly && iy < (1+ytopo)*GInd::getLatData().ly &&
+        iz >= ztopo*GInd::getLatData().lz && iz < (1+ztopo)*GInd::getLatData().lz  ){
+
+    Vect12<floatT> tmp12 = _SpinorIn.getElement(GInd::getSiteStack(GInd::getSite(ix-xtopo*GInd::getLatData().lx,iy-ytopo*GInd::getLatData().ly, iz-ztopo*GInd::getLatData().lz, it) , spincolor2));
+    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)),tmp12.data[spincolor1]);
+    //printf("%d %f %d %d %d \n" ,(int)(site), tmp12.data[spincolor1].cREAL,xtopo,ytopo,ztopo );
+    }
+    else{
+        _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)),0.0);
+    }
+
+
+}
+
+template<class floatT,size_t HaloDepth>
+__global__ void copySpinorToContainerLocal(MemoryAccessor _redBase, Vect12ArrayAcc<floatT> _SpinorIn, const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, lx*ly*lz, it, tmp);
+    divmod(tmp , lx*ly   , iz, tmp);
+    divmod(tmp ,  lx     , iy, ix);
+
+    Vect12<floatT> tmp12 = _SpinorIn.getElement(GInd::getSiteStack(GInd::getSite(ix,iy, iz, it) , spincolor2));
+    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)),tmp12.data[spincolor1]);
+
+
+}
+
+template<class floatT,size_t HaloDepth>
+__global__ void copySpinorToContainerLocal3(MemoryAccessor _redBase, Vect3ArrayAcc<floatT> _SpinorIn, const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, lx*ly*lz, it, tmp);
+    divmod(tmp , lx*ly   , iz, tmp);
+    divmod(tmp ,  lx     , iy, ix);
+
+    Vect3<floatT> tmp3 = _SpinorIn.getElement(GInd::getSiteStack(GInd::getSite(ix,iy, iz, it) , spincolor2));
+    _redBase.setValue<COMPLEX(floatT)>(ix+lx*(iy+ly*(iz+lz*it)),tmp3.data[spincolor1]);
+
+
+}
+
+
+template<class floatT,size_t HaloDepth>
+__global__ void copyContainerToSpinor(Vect12ArrayAcc<floatT> _SpinorOut,LatticeContainerAccessor _redBase,
+                                      const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt,
+                                      const int xtopo,const int ytopo,const int ztopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, GInd::getLatData().vol3, it, tmp);
+    divmod(tmp , GInd::getLatData().vol2, iz, tmp);
+    divmod(tmp , GInd::getLatData().vol1, iy, ix);
+
+    COMPLEX(floatT) val = _redBase.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*it)));
+
+    Vect12<floatT> tmp12 = _SpinorOut.getElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2));
+
+    tmp12.data[spincolor1] = val;
+    _SpinorOut.setElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2),tmp12);
+
+}
+
+
+template<class floatT,size_t HaloDepth>
+__global__ void copyContainerToSpinorXYZT(Vect12ArrayAcc<floatT> _SpinorOut,LatticeContainerAccessor _redBase,
+                                      const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt,
+                                      const int xtopo,const int ytopo,const int ztopo, const int ttopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, GInd::getLatData().vol3, it, tmp);
+    divmod(tmp , GInd::getLatData().vol2, iz, tmp);
+    divmod(tmp , GInd::getLatData().vol1, iy, ix);
+
+    COMPLEX(floatT) val = _redBase.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
+
+    Vect12<floatT> tmp12 = _SpinorOut.getElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2));
+
+    tmp12.data[spincolor1] = val;
+    _SpinorOut.setElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2),tmp12);
+
+}
+
+template<class floatT,size_t HaloDepth>
+__global__ void copyContainerToSpinor3_XYZT(Vect3ArrayAcc<floatT> _SpinorOut,LatticeContainerAccessor _redBase,
+                                      const size_t size, int spincolor1, int spincolor2,int lx,int ly,int lz,int lt,
+                                      const int xtopo,const int ytopo,const int ztopo, const int ttopo) {
+
+    size_t site = blockDim.x * blockIdx.x + threadIdx.x;
+    if (site >= size) {
+        return;
+    }
+
+    typedef GIndexer<All,HaloDepth> GInd;
+
+    int ix, iy, iz, it;
+//    it = tt;
+
+    int  tmp;
+
+    divmod(site, GInd::getLatData().vol3, it, tmp);
+    divmod(tmp , GInd::getLatData().vol2, iz, tmp);
+    divmod(tmp , GInd::getLatData().vol1, iy, ix);
+
+    COMPLEX(floatT) val = _redBase.getElement<COMPLEX(floatT)>((ix+xtopo*GInd::getLatData().lx)+lx*((iy+ytopo*GInd::getLatData().ly)+ly*((iz+ztopo*GInd::getLatData().lz)+lz*(it+ttopo*GInd::getLatData().lt))));
+
+    Vect3<floatT> tmp3 = _SpinorOut.getElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2));
+
+    tmp3.data[spincolor1] = val;
+    _SpinorOut.setElement(GInd::getSiteStack(GInd::getSite((size_t)ix,(size_t)iy, (size_t)iz, (size_t)(it)) , spincolor2),tmp3);
+
+}
+
+
+
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct SumXYZ_TrMdaggerM2{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+
+    SpinorColorAcc<floatT> _spinorIn;
+    SpinorColorAcc<floatT> _spinorInDagger;
+    int _t;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SumXYZ_TrMdaggerM2(int t,const SpinorRHS_t &spinorInDagger, const SpinorRHS_t &spinorIn)
+          :  _t(t), _spinorIn(spinorIn.getAccessor()), _spinorInDagger(spinorInDagger.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+
+        sitexyzt coords=site.coord;
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
+                                 _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
+        }
+
+//        printf("tr %d %d %d %f %f \n", coords.x,coords.y,coords.z,temp.cREAL, temp.cIMAG);
+
+        return temp;
+    }
+};
+
+
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct SumXYZT{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+
+    SpinorColorAcc<floatT> _spinorIn;
+    int _spin1, _spin2;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SumXYZT(const SpinorRHS_t &spinorIn, int spin1, int spin2)
+          :   _spinorIn(spinorIn.getAccessor()), _spin1(spin1), _spin2(spin2)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+
+        sitexyzt coords=site.coord;
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, coords.t);
+
+	COMPLEX(double) temp(0.0,0.0);
+
+        temp  =  _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,_spin2)).data[_spin1];
+        
+
+        return temp;
+    }
+};
+
+template<class floatT, size_t HaloDepth,size_t NStacks, int conjON>
+struct SumXYZ_TrMdaggerMwave{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+
+    SpinorColorAcc<floatT> _spinorIn;
+    SpinorColorAcc<floatT> _spinorInDagger;
+    Vect3ArrayAcc<floatT> _spinor_wave;
+    int _t, _time, _col;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SumXYZ_TrMdaggerMwave(int t,const SpinorRHS_t &spinorInDagger, const SpinorRHS_t &spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave, int time, int col)
+          :  _t(t), _spinorIn(spinorIn.getAccessor()), _spinorInDagger(spinorInDagger.getAccessor()),
+                   _spinor_wave(spinor_wave.getAccessor()), _time(time), _col(col)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(floatT)  operator()(gSite site){
+
+        COMPLEX(floatT) temp(0.0,0.0);
+
+        sitexyzt coords=site.coord;
+        sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+
+        if(coord.t <= _t && (coord.t+GInd::getLatData().lt) > _t){
+
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, (_t)%(GInd::getLatData().lt) );
+
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorInDagger.template getElement<floatT>(GInd::getSiteStack(siteT,stack)) *
+                                 _spinorIn.template getElement<floatT>(GInd::getSiteStack(siteT,stack));
+        }
+        if (conjON == 2){
+            temp = COMPLEX(floatT)((    temp*((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL,
+                                   (temp*conj((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL);
+        }
+        else if (conjON == 1){
+            temp = temp*conj((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
+        }
+        else{
+            temp = temp*((_spinor_wave.template getElement<floatT>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
+        }
+
+        }
+
+        return temp;
+    }
+};
+
+
+template<class floatT, size_t HaloDepth,size_t NStacks, int conjON>
+struct SumXYZ_TrMdaggerMwave_old{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+
+    SpinorColorAcc<floatT> _spinorIn;
+    SpinorColorAcc<floatT> _spinorInDagger;
+    Vect3ArrayAcc<floatT> _spinor_wave;
+    int _t, _time, _col;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SumXYZ_TrMdaggerMwave_old(int t,const SpinorRHS_t &spinorInDagger, const SpinorRHS_t &spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave, int time, int col)
+          :  _t(t), _spinorIn(spinorIn.getAccessor()), _spinorInDagger(spinorInDagger.getAccessor()),
+                   _spinor_wave(spinor_wave.getAccessor()), _time(time), _col(col)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ COMPLEX(double)  operator()(gSite site){
+
+        sitexyzt coords=site.coord;
+        gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _t);
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(siteT,stack)) *
+                                 _spinorIn.template getElement<double>(GInd::getSiteStack(siteT,stack));
+        }
+        if (conjON == 2){
+            temp = COMPLEX(double)((    temp*((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL,
+                                   (temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])).cREAL);
+        }
+        else if (conjON == 1){
+            temp = temp*conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);
+        }
+        else{
+            temp = temp*((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col]);  
+        }
+
+        return temp;
+    }
+};
+
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct SpinorXdaggerwave{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+    SpinorColorAcc<floatT> _spinorIn;
+    Vect3ArrayAcc<floatT> _spinor_wave;
+    int _time, _col;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    SpinorXdaggerwave( const SpinorRHS_t &spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave, int time, int col)
+          :   _spinorIn(spinorIn.getAccessor()),
+                   _spinor_wave(spinor_wave.getAccessor()), _time(time), _col(col)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ Vect12<floatT>  operator()(gSiteStack site){
+
+	sitexyzt coords=site.coord;
+
+        return conj((_spinor_wave.template getElement<double>(GInd::getSite(coords.x,coords.y, coords.z, _time))).data[_col])*_spinorIn.template getElement<double>(site);
+    }
+};
+
+template<class floatT, size_t HaloDepth,size_t NStacks>
+struct Tr_SpinorXspinor{
+    using SpinorRHS_t = Spinorfield<floatT, true, All, HaloDepth, 12, NStacks>;
+
+    SpinorColorAcc<floatT> _spinorInDagger;
+    SpinorColorAcc<floatT> _spinorIn;
+
+    // adding spinor gives compile error
+    typedef GIndexer<All, HaloDepth > GInd;
+    Tr_SpinorXspinor(SpinorRHS_t &spinorInDagger, const SpinorRHS_t &spinorIn)
+          :  _spinorInDagger(spinorInDagger.getAccessor()),  _spinorIn(spinorIn.getAccessor())
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ void  operator()(gSite site){
+
+
+        COMPLEX(double) temp(0.0,0.0);
+        for (size_t stack = 0; stack < NStacks; stack++) {
+            temp  = temp + _spinorInDagger.template getElement<double>(GInd::getSiteStack(site,stack)) *
+                                 _spinorIn.template getElement<double>(GInd::getSiteStack(site,stack));
+        }
+        Vect12<floatT> tmp(0.0);
+	tmp.data[0] = temp;
+
+        _spinorInDagger.setElement(site,tmp);
+    }
+};
+
+template<class floatT, size_t HaloDepth>
+struct MakeWaveSource12{
+
+    // accessor to access the spinor field
+    Vect12ArrayAcc<floatT> _spinorIn;
+    Vect3ArrayAcc<floatT> _spinor_wave;
+
+    size_t _time, _col, _post;
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    MakeWaveSource12(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave
+                      ,size_t time, size_t col, size_t post)
+                : _spinorIn(spinorIn.getAccessor()), _spinor_wave(spinor_wave.getAccessor()),
+                  _time(time), _col(col), _post(post)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ void operator()(gSite site) {
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            Vect12<floatT> tmp(0.0);
+
+            sitexyzt coords=site.coord;
+            gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _time);
+            sitexyzt coord = GIndexer<All, HaloDepth>::getLatData().globalPos(site.coord);
+            if(coord[3] == _post ){
+                tmp.data[stack] = (_spinor_wave.template getElement<floatT>(siteT)).data[_col];
+            }
+
+            //if(_time == 0 && coords.y == 0 && coords.x == 0)
+            //  printf("i i %d %d %d %f %f \n",(int)coords.x, (int)coords.y, (int)coords.z, tmp.data[stack].cREAL , tmp.data[stack].cIMAG);
+
+            const gSiteStack writeSite = GInd::getSiteStack(site,stack);
+            _spinorIn.setElement(writeSite,tmp);
+
+        }
+    }
+};
+
+
+template<class floatT, size_t HaloDepth>
+struct MakeWaveSource12_old{
+
+    // accessor to access the spinor field
+    Vect12ArrayAcc<floatT> _spinorIn;
+    Vect3ArrayAcc<floatT> _spinor_wave;
+
+    size_t _time, _col, _post;
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    MakeWaveSource12_old(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, const Spinorfield<floatT, true, All, HaloDepth, 3,1> &spinor_wave
+                      ,size_t time, size_t col, size_t post)
+                : _spinorIn(spinorIn.getAccessor()), _spinor_wave(spinor_wave.getAccessor()),
+                  _time(time), _col(col), _post(post)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ void operator()(gSite site) {
+
+        for (size_t stack = 0; stack < 12; stack++) {
+            Vect12<floatT> tmp(0.0);
+
+            sitexyzt coords=site.coord;
+            gSite siteT = GInd::getSite(coords.x,coords.y, coords.z, _time);
+            if(coords[3] == _post ){
+                tmp.data[stack] = (_spinor_wave.template getElement<double>(siteT)).data[_col];
+            }
+
+            //if(_time == 0 && coords.y == 0 && coords.x == 0)
+            //  printf("i i %d %d %d %f %f \n",(int)coords.x, (int)coords.y, (int)coords.z, tmp.data[stack].cREAL , tmp.data[stack].cIMAG);
+          
+            const gSiteStack writeSite = GInd::getSiteStack(site,stack);
+            _spinorIn.setElement(writeSite,tmp);
+
+        }
+    }
+};
+
+template<class floatT, size_t HaloDepth>
+struct PrintSpinor{
+
+    // accessor to access the spinor field
+    Vect12ArrayAcc<floatT> _spinorIn;
+    int spin1, spin2;
+
+    typedef GIndexer<All, HaloDepth > GInd;
+    //Constructor to initialize all necessary members.
+    PrintSpinor(Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn, int _spin1, int _spin2)
+                : _spinorIn(spinorIn.getAccessor()), spin1(_spin1), spin2(_spin2)
+    { }
+
+    //This is the operator that is called inside the Kernel
+    __device__ __host__ void operator()(gSite site) {
+
+	sitexyzt coords=site.coord;
+        if(coords.x == 1 && coords.y == 2 && coords.z == 3 && coords.t == 4){
+
+	       printf("\n xdir  { ");	
+              for(int xx =0; xx < GInd::getLatData().lx ; xx++){        
+		   gSiteStack pSite = GInd::getSiteStack(GInd::getSite(xx,coords.y, coords.z, coords.t),spin2);
+
+                   Vect12<floatT> tmp = _spinorIn.template getElement<floatT>(pSite);
+
+	     //      printf("i i %d %d %d %d %f %f \n",(int)xx, (int)coords.y, (int)coords.z,(int)coords.t, tmp.data[0].cREAL , tmp.data[0].cIMAG);
+                     printf("%.16f + im* %.16f ,", tmp.data[spin1].cREAL , tmp.data[spin1].cIMAG );
+ 
+	      }
+
+	      printf(" } \n ");
+
+	      printf("\n ydir  { ");
+              for(int yy =0; yy < GInd::getLatData().ly ; yy++){
+                   gSiteStack pSite = GInd::getSiteStack(GInd::getSite(coords.x,yy, coords.z, coords.t),spin2);
+
+                   Vect12<floatT> tmp = _spinorIn.template getElement<floatT>(pSite);
+
+             //      printf("i i %d %d %d %d %f %f \n",(int)xx, (int)coords.y, (int)coords.z,(int)coords.t, tmp.data[0].cREAL , tmp.data[0].cIMAG);
+                     printf("%.16f + im* %.16f ,", tmp.data[spin1].cREAL , tmp.data[spin1].cIMAG );
+
+              }
+
+              printf(" } \n ");
+
+              printf("\n zdir  { ");
+              for(int zz =0; zz < GInd::getLatData().lz ; zz++){
+                   gSiteStack pSite = GInd::getSiteStack(GInd::getSite(coords.x, coords.y,zz, coords.t),spin2);
+
+                   Vect12<floatT> tmp = _spinorIn.template getElement<floatT>(pSite);
+
+             //      printf("i i %d %d %d %d %f %f \n",(int)xx, (int)coords.y, (int)coords.z,(int)coords.t, tmp.data[0].cREAL , tmp.data[0].cIMAG);
+                     printf("%.16f + im* %.16f ,", tmp.data[spin1].cREAL , tmp.data[spin1].cIMAG );
+
+              }
+
+              printf(" } \n ");
+
+
+              printf("\n tdir  { ");
+              for(int tt =0; tt < GInd::getLatData().lt ; tt++){
+                   gSiteStack pSite = GInd::getSiteStack(GInd::getSite(coords.x, coords.y, coords.z, tt),spin2);
+
+                   Vect12<floatT> tmp = _spinorIn.template getElement<floatT>(pSite);
+
+             //      printf("i i %d %d %d %d %f %f \n",(int)xx, (int)coords.y, (int)coords.z,(int)coords.t, tmp.data[0].cREAL , tmp.data[0].cIMAG);
+                     printf("%.16f + im* %.16f ,", tmp.data[spin1].cREAL , tmp.data[spin1].cIMAG );
+
+              }
+
+              printf(" } \n ");
+
+
+
+	}
+
+    }
+};
+
+
+

@@ -28,11 +28,11 @@ SimpleArray<double,NStacks> measure_condensate(CommunicationBase &commBase, Rhmc
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash_e_inv(smeared_W, smeared_X, mass);
     HisqDSlash<floatT, onDevice, Odd, HaloDepth, HaloDepthSpin, NStacks> dslash_o(smeared_W, smeared_X, 0.0);
 
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> eta_e(commBase);
-    Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, NStacks> eta_o(commBase);
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> x_e(commBase);
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> w_e(commBase);
-    Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, NStacks> w_o(commBase);
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, NStacks> eta_e(commBase);
+    Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, 3, NStacks> eta_o(commBase);
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, NStacks> x_e(commBase);
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3, NStacks> w_e(commBase);
+    Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, 3, NStacks> w_o(commBase);
 
     eta_o.gauss(d_rand.state);
     eta_e.gauss(d_rand.state);

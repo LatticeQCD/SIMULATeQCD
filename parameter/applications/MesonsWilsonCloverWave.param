@@ -1,0 +1,61 @@
+#
+# configConverter.param
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of nodes per direction
+#    Gaugefile: Name of input gauge configuration
+#   endianness: Endianness of input configuration
+#       format: Format of input configuration (ildg, milc, or nersc)
+#   format_out: Format of output configuration (ildg or nersc)
+#     prec_out: Precision of the output configuration, 1 for single and 2 for double
+#
+Lattice       = 64 64 64 64
+Nodes         = 1 1 2 4
+beta          = 3.360
+gauge_file    = CONF
+gauge_file_folder = FOLDER
+format        = nersc
+endianness    = auto
+mass          = 4.1712
+mass2         = 4.1712
+csw           = 1.0286
+sourcePos     = PX PY PZ PT
+sources       = 2 2 2 4
+smear1         = 0.0
+smearSteps1    = 0
+smear2         = 0.0
+smearSteps2    = 0
+tolerance      = 1e-28
+maxiter        = 10000
+use_hyp        = 1
+use_mass2      = 0
+
+gtolerance = 1e-08
+maxgfsteps = 90000
+numunit = 20
+
+nSources = 4
+source1_file   = source64_delta.bin
+source1F_file  = source64F_delta.bin
+#source2_file   = source64_delta.bin
+#source2F_file  = source64F_delta.bin
+#source3_file   = source64_delta.bin
+#source3F_file  = source64F_delta.bin
+#source4_file   = source64_delta.bin
+#source4F_file  = source64F_delta.bin
+
+
+source2_file   = source64_S1_zero_a0404.bin
+source2F_file  = source64F_S1_zero_a0404.bin
+source3_file   = source64_S2_zero_a0404.bin
+source3F_file  = source64F_S2_zero_a0404.bin
+source4_file   = source64_S3_zero_a0404.bin
+source4F_file  = source64F_S3_zero_a0404.bin
+
+
+use_wilson=0
+wilson_step=0.001
+wilson_start=0.0
+wilson_stop=0.125
+
+

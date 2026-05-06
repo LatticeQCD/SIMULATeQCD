@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC, true, HaloDepth> gaugeLvl2(commBase);
     Gaugefield<PREC, true, HaloDepth,U3R14> gaugeNaik(commBase);
     Gaugefield<PREC, true, HaloDepth> force(commBase);
-    Spinorfield<PREC, true, Even, HaloDepthSpin> SpinorIn(commBase);
+    Spinorfield<PREC, true, Even, HaloDepthSpin,3> SpinorIn(commBase);
 
     grnd_state<true> d_rand;
 

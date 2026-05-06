@@ -141,7 +141,7 @@ struct DotAlongXY{
 //        return results;
 
 
-//        return  conj(_spinorIn1.getElement(site).getElement0())*_spinorIn2.getElement(GInd::getSiteFull((size_t)ix, (size_t)iy, (size_t)iz, (size_t)it)).getElement0();
+//        return  conj(_spinorIn1.getElement(site).getElement<0>())*_spinorIn2.getElement(GInd::getSiteFull((size_t)ix, (size_t)iy, (size_t)iz, (size_t)it)).getElement<0>();
         return  tr_c(_gaugeIn.getLinkDagger(GInd::getSiteMu(site,0))*_gaugeIn.getLink(GInd::getSiteMu(GInd::getSiteFull((size_t)ix, (size_t)iy, (size_t)iz, (size_t)it),1)))/3.0;
     }
 
@@ -207,7 +207,7 @@ struct DotAlongXYInterval{
 	return results/3.0;
 
 
-//        return  conj(_spinorIn1.getElement(site).getElement0())*_spinorIn2.getElement(GInd::getSiteFull((size_t)ix, (size_t)iy, (size_t)iz, (size_t)it)).getElement0();
+//        return  conj(_spinorIn1.getElement(site).getElement<0>())*_spinorIn2.getElement(GInd::getSiteFull((size_t)ix, (size_t)iy, (size_t)iz, (size_t)it)).getElement<0>();
 //        return  tr_c(_gaugeIn.getLinkDagger(GInd::getSiteMu(site,0))*_gaugeIn.getLink(GInd::getSiteMu(GInd::getSiteFull((size_t)ix, (size_t)iy, (size_t)iz, (size_t)it),1)))/3.0;
 
 	}

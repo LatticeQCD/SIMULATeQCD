@@ -164,8 +164,8 @@ template<class floatT,bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin,
 struct multiplySimpleArraySpinor {
 
     SimpleArray<floatT, NStacks> _Arr;
-    Vect3arrayAcc<floatT> _Spinor;
-    multiplySimpleArraySpinor(SimpleArray<floatT, NStacks>& Arr, Spinorfield<floatT,onDevice,LatticeLayout,HaloDepthSpin,NStacks>& Spinor) : _Arr(Arr), _Spinor(Spinor.getAccessor()) {}
+    Vect3ArrayAcc<floatT> _Spinor;
+    multiplySimpleArraySpinor(SimpleArray<floatT, NStacks>& Arr, Spinorfield<floatT,onDevice,LatticeLayout,HaloDepthSpin, 3,NStacks>& Spinor) : _Arr(Arr), _Spinor(Spinor.getAccessor()) {}
 
     __host__ __device__ void initialize(__attribute__((unused)) gSite& site) {
     }
@@ -182,7 +182,7 @@ struct multiplySimpleArraySpinor {
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, int steps, bool runTesting, const int rdeg>
 tensor_product<floatT, onDevice, HaloDepth, HaloDepthSpin, steps, runTesting,rdeg>::tensor_product(Gaugefield<floatT, onDevice,  HaloDepth> &gaugeIn,
-                                                   Vect3arrayAcc<floatT> x, Vect3arrayAcc<floatT> y,
+                                                   Vect3ArrayAcc<floatT> x, Vect3ArrayAcc<floatT> y,
                                                    SimpleArray<floatT, rdeg> rat_num)
   : _x(x), _y(y), gAccessor(gaugeIn.getAccessor()), _rat_num(rat_num) {}
 
@@ -254,7 +254,7 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
 
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
-void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>::make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn,
+void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>::make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &SpinorIn,
         Gaugefield<floatT, onDevice, HaloDepth, comp> &Force,
         Gaugefield<floatT, onDevice, HaloDepth, comp> &NaikForce,
         bool isLight)
@@ -296,7 +296,7 @@ void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting,rdeg>
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
-void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::TestForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn, Gaugefield<floatT,onDevice,HaloDepth,comp> &Force, grnd_state<true> &d_rand) {
+void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::TestForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> &SpinorIn, Gaugefield<floatT,onDevice,HaloDepth,comp> &Force, grnd_state<true> &d_rand) {
 
     if (!runTesting) {
         rootLogger.error("Calling member function TestForce should only be used when the template parameter runTesting is set to true!");
@@ -305,8 +305,8 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
     Force.iterateWithConst(su3_zero<floatT>());
     _TmpForce.iterateWithConst(su3_zero<floatT>());
 
-    Spinorfield<floatT, onDevice, Even, HaloDepthSpin> temp(SpinorIn.getComm());
-    Spinorfield<floatT, false, Even, HaloDepthSpin> SpinorOutput(SpinorIn.getComm());
+    Spinorfield<floatT, onDevice, Even, HaloDepthSpin, 3> temp(SpinorIn.getComm());
+    Spinorfield<floatT, false, Even, HaloDepthSpin, 3> SpinorOutput(SpinorIn.getComm());
 
     Vect3<floatT> SpinorTestOutput;
     for (int i = 0; i < rdeg; i++) {
@@ -532,7 +532,7 @@ void HisqForce<floatT,onDevice, HaloDepth,HaloDepthSpin,comp,runTesting,rdeg>::T
 
 
 template<class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
-void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::updateForce(Spinorfield<floatT,onDevice,Even,HaloDepthSpin> &SpinorIn,
+void HisqForce<floatT,onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::updateForce(Spinorfield<floatT,onDevice,Even,HaloDepthSpin, 3> &SpinorIn,
         Gaugefield<floatT,onDevice,HaloDepth,comp> &Force, bool isLight) {
 
     make_f0(SpinorIn,Force,_TmpForce,isLight);

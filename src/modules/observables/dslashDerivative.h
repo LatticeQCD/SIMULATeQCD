@@ -6,7 +6,7 @@
 template<typename floatT, bool onDevice, Layout LatLayoutRHS, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 struct dDdmuFunctor {
 
-    Vect3arrayAcc<floatT> _spinorIn;
+    Vect3ArrayAcc<floatT> _spinorIn;
     SU3Accessor<floatT, R18> _gAcc_smeared;
     SU3Accessor<floatT, U3R14> _gAcc_Naik;
     floatT _sign;
@@ -14,7 +14,7 @@ struct dDdmuFunctor {
     int _order;
 
     dDdmuFunctor(
-            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> &spinorIn,
+            const Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> &spinorIn,
             Gaugefield<floatT, onDevice, HaloDepthGauge, R18> &gauge_smeared,
             Gaugefield<floatT, onDevice, HaloDepthGauge, U3R14> &gauge_Naik, int order, floatT naik_epsilon = 0.0) :
         _spinorIn(spinorIn.getAccessor()),

@@ -63,9 +63,9 @@ void test_dslash(CommunicationBase &commBase, int Vol){
     gauge_Naik_half.convert_precision<floatT>(gauge_Naik);
 
     rootLogger.info("Initialize spinors");
-    Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
-    Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorSave(commBase);
-    Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
+    Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorIn(commBase);
+    Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorSave(commBase);
+    Spinorfield<__half, true, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorOut(commBase);
 
     gpuErr = gpuGetLastError();
     if (gpuErr)
@@ -97,7 +97,7 @@ void test_dslash(CommunicationBase &commBase, int Vol){
 
 
 
-    Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, NStacks> spinorTest(commBase);
+    Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorTest(commBase);
     spinorTest.template convert_precision<__half>(spinorOut);
     SimpleArray<COMPLEX(double), NStacks> dot(0);
     SimpleArray<double, NStacks> norm(0.0);

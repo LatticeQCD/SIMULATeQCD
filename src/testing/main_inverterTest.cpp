@@ -41,16 +41,16 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
     rootLogger.info("Initialize spinors");
 
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> eta(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> eta2(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> eta3(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> eta(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> eta2(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> eta3(commBase);
 
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorIn(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, NStacks> spinorOut2(commBase);
-    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, NStacks> spinorOut3(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorIn(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorOut(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorOut2(commBase);
+    Spinorfield<floatT, onDevice, LayoutSwitcher<LatLayoutRHS>(), HaloDepthSpin, 3, NStacks> spinorOut3(commBase);
 
-    Spinorfield<floatT, false, LatLayoutRHS, HaloDepthSpin, NStacks> spinorHost(commBase);
+    Spinorfield<floatT, false, LatLayoutRHS, HaloDepthSpin, 3, NStacks> spinorHost(commBase);
 
     rootLogger.info("Randomize spinors");
     spinorIn.gauss(d_rand.state);
@@ -134,18 +134,18 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     }
 
 
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> spinorInMulti(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> spinortmp(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> phi(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 1> spinorOutSingle(commBase);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, Multistack> spinorOutMulti(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> spinorInMulti(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> spinortmp(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> phi(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 1> spinorOutSingle(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, Multistack> spinorOutMulti(commBase);
 
 
     AdvancedMultiShiftCG<floatT, Multistack> cgM;
 
 
     rootLogger.info("The xi test as in ye olde code:");
-    spinorInMulti.one();
+    spinorInMulti.unit_basis(0); 
 
     spinortmp.copyFromStackToStack(spinorOutMulti, 0, 0);
     spinorHost = spinortmp;
@@ -250,7 +250,7 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
 
 
     spinorInMulti.gauss(d_rand.state);
-    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 12> spinorOutMulti_bar(commBase);
+    Spinorfield<floatT, onDevice, LatLayoutRHS, HaloDepthSpin, 3, 12> spinorOutMulti_bar(commBase);
 
 
     AdvancedMultiShiftCG<floatT, 12> cgM_bar;

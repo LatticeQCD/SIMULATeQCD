@@ -21,13 +21,13 @@ struct QuickDslash {
 
     //! The functor has to know about all the elements that it needs for computation.
     //! However, it does not need the Spinor, where the result should go (SpinorOut).
-    Vect3arrayAcc<floatT> spinorIn;
+    Vect3ArrayAcc<floatT> spinorIn;
     SU3Accessor<floatT, R18> gAcc;
     SU3Accessor<floatT, U3R14> gAccN;
 
     //! Use the constructor to initialize the members
     QuickDslash(
-            Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin> &spinorIn,
+            Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, 3> &spinorIn,
             Gaugefield<floatT, true, HaloDepthGauge, R18> &gauge,
             Gaugefield<floatT, true, HaloDepthGauge, U3R14> &gaugeN) :
             spinorIn(spinorIn.getAccessor()),
@@ -264,8 +264,8 @@ struct ReadAtMu1 {
 
 //! A custom implementation of the dot product using functor syntax
 template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth>
-COMPLEX(floatT) myDotProd(Spinorfield<floatT, onDevice, LatLayout, HaloDepth> &lhs,
-                           Spinorfield<floatT, onDevice, LatLayout, HaloDepth> &rhs,
+COMPLEX(floatT) myDotProd(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3> &lhs,
+                           Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3> &rhs,
                            LatticeContainer<onDevice,COMPLEX(floatT)> &latContainer) {
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
@@ -311,7 +311,7 @@ void run_func(CommunicationBase &commBase) {
      * (The actual implementation is more complex, as it is more general)
      *
      *  template <typename Functor, class floatT, Layout LatLayout, size_t HaloDepths>
-     *  __global__ void iterateOverBulk( Vect3arrayAcc<floatT> spinorOut, Functor opc, const size_t size) {
+     *  __global__ void iterateOverBulk( Vect3ArrayAcc<floatT> spinorOut, Functor opc, const size_t size) {
      *
      *    size_t i = blockDim.x * blockIdx.x + threadIdx.x;
      *    if (i >= size) {
@@ -547,21 +547,21 @@ void run_func(CommunicationBase &commBase) {
 
     rootLogger.info("Initialize Spinorfield");
     //! Two data spinors that we will use for further tests.
-    Spinorfield<floatT, true, LatLayout, HaloDepthSpin> spinor1(commBase);
-    Spinorfield<floatT, true, LatLayout, HaloDepthSpin> spinor2(commBase);
+    Spinorfield<floatT, true, LatLayout, HaloDepthSpin, 3> spinor1(commBase);
+    Spinorfield<floatT, true, LatLayout, HaloDepthSpin, 3> spinor2(commBase);
 
     //! Spinor to hold the result.
-    Spinorfield<floatT, true, LatLayout, HaloDepthSpin> res_spinor(commBase);
+    Spinorfield<floatT, true, LatLayout, HaloDepthSpin,3 > res_spinor(commBase);
 
     //! Spinor to enter the Dslash from the right. This needs another parity, therefore LatLayoutRHS.
-    Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin> rhs_spinor(commBase);
+    Spinorfield<floatT, true, LatLayoutRHS, HaloDepthSpin, 3> rhs_spinor(commBase);
 
     //! Spinor to hold the result from the reference.
-    Spinorfield<floatT, true, LatLayout, HaloDepthSpin> ref_spinor(commBase);
+    Spinorfield<floatT, true, LatLayout, HaloDepthSpin,3> ref_spinor(commBase);
 
     //! We compare the results of the spinor operations by projecting the result onto this spinor. This gives a scalar,
     //! which is easy to compare. Similar to the plaquette above.
-    Spinorfield<floatT, true, LatLayout, HaloDepthSpin> project_to_spinor(commBase);
+    Spinorfield<floatT, true, LatLayout, HaloDepthSpin,3> project_to_spinor(commBase);
 
     rootLogger.info("Fill with random numbers");
 

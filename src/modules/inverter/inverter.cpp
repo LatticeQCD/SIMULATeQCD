@@ -7,6 +7,102 @@
 
 template<class floatT, size_t NStacks>
 template <typename Spinor_t>
+void bicgstab<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
+        Spinor_t& spinorIn, int max_iter, double precision)
+{
+    Spinor_t vri(spinorIn.getComm());
+
+    Spinor_t vpi(spinorIn.getComm());
+
+    Spinor_t vr0h(spinorIn.getComm());
+
+    Spinor_t vv(spinorIn.getComm());
+    Spinor_t vh(spinorIn.getComm());
+    Spinor_t vs(spinorIn.getComm());
+    Spinor_t vt(spinorIn.getComm());
+
+
+
+    vri = spinorIn;
+    vr0h= vri;
+    vpi = vri;
+    spinorOut = static_cast<floatT>(0.0) * vri;
+
+    SimpleArray<COMPLEX(double), NStacks> dot(0);
+    SimpleArray<COMPLEX(double), NStacks> spi(0.0);
+    SimpleArray<COMPLEX(double), NStacks> spip1(0.0);
+    SimpleArray<COMPLEX(double), NStacks> alpha(0.0);
+    SimpleArray<COMPLEX(double), NStacks> omega(0.0);
+    SimpleArray<COMPLEX(double), NStacks> beta(0.0);
+
+
+    SimpleArray<floatT, NStacks> rsnew(0.0);
+
+    spi = vr0h.dotProductStacked(vri);
+
+    for (int i = 0; i < max_iter; i++) {
+        vpi.updateAll(COMM_BOTH | Hyperplane | Plane);
+        //vp.updateAll(COMM_BOTH | Hyperplane);
+        dslash.applyMdaggM(vv, vpi, false);
+
+        dot = (vr0h.dotProductStacked(vv));
+        alpha = spi/dot;
+
+        // h = spinorOut + ( vp * alpha);
+        vh = spinorOut + alpha * vpi;
+
+        // s = vr - (vap * alpha);
+        vs = vri - alpha * vv;
+
+        dot = vs.dotProductStacked(vs);
+        rsnew = real<floatT>(dot);
+
+        if(max(rsnew /*/ norm*/) < precision) {
+            spinorOut = vh;
+            rootLogger.info("# iterations " ,  i);
+            break;
+        }
+        vs.updateAll(COMM_BOTH | Hyperplane | Plane);
+        dslash.applyMdaggM(vt, vs, false);
+
+        
+        beta = vt.dotProductStacked(vs);
+        dot   = vt.dotProductStacked(vt);
+        omega = beta/dot;     
+
+        spinorOut = vh + omega * vs;
+
+        vri       = vs - omega * vt;
+
+        dot = vri.dotProductStacked(vri);
+        rsnew = real<floatT>(dot);
+
+        if(max(rsnew /*/ norm*/) < precision) {
+            rootLogger.info("# iterations " ,  i);
+            break;
+        }
+
+        spip1 = vr0h.dotProductStacked(vri);
+        //beta  = (spip1/spi)*(alpha/omega);
+        beta =  spip1/spi;
+        dot  = omega/alpha;
+        beta = beta/dot;
+
+        vpi = vri + beta * (vpi -omega *vv);
+
+        spi = spip1;
+        
+
+        if(i == max_iter -1) {
+            rootLogger.warn("CG: Warning max iteration reached " ,  i);
+        }
+    }
+    spinorOut.updateAll();
+    rootLogger.info("residue " ,  max(rsnew /*/norm*/));
+}
+
+template<class floatT, size_t NStacks>
+template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut,
         Spinor_t& spinorIn, int max_iter, double precision)
 {
@@ -31,7 +127,8 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
     SimpleArray<floatT, NStacks> remain;
 
     for (int i = 0; i < max_iter; i++) {
-        vp.updateAll(COMM_BOTH | Hyperplane);
+        vp.updateAll(COMM_BOTH | Hyperplane | Plane);
+        //vp.updateAll(COMM_BOTH | Hyperplane);
         dslash.applyMdaggM(vap, vp, false);
 
         dot = vp.dotProductStacked(vap);
@@ -70,16 +167,16 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
 template<class floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 struct StackTimesFloatPlusFloatTimesNoStack
 {
-    Vect3arrayAcc<floatT> spinorIn1;
-    Vect3arrayAcc<floatT> spinorIn2;
+    Vect3ArrayAcc<floatT> spinorIn1;
+    Vect3ArrayAcc<floatT> spinorIn2;
     SimpleArray<floatT, NStacks> _a;
     SimpleArray<floatT, NStacks> _b;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackTimesFloatPlusFloatTimesNoStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn1,
+    StackTimesFloatPlusFloatTimesNoStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn1,
             SimpleArray<floatT, NStacks> a,
-            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> &spinorIn2,
+            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, 1> &spinorIn2,
             SimpleArray<floatT, NStacks> b) :
         spinorIn1(spinorIn1.getAccessor()), spinorIn2(spinorIn2.getAccessor()), _a(a), _b(b) {}
 
@@ -97,14 +194,14 @@ struct StackTimesFloatPlusFloatTimesNoStack
 template<class floatT, bool onDevice, Layout LatLayout, int HaloDepth, size_t NStacks>
 struct StackMinusFloatTimeStack
 {
-    Vect3arrayAcc<floatT> spinorIn1;
-    Vect3arrayAcc<floatT> spinorIn2;
+    Vect3ArrayAcc<floatT> spinorIn1;
+    Vect3ArrayAcc<floatT> spinorIn2;
     SimpleArray<floatT, NStacks> _a;
 
     typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    StackMinusFloatTimeStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn1,
-            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &spinorIn2,
+    StackMinusFloatTimeStack(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn1,
+            Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 3, NStacks> &spinorIn2,
             SimpleArray<floatT,NStacks> a) :
         spinorIn1(spinorIn1.getAccessor()), spinorIn2(spinorIn2.getAccessor()), _a(a) {}
 
@@ -570,30 +667,44 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
 template class ConjugateGradient<floatT, STACKS>;
 
 #define CLASSCG_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
-template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, int, double);\
-template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
-template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-                                                                    Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, double); \
+template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, int, double);\
+template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorIn, int, double);\
+template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+                                                            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double); \
+template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+                                                                    Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double, double); \
 
 #define CLASSCG_FLOAT_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
-template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);
+template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, LinearOperator<Spinorfield<float, true, LO, HALOSPIN, 3,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, const int, const double, double);
 
 #define CLASSCG_HALF_INV_INIT(floatT,LO,HALOSPIN,STACKS)  \
-template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, LinearOperator<Spinorfield<__half, true, LO, HALOSPIN,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN,STACKS>& spinorIn, const int, const double, double);
+template void ConjugateGradient<floatT,STACKS>::invert_mixed(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, LinearOperator<Spinorfield<__half, true, LO, HALOSPIN, 3,STACKS> >& dslash_inner, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, const Spinorfield<floatT, true, LO, HALOSPIN, 3,STACKS>& spinorIn, const int, const double, double);
 
 #define CLASSMCG_INIT(floatT,LO,HALOSPIN,STACKS)                    \
     template class MultiShiftCG<floatT,true ,LO ,HALOSPIN, STACKS>;
 #define CLASSAMCG_INIT(floatT,STACKS) \
     template class AdvancedMultiShiftCG<floatT, STACKS>;
 #define CLASSAMCG_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
-template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 1> >& dslash, \
-            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 1>& spinorIn, \
+template void AdvancedMultiShiftCG<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, 1> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, 3, 1>& spinorIn, \
             SimpleArray<floatT, STACKS> sigma, const int, const double); \
 
+#define CLASSBICGSTAB_INIT(floatT,STACKS) \
+template class bicgstab<floatT, STACKS>;
+
+#define CLASSBICGSTAB_INV_INIT(floatT,LO,HALOSPIN,STACKS) \
+template void bicgstab<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 3, STACKS>& spinorIn, int, double);\
+template void bicgstab<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS> >& dslash, \
+            Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, 12, STACKS>& spinorIn, int, double);\
+
+
 INIT_PN(CLASSCG_INIT)
+INIT_PN(CLASSBICGSTAB_INIT)
 INIT_PLHSN(CLASSCG_INV_INIT)
+INIT_PLHSN(CLASSBICGSTAB_INV_INIT)
 #if DOUBLEPREC == 1 && SINGLEPREC ==1
 INIT_PLHSN(CLASSCG_FLOAT_INV_INIT)
 #endif

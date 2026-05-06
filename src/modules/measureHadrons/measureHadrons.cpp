@@ -8,11 +8,11 @@
 template<class floatT, size_t HaloDepth>
 struct contractPropagators {
 
-    Vect3arrayAcc<floatT> _acc_i;
-    Vect3arrayAcc<floatT> _acc_j;
+    Vect3ArrayAcc<floatT> _acc_i;
+    Vect3ArrayAcc<floatT> _acc_j;
 
-    contractPropagators(Spinorfield<floatT, false, All, HaloDepth, 3> &spinor_i,
-                        Spinorfield<floatT, false, All, HaloDepth, 3> &spinor_j) :
+    contractPropagators(Spinorfield<floatT, false, All, HaloDepth, 3, 3> &spinor_i,
+                        Spinorfield<floatT, false, All, HaloDepth, 3, 3> &spinor_j) :
             _acc_i(spinor_i.getAccessor()), _acc_j(spinor_j.getAccessor()) {}
 
 
@@ -34,20 +34,20 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
 
     //! setup memory for propagator results
     const size_t n_color = 3;
-    std::vector<Spinorfield<floatT,false,All,0,n_color>> prop_containers;
+    std::vector<Spinorfield<floatT,false,All,0,3,n_color>> prop_containers;
     for(size_t i = 0; i < _n_masses; i++) {
-        prop_containers.emplace_back(std::move(Spinorfield<floatT,false,All,0,n_color>(_commBase, "Spinorfield"+_lp.mass_labels.get()[i])));
+        prop_containers.emplace_back(std::move(Spinorfield<floatT,false,All,0,3,n_color>(_commBase, "Spinorfield"+_lp.mass_labels.get()[i])));
     }
 
     for(int i = 0; i < _n_masses; i++){
 
         //! host
-        Spinorfield<floatT, false, Even, HaloDepthSpin, NStacks> h_Ge(_commBase); //! even part of propagator
-        Spinorfield<floatT, false, Odd, HaloDepthSpin, NStacks> h_Go(_commBase); //! odd part of propagator
+        Spinorfield<floatT, false, Even, HaloDepthSpin,3, NStacks> h_Ge(_commBase); //! even part of propagator
+        Spinorfield<floatT, false, Odd, HaloDepthSpin,3, NStacks> h_Go(_commBase); //! odd part of propagator
         //! device
-        Spinorfield<floatT, true, Even, HaloDepthSpin, NStacks> d_Se(_commBase); //! even source
-        Spinorfield<floatT, true, Even, HaloDepthSpin, NStacks> d_Ge(_commBase); //! even part of propagator
-        Spinorfield<floatT, true, Odd, HaloDepthSpin, NStacks> d_Go(_commBase); //! odd part of propagator
+        Spinorfield<floatT, true, Even, HaloDepthSpin,3, NStacks> d_Se(_commBase); //! even source
+        Spinorfield<floatT, true, Even, HaloDepthSpin,3, NStacks> d_Ge(_commBase); //! even part of propagator
+        Spinorfield<floatT, true, Odd, HaloDepthSpin,3, NStacks> d_Go(_commBase); //! odd part of propagator
 
         ConjugateGradient<floatT,NStacks> cg;
 
@@ -69,8 +69,8 @@ void measureHadrons<floatT, onDevice, HaloDepth, HaloDepthSpin, Source, NStacks,
         HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, NStacks> dslash(gauge_smeared, gauge_Naik,
                                                                                      mass, naik_epsilon);
 
-        Vect3arrayAcc<floatT> h_Ge_acc = h_Ge.getAccessor();               //! host accessor for even propagator
-        Vect3arrayAcc<floatT> h_Go_acc = h_Go.getAccessor();               //! host accessor for odd propagator
+        Vect3ArrayAcc<floatT> h_Ge_acc = h_Ge.getAccessor();               //! host accessor for even propagator
+        Vect3ArrayAcc<floatT> h_Go_acc = h_Go.getAccessor();               //! host accessor for odd propagator
 
         //! first color
         const int color0 = 0;
