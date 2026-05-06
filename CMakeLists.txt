@@ -700,7 +700,7 @@ add_to_compound_SIMULATeQCD_target(tests stackedSpinorTest)
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfFifthDimTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfFifthDimTest src/testing/main_mdwfFifthDimTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfFifthDimTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(mdwfFifthDimTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_8=1 LAYOUT_ALL=1)
+SIMULATeQCD_target_compile_definitions(mdwfFifthDimTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_8=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests mdwfFifthDimTest)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_taylorMeasurementTest.cpp src/modules/observables/dslashDerivative.cpp src/spinor/spinorfield.cpp)

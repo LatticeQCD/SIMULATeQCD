@@ -44,44 +44,53 @@ double expectedFifthDimValue(size_t stack,
     return expected;
 }
 
-template<size_t Ls>
+template<Layout LatLayout>
+const char *layoutName() {
+    if (LatLayout == All) {
+        return "All";
+    }
+    if (LatLayout == Even) {
+        return "Even";
+    }
+    return "Odd";
+}
+
+template<Layout LatLayout, size_t Ls>
 void runFifthDimSmokeTest(CommunicationBase &commBase) {
     const size_t HaloDepth = 2;
-    typedef GIndexer<All, HaloDepth> GInd;
+    typedef GIndexer<LatLayout, HaloDepth> GInd;
 
-    MDWFSpinor<double, true, All, HaloDepth, Ls> spinorIn(commBase, "MDWF_spinor_in");
-    MDWFSpinor<double, true, All, HaloDepth, Ls> spinorOut(commBase, "MDWF_spinor_out");
-    MDWFSpinor<double, false, All, HaloDepth, Ls> spinorOutHost(commBase, "MDWF_spinor_out_host");
+    MDWFSpinor<double, true, LatLayout, HaloDepth, Ls> spinorIn(commBase, "MDWF_spinor_in");
+    MDWFSpinor<double, true, LatLayout, HaloDepth, Ls> spinorOut(commBase, "MDWF_spinor_out");
+    MDWFSpinor<double, false, LatLayout, HaloDepth, Ls> spinorOutHost(commBase, "MDWF_spinor_out_host");
 
-    spinorIn.template iterateOverBulk<>(FillMDWFStackPattern<double, All, HaloDepth, Ls>());
+    spinorIn.template iterateOverBulk<>(FillMDWFStackPattern<double, LatLayout, HaloDepth, Ls>());
 
     MDWFFifthDimCoefficients<double> coeff(2.0, 3.0, 5.0, 7.0, 11.0);
-    applyMDWFFifthDimCoupling<double, true, All, HaloDepth, Ls>(spinorOut, spinorIn, coeff);
+    applyMDWFFifthDimCoupling<double, true, LatLayout, HaloDepth, Ls>(spinorOut, spinorIn, coeff);
 
     spinorOutHost = spinorOut;
     Vect12ArrayAcc<double> outAcc = spinorOutHost.getAccessor();
 
     double maxDiff = 0.0;
-    for (size_t x = 0; x < GInd::getLatData().lx; x++)
-        for (size_t y = 0; y < GInd::getLatData().ly; y++)
-            for (size_t z = 0; z < GInd::getLatData().lz; z++)
-                for (size_t t = 0; t < GInd::getLatData().lt; t++)
-                    for (size_t stack = 0; stack < Ls; stack++) {
-                        Vect12<double> out = outAcc.getElement(GInd::getSiteStack(x, y, z, t, stack));
-                        for (size_t component = 0; component < 12; component++) {
-                            const double expected = expectedFifthDimValue<Ls>(stack, component, coeff);
-                            const double diff = std::abs(real(out.data[component]) - expected)
-                                                + std::abs(imag(out.data[component]));
-                            if (diff > maxDiff) {
-                                maxDiff = diff;
-                            }
-                        }
-                    }
+    const size_t localSites = (LatLayout == All) ? GInd::getLatData().vol4 : GInd::getLatData().sizeh;
+    for (size_t isite = 0; isite < localSites; isite++)
+        for (size_t stack = 0; stack < Ls; stack++) {
+            Vect12<double> out = outAcc.getElement(GInd::getSiteStack(GInd::getSite(isite), stack));
+            for (size_t component = 0; component < 12; component++) {
+                const double expected = expectedFifthDimValue<Ls>(stack, component, coeff);
+                const double diff = std::abs(real(out.data[component]) - expected)
+                                    + std::abs(imag(out.data[component]));
+                if (diff > maxDiff) {
+                    maxDiff = diff;
+                }
+            }
+        }
 
     if (maxDiff > 1e-12) {
         throw std::runtime_error(stdLogger.fatal("MDWF fifth-direction smoke test failed with maxDiff = ", maxDiff));
     }
-    rootLogger.info("MDWF fifth-direction smoke test passed with Ls = ", Ls);
+    rootLogger.info("MDWF fifth-direction smoke test passed for layout ", layoutName<LatLayout>(), " with Ls = ", Ls);
 }
 
 int main(int argc, char **argv) {
@@ -96,7 +105,9 @@ int main(int argc, char **argv) {
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
 
-        runFifthDimSmokeTest<8>(commBase);
+        runFifthDimSmokeTest<All, 8>(commBase);
+        runFifthDimSmokeTest<Even, 8>(commBase);
+        runFifthDimSmokeTest<Odd, 8>(commBase);
         return 0;
     }
     catch (const std::runtime_error &error) {
