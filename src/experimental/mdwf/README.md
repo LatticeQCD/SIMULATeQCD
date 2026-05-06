@@ -43,6 +43,6 @@ Existing multi-RHS CG treats `NStacks` as independent right-hand sides and perfo
 5. Stage 5: clover through Wilson path.
 6. Stage 6: `c_sw = 0` validation.
 
-## Proposed first smoke test
+## Smoke test
 
-If a later patch adds a non-intrusive experimental target, it should only instantiate a small field such as `MDWFSpinor<double, true, All, 2, 8>` and verify construction/indexing.  It should not call CG, Wilson Dslash, clover, RHMC/HMC, force code, or any physics operator.
+`mdwfFifthDimTest` instantiates `MDWFSpinor<double, true, All, 2, 8>`, applies only `applyMDWFFifthDimCoupling`, and checks the local fifth-direction projector algebra.  It does not call CG, Wilson Dslash, clover, RHMC/HMC, force code, or any physics operator.
