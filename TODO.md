@@ -7,14 +7,20 @@
 - [x] Stage 2 validation: `mdwfFifthDimTest` passes on the cluster for `All`, `Even`, and `Odd` layouts with `Ls = 8`.
 - [x] Stage 3: apply the existing 4D Wilson kernel independently on each fifth-dimensional slice.
 - [x] Stage 3 validation: `mdwfWilsonSliceTest` passes on the cluster with `Ls = 8`.
-- [ ] Stage 4 validation: compile and run `mdwfOperatorSkeletonTest` on the cluster.
+- [x] Stage 4: combine 4D Wilson slice application with fifth-direction coupling into an MDWF operator skeleton.
+- [x] Stage 4 validation: `mdwfOperatorSkeletonTest` passes on the cluster with `Ls = 8`.
 
 ## Next stages
 
-- [ ] Stage 4: combine 4D Wilson slice application with fifth-direction coupling into an MDWF operator skeleton.
 - [ ] Stage 5: add clover through the Wilson-kernel path.
 - [ ] Stage 6: validate `c_sw = 0` against the unclovered Wilson/domain-wall path.
 - [ ] Stage 7: only after the operator is correct, discuss solver/RHMC integration and optional smearing.
+
+## Stage 5 notes
+
+- Preserve a `c_sw = 0` regression test before enabling nonzero clover.
+- Route clover only through the existing Wilson-kernel path; do not duplicate clover storage or alter MDWF fifth-direction coupling.
+- Keep the first clover patch local to the MDWF wrapper/test layer unless an existing Wilson interface requires a minimal extension.
 
 ## Guardrails
 
