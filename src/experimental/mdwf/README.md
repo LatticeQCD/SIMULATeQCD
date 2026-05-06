@@ -18,6 +18,18 @@ This choice keeps the first MDWF patch local:
 - It does not change `GIndexer`, `SiteComm`, `Spinorfield`, or the global memory layout.
 - It allows existing Wilson/clover kernels to be inspected for slice-by-slice reuse before adding MDWF physics.
 
+## Fifth-direction coupling
+
+`MDWFFifthDim.h` adds only nearest-neighbor coupling in the physical fifth dimension stored as `site.stack`.  It applies
+
+```cpp
+out_s = diagonal * psi_s
+      + forward_coeff  * P_- psi_{s+1}
+      + backward_coeff * P_+ psi_{s-1}
+```
+
+with separate explicit coefficients for the `s = Ls - 1 -> 0` and `s = 0 -> Ls - 1` boundary hops.  It does not apply the 4D Wilson kernel, clover term, spacetime boundary conditions, or any solver operation.
+
 ## Solver warning
 
 Existing multi-RHS CG treats `NStacks` as independent right-hand sides and performs stack-wise reductions and coefficients.  A coupled MDWF operator must not use that solver path as a true 5D solver until a 5D vector algebra layer reduces over both 4D sites and the fifth dimension.
