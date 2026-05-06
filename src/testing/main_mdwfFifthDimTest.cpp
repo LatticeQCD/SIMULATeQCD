@@ -56,7 +56,7 @@ void runFifthDimSmokeTest(CommunicationBase &commBase) {
     spinorIn.template iterateOverBulk<>(FillMDWFStackPattern<double, All, HaloDepth, Ls>());
 
     MDWFFifthDimCoefficients<double> coeff(2.0, 3.0, 5.0, 7.0, 11.0);
-    applyMDWFFifthDimCoupling(spinorOut, spinorIn, coeff);
+    applyMDWFFifthDimCoupling<double, true, All, HaloDepth, Ls>(spinorOut, spinorIn, coeff);
 
     spinorOutHost = spinorOut;
     Vect12ArrayAcc<double> outAcc = spinorOutHost.getAccessor();
