@@ -40,22 +40,22 @@ void runMDWFOperatorWorkspaceSmokeTest(CommunicationBase &commBase) {
     MDWFSpinor<double, true, All, HaloDepth, Ls> spinorIn(commBase, "MDWF_workspace_in");
     MDWFSpinor<double, true, All, HaloDepth, Ls> workspaceOut(commBase, "MDWF_workspace_out");
     MDWFSpinor<double, true, All, HaloDepth, Ls> referenceOut(commBase, "MDWF_workspace_reference_out");
-    MDWFSpinor<double, true, All, HaloDepth, Ls> wilsonPart(commBase, "MDWF_workspace_wilson_part");
-    MDWFSpinor<double, true, All, HaloDepth, Ls> fifthPart(commBase, "MDWF_workspace_fifth_part");
-    MDWFSpinor<double, true, All, HaloDepth, Ls> wilsonTmp(commBase, "MDWF_workspace_wilson_tmp");
+    MDWFSpinor<double, true, All, HaloDepth, Ls> wilsonPart(commBase, "MDWF_workspace_reference_wilson_part");
+    MDWFSpinor<double, true, All, HaloDepth, Ls> fifthPart(commBase, "MDWF_workspace_reference_fifth_part");
+    MDWFSpinor<double, true, All, HaloDepth, Ls> wilsonTmp(commBase, "MDWF_workspace_reference_wilson_tmp");
     MDWFSpinor<double, false, All, HaloDepth, Ls> workspaceHost(commBase, "MDWF_workspace_host");
     MDWFSpinor<double, false, All, HaloDepth, Ls> referenceHost(commBase, "MDWF_workspace_reference_host");
 
-    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuUpper(commBase, "MDWF_workspace_fmunu_upper");
-    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuLower(commBase, "MDWF_workspace_fmunu_lower");
-    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuInvUpper(commBase, "MDWF_workspace_fmunu_inv_upper");
-    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuInvLower(commBase, "MDWF_workspace_fmunu_inv_lower");
+    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuUpper(commBase, "MDWF_workspace_reference_fmunu_upper");
+    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuLower(commBase, "MDWF_workspace_reference_fmunu_lower");
+    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuInvUpper(commBase, "MDWF_workspace_reference_fmunu_inv_upper");
+    Spinorfield<double, true, All, HaloDepth, 18, 1> fmunuInvLower(commBase, "MDWF_workspace_reference_fmunu_inv_lower");
 
     spinorIn.template iterateOverBulk<>(FillMDWFWorkspacePattern<double, All, HaloDepth, Ls>());
     spinorIn.updateAll();
 
     MDWFFifthDimCoefficients<double> coeff(2.0, 3.0, 5.0, 7.0, 11.0);
-    MDWFOperatorWorkspace<double, HaloDepth, HaloDepth, Ls> workspace(gauge, "MDWF_workspace");
+    MDWFOperatorWorkspace<double, HaloDepth, HaloDepth, Ls> workspace(gauge, "MDWF_workspace_internal");
 
     workspace.applyClover(workspaceOut, spinorIn, coeff, 1.0, 0.5, true);
     applyMDWFCloverOperator<double, HaloDepth, HaloDepth, Ls>(
