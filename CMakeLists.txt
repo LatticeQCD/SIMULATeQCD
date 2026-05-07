@@ -775,6 +775,12 @@ set_SIMULATeQCD_property(mdwfCoupledCGMdwfCsw0Test PROPERTIES RUNTIME_OUTPUT_DIR
 SIMULATeQCD_target_compile_definitions(mdwfCoupledCGMdwfCsw0Test PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfCoupledCGMdwfCsw0Test)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfNormalOperatorDiagonalTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfNormalOperatorDiagonalTest src/testing/main_mdwfNormalOperatorDiagonalTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfNormalOperatorDiagonalTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfNormalOperatorDiagonalTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfNormalOperatorDiagonalTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_taylorMeasurementTest.cpp src/modules/observables/dslashDerivative.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(taylorMeasurementTest src/testing/main_taylorMeasurementTest.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp 
 src/modules/hisq/hisqSmearing.cpp src/spinor/spinorfield.cpp src/modules/observables/dslashDerivative.cpp)
