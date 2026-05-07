@@ -36,9 +36,11 @@
 - [x] `c_sw = 0` normal-equation behavior is preserved as the required regression gate before any nonzero-`c_sw` normal solve.
 - [x] Nonzero `c_sw` normal-equation sanity scaffold: add `mdwfNormalMdwfNonzeroCswSanityTest` with explicit `M^\dagger M`, nonzero-adjoint identity check, and finite-response comparison against `c_sw = 0`.
 - [x] Nonzero `c_sw` normal-equation sanity validation: `mdwfNormalMdwfCsw0SolveTest` and `mdwfNormalMdwfNonzeroCswSanityTest` pass on the cluster with `Ls = 8`.
+- [x] Nonzero `c_sw` normal-equation CG solve scaffold: add `mdwfNormalMdwfNonzeroCswSolveTest` with explicit `M^\dagger M`, nonzero-adjoint identity check, positive-Rayleigh sanity check, and residual check.
 
 ## Next stages
 
+- [ ] Nonzero `c_sw` normal-equation CG solve validation: run `mdwfNormalMdwfCsw0SolveTest`, `mdwfNormalMdwfNonzeroCswSanityTest`, then `mdwfNormalMdwfNonzeroCswSolveTest` on the cluster.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
