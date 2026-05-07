@@ -817,6 +817,12 @@ set_SIMULATeQCD_property(mdwfMultiShiftNormalMdwfTest PROPERTIES RUNTIME_OUTPUT_
 SIMULATeQCD_target_compile_definitions(mdwfMultiShiftNormalMdwfTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfMultiShiftNormalMdwfTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfRationalMockTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfRationalMockTest src/testing/main_mdwfRationalMockTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfRationalMockTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfRationalMockTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfRationalMockTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_taylorMeasurementTest.cpp src/modules/observables/dslashDerivative.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(taylorMeasurementTest src/testing/main_taylorMeasurementTest.cpp src/modules/dslash/dslash.cpp src/modules/inverter/inverter.cpp 
 src/modules/hisq/hisqSmearing.cpp src/spinor/spinorfield.cpp src/modules/observables/dslashDerivative.cpp)
