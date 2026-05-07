@@ -21,7 +21,7 @@ struct MDWFCoupledCGResult {
     bool converged;
 };
 
-template<class floatT, class CoupledAdapter, size_t BlockSize = 32>
+template<class floatT, class CoupledAdapter, size_t BlockSize = 64>
 class MDWFCoupledCG {
 public:
     using Spinor = typename CoupledAdapter::Spinor;
