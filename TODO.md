@@ -40,10 +40,13 @@
 - [x] Nonzero `c_sw` normal-equation CG solve validation: `mdwfNormalMdwfNonzeroCswSolveTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 35 iterations, relative residual `6.99408e-09`, and adjoint relative difference `1.24017e-16`.
 - [x] Shifted normal-operator scaffold: add `MDWFShiftedNormalOperator` for explicit `(M^\dagger M + sigma) x` without RHMC/HMC integration.
 - [x] Shifted normal-equation solve scaffold: add `mdwfShiftedNormalSolveTest` for `sigma = 0.1`, covering both `c_sw = 0` and `c_sw = 0.5`.
+- [x] Shifted normal-equation solve validation: `mdwfShiftedNormalSolveTest` passes on the cluster with `Ls = 8`, `sigma = 0.1`, 34 iterations for both `c_sw = 0` and `c_sw = 0.5`, and exact zero-shift agreement.
+- [x] Coupled-5D multishift-CG scaffold: add `MDWFCoupledMultiShiftCG` with a multi-shift interface that preserves the coupled 5D inner product and keeps `Ls` out of the RHS interpretation.
+- [x] Coupled-5D multishift mock-SPD tests: add `mdwfCoupledMultiShiftCGMockTest` for `A = 2 I` and fifth-slice diagonal `A_s = 1 + 0.1 s`.
 
 ## Next stages
 
-- [ ] Shifted normal-equation solve validation: compile and run `mdwfShiftedNormalSolveTest` on the cluster.
+- [ ] Coupled-5D multishift mock validation: compile and run `mdwfCoupledMultiShiftCGMockTest` on the cluster before applying multishift CG to MDWF.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
@@ -63,5 +66,6 @@
 - `MDWFNormalOperator` composes supplied forward/adjoint operators; it must not be used with the raw MDWF operator as its own adjoint unless that hermiticity is explicitly proven.
 - `MDWFAdjointLinearOperator` is part of the experimental scaffold; validate adjoint identities before trusting any normal-equation solve.
 - Nonzero-`c_sw` normal-equation tests must preserve `mdwfNormalMdwfCsw0SolveTest` as a passing baseline and must continue using an explicitly supplied `M^\dagger M`.
+- `MDWFCoupledMultiShiftCG` is a correctness-first scaffold with independent coupled-CG solves per shift; do not treat it as an optimized simultaneous multishift recurrence yet.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
