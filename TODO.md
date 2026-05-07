@@ -25,11 +25,13 @@
 - [x] Coupled-5D CG slice-diagonal mock scaffold: add `A_s = 1 + 0.1 s` with exact solution `x_s = b_s / A_s`.
 - [x] Coupled-5D CG slice-diagonal mock validation: `mdwfCoupledCGSliceDiagonalTest` passes on the cluster with `Ls = 8`.
 - [x] Coupled-5D CG fifth-neighbor SPD mock scaffold: add open-boundary `A = 2 I - 0.25 T_s` with host tridiagonal exact solve.
+- [x] Coupled-5D CG fifth-neighbor SPD mock validation: `mdwfCoupledCGFifthNeighborTest` passes on the cluster with `Ls = 8`.
+- [x] First safe MDWF-operator CG scaffold: add `mdwfCoupledCGMdwfCsw0Test` with `c_sw = 0` operator regression and zero-RHS CG early exit.
 
 ## Next stages
 
-- [ ] Coupled-5D CG fifth-neighbor SPD mock validation: compile and run `mdwfCoupledCGFifthNeighborTest` on the cluster.
-- [ ] After fifth-neighbor mock validation, decide the first safe MDWF-operator CG test and preserve `c_sw = 0` checks.
+- [ ] First safe MDWF-operator CG validation: compile and run `mdwfCoupledCGMdwfCsw0Test` on the cluster.
+- [ ] Do not attempt a nonzero-source CG solve with the raw MDWF operator until a Hermitian positive-definite normal/operator form is explicitly defined.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
