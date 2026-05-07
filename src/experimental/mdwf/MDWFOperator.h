@@ -36,3 +36,33 @@ void applyMDWFOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &spinor_
         spinor_out.updateAll();
     }
 }
+
+template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls>
+void applyMDWFCloverOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &spinor_out,
+                             Gaugefield<floatT, true, HaloDepthGauge, R18> &gauge,
+                             MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &wilson_part,
+                             MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &fifth_part,
+                             MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &wilson_tmp,
+                             Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> &fmunu_upper,
+                             Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> &fmunu_lower,
+                             Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> &fmunu_inv_upper,
+                             Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1> &fmunu_inv_lower,
+                             const MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &spinor_in,
+                             MDWFFifthDimCoefficients<floatT> fifth_coeff,
+                             floatT mass,
+                             floatT csw = 0.0,
+                             bool update = false) {
+    applyMDWFCloverWilsonSlice<floatT, HaloDepthGauge, HaloDepthSpin, Ls>(
+        wilson_part, gauge, wilson_tmp, fmunu_upper, fmunu_lower, fmunu_inv_upper, fmunu_inv_lower,
+        spinor_in, mass, csw);
+
+    applyMDWFFifthDimCoupling<floatT, true, All, HaloDepthSpin, Ls>(
+        fifth_part, spinor_in, fifth_coeff);
+
+    spinor_out = wilson_part;
+    spinor_out += fifth_part;
+
+    if (update) {
+        spinor_out.updateAll();
+    }
+}

@@ -9,6 +9,7 @@
 - [x] Stage 3 validation: `mdwfWilsonSliceTest` passes on the cluster with `Ls = 8`.
 - [x] Stage 4: combine 4D Wilson slice application with fifth-direction coupling into an MDWF operator skeleton.
 - [x] Stage 4 validation: `mdwfOperatorSkeletonTest` passes on the cluster with `Ls = 8`.
+- [ ] Stage 5/6 validation: compile and run `mdwfCloverCsw0Test` on the cluster.
 
 ## Next stages
 
