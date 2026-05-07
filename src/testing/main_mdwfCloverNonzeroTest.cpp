@@ -94,8 +94,8 @@ void runMDWFCloverNonzeroSmokeTest(CommunicationBase &commBase) {
             "MDWF nonzero-c_sw sanity test found no clover response; maxDiff = ", maxDiff));
     }
 
-    rootLogger.info("MDWF nonzero-c_sw sanity test passed with Ls = ", Ls,
-                    ", c_sw = 0.5, maxDiff = ", maxDiff);
+    rootLogger.info("MDWF nonzero-c_sw sanity response detected with Ls = ", Ls,
+                    ", c_sw = 0.5, maxDiff = ", maxDiff, ", diffNorm = ", diffNorm);
 }
 
 int main(int argc, char **argv) {

@@ -12,10 +12,11 @@
 - [x] Stage 5: add clover through the Wilson-kernel path.
 - [x] Stage 6: validate `c_sw = 0` against the unclovered Wilson/domain-wall path.
 - [x] Stage 5/6 validation: `mdwfCloverCsw0Test` passes on the cluster with `Ls = 8`.
+- [x] Nonzero `c_sw` sanity: `mdwfCloverNonzeroTest` passes on the cluster and detects a finite clover response.
 
 ## Next stages
 
-- [ ] Validate `mdwfCloverNonzeroTest` on the cluster.
+- [ ] Validate `mdwfOperatorWorkspaceTest` on the cluster.
 - [ ] Stage 7: only after the operator is correct, discuss solver/RHMC integration and optional smearing.
 
 ## Stage 5 notes
