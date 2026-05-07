@@ -99,10 +99,13 @@ void runMDWFNormalMdwfNonzeroCswSanityTest(CommunicationBase &commBase) {
     difference = cswNonzeroOut;
     difference -= cswZeroOut;
 
-    const double cswZeroNorm = normalAdapter.norm2(cswZeroOut);
-    const double cswNonzeroNorm = normalAdapter.norm2(cswNonzeroOut);
-    const double diffNorm = normalAdapter.norm2(difference);
-    const double relativeDiff = std::sqrt(diffNorm / std::max(cswZeroNorm, 1.0));
+    const double cswZeroNorm2 = normalAdapter.norm2(cswZeroOut);
+    const double cswNonzeroNorm2 = normalAdapter.norm2(cswNonzeroOut);
+    const double diffNorm2 = normalAdapter.norm2(difference);
+    const double cswZeroL2 = std::sqrt(cswZeroNorm2);
+    const double cswNonzeroL2 = std::sqrt(cswNonzeroNorm2);
+    const double diffL2 = std::sqrt(diffNorm2);
+    const double relativeDiff = diffL2 / std::max(cswZeroL2, 1.0);
 
     cswZeroHost = cswZeroOut;
     cswNonzeroHost = cswNonzeroOut;
@@ -134,11 +137,14 @@ void runMDWFNormalMdwfNonzeroCswSanityTest(CommunicationBase &commBase) {
         || forwardCswNonzero.csw() != nonzeroCsw
         || adjointCswNonzero.csw() != nonzeroCsw
         || adjointRelDiff > 1e-9
-        || !std::isfinite(cswZeroNorm)
-        || !std::isfinite(cswNonzeroNorm)
-        || !std::isfinite(diffNorm)
+        || !std::isfinite(cswZeroNorm2)
+        || !std::isfinite(cswNonzeroNorm2)
+        || !std::isfinite(diffNorm2)
+        || !std::isfinite(cswZeroL2)
+        || !std::isfinite(cswNonzeroL2)
+        || !std::isfinite(diffL2)
         || !std::isfinite(relativeDiff)
-        || diffNorm <= 1e-24
+        || diffNorm2 <= 1e-24
         || maxDiff <= 1e-12) {
         throw std::runtime_error(stdLogger.fatal(
             "MDWF nonzero-c_sw normal-equation sanity test failed: csw0_forward = ", forwardCsw0.csw(),
@@ -146,19 +152,23 @@ void runMDWFNormalMdwfNonzeroCswSanityTest(CommunicationBase &commBase) {
             ", csw_forward = ", forwardCswNonzero.csw(),
             ", csw_adjoint = ", adjointCswNonzero.csw(),
             ", adjointRelDiff = ", adjointRelDiff,
-            ", cswZeroNorm = ", cswZeroNorm,
-            ", cswNonzeroNorm = ", cswNonzeroNorm,
-            ", diffNorm = ", diffNorm,
+            ", cswZeroNorm2 = ", cswZeroNorm2,
+            ", cswNonzeroNorm2 = ", cswNonzeroNorm2,
+            ", diffNorm2 = ", diffNorm2,
+            ", cswZeroL2 = ", cswZeroL2,
+            ", cswNonzeroL2 = ", cswNonzeroL2,
+            ", diffL2 = ", diffL2,
             ", relativeDiff = ", relativeDiff,
-            ", maxDiff = ", maxDiff));
+            ", maxComponentDiff = ", maxDiff));
     }
 
     rootLogger.info("MDWF nonzero-c_sw normal-equation sanity response detected with Ls = ", Ls,
                     ", c_sw = ", nonzeroCsw,
                     ", adjointRelDiff = ", adjointRelDiff,
-                    ", diffNorm = ", diffNorm,
+                    ", diffNorm2 = ", diffNorm2,
+                    ", diffL2 = ", diffL2,
                     ", relativeDiff = ", relativeDiff,
-                    ", maxDiff = ", maxDiff);
+                    ", maxComponentDiff = ", maxDiff);
 }
 
 int main(int argc, char **argv) {
