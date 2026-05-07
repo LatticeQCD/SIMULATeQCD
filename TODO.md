@@ -48,10 +48,12 @@
 - [x] Coupled-5D multishift MDWF normal validation: `mdwfMultiShiftNormalMdwfTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 shifts, exact agreement with single-shift solves, and max relative residual `9.0239e-09`.
 - [x] Coupled-5D rational-operator scaffold: add `MDWFRationalOperator` for explicit `c0 + sum_i numerator_i / (A + shift_i)`, backed by `MDWFCoupledMultiShiftCG`.
 - [x] Coupled-5D rational mock-SPD test scaffold: add `mdwfRationalMockTest` for `A = 2 I` and fifth-slice diagonal `A_s = 1 + 0.1 s`.
+- [x] Coupled-5D rational mock validation: `mdwfRationalMockTest` passes on the cluster with `Ls = 8` and exact mock-SPD agreement.
+- [x] Coupled-5D rational MDWF normal scaffold: add `mdwfRationalNormalMdwfTest`, comparing `MDWFRationalOperator` against repeated `MDWFShiftedNormalOperator` single-shift solves.
 
 ## Next stages
 
-- [ ] Coupled-5D rational mock validation: compile and run `mdwfRationalMockTest` on the cluster before applying rational operators to MDWF normal systems.
+- [ ] Coupled-5D rational MDWF normal validation: compile and run `mdwfRationalNormalMdwfTest` on the cluster before discussing RHMC integration.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
