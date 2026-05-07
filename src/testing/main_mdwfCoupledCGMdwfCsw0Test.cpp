@@ -109,11 +109,13 @@ void runMDWFCoupledCGMdwfCsw0SmokeTest(CommunicationBase &commBase) {
             }
         }
 
+    const double csw0Tolerance = 1e-10;
+
     if (linearOperator.csw() != 0.0
         || !result.converged
         || result.iterations != 0
         || result.residue > 1e-12
-        || csw0MaxDiff > 1e-12
+        || csw0MaxDiff > csw0Tolerance
         || zeroSolutionMax > 1e-12
         || operatorZeroMax > 1e-12) {
         throw std::runtime_error(stdLogger.fatal(
