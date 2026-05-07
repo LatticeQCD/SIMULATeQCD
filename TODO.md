@@ -43,10 +43,12 @@
 - [x] Shifted normal-equation solve validation: `mdwfShiftedNormalSolveTest` passes on the cluster with `Ls = 8`, `sigma = 0.1`, 34 iterations for both `c_sw = 0` and `c_sw = 0.5`, and exact zero-shift agreement.
 - [x] Coupled-5D multishift-CG scaffold: add `MDWFCoupledMultiShiftCG` with a multi-shift interface that preserves the coupled 5D inner product and keeps `Ls` out of the RHS interpretation.
 - [x] Coupled-5D multishift mock-SPD tests: add `mdwfCoupledMultiShiftCGMockTest` for `A = 2 I` and fifth-slice diagonal `A_s = 1 + 0.1 s`.
+- [x] Coupled-5D multishift mock validation: `mdwfCoupledMultiShiftCGMockTest` passes on the cluster with `Ls = 8` for 4 shifts on both mock SPD operators.
+- [x] Coupled-5D multishift MDWF normal scaffold: add `mdwfMultiShiftNormalMdwfTest`, comparing multishift solutions against repeated `MDWFShiftedNormalOperator` single-shift solves for shifts `{0.0, 0.1, 0.3}`.
 
 ## Next stages
 
-- [ ] Coupled-5D multishift mock validation: compile and run `mdwfCoupledMultiShiftCGMockTest` on the cluster before applying multishift CG to MDWF.
+- [ ] Coupled-5D multishift MDWF normal validation: compile and run `mdwfMultiShiftNormalMdwfTest` on the cluster.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
