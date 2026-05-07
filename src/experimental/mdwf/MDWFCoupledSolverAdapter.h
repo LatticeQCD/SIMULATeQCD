@@ -13,10 +13,14 @@
 
 #include <vector>
 
-template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls>
+template<class floatT,
+         size_t HaloDepthGauge,
+         size_t HaloDepthSpin,
+         size_t Ls,
+         class LinearOperatorT = MDWFLinearOperator<floatT, HaloDepthGauge, HaloDepthSpin, Ls>>
 class MDWFCoupledSolverAdapter {
 public:
-    using Operator = MDWFLinearOperator<floatT, HaloDepthGauge, HaloDepthSpin, Ls>;
+    using Operator = LinearOperatorT;
     using Spinor = typename Operator::Spinor;
 
 private:

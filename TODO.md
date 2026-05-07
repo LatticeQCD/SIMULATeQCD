@@ -17,11 +17,13 @@
 - [x] Stage 7 scaffold: add a non-solving `MDWFLinearOperator` wrapper around the MDWF operator workspace.
 - [x] Stage 7 scaffold validation: `mdwfLinearOperatorTest` passes on the cluster with `Ls = 8`.
 - [x] Coupled-5D solver-adapter scaffold: add `MDWFCoupledSolverAdapter` with 5D matvec and aggregated 5D inner products.
+- [x] Coupled-5D solver-adapter validation: `mdwfCoupledSolverAdapterTest` passes on the cluster with `Ls = 8`.
+- [x] Coupled-5D CG scaffold: add isolated `MDWFCoupledCG` using `MDWFCoupledSolverAdapter` primitives.
 
 ## Next stages
 
-- [ ] Coupled-5D solver-adapter validation: compile and run `mdwfCoupledSolverAdapterTest` on the cluster.
-- [ ] Implement a true coupled-5D Krylov solver using `MDWFCoupledSolverAdapter` primitives.
+- [ ] Coupled-5D CG scaffold validation: compile and run `mdwfCoupledCGIdentityTest` on the cluster.
+- [ ] After identity validation, test `MDWFCoupledCG` on a controlled positive-definite mock operator before trying the MDWF operator.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
@@ -36,6 +38,7 @@
 - Keep MDWF changes under `src/experimental/mdwf/` plus focused tests in `src/testing/`.
 - Do not use existing multi-RHS CG as a true coupled MDWF solver.
 - `MDWFLinearOperator` intentionally exposes `apply()` but deletes `applyMdaggM()` until a true coupled 5D solver adapter exists.
-- `MDWFCoupledSolverAdapter` must aggregate `dotProductStacked`/`realdotProductStacked` over all `Ls` slices before any solver uses the result.
+- `MDWFCoupledSolverAdapter` must aggregate `dotProductStacked` over all `Ls` slices before any solver uses the result.
+- `MDWFCoupledCG` is isolated from `src/modules/inverter/` and must not be wired into RHMC/HMC until the coupled operator is validated.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
