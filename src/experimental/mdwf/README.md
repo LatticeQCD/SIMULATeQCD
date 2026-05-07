@@ -34,6 +34,16 @@ with separate explicit coefficients for the `s = Ls - 1 -> 0` and `s = 0 -> Ls -
 
 Existing multi-RHS CG treats `NStacks` as independent right-hand sides and performs stack-wise reductions and coefficients.  A coupled MDWF operator must not use that solver path as a true 5D solver until a 5D vector algebra layer reduces over both 4D sites and the fifth dimension.
 
+## Normal operator convention
+
+The raw MDWF operator `M` is not assumed to be Hermitian positive-definite.  A CG solve with a nonzero source must use an explicitly defined normal form:
+
+```cpp
+N = M^\dagger M
+```
+
+with the coupled 5D inner product that sums over all 4D sites, spin/color components, and fifth-dimensional slices.  The scaffold in `MDWFNormalOperator.h` only composes a supplied forward operator `M` and a supplied adjoint operator `M^\dagger`; it does not derive or assume the MDWF adjoint.  The normal form is HPD only if the adjoint implementation is mathematically correct and `M` has no null vector in the solved subspace.
+
 ## Planned stages
 
 1. Stage 1: 5D spinor representation.

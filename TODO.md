@@ -27,11 +27,13 @@
 - [x] Coupled-5D CG fifth-neighbor SPD mock scaffold: add open-boundary `A = 2 I - 0.25 T_s` with host tridiagonal exact solve.
 - [x] Coupled-5D CG fifth-neighbor SPD mock validation: `mdwfCoupledCGFifthNeighborTest` passes on the cluster with `Ls = 8`.
 - [x] First safe MDWF-operator CG scaffold: add `mdwfCoupledCGMdwfCsw0Test` with `c_sw = 0` operator regression and zero-RHS CG early exit.
+- [x] First safe MDWF-operator CG validation: `mdwfCoupledCGMdwfCsw0Test` passes on the cluster with `Ls = 8`.
+- [x] Normal-operator scaffold: define `N = M^\dagger M` as an explicit composition of supplied forward and adjoint operators.
 
 ## Next stages
 
-- [ ] First safe MDWF-operator CG validation: compile and run `mdwfCoupledCGMdwfCsw0Test` on the cluster.
-- [ ] Do not attempt a nonzero-source CG solve with the raw MDWF operator until a Hermitian positive-definite normal/operator form is explicitly defined.
+- [ ] Normal-operator scaffold validation: compile and run `mdwfNormalOperatorDiagonalTest` on the cluster.
+- [ ] Do not attempt a nonzero-source CG solve with the raw MDWF operator; use only an explicitly supplied `M^\dagger M` normal form.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
@@ -48,5 +50,6 @@
 - `MDWFLinearOperator` intentionally exposes `apply()` but deletes `applyMdaggM()` until a true coupled 5D solver adapter exists.
 - `MDWFCoupledSolverAdapter` must aggregate `dotProductStacked` over all `Ls` slices before any solver uses the result.
 - `MDWFCoupledCG` is isolated from `src/modules/inverter/` and must not be wired into RHMC/HMC until the coupled operator is validated.
+- `MDWFNormalOperator` composes supplied forward/adjoint operators; it must not be used with the raw MDWF operator as its own adjoint unless that hermiticity is explicitly proven.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
