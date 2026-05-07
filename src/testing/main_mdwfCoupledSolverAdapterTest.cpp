@@ -77,10 +77,10 @@ void runMDWFCoupledSolverAdapterSmokeTest(CommunicationBase &commBase) {
             }
         }
 
-    std::vector<double> stackNorms = spinorIn.realdotProductStacked(spinorIn);
+    std::vector<COMPLEX(double)> stackNorms = spinorIn.dotProductStacked(spinorIn);
     double referenceNorm = 0.0;
     for (size_t stack = 0; stack < Ls; stack++) {
-        referenceNorm += stackNorms[stack];
+        referenceNorm += real<double>(stackNorms[stack]);
     }
     const double adapterNorm = adapter.norm2(spinorIn);
     const double normDiff = std::abs(adapterNorm - referenceNorm);

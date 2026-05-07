@@ -41,11 +41,11 @@ public:
     }
 
     double realDotProduct5D(Spinor &left, const Spinor &right) {
-        std::vector<double> stack_dots = left.realdotProductStacked(right);
+        std::vector<COMPLEX(double)> stack_dots = left.dotProductStacked(right);
 
         double result = 0.0;
         for (size_t stack = 0; stack < Ls; stack++) {
-            result += stack_dots[stack];
+            result += real<double>(stack_dots[stack]);
         }
         return result;
     }
