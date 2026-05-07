@@ -45,10 +45,13 @@
 - [x] Coupled-5D multishift mock-SPD tests: add `mdwfCoupledMultiShiftCGMockTest` for `A = 2 I` and fifth-slice diagonal `A_s = 1 + 0.1 s`.
 - [x] Coupled-5D multishift mock validation: `mdwfCoupledMultiShiftCGMockTest` passes on the cluster with `Ls = 8` for 4 shifts on both mock SPD operators.
 - [x] Coupled-5D multishift MDWF normal scaffold: add `mdwfMultiShiftNormalMdwfTest`, comparing multishift solutions against repeated `MDWFShiftedNormalOperator` single-shift solves for shifts `{0.0, 0.1, 0.3}`.
+- [x] Coupled-5D multishift MDWF normal validation: `mdwfMultiShiftNormalMdwfTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 shifts, exact agreement with single-shift solves, and max relative residual `9.0239e-09`.
+- [x] Coupled-5D rational-operator scaffold: add `MDWFRationalOperator` for explicit `c0 + sum_i numerator_i / (A + shift_i)`, backed by `MDWFCoupledMultiShiftCG`.
+- [x] Coupled-5D rational mock-SPD test scaffold: add `mdwfRationalMockTest` for `A = 2 I` and fifth-slice diagonal `A_s = 1 + 0.1 s`.
 
 ## Next stages
 
-- [ ] Coupled-5D multishift MDWF normal validation: compile and run `mdwfMultiShiftNormalMdwfTest` on the cluster.
+- [ ] Coupled-5D rational mock validation: compile and run `mdwfRationalMockTest` on the cluster before applying rational operators to MDWF normal systems.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
@@ -69,5 +72,6 @@
 - `MDWFAdjointLinearOperator` is part of the experimental scaffold; validate adjoint identities before trusting any normal-equation solve.
 - Nonzero-`c_sw` normal-equation tests must preserve `mdwfNormalMdwfCsw0SolveTest` as a passing baseline and must continue using an explicitly supplied `M^\dagger M`.
 - `MDWFCoupledMultiShiftCG` is a correctness-first scaffold with independent coupled-CG solves per shift; do not treat it as an optimized simultaneous multishift recurrence yet.
+- `MDWFRationalOperator` consumes explicit rational coefficients only; it does not define RHMC determinant powers, pseudofermion conventions, or force terms.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
