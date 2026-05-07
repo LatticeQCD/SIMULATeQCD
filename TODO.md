@@ -32,11 +32,13 @@
 - [x] Normal-operator scaffold validation: `mdwfNormalOperatorDiagonalTest` passes on the cluster with `Ls = 8`.
 - [x] Explicit MDWF adjoint scaffold: add `MDWFAdjointLinearOperator` for `M^\dagger` using gamma5-hermitian Wilson/clover and transposed fifth-direction coupling.
 - [x] Raw-MDWF normal-equation solve scaffold: add `mdwfNormalMdwfCsw0SolveTest` with explicit `M^\dagger M`, `c_sw = 0`, adjoint identity check, and nonzero source.
+- [x] Raw-MDWF normal-equation solve validation: `mdwfNormalMdwfCsw0SolveTest` passes on the cluster with `Ls = 8`.
+- [x] `c_sw = 0` normal-equation behavior is preserved as the required regression gate before any nonzero-`c_sw` normal solve.
+- [x] Nonzero `c_sw` normal-equation sanity scaffold: add `mdwfNormalMdwfNonzeroCswSanityTest` with explicit `M^\dagger M`, nonzero-adjoint identity check, and finite-response comparison against `c_sw = 0`.
 
 ## Next stages
 
-- [ ] Raw-MDWF normal-equation solve validation: compile and run `mdwfNormalMdwfCsw0SolveTest` on the cluster.
-- [ ] Preserve `c_sw = 0` normal-equation behavior before attempting nonzero `c_sw` normal solves.
+- [ ] Nonzero `c_sw` normal-equation sanity validation: run `mdwfNormalMdwfCsw0SolveTest` first on the cluster, then compile and run `mdwfNormalMdwfNonzeroCswSanityTest`.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
@@ -55,5 +57,6 @@
 - `MDWFCoupledCG` is isolated from `src/modules/inverter/` and must not be wired into RHMC/HMC until the coupled operator is validated.
 - `MDWFNormalOperator` composes supplied forward/adjoint operators; it must not be used with the raw MDWF operator as its own adjoint unless that hermiticity is explicitly proven.
 - `MDWFAdjointLinearOperator` is part of the experimental scaffold; validate adjoint identities before trusting any normal-equation solve.
+- Nonzero-`c_sw` normal-equation tests must preserve `mdwfNormalMdwfCsw0SolveTest` as a passing baseline and must continue using an explicitly supplied `M^\dagger M`.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
