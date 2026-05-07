@@ -37,10 +37,13 @@
 - [x] Nonzero `c_sw` normal-equation sanity scaffold: add `mdwfNormalMdwfNonzeroCswSanityTest` with explicit `M^\dagger M`, nonzero-adjoint identity check, and finite-response comparison against `c_sw = 0`.
 - [x] Nonzero `c_sw` normal-equation sanity validation: `mdwfNormalMdwfCsw0SolveTest` and `mdwfNormalMdwfNonzeroCswSanityTest` pass on the cluster with `Ls = 8`.
 - [x] Nonzero `c_sw` normal-equation CG solve scaffold: add `mdwfNormalMdwfNonzeroCswSolveTest` with explicit `M^\dagger M`, nonzero-adjoint identity check, positive-Rayleigh sanity check, and residual check.
+- [x] Nonzero `c_sw` normal-equation CG solve validation: `mdwfNormalMdwfNonzeroCswSolveTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 35 iterations, relative residual `6.99408e-09`, and adjoint relative difference `1.24017e-16`.
+- [x] Shifted normal-operator scaffold: add `MDWFShiftedNormalOperator` for explicit `(M^\dagger M + sigma) x` without RHMC/HMC integration.
+- [x] Shifted normal-equation solve scaffold: add `mdwfShiftedNormalSolveTest` for `sigma = 0.1`, covering both `c_sw = 0` and `c_sw = 0.5`.
 
 ## Next stages
 
-- [ ] Nonzero `c_sw` normal-equation CG solve validation: run `mdwfNormalMdwfCsw0SolveTest`, `mdwfNormalMdwfNonzeroCswSanityTest`, then `mdwfNormalMdwfNonzeroCswSolveTest` on the cluster.
+- [ ] Shifted normal-equation solve validation: compile and run `mdwfShiftedNormalSolveTest` on the cluster.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
