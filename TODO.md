@@ -21,11 +21,13 @@
 - [x] Coupled-5D CG scaffold: add isolated `MDWFCoupledCG` using `MDWFCoupledSolverAdapter` primitives.
 - [x] Coupled-5D CG identity validation: `mdwfCoupledCGIdentityTest` passes on the cluster with `Ls = 8`.
 - [x] Coupled-5D CG diagonal mock scaffold: add an `A = 2 I` positive-definite test target.
+- [x] Coupled-5D CG diagonal mock validation: `mdwfCoupledCGDiagonalTest` passes on the cluster with `Ls = 8`.
+- [x] Coupled-5D CG slice-diagonal mock scaffold: add `A_s = 1 + 0.1 s` with exact solution `x_s = b_s / A_s`.
 
 ## Next stages
 
-- [ ] Coupled-5D CG diagonal mock validation: compile and run `mdwfCoupledCGDiagonalTest` on the cluster.
-- [ ] After diagonal mock validation, test a nontrivial controlled positive-definite mock operator before trying the MDWF operator.
+- [ ] Coupled-5D CG slice-diagonal mock validation: compile and run `mdwfCoupledCGSliceDiagonalTest` on the cluster.
+- [ ] After slice-diagonal mock validation, decide whether to test a controlled nearest-neighbor fifth-direction SPD mock before trying the MDWF operator.
 - [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
