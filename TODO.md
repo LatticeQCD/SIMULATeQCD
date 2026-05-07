@@ -13,11 +13,14 @@
 - [x] Stage 6: validate `c_sw = 0` against the unclovered Wilson/domain-wall path.
 - [x] Stage 5/6 validation: `mdwfCloverCsw0Test` passes on the cluster with `Ls = 8`.
 - [x] Nonzero `c_sw` sanity: `mdwfCloverNonzeroTest` passes on the cluster and detects a finite clover response.
+- [x] Workspace validation: `mdwfOperatorWorkspaceTest` passes on the cluster with `Ls = 8`.
+- [x] Stage 7 scaffold: add a non-solving `MDWFLinearOperator` wrapper around the MDWF operator workspace.
 
 ## Next stages
 
-- [ ] Validate `mdwfOperatorWorkspaceTest` on the cluster.
-- [ ] Stage 7: only after the operator is correct, discuss solver/RHMC integration and optional smearing.
+- [ ] Stage 7 scaffold validation: compile and run `mdwfLinearOperatorTest` on the cluster.
+- [ ] Design the true MDWF solver adapter without treating `Ls` stacks as independent right-hand sides.
+- [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
 
 ## Stage 5 notes
 
@@ -30,5 +33,6 @@
 
 - Keep MDWF changes under `src/experimental/mdwf/` plus focused tests in `src/testing/`.
 - Do not use existing multi-RHS CG as a true coupled MDWF solver.
+- `MDWFLinearOperator` intentionally exposes `apply()` but deletes `applyMdaggM()` until a true coupled 5D solver adapter exists.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
