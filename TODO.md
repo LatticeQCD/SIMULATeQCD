@@ -50,11 +50,15 @@
 - [x] Coupled-5D rational mock-SPD test scaffold: add `mdwfRationalMockTest` for `A = 2 I` and fifth-slice diagonal `A_s = 1 + 0.1 s`.
 - [x] Coupled-5D rational mock validation: `mdwfRationalMockTest` passes on the cluster with `Ls = 8` and exact mock-SPD agreement.
 - [x] Coupled-5D rational MDWF normal scaffold: add `mdwfRationalNormalMdwfTest`, comparing `MDWFRationalOperator` against repeated `MDWFShiftedNormalOperator` single-shift solves.
+- [x] Coupled-5D rational MDWF normal validation: `mdwfRationalNormalMdwfTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 rational terms, max relative residual `9.37912e-09`, and exact agreement with repeated single-shift solves.
+- [x] MDWF RHMC architecture note: add `RHMC_ARCHITECTURE.md` documenting the pre-RHMC boundary, solver requirements, rational-coefficient semantics, and smearing policy.
+- [x] MDWF rational-coefficient adapter scaffold: add `MDWFRationalCoefficientAdapter` for explicit partial-fraction coefficients without assigning RHMC determinant powers.
+- [x] MDWF rational-coefficient adapter test scaffold: add `mdwfRationalCoefficientAdapterTest` with a tiny explicit coefficient set and validation guards.
 
 ## Next stages
 
-- [ ] Coupled-5D rational MDWF normal validation: compile and run `mdwfRationalNormalMdwfTest` on the cluster before discussing RHMC integration.
-- [ ] Only after the operator and solver adapter are correct, discuss RHMC integration and optional smearing.
+- [ ] MDWF rational-coefficient adapter validation: compile and run `mdwfRationalCoefficientAdapterTest` on the cluster.
+- [ ] After adapter validation, add a pseudofermion heatbath mock test with a controlled diagonal normal operator.
 
 ## Stage 5 notes
 
