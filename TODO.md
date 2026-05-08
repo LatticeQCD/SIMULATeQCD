@@ -53,12 +53,17 @@
 - [x] Coupled-5D rational MDWF normal validation: `mdwfRationalNormalMdwfTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 rational terms, max relative residual `9.37912e-09`, and exact agreement with repeated single-shift solves.
 - [x] MDWF RHMC architecture note: add `RHMC_ARCHITECTURE.md` documenting the pre-RHMC boundary, solver requirements, rational-coefficient semantics, and smearing policy.
 - [x] MDWF rational-coefficient adapter scaffold: add `MDWFRationalCoefficientAdapter` for explicit partial-fraction coefficients without assigning RHMC determinant powers.
-- [x] MDWF rational-coefficient adapter test scaffold: add `mdwfRationalCoefficientAdapterTest` with a tiny explicit coefficient set and validation guards.
+- [x] MDWF rational-coefficient adapter test scaffold: add `mdwfRationalCoefficientAdapterTest` with a tiny explicit coefficient set and metadata/scalar checks.
+- [x] MDWF pseudofermion/action scaffold: add `MDWFPseudofermionAction` for explicit rational heatbath application and rational action evaluation without RHMC/HMC/force wiring.
+- [x] MDWF pseudofermion heatbath mock scaffold: add `mdwfPseudofermionHeatbathMockTest` with a controlled fifth-slice diagonal normal operator.
+- [x] MDWF normal-operator action scaffold: add `mdwfNormalMdwfActionTest` on a fixed random gauge field with explicit positive action-rational coefficients.
 
 ## Next stages
 
 - [ ] MDWF rational-coefficient adapter validation: compile and run `mdwfRationalCoefficientAdapterTest` on the cluster.
-- [ ] After adapter validation, add a pseudofermion heatbath mock test with a controlled diagonal normal operator.
+- [ ] MDWF pseudofermion heatbath mock validation: compile and run `mdwfPseudofermionHeatbathMockTest` on the cluster.
+- [ ] MDWF normal-operator action validation: compile and run `mdwfNormalMdwfActionTest` on the cluster.
+- [ ] After action validation, compare action rational results against repeated shifted solves while preserving `mdwfRationalNormalMdwfTest` behavior.
 
 ## Stage 5 notes
 
