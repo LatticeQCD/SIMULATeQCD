@@ -57,13 +57,15 @@
 - [x] MDWF pseudofermion/action scaffold: add `MDWFPseudofermionAction` for explicit rational heatbath application and rational action evaluation without RHMC/HMC/force wiring.
 - [x] MDWF pseudofermion heatbath mock scaffold: add `mdwfPseudofermionHeatbathMockTest` with a controlled fifth-slice diagonal normal operator.
 - [x] MDWF normal-operator action scaffold: add `mdwfNormalMdwfActionTest` on a fixed random gauge field with explicit positive action-rational coefficients.
+- [x] MDWF rational action comparison scaffold: add `mdwfRationalActionComparisonTest`, comparing `computeMDWFRationalAction` against repeated `MDWFShiftedNormalOperator` single-shift solves while leaving `mdwfRationalNormalMdwfTest` unchanged.
 
 ## Next stages
 
 - [ ] MDWF rational-coefficient adapter validation: compile and run `mdwfRationalCoefficientAdapterTest` on the cluster.
-- [ ] MDWF pseudofermion heatbath mock validation: compile and run `mdwfPseudofermionHeatbathMockTest` on the cluster.
-- [ ] MDWF normal-operator action validation: compile and run `mdwfNormalMdwfActionTest` on the cluster.
-- [ ] After action validation, compare action rational results against repeated shifted solves while preserving `mdwfRationalNormalMdwfTest` behavior.
+- [x] MDWF pseudofermion heatbath mock validation: `mdwfPseudofermionHeatbathMockTest` passes on the cluster with `Ls = 8`, 2 terms, max residue `1.87352e-21`, and max diff `2.67841e-15`.
+- [x] MDWF normal-operator action validation: `mdwfNormalMdwfActionTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `723629`, action imaginary relative size `5.90684e-19`, and max residue `9.84526e-09`.
+- [ ] MDWF rational action comparison validation: compile and run `mdwfRationalActionComparisonTest` on the cluster.
+- [ ] After rational action comparison validation, design the force interface as architecture-only notes before touching force/HMC/RHMC code.
 
 ## Stage 5 notes
 
