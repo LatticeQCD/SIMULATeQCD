@@ -60,6 +60,8 @@
 - [x] MDWF rational action comparison scaffold: add `mdwfRationalActionComparisonTest`, comparing `computeMDWFRationalAction` against repeated `MDWFShiftedNormalOperator` single-shift solves while leaving `mdwfRationalNormalMdwfTest` unchanged.
 - [x] MDWF force-interface architecture note: add `FORCE_INTERFACE.md` with the pre-force software boundary, derivative split, solver/workspace requirements, and validation ladder.
 - [x] MDWF force-rational workspace scaffold: add `MDWFFermionForceWorkspace` and `mdwfFermionForceWorkspaceMockTest` to solve/store `(chi_i, eta_i)` for force rational coefficients without accumulating gauge force.
+- [x] MDWF finite-difference harness design: add `FINITE_DIFFERENCE_HARNESS.md` documenting the single-link action-derivative plan before any force accumulation.
+- [x] MDWF finite-difference null scaffold: add `MDWFFiniteDifferenceHarness` and `mdwfFiniteDifferenceNullTest` to perturb one gauge link and evaluate the centered action derivative through `computeMDWFRationalAction`, with a gauge-independent mock expected to give zero derivative.
 
 ## Next stages
 
@@ -67,8 +69,9 @@
 - [x] MDWF pseudofermion heatbath mock validation: `mdwfPseudofermionHeatbathMockTest` passes on the cluster with `Ls = 8`, 2 terms, max residue `1.87352e-21`, and max diff `2.67841e-15`.
 - [x] MDWF normal-operator action validation: `mdwfNormalMdwfActionTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `723629`, action imaginary relative size `5.90684e-19`, and max residue `9.84526e-09`.
 - [x] MDWF rational action comparison validation: `mdwfRationalActionComparisonTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `778994`, max rational/single-shift relative residual `9.68192e-09`, and exact agreement with repeated shifted solves.
-- [ ] MDWF force-rational workspace validation: compile and run `mdwfFermionForceWorkspaceMockTest` on the cluster.
-- [ ] After force-rational workspace validation, design a finite-difference harness before adding any gauge-force accumulation.
+- [x] MDWF force-rational workspace validation: `mdwfFermionForceWorkspaceMockTest` passes on the cluster with `Ls = 8`, 3 terms, max residue `1.45774e-21`, and max diff `3.58047e-15`.
+- [ ] MDWF finite-difference null validation: compile and run `mdwfFiniteDifferenceNullTest` on the cluster.
+- [ ] After null finite-difference validation, add a `c_sw = 0` MDWF action finite-difference smoke test before any force accumulation.
 
 ## Stage 5 notes
 

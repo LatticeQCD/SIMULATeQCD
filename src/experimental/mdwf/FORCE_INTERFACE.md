@@ -114,7 +114,7 @@ The first force work should proceed in this order:
 1. **Architecture note only**: this file.
 2. **Workspace-only scaffold**: allocate/solve/store `(chi_i, eta_i)` for force rational coefficients, with no gauge-force accumulation.
 3. **Gauge-independent null test**: fifth-direction-only mock operator gives zero gauge force.
-4. **Finite-difference harness**: compare action change against a single-link gauge perturbation before any HMC wiring.
+4. **Finite-difference harness**: compare action change against a single-link gauge perturbation before any HMC wiring.  The design is documented in `FINITE_DIFFERENCE_HARNESS.md`.
 5. **`c_sw = 0` Wilson-path force**: validate finite differences using the unclovered Wilson-kernel contribution.
 6. **Nonzero `c_sw` clover-path force**: add clover derivative only after the `c_sw = 0` finite-difference test is stable.
 7. **Only after force finite differences pass**: discuss integrator/RHMC coupling.
