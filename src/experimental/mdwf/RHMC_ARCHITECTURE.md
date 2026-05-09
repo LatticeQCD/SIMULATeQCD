@@ -112,3 +112,5 @@ The next safe code patch should stay under `src/experimental/mdwf/` and add only
 3. Add an MDWF normal-operator action test on a fixed random gauge field.
 4. Compare action rational results against repeated shifted solves, preserving the existing `mdwfRationalNormalMdwfTest` behavior.
 5. Only then design the force interface.
+
+The force-interface design boundary is documented separately in `FORCE_INTERFACE.md`.  That note is still architecture-only and must not be interpreted as permission to edit force, HMC, RHMC, or HISQ code.
