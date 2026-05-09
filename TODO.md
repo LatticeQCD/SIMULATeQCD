@@ -65,6 +65,7 @@
 - [x] MDWF `c_sw = 0` finite-difference action scaffold: add `mdwfFiniteDifferenceMdwfCsw0Test` using the actual MDWF normal-action path and an epsilon sweep before any force accumulation.
 - [x] MDWF nonzero-`c_sw` finite-difference action scaffold: add `mdwfFiniteDifferenceMdwfNonzeroCswTest` using the actual MDWF normal-action path, `c_sw = 0.5`, and a `c_sw = 0` comparison at the finest epsilon before any force accumulation.
 - [x] MDWF analytic force-contraction scaffold: add `MDWFAnalyticForceContractionCheck` and `mdwfAnalyticForceContractionMockTest` to compare a single-link analytic action derivative against the finite-difference harness without production force accumulation.
+- [x] MDWF Wilson-path force-contraction design: add `WILSON_FORCE_CONTRACTION_CHECK.md` to define the first `c_sw = 0` scalar contraction check using stored `(chi_i, eta_i)` workspaces before any force-field accumulation.
 
 ## Next stages
 
@@ -76,8 +77,8 @@
 - [x] MDWF finite-difference null validation: `mdwfFiniteDifferenceNullTest` passes on the cluster with `Ls = 8`, epsilon `1e-4`, derivative `0`, action real `3.46319e+06`, max shifted residual `1.56911e-21`, and perturbed link difference `0.0002`.
 - [x] MDWF `c_sw = 0` finite-difference action validation: `mdwfFiniteDifferenceMdwfCsw0Test` passes on the cluster with `Ls = 8`, derivative stable at `21.519`, max shifted residual `9.00309e-09`, max imaginary relative size `5.28353e-19`, and perturbed link difference `0.0002`.
 - [x] MDWF nonzero-`c_sw` finite-difference action validation: `mdwfFiniteDifferenceMdwfNonzeroCswTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, derivative stable at `19.6763`, `c_sw = 0` derivative `21.519`, derivative response `1.84264`, relative action response `0.00178742`, max shifted residual `9.0455e-09`, max imaginary relative size `5.28353e-19`, and perturbed link difference `0.0002`.
-- [ ] MDWF analytic force-contraction mock validation: compile and run `mdwfAnalyticForceContractionMockTest` on the cluster.
-- [ ] After analytic contraction mock validation, design the first MDWF Wilson-path contraction check using stored `(chi_i, eta_i)` workspaces, still without production force accumulation.
+- [x] MDWF analytic force-contraction mock validation: `mdwfAnalyticForceContractionMockTest` passes on the cluster with `Ls = 8`, left finite difference/analytic derivative `0.0629916` with abs diff `6.69862e-11`, and right finite difference/analytic derivative `-0.111558` with abs diff `1.04964e-11`.
+- [ ] Implement `mdwfWilsonForceContractionCsw0Test` as a scalar Wilson-path action-derivative check against the finite-difference harness, still without production force accumulation.
 
 ## Stage 5 notes
 
