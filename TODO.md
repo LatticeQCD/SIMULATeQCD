@@ -58,14 +58,17 @@
 - [x] MDWF pseudofermion heatbath mock scaffold: add `mdwfPseudofermionHeatbathMockTest` with a controlled fifth-slice diagonal normal operator.
 - [x] MDWF normal-operator action scaffold: add `mdwfNormalMdwfActionTest` on a fixed random gauge field with explicit positive action-rational coefficients.
 - [x] MDWF rational action comparison scaffold: add `mdwfRationalActionComparisonTest`, comparing `computeMDWFRationalAction` against repeated `MDWFShiftedNormalOperator` single-shift solves while leaving `mdwfRationalNormalMdwfTest` unchanged.
+- [x] MDWF force-interface architecture note: add `FORCE_INTERFACE.md` with the pre-force software boundary, derivative split, solver/workspace requirements, and validation ladder.
+- [x] MDWF force-rational workspace scaffold: add `MDWFFermionForceWorkspace` and `mdwfFermionForceWorkspaceMockTest` to solve/store `(chi_i, eta_i)` for force rational coefficients without accumulating gauge force.
 
 ## Next stages
 
 - [ ] MDWF rational-coefficient adapter validation: compile and run `mdwfRationalCoefficientAdapterTest` on the cluster.
 - [x] MDWF pseudofermion heatbath mock validation: `mdwfPseudofermionHeatbathMockTest` passes on the cluster with `Ls = 8`, 2 terms, max residue `1.87352e-21`, and max diff `2.67841e-15`.
 - [x] MDWF normal-operator action validation: `mdwfNormalMdwfActionTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `723629`, action imaginary relative size `5.90684e-19`, and max residue `9.84526e-09`.
-- [ ] MDWF rational action comparison validation: compile and run `mdwfRationalActionComparisonTest` on the cluster.
-- [ ] After rational action comparison validation, design the force interface as architecture-only notes before touching force/HMC/RHMC code.
+- [x] MDWF rational action comparison validation: `mdwfRationalActionComparisonTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `778994`, max rational/single-shift relative residual `9.68192e-09`, and exact agreement with repeated shifted solves.
+- [ ] MDWF force-rational workspace validation: compile and run `mdwfFermionForceWorkspaceMockTest` on the cluster.
+- [ ] After force-rational workspace validation, design a finite-difference harness before adding any gauge-force accumulation.
 
 ## Stage 5 notes
 
@@ -86,5 +89,6 @@
 - Nonzero-`c_sw` normal-equation tests must preserve `mdwfNormalMdwfCsw0SolveTest` as a passing baseline and must continue using an explicitly supplied `M^\dagger M`.
 - `MDWFCoupledMultiShiftCG` is a correctness-first scaffold with independent coupled-CG solves per shift; do not treat it as an optimized simultaneous multishift recurrence yet.
 - `MDWFRationalOperator` consumes explicit rational coefficients only; it does not define RHMC determinant powers, pseudofermion conventions, or force terms.
+- `FORCE_INTERFACE.md` is architecture-only; no force, HMC, RHMC, HISQ, momentum-update, or smearing code should be changed until the force workspace and finite-difference plan are reviewed.
 - Do not touch RHMC/HMC/force/HISQ code for the operator scaffold.
 - Do not change `Spinorfield`, `GIndexer`, `SiteComm`, or global memory layout for the scaffold.
