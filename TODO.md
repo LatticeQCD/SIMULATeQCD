@@ -80,8 +80,10 @@
 - [x] MDWF nonzero-`c_sw` finite-difference action validation: `mdwfFiniteDifferenceMdwfNonzeroCswTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, derivative stable at `19.6763`, `c_sw = 0` derivative `21.519`, derivative response `1.84264`, relative action response `0.00178742`, max shifted residual `9.0455e-09`, max imaginary relative size `5.28353e-19`, and perturbed link difference `0.0002`.
 - [x] MDWF analytic force-contraction mock validation: `mdwfAnalyticForceContractionMockTest` passes on the cluster with `Ls = 8`, left finite difference/analytic derivative `0.0629916` with abs diff `6.69862e-11`, and right finite difference/analytic derivative `-0.111558` with abs diff `1.04964e-11`.
 - [x] MDWF Wilson-path scalar contraction validation: `mdwfWilsonForceContractionCsw0Test` passes on the cluster for the first selected link with `Ls = 8`, finite-difference and analytic derivatives `21.519`, abs diff `7.9604e-08`, rel diff `3.69925e-09`, action max residual `9.00309e-09`, and force max residual `9.00308e-09`.
-- [ ] MDWF Wilson-path scalar contraction sweep validation: rerun `mdwfWilsonForceContractionCsw0Test` after the added second direction/generator/right-link probe.
-- [ ] After the `c_sw = 0` Wilson-path scalar contraction sweep passes, design the nonzero-`c_sw` clover-path contraction.
+- [x] MDWF Wilson-path scalar contraction sweep validation: `mdwfWilsonForceContractionCsw0Test` passes on the cluster with 2 probes; probe 0 left `mu = 1`, generator `0`, derivative `21.519`, abs diff `7.9604e-08`; probe 1 right `mu = 2`, generator `1`, derivative `13.7299`, abs diff `2.28897e-07`; max rel diff `1.66714e-08`, action max residual `9.00309e-09`, and force max residual `9.00308e-09`.
+- [x] MDWF nonzero-`c_sw` clover-path contraction design: add `CLOVER_FORCE_CONTRACTION_CHECK.md` for the scalar-only Wilson+clover contraction target, preserving the `c_sw = 0` Wilson sweep as the gate and avoiding production force accumulation.
+- [x] MDWF nonzero-`c_sw` scalar clover-path contraction scaffold: add `mdwfCloverForceContractionNonzeroTest` with test-local Wilson+clover derivative helpers, comparing against the finite-difference action harness without production force accumulation.
+- [ ] Cluster-validate `mdwfCloverForceContractionNonzeroTest`; keep `mdwfWilsonForceContractionCsw0Test` as the required regression gate.
 
 ## Stage 5 notes
 
