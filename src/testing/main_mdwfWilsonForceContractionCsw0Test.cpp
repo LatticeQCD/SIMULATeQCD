@@ -7,8 +7,8 @@
  *     dS_i = -2 alpha_i Re[ eta_i^\dagger (dM/depsilon) chi_i ].
  *
  * The derivative helper mirrors the `DiracWilsonEvenOdd2` stencil used by the
- * current MDWF Wilson path.  It computes one scalar for one selected link and
- * generator.  It does not accumulate gauge force, update momenta, call
+ * current MDWF Wilson path.  It computes scalar checks for selected links and
+ * generators.  It does not accumulate gauge force, update momenta, call
  * RHMC/HMC, touch HISQ, use smearing, or implement a production force kernel.
  */
 
@@ -292,18 +292,25 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
     field.updateAll();
 
     MDWFFifthDimCoefficients<double> fifthCoeff(1.0, -0.05, -0.05, 0.0, 0.0);
-    MDWFFiniteDifferenceProbe<double> probe{
-        1, 2, 3, 0,
-        1,
-        0,
-        1e-4,
-        MDWFFiniteDifferenceMultiplicationSide::Left
+    MDWFFiniteDifferenceProbe<double> probes[2] = {
+        {
+            1, 2, 3, 0,
+            1,
+            0,
+            1e-4,
+            MDWFFiniteDifferenceMultiplicationSide::Left
+        },
+        {
+            2, 1, 3, 0,
+            2,
+            1,
+            1e-4,
+            MDWFFiniteDifferenceMultiplicationSide::Right
+        }
     };
 
     MDWFWilsonForceContractionCsw0ActionEvaluator<HaloDepth, Ls> actionEvaluator(
         commBase, field, actionCoefficients, fifthCoeff, mass, 512, 1e-8);
-    MDWFFiniteDifferenceResult<double> finiteDifference = evaluateMDWFFiniteDifferenceAction(
-        gaugePlus, gaugeMinus, baseGauge, probe, actionEvaluator);
 
     ForwardOperator forward(baseGauge, fifthCoeff, mass, csw,
                             "MDWF_wilson_force_contraction_csw0_forward");
@@ -320,39 +327,66 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
         maxForceWorkspaceResidue = std::max(maxForceWorkspaceResidue, info.residue);
     }
 
-    const double analyticDerivative
-        = mdwfWilsonForceContractionAnalyticDerivative<Workspace, Spinor, Ls>(
-            workspace, baseGauge, forceCoefficients, probe, commBase);
-    MDWFAnalyticForceContractionResult<double> comparison
-        = compareMDWFAnalyticForceContraction(finiteDifference, analyticDerivative, 5e-3, 5e-4);
+    double maxActionResidual = 0.0;
+    double maxAbsDiff = 0.0;
+    double maxRelDiff = 0.0;
 
-    if (mdwfRationalCoefficientRoleName(actionInput.role) != "action"
-        || mdwfRationalCoefficientRoleName(forceInput.role) != "force"
-        || !finiteDifference.converged
-        || !workspace.converged()
-        || finiteDifference.max_shifted_residual > 1e-8
-        || maxForceWorkspaceResidue > 1e-8
-        || finiteDifference.action_imag_relative > 1e-8
-        || !comparison.passed) {
-        throw std::runtime_error(stdLogger.fatal(
-            "MDWF c_sw = 0 Wilson force-contraction test failed: finiteDifference = ",
-            comparison.finite_difference_derivative,
-            ", analytic = ", comparison.analytic_derivative,
-            ", absDiff = ", comparison.absolute_difference,
-            ", relDiff = ", comparison.relative_difference,
-            ", finiteDifferenceConverged = ", finiteDifference.converged,
-            ", workspaceConverged = ", workspace.converged(),
-            ", actionMaxResidual = ", finiteDifference.max_shifted_residual,
-            ", forceMaxResidual = ", maxForceWorkspaceResidue,
-            ", actionImagRel = ", finiteDifference.action_imag_relative));
+    for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
+        MDWFFiniteDifferenceResult<double> finiteDifference = evaluateMDWFFiniteDifferenceAction(
+            gaugePlus, gaugeMinus, baseGauge, probes[probeIndex], actionEvaluator);
+        const double analyticDerivative
+            = mdwfWilsonForceContractionAnalyticDerivative<Workspace, Spinor, Ls>(
+                workspace, baseGauge, forceCoefficients, probes[probeIndex], commBase);
+        MDWFAnalyticForceContractionResult<double> comparison
+            = compareMDWFAnalyticForceContraction(finiteDifference, analyticDerivative, 5e-3, 5e-4);
+
+        maxActionResidual = std::max(maxActionResidual, finiteDifference.max_shifted_residual);
+        maxAbsDiff = std::max(maxAbsDiff, comparison.absolute_difference);
+        maxRelDiff = std::max(maxRelDiff, comparison.relative_difference);
+
+        if (mdwfRationalCoefficientRoleName(actionInput.role) != "action"
+            || mdwfRationalCoefficientRoleName(forceInput.role) != "force"
+            || !finiteDifference.converged
+            || !workspace.converged()
+            || finiteDifference.max_shifted_residual > 1e-8
+            || maxForceWorkspaceResidue > 1e-8
+            || finiteDifference.action_imag_relative > 1e-8
+            || !comparison.passed) {
+            const char *side = probes[probeIndex].multiplication_side
+                               == MDWFFiniteDifferenceMultiplicationSide::Left ? "left" : "right";
+            throw std::runtime_error(stdLogger.fatal(
+                "MDWF c_sw = 0 Wilson force-contraction test failed for probe ", probeIndex,
+                ": mu = ", static_cast<int>(probes[probeIndex].mu),
+                ", generator = ", probes[probeIndex].generator_id,
+                ", side = ", side,
+                ", finiteDifference = ", comparison.finite_difference_derivative,
+                ", analytic = ", comparison.analytic_derivative,
+                ", absDiff = ", comparison.absolute_difference,
+                ", relDiff = ", comparison.relative_difference,
+                ", finiteDifferenceConverged = ", finiteDifference.converged,
+                ", workspaceConverged = ", workspace.converged(),
+                ", actionMaxResidual = ", finiteDifference.max_shifted_residual,
+                ", forceMaxResidual = ", maxForceWorkspaceResidue,
+                ", actionImagRel = ", finiteDifference.action_imag_relative));
+        }
+
+        const char *side = probes[probeIndex].multiplication_side
+                           == MDWFFiniteDifferenceMultiplicationSide::Left ? "left" : "right";
+        rootLogger.info("MDWF c_sw = 0 Wilson force-contraction probe passed with index = ", probeIndex,
+                        ", mu = ", static_cast<int>(probes[probeIndex].mu),
+                        ", generator = ", probes[probeIndex].generator_id,
+                        ", side = ", side,
+                        ", finiteDifference = ", comparison.finite_difference_derivative,
+                        ", analytic = ", comparison.analytic_derivative,
+                        ", absDiff = ", comparison.absolute_difference,
+                        ", relDiff = ", comparison.relative_difference);
     }
 
     rootLogger.info("MDWF c_sw = 0 Wilson force-contraction test passed with Ls = ", Ls,
-                    ", finiteDifference = ", comparison.finite_difference_derivative,
-                    ", analytic = ", comparison.analytic_derivative,
-                    ", absDiff = ", comparison.absolute_difference,
-                    ", relDiff = ", comparison.relative_difference,
-                    ", actionMaxResidual = ", finiteDifference.max_shifted_residual,
+                    ", probes = ", 2,
+                    ", maxAbsDiff = ", maxAbsDiff,
+                    ", maxRelDiff = ", maxRelDiff,
+                    ", actionMaxResidual = ", maxActionResidual,
                     ", forceMaxResidual = ", maxForceWorkspaceResidue);
 }
 
