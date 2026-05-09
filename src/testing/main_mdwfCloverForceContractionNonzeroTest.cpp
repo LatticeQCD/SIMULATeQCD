@@ -333,8 +333,13 @@ Vect12<double> mdwfCloverForceApplyCloverDerivative(
     Matrix6x6<double> &lower,
     const Vect12<double> &spinor) {
 
-    Vect12<double> out = upper.MatrixXVect12UpDown(spinor, 0);
-    out = lower.MatrixXVect12UpDown(out, 1);
+    Vect18<double> upperStored = upper.ConvertHermitianToVect18();
+    Vect18<double> lowerStored = lower.ConvertHermitianToVect18();
+    Matrix6x6<double> storedUpper(upperStored);
+    Matrix6x6<double> storedLower(lowerStored);
+
+    Vect12<double> out = storedUpper.MatrixXVect12UpDown(spinor, 0);
+    out = storedLower.MatrixXVect12UpDown(out, 1);
     return out;
 }
 
