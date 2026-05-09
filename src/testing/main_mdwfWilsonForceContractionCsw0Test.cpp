@@ -290,6 +290,9 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
     field.template iterateOverBulk<>(
         FillMDWFWilsonForceContractionCsw0Source<double, All, HaloDepth, Ls>());
     field.updateAll();
+    Spinor forceField(commBase, "MDWF_wilson_force_contraction_csw0_force_field");
+    forceField = field;
+    forceField.updateAll();
 
     MDWFFifthDimCoefficients<double> fifthCoeff(1.0, -0.05, -0.05, 0.0, 0.0);
     MDWFFiniteDifferenceProbe<double> probes[2] = {
@@ -319,7 +322,7 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
     NormalOperator normal(commBase, forward, adjoint,
                           "MDWF_wilson_force_contraction_csw0_normal");
     Workspace workspace;
-    workspace.prepare(normal, forward, field, forceCoefficients, 512, 1e-8,
+    workspace.prepare(normal, forward, forceField, forceCoefficients, 512, 1e-8,
                       "MDWF_wilson_force_contraction_csw0_workspace");
 
     double maxForceWorkspaceResidue = 0.0;
