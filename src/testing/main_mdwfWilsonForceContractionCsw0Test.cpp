@@ -314,6 +314,14 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
 
     MDWFWilsonForceContractionCsw0ActionEvaluator<HaloDepth, Ls> actionEvaluator(
         commBase, field, actionCoefficients, fifthCoeff, mass, 512, 1e-8);
+    MDWFFiniteDifferenceResult<double> finiteDifferences[2];
+    double maxActionResidual = 0.0;
+    for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
+        finiteDifferences[probeIndex] = evaluateMDWFFiniteDifferenceAction(
+            gaugePlus, gaugeMinus, baseGauge, probes[probeIndex], actionEvaluator);
+        maxActionResidual = std::max(maxActionResidual,
+                                     finiteDifferences[probeIndex].max_shifted_residual);
+    }
 
     ForwardOperator forward(baseGauge, fifthCoeff, mass, csw,
                             "MDWF_wilson_force_contraction_csw0_forward");
@@ -330,20 +338,17 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
         maxForceWorkspaceResidue = std::max(maxForceWorkspaceResidue, info.residue);
     }
 
-    double maxActionResidual = 0.0;
     double maxAbsDiff = 0.0;
     double maxRelDiff = 0.0;
 
     for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
-        MDWFFiniteDifferenceResult<double> finiteDifference = evaluateMDWFFiniteDifferenceAction(
-            gaugePlus, gaugeMinus, baseGauge, probes[probeIndex], actionEvaluator);
+        const MDWFFiniteDifferenceResult<double> &finiteDifference = finiteDifferences[probeIndex];
         const double analyticDerivative
             = mdwfWilsonForceContractionAnalyticDerivative<Workspace, Spinor, Ls>(
                 workspace, baseGauge, forceCoefficients, probes[probeIndex], commBase);
         MDWFAnalyticForceContractionResult<double> comparison
             = compareMDWFAnalyticForceContraction(finiteDifference, analyticDerivative, 5e-3, 5e-4);
 
-        maxActionResidual = std::max(maxActionResidual, finiteDifference.max_shifted_residual);
         maxAbsDiff = std::max(maxAbsDiff, comparison.absolute_difference);
         maxRelDiff = std::max(maxRelDiff, comparison.relative_difference);
 
