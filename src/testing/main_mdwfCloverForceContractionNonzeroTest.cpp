@@ -540,7 +540,7 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
 
     MDWFFifthDimCoefficients<double> fifthCoeff(1.0, -0.05, -0.05, 0.0, 0.0);
     MDWFFiniteDifferenceProbe<double> probe{
-        1, 2, 3, 0,
+        2, 2, 2, 2,
         1,
         0,
         1e-4,
