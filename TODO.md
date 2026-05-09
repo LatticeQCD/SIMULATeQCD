@@ -63,6 +63,7 @@
 - [x] MDWF finite-difference harness design: add `FINITE_DIFFERENCE_HARNESS.md` documenting the single-link action-derivative plan before any force accumulation.
 - [x] MDWF finite-difference null scaffold: add `MDWFFiniteDifferenceHarness` and `mdwfFiniteDifferenceNullTest` to perturb one gauge link and evaluate the centered action derivative through `computeMDWFRationalAction`, with a gauge-independent mock expected to give zero derivative.
 - [x] MDWF `c_sw = 0` finite-difference action scaffold: add `mdwfFiniteDifferenceMdwfCsw0Test` using the actual MDWF normal-action path and an epsilon sweep before any force accumulation.
+- [x] MDWF nonzero-`c_sw` finite-difference action scaffold: add `mdwfFiniteDifferenceMdwfNonzeroCswTest` using the actual MDWF normal-action path, `c_sw = 0.5`, and a `c_sw = 0` comparison at the finest epsilon before any force accumulation.
 
 ## Next stages
 
@@ -72,8 +73,9 @@
 - [x] MDWF rational action comparison validation: `mdwfRationalActionComparisonTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `778994`, max rational/single-shift relative residual `9.68192e-09`, and exact agreement with repeated shifted solves.
 - [x] MDWF force-rational workspace validation: `mdwfFermionForceWorkspaceMockTest` passes on the cluster with `Ls = 8`, 3 terms, max residue `1.45774e-21`, and max diff `3.58047e-15`.
 - [x] MDWF finite-difference null validation: `mdwfFiniteDifferenceNullTest` passes on the cluster with `Ls = 8`, epsilon `1e-4`, derivative `0`, action real `3.46319e+06`, max shifted residual `1.56911e-21`, and perturbed link difference `0.0002`.
-- [ ] MDWF `c_sw = 0` finite-difference action validation: compile and run `mdwfFiniteDifferenceMdwfCsw0Test` on the cluster.
-- [ ] After `c_sw = 0` finite-difference validation, add a nonzero-`c_sw` finite-difference smoke test before any force accumulation.
+- [x] MDWF `c_sw = 0` finite-difference action validation: `mdwfFiniteDifferenceMdwfCsw0Test` passes on the cluster with `Ls = 8`, derivative stable at `21.519`, max shifted residual `9.00309e-09`, max imaginary relative size `5.28353e-19`, and perturbed link difference `0.0002`.
+- [ ] MDWF nonzero-`c_sw` finite-difference action validation: compile and run `mdwfFiniteDifferenceMdwfNonzeroCswTest` on the cluster.
+- [ ] After nonzero-`c_sw` finite-difference validation, design the first analytic-force contraction check against the finite-difference harness without force accumulation in production paths.
 
 ## Stage 5 notes
 
