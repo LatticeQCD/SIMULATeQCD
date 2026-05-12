@@ -12,6 +12,7 @@
 #include "../experimental/mdwf/MDWFRationalCoefficientAdapter.h"
 
 #include <cmath>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -61,6 +62,10 @@ void runMDWFRationalCoefficientAdapterTest() {
     rootLogger.info("MDWF rational coefficient adapter smoke test passed with terms = ",
                     coefficients.shift.size(),
                     ", value_at_2 = ", evaluateMDWFRationalScalar(x, coefficients));
+    std::cout << "MDWF rational coefficient adapter smoke test passed with terms = "
+              << coefficients.shift.size()
+              << ", value_at_2 = " << evaluateMDWFRationalScalar(x, coefficients)
+              << std::endl;
 }
 
 int main() {

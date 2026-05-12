@@ -83,7 +83,8 @@
 - [x] MDWF Wilson-path scalar contraction sweep validation: `mdwfWilsonForceContractionCsw0Test` passes on the cluster with 2 probes; probe 0 left `mu = 1`, generator `0`, derivative `21.519`, abs diff `7.9604e-08`; probe 1 right `mu = 2`, generator `1`, derivative `13.7299`, abs diff `2.28897e-07`; max rel diff `1.66714e-08`, action max residual `9.00309e-09`, and force max residual `9.00308e-09`.
 - [x] MDWF nonzero-`c_sw` clover-path contraction design: add `CLOVER_FORCE_CONTRACTION_CHECK.md` for the scalar-only Wilson+clover contraction target, preserving the `c_sw = 0` Wilson sweep as the gate and avoiding production force accumulation.
 - [x] MDWF nonzero-`c_sw` scalar clover-path contraction scaffold: add `mdwfCloverForceContractionNonzeroTest` with test-local Wilson+clover derivative helpers, comparing against the finite-difference action harness without production force accumulation.
-- [ ] Cluster-validate `mdwfCloverForceContractionNonzeroTest`; keep `mdwfWilsonForceContractionCsw0Test` as the required regression gate.
+- [x] Cluster validation: `mdwfCloverForceContractionNonzeroTest` passes with `Ls = 8`, `c_sw = 0.5`, interior probe `(2,2,2,2)`, finite difference `25.9897`, Wilson analytic part `31.7972`, clover analytic part `-5.80751`, total analytic `25.9897`, abs diff `1.91264e-07`, rel diff `7.35921e-09`, and action/force residuals `9.04549e-09`.
+- [ ] Make the test-local clover contraction helper periodic-image aware before adding boundary or halo-touching clover probes.
 
 ## Stage 5 notes
 
