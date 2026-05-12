@@ -87,7 +87,11 @@
 - [x] MDWF test-local clover contraction helper periodic-image scaffold: selected-link matching now wraps halo/boundary coordinates through the local lattice extents before comparing to the finite-difference probe; no boundary probe added yet.
 - [x] Cluster validation after periodic-image matching: `mdwfCloverForceContractionNonzeroTest` still passes with `Ls = 8`, `c_sw = 0.5`, finite difference `25.9897`, Wilson analytic part `31.7972`, clover analytic part `-5.80751`, total analytic `25.9897`, abs diff `1.91264e-07`, rel diff `7.35921e-09`, and action/force residuals `9.04549e-09`.
 - [x] MDWF boundary/halo-touching nonzero-`c_sw` clover contraction scaffold: extend `mdwfCloverForceContractionNonzeroTest` to keep the validated interior probe and add a `t = 0` halo-touching probe using the periodic-image helper.
-- [ ] Cluster-validate the two-probe `mdwfCloverForceContractionNonzeroTest` before adding any production force accumulation.
+- [x] Cluster validation: two-probe `mdwfCloverForceContractionNonzeroTest` passes with `Ls = 8`, `c_sw = 0.5`; interior probe total analytic `25.9897` with abs diff `1.91264e-07`; halo-touching `t = 0` probe total analytic `19.6763` with abs diff `8.12379e-08`; max rel diff `7.35921e-09`, action residual `9.04549e-09`, and force residual `9.04549e-09`.
+- [x] MDWF force-accumulation architecture boundary: add `FORCE_ACCUMULATION_DESIGN.md` to define how the validated scalar derivatives should bridge to a future projected gauge-force accumulator, without adding force/HMC/RHMC code.
+- [x] MDWF one-link force-accumulator mock scaffold: add `MDWFOneLinkForceAccumulatorMock` and `mdwfOneLinkForceAccumulatorMockTest`, writing only one selected link and validating its scalar contraction against the existing analytic helper.
+- [ ] Cluster validation: build and run `mdwfOneLinkForceAccumulatorMockTest`.
+- [ ] Next: add a `c_sw = 0` Wilson one-link accumulator check against `mdwfWilsonForceContractionCsw0Test` before any all-link or production force accumulation.
 
 ## Stage 5 notes
 
