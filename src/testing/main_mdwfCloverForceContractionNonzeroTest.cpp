@@ -149,14 +149,30 @@ SU3<floatT> mdwfCloverForceLinkDaggerDerivative(
     return static_cast<floatT>(-1.0) * linkDagger * generator;
 }
 
-template<class floatT>
-bool mdwfCloverForceSameLink(const gSiteMu &siteMu,
-                             const MDWFFiniteDifferenceProbe<floatT> &probe) {
-    return siteMu.coord.x == probe.x
-           && siteMu.coord.y == probe.y
-           && siteMu.coord.z == probe.z
-           && siteMu.coord.t == probe.t
-           && siteMu.mu == probe.mu;
+int mdwfCloverForcePeriodicCoordinate(int coordinate, size_t extent) {
+    const int intExtent = static_cast<int>(extent);
+    int wrapped = coordinate % intExtent;
+    if (wrapped < 0) {
+        wrapped += intExtent;
+    }
+    return wrapped;
+}
+
+template<size_t HaloDepth, class floatT>
+bool mdwfCloverForceSamePeriodicLink(const gSiteMu &siteMu,
+                                     const MDWFFiniteDifferenceProbe<floatT> &probe) {
+    typedef GIndexer<All, HaloDepth> GInd;
+    const LatticeData lat = GInd::getLatData();
+
+    return siteMu.mu == probe.mu
+           && mdwfCloverForcePeriodicCoordinate(siteMu.coord.x, lat.lx)
+              == mdwfCloverForcePeriodicCoordinate(probe.x, lat.lx)
+           && mdwfCloverForcePeriodicCoordinate(siteMu.coord.y, lat.ly)
+              == mdwfCloverForcePeriodicCoordinate(probe.y, lat.ly)
+           && mdwfCloverForcePeriodicCoordinate(siteMu.coord.z, lat.lz)
+              == mdwfCloverForcePeriodicCoordinate(probe.z, lat.lz)
+           && mdwfCloverForcePeriodicCoordinate(siteMu.coord.t, lat.lt)
+              == mdwfCloverForcePeriodicCoordinate(probe.t, lat.lt);
 }
 
 template<class floatT>
@@ -189,7 +205,7 @@ SU3<floatT> mdwfCloverForcePathFactorDerivative(
     return mdwfCloverForceLinkDerivative(link, probe);
 }
 
-template<class floatT>
+template<size_t HaloDepth, class floatT>
 SU3<floatT> mdwfCloverForcePathDerivative(
     SU3Accessor<floatT, R18> gaugeAcc,
     const std::array<MDWFCloverForcePathFactor<floatT>, 4> &path,
@@ -197,7 +213,7 @@ SU3<floatT> mdwfCloverForcePathDerivative(
 
     SU3<floatT> derivative = su3_zero<floatT>();
     for (size_t active = 0; active < path.size(); active++) {
-        if (!mdwfCloverForceSameLink(path[active].site_mu, probe)) {
+        if (!mdwfCloverForceSamePeriodicLink<HaloDepth>(path[active].site_mu, probe)) {
             continue;
         }
 
@@ -250,10 +266,10 @@ SU3<double> mdwfCloverForcePlaqCloverDerivative(
         {GInd::getSiteMu(GInd::site_dn(site, mu), mu), false}
     }};
 
-    return mdwfCloverForcePathDerivative(gaugeAcc, pathP, probe)
-           + mdwfCloverForcePathDerivative(gaugeAcc, pathQ, probe)
-           + mdwfCloverForcePathDerivative(gaugeAcc, pathR, probe)
-           + mdwfCloverForcePathDerivative(gaugeAcc, pathS, probe);
+    return mdwfCloverForcePathDerivative<HaloDepth>(gaugeAcc, pathP, probe)
+           + mdwfCloverForcePathDerivative<HaloDepth>(gaugeAcc, pathQ, probe)
+           + mdwfCloverForcePathDerivative<HaloDepth>(gaugeAcc, pathR, probe)
+           + mdwfCloverForcePathDerivative<HaloDepth>(gaugeAcc, pathS, probe);
 }
 
 template<size_t HaloDepth>
