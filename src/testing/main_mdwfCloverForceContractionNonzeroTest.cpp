@@ -555,18 +555,33 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
     forceField.updateAll();
 
     MDWFFifthDimCoefficients<double> fifthCoeff(1.0, -0.05, -0.05, 0.0, 0.0);
-    MDWFFiniteDifferenceProbe<double> probe{
-        2, 2, 2, 2,
-        1,
-        0,
-        1e-4,
-        MDWFFiniteDifferenceMultiplicationSide::Left
+    MDWFFiniteDifferenceProbe<double> probes[2] = {
+        {
+            2, 2, 2, 2,
+            1,
+            0,
+            1e-4,
+            MDWFFiniteDifferenceMultiplicationSide::Left
+        },
+        {
+            1, 2, 3, 0,
+            1,
+            0,
+            1e-4,
+            MDWFFiniteDifferenceMultiplicationSide::Left
+        }
     };
 
     MDWFCloverForceContractionNonzeroActionEvaluator<HaloDepth, Ls> actionEvaluator(
         commBase, field, actionCoefficients, fifthCoeff, mass, csw, 512, 1e-8);
-    MDWFFiniteDifferenceResult<double> finiteDifference = evaluateMDWFFiniteDifferenceAction(
-        gaugePlus, gaugeMinus, baseGauge, probe, actionEvaluator);
+    MDWFFiniteDifferenceResult<double> finiteDifferences[2];
+    double maxActionResidual = 0.0;
+    for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
+        finiteDifferences[probeIndex] = evaluateMDWFFiniteDifferenceAction(
+            gaugePlus, gaugeMinus, baseGauge, probes[probeIndex], actionEvaluator);
+        maxActionResidual = std::max(maxActionResidual,
+                                     finiteDifferences[probeIndex].max_shifted_residual);
+    }
 
     ForwardOperator forward(baseGauge, fifthCoeff, mass, csw,
                             "MDWF_clover_force_contraction_nonzero_forward");
@@ -583,55 +598,84 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
         maxForceWorkspaceResidue = std::max(maxForceWorkspaceResidue, info.residue);
     }
 
-    double wilsonDerivative = 0.0;
-    double cloverDerivative = 0.0;
-    mdwfCloverForceContractionAnalyticDerivative<Workspace, Spinor, Ls>(
-        workspace, baseGauge, forceCoefficients, probe, csw, commBase,
-        wilsonDerivative, cloverDerivative);
+    double maxAbsDiff = 0.0;
+    double maxRelDiff = 0.0;
 
-    const double analyticDerivative = wilsonDerivative + cloverDerivative;
-    MDWFAnalyticForceContractionResult<double> comparison
-        = compareMDWFAnalyticForceContraction(finiteDifference, analyticDerivative, 5e-3, 5e-4);
+    for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
+        double wilsonDerivative = 0.0;
+        double cloverDerivative = 0.0;
+        mdwfCloverForceContractionAnalyticDerivative<Workspace, Spinor, Ls>(
+            workspace, baseGauge, forceCoefficients, probes[probeIndex], csw, commBase,
+            wilsonDerivative, cloverDerivative);
 
-    if (mdwfRationalCoefficientRoleName(actionInput.role) != "action"
-        || mdwfRationalCoefficientRoleName(forceInput.role) != "force"
-        || !finiteDifference.converged
-        || !workspace.converged()
-        || finiteDifference.max_shifted_residual > 1e-8
-        || maxForceWorkspaceResidue > 1e-8
-        || finiteDifference.action_imag_relative > 1e-8
-        || !std::isfinite(wilsonDerivative)
-        || !std::isfinite(cloverDerivative)
-        || !comparison.passed) {
-        const char *side = probe.multiplication_side
+        const double analyticDerivative = wilsonDerivative + cloverDerivative;
+        MDWFAnalyticForceContractionResult<double> comparison
+            = compareMDWFAnalyticForceContraction(
+                finiteDifferences[probeIndex], analyticDerivative, 5e-3, 5e-4);
+
+        maxAbsDiff = std::max(maxAbsDiff, comparison.absolute_difference);
+        maxRelDiff = std::max(maxRelDiff, comparison.relative_difference);
+
+        if (mdwfRationalCoefficientRoleName(actionInput.role) != "action"
+            || mdwfRationalCoefficientRoleName(forceInput.role) != "force"
+            || !finiteDifferences[probeIndex].converged
+            || !workspace.converged()
+            || finiteDifferences[probeIndex].max_shifted_residual > 1e-8
+            || maxForceWorkspaceResidue > 1e-8
+            || finiteDifferences[probeIndex].action_imag_relative > 1e-8
+            || !std::isfinite(wilsonDerivative)
+            || !std::isfinite(cloverDerivative)
+            || !comparison.passed) {
+            const char *side = probes[probeIndex].multiplication_side
+                               == MDWFFiniteDifferenceMultiplicationSide::Left ? "left" : "right";
+            throw std::runtime_error(stdLogger.fatal(
+                "MDWF nonzero-c_sw clover force-contraction test failed for probe ", probeIndex,
+                ": c_sw = ", csw,
+                ", x = ", probes[probeIndex].x,
+                ", y = ", probes[probeIndex].y,
+                ", z = ", probes[probeIndex].z,
+                ", t = ", probes[probeIndex].t,
+                ", mu = ", static_cast<int>(probes[probeIndex].mu),
+                ", generator = ", probes[probeIndex].generator_id,
+                ", side = ", side,
+                ", finiteDifference = ", comparison.finite_difference_derivative,
+                ", wilsonAnalytic = ", wilsonDerivative,
+                ", cloverAnalytic = ", cloverDerivative,
+                ", totalAnalytic = ", comparison.analytic_derivative,
+                ", absDiff = ", comparison.absolute_difference,
+                ", relDiff = ", comparison.relative_difference,
+                ", finiteDifferenceConverged = ", finiteDifferences[probeIndex].converged,
+                ", workspaceConverged = ", workspace.converged(),
+                ", actionMaxResidual = ", finiteDifferences[probeIndex].max_shifted_residual,
+                ", forceMaxResidual = ", maxForceWorkspaceResidue,
+                ", actionImagRel = ", finiteDifferences[probeIndex].action_imag_relative));
+        }
+
+        const char *side = probes[probeIndex].multiplication_side
                            == MDWFFiniteDifferenceMultiplicationSide::Left ? "left" : "right";
-        throw std::runtime_error(stdLogger.fatal(
-            "MDWF nonzero-c_sw clover force-contraction test failed: c_sw = ", csw,
-            ", mu = ", static_cast<int>(probe.mu),
-            ", generator = ", probe.generator_id,
-            ", side = ", side,
-            ", finiteDifference = ", comparison.finite_difference_derivative,
-            ", wilsonAnalytic = ", wilsonDerivative,
-            ", cloverAnalytic = ", cloverDerivative,
-            ", totalAnalytic = ", comparison.analytic_derivative,
-            ", absDiff = ", comparison.absolute_difference,
-            ", relDiff = ", comparison.relative_difference,
-            ", finiteDifferenceConverged = ", finiteDifference.converged,
-            ", workspaceConverged = ", workspace.converged(),
-            ", actionMaxResidual = ", finiteDifference.max_shifted_residual,
-            ", forceMaxResidual = ", maxForceWorkspaceResidue,
-            ", actionImagRel = ", finiteDifference.action_imag_relative));
+        rootLogger.info("MDWF nonzero-c_sw clover force-contraction probe passed with index = ",
+                        probeIndex,
+                        ", x = ", probes[probeIndex].x,
+                        ", y = ", probes[probeIndex].y,
+                        ", z = ", probes[probeIndex].z,
+                        ", t = ", probes[probeIndex].t,
+                        ", mu = ", static_cast<int>(probes[probeIndex].mu),
+                        ", generator = ", probes[probeIndex].generator_id,
+                        ", side = ", side,
+                        ", finiteDifference = ", comparison.finite_difference_derivative,
+                        ", wilsonAnalytic = ", wilsonDerivative,
+                        ", cloverAnalytic = ", cloverDerivative,
+                        ", totalAnalytic = ", comparison.analytic_derivative,
+                        ", absDiff = ", comparison.absolute_difference,
+                        ", relDiff = ", comparison.relative_difference);
     }
 
     rootLogger.info("MDWF nonzero-c_sw clover force-contraction test passed with Ls = ", Ls,
                     ", c_sw = ", csw,
-                    ", finiteDifference = ", comparison.finite_difference_derivative,
-                    ", wilsonAnalytic = ", wilsonDerivative,
-                    ", cloverAnalytic = ", cloverDerivative,
-                    ", totalAnalytic = ", comparison.analytic_derivative,
-                    ", absDiff = ", comparison.absolute_difference,
-                    ", relDiff = ", comparison.relative_difference,
-                    ", actionMaxResidual = ", finiteDifference.max_shifted_residual,
+                    ", probes = ", 2,
+                    ", maxAbsDiff = ", maxAbsDiff,
+                    ", maxRelDiff = ", maxRelDiff,
+                    ", actionMaxResidual = ", maxActionResidual,
                     ", forceMaxResidual = ", maxForceWorkspaceResidue);
 }
 
