@@ -70,7 +70,7 @@
 
 ## Next stages
 
-- [ ] MDWF rational-coefficient adapter validation: compile and run `mdwfRationalCoefficientAdapterTest` on the cluster.
+- [x] MDWF rational-coefficient adapter validation: `mdwfRationalCoefficientAdapterTest` passes on the cluster with 3 terms and scalar value at `x = 2` equal to `0.766563`.
 - [x] MDWF pseudofermion heatbath mock validation: `mdwfPseudofermionHeatbathMockTest` passes on the cluster with `Ls = 8`, 2 terms, max residue `1.87352e-21`, and max diff `2.67841e-15`.
 - [x] MDWF normal-operator action validation: `mdwfNormalMdwfActionTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `723629`, action imaginary relative size `5.90684e-19`, and max residue `9.84526e-09`.
 - [x] MDWF rational action comparison validation: `mdwfRationalActionComparisonTest` passes on the cluster with `Ls = 8`, `c_sw = 0.5`, 3 terms, action real `778994`, max rational/single-shift relative residual `9.68192e-09`, and exact agreement with repeated shifted solves.
@@ -84,7 +84,8 @@
 - [x] MDWF nonzero-`c_sw` clover-path contraction design: add `CLOVER_FORCE_CONTRACTION_CHECK.md` for the scalar-only Wilson+clover contraction target, preserving the `c_sw = 0` Wilson sweep as the gate and avoiding production force accumulation.
 - [x] MDWF nonzero-`c_sw` scalar clover-path contraction scaffold: add `mdwfCloverForceContractionNonzeroTest` with test-local Wilson+clover derivative helpers, comparing against the finite-difference action harness without production force accumulation.
 - [x] Cluster validation: `mdwfCloverForceContractionNonzeroTest` passes with `Ls = 8`, `c_sw = 0.5`, interior probe `(2,2,2,2)`, finite difference `25.9897`, Wilson analytic part `31.7972`, clover analytic part `-5.80751`, total analytic `25.9897`, abs diff `1.91264e-07`, rel diff `7.35921e-09`, and action/force residuals `9.04549e-09`.
-- [ ] Make the test-local clover contraction helper periodic-image aware before adding boundary or halo-touching clover probes.
+- [x] MDWF test-local clover contraction helper periodic-image scaffold: selected-link matching now wraps halo/boundary coordinates through the local lattice extents before comparing to the finite-difference probe; no boundary probe added yet.
+- [ ] Cluster-validate `mdwfCloverForceContractionNonzeroTest` after periodic-image matching, then add one boundary or halo-touching clover probe as a separate patch.
 
 ## Stage 5 notes
 
