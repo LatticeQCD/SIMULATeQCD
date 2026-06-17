@@ -136,7 +136,7 @@ void Source::smearSource(Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge,
                          floatT lambda, int steps){
      int i = 0;
      while(i < steps){
-         if((steps-1) > 2){
+         if((steps-i) > 2){
              spinorOut.template iterateOverFull<BLOCKSIZE>(SmearSource<floatT,HaloDepthGauge,HaloDepthSpin>(gauge,spinorIn,lambda*lambda/(4.0*steps)));
              spinorIn.template iterateOverBulk<BLOCKSIZE>(SmearSource<floatT,HaloDepthGauge,HaloDepthSpin>(gauge,spinorOut,lambda*lambda/(4.0*steps)));
              spinorIn.updateAll();

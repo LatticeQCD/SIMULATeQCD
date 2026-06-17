@@ -61,6 +61,14 @@ __host__ __device__ auto operator*(const floatT & ob1, const ColorVect<floatT>& 
 }
 
 template <class floatT>
+__host__ __device__ auto operator*(const COMPLEX(floatT) & ob1, const ColorVect<floatT>& ob2)->ColorVect<floatT> {
+    ColorVect<floatT> res;
+    for (int i = 0; i < 4; ++i)
+        res[i] = ob1 * ob2[i];
+    return res;
+}
+
+template <class floatT>
 __host__ __device__ auto GammaXMultVec( const ColorVect<floatT>& ob1)->ColorVect<floatT> {
     ColorVect<floatT> res;
     
