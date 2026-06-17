@@ -1,4 +1,5 @@
 ARG CUDA_VERSION
+ARG RHEL_VERSION
 
 # Get the CUDA toolkit from the NVIDIA CUDA image
 FROM docker.io/nvidia/cuda:${CUDA_VERSION}-devel-rockylinux${RHEL_VERSION} as cuda-builder
@@ -13,6 +14,9 @@ ARG GROUPNAME
 ARG RHEL_VERSION
 
 ENV BUILDAH_ISOLATION=chroot
+
+RUN microdnf install -y shadow-utils \
+    && microdnf clean all
 
 # This code is just ensuring that our user exists and is running with the same permissions as the host user.
 # This is usually userid/gid 1000
