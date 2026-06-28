@@ -32,6 +32,7 @@ enum class HDF5_Observable {
 };
 
 
+// template<class floatT, bool onlyRelevant>
 template<class floatT>
 class HDF5FileWriter {
     private:
@@ -76,7 +77,7 @@ class HDF5FileWriter {
         const H5std_string dataSetNameFlowTimeNecessary;
         const H5std_string dataSetNamePlaquette, dataSetNameClover;
         const H5std_string dataSetNameTopCharge, dataSetNameTopChargeImp;
-        const H5std_string dataSetNameR2Counts;
+        const H5std_string dataSetNameR2Counts, dataSetNameR2Values;
         const H5std_string dataSetNameEMTE, dataSetNameEMTU;
         const H5std_string dataSetNameEMTCorr;
 
@@ -84,7 +85,7 @@ class HDF5FileWriter {
         DataSet *dataSetFlowTimeMeasured;
         DataSet *dataSetPlaquette, *dataSetClover;
         DataSet *dataSetTopCharge, *dataSetTopChargeImp;
-        DataSet *dataSetR2Counts;
+        DataSet *dataSetR2Counts, *dataSetR2Values;
         DataSet *dataSetEMTE, *dataSetEMTU;
         DataSet *dataSetEMTCorr;
 
@@ -97,7 +98,9 @@ class HDF5FileWriter {
             dataSetNameFlowTime("flow_time"), dataSetNameFlowTimeNecessary("measured_flow_time"),
             dataSetNamePlaquette("plaquette"), dataSetNameTopCharge("topological_charge"),
             dataSetNameClover("clover"), dataSetNameTopChargeImp("topological_charge_improved"),
-            dataSetNameR2Counts("r2_counts"), dataSetNameEMTE("EMTE"), dataSetNameEMTU("EMTU"), dataSetNameEMTCorr("G") {
+            dataSetNameR2Counts("r2_counts"), dataSetNameR2Values("r2_values"),
+            dataSetNameEMTE("EMTE"), dataSetNameEMTU("EMTU"), dataSetNameEMTCorr("G")
+        {
             
             // fix PredType based on floatT
             if constexpr (std::is_same_v<floatT, double>) {
@@ -106,7 +109,11 @@ class HDF5FileWriter {
                 hdf5FloatT = &PredType::NATIVE_FLOAT;
             }
 
-            r2max = TensorDecomposition<floatT, 0>::getR2max();
+            // if (!onlyRelevant) {
+                r2max = TensorDecomposition<floatT, 0>::getR2max();
+            // } else {
+            //     r2max = TensorDecomposition<float, 0>::getNumberOfHitR2();
+            // }
 
             // create the HDF5 file
             _file = new H5File(_fileName, H5F_ACC_TRUNC);
@@ -162,6 +169,7 @@ class HDF5FileWriter {
             
             dataSetFlowTimeMeasured = new DataSet(groupEMTCorr->createDataSet(dataSetNameFlowTimeNecessary, *hdf5FloatT, *dataSpaceFlowTimeQuantity, propListFlowTimeQuantity));
             dataSetR2Counts = new DataSet(groupEMTCorr->createDataSet(dataSetNameR2Counts, PredType::NATIVE_INT, *dataSpaceR2Counts));
+            dataSetR2Values = new DataSet(groupEMTCorr->createDataSet(dataSetNameR2Values, PredType::NATIVE_INT, *dataSpaceR2Counts));
             dataSetEMTCorr = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorr, *compTypeComplex, *dataSpaceEMTCorr, propListEMTCorr));
 
         }
@@ -219,7 +227,21 @@ class HDF5FileWriter {
 
         void writeR2Counts(const std::vector<int>& vecCounts) {
             if (IamRoot()) {
-                dataSetR2Counts->write(vecCounts.data(), PredType::NATIVE_INT);
+                std::vector<int> filteredR2Values = std::vector<int>();
+                std::vector<int> filteredCounts = std::vector<int>();
+
+                for (int r2 = 0; r2 < vecCounts.size(); r2++) {
+                    // if (!onlyRelevant) {
+                    //     filteredCounts.push_back(vecCounts[r2]);
+                    //     filteredR2Values.push_back(r2);
+                    // } else if (vecCounts[r2] != 0) {
+                        filteredCounts.push_back(vecCounts[r2]);
+                        filteredR2Values.push_back(r2);
+                    // }
+                }
+
+                dataSetR2Values->write(filteredR2Values.data(), PredType::NATIVE_INT);
+                dataSetR2Counts->write(filteredCounts.data(), PredType::NATIVE_INT);
             }
         }
 
@@ -314,6 +336,7 @@ class HDF5FileWriter {
 
         void writeEMTCorrData(
             const std::vector<std::vector<COMPLEX(floatT)>>& vecEMTcorrComplex
+            // const std::vector<int>& vecR2Counts
         ) {
             // create vector of ComplexData instead of COMPLEX(floatT)
             std::vector<std::vector<ComplexData<floatT>>> vecEMTCorrComplexTransformed(10, std::vector<ComplexData<floatT>>(r2max+1));
@@ -322,6 +345,16 @@ class HDF5FileWriter {
                     vecEMTCorrComplexTransformed[i][r2] = {real(vecEMTcorrComplex[i][r2]), imag(vecEMTcorrComplex[i][r2])};
                 }
             }
+
+            // if (onlyRelevant) {
+            //     for (int i = 0; i < 10; i++) {
+            //         for (int r2 = 0; r2 < r2max + 1; r2++) {
+            //             if (vecR2Counts[r2] != 0) {
+
+            //             }
+            //         }
+            //     }
+            // }
 
             // flatten array
             std::vector<ComplexData<floatT>> vecEMTCorrComplexDataTransformedFlat(10 * (r2max + 1));
