@@ -1989,18 +1989,29 @@ template void FourierClass<double>::performFourierTransformationTensor4x4Symx4x4
 template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Both>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
 template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Both>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
 template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Spatial>(
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Spatial>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Spatial>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
     int sign
