@@ -30,14 +30,21 @@ class EnergyMomentumTensorCorrelator {
             return tensorDecomposition.getR2max();
         }
 
+        template<bool matsubara>
         void EMTCorrGTensor(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
             LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& field
         );
 
-        void EMTCorrGFunctions(
+        void EMTCorrGFunctionsAveragedTau(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
             std::vector<std::vector<COMPLEX(floatT)>>& array
+        );
+
+        template<bool matsubara>
+        void EMTCorrGFunctionsGeneralTau(
+            Gaugefield<floatT, true, HaloDepth>& gaugefield,
+            std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array
         );
 
         void getR2Counts(
@@ -71,6 +78,7 @@ struct EMTtimesEMTStar {
 
 
 template<class floatT, size_t HaloDepth>
+template<bool matsubara>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& G
@@ -97,9 +105,15 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     
     // FFT the product back, store it in G again
     gFourierTimer.start();
-    // fourierClass.template performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Both>(G, G, -1.0);
-    fourierClass.template performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(G, G, -1.0);
-    // fourierClass.template performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G, G, -1.0);
+    if (matsubara) {
+        // fourierClass.template performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Spatial>(G, G, -1.0);
+        fourierClass.template performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Spatial>(G, G, -1.0);
+        // fourierClass.template performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Spatial>(G, G, -1.0);
+    } else {
+        // fourierClass.template performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Both>(G, G, -1.0);
+        fourierClass.template performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(G, G, -1.0);
+        // fourierClass.template performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G, G, -1.0);
+    }
     gFourierTimer.stop();
     rootLogger.debug("   G Fourier took            ", gFourierTimer.seconds(), "s.");
 
@@ -107,7 +121,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
 
 
 template<class floatT, size_t HaloDepth>
-void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctions(
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsAveragedTau(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
     std::vector<std::vector<COMPLEX(floatT)>>& array
 ) {
@@ -119,10 +133,35 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctions(
     GTensor.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT correlator into G tensor
-    this->EMTCorrGTensor(gaugefield, GTensor);
+    this->EMTCorrGTensor<false>(gaugefield, GTensor);
 
     tensorDecompositionTimer.start();
-    tensorDecomposition.template getAllTensorFunctions<true>(GTensor, array);
+    tensorDecomposition.template getComponentFunctionsAveragedTau<true>(GTensor, array);
+    tensorDecompositionTimer.stop();
+
+    rootLogger.debug("   Tensor Decomposition took ", tensorDecompositionTimer.seconds(), "s.");
+
+}
+
+
+template<class floatT, size_t HaloDepth>
+template<bool matsubara>
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsGeneralTau(
+    Gaugefield<floatT, true, HaloDepth>& gaugefield,
+    std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array
+) {
+
+    StopWatch<true> tensorDecompositionTimer;
+
+    // create lattice container for G tensor
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>> GTensor(gaugefield.getComm(), "GTensor", "GTensor", "GTensor", "GTensor");
+    GTensor.adjustSize(GInd::getLatData().vol4);
+
+    // calculate EMT correlator into G tensor
+    this->EMTCorrGTensor<matsubara>(gaugefield, GTensor);
+
+    tensorDecompositionTimer.start();
+    tensorDecomposition.template getComponentFunctionsGeneralTau<true>(GTensor, array);
     tensorDecompositionTimer.stop();
 
     rootLogger.debug("   Tensor Decomposition took ", tensorDecompositionTimer.seconds(), "s.");

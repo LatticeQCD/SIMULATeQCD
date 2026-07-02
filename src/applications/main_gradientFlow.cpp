@@ -411,20 +411,29 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         vec_weight = std::vector<int>(corrTools.distmax);
         corrTools.getFactorArray(vec_factor, vec_weight);
     }
-
-    std::vector<std::vector<COMPLEX(PREC)>> vecEMTCorr;
+    
     std::vector<int> vecCounts;
-    if (lp.energyMomentumTensorCorrFunctions()) {
+    if (lp.energyMomentumTensorCorrFunctionsAveragedTau() || lp.energyMomentumTensorCorrFunctionsGeneralTau()) {
         hsize_t r2max = EMTCorr.getR2max();
-
-        vecEMTCorr = std::vector<std::vector<COMPLEX(PREC)>>(10, std::vector<COMPLEX(PREC)>(r2max+1));
         vecCounts = std::vector<int>(r2max+1);
-
         EMTCorr.getR2Counts(vecCounts);
-
+    
         if (lp.useHDF5()) {
             hdf5File.writeR2Counts(vecCounts);
         }
+    }
+
+    std::vector<std::vector<COMPLEX(PREC)>> vecEMTCorrAveragedTau;
+    if (lp.energyMomentumTensorCorrFunctionsAveragedTau()) {
+        hsize_t r2max = EMTCorr.getR2max();
+        vecEMTCorrAveragedTau = std::vector<std::vector<COMPLEX(PREC)>>(10, std::vector<COMPLEX(PREC)>(r2max+1));
+    }
+    
+    std::vector<std::vector<std::vector<COMPLEX(PREC)>>> vecEMTCorrGeneralTau;
+    if (lp.energyMomentumTensorCorrFunctionsGeneralTau()) {
+        hsize_t r2max = EMTCorr.getR2max();
+        vecEMTCorrGeneralTau = std::vector<std::vector<std::vector<COMPLEX(PREC)>>>(14, std::vector<std::vector<COMPLEX(PREC)>>(lp.latDim()[3], std::vector<COMPLEX(PREC)>(r2max+1)));
+        rootLogger.info("Time extend of the lattice is " + std::to_string(lp.latDim()[3]));
     }
 
     std::vector<Matrix4x4Sym<floatT>> EMTUBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
@@ -701,19 +710,34 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             }
         }
 
-        if (lp.energyMomentumTensorCorrFunctions() && gradFlow.checkIfMeasuredTime()) {
+        if (lp.energyMomentumTensorCorrFunctionsAveragedTau() && gradFlow.checkIfMeasuredTime()) {
             StopWatch<true> emtCorrTimer;
             StopWatch<true> hdf5Timer;
 
-
             emtCorrTimer.start();
-            EMTCorr.EMTCorrGFunctions(gauge, vecEMTCorr);
+            EMTCorr.EMTCorrGFunctionsAveragedTau(gauge, vecEMTCorrAveragedTau);
             emtCorrTimer.stop();
             rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
             
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
-            hdf5File.writeEMTCorrData(vecEMTCorr);
+            hdf5File.writeEMTCorrAveragedTauData(vecEMTCorrAveragedTau);
+            hdf5Timer.stop();
+            rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
+        }
+
+        if (lp.energyMomentumTensorCorrFunctionsGeneralTau() && gradFlow.checkIfMeasuredTime()) {
+            StopWatch<true> emtCorrTimer;
+            StopWatch<true> hdf5Timer;
+
+            emtCorrTimer.start();
+            EMTCorr.template EMTCorrGFunctionsGeneralTau<true>(gauge, vecEMTCorrGeneralTau);
+            emtCorrTimer.stop();
+            rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
+            
+            // write data in hdf5 file anyway (regardless of useHDF5 setting)
+            hdf5Timer.start();
+            hdf5File.writeEMTCorrGeneralTauData(vecEMTCorrGeneralTau);
             hdf5Timer.stop();
             rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }

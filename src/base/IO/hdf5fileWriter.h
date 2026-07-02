@@ -28,7 +28,8 @@ enum class HDF5_Observable {
     TopChargeImp,
     EMTU,
     EMTE,
-    EMTCorr
+    EMTCorrAveragedTau,
+    EMTCorrGeneralTau
 };
 
 
@@ -49,21 +50,25 @@ class HDF5FileWriter {
         hsize_t r2max;
         
         // dimensions for quantities with:
-        // scalar,                  flow-time dependent,            e.g. Q(tau_F)
+        // scalar,                  flow-time dependent,                e.g. Q(tau_F)
         hsize_t initDimsFlowTimeQuantity[1] = {0};
         hsize_t maxDimsFlowTimeQuantity[1] = {H5S_UNLIMITED};
         hsize_t chunkSizeFlowTimeQuantity[1] = {1};
-        // scalar,                  r^2 dependent,                  e.g. N_counts(r^2)
+        // scalar,                  r^2 dependent,                      e.g. N_counts(r^2)
         hsize_t initDimsR2Counts[1]; // = {r2max + 1}
         hsize_t maxDimsR2Counts[1]; // = {r2max + 1}
-        // 4x4Sym (10 components),  flow-time dependent,            e.g. T_munu(tau_F)
+        // 4x4Sym (10 components),  flow-time dependent,                e.g. T_munu(tau_F)
         hsize_t initDims4x4Sym[2] = {0, 10};
         hsize_t maxDims4x4Sym[2] = {H5S_UNLIMITED, 10};
         hsize_t chunkSize4x4Sym[2] = {1, 10};
-        // 10 tensor functions,     flow-time and r^2 dependent,    e.g. G_LL(tau_F, r^2)
-        hsize_t initDimsEMTCorr[3]; // = {10, 0, r2max + 1}
-        hsize_t maxDimsEMTCorr[3]; // = {10, H5S_UNLIMITED, r2max + 1}
-        hsize_t chunkSizeEMTCorr[3]; // = {1, 1, r2max + 1}
+        // 10 tensor functions,     flow-time and r^2 dependent,        e.g. G_LL(tau_F, r^2)
+        hsize_t initDimsEMTCorrAveragedTau[3]; // = {10, 0, r2max + 1}
+        hsize_t maxDimsEMTCorrAveragedTau[3]; // = {10, H5S_UNLIMITED, r2max + 1}
+        hsize_t chunkSizeEMTCorrAveragedTau[3]; // = {1, 1, r2max + 1}
+        // 14 tensor functions,     flow-time, tau and r^2 dependent,   e.g. G_MT(tau_F, tau, r^2)
+        hsize_t initDimsEMTCorrGeneralTau[4]; // = {14, 0, N_t, r2max + 1}
+        hsize_t maxDimsEMTCorrGeneralTau[4]; // = {14, H5S_UNLIMITED, N_t, r2max + 1}
+        hsize_t chunkSizeEMTCorrGeneralTau[4]; // = {1, 1, N_t, r2max + 1}
         
         const H5::DataType* hdf5FloatT = nullptr;
         CompType *compTypeComplex;
@@ -71,7 +76,8 @@ class HDF5FileWriter {
         DataSpace *dataSpaceFlowTimeQuantity;
         DataSpace *dataSpaceR2Counts;
         DataSpace *dataSpace4x4Sym;
-        DataSpace *dataSpaceEMTCorr;
+        DataSpace *dataSpaceEMTCorrAveragedTau;
+        DataSpace *dataSpaceEMTCorrGeneralTau;
 
         const H5std_string dataSetNameFlowTime;
         const H5std_string dataSetNameFlowTimeNecessary;
@@ -79,7 +85,8 @@ class HDF5FileWriter {
         const H5std_string dataSetNameTopCharge, dataSetNameTopChargeImp;
         const H5std_string dataSetNameR2Counts, dataSetNameR2Values;
         const H5std_string dataSetNameEMTE, dataSetNameEMTU;
-        const H5std_string dataSetNameEMTCorr;
+        const H5std_string dataSetNameEMTCorrAveragedTau;
+        const H5std_string dataSetNameEMTCorrGeneralTau;
 
         DataSet *dataSetFlowTime;
         DataSet *dataSetFlowTimeMeasured;
@@ -87,7 +94,8 @@ class HDF5FileWriter {
         DataSet *dataSetTopCharge, *dataSetTopChargeImp;
         DataSet *dataSetR2Counts, *dataSetR2Values;
         DataSet *dataSetEMTE, *dataSetEMTU;
-        DataSet *dataSetEMTCorr;
+        DataSet *dataSetEMTCorrAveragedTau;
+        DataSet *dataSetEMTCorrGeneralTau;
 
     public:
         // standard constructor
@@ -99,7 +107,9 @@ class HDF5FileWriter {
             dataSetNamePlaquette("plaquette"), dataSetNameTopCharge("topological_charge"),
             dataSetNameClover("clover"), dataSetNameTopChargeImp("topological_charge_improved"),
             dataSetNameR2Counts("r2_counts"), dataSetNameR2Values("r2_values"),
-            dataSetNameEMTE("EMTE"), dataSetNameEMTU("EMTU"), dataSetNameEMTCorr("G")
+            dataSetNameEMTE("EMTE"), dataSetNameEMTU("EMTU"),
+            dataSetNameEMTCorrAveragedTau("G_averaged_tau"),
+            dataSetNameEMTCorrGeneralTau("G_general_tau")
         {
             
             // fix PredType based on floatT
@@ -124,34 +134,49 @@ class HDF5FileWriter {
 
             // set initial dimension to zero for flow time, r2max+1 for separations
             initDimsR2Counts[0] = r2max + 1;
-            initDimsEMTCorr[0] = 10;
-            initDimsEMTCorr[1] = 0;
-            initDimsEMTCorr[2] = r2max + 1;
+            initDimsEMTCorrAveragedTau[0] = 10;
+            initDimsEMTCorrAveragedTau[1] = 0;
+            initDimsEMTCorrAveragedTau[2] = r2max + 1;
+            initDimsEMTCorrGeneralTau[0] = 14;
+            initDimsEMTCorrGeneralTau[1] = 0;
+            initDimsEMTCorrGeneralTau[2] = latParams.latDim()[3];
+            initDimsEMTCorrGeneralTau[3] = r2max + 1;
 
             // set maximum dimensions, unlimited for flow time, r2max+1 for separations
             maxDimsR2Counts[0] = r2max + 1;
-            maxDimsEMTCorr[0] = 10;
-            maxDimsEMTCorr[1] = H5S_UNLIMITED;
-            maxDimsEMTCorr[2] = r2max + 1;
+            maxDimsEMTCorrAveragedTau[0] = 10;
+            maxDimsEMTCorrAveragedTau[1] = H5S_UNLIMITED;
+            maxDimsEMTCorrAveragedTau[2] = r2max + 1;
+            maxDimsEMTCorrGeneralTau[0] = 14;
+            maxDimsEMTCorrGeneralTau[1] = H5S_UNLIMITED;
+            maxDimsEMTCorrGeneralTau[2] = latParams.latDim()[3];
+            maxDimsEMTCorrGeneralTau[3] = r2max + 1;
 
             // set chunk size, one for flow time, r2max+1 for separations
-            chunkSizeEMTCorr[0] = 1;
-            chunkSizeEMTCorr[1] = 1;
-            chunkSizeEMTCorr[2] = r2max + 1;
+            chunkSizeEMTCorrAveragedTau[0] = 1;
+            chunkSizeEMTCorrAveragedTau[1] = 1;
+            chunkSizeEMTCorrAveragedTau[2] = r2max + 1;
+            chunkSizeEMTCorrGeneralTau[0] = 1;
+            chunkSizeEMTCorrGeneralTau[1] = 1;
+            chunkSizeEMTCorrGeneralTau[2] = 1;
+            chunkSizeEMTCorrGeneralTau[3] = r2max + 1;
 
             // create dataSpaces
             dataSpaceFlowTimeQuantity = new DataSpace(1, initDimsFlowTimeQuantity, maxDimsFlowTimeQuantity);
             dataSpaceR2Counts = new DataSpace(1, initDimsR2Counts, maxDimsR2Counts);
             dataSpace4x4Sym = new DataSpace(2, initDims4x4Sym, maxDims4x4Sym);
-            dataSpaceEMTCorr = new DataSpace(3, initDimsEMTCorr, maxDimsEMTCorr);
+            dataSpaceEMTCorrAveragedTau = new DataSpace(3, initDimsEMTCorrAveragedTau, maxDimsEMTCorrAveragedTau);
+            dataSpaceEMTCorrGeneralTau = new DataSpace(4, initDimsEMTCorrGeneralTau, maxDimsEMTCorrGeneralTau);
             
             // create dataset property list and set the chunking
             DSetCreatPropList propListFlowTimeQuantity;
             propListFlowTimeQuantity.setChunk(1, chunkSizeFlowTimeQuantity);
             DSetCreatPropList propList4x4Sym;
             propList4x4Sym.setChunk(2, chunkSize4x4Sym);
-            DSetCreatPropList propListEMTCorr;
-            propListEMTCorr.setChunk(3, chunkSizeEMTCorr);
+            DSetCreatPropList propListEMTCorrAveragedTau;
+            propListEMTCorrAveragedTau.setChunk(3, chunkSizeEMTCorrAveragedTau);
+            DSetCreatPropList propListEMTCorrGeneralTau;
+            propListEMTCorrGeneralTau.setChunk(4, chunkSizeEMTCorrGeneralTau);
 
             // create compound data type for storing complex numbers
             compTypeComplex = new CompType(sizeof(ComplexData<floatT>));
@@ -170,7 +195,8 @@ class HDF5FileWriter {
             dataSetFlowTimeMeasured = new DataSet(groupEMTCorr->createDataSet(dataSetNameFlowTimeNecessary, *hdf5FloatT, *dataSpaceFlowTimeQuantity, propListFlowTimeQuantity));
             dataSetR2Counts = new DataSet(groupEMTCorr->createDataSet(dataSetNameR2Counts, PredType::NATIVE_INT, *dataSpaceR2Counts));
             dataSetR2Values = new DataSet(groupEMTCorr->createDataSet(dataSetNameR2Values, PredType::NATIVE_INT, *dataSpaceR2Counts));
-            dataSetEMTCorr = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorr, *compTypeComplex, *dataSpaceEMTCorr, propListEMTCorr));
+            dataSetEMTCorrAveragedTau = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorrAveragedTau, *compTypeComplex, *dataSpaceEMTCorrAveragedTau, propListEMTCorrAveragedTau));
+            dataSetEMTCorrGeneralTau = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorrGeneralTau, *compTypeComplex, *dataSpaceEMTCorrGeneralTau, propListEMTCorrGeneralTau));
 
         }
 
@@ -221,7 +247,7 @@ class HDF5FileWriter {
 
                 dataSetEMTU->createAttribute("index pairs", strType, dataSpaceIndices).write(strType, EMTNumbers);
                 dataSetEMTU->createAttribute("index names", strType, dataSpaceIndices).write(strType, EMTUNames);
-                dataSetEMTCorr->createAttribute("component names", strType, dataSpaceIndices).write(strType, tensorComponentsNames);
+                dataSetEMTCorrAveragedTau->createAttribute("component names", strType, dataSpaceIndices).write(strType, tensorComponentsNames);
             }
         }
 
@@ -334,7 +360,7 @@ class HDF5FileWriter {
             write4x4Sym(*dataSetEMTU, vecEMTUComponents);
         }
 
-        void writeEMTCorrData(
+        void writeEMTCorrAveragedTauData(
             const std::vector<std::vector<COMPLEX(floatT)>>& vecEMTcorrComplex
             // const std::vector<int>& vecR2Counts
         ) {
@@ -365,7 +391,7 @@ class HDF5FileWriter {
             }
 
             // get dataspace of dataset
-            DataSpace *fileSpaceCorr = new DataSpace(dataSetEMTCorr->getSpace());
+            DataSpace *fileSpaceCorr = new DataSpace(dataSetEMTCorrAveragedTau->getSpace());
 
             // get rank
             int rank = fileSpaceCorr->getSimpleExtentNdims();
@@ -378,10 +404,10 @@ class HDF5FileWriter {
             hsize_t offset[3] = {0, currentDims[1], 0};
             hsize_t amount[3] = {10, 1, currentDims[2]};
             hsize_t newsize[3] = {10, currentDims[1]+1, currentDims[2]};
-            dataSetEMTCorr->extend(newsize);
+            dataSetEMTCorrAveragedTau->extend(newsize);
             
             // select hyperslab in file
-            fileSpaceCorr = new DataSpace(dataSetEMTCorr->getSpace());
+            fileSpaceCorr = new DataSpace(dataSetEMTCorrAveragedTau->getSpace());
             fileSpaceCorr->selectHyperslab(H5S_SELECT_SET, amount, offset);
             
             // create memory space
@@ -389,7 +415,69 @@ class HDF5FileWriter {
             
             if (IamRoot()) {
                 // write complex data
-                dataSetEMTCorr->write(vecEMTCorrComplexDataTransformedFlat.data(), *compTypeComplex, *memorySpace, *fileSpaceCorr);
+                dataSetEMTCorrAveragedTau->write(vecEMTCorrComplexDataTransformedFlat.data(), *compTypeComplex, *memorySpace, *fileSpaceCorr);
+            }
+        }
+
+        void writeEMTCorrGeneralTauData(
+            const std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex
+            // const std::vector<int>& vecR2Counts
+        ) {
+
+            int lt = _latParams.latDim()[3];
+
+            // create vector of ComplexData instead of COMPLEX(floatT)
+            std::vector<std::vector<std::vector<ComplexData<floatT>>>> vecEMTCorrComplexTransformed(14, std::vector<std::vector<ComplexData<floatT>>>(lt, std::vector<ComplexData<floatT>>(r2max+1)));
+            for (int i = 0; i < 14; i++)
+            for (int t = 0; t < lt; t++)
+            for (int r2 = 0; r2 < r2max + 1; r2++) {
+                vecEMTCorrComplexTransformed[i][t][r2] = {real(vecEMTcorrComplex[i][t][r2]), imag(vecEMTcorrComplex[i][t][r2])};
+            }
+
+            // if (onlyRelevant) {
+            //     for (int i = 0; i < 10; i++) {
+            //         for (int r2 = 0; r2 < r2max + 1; r2++) {
+            //             if (vecR2Counts[r2] != 0) {
+
+            //             }
+            //         }
+            //     }
+            // }
+
+            // flatten array
+            std::vector<ComplexData<floatT>> vecEMTCorrComplexDataTransformedFlat(14 * lt * (r2max + 1));
+            for (int i = 0; i < 14; i++)
+            for (int t = 0; t < lt; t++)
+            for (int r2 = 0; r2 < r2max + 1; r2++) {
+                vecEMTCorrComplexDataTransformedFlat[(i * lt + t) * (r2max + 1) + r2] = vecEMTCorrComplexTransformed[i][t][r2];
+            }
+
+            // get dataspace of dataset
+            DataSpace *fileSpaceCorr = new DataSpace(dataSetEMTCorrGeneralTau->getSpace());
+
+            // get rank
+            int rank = fileSpaceCorr->getSimpleExtentNdims();
+
+            // get current dimensions
+            std::vector<hsize_t> currentDims(rank);
+            fileSpaceCorr->getSimpleExtentDims(currentDims.data(), NULL);
+
+            // set offset, amount and new size
+            hsize_t offset[4] = {0, currentDims[1], 0, 0};
+            hsize_t amount[4] = {currentDims[0], 1, currentDims[2], currentDims[3]};
+            hsize_t newsize[4] = {currentDims[0], currentDims[1]+1, currentDims[2], currentDims[3]};
+            dataSetEMTCorrGeneralTau->extend(newsize);
+            
+            // select hyperslab in file
+            fileSpaceCorr = new DataSpace(dataSetEMTCorrGeneralTau->getSpace());
+            fileSpaceCorr->selectHyperslab(H5S_SELECT_SET, amount, offset);
+            
+            // create memory space
+            DataSpace *memorySpace = new DataSpace(4, amount, NULL);
+            
+            if (IamRoot()) {
+                // write complex data
+                dataSetEMTCorrGeneralTau->write(vecEMTCorrComplexDataTransformedFlat.data(), *compTypeComplex, *memorySpace, *fileSpaceCorr);
             }
         }
 
