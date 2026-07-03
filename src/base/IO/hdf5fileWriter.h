@@ -5,6 +5,8 @@
 //
 
 #include "H5Cpp.h"
+#include <vector>
+#include <string>
 #include "../communication/communicationBase.h"
 #include "../latticeParameters.h"
 #include "../../modules/tensor_decomposition/tensorDecomposition.h"
@@ -204,6 +206,35 @@ class HDF5FileWriter {
             return _commBase.IamRoot();
         }
 
+        void writeBoolAttribute(
+            H5Object& object,
+            const std::string& attributeName,
+            bool value
+        ) {
+            DataSpace dataSpaceScalar(H5S_SCALAR);
+
+            hbool_t hvalue = value;
+
+            object.createAttribute(attributeName, PredType::NATIVE_HBOOL, dataSpaceScalar).write(PredType::NATIVE_HBOOL, &hvalue);
+        }
+
+        void writeStringArrayAttribute(
+            H5Object& object,
+            const std::string& attributeName,
+            const std::vector<std::string>& strings
+        ) {
+            StrType strType(PredType::C_S1, H5T_VARIABLE);
+
+            hsize_t dims[1] = {strings.size()};
+            DataSpace dataSpace(1, dims);
+
+            std::vector<const char*> chars;
+            chars.reserve(strings.size());
+            for (auto& s : strings) chars.push_back(s.c_str());
+
+            object.createAttribute(attributeName, strType, dataSpace).write(strType, chars.data());
+        }
+
         void writeAttributes(gradientFlowParam<floatT> &parameters) {
             if (IamRoot()) {
                 hsize_t latDimDims[1] = {4};
@@ -224,30 +255,39 @@ class HDF5FileWriter {
                 groupGradFlowMeasurements->createAttribute("start step size", PredType::NATIVE_DOUBLE, dataSpaceScalar).write(PredType::NATIVE_DOUBLE, &parameters.start_step_size.ref());
                 groupGradFlowMeasurements->createAttribute("adaptive step size accuracy", PredType::NATIVE_DOUBLE, dataSpaceScalar).write(PredType::NATIVE_DOUBLE, &parameters.accuracy.ref());
 
-                const char* EMTNumbers[10] = {
-                    "00", "11", "22", "33"
+                std::vector<std::string> EMTNumbers = {
+                    "00", "11", "22", "33",
                     "01", "02", "03",
-                    "12", "13"
+                    "12", "13",
                     "23"
                 };
-                const char* EMTUNames[10] = {
-                    "xx", "yy", "zz", "tt"
+                std::vector<std::string> EMTUNames = {
+                    "xx", "yy", "zz", "tt",
                     "xy", "xz", "xt",
-                    "yz", "yt"
+                    "yz", "yt",
                     "zt"
                 };
-                const char* tensorComponentsNames[10] = {
-                    "TT", "LL",
-                    "T", "L",
-                    "SS", "LL", "WW",
-                    "SL", "SW", "LW"
+
+                std::vector<std::string> emtCorrComponentFunctionNamesAveragedTau = {
+                    "TT", "RT",
+                    "UT", "UR",
+                    "ss", "ll", "ww",
+                    "sl", "sw", "lw"
                 };
 
-                StrType strType(PredType::C_S1, 256);
+                std::vector<std::string> emtCorrComponentFunctionNamesGeneralTau = {
+                    "TT",
+                    "RT", "MT", "UT",
+                    "ss", "ll", "ww", "mm",
+                    "sl", "sw", "sm", "lw", "lm", "wm"
+                };
 
-                dataSetEMTU->createAttribute("index pairs", strType, dataSpaceIndices).write(strType, EMTNumbers);
-                dataSetEMTU->createAttribute("index names", strType, dataSpaceIndices).write(strType, EMTUNames);
-                dataSetEMTCorrAveragedTau->createAttribute("component names", strType, dataSpaceIndices).write(strType, tensorComponentsNames);
+                this->writeStringArrayAttribute(*dataSetEMTU, "index pairs", EMTNumbers);
+                this->writeStringArrayAttribute(*dataSetEMTU, "index names", EMTUNames);
+                this->writeStringArrayAttribute(*dataSetEMTCorrAveragedTau, "component names", emtCorrComponentFunctionNamesAveragedTau);
+                this->writeStringArrayAttribute(*dataSetEMTCorrGeneralTau, "component names", emtCorrComponentFunctionNamesGeneralTau);
+
+                this->writeBoolAttribute(*dataSetEMTCorrGeneralTau, "Matsubara modes", parameters.energyMomentumTensorCorrFunctionsGeneralTauMatsubara());
             }
         }
 
