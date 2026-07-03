@@ -731,7 +731,11 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             StopWatch<true> hdf5Timer;
 
             emtCorrTimer.start();
-            EMTCorr.template EMTCorrGFunctionsGeneralTau<lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()>(gauge, vecEMTCorrGeneralTau);
+            if (lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()) {
+                EMTCorr.template EMTCorrGFunctionsGeneralTau<true>(gauge, vecEMTCorrGeneralTau);
+            } else {
+                EMTCorr.template EMTCorrGFunctionsGeneralTau<false>(gauge, vecEMTCorrGeneralTau);
+            }
             emtCorrTimer.stop();
             rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
             
