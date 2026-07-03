@@ -721,7 +721,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
-            hdf5File.writeEMTCorrAveragedTauData(vecEMTCorrAveragedTau);
+            hdf5File.writeEMTCorrAveragedTauData(vecEMTCorrAveragedTau, vecCounts);
             hdf5Timer.stop();
             rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }
@@ -741,7 +741,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
-            hdf5File.writeEMTCorrGeneralTauData(vecEMTCorrGeneralTau);
+            hdf5File.writeEMTCorrGeneralTauData(vecEMTCorrGeneralTau, vecCounts);
             hdf5Timer.stop();
             rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }
