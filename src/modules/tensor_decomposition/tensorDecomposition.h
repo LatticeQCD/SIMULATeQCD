@@ -606,7 +606,7 @@ class TensorDecomposition {
         }
 
         // main function: get the counts of sites for each r^2 (spatial) value
-        void getR2Counts(
+        static void getR2Counts(
             std::vector<int>& r2Counts
         ) {
             typedef GIndexer<All> GInd;
@@ -632,20 +632,20 @@ class TensorDecomposition {
             }
         }
 
-        // int getNumberOfHitR2() {
-        //     int r2max = getR2max();
+        static int getNumberOfHitR2() {
+            int r2max = getR2max();
 
-        //     std::vector<int> r2Counts = std::vector<int>(r2max+1);
+            std::vector<int> r2Counts = std::vector<int>(r2max+1);
 
-        //     getR2Counts(r2Counts);
+            getR2Counts(r2Counts);
 
-        //     int numberOfHits = 0;
+            int numberOfHits = 0;
 
-        //     for (int r2 = 0; r2 < r2Counts.size(); r2++) {
-        //         if (r2Counts[r2] != 0) numberOfHits++;
-        //     }
+            for (int r2 = 0; r2 < r2Counts.size(); r2++) {
+                if (r2Counts[r2] != 0) numberOfHits++;
+            }
 
-        //     return numberOfHits;
-        // }
+            return numberOfHits;
+        }
         
     };
