@@ -718,6 +718,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             EMTCorr.EMTCorrGFunctionsAveragedTau(gauge, vecEMTCorrAveragedTau);
             emtCorrTimer.stop();
             rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
+
+            EMTCorr.checkEMTCorrGFunctionsAveragedTau(vecEMTCorrAveragedTau, vecCounts);
             
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
@@ -739,9 +741,18 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             emtCorrTimer.stop();
             rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
             
+            // check for Matsubara modes is not implemented (yet?)
+            if (!lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()) {
+                EMTCorr.template checkEMTCorrGFunctionsGeneralTau<false>(vecEMTCorrGeneralTau, vecCounts);
+            }
+
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
-            hdf5File.writeEMTCorrGeneralTauData(vecEMTCorrGeneralTau, vecCounts);
+            if (lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()) {
+                hdf5File.template writeEMTCorrGeneralTauData<true>(vecEMTCorrGeneralTau, vecCounts);
+            } else {
+                hdf5File.template writeEMTCorrGeneralTauData<false>(vecEMTCorrGeneralTau, vecCounts);
+            }
             hdf5Timer.stop();
             rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }
