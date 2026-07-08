@@ -47,6 +47,17 @@ class EnergyMomentumTensorCorrelator {
             std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array
         );
 
+        void checkEMTCorrGFunctionsAveragedTau(
+            const std::vector<std::vector<COMPLEX(floatT)>>& vecEMTcorrComplex,
+            const std::vector<int>& vecR2Counts
+        );
+
+        template<bool matsubara> 
+        void checkEMTCorrGFunctionsGeneralTau(
+            std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex,
+            const std::vector<int>& vecR2Counts
+        );
+
         void getR2Counts(
             std::vector<int>& counts
         );
@@ -168,6 +179,91 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsGeneral
 
 }
 
+
+template<class floatT, size_t HaloDepth>
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::checkEMTCorrGFunctionsAveragedTau(
+    const std::vector<std::vector<COMPLEX(floatT)>>& vecEMTcorrComplex,
+    const std::vector<int>& vecR2Counts
+) {
+    constexpr double threshold_relative = 1e-12;
+
+    // sum Im^2(G^X) and |G^X| over all r2
+    floatT imagPartSquared = 0.0, normSquared = 0.0;
+
+    for (int i = 0; i < vecEMTcorrComplex.size(); i++) {
+        for (int r2 = 0; r2 < vecEMTcorrComplex[0].size(); r2++) {
+            if (vecR2Counts[r2] != 0) {
+                imagPartSquared += imag(vecEMTcorrComplex[i][r2]) * imag(vecEMTcorrComplex[i][r2]);
+                normSquared += abs2(vecEMTcorrComplex[i][r2]);
+            }
+        }
+        // throw exception if imaginary part is too large
+        if (imagPartSquared / normSquared > threshold_relative) {
+            rootLogger.error(std::setprecision(10),
+                "G_" + std::to_string(i) + ": " 
+                + "Imag^2 / Norm^2 = "
+                + (std::ostringstream{} << std::setprecision(10) << imagPartSquared / normSquared).str()
+                + " is too large with Imag^2="
+                + (std::ostringstream{} << std::setprecision(10) << imagPartSquared).str()
+                + " and Norm^2="
+                + (std::ostringstream{} << std::setprecision(10) << normSquared).str()
+            );
+        }
+        // reset sums for next G^X
+        imagPartSquared = 0.0;
+        normSquared = 0.0;
+    }
+}
+
+template<class floatT, size_t HaloDepth>
+template<bool matsubara>
+void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::checkEMTCorrGFunctionsGeneralTau(
+    std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex,
+    const std::vector<int>& vecR2Counts
+) {
+    constexpr double threshold_relative = 1e-12;
+
+    // sum of [Im^2(G^X) or Re^2(G^X)] and |G^X| over all r2
+    floatT numerator = 0.0, normSquared = 0.0;
+
+    for (int i = 0; i < vecEMTcorrComplex.size(); i++) {
+        for (int t = 0; t < vecEMTcorrComplex[0].size(); t++) {
+            for (int r2 = 0; r2 < vecEMTcorrComplex[0][0].size(); r2++) {
+                if (vecR2Counts[r2] != 0) {
+                    if (matsubara && (i == 2 || i == 10 || i == 12 || i == 13)) {
+                        numerator += real(vecEMTcorrComplex[i][t][r2]) * real(vecEMTcorrComplex[i][t][r2]);
+                    } else {
+                        numerator += imag(vecEMTcorrComplex[i][t][r2]) * imag(vecEMTcorrComplex[i][t][r2]);
+                    }
+                    normSquared += abs2(vecEMTcorrComplex[i][t][r2]);
+                }
+            }
+
+            std::string vanishingNumeratorName;
+            if (matsubara && (i == 2 || i == 10 || i == 12 || i == 13)) {
+                vanishingNumeratorName = "Real^2";
+            } else {
+                vanishingNumeratorName = "Imag^2";
+            }
+
+            if (numerator/normSquared > threshold_relative) {
+                rootLogger.error(std::setprecision(10),
+                    "G_" + std::to_string(i) + "(" + std::to_string(t) + "): "
+                    + vanishingNumeratorName + " / Norm^2 = "
+                    + (std::ostringstream{} << std::setprecision(10) << numerator/normSquared).str()
+                    + " is too large with " + vanishingNumeratorName + "="
+                    + (std::ostringstream{} << std::setprecision(10) << numerator).str()
+                    + " and Norm^2="
+                    + (std::ostringstream{} << std::setprecision(10) << normSquared).str()
+                );
+            }
+            
+            // reset sums for next G^X and next tau value
+            numerator = 0.0;
+            normSquared = 0.0;
+        }
+    }
+}
 
 template<class floatT, size_t HaloDepth>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::getR2Counts(
