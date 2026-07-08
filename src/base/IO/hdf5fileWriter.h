@@ -179,9 +179,9 @@ class HDF5FileWriter {
             propListEMTCorrGeneralTau.setChunk(4, chunkSizeEMTCorrGeneralTau);
 
             // create compound data type for storing complex numbers
-            compTypeComplex = new CompType(sizeof(ComplexData<floatT>));
-            compTypeComplex->insertMember("real", HOFFSET(ComplexData<floatT>, real), *hdf5FloatT);
-            compTypeComplex->insertMember("imag", HOFFSET(ComplexData<floatT>, imag), *hdf5FloatT);
+            // compTypeComplex = new CompType(sizeof(ComplexData<floatT>));
+            // compTypeComplex->insertMember("real", HOFFSET(ComplexData<floatT>, real), *hdf5FloatT);
+            // compTypeComplex->insertMember("imag", HOFFSET(ComplexData<floatT>, imag), *hdf5FloatT);
 
             // create datasets
             dataSetFlowTime = new DataSet(groupGradFlowMeasurements->createDataSet(dataSetNameFlowTime, *hdf5FloatT, *dataSpaceFlowTimeQuantity, propListFlowTimeQuantity));
@@ -195,8 +195,8 @@ class HDF5FileWriter {
             dataSetFlowTimeMeasured = new DataSet(groupEMTCorr->createDataSet(dataSetNameFlowTimeNecessary, *hdf5FloatT, *dataSpaceFlowTimeQuantity, propListFlowTimeQuantity));
             dataSetR2Counts = new DataSet(groupEMTCorr->createDataSet(dataSetNameR2Counts, PredType::NATIVE_INT, *dataSpaceR2Counts));
             dataSetR2Values = new DataSet(groupEMTCorr->createDataSet(dataSetNameR2Values, PredType::NATIVE_INT, *dataSpaceR2Counts));
-            dataSetEMTCorrAveragedTau = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorrAveragedTau, *compTypeComplex, *dataSpaceEMTCorrAveragedTau, propListEMTCorrAveragedTau));
-            dataSetEMTCorrGeneralTau = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorrGeneralTau, *compTypeComplex, *dataSpaceEMTCorrGeneralTau, propListEMTCorrGeneralTau));
+            dataSetEMTCorrAveragedTau = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorrAveragedTau, *hdf5FloatT, *dataSpaceEMTCorrAveragedTau, propListEMTCorrAveragedTau));
+            dataSetEMTCorrGeneralTau = new DataSet(groupEMTCorr->createDataSet(dataSetNameEMTCorrGeneralTau, *hdf5FloatT, *dataSpaceEMTCorrGeneralTau, propListEMTCorrGeneralTau));
 
         }
 
@@ -399,17 +399,17 @@ class HDF5FileWriter {
             const std::vector<std::vector<COMPLEX(floatT)>>& vecEMTcorrComplex,
             const std::vector<int>& vecR2Counts
         ) {
-            // create vector of ComplexData instead of COMPLEX(floatT)
-            std::vector<std::vector<ComplexData<floatT>>> vecEMTCorrComplexTransformed(10);
+            // create vector of floatT instead of COMPLEX(floatT) to store just the real parts
+            std::vector<std::vector<floatT>> vecEMTCorrComplexTransformed(10);
             for (int i = 0; i < 10; i++)
             for (int r2 = 0; r2 < r2max + 1; r2++) {
                 if (vecR2Counts[r2] != 0) {
-                    vecEMTCorrComplexTransformed[i].push_back({real(vecEMTcorrComplex[i][r2]), imag(vecEMTcorrComplex[i][r2])});
+                    vecEMTCorrComplexTransformed[i].push_back(real(vecEMTcorrComplex[i][r2]));
                 }
             }
 
             // flatten array
-            std::vector<ComplexData<floatT>> vecEMTCorrComplexDataTransformedFlat(10 * (hitR2));
+            std::vector<floatT> vecEMTCorrComplexDataTransformedFlat(10 * (hitR2));
             for (int i = 0; i < 10; i++)
             for (int r2 = 0; r2 < hitR2; r2++) {
                 vecEMTCorrComplexDataTransformedFlat[i * (hitR2) + r2] = vecEMTCorrComplexTransformed[i][r2];
@@ -440,29 +440,33 @@ class HDF5FileWriter {
             
             if (IamRoot()) {
                 // write complex data
-                dataSetEMTCorrAveragedTau->write(vecEMTCorrComplexDataTransformedFlat.data(), *compTypeComplex, *memorySpace, *fileSpaceCorr);
+                dataSetEMTCorrAveragedTau->write(vecEMTCorrComplexDataTransformedFlat.data(), *hdf5FloatT, *memorySpace, *fileSpaceCorr);
             }
         }
 
+        template<bool matsubara>
         void writeEMTCorrGeneralTauData(
             const std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex,
             const std::vector<int>& vecR2Counts
         ) {
-
             int lt = _latParams.latDim()[3];
 
-            // create vector of ComplexData instead of COMPLEX(floatT)
-            std::vector<std::vector<std::vector<ComplexData<floatT>>>> vecEMTCorrComplexTransformed(14, std::vector<std::vector<ComplexData<floatT>>>(lt));
+            // create vector of floatT instead of COMPLEX(floatT) to store real or imag parts
+            std::vector<std::vector<std::vector<floatT>>> vecEMTCorrComplexTransformed(14, std::vector<std::vector<floatT>>(lt));
             for (int i = 0; i < 14; i++)
             for (int t = 0; t < lt; t++)
             for (int r2 = 0; r2 < r2max + 1; r2++) {
                 if (vecR2Counts[r2] != 0) {
-                    vecEMTCorrComplexTransformed[i][t].push_back({real(vecEMTcorrComplex[i][t][r2]), imag(vecEMTcorrComplex[i][t][r2])});
+                    if (matsubara && (i == 2 || i == 10 || i == 12 || i == 13)) {
+                        vecEMTCorrComplexTransformed[i][t].push_back(imag(vecEMTcorrComplex[i][t][r2]));
+                    } else {
+                        vecEMTCorrComplexTransformed[i][t].push_back(real(vecEMTcorrComplex[i][t][r2]));
+                    }
                 }
             }
 
             // flatten array
-            std::vector<ComplexData<floatT>> vecEMTCorrComplexDataTransformedFlat(14 * lt * (hitR2));
+            std::vector<floatT> vecEMTCorrComplexDataTransformedFlat(14 * lt * (hitR2));
             for (int i = 0; i < 14; i++)
             for (int t = 0; t < lt; t++)
             for (int r2 = 0; r2 < hitR2; r2++) {
@@ -494,7 +498,7 @@ class HDF5FileWriter {
             
             if (IamRoot()) {
                 // write complex data
-                dataSetEMTCorrGeneralTau->write(vecEMTCorrComplexDataTransformedFlat.data(), *compTypeComplex, *memorySpace, *fileSpaceCorr);
+                dataSetEMTCorrGeneralTau->write(vecEMTCorrComplexDataTransformedFlat.data(), *hdf5FloatT, *memorySpace, *fileSpaceCorr);
             }
         }
 
