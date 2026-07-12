@@ -251,6 +251,18 @@ struct LatticeData {
 
     }
 
+    __device__ __host__ sitexyzt globalPosSymAroundHalf(sitexyzt n) {
+
+        sitexyzt globalCoord = globalPos(n);
+
+        for (int i = 0; i<4; i++) {
+            if (globalCoord[i] > globalLatticeXYZT()[i]/2) globalCoord[i] = globalLatticeXYZT()[i] - globalCoord[i];
+        }
+
+        return globalCoord;
+
+    }
+
     __device__ __host__ bool isLocal(sitexyzt globalsite){
         //! make sure globalsite is valid, i.e. not negative or greater than lattice extents!
 
