@@ -30,10 +30,14 @@ class EnergyMomentumTensorCorrelator {
             return tensorDecomposition.getR2max();
         }
 
-        template<bool matsubara>
+        int getTauMax() {
+            return tensorDecomposition.getTauMax();
+        }
+
         void EMTCorrGTensor(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
-            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& field
+            LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& field,
+            bool matsubara
         );
 
         void EMTCorrGFunctionsAveragedTau(
@@ -41,10 +45,10 @@ class EnergyMomentumTensorCorrelator {
             std::vector<std::vector<COMPLEX(floatT)>>& array
         );
 
-        template<bool matsubara>
         void EMTCorrGFunctionsGeneralTau(
             Gaugefield<floatT, true, HaloDepth>& gaugefield,
-            std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array
+            std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array,
+            bool matsubara
         );
 
         void checkEMTCorrGFunctionsAveragedTau(
@@ -52,10 +56,10 @@ class EnergyMomentumTensorCorrelator {
             const std::vector<int>& vecR2Counts
         );
 
-        template<bool matsubara> 
         void checkEMTCorrGFunctionsGeneralTau(
             std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex,
-            const std::vector<int>& vecR2Counts
+            const std::vector<int>& vecR2Counts,
+            bool matsubara
         );
 
         void getR2Counts(
@@ -89,10 +93,10 @@ struct EMTtimesEMTStar {
 
 
 template<class floatT, size_t HaloDepth>
-template<bool matsubara>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& G
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& G,
+    bool matsubara
 ) {
     StopWatch<true> emtFourierTimer;
     StopWatch<true> gFourierTimer;
@@ -144,7 +148,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsAverage
     GTensor.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT correlator into G tensor
-    this->EMTCorrGTensor<false>(gaugefield, GTensor);
+    this->EMTCorrGTensor(gaugefield, GTensor, false);
 
     tensorDecompositionTimer.start();
     tensorDecomposition.template getComponentFunctionsAveragedTau<true>(GTensor, array);
@@ -156,10 +160,10 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsAverage
 
 
 template<class floatT, size_t HaloDepth>
-template<bool matsubara>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsGeneralTau(
     Gaugefield<floatT, true, HaloDepth>& gaugefield,
-    std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array
+    std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& array,
+    bool matsubara
 ) {
 
     StopWatch<true> tensorDecompositionTimer;
@@ -169,7 +173,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGFunctionsGeneral
     GTensor.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT correlator into G tensor
-    this->EMTCorrGTensor<matsubara>(gaugefield, GTensor);
+    this->EMTCorrGTensor(gaugefield, GTensor, matsubara);
 
     tensorDecompositionTimer.start();
     tensorDecomposition.template getComponentFunctionsGeneralTau<true>(GTensor, array);
@@ -216,10 +220,10 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::checkEMTCorrGFunctionsAv
 }
 
 template<class floatT, size_t HaloDepth>
-template<bool matsubara>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::checkEMTCorrGFunctionsGeneralTau(
     std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex,
-    const std::vector<int>& vecR2Counts
+    const std::vector<int>& vecR2Counts,
+    bool matsubara
 ) {
     constexpr double threshold_relative = 1e-12;
 

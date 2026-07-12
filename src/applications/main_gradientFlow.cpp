@@ -432,8 +432,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     std::vector<std::vector<std::vector<COMPLEX(PREC)>>> vecEMTCorrGeneralTau;
     if (lp.energyMomentumTensorCorrFunctionsGeneralTau()) {
         hsize_t r2max = EMTCorr.getR2max();
-        vecEMTCorrGeneralTau = std::vector<std::vector<std::vector<COMPLEX(PREC)>>>(14, std::vector<std::vector<COMPLEX(PREC)>>(lp.latDim()[3], std::vector<COMPLEX(PREC)>(r2max+1)));
-        rootLogger.info("Time extend of the lattice is " + std::to_string(lp.latDim()[3]));
+        hsize_t tauMax = EMTCorr.getTauMax();
+        vecEMTCorrGeneralTau = std::vector<std::vector<std::vector<COMPLEX(PREC)>>>(14, std::vector<std::vector<COMPLEX(PREC)>>(tauMax + 1, std::vector<COMPLEX(PREC)>(r2max+1)));
     }
 
     std::vector<Matrix4x4Sym<floatT>> EMTUBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
@@ -733,26 +733,18 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             StopWatch<true> hdf5Timer;
 
             emtCorrTimer.start();
-            if (lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()) {
-                EMTCorr.template EMTCorrGFunctionsGeneralTau<true>(gauge, vecEMTCorrGeneralTau);
-            } else {
-                EMTCorr.template EMTCorrGFunctionsGeneralTau<false>(gauge, vecEMTCorrGeneralTau);
-            }
+            EMTCorr.EMTCorrGFunctionsGeneralTau(gauge, vecEMTCorrGeneralTau, lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara());
             emtCorrTimer.stop();
             rootLogger.debug("EMTCorrGFunctions took ", emtCorrTimer.seconds(), "s.");
             
             // check for Matsubara modes is not implemented (yet?)
             if (!lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()) {
-                EMTCorr.template checkEMTCorrGFunctionsGeneralTau<false>(vecEMTCorrGeneralTau, vecCounts);
+                EMTCorr.checkEMTCorrGFunctionsGeneralTau(vecEMTCorrGeneralTau, vecCounts, lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara());
             }
 
             // write data in hdf5 file anyway (regardless of useHDF5 setting)
             hdf5Timer.start();
-            if (lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara()) {
-                hdf5File.template writeEMTCorrGeneralTauData<true>(vecEMTCorrGeneralTau, vecCounts);
-            } else {
-                hdf5File.template writeEMTCorrGeneralTauData<false>(vecEMTCorrGeneralTau, vecCounts);
-            }
+            hdf5File.writeEMTCorrGeneralTauData(vecEMTCorrGeneralTau, vecCounts, lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara());
             hdf5Timer.stop();
             rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
         }

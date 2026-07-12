@@ -528,7 +528,7 @@ class TensorDecomposition {
             int r2max = getR2max();
     
             // set array to zero initially
-            for (int r2 = 0; r2 < r2max + 1; r2++) {
+            for (int r2 = 0; r2 < array.size(); r2++) {
                 array[r2] = 0.0;
             }
     
@@ -539,7 +539,9 @@ class TensorDecomposition {
                 sitexyzt site(x, y, z, t);
                 sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
                 int r2 = getNormSquared(getSpatialPart(rt));
-                array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
+                if (r2 < r2max + 1) {
+                    array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
+                }
             }
         }
 
@@ -555,22 +557,34 @@ class TensorDecomposition {
             int lz = GInd::getLatData().lz;
             int lt = GInd::getLatData().lt;
     
+            int tauMax = getTauMax();
             int r2max = getR2max();
     
             // set array to zero initially
-            for (int r2 = 0; r2 < r2max + 1; r2++)
-            for (int t = 0; t < lt; t++) {
+            for (int t = 0; t < array.size(); t++)
+            for (int r2 = 0; r2 < array[0].size(); r2++){
                 array[t][r2] = 0.0;
             }
 
             for (int x = 0; x < lx; x++)
             for (int y = 0; y < ly; y++)
             for (int z = 0; z < lz; z++)
-            for (int t = 0; t < lt; t++) {
+            for (int t = 0; t < tauMax + 1; t++) {
                 sitexyzt site(x, y, z, t);
+                sitexyzt rHalf = GInd::getLatData().globalPosSymAroundHalf(site);
                 sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
                 int r2 = getNormSquared(getSpatialPart(rt));
-                array[t][r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
+
+                if (r2 < r2max + 1) {
+                    // values for tau = rHalf[3] in (0,N_tau/2) (exluding 0, excluding N_tau/2) are counted twice
+                    // e.g. the values for tau=1 and tau=N_tau-1 are equal up to a sign
+                    // therefore, in these cases, their values are averaged
+                    // if (rHalf[3] > 0 && rHalf[3] < GInd::getLatData().lt / 2.0) {
+                        // array[rHalf[3]][r2] += 0.5 * latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
+                    // } else {
+                        array[rHalf[3]][r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
+                    // }
+                }
             }
         }
     
@@ -578,13 +592,34 @@ class TensorDecomposition {
         // standard constructor
         TensorDecomposition(CommunicationBase& commBase) {}
 
+        // main function: get maximum tau value for temporal coordinate
+        static int getTauMax() {
+            typedef GIndexer<All> GInd;
+            sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
+
+            return std::floor(globL[3] / 2);
+        }
+
         // main function: get maximum r^2 value for spatial coordinates
         static int getR2max() {
             typedef GIndexer<All> GInd;
             sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
 
-            // maximum spatial r^2 value is (glx/2)^2 + (gly/2)^2 + (glz/2)^2 with global extents glx, gly, glz
-            return getNormSquared(getSpatialPart(globL)) / 4.0;
+            int r2max;
+
+            // maximum spatial r^2 value due to spatial periodicity is
+            // (glx/2)^2 + (gly/2)^2 + (glz/2)^2 with global extents glx, gly, glz
+            // r2max = getNormSquared(getSpatialPart(globL)) / 4;
+            // other maximum spatial r^2 value is (N_{space,min}/2)^2 with the smallest, spatial extent N_{space,min}
+            if (globL[0] < globL[1] && globL[0] < globL[2]) {
+                r2max = globL[0] * globL[0] / 4;
+            } else if (globL[1] < globL[0] && globL[1] < globL[2]) {
+                r2max = globL[1] * globL[1] / 4;
+            } else {
+                r2max = globL[2] * globL[2] / 4;
+            }
+
+            return r2max;
         }
 
         // main function: get all r^2-dependent component functions for all projectors in the averaged tau scenario
@@ -618,7 +653,7 @@ class TensorDecomposition {
             int r2max = getR2max();
 
             // set r2Counts to zero initially
-            for (int r2 = 0; r2 < r2max + 1; r2++) {
+            for (int r2 = 0; r2 < r2Counts.size(); r2++) {
                 r2Counts[r2] = 0;
             }
 
@@ -628,7 +663,9 @@ class TensorDecomposition {
                 sitexyzt site(x, y, z, 0); // t is irrelevant for r^2
                 sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
                 int r2 = getNormSquared(getSpatialPart(rt)); // getSpatialPart to be safe
-                r2Counts[r2] += 1;
+                if (r2 < r2max + 1) {
+                    r2Counts[r2] += 1;
+                }
             }
         }
 

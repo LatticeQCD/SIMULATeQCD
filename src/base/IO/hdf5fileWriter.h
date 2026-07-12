@@ -50,6 +50,7 @@ class HDF5FileWriter {
         const H5std_string groupNameEMTCorr;
 
         hsize_t r2max;
+        hsize_t tauMax;
         hsize_t hitR2;
         
         // dimensions for quantities with:
@@ -74,7 +75,6 @@ class HDF5FileWriter {
         hsize_t chunkSizeEMTCorrGeneralTau[4]; // = {1, 1, N_t, r2max + 1}
         
         const H5::DataType* hdf5FloatT = nullptr;
-        CompType *compTypeComplex;
 
         DataSpace *dataSpaceFlowTimeQuantity;
         DataSpace *dataSpaceR2Counts;
@@ -123,6 +123,7 @@ class HDF5FileWriter {
             }
 
             r2max = TensorDecomposition<floatT, 0>::getR2max();
+            tauMax = TensorDecomposition<floatT, 0>::getTauMax();
             hitR2 = TensorDecomposition<floatT, 0>::getNumberOfHitR2();
 
             // create the HDF5 file
@@ -139,7 +140,7 @@ class HDF5FileWriter {
             initDimsEMTCorrAveragedTau[2] = hitR2;
             initDimsEMTCorrGeneralTau[0] = 14;
             initDimsEMTCorrGeneralTau[1] = 0;
-            initDimsEMTCorrGeneralTau[2] = latParams.latDim()[3];
+            initDimsEMTCorrGeneralTau[2] = tauMax + 1;
             initDimsEMTCorrGeneralTau[3] = hitR2;
 
             // set maximum dimensions: one for component functions, one for flow time, one for tau, hitR2 for separations
@@ -149,7 +150,7 @@ class HDF5FileWriter {
             maxDimsEMTCorrAveragedTau[2] = hitR2;
             maxDimsEMTCorrGeneralTau[0] = 14;
             maxDimsEMTCorrGeneralTau[1] = H5S_UNLIMITED;
-            maxDimsEMTCorrGeneralTau[2] = latParams.latDim()[3];
+            maxDimsEMTCorrGeneralTau[2] = tauMax + 1;
             maxDimsEMTCorrGeneralTau[3] = hitR2;
 
             // set chunk size: one for component functions, one for flow time, one for tau, hitR2 for separations
@@ -444,17 +445,15 @@ class HDF5FileWriter {
             }
         }
 
-        template<bool matsubara>
         void writeEMTCorrGeneralTauData(
             const std::vector<std::vector<std::vector<COMPLEX(floatT)>>>& vecEMTcorrComplex,
-            const std::vector<int>& vecR2Counts
+            const std::vector<int>& vecR2Counts,
+            const bool matsubara
         ) {
-            int lt = _latParams.latDim()[3];
-
             // create vector of floatT instead of COMPLEX(floatT) to store real or imag parts
-            std::vector<std::vector<std::vector<floatT>>> vecEMTCorrComplexTransformed(14, std::vector<std::vector<floatT>>(lt));
+            std::vector<std::vector<std::vector<floatT>>> vecEMTCorrComplexTransformed(14, std::vector<std::vector<floatT>>(tauMax + 1));
             for (int i = 0; i < 14; i++)
-            for (int t = 0; t < lt; t++)
+            for (int t = 0; t < tauMax + 1; t++)
             for (int r2 = 0; r2 < r2max + 1; r2++) {
                 if (vecR2Counts[r2] != 0) {
                     if (matsubara && (i == 2 || i == 10 || i == 12 || i == 13)) {
@@ -466,11 +465,11 @@ class HDF5FileWriter {
             }
 
             // flatten array
-            std::vector<floatT> vecEMTCorrComplexDataTransformedFlat(14 * lt * (hitR2));
+            std::vector<floatT> vecEMTCorrComplexDataTransformedFlat(14 * (tauMax + 1) * (hitR2));
             for (int i = 0; i < 14; i++)
-            for (int t = 0; t < lt; t++)
+            for (int t = 0; t < tauMax + 1; t++)
             for (int r2 = 0; r2 < hitR2; r2++) {
-                vecEMTCorrComplexDataTransformedFlat[(i * lt + t) * (hitR2) + r2] = vecEMTCorrComplexTransformed[i][t][r2];
+                vecEMTCorrComplexDataTransformedFlat[(i * (tauMax + 1) + t) * (hitR2) + r2] = vecEMTCorrComplexTransformed[i][t][r2];
             }
 
             // get dataspace of dataset
