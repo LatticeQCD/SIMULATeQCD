@@ -76,7 +76,8 @@ int main(int argc, char **argv) {
         const int NStacks1 = 1;
         std::vector<DerivativeOperatorMeasurement> results1;
         {
-            TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks1> taylor_measurement(gauge, param, mass, param.use_naik_epsilon(), d_rand);
+            Eigenpairs<PREC, true, Even, HaloDepth, HaloDepthSpin, NStacks1> eigenpairs1(commBase);
+            TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks1> taylor_measurement(gauge, eigenpairs1, param, mass, param.use_naik_epsilon(), d_rand);
             rootLogger.info("Class initialized");
             for (const auto& id : param.operator_ids.get()) {
                 taylor_measurement.insertOperator(id);
@@ -89,7 +90,8 @@ int main(int argc, char **argv) {
         const int NStacks2 = 2;
         std::vector<DerivativeOperatorMeasurement> results2;
         {
-            TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks2> taylor_measurement(gauge, param, mass, param.use_naik_epsilon(), d_rand);
+            Eigenpairs<PREC, true, Even, HaloDepth, HaloDepthSpin, NStacks2> eigenpairs2(commBase);
+            TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks2> taylor_measurement(gauge, eigenpairs2, param, mass, param.use_naik_epsilon(), d_rand);
             rootLogger.info("Class initialized");
             for (const auto& id : param.operator_ids.get()) {
                 taylor_measurement.insertOperator(id);
@@ -165,7 +167,8 @@ int main(int argc, char **argv) {
         for (double mass : param.valence_masses.get()) {
             rootLogger.info("Using mass ", mass);
 
-            TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(gauge, param, mass, param.use_naik_epsilon(), d_rand);
+            Eigenpairs<PREC, true, Even, HaloDepth, HaloDepthSpin, NStacks> eigenpairsN(commBase);
+            TaylorMeasurement<PREC, true, HaloDepth, HaloDepthSpin, NStacks> taylor_measurement(gauge, eigenpairsN, param, mass, param.use_naik_epsilon(), d_rand);
             try {
                 for (const auto& id : param.operator_ids.get()) {
                     taylor_measurement.insertOperator(id);
