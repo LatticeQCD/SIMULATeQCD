@@ -543,6 +543,22 @@ class TensorDecomposition {
                     array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
                 }
             }
+
+            // divide by r2 counts to account for degeneracy
+            std::vector<int> r2Counts = std::vector<int>(r2max + 1);
+            getR2Counts(r2Counts);
+            
+            for (int r2 = 0; r2 < array.size(); r2++) {
+                if (r2Counts[r2] != 0) {
+                    array[r2] /= r2Counts[r2];
+                }
+            }
+
+            // divide by temporal extend of the lattice as it is a temporal average
+            int globLT = GInd::getLatData().globLT;
+            for (int r2 = 0; r2 < array.size(); r2++) {
+                array[r2] /= globLT;
+            }
         }
 
         // helper function: reduce a lattice container to an r^2-dependent (spatial) array, keep time coordinates separate
@@ -584,6 +600,17 @@ class TensorDecomposition {
                     // } else {
                         array[rHalf[3]][r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
                     // }
+                }
+            }
+
+            // divide by r2 counts to account for degeneracy
+            std::vector<int> r2Counts = std::vector<int>(r2max + 1);
+            getR2Counts(r2Counts);
+            
+            for (int t = 0; t < array.size(); t++)
+            for (int r2 = 0; r2 < array[t].size(); r2++) {
+                if (r2Counts[r2] != 0) {
+                    array[t][r2] /= r2Counts[r2];
                 }
             }
         }
