@@ -419,7 +419,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         EMTCorr.getR2Counts(vecCounts);
     
         if (lp.useHDF5()) {
-            hdf5File.writeR2Counts(vecCounts);
+            hdf5File.writeR2CountsAndValues(vecCounts);
         }
     }
 
