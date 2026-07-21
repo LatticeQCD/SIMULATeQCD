@@ -290,7 +290,7 @@ class HDF5FileWriter {
             }
         }
 
-        void writeR2Counts(const std::vector<int>& vecCounts) {
+        void writeR2CountsAndValues(const std::vector<int>& vecCounts) {
             if (IamRoot()) {
                 std::vector<int> filteredR2Values = std::vector<int>();
                 std::vector<int> filteredCounts = std::vector<int>();
