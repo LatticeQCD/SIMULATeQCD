@@ -91,6 +91,24 @@ struct EMTtimesEMTStar {
 
 };
 
+template<class floatT>
+struct DivideBySqrtVolume {
+
+    LatticeContainerAccessor accessor;
+    typedef GIndexer<All> GInd;
+    int globvol4 = GInd::getLatData().globvol4;
+
+    DivideBySqrtVolume(LatticeContainerAccessor firstAccessor) : accessor(firstAccessor) {}
+
+    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
+
+        Tensor4x4Symx4x4SymComplex<floatT> element(accessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site));
+
+        return element / sqrt(globvol4);
+    }
+
+};
+
 
 template<class floatT, size_t HaloDepth>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
@@ -132,6 +150,8 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     gFourierTimer.stop();
     rootLogger.debug("   G Fourier took            ", gFourierTimer.seconds(), "s.");
 
+    // divide by sqrt of the 4D global volume as
+    G.template iterateOverBulk<All, HaloDepth>(DivideBySqrtVolume<floatT>(G.getAccessor()));
 }
 
 

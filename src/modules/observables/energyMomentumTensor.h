@@ -315,18 +315,22 @@ COMPLEX(floatT) EnergyMomentumTensor<floatT, onDevice, HaloDepth>::getFtau2PlusM
     return result/GInd::getLatData().globvol4;
 }
 
+// the averaged (over the full 4D global lattice) Energy-Momentum Tensor U (traceless part)
 template<class floatT, bool onDevice, size_t HaloDepth>
 void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::EMTUAveraged(Matrix4x4Sym<floatT> &result) {
 
     _redBaseEMTU.template iterateOverBulk<All, HaloDepth>(EMTtraceless<floatT, onDevice, HaloDepth>(_gauge.getAccessor()));
     _redBaseEMTU.reduce(result, GInd::getLatData().vol4);
+    result /= GInd::getLatData().globvol4;
 }
 
+// the averaged (over the full 4D global lattice) Energy-Momentum Tensor E (only-trace part)
 template<class floatT, bool onDevice, size_t HaloDepth>
 void EnergyMomentumTensor<floatT, onDevice, HaloDepth>::EMTEAveraged(floatT &result) {
 
     _redBaseEMTE.template iterateOverBulk<All, HaloDepth>(EMTtrace<floatT, onDevice, HaloDepth>(_gauge.getAccessor()));
     _redBaseEMTE.reduce(result, GInd::getLatData().vol4);
+    result /= GInd::getLatData().globvol4;
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth>
