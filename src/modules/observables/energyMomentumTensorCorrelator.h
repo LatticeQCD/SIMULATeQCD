@@ -116,8 +116,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<floatT>>& G,
     bool matsubara
 ) {
-    StopWatch<true> emtFourierTimer;
-    StopWatch<true> gFourierTimer;
+    StopWatch<true> timer;
 
     // create helper lattice containers
     LatticeContainer<true, Matrix4x4SymComplex<floatT>> emtFouriered(gaugefield.getComm(), "emtFT", "emtFT", "emtFT", "emtFT");
@@ -127,17 +126,24 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     emtFouriered.template iterateOverBulk<All, HaloDepth>(EMTFullComplex<floatT, true, HaloDepth>(gaugefield.getAccessor()));
     
     // FFT it, store it in the same Container
-    emtFourierTimer.start();
+    timer.start();
     fourierClass.template performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Both>(emtFouriered, emtFouriered, 1.0);
     // fourierClass.template performFourierTransformPolymorph<Matrix4x4SymComplex<floatT>, SpatialTemporal::Both>(emtFouriered, emtFouriered, 1.0);
-    emtFourierTimer.stop();
-    rootLogger.debug("   EMT Fourier took          ", emtFourierTimer.seconds(), "s.");
+    timer.stop();
+    rootLogger.debug("   EMT Fourier took          ", timer.seconds(), "s.");
+
+    timer.reset();
     
     // create product out of the two FFTed EMTs, store it in G
+    timer.start();
     G.template iterateOverBulk<All, HaloDepth>(EMTtimesEMTStar<floatT>(emtFouriered.getAccessor(), emtFouriered.getAccessor()));
-    
+    timer.stop();
+    rootLogger.debug("   T times T took            ", timer.seconds(), "s.");
+
+    timer.reset();
+
     // FFT the product back, store it in G again
-    gFourierTimer.start();
+    timer.start();
     if (matsubara) {
         // fourierClass.template performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Spatial>(G, G, -1.0);
         fourierClass.template performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Spatial>(G, G, -1.0);
@@ -147,11 +153,17 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
         fourierClass.template performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(G, G, -1.0);
         // fourierClass.template performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<floatT>, SpatialTemporal::Both>(G, G, -1.0);
     }
-    gFourierTimer.stop();
-    rootLogger.debug("   G Fourier took            ", gFourierTimer.seconds(), "s.");
+    timer.stop();
+    rootLogger.debug("   G Fourier took            ", timer.seconds(), "s.");
+
+    timer.reset();
 
     // divide by sqrt of the 4D global volume as
+    timer.start();
     G.template iterateOverBulk<All, HaloDepth>(DivideBySqrtVolume<floatT>(G.getAccessor()));
+    timer.stop();
+    rootLogger.debug("   G normalization took      ", timer.seconds(), "s.");
+
 }
 
 
