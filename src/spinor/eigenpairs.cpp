@@ -295,6 +295,36 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     }
 }
 
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::lanczos(
+    LinearOperator<Spinor_external> &op,
+    const int &num_vec_in,
+    const TRLanRestartParams &params) {
+    // This overload is intentionally thin: Eigenpairs owns storage and file I/O,
+    // while TRLanSpinorSolver owns the numerical algorithm. Passing params here
+    // enables thick restart and the Chebyshev filter without changing existing
+    // callers of lanczos(op, num_vec_in).
+    spinor_vec.clear();
+    lambda_vec.clear();
+
+    CommunicationBase &commBase = this->getComm();
+
+    if constexpr (LatticeLayout == Layout::All) {
+        throw std::runtime_error(stdLogger.fatal("Eigenpairs::lanczos is currently implemented only for Even/Odd layout"));
+    } else {
+        TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::compute(
+            commBase,
+            op,
+            num_vec_in,
+            spinor_vec,
+            lambda_vec,
+            params
+        );
+
+        spinor_count = static_cast<int>(spinor_vec.size());
+    }
+}
+
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
 returnEigen<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>::returnEigen(const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &spinorIn) :
@@ -311,4 +341,3 @@ INIT_PLHHSN(EIGEN_INIT_PLHHSN)
 template class Eigenpairs<floatT,true,LO,HaloDepth, HaloDepthSpin,STACKS>;\
 template struct returnEigen<floatT,true,LO,HaloDepth, HaloDepthSpin,STACKS>;
 INIT_PLHHSN_HALF(EIGEN_INIT_PLHHSN_HALF)
-
