@@ -32,7 +32,16 @@ int main(int argc, char *argv[]){
     HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0, 0.0);
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
-    eigenpairsWrite.lanczos(dslash, numVec);
+    TRLanRestartParams lanczosParams;
+    lanczosParams.krylovDim = 64;
+    lanczosParams.thickRestartDim = 20;
+    lanczosParams.maxRestarts = 100;
+    lanczosParams.residualTol = 5e-6;
+    lanczosParams.breakdownTol = 1e-12;
+    lanczosParams.seed = 1234;
+    lanczosParams.failOnNoConvergence = false;
+
+    eigenpairsWrite.lanczos(dslash, numVec, lanczosParams);
     eigenpairsWrite.checkEigenValueEquation(dslash, 0.0, 1e-5);
     eigenpairsWrite.writeEigenpairsToFile("testEigenpairsFile", 0, ENDIAN_AUTO);
 
