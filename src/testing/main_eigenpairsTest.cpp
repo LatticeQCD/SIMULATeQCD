@@ -35,9 +35,9 @@ int main(int argc, char *argv[]){
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     TRLanRestartParams lanczosParams;
-    lanczosParams.krylovDim = 256;
-    lanczosParams.thickRestartDim = 80;
-    lanczosParams.maxRestarts = 10;
+    lanczosParams.krylovDim = 384;
+    lanczosParams.thickRestartDim = 128;
+    lanczosParams.maxRestarts = 5;
     lanczosParams.residualTol = 1e-6;
     lanczosParams.breakdownTol = 1e-12;
     lanczosParams.seed = 1234;
