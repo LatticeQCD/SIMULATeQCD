@@ -4,6 +4,10 @@
 #include "../../base/math/random.h"
 #include "../../spinor/eigenpairs.h"
 
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <numeric>
 #include <type_traits>
 
 
@@ -92,7 +96,8 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	std::vector<Spinor_internal> ritzVectors;
 	std::vector<double> physicalEigenvalues;
 	std::vector<double> physicalResiduals;
-	std::vector<int> physicalOrder;
+	std::vector<double> correctedEigenvalues;
+	std::vector<int> candidateOrder;
 
 	// Each cycle extends q to size m, projects the operator into that subspace,
 	// diagonalizes the projected matrix, and either stops or thick-restarts with
@@ -105,14 +110,16 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 		// Extend the current basis. On the first cycle q has one random vector;
 		// after a restart it contains the retained Ritz block plus possibly one
 		// normalized residual direction.
-		buildKrylovSpace(comm, op, q, m, breakdownTol, params.chebyshev);
+		buildKrylovSpace(comm, op, q, m, breakdownTol, params.chebyshev, params.exponential);
 
 		// Build and diagonalize the dense Rayleigh-Ritz matrix H = Q^dag A Q.
 		// Denscode diagonalizes the tridiagonal/dense T_lan matrix here.
 		std::vector<std::vector<double>> projected;
-		projectedMatrix(comm, op, q, params.chebyshev, projected);
+		projectedMatrix(comm, op, q, params.chebyshev, params.exponential, projected);
 		diagonalizeSymmetricDense(projected, ritzValues, ritzCoefficients);
-		if (params.chebyshev.enabled) {
+		if (params.exponential.enabled) {
+			sortDenseEigenpairsDescending(ritzValues, ritzCoefficients);
+		} else if (params.chebyshev.enabled) {
 			sortDenseEigenpairsByMagnitudeDescending(ritzValues, ritzCoefficients);
 		} else {
 			sortDenseEigenpairsAscending(ritzValues, ritzCoefficients);
@@ -122,26 +129,41 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 		// vectors. These are the vectors that become the thick restart basis.
 		buildRitzVectors(q, ritzCoefficients, std::min(thickDim, static_cast<int>(q.size())), comm, ritzVectors);
 
-		// Check convergence only with the physical MdaggM residual. The filtered
-		// residual is not a valid certificate because the Chebyshev polynomial is
-		// not one-to-one on the mapped unwanted interval.
+		// Check convergence only with an MdaggM residual. For the exponential path
+		// this uses the inverse-transformed Ritz value that will be returned; for
+		// the other paths it uses the physical Rayleigh quotient.
 		const int nCandidates = static_cast<int>(ritzVectors.size());
 		physicalEigenvalues.assign(nCandidates, 0.0);
 		physicalResiduals.assign(nCandidates, 0.0);
-		physicalOrder.resize(nCandidates);
+		correctedEigenvalues.assign(nCandidates, 0.0);
+		candidateOrder.resize(nCandidates);
 		for (int i = 0; i < nCandidates; ++i) {
-			physicalOrder[i] = i;
-			physicalResiduals[i] = physicalResidual(comm, op, ritzVectors[i], physicalEigenvalues[i]);
+			candidateOrder[i] = i;
+			correctedEigenvalues[i] = params.exponential.enabled
+				? correctExponentialEigenvalue(ritzValues[i], params.exponential)
+				: 0.0;
+			if (params.exponential.enabled) {
+				physicalResiduals[i] = physicalResidualForEigenvalue(
+					comm,
+					op,
+					ritzVectors[i],
+					correctedEigenvalues[i],
+					physicalEigenvalues[i]);
+			} else {
+				physicalResiduals[i] =
+					physicalResidual(comm, op, ritzVectors[i], physicalEigenvalues[i]);
+				correctedEigenvalues[i] = physicalEigenvalues[i];
+			}
 		}
-		std::sort(physicalOrder.begin(), physicalOrder.end(), [&](int lhs, int rhs) {
-			return physicalEigenvalues[lhs] < physicalEigenvalues[rhs];
+		std::sort(candidateOrder.begin(), candidateOrder.end(), [&](int lhs, int rhs) {
+			return correctedEigenvalues[lhs] < correctedEigenvalues[rhs];
 		});
 
 		maxPhysicalResidual = 0.0;
 		const int nRequestedAvailable = std::min(requestedEigenpairs, nCandidates);
 		for (int i = 0; i < nRequestedAvailable; ++i) {
-			const int idx = physicalOrder[i];
-			const double allowed = residualTol * std::max(1.0, std::fabs(physicalEigenvalues[idx]));
+			const int idx = candidateOrder[i];
+			const double allowed = residualTol * std::max(1.0, std::fabs(correctedEigenvalues[idx]));
 			const double scaledResidual = physicalResiduals[idx] / std::max(allowed, std::numeric_limits<double>::min());
 			maxPhysicalResidual = std::max(maxPhysicalResidual, scaledResidual);
 		}
@@ -167,11 +189,17 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 		double restartResidualNorm = 0.0;
 		const int nResiduals = std::min(requestedEigenpairs, static_cast<int>(ritzVectors.size()));
 		for (int ev = 0; ev < nResiduals; ++ev) {
-			const int idx = physicalOrder.empty() ? ev : physicalOrder[ev];
+			const int idx = candidateOrder.empty() ? ev : candidateOrder[ev];
 			Spinor_internal residual(comm);
-			applyFilteredOperator(comm, op, residual, ritzVectors[idx], params.chebyshev);
+			applyFilteredOperator(
+				comm, op, residual, ritzVectors[idx], params.chebyshev, params.exponential);
 			axpyReal(residual, -ritzValues[idx], ritzVectors[idx]);
-			const double norm = std::sqrt(std::max(residual.realdotProduct(residual), 0.0));
+			const double residual2 = residual.realdotProduct(residual);
+			if (!std::isfinite(residual2) || residual2 < 0.0) {
+				throw std::runtime_error(stdLogger.fatal(
+					"Filtered Ritz residual is not finite"));
+			}
+			const double norm = std::sqrt(residual2);
 			if (norm > restartResidualNorm) {
 				restartResidualNorm = norm;
 				restartResidual = residual;
@@ -194,6 +222,10 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 		if (restartResidualNorm > breakdownTol && static_cast<int>(q.size()) < m) {
 			fullReorthogonalize(restartResidual, q, static_cast<int>(q.size()));
 			const double n2 = restartResidual.realdotProduct(restartResidual);
+			if (!std::isfinite(n2) || n2 < 0.0) {
+				throw std::runtime_error(stdLogger.fatal(
+					"Thick-restart residual direction has a non-finite norm"));
+			}
 			if (n2 > breakdownTol * breakdownTol) {
 				q.emplace_back(comm);
 				q.back() = restartResidual;
@@ -213,17 +245,21 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	eigenvectors.reserve(nKeep);
 	eigenvalues.reserve(nKeep);
 
-	// Store only the requested number of eigenpairs. If a polynomial filter was
-	// used, ritzValues are eigenvalues of the polynomial operator, so recompute
-	// eigenvalues with the original MdaggM Rayleigh quotient before returning.
+	// Store only the requested number of eigenpairs. The exponential path reports
+	// the inverse-transformed Ritz value, matching Densecode's EVPolyCorrect before
+	// WriteEV. The raw and Chebyshev paths report the physical Rayleigh quotient.
 	for (int ev = 0; ev < nKeep; ++ev) {
-		const int idx = physicalOrder.empty() ? ev : physicalOrder[ev];
+		const int idx = candidateOrder.empty() ? ev : candidateOrder[ev];
 		eigenvectors.emplace_back(comm);
 		eigenvectors.back() = ritzVectors[idx];
-		// The Chebyshev polynomial is used only to accelerate eigenvector
-		// convergence. Report the Rayleigh quotient of the original MdaggM
-		// operator, because that is the physical eigenvalue expected by callers.
-		eigenvalues.push_back(physicalEigenvalues.empty() ? rayleighQuotient(comm, op, eigenvectors.back()) : physicalEigenvalues[idx]);
+		if (params.exponential.enabled) {
+			eigenvalues.push_back(correctedEigenvalues[idx]);
+		} else {
+			eigenvalues.push_back(
+				physicalEigenvalues.empty()
+					? rayleighQuotient(comm, op, eigenvectors.back())
+					: physicalEigenvalues[idx]);
+		}
 	}
 }
 
@@ -254,12 +290,15 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	LinearOperator<Spinor_external> &op,
 	Spinor_internal &out,
 	const Spinor_internal &in,
-	const TRLanChebyshevFilterParams &filter)
+	const TRLanChebyshevFilterParams &chebyshev,
+	const TRLanExponentialFilterParams &exponential)
 {
 	// Keep all Lanczos and restart code calling one function. This avoids having
 	// separate filtered/unfiltered code paths that can drift apart.
-	if (filter.enabled && filter.order > 0) {
-		applyChebyshevFilter(comm, op, out, in, filter);
+	if (exponential.enabled) {
+		applyExponentialFilter(comm, op, out, in, exponential);
+	} else if (chebyshev.enabled) {
+		applyChebyshevFilter(comm, op, out, in, chebyshev);
 	} else {
 		applyMdaggMSingle(comm, op, out, in);
 	}
@@ -327,6 +366,77 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::applyExponentialFilter(
+	CommunicationBase &comm,
+	LinearOperator<Spinor_external> &op,
+	Spinor_internal &out,
+	const Spinor_internal &in,
+	const TRLanExponentialFilterParams &filter)
+{
+	// Densecode's ExpInit/ExpIter repeatedly apply
+	//
+	//   beta * I + alpha * beta / order * DoeDeo.
+	//
+	// Densecode's printed/stored eigenvalue convention is positive mu,
+	// while SIMULATeQCD's raw applyMdaggM convention gives lambda_SIM = -mu
+	// for the same low mode. Therefore the Densecode factor
+	//     beta * (1 - alpha * mu / order)
+	// becomes, in SIMULATeQCD variables,
+	//     beta * (1 + alpha * lambda_SIM / order).
+	const double mdaggMCoeff =
+		(filter.alpha / static_cast<double>(filter.order)) * filter.beta;
+
+	Spinor_internal current(comm);
+	Spinor_internal applied(comm);
+	Spinor_internal next(comm);
+	current = in;
+
+	for (int stage = 0; stage < filter.order; ++stage) {
+		applyMdaggMSingle(comm, op, applied, current);
+		next = current;
+		next *= COMPLEX(floatT)(static_cast<floatT>(filter.beta), static_cast<floatT>(0.0));
+		axpyReal(next, mdaggMCoeff, applied);
+		current = next;
+	}
+
+	out = current;
+}
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+double TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::correctExponentialEigenvalue(
+	double filteredEigenvalue,
+	const TRLanExponentialFilterParams &filter)
+{
+	if (!std::isfinite(filteredEigenvalue)) {
+		throw std::runtime_error(stdLogger.fatal(
+			"Cannot correct a non-finite exponential-filtered Ritz value"));
+	}
+
+	double root = 0.0;
+	if (filteredEigenvalue < 0.0) {
+		if (filter.order % 2 == 0) {
+			throw std::runtime_error(stdLogger.fatal(
+				"Negative Ritz value cannot be inverted through an even-order exponential filter"));
+		}
+		root = -std::pow(-filteredEigenvalue, 1.0 / static_cast<double>(filter.order));
+	} else {
+		root = std::pow(filteredEigenvalue, 1.0 / static_cast<double>(filter.order));
+	}
+
+	// This is Densecode's EVPolyCorrect formula, with theta represented by
+	// filteredEigenvalue:
+	//   lambda = n * (beta - theta^(1/n)) / (alpha * beta).
+	const double corrected =
+		static_cast<double>(filter.order) * (filter.beta - root)
+		/ (filter.alpha * filter.beta);
+	if (!std::isfinite(corrected)) {
+		throw std::runtime_error(stdLogger.fatal(
+			"Exponential-filtered Ritz value correction produced a non-finite eigenvalue"));
+	}
+	return corrected;
+}
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::zero(Spinor_internal &vec)
 {
 	vec *= COMPLEX(floatT)(static_cast<floatT>(0.0), static_cast<floatT>(0.0));
@@ -366,7 +476,7 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	const char *errorMsg)
 {
 	const double n2 = vec.realdotProduct(vec);
-	if (n2 <= std::numeric_limits<double>::epsilon()) {
+	if (!std::isfinite(n2) || n2 <= std::numeric_limits<double>::epsilon()) {
 		throw std::runtime_error(stdLogger.fatal(errorMsg));
 	}
 
@@ -395,6 +505,10 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	if (params.thickRestartDim > 0 && params.thickRestartDim > krylovDim - 2) {
 		throw std::runtime_error(stdLogger.fatal("thickRestartDim must be at most krylovDim - 2"));
 	}
+	if (params.chebyshev.enabled && params.exponential.enabled) {
+		throw std::runtime_error(stdLogger.fatal(
+			"Chebyshev and exponential Lanczos filters are mutually exclusive"));
+	}
 	if (params.chebyshev.enabled) {
 		if (params.chebyshev.order <= 0) {
 			throw std::runtime_error(stdLogger.fatal("Enabled Chebyshev filter requires order > 0"));
@@ -406,6 +520,27 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 			throw std::runtime_error(stdLogger.fatal("Chebyshev filter requires upperBound > lowerBound"));
 		}
 	}
+	if (params.exponential.enabled) {
+		if (params.exponential.order <= 0) {
+			throw std::runtime_error(stdLogger.fatal(
+				"Enabled exponential filter requires order > 0"));
+		}
+		if (!std::isfinite(params.exponential.alpha) || params.exponential.alpha <= 0.0) {
+			throw std::runtime_error(stdLogger.fatal(
+				"Exponential filter alpha must be positive and finite"));
+		}
+		if (!std::isfinite(params.exponential.beta) || params.exponential.beta <= 0.0) {
+			throw std::runtime_error(stdLogger.fatal(
+				"Exponential filter beta must be positive and finite"));
+		}
+		const double stageCoefficient =
+			(params.exponential.alpha / static_cast<double>(params.exponential.order))
+			* params.exponential.beta;
+		if (!std::isfinite(stageCoefficient)) {
+			throw std::runtime_error(stdLogger.fatal(
+				"Exponential filter stage coefficient is not finite"));
+		}
+	}
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
@@ -415,21 +550,26 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	std::vector<Spinor_internal> &basis,
 	int targetDim,
 	double breakdownTol,
-	const TRLanChebyshevFilterParams &filter)
+	const TRLanChebyshevFilterParams &chebyshev,
+	const TRLanExponentialFilterParams &exponential)
 {
 	while (static_cast<int>(basis.size()) < targetDim) {
 		const int j = static_cast<int>(basis.size()) - 1;
 		Spinor_internal w(comm);
-		// Apply A q_j, where A is either MdaggM or the Chebyshev-filtered
-		// polynomial operator selected by the parameters.
-		applyFilteredOperator(comm, op, w, basis[j], filter);
+		// Apply A q_j, where A is MdaggM or the selected polynomial transform.
+		applyFilteredOperator(comm, op, w, basis[j], chebyshev, exponential);
 
 		// Full reorthogonalization is intentionally retained for restart
 		// robustness. After a thick restart the first basis vectors are Ritz
 		// combinations, so relying on a three-term recurrence alone is fragile.
 		fullReorthogonalize(w, basis, j + 1);
 
-		const double normW = std::sqrt(std::max(w.realdotProduct(w), 0.0));
+		const double normW2 = w.realdotProduct(w);
+		if (!std::isfinite(normW2) || normW2 < 0.0) {
+			throw std::runtime_error(stdLogger.fatal(
+				"Lanczos operator application produced a non-finite vector norm"));
+		}
+		const double normW = std::sqrt(normW2);
 		if (normW < breakdownTol) {
 			// A tiny norm means the Krylov space has stopped growing. In exact
 			// arithmetic this is a happy breakdown; numerically it is safest to
@@ -449,7 +589,8 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 	CommunicationBase &comm,
 	LinearOperator<Spinor_external> &op,
 	std::vector<Spinor_internal> &basis,
-	const TRLanChebyshevFilterParams &filter,
+	const TRLanChebyshevFilterParams &chebyshev,
+	const TRLanExponentialFilterParams &exponential,
 	std::vector<std::vector<double>> &matrix)
 {
 	const int n = static_cast<int>(basis.size());
@@ -460,10 +601,14 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 		// Compute A q_col once, then take dot products with all previous basis
 		// vectors. Symmetry fills the lower triangle without another operator
 		// application.
-		applyFilteredOperator(comm, op, w, basis[col], filter);
-		for (int row = 0; row <= col; ++row) {
-			const COMPLEX(double) elem = basis[row].dotProduct(w);
-			matrix[row][col] = elem.cREAL;
+			applyFilteredOperator(comm, op, w, basis[col], chebyshev, exponential);
+			for (int row = 0; row <= col; ++row) {
+				const COMPLEX(double) elem = basis[row].dotProduct(w);
+				if (!std::isfinite(elem.cREAL)) {
+					throw std::runtime_error(stdLogger.fatal(
+						"Lanczos projected matrix contains a non-finite value"));
+				}
+				matrix[row][col] = elem.cREAL;
 			matrix[col][row] = elem.cREAL;
 		}
 	}
@@ -610,6 +755,33 @@ void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>:
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::sortDenseEigenpairsDescending(
+	std::vector<double> &d,
+	std::vector<std::vector<double>> &z)
+{
+	const int n = static_cast<int>(d.size());
+	std::vector<int> order(n);
+	std::iota(order.begin(), order.end(), 0);
+
+	std::sort(order.begin(), order.end(), [&](int lhs, int rhs) {
+		return d[lhs] > d[rhs];
+	});
+
+	std::vector<double> dSorted(n, 0.0);
+	std::vector<std::vector<double>> zSorted(n, std::vector<double>(n, 0.0));
+	for (int col = 0; col < n; ++col) {
+		const int src = order[col];
+		dSorted[col] = d[src];
+		for (int row = 0; row < n; ++row) {
+			zSorted[row][col] = z[row][src];
+		}
+	}
+
+	d.swap(dSorted);
+	z.swap(zSorted);
+}
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
 void TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::sortDenseEigenpairsByMagnitudeDescending(
 	std::vector<double> &d,
 	std::vector<std::vector<double>> &z)
@@ -690,12 +862,49 @@ double TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks
 	applyMdaggMSingle(comm, op, applied, vec);
 	const COMPLEX(double) numerator = vec.dotProduct(applied);
 	const double denominator = vec.realdotProduct(vec);
-	if (denominator <= std::numeric_limits<double>::epsilon()) {
+	if (!std::isfinite(numerator.cREAL) || !std::isfinite(denominator)
+		|| denominator <= std::numeric_limits<double>::epsilon()) {
 		throw std::runtime_error(stdLogger.fatal("Cannot compute residual of zero spinor"));
 	}
 	lambda = numerator.cREAL / denominator;
 	axpyReal(applied, -lambda, vec);
-	return std::sqrt(std::max(applied.realdotProduct(applied), 0.0));
+	const double residual2 = applied.realdotProduct(applied);
+	if (!std::isfinite(residual2) || residual2 < 0.0) {
+		throw std::runtime_error(stdLogger.fatal(
+			"Physical eigenpair residual is not finite"));
+	}
+	return std::sqrt(residual2);
+}
+
+template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>
+double TRLanSpinorSolver<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>::physicalResidualForEigenvalue(
+	CommunicationBase &comm,
+	LinearOperator<Spinor_external> &op,
+	Spinor_internal &vec,
+	double lambda,
+	double &rayleigh)
+{
+	Spinor_internal applied(comm);
+	applyMdaggMSingle(comm, op, applied, vec);
+	const COMPLEX(double) numerator = vec.dotProduct(applied);
+	const double denominator = vec.realdotProduct(vec);
+	if (!std::isfinite(numerator.cREAL) || !std::isfinite(denominator)
+		|| denominator <= std::numeric_limits<double>::epsilon()) {
+		throw std::runtime_error(stdLogger.fatal("Cannot compute residual of zero spinor"));
+	}
+
+	rayleigh = numerator.cREAL / denominator;
+
+	// In the Densecode exponential path, lambda is the positive stored
+	// eigenvalue mu, while SIMULATeQCD's raw operator convention gives
+	// A_SIM v = -mu v for these modes. Therefore check A_SIM v + mu v.
+	axpyReal(applied, lambda, vec);
+	const double residual2 = applied.realdotProduct(applied);
+	if (!std::isfinite(residual2) || residual2 < 0.0) {
+		throw std::runtime_error(stdLogger.fatal(
+			"Corrected physical eigenpair residual is not finite"));
+	}
+	return std::sqrt(residual2);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepthSpin, size_t NStacks>

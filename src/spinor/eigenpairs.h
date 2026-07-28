@@ -78,7 +78,7 @@ public:
 
     void lanczos(LinearOperator<Spinor_external> &op, const int &num_vec_in);
     // Restart/filter-aware Lanczos entry point. Use this overload to pass
-    // Denscode-style m_lan/k_lan controls and Chebyshev filter parameters.
+    // Densecode-style m_lan/k_lan and exponential/Chebyshev filter parameters.
     void lanczos(LinearOperator<Spinor_external> &op, const int &num_vec_in, const TRLanRestartParams &params);
     
     virtual Vect3arrayAcc<floatT> getAccessor() const;

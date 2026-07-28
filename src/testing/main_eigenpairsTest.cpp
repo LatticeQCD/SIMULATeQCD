@@ -1,5 +1,7 @@
 #include "../simulateqcd.h"
 #include "../modules/observables/taylorMeasurement.h"
+#include <fstream>
+#include <iomanip>
 
 int main(int argc, char *argv[]){
 
@@ -33,16 +35,34 @@ int main(int argc, char *argv[]){
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     TRLanRestartParams lanczosParams;
-    lanczosParams.krylovDim = 64;
-    lanczosParams.thickRestartDim = 20;
-    lanczosParams.maxRestarts = 100;
-    lanczosParams.residualTol = 5e-6;
+    lanczosParams.krylovDim = 256;
+    lanczosParams.thickRestartDim = 80;
+    lanczosParams.maxRestarts = 10;
+    lanczosParams.residualTol = 1e-6;
     lanczosParams.breakdownTol = 1e-12;
     lanczosParams.seed = 1234;
     lanczosParams.failOnNoConvergence = false;
 
+
+    lanczosParams.chebyshev.enabled = false;
+    lanczosParams.exponential.enabled = true;
+    lanczosParams.exponential.order = 26;
+    lanczosParams.exponential.alpha = 9.0;
+    lanczosParams.exponential.beta = 1.0;
+
     eigenpairsWrite.lanczos(dslash, numVec, lanczosParams);
     eigenpairsWrite.checkEigenValueEquation(dslash, 0.0, 1e-5);
+
+    if (commBase.IamRoot()) {
+        std::ofstream evout("simqcd_eigenvalues.txt");
+        evout << std::setprecision(17);
+
+        for (int idx = 0; idx < eigenpairsWrite.SpinorCount(); idx++) {
+            const double lambda = eigenpairsWrite.getEigenValue(idx);
+            rootLogger.info("SIMQCD_EIGENVALUE ", idx, " = ", lambda);
+            evout << idx << " " << lambda << "\n";
+        }
+    }
     eigenpairsWrite.writeEigenpairsToFile("testEigenpairsFile", 0, ENDIAN_AUTO);
 
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsRead(commBase);

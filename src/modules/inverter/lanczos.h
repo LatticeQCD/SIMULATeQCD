@@ -25,6 +25,29 @@ struct TRLanChebyshevFilterParams {
   double upperBound = 0.0;
 };
 
+// Densecode-compatible exponential polynomial filter. Densecode applies
+//
+//   [ beta * (I + alpha * DoeDeo / order) ]^order .
+//
+// SIMULATeQCD exposes the positive operator MdaggM = -DoeDeo, so the identical
+// spectral transform is
+//
+//   P(MdaggM) = [ beta * (I - alpha * MdaggM / order) ]^order .
+//
+// For low-mode targeting, parameters must keep
+// 1 - alpha * lambda / order positive over the spectrum of interest. On that
+// interval P is one-to-one and largest filtered eigenvalues correspond to the
+// lowest physical eigenvalues.
+struct TRLanExponentialFilterParams {
+  bool enabled = false;
+  // Densecode's exponential_order.
+  int order = 0;
+  // Densecode's exponential_alpha. Must be positive when enabled.
+  double alpha = 0.0;
+  // Densecode's exponential_beta. Must be positive when enabled.
+  double beta = 1.0;
+};
+
 // Controls the thick-restarted Lanczos run. The defaults preserve the previous
 // public API while allowing callers to choose Denscode-like m_lan/k_lan values.
 struct TRLanRestartParams {
@@ -48,6 +71,8 @@ struct TRLanRestartParams {
   unsigned int seed = 1234;
   // Optional Chebyshev filter parameters.
   TRLanChebyshevFilterParams chebyshev;
+  // Optional Densecode exponential filter and eigenvalue-correction pipeline.
+  TRLanExponentialFilterParams exponential;
   // If true, hitting maxRestarts before the requested physical residual is
   // reached is an error. The legacy overload disables this to preserve the old
   // "return best Ritz pairs from one projection" behavior.
@@ -71,7 +96,7 @@ public:
       unsigned int seed = 1234);
 
   // Restart-aware entry point. This overload is what new callers should use
-  // when they want thick restart and/or the Chebyshev filter.
+  // for thick restart and either supported polynomial filter.
   static void compute(
       CommunicationBase &comm,
       LinearOperator<Spinor_external> &op,
@@ -95,7 +120,8 @@ private:
       LinearOperator<Spinor_external> &op,
       Spinor_internal &out,
       const Spinor_internal &in,
-      const TRLanChebyshevFilterParams &filter);
+      const TRLanChebyshevFilterParams &chebyshev,
+      const TRLanExponentialFilterParams &exponential);
 
   // Evaluate the Chebyshev polynomial filter with the three-term recurrence.
   static void applyChebyshevFilter(
@@ -104,6 +130,22 @@ private:
       Spinor_internal &out,
       const Spinor_internal &in,
       const TRLanChebyshevFilterParams &filter);
+
+  // Apply Densecode's repeated first-order exponential polynomial. Expressed in
+  // terms of SIMULATeQCD's positive MdaggM, one stage is
+  // beta * (I - alpha * MdaggM / order).
+  static void applyExponentialFilter(
+      CommunicationBase &comm,
+      LinearOperator<Spinor_external> &op,
+      Spinor_internal &out,
+      const Spinor_internal &in,
+      const TRLanExponentialFilterParams &filter);
+
+  // Invert the exponential spectral map exactly as Densecode's EVPolyCorrect:
+  // lambda = order * (beta - theta^(1/order)) / (alpha * beta).
+  static double correctExponentialEigenvalue(
+      double filteredEigenvalue,
+      const TRLanExponentialFilterParams &filter);
 
   // Convenience helpers for operations that are repeatedly needed when building
   // Ritz combinations and residuals.
@@ -125,7 +167,8 @@ private:
       std::vector<Spinor_internal> &basis,
       int targetDim,
       double breakdownTol,
-      const TRLanChebyshevFilterParams &filter);
+      const TRLanChebyshevFilterParams &chebyshev,
+      const TRLanExponentialFilterParams &exponential);
 
   // Build the dense projected matrix H_ij = <q_i, A q_j> using the current
   // basis and whichever operator A is active.
@@ -133,7 +176,8 @@ private:
       CommunicationBase &comm,
       LinearOperator<Spinor_external> &op,
       std::vector<Spinor_internal> &basis,
-      const TRLanChebyshevFilterParams &filter,
+      const TRLanChebyshevFilterParams &chebyshev,
+      const TRLanExponentialFilterParams &exponential,
       std::vector<std::vector<double>> &matrix);
 
   // Diagonalize the small dense projected matrix. The eigenvectors z are used
@@ -146,6 +190,10 @@ private:
   // Sort projected eigenpairs by algebraic value. This is correct for the
   // unfiltered MdaggM problem.
   static void sortDenseEigenpairsAscending(std::vector<double> &d, std::vector<std::vector<double>> &z);
+
+  // Densecode's exponential transform is decreasing on its configured physical
+  // spectral interval, so its largest Ritz values represent the lowest modes.
+  static void sortDenseEigenpairsDescending(std::vector<double> &d, std::vector<std::vector<double>> &z);
 
   // Sort filtered projected eigenpairs by largest polynomial magnitude. Low
   // physical modes can appear at either algebraic end of T_n(A'), depending on
@@ -163,12 +211,22 @@ private:
 
   // Compute ||MdaggM v - lambda v|| and return lambda through the reference.
   // This physical residual is the only convergence certificate, even when the
-  // basis was built with a Chebyshev filter.
+  // basis was built with a polynomial filter.
   static double physicalResidual(
       CommunicationBase &comm,
       LinearOperator<Spinor_external> &op,
       Spinor_internal &vec,
       double &lambda);
+
+  // Compute the physical residual against a supplied eigenvalue while also
+  // returning the raw Rayleigh quotient. The exponential path uses this to
+  // certify the inverse-transformed value that will actually be written.
+  static double physicalResidualForEigenvalue(
+      CommunicationBase &comm,
+      LinearOperator<Spinor_external> &op,
+      Spinor_internal &vec,
+      double lambda,
+      double &rayleigh);
 
   // Return <v, MdaggM v>/<v,v>. When filtering is enabled this converts the
   // final vector quality back to the original physical operator.

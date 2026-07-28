@@ -302,8 +302,8 @@ void Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, 
     const TRLanRestartParams &params) {
     // This overload is intentionally thin: Eigenpairs owns storage and file I/O,
     // while TRLanSpinorSolver owns the numerical algorithm. Passing params here
-    // enables thick restart and the Chebyshev filter without changing existing
-    // callers of lanczos(op, num_vec_in).
+    // enables thick restart and either polynomial filter without changing
+    // existing callers of lanczos(op, num_vec_in).
     spinor_vec.clear();
     lambda_vec.clear();
 
