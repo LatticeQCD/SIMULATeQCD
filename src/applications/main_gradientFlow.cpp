@@ -390,6 +390,12 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     PolyakovLoopCorrelator<floatT,true,HaloDepth> PLC(gauge);
     CorrelatorTools<floatT,true,HaloDepth> corrTools;
 
+    //! ------------------------------- parameter check (for the EMTCorr class) ----------------------------------------
+
+    if (lp.energyMomentumTensorCorrFunctionsAveragedTau() || lp.energyMomentumTensorCorrFunctionsGeneralTau()) {
+        EMTCorr.checkLatticeExtents();
+    }
+
     //! -------------------------------variables for the observables----------------------------------------------------
 
     floatT plaq, clov, topChar, wb, resultEMTE;

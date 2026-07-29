@@ -90,6 +90,15 @@ public:
 
     }
 
+    void checkLatticeExtents() {
+        if (lxL > LZ || lyL > LZ || lzL > LZ || ltL > LZ) {
+            throw std::runtime_error(rootLogger.fatal(
+                "Global lattice extents exceed the hard-coded maximum LZ", LZ,
+                "used within the fourier(Polymorph) routine. Re-compile with a larger LZ."
+            ));
+        }
+    }
+
     template<size_t HaloDepth>
     void moveSpinor1212ToContainer(
         Spinorfield<floatT, true, All, HaloDepth, 12, 12> & spinorIn,
