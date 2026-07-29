@@ -106,7 +106,7 @@ class HDF5FileWriter {
             _commBase(commBase), _latParams(latParams), _fileName(fileName),
             groupNameGradFlowMeasurements("/gradient_flow_measurements"),
             groupNameEMTCorr("EMT_correlator"),
-            dataSetNameFlowTime("flow_time"), dataSetNameFlowTimeNecessary("measured_flow_time"),
+            dataSetNameFlowTime("flow_time"), dataSetNameFlowTimeNecessary("flow_time"),
             dataSetNamePlaquette("plaquette"), dataSetNameTopCharge("topological_charge"),
             dataSetNameClover("clover"), dataSetNameTopChargeImp("topological_charge_improved"),
             dataSetNameR2Counts("r2_counts"), dataSetNameR2Values("r2_values"),
