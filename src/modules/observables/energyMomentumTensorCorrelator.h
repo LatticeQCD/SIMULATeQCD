@@ -26,6 +26,10 @@ class EnergyMomentumTensorCorrelator {
 
         ~EnergyMomentumTensorCorrelator() {}
 
+        void checkLatticeExtents() {
+            fourierClass.checkLatticeExtents();
+        }
+
         int getR2max() {
             return tensorDecomposition.getR2max();
         }
