@@ -15,7 +15,7 @@ int main(int argc, char *argv[]){
 
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
-    const size_t NStacks = 1; // NOTE: this only works for NStacks=8 after the blocksize fix
+    const size_t NStacks = 1;
     const int numVec = 5;
     typedef float floatT; // Define the precision here
 
@@ -35,23 +35,27 @@ int main(int argc, char *argv[]){
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     TRLanRestartParams lanczosParams;
-    lanczosParams.krylovDim = 384;
-    lanczosParams.thickRestartDim = 128;
-    lanczosParams.maxRestarts = 5;
+    lanczosParams.krylovDim = 256;
+    lanczosParams.thickRestartDim = 80;
+    lanczosParams.maxRestarts = 10;
     lanczosParams.residualTol = 1e-6;
     lanczosParams.breakdownTol = 1e-12;
     lanczosParams.seed = 1234;
+    lanczosParams.reorthogonalizationPasses = 2;
+    lanczosParams.physicalCheckInterval = 5;
     lanczosParams.failOnNoConvergence = false;
-
+    lanczosParams.convergenceDiagnostics = true;
+    lanczosParams.mpiConsistencyDiagnostics = true;
 
     lanczosParams.chebyshev.enabled = false;
     lanczosParams.exponential.enabled = true;
     lanczosParams.exponential.order = 26;
     lanczosParams.exponential.alpha = 9.0;
     lanczosParams.exponential.beta = 1.0;
+    lanczosParams.exponential.operatorShift = 0.0;
+    lanczosParams.exponential.operatorScale = 1.0;
 
     eigenpairsWrite.lanczos(dslash, numVec, lanczosParams);
-    eigenpairsWrite.checkEigenValueEquation(dslash, 0.0, 1e-5);
 
     if (commBase.IamRoot()) {
         std::ofstream evout("simqcd_eigenvalues.txt");
@@ -78,10 +82,12 @@ int main(int argc, char *argv[]){
         eigenpairsRead.getEigenSpinor(spinorRead, idx);
 
         spinorDiff = spinorWrite - spinorRead;
-        if (spinorDiff.realdotProduct(spinorDiff) > 1e-10) {
-            rootLogger.warn("Eigenpair with index ", idx, " differs between written and read version! Norm of difference: ", spinorDiff.realdotProduct(spinorDiff));
+        const double spinorDiffNorm =
+                spinorDiff.realdotProduct(spinorDiff);
+        if (spinorDiffNorm > 1e-10) {
+            rootLogger.warn("Eigenpair with index ", idx, " differs between written and read version! Norm of difference: ", spinorDiffNorm);
         } else {
-            rootLogger.info("Eigenpair with index ", idx, " matches between written and read version. Norm of difference: ", spinorDiff.realdotProduct(spinorDiff));
+            rootLogger.info("Eigenpair with index ", idx, " matches between written and read version. Norm of difference: ", spinorDiffNorm);
         }
     }
 

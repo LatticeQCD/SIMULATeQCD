@@ -327,6 +327,7 @@ set_SIMULATeQCD_gpu_backend(
     src/modules/gauge_updates/subLatMeas_device.cpp
     src/modules/gauge_updates/luscherweisz.cpp
     src/modules/inverter/inverter.cpp
+    src/modules/inverter/lanczos.cpp
     src/modules/measureHadrons/measureHadrons.cpp
     src/modules/observables/blocking.cpp
     src/modules/observables/colorElectricCorr.cpp

@@ -121,6 +121,17 @@ typedef floatT floatT_inner;
         return _lattice;
     }
 
+    template<bool onDevice2>
+    void copyFromArray(
+            const Vect3array<floatT, onDevice2> &source,
+            const size_t sourceOffset = 0) {
+        _lattice.copyFromPartial(
+                source,
+                getNumberLatticePointsFull(),
+                0,
+                sourceOffset);
+    }
+
     COMPLEX(double) dotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     double realdotProduct(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y);
     void realDotProductNoCopy(const Spinorfield<floatT, onDevice, LatticeLayout, HaloDepth, NStacks> &y, gMemoryPtr<onDevice> pAp);
