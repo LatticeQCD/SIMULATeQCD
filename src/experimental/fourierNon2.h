@@ -385,9 +385,6 @@ __global__ void fourier(
         }
     }
 
-    // delete [] v;
-    // delete [] v0;
-
 }
 
 template<class floatT, typename elemType, int direction>
@@ -477,8 +474,6 @@ __global__ void fourierPolymorph(
         }
     }
     
-    delete [] v0;
-
     for(int z = 0; z < lz ; z++) {
         v[z] = v[z]/sqrt(lz);
         if(direction == 0) {
