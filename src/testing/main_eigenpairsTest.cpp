@@ -1,7 +1,288 @@
 #include "../simulateqcd.h"
 #include "../modules/observables/taylorMeasurement.h"
+#include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
+#include <limits>
+#include <stdexcept>
+#include <string>
+
+namespace {
+
+struct BenchmarkTiming {
+    double localSeconds;
+    double maximumSeconds;
+};
+
+bool deflationBenchmarkEnabled() {
+    const char *value = std::getenv("SIMQCD_RUN_DEFLATION_BENCHMARK");
+    return value != nullptr && std::string(value) == "1";
+}
+
+void synchronizeBenchmarkBackend() {
+    const gpuError_t gpuError = gpuDeviceSynchronize();
+    if (gpuError != gpuSuccess) {
+        GpuError("Deflation benchmark backend synchronization failed", gpuError);
+    }
+}
+
+template<class Callable>
+BenchmarkTiming timeBenchmarkRegion(CommunicationBase &commBase, Callable &&callable) {
+    synchronizeBenchmarkBackend();
+    commBase.globalBarrier();
+
+    StopWatch<false> timer;
+    timer.start();
+    callable();
+    synchronizeBenchmarkBackend();
+    const double localSeconds = timer.stop() / 1000.0;
+
+    return {localSeconds, commBase.globalMaximum(localSeconds)};
+}
+
+double safeRatio(const double numerator, const double denominator) {
+    if (denominator > 0.0) {
+        return numerator / denominator;
+    }
+    return numerator == 0.0 ? 1.0 : std::numeric_limits<double>::infinity();
+}
+
+void requireBenchmarkCondition(const bool condition, const std::string &message) {
+    if (!condition) {
+        throw std::runtime_error("Deflation benchmark validation failed: " + message);
+    }
+}
+
+template<class Operator, class Spinor>
+double calculateRelativeResidual(Operator &dslash, const Spinor &solution, Spinor &rhs) {
+    Spinor applied(rhs.getComm());
+    Spinor residual(rhs.getComm());
+
+    dslash.applyMdaggM(applied, solution, true);
+    residual = applied - rhs;
+
+    const double rhsNormSquared = rhs.realdotProduct(rhs);
+    const double residualNormSquared = residual.realdotProduct(residual);
+    requireBenchmarkCondition(std::isfinite(rhsNormSquared) && rhsNormSquared > 0.0,
+                              "right-hand-side norm is not finite and positive");
+    requireBenchmarkCondition(std::isfinite(residualNormSquared) && residualNormSquared >= 0.0,
+                              "residual norm is not finite and non-negative");
+    return std::sqrt(residualNormSquared / rhsNormSquared);
+}
+
+template<class Spinor>
+double calculateRelativeDifference(Spinor &reference, const Spinor &candidate) {
+    Spinor difference(reference.getComm());
+    difference = reference - candidate;
+
+    const double referenceNormSquared = reference.realdotProduct(reference);
+    const double differenceNormSquared = difference.realdotProduct(difference);
+    requireBenchmarkCondition(std::isfinite(referenceNormSquared) && referenceNormSquared > 0.0,
+                              "ordinary solution norm is not finite and positive");
+    requireBenchmarkCondition(std::isfinite(differenceNormSquared) && differenceNormSquared >= 0.0,
+                              "solution-difference norm is not finite and non-negative");
+    return std::sqrt(differenceNormSquared / referenceNormSquared);
+}
+
+template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t NStacks>
+void runDeflationBenchmark(
+        CommunicationBase &commBase,
+        Gaugefield<floatT, true, HaloDepthGauge, R18> &gaugeSmeared,
+        Gaugefield<floatT, true, HaloDepthGauge, U3R14> &gaugeNaik,
+        const Eigenpairs<floatT, true, Even, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpairs,
+        const int expectedEigenpairs, const double mass, const floatT naikEpsilon,
+        const int maximumIterations, const double solveTolerance,
+        const double eigenpairResidualTolerance, const unsigned int rhsSeed) {
+    using Spinor = Spinorfield<floatT, true, Even, HaloDepthSpin, NStacks>;
+    using Dslash = HisqDSlash<floatT, true, Even, HaloDepthGauge, HaloDepthSpin, NStacks>;
+
+    requireBenchmarkCondition(NStacks == 1, "benchmark requires exactly one right-hand side");
+    requireBenchmarkCondition(eigenpairs.SpinorCount() == expectedEigenpairs,
+                              "required eigenpair count is not present");
+    requireBenchmarkCondition(std::isfinite(mass) && mass > 0.0, "mass is not finite and positive");
+    requireBenchmarkCondition(std::isfinite(static_cast<double>(naikEpsilon)),
+                              "Naik epsilon is not finite");
+    requireBenchmarkCondition(maximumIterations > 0, "maximum iteration count is not positive");
+    requireBenchmarkCondition(std::isfinite(solveTolerance) && solveTolerance > 0.0,
+                              "solve tolerance is not finite and positive");
+    requireBenchmarkCondition(std::isfinite(eigenpairResidualTolerance)
+                                      && eigenpairResidualTolerance > 0.0,
+                              "eigenpair validation tolerance is not finite and positive");
+
+    for (int index = 0; index < eigenpairs.SpinorCount(); ++index) {
+        const double lambda = eigenpairs.getEigenValue(index);
+        requireBenchmarkCondition(std::isfinite(lambda) && lambda >= 0.0,
+                                  "eigenvalue is not finite and non-negative");
+        requireBenchmarkCondition(std::isfinite(mass * mass + lambda) && mass * mass + lambda > 0.0,
+                                  "deflation denominator is not finite and positive");
+    }
+
+    Dslash massiveDslash(gaugeSmeared, gaugeNaik, mass, naikEpsilon);
+    ConjugateGradient<floatT, NStacks> cg;
+
+    grnd_state<false> hostRandom;
+    grnd_state<true> deviceRandom;
+    hostRandom.make_rng_state(rhsSeed);
+    deviceRandom = hostRandom;
+
+    Spinor rhs(commBase);
+    Spinor ordinaryRhs(commBase);
+    Spinor deflatedRhs(commBase);
+    rhs.gauss(deviceRandom.state);
+    rhs.updateAll();
+    ordinaryRhs = rhs;
+    deflatedRhs = rhs;
+    ordinaryRhs.updateAll();
+    deflatedRhs.updateAll();
+
+    Spinor ordinarySolution(commBase);
+    Spinor deflatedSolution(commBase);
+    CGSolveResult ordinaryResult;
+    CGSolveResult deflatedResult;
+
+    const BenchmarkTiming ordinaryTiming = timeBenchmarkRegion(commBase, [&] {
+        // invert_new compares ||r||^2/||b||^2, so square the requested norm tolerance.
+        cg.invert_new(massiveDslash, ordinarySolution, ordinaryRhs, maximumIterations,
+                      solveTolerance * solveTolerance, &ordinaryResult);
+    });
+
+    double eigenpairMaximumResidual = 0.0;
+    const BenchmarkTiming eigenpairValidationTiming = timeBenchmarkRegion(commBase, [&] {
+        cg.template checkEigenValueEquation<true, Even, HaloDepthGauge, HaloDepthSpin>(
+                mass, massiveDslash, eigenpairs, &eigenpairMaximumResidual);
+    });
+
+    const BenchmarkTiming startVectorTiming = timeBenchmarkRegion(commBase, [&] {
+        cg.template startVector<true, Even, HaloDepthGauge, HaloDepthSpin>(
+                mass, deflatedSolution, deflatedRhs, eigenpairs);
+    });
+
+    const BenchmarkTiming startVectorTesterTiming = timeBenchmarkRegion(commBase, [&] {
+        cg.template startVectorTester<true, Even, HaloDepthGauge, HaloDepthSpin>(
+                mass, massiveDslash, deflatedSolution, deflatedRhs, eigenpairs);
+    });
+
+    const BenchmarkTiming deflatedCgTiming = timeBenchmarkRegion(commBase, [&] {
+        cg.invert_deflation(massiveDslash, deflatedSolution, deflatedRhs, maximumIterations,
+                            solveTolerance, &deflatedResult, true);
+    });
+
+    const double localDeflatedTotal =
+            eigenpairValidationTiming.localSeconds
+            + startVectorTiming.localSeconds
+            + startVectorTesterTiming.localSeconds
+            + deflatedCgTiming.localSeconds;
+    const double deflatedTotalSeconds = commBase.globalMaximum(localDeflatedTotal);
+
+    const double ordinaryFinalResidual =
+            calculateRelativeResidual(massiveDslash, ordinarySolution, ordinaryRhs);
+    const double deflatedFinalResidual =
+            calculateRelativeResidual(massiveDslash, deflatedSolution, deflatedRhs);
+    const double solutionRelativeDifference =
+            calculateRelativeDifference(ordinarySolution, deflatedSolution);
+
+    const double explicitResidualCertificationFactor = 1.01;
+    const double explicitResidualCertificationTolerance =
+            explicitResidualCertificationFactor * solveTolerance;
+    const bool ordinaryExplicitResidualStrictPass =
+            std::isfinite(ordinaryFinalResidual)
+            && ordinaryFinalResidual <= solveTolerance;
+    const bool deflatedExplicitResidualStrictPass =
+            std::isfinite(deflatedFinalResidual)
+            && deflatedFinalResidual <= solveTolerance;
+    const bool ordinaryExplicitResidualCertified =
+            std::isfinite(ordinaryFinalResidual)
+            && ordinaryFinalResidual <= explicitResidualCertificationTolerance;
+    const bool deflatedExplicitResidualCertified =
+            std::isfinite(deflatedFinalResidual)
+            && deflatedFinalResidual <= explicitResidualCertificationTolerance;
+
+    const int iterationReduction = ordinaryResult.iterations - deflatedResult.iterations;
+    const double iterationSpeedup =
+            safeRatio(static_cast<double>(ordinaryResult.iterations),
+                      static_cast<double>(deflatedResult.iterations));
+    const double cgTimeSpeedup =
+            safeRatio(ordinaryTiming.maximumSeconds, deflatedCgTiming.maximumSeconds);
+    const double totalTimeSpeedup =
+            safeRatio(ordinaryTiming.maximumSeconds, deflatedTotalSeconds);
+
+    if (commBase.IamRoot()) {
+        std::cout << std::setprecision(17);
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK eigenpair_count = " << eigenpairs.SpinorCount() << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK rhs_seed = " << rhsSeed << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK mass = " << mass << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK naik_epsilon = " << naikEpsilon << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK requested_tolerance = " << solveTolerance << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK configured_squared_residue = "
+                  << solveTolerance * solveTolerance << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK explicit_residual_certification_factor = "
+                  << explicitResidualCertificationFactor << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK explicit_residual_certification_tolerance = "
+                  << explicitResidualCertificationTolerance << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK maximum_iterations = " << maximumIterations << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK ordinary_iterations = " << ordinaryResult.iterations << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_iterations = " << deflatedResult.iterations << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK ordinary_recursive_residual = "
+                  << ordinaryResult.recursiveRelativeResidual << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_recursive_residual = "
+                  << deflatedResult.recursiveRelativeResidual << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK ordinary_solve_seconds = "
+                  << ordinaryTiming.maximumSeconds << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK eigenpair_validation_seconds = "
+                  << eigenpairValidationTiming.maximumSeconds << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK start_vector_seconds = "
+                  << startVectorTiming.maximumSeconds << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK start_vector_tester_seconds = "
+                  << startVectorTesterTiming.maximumSeconds << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_cg_seconds = "
+                  << deflatedCgTiming.maximumSeconds << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_total_seconds = "
+                  << deflatedTotalSeconds << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK eigenpair_maximum_residual = "
+                  << eigenpairMaximumResidual << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK ordinary_final_residual = "
+                  << ordinaryFinalResidual << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_final_residual = "
+                  << deflatedFinalResidual << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK solution_relative_difference = "
+                  << solutionRelativeDifference << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK ordinary_explicit_residual_strict_pass = "
+                  << ordinaryExplicitResidualStrictPass << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_explicit_residual_strict_pass = "
+                  << deflatedExplicitResidualStrictPass << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK ordinary_explicit_residual_certified = "
+                  << ordinaryExplicitResidualCertified << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK deflated_explicit_residual_certified = "
+                  << deflatedExplicitResidualCertified << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK iteration_reduction = "
+                  << iterationReduction << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK iteration_speedup = "
+                  << iterationSpeedup << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK cg_time_speedup = "
+                  << cgTimeSpeedup << "\n";
+        std::cout << "SIMQCD_DEFLATION_BENCHMARK total_time_speedup = "
+                  << totalTimeSpeedup << "\n";
+        std::cout.flush();
+    }
+
+    requireBenchmarkCondition(ordinaryResult.converged, "ordinary CG did not reach its recurrence tolerance");
+    requireBenchmarkCondition(deflatedResult.converged, "deflated CG did not reach its recurrence tolerance");
+    requireBenchmarkCondition(std::isfinite(eigenpairMaximumResidual)
+                                      && eigenpairMaximumResidual <= eigenpairResidualTolerance,
+                              "eigenpair equation residual exceeds its validation tolerance");
+    requireBenchmarkCondition(ordinaryExplicitResidualCertified,
+                              "ordinary explicit final residual exceeds the 1 percent certification margin");
+    requireBenchmarkCondition(deflatedExplicitResidualCertified,
+                              "deflated explicit final residual exceeds the 1 percent certification margin");
+    const double solutionAgreementTolerance = std::max(100.0 * solveTolerance, 1.0e-4);
+    requireBenchmarkCondition(std::isfinite(solutionRelativeDifference)
+                                      && solutionRelativeDifference <= solutionAgreementTolerance,
+                              "ordinary and deflated solutions do not agree");
+}
+
+} // namespace
 
 int main(int argc, char *argv[]){
 
@@ -18,6 +299,7 @@ int main(int argc, char *argv[]){
     const size_t NStacks = 1;
     const int numVec = 5;
     typedef float floatT; // Define the precision here
+    constexpr floatT naikEpsilon = 0.0;
 
     initIndexer(HaloDepthGauge, param, commBase);
 
@@ -28,10 +310,12 @@ int main(int argc, char *argv[]){
 
     Gaugefield<floatT,true,HaloDepthGauge,R18> gauge_smeared(commBase);
     Gaugefield<floatT,true,HaloDepthGauge,U3R14> gauge_Naik(commBase);
-    HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(gauge, gauge_smeared, gauge_Naik);
+    HisqSmearing<floatT, true, HaloDepthGauge, R18, R18, R18, U3R14> smearing(
+            gauge, gauge_smeared, gauge_Naik, naikEpsilon);
     smearing.SmearAll();
 
-    HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(gauge_smeared, gauge_Naik, 0.0, 0.0);
+    HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(
+            gauge_smeared, gauge_Naik, 0.0, naikEpsilon);
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     TRLanRestartParams lanczosParams;
@@ -101,5 +385,20 @@ int main(int argc, char *argv[]){
         } else {
             rootLogger.info("Eigenvalue with index ", idx, " matches between written and read version. Difference: ", lambdaDiff);
         }
+    }
+
+    if (deflationBenchmarkEnabled()) {
+        if (param.valence_masses.numberValues() == 0) {
+            throw std::runtime_error("Deflation benchmark requires at least one valence mass");
+        }
+        const double eigenpairResidualTolerance =
+                std::max(10.0 * lanczosParams.residualTol, 1.0e-5);
+        if (!std::isfinite(param.residue()) || param.residue() <= 0.0) {
+            throw std::runtime_error("Deflation benchmark requires a finite positive residue");
+        }
+        runDeflationBenchmark(
+                commBase, gauge_smeared, gauge_Naik, eigenpairsRead, numVec,
+                param.valence_masses[0], naikEpsilon, param.cgMax(), std::sqrt(param.residue()),
+                eigenpairResidualTolerance, 5678);
     }
 }
