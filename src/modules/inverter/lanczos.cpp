@@ -486,9 +486,7 @@ void TRLanSpinorSolver<
                                                 .operatorScale
                                         : 1.0,
                                 rayleigh,
-                                params.convergenceDiagnostics
-                                        ? &physicalVectorNorms[i]
-                                        : nullptr,
+                                &physicalVectorNorms[i],
                                 workspace);
                 physicalValues[i] =
                         params.exponential.enabled
@@ -513,9 +511,18 @@ void TRLanSpinorSolver<
                                 < physicalValues[right];
                     });
 
-            double largestScaledPhysicalResidual = 0.0;
             const int available =
                     std::min(requestedEigenpairs, keep);
+            double largestScaledPhysicalResidual = 0.0;
+            double densecodeCombinedResidual = 0.0;
+            double maximumAbsoluteResidual = 0.0;
+            double maximumRelativeResidual = 0.0;
+            std::vector<double> absoluteResiduals(
+                    available, 0.0);
+            std::vector<double> relativeResiduals(
+                    available, 0.0);
+            // physicalOrder starts with the requested low modes. Retained
+            // thick-restart guard vectors are deliberately excluded here.
             for (int i = 0; i < available; ++i) {
                 const int index = physicalOrder[i];
                 const double allowed =
@@ -532,70 +539,76 @@ void TRLanSpinorSolver<
                                         allowed,
                                         std::numeric_limits<
                                                 double>::min()));
+                const double vectorNorm =
+                        physicalVectorNorms[index];
+                const double absoluteResidual =
+                        physicalResiduals[index] * vectorNorm;
+                absoluteResiduals[i] = absoluteResidual;
+                densecodeCombinedResidual =
+                        std::hypot(
+                                densecodeCombinedResidual,
+                                absoluteResidual);
+                maximumAbsoluteResidual =
+                        std::max(
+                                maximumAbsoluteResidual,
+                                absoluteResidual);
+
+                const double operatorEigenvalue =
+                        params.exponential.enabled
+                                ? params.exponential.operatorShift
+                                        - physicalValues[index]
+                                                / params.exponential
+                                                          .operatorScale
+                                : physicalValues[index];
+                const double relativeScale =
+                        std::fabs(operatorEigenvalue)
+                        * vectorNorm;
+                const double relativeResidual =
+                        relativeScale
+                                        > std::numeric_limits<
+                                                double>::min()
+                                ? absoluteResidual / relativeScale
+                                : (absoluteResidual == 0.0
+                                        ? 0.0
+                                        : std::numeric_limits<
+                                                  double>::infinity());
+                relativeResiduals[i] = relativeResidual;
+                maximumRelativeResidual =
+                        std::max(
+                                maximumRelativeResidual,
+                                relativeResidual);
             }
-            converged =
+            const bool maximumScaledCriterionSatisfied =
                     available == requestedEigenpairs
                     && largestScaledPhysicalResidual <= 1.0;
+            const bool densecodeCriterionSatisfied =
+                    available == requestedEigenpairs
+                    && densecodeCombinedResidual
+                            <= params.residualTol;
+            switch (params.convergenceCriterion) {
+                case TRLanConvergenceCriterion::
+                        MaximumScaledPerMode:
+                    converged =
+                            maximumScaledCriterionSatisfied;
+                    break;
+                case TRLanConvergenceCriterion::
+                        DensecodeAggregatePhysical:
+                    converged =
+                            densecodeCriterionSatisfied;
+                    break;
+            }
             rootLogger.info(
                     "TRLan restart ", restart,
-                    ": physicalResidual/allowed=",
+                    ": activeCriterion=",
+                    trlanConvergenceCriterionName(
+                            params.convergenceCriterion),
+                    " maximumScaledPerMode=",
                     largestScaledPhysicalResidual,
+                    " densecodeAggregatePhysical=",
+                    densecodeCombinedResidual,
                     " converged=", converged);
 
             if (params.convergenceDiagnostics) {
-                double densecodeCombinedResidual = 0.0;
-                double maximumAbsoluteResidual = 0.0;
-                double maximumRelativeResidual = 0.0;
-                std::vector<double> absoluteResiduals(
-                        available, 0.0);
-                std::vector<double> relativeResiduals(
-                        available, 0.0);
-
-                for (int i = 0; i < available; ++i) {
-                    const int index = physicalOrder[i];
-                    const double vectorNorm =
-                            physicalVectorNorms[index];
-                    const double absoluteResidual =
-                            physicalResiduals[index]
-                            * vectorNorm;
-                    absoluteResiduals[i] = absoluteResidual;
-                    densecodeCombinedResidual =
-                            std::hypot(
-                                    densecodeCombinedResidual,
-                                    absoluteResidual);
-                    maximumAbsoluteResidual =
-                            std::max(
-                                    maximumAbsoluteResidual,
-                                    absoluteResidual);
-
-                    const double operatorEigenvalue =
-                            params.exponential.enabled
-                                    ? params.exponential
-                                              .operatorShift
-                                            - physicalValues[index]
-                                                    / params.exponential
-                                                              .operatorScale
-                                    : physicalValues[index];
-                    const double relativeScale =
-                            std::fabs(operatorEigenvalue)
-                            * vectorNorm;
-                    const double relativeResidual =
-                            relativeScale
-                                            > std::numeric_limits<
-                                                    double>::min()
-                                    ? absoluteResidual
-                                            / relativeScale
-                                    : (absoluteResidual == 0.0
-                                            ? 0.0
-                                            : std::numeric_limits<
-                                                      double>::infinity());
-                    relativeResiduals[i] = relativeResidual;
-                    maximumRelativeResidual =
-                            std::max(
-                                    maximumRelativeResidual,
-                                    relativeResidual);
-                }
-
                 const double rmsResidual =
                         available > 0
                                 ? densecodeCombinedResidual
@@ -604,29 +617,34 @@ void TRLanSpinorSolver<
                                                         available))
                                 : std::numeric_limits<
                                           double>::infinity();
-                const bool densecodeCriterionSatisfied =
-                        available == requestedEigenpairs
-                        && densecodeCombinedResidual
-                                <= residualTolerance;
 
                 rootLogger.info(
                         "=== TRLan convergence diagnostics ===");
                 rootLogger.info("restart = ", restart);
                 rootLogger.info(
-                        "current criterion = max_i "
+                        "active criterion = ",
+                        trlanConvergenceCriterionName(
+                                params.convergenceCriterion));
+                rootLogger.info(
+                        "MaximumScaledPerMode criterion = max_i "
                         "((||r_i||/||q_i||) / "
                         "(residualTol_eff*max(1,|lambda_i|))) "
                         "<= 1");
                 rootLogger.info(
-                        "current criterion value = ",
+                        "MaximumScaledPerMode criterion value = ",
                         largestScaledPhysicalResidual,
-                        " satisfied = ", converged);
+                        " satisfied = ",
+                        maximumScaledCriterionSatisfied);
                 rootLogger.info(
                         "Densecode combined residual = ",
                         densecodeCombinedResidual,
-                        " threshold = ", residualTolerance,
+                        " threshold = ", params.residualTol,
                         " satisfied = ",
                         densecodeCriterionSatisfied);
+                rootLogger.info(
+                        "DensecodeAggregatePhysical criterion = "
+                        "sqrt(sum_i ||A q_i - lambda_i q_i||^2) "
+                        "<= residualTol");
                 rootLogger.info(
                         "maximum individual absolute residual = ",
                         maximumAbsoluteResidual);
@@ -761,7 +779,10 @@ void TRLanSpinorSolver<
             basis.globalReductions(),
             " basisRotations=", basis.rotations(),
             " largestPhysicalResidual=",
-            largestOutputResidual);
+            largestOutputResidual,
+            " activeConvergenceCriterion=",
+            trlanConvergenceCriterionName(
+                    params.convergenceCriterion));
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout,
@@ -793,6 +814,16 @@ void TRLanSpinorSolver<
         || params.residualTol <= 0.0) {
         throw std::runtime_error(stdLogger.fatal(
                 "TRLan residualTol must be positive and finite"));
+    }
+    switch (params.convergenceCriterion) {
+        case TRLanConvergenceCriterion::
+                MaximumScaledPerMode:
+        case TRLanConvergenceCriterion::
+                DensecodeAggregatePhysical:
+            break;
+        default:
+            throw std::runtime_error(stdLogger.fatal(
+                    "TRLan convergence criterion is invalid"));
     }
     if (!std::isfinite(params.breakdownTol)
         || params.breakdownTol <= 0.0) {

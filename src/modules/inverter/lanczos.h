@@ -34,6 +34,22 @@ struct TRLanExponentialFilterParams {
   double operatorScale = 1.0;
 };
 
+enum class TRLanConvergenceCriterion {
+  MaximumScaledPerMode,
+  DensecodeAggregatePhysical
+};
+
+inline const char *trlanConvergenceCriterionName(
+    const TRLanConvergenceCriterion criterion) {
+  switch (criterion) {
+    case TRLanConvergenceCriterion::MaximumScaledPerMode:
+      return "maximum_scaled_per_mode";
+    case TRLanConvergenceCriterion::DensecodeAggregatePhysical:
+      return "densecode_aggregate_physical";
+  }
+  return "unknown";
+}
+
 struct TRLanRestartParams {
   // Densecode's m_lan and retained k_lan dimensions.
   int krylovDim = -1;
@@ -42,6 +58,8 @@ struct TRLanRestartParams {
 
   // Physical residual requirement for the unfiltered eigenproblem.
   double residualTol = 1e-10;
+  TRLanConvergenceCriterion convergenceCriterion =
+      TRLanConvergenceCriterion::MaximumScaledPerMode;
   double breakdownTol = 1e-12;
   unsigned int seed = 1234;
 

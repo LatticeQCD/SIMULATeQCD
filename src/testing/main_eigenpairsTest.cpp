@@ -1,5 +1,8 @@
 #include "../simulateqcd.h"
 #include "../modules/observables/taylorMeasurement.h"
+#include <cerrno>
+#include <charconv>
+#include <cctype>
 #include <cmath>
 #include <cstdlib>
 #include <fstream>
@@ -8,8 +11,198 @@
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 
 namespace {
+
+struct LanczosTestConfiguration {
+    int numEigenvectors = 5;
+    int krylovDimension = 256;
+    int thickRestartDimension = 80;
+    int maximumRestarts = 10;
+    double residualTolerance = 1.0e-6;
+    TRLanConvergenceCriterion convergenceCriterion =
+            TRLanConvergenceCriterion::MaximumScaledPerMode;
+};
+
+int readEnvironmentInteger(const char *name, const int defaultValue) {
+    const char *rawValue = std::getenv(name);
+    if (rawValue == nullptr) {
+        return defaultValue;
+    }
+
+    const std::string value(rawValue);
+    int parsed = 0;
+    const std::from_chars_result result =
+            std::from_chars(
+                    value.data(),
+                    value.data() + value.size(),
+                    parsed);
+    if (value.empty()
+        || result.ec != std::errc()
+        || result.ptr != value.data() + value.size()) {
+        throw std::runtime_error(
+                std::string(name)
+                + " must be a base-10 integer representable as int");
+    }
+    return parsed;
+}
+
+double readEnvironmentDouble(
+        const char *name,
+        const double defaultValue) {
+    const char *rawValue = std::getenv(name);
+    if (rawValue == nullptr) {
+        return defaultValue;
+    }
+
+    const std::string value(rawValue);
+    if (value.empty()) {
+        throw std::runtime_error(
+                std::string(name)
+                + " must be a finite floating-point value");
+    }
+    for (const unsigned char character : value) {
+        if (std::isspace(character)) {
+            throw std::runtime_error(
+                    std::string(name)
+                    + " must not contain whitespace");
+        }
+    }
+
+    errno = 0;
+    char *end = nullptr;
+    const double parsed = std::strtod(value.c_str(), &end);
+    if (errno == ERANGE
+        || end == value.c_str()
+        || end != value.c_str() + value.size()
+        || !std::isfinite(parsed)) {
+        throw std::runtime_error(
+                std::string(name)
+                + " must be a finite floating-point value");
+    }
+    return parsed;
+}
+
+TRLanConvergenceCriterion readEnvironmentConvergenceCriterion() {
+    const char *rawValue =
+            std::getenv(
+                    "SIMQCD_LANCZOS_CONVERGENCE_CRITERION");
+    if (rawValue == nullptr) {
+        return TRLanConvergenceCriterion::
+                MaximumScaledPerMode;
+    }
+
+    const std::string value(rawValue);
+    if (value == "maximum_scaled_per_mode") {
+        return TRLanConvergenceCriterion::
+                MaximumScaledPerMode;
+    }
+    if (value == "densecode_aggregate_physical") {
+        return TRLanConvergenceCriterion::
+                DensecodeAggregatePhysical;
+    }
+    throw std::runtime_error(
+            "SIMQCD_LANCZOS_CONVERGENCE_CRITERION must be "
+            "'maximum_scaled_per_mode' or "
+            "'densecode_aggregate_physical'");
+}
+
+LanczosTestConfiguration readLanczosTestConfiguration() {
+    LanczosTestConfiguration configuration;
+    configuration.numEigenvectors =
+            readEnvironmentInteger(
+                    "SIMQCD_NUM_EIGENVECTORS",
+                    configuration.numEigenvectors);
+    configuration.krylovDimension =
+            readEnvironmentInteger(
+                    "SIMQCD_KRYLOV_DIM",
+                    configuration.krylovDimension);
+    configuration.thickRestartDimension =
+            readEnvironmentInteger(
+                    "SIMQCD_THICK_RESTART_DIM",
+                    configuration.thickRestartDimension);
+    configuration.maximumRestarts =
+            readEnvironmentInteger(
+                    "SIMQCD_MAX_RESTARTS",
+                    configuration.maximumRestarts);
+    configuration.residualTolerance =
+            readEnvironmentDouble(
+                    "SIMQCD_LANCZOS_RESIDUAL_TOL",
+                    configuration.residualTolerance);
+    configuration.convergenceCriterion =
+            readEnvironmentConvergenceCriterion();
+    return configuration;
+}
+
+void validateLanczosTestConfiguration(
+        const LanczosTestConfiguration &configuration) {
+    if (configuration.numEigenvectors <= 0) {
+        throw std::runtime_error(
+                "SIMQCD_NUM_EIGENVECTORS must be positive");
+    }
+    if (configuration.krylovDimension <= 0) {
+        throw std::runtime_error(
+                "SIMQCD_KRYLOV_DIM must be positive");
+    }
+    if (configuration.thickRestartDimension <= 0) {
+        throw std::runtime_error(
+                "SIMQCD_THICK_RESTART_DIM must be positive");
+    }
+    if (configuration.numEigenvectors
+        > configuration.thickRestartDimension) {
+        throw std::runtime_error(
+                "SIMQCD_NUM_EIGENVECTORS must not exceed "
+                "SIMQCD_THICK_RESTART_DIM");
+    }
+    if (configuration.thickRestartDimension
+        >= configuration.krylovDimension) {
+        throw std::runtime_error(
+                "SIMQCD_THICK_RESTART_DIM must be smaller than "
+                "SIMQCD_KRYLOV_DIM");
+    }
+    if (configuration.krylovDimension
+                - configuration.thickRestartDimension
+        < 2) {
+        throw std::runtime_error(
+                "SIMQCD_KRYLOV_DIM must leave at least two "
+                "non-retained Lanczos slots");
+    }
+    if (configuration.maximumRestarts < 0) {
+        throw std::runtime_error(
+                "SIMQCD_MAX_RESTARTS must be non-negative");
+    }
+    if (!std::isfinite(configuration.residualTolerance)
+        || configuration.residualTolerance <= 0.0) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_RESIDUAL_TOL must be positive "
+                "and finite");
+    }
+}
+
+void printLanczosTestConfiguration(
+        CommunicationBase &commBase,
+        const LanczosTestConfiguration &configuration) {
+    if (!commBase.IamRoot()) {
+        return;
+    }
+    std::cout << std::setprecision(17);
+    std::cout << "SIMQCD_LANCZOS_CONFIG num_eigenvectors = "
+              << configuration.numEigenvectors << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG krylov_dimension = "
+              << configuration.krylovDimension << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG thick_restart_dimension = "
+              << configuration.thickRestartDimension << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG maximum_restarts = "
+              << configuration.maximumRestarts << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG residual_tolerance = "
+              << configuration.residualTolerance << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG convergence_criterion = "
+              << trlanConvergenceCriterionName(
+                         configuration.convergenceCriterion)
+              << "\n";
+    std::cout.flush();
+}
 
 struct BenchmarkTiming {
     double localSeconds;
@@ -297,9 +490,16 @@ int main(int argc, char *argv[]){
     const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
     const size_t HaloDepthSpin = 4;
     const size_t NStacks = 1;
-    const int numVec = 5;
     typedef float floatT; // Define the precision here
     constexpr floatT naikEpsilon = 0.0;
+
+    const LanczosTestConfiguration lanczosConfiguration =
+            readLanczosTestConfiguration();
+    validateLanczosTestConfiguration(lanczosConfiguration);
+    printLanczosTestConfiguration(
+            commBase, lanczosConfiguration);
+    const int numVec =
+            lanczosConfiguration.numEigenvectors;
 
     initIndexer(HaloDepthGauge, param, commBase);
 
@@ -319,10 +519,16 @@ int main(int argc, char *argv[]){
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     TRLanRestartParams lanczosParams;
-    lanczosParams.krylovDim = 256;
-    lanczosParams.thickRestartDim = 80;
-    lanczosParams.maxRestarts = 10;
-    lanczosParams.residualTol = 1e-6;
+    lanczosParams.krylovDim =
+            lanczosConfiguration.krylovDimension;
+    lanczosParams.thickRestartDim =
+            lanczosConfiguration.thickRestartDimension;
+    lanczosParams.maxRestarts =
+            lanczosConfiguration.maximumRestarts;
+    lanczosParams.residualTol =
+            lanczosConfiguration.residualTolerance;
+    lanczosParams.convergenceCriterion =
+            lanczosConfiguration.convergenceCriterion;
     lanczosParams.breakdownTol = 1e-12;
     lanczosParams.seed = 1234;
     lanczosParams.reorthogonalizationPasses = 2;
