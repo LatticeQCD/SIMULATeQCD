@@ -36,7 +36,8 @@ struct TRLanExponentialFilterParams {
 
 enum class TRLanConvergenceCriterion {
   MaximumScaledPerMode,
-  DensecodeAggregatePhysical
+  ProjectedPhysicalAggregate,
+  DirectPhysicalAggregate
 };
 
 inline const char *trlanConvergenceCriterionName(
@@ -44,8 +45,10 @@ inline const char *trlanConvergenceCriterionName(
   switch (criterion) {
     case TRLanConvergenceCriterion::MaximumScaledPerMode:
       return "maximum_scaled_per_mode";
-    case TRLanConvergenceCriterion::DensecodeAggregatePhysical:
-      return "densecode_aggregate_physical";
+    case TRLanConvergenceCriterion::ProjectedPhysicalAggregate:
+      return "projected_physical_aggregate";
+    case TRLanConvergenceCriterion::DirectPhysicalAggregate:
+      return "direct_physical_aggregate";
   }
   return "unknown";
 }
@@ -204,6 +207,11 @@ private:
   static double exponentialDerivativeMagnitude(
       double filteredEigenvalue,
       const TRLanExponentialFilterParams &filter);
+
+  static double projectedPhysicalResidualEstimate(
+      double filteredEigenvalue,
+      double filteredResidual,
+      const TRLanRestartParams &params);
 
   static bool inexpensiveConvergenceGate(
       const std::vector<double> &filteredEigenvalues,

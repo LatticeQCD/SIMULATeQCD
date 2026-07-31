@@ -98,14 +98,22 @@ TRLanConvergenceCriterion readEnvironmentConvergenceCriterion() {
         return TRLanConvergenceCriterion::
                 MaximumScaledPerMode;
     }
-    if (value == "densecode_aggregate_physical") {
+    if (value == "projected_physical_aggregate") {
         return TRLanConvergenceCriterion::
-                DensecodeAggregatePhysical;
+                ProjectedPhysicalAggregate;
+    }
+    if (value == "direct_physical_aggregate"
+        || value == "densecode_aggregate_physical") {
+        return TRLanConvergenceCriterion::
+                DirectPhysicalAggregate;
     }
     throw std::runtime_error(
             "SIMQCD_LANCZOS_CONVERGENCE_CRITERION must be "
-            "'maximum_scaled_per_mode' or "
-            "'densecode_aggregate_physical'");
+            "'maximum_scaled_per_mode', "
+            "'projected_physical_aggregate', or "
+            "'direct_physical_aggregate' "
+            "('densecode_aggregate_physical' is accepted as an alias "
+            "for 'direct_physical_aggregate')");
 }
 
 LanczosTestConfiguration readLanczosTestConfiguration() {

@@ -306,6 +306,20 @@ void TRLanSpinorSolver<
     std::vector<double> finalEigenvalues;
     std::vector<double> finalResiduals;
 
+    double finalRawFilteredAggregate =
+            std::numeric_limits<double>::infinity();
+    double finalProjectedPhysicalAggregate =
+            std::numeric_limits<double>::infinity();
+    double finalDirectPhysicalAggregate =
+            std::numeric_limits<double>::infinity();
+    double finalMaximumScaledPerMode =
+            std::numeric_limits<double>::infinity();
+    double finalMaximumIndividualPhysicalResidual =
+            std::numeric_limits<double>::infinity();
+    bool finalProjectedPhysicalAggregateSatisfied = false;
+    bool finalDirectPhysicalAggregateSatisfied = false;
+    bool finalMaximumScaledPerModeSatisfied = false;
+
     bool converged = false;
     bool stoppedByBreakdown = false;
     int firstColumn = 0;
@@ -444,8 +458,59 @@ void TRLanSpinorSolver<
                         requestedEigenpairs,
                         residualTolerance,
                         params);
+        bool projectedPolicyCandidateSatisfied = false;
+        if (params.convergenceCriterion
+                    == TRLanConvergenceCriterion::
+                            ProjectedPhysicalAggregate
+            && keep >= requestedEigenpairs
+            && !params.chebyshev.enabled) {
+            std::vector<double> projectedPhysicalValues(
+                    keep, 0.0);
+            for (int i = 0; i < keep; ++i) {
+                projectedPhysicalValues[i] =
+                        params.exponential.enabled
+                                ? correctedExponentialEigenvalue(
+                                        retainedFilteredValues[i],
+                                        params.exponential)
+                                : retainedFilteredValues[i];
+            }
+            std::vector<int> projectedPhysicalOrder(keep);
+            std::iota(
+                    projectedPhysicalOrder.begin(),
+                    projectedPhysicalOrder.end(),
+                    0);
+            std::stable_sort(
+                    projectedPhysicalOrder.begin(),
+                    projectedPhysicalOrder.end(),
+                    [&](const int left, const int right) {
+                        if (projectedPhysicalValues[left]
+                            == projectedPhysicalValues[right]) {
+                            return left < right;
+                        }
+                        return projectedPhysicalValues[left]
+                                < projectedPhysicalValues[right];
+                    });
+
+            double candidateAggregate = 0.0;
+            for (int i = 0;
+                 i < requestedEigenpairs;
+                 ++i) {
+                const int index = projectedPhysicalOrder[i];
+                candidateAggregate =
+                        std::hypot(
+                                candidateAggregate,
+                                projectedPhysicalResidualEstimate(
+                                        retainedFilteredValues[index],
+                                        retainedFilteredResiduals[index],
+                                        params));
+            }
+            projectedPolicyCandidateSatisfied =
+                    std::isfinite(candidateAggregate)
+                    && candidateAggregate <= params.residualTol;
+        }
         const bool performPhysicalCheck =
                 estimatedConverged
+                || projectedPolicyCandidateSatisfied
                 || periodicPhysicalCheck
                 || finalRestart
                 || stoppedByBreakdown;
@@ -514,9 +579,16 @@ void TRLanSpinorSolver<
             const int available =
                     std::min(requestedEigenpairs, keep);
             double largestScaledPhysicalResidual = 0.0;
-            double densecodeCombinedResidual = 0.0;
+            double rawFilteredAggregate = 0.0;
+            double projectedPhysicalAggregate = 0.0;
+            double directPhysicalAggregate = 0.0;
             double maximumAbsoluteResidual = 0.0;
             double maximumRelativeResidual = 0.0;
+            std::vector<double> requestedFilteredResiduals(
+                    available, 0.0);
+            std::vector<double> projectedPhysicalResiduals(
+                    available,
+                    std::numeric_limits<double>::infinity());
             std::vector<double> absoluteResiduals(
                     available, 0.0);
             std::vector<double> relativeResiduals(
@@ -525,6 +597,26 @@ void TRLanSpinorSolver<
             // thick-restart guard vectors are deliberately excluded here.
             for (int i = 0; i < available; ++i) {
                 const int index = physicalOrder[i];
+                const double filteredResidual =
+                        retainedFilteredResiduals[index];
+                requestedFilteredResiduals[i] =
+                        filteredResidual;
+                rawFilteredAggregate =
+                        std::hypot(
+                                rawFilteredAggregate,
+                                filteredResidual);
+                const double projectedPhysicalResidual =
+                        projectedPhysicalResidualEstimate(
+                                retainedFilteredValues[index],
+                                filteredResidual,
+                                params);
+                projectedPhysicalResiduals[i] =
+                        projectedPhysicalResidual;
+                projectedPhysicalAggregate =
+                        std::hypot(
+                                projectedPhysicalAggregate,
+                                projectedPhysicalResidual);
+
                 const double allowed =
                         residualTolerance
                         * std::max(
@@ -544,9 +636,9 @@ void TRLanSpinorSolver<
                 const double absoluteResidual =
                         physicalResiduals[index] * vectorNorm;
                 absoluteResiduals[i] = absoluteResidual;
-                densecodeCombinedResidual =
+                directPhysicalAggregate =
                         std::hypot(
-                                densecodeCombinedResidual,
+                                directPhysicalAggregate,
                                 absoluteResidual);
                 maximumAbsoluteResidual =
                         std::max(
@@ -581,9 +673,14 @@ void TRLanSpinorSolver<
             const bool maximumScaledCriterionSatisfied =
                     available == requestedEigenpairs
                     && largestScaledPhysicalResidual <= 1.0;
-            const bool densecodeCriterionSatisfied =
+            const bool projectedPhysicalAggregateSatisfied =
                     available == requestedEigenpairs
-                    && densecodeCombinedResidual
+                    && std::isfinite(projectedPhysicalAggregate)
+                    && projectedPhysicalAggregate
+                            <= params.residualTol;
+            const bool directPhysicalAggregateSatisfied =
+                    available == requestedEigenpairs
+                    && directPhysicalAggregate
                             <= params.residualTol;
             switch (params.convergenceCriterion) {
                 case TRLanConvergenceCriterion::
@@ -592,11 +689,34 @@ void TRLanSpinorSolver<
                             maximumScaledCriterionSatisfied;
                     break;
                 case TRLanConvergenceCriterion::
-                        DensecodeAggregatePhysical:
+                        ProjectedPhysicalAggregate:
                     converged =
-                            densecodeCriterionSatisfied;
+                            projectedPhysicalAggregateSatisfied;
+                    break;
+                case TRLanConvergenceCriterion::
+                        DirectPhysicalAggregate:
+                    converged =
+                            directPhysicalAggregateSatisfied;
                     break;
             }
+
+            finalRawFilteredAggregate =
+                    rawFilteredAggregate;
+            finalProjectedPhysicalAggregate =
+                    projectedPhysicalAggregate;
+            finalDirectPhysicalAggregate =
+                    directPhysicalAggregate;
+            finalMaximumScaledPerMode =
+                    largestScaledPhysicalResidual;
+            finalMaximumIndividualPhysicalResidual =
+                    maximumAbsoluteResidual;
+            finalProjectedPhysicalAggregateSatisfied =
+                    projectedPhysicalAggregateSatisfied;
+            finalDirectPhysicalAggregateSatisfied =
+                    directPhysicalAggregateSatisfied;
+            finalMaximumScaledPerModeSatisfied =
+                    maximumScaledCriterionSatisfied;
+
             rootLogger.info(
                     "TRLan restart ", restart,
                     ": activeCriterion=",
@@ -604,14 +724,34 @@ void TRLanSpinorSolver<
                             params.convergenceCriterion),
                     " maximumScaledPerMode=",
                     largestScaledPhysicalResidual,
-                    " densecodeAggregatePhysical=",
-                    densecodeCombinedResidual,
-                    " converged=", converged);
+                    " directPhysicalAggregate=",
+                    directPhysicalAggregate,
+                    " converged=",
+                    converged,
+                    " active_policy=",
+                    trlanConvergenceCriterionName(
+                            params.convergenceCriterion),
+                    " active_policy_converged=",
+                    converged,
+                    " projected_physical_aggregate=",
+                    projectedPhysicalAggregate,
+                    " projected_physical_aggregate_satisfied=",
+                    projectedPhysicalAggregateSatisfied,
+                    " direct_physical_aggregate=",
+                    directPhysicalAggregate,
+                    " direct_physical_aggregate_satisfied=",
+                    directPhysicalAggregateSatisfied,
+                    " maximum_scaled_per_mode=",
+                    largestScaledPhysicalResidual,
+                    " maximum_scaled_per_mode_satisfied=",
+                    maximumScaledCriterionSatisfied,
+                    " maximum_individual_physical_residual=",
+                    maximumAbsoluteResidual);
 
             if (params.convergenceDiagnostics) {
                 const double rmsResidual =
                         available > 0
-                                ? densecodeCombinedResidual
+                                ? directPhysicalAggregate
                                         / std::sqrt(
                                                 static_cast<double>(
                                                         available))
@@ -636,15 +776,28 @@ void TRLanSpinorSolver<
                         " satisfied = ",
                         maximumScaledCriterionSatisfied);
                 rootLogger.info(
-                        "Densecode combined residual = ",
-                        densecodeCombinedResidual,
+                        "raw filtered aggregate = ",
+                        rawFilteredAggregate);
+                rootLogger.info(
+                        "ProjectedPhysicalAggregate criterion = "
+                        "sqrt(sum_i projectedPhysicalResidual_i^2) "
+                        "<= residualTol");
+                rootLogger.info(
+                        "projected physical aggregate = ",
+                        projectedPhysicalAggregate,
                         " threshold = ", params.residualTol,
                         " satisfied = ",
-                        densecodeCriterionSatisfied);
+                        projectedPhysicalAggregateSatisfied);
                 rootLogger.info(
-                        "DensecodeAggregatePhysical criterion = "
+                        "DirectPhysicalAggregate criterion = "
                         "sqrt(sum_i ||A q_i - lambda_i q_i||^2) "
                         "<= residualTol");
+                rootLogger.info(
+                        "direct physical aggregate = ",
+                        directPhysicalAggregate,
+                        " threshold = ", params.residualTol,
+                        " satisfied = ",
+                        directPhysicalAggregateSatisfied);
                 rootLogger.info(
                         "maximum individual absolute residual = ",
                         maximumAbsoluteResidual);
@@ -664,6 +817,10 @@ void TRLanSpinorSolver<
                             "mode ", i,
                             ": physicalEigenvalue=",
                             physicalValues[index],
+                            " rawFilteredResidual=",
+                            requestedFilteredResiduals[i],
+                            " projectedPhysicalResidual=",
+                            projectedPhysicalResiduals[i],
                             " absoluteResidual=",
                             absoluteResiduals[i],
                             " relativeResidual=",
@@ -782,7 +939,28 @@ void TRLanSpinorSolver<
             largestOutputResidual,
             " activeConvergenceCriterion=",
             trlanConvergenceCriterionName(
-                    params.convergenceCriterion));
+                    params.convergenceCriterion),
+            " active_policy=",
+            trlanConvergenceCriterionName(
+                    params.convergenceCriterion),
+            " active_policy_converged=",
+            converged,
+            " raw_filtered_aggregate=",
+            finalRawFilteredAggregate,
+            " projected_physical_aggregate=",
+            finalProjectedPhysicalAggregate,
+            " projected_physical_aggregate_satisfied=",
+            finalProjectedPhysicalAggregateSatisfied,
+            " direct_physical_aggregate=",
+            finalDirectPhysicalAggregate,
+            " direct_physical_aggregate_satisfied=",
+            finalDirectPhysicalAggregateSatisfied,
+            " maximum_scaled_per_mode=",
+            finalMaximumScaledPerMode,
+            " maximum_scaled_per_mode_satisfied=",
+            finalMaximumScaledPerModeSatisfied,
+            " maximum_individual_physical_residual=",
+            finalMaximumIndividualPhysicalResidual);
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout,
@@ -819,7 +997,9 @@ void TRLanSpinorSolver<
         case TRLanConvergenceCriterion::
                 MaximumScaledPerMode:
         case TRLanConvergenceCriterion::
-                DensecodeAggregatePhysical:
+                ProjectedPhysicalAggregate:
+        case TRLanConvergenceCriterion::
+                DirectPhysicalAggregate:
             break;
         default:
             throw std::runtime_error(stdLogger.fatal(
@@ -1350,10 +1530,53 @@ double TRLanSpinorSolver<
     const double exponent =
             static_cast<double>(filter.order - 1)
             / static_cast<double>(filter.order);
-    return filter.alpha * filter.beta
+    return std::fabs(filter.operatorScale)
+            * filter.alpha * filter.beta
             * std::pow(
                     std::fabs(filteredEigenvalue),
                     exponent);
+}
+
+template<class floatT, bool onDevice, Layout LatticeLayout,
+         size_t HaloDepthSpin, size_t NStacks>
+double TRLanSpinorSolver<
+        floatT, onDevice, LatticeLayout,
+        HaloDepthSpin, NStacks>::projectedPhysicalResidualEstimate(
+        const double filteredEigenvalue,
+        const double filteredResidual,
+        const TRLanRestartParams &params) {
+    const double infinity =
+            std::numeric_limits<double>::infinity();
+    if (!std::isfinite(filteredResidual)
+        || filteredResidual < 0.0) {
+        return infinity;
+    }
+    if (params.chebyshev.enabled) {
+        // The existing convergence gate has no inverse Chebyshev Jacobian.
+        return infinity;
+    }
+    if (!params.exponential.enabled) {
+        return filteredResidual;
+    }
+    if (!std::isfinite(filteredEigenvalue)
+        || (params.exponential.order % 2 == 0
+            && filteredEigenvalue < 0.0)) {
+        return infinity;
+    }
+
+    const double derivative =
+            exponentialDerivativeMagnitude(
+                    filteredEigenvalue,
+                    params.exponential);
+    if (!std::isfinite(derivative)
+        || derivative
+                <= std::numeric_limits<double>::min()) {
+        return infinity;
+    }
+    // The filtered Ritz residual is mapped back through the local Jacobian
+    // of the same exponential spectral transformation used by the gate.
+    const double estimate = filteredResidual / derivative;
+    return std::isfinite(estimate) ? estimate : infinity;
 }
 
 template<class floatT, bool onDevice, Layout LatticeLayout,
