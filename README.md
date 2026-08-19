@@ -15,10 +15,7 @@ competitive performance.
 
 ## How to Build 
 
-There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
-we recommend that you use the [container build](#compile-using-container). The container will automatically grab all software you need.
-If you are running on an HPC system or want to use AMD, we recommmend you [compile manually](#compile-manually) and ensure that all needed
-software already exists on the system you're using.
+We highly recommend you [compile manually](#compile-manually). 
 This README attempts to give a succinct overview of how to build and use SIMULATeQCD. If you run into problems building, first
 please have a look at the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the **[documentation](https://latticeqcd.github.io/SIMULATeQCD)**.
 
@@ -29,19 +26,6 @@ This is needed for downloading configurations used in the unit tests. Then run
 ```shell
 git clone https://github.com/LatticeQCD/SIMULATeQCD.git -b v1.2.0
 ```
-
-### Compile Using Container (CURRENTLY BROKEN)
-
-To build using the container, you need to have `podman` properly configured on your system.  
-You can find more detailed instructions about the container in the [Getting Started](https://latticeqcd.github.io/SIMULATeQCD/01_gettingStarted/gettingStarted.html) section of the documentation.
-To run the container you need an NVIDIA GPU.
-
-To build the code, you then simply
-
-1. Update [config.yml](./podman-build/config.yml) with any settings you would like to use for your build. This includes your target output directory.
-   1. You can run `<where_you_downloaded>/simulate_qcd.sh list` to get a list of possible build targets.
-   2. If you want to change where the code outputs to, you need to update OUTPUT_DIRECTORY in [config.yml](./podman-build/config.yml). It will create a folder called build in the specified folder.
-2. Run `chmod +x ./simulate_qcd.sh && ./simulate_qcd.sh build`
 
 ### Compile Manually
 
@@ -124,8 +108,8 @@ Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
 - you have found a bug.
 - you have a feature request.
 
-If none of the above cases apply, you may also send an email to lukas.mazur(at)uni-paderborn(dot)de
-or clarke(dot)davida(at)gmail.com.
+If none of the above cases apply, you may also send an email to 
+clarke(dot)davida(at)gmail.com.
 
 
 ## Contributors
@@ -156,6 +140,10 @@ If you are using this code in your research please cite:
 - *L. Mazur, Topological aspects in lattice QCD, Ph.D. thesis, Bielefeld University (2021), [https://doi.org/10.4119/unibi/2956493](https://doi.org/10.4119/unibi/2956493)*
 - *L. Mazur, D.Bollweg, D. A. Clarke, L. Altenkort et al., SIMULATeQCD: A simple multi-GPU lattice code for QCD calculations, [https://arxiv.org/abs/2306.01098](https://doi.org/10.1016/j.cpc.2024.109164)*
 
+## Status as of 18/08/2026
+
+Testing on the Bielefeld cluster, `make -j4 everything` compiles in about 110 minutes.
+There appears to be no compilation errors. All tests of the `runTest*` suite pass.
 
 ## Acknowledgments
 - This work was supported by the U.S. Department of Energy, Office of Science within the framework of Scientific Discovery through Advance Computing (SciDAC).

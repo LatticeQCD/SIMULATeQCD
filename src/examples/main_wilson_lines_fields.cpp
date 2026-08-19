@@ -259,17 +259,11 @@ struct CalcWilson{
     {
     }
 
-    /// This is the operator that is called inside the Kernel. We set the type to COMPLEX(floatT) because the
-    /// Polyakov loop is complex valued.
+    /// This is the operator that is called inside the Kernel. 
     __device__ __host__ auto operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
 
-//        gSite site = GInd::getSite(siteMu.isite);
-
-
-        /// Define an SU(3) matrix and initialize result variable.
         SU3<floatT> temp;
-        COMPLEX(floatT) result;
 
         /// Extension in timelike direction. In general unsigned declarations reduce compiler warnings.
         const size_t Ntau=GInd::getLatData().lt;
@@ -282,7 +276,6 @@ struct CalcWilson{
         size_t it=coords.t;
 
         /// Start off at this site, pointing in N_tau direction.
-   //     temp=SU3Accessor.getLink(GInd::getSiteMu(site, 3));
         temp=SU3Accessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, it), 3));
 
         /// Loop over N_tau direction.
@@ -294,14 +287,7 @@ struct CalcWilson{
           temp*=SU3Accessor.getLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, itau), 3));
         }
 
-        /// tr_c is the complex trace.
-//        result = tr_c(temp);
-
-//        SU3Accessor.setLink(GInd::getSiteMu(GInd::getSite(ix, iy, iz, it), 0));
-
-
         return temp;
-
     }
 
     auto getAccessor() const

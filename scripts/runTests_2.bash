@@ -21,7 +21,7 @@ testRoutinesNoParam[_dotProductTest]="1"
 testRoutinesNoParam[_dslashImagmuTest]="1"
 testRoutinesNoParam[_gfixTestSingle]="1"
 testRoutinesNoParam[_halfPrecMathTest]="1"
-testRoutinesNoParam[_hBOR_single_test]="1"
+testRoutinesNoParam[_hbor_single_test]="1"
 testRoutinesNoParam[_hisqForce]="1"
 testRoutinesNoParam[_hisqSmearingTest]="1"
 testRoutinesNoParam[_hisqSmearingImagmuTest]="1"
@@ -83,11 +83,11 @@ if [ ! -s ${rhmcErr}_4pf ]; then rm ${rhmcErr}_4pf; fi
 ((jtest++))
 echo
 echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
-runTestRoutineNoParam "_RndMultipleTest" "2"
+runTestRoutineNoParam "_rndMultipleTest" "2"
 ((jtest++))
 echo
 echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
-runByLayout "_HBOR_multiple_test" "4ks"
+runByLayout "_hbor_multiple_test" "4ks"
 ((jtest++))
 echo
 echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
