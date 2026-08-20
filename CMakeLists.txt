@@ -142,7 +142,7 @@ set(USE_MARKER OFF CACHE BOOL "Set to ON to build with GPU Marker API (default =
 if (USE_MARKER)
     add_definitions(-DUSE_MARKER)
     if (USE_CUDA)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnvtx3/nvToolsExt")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -lnvToolsExt")
     elseif(USE_HIP)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${ROCM_PATH}/roctracer/lib -lroctracer64 -lroctx64")
     endif()
