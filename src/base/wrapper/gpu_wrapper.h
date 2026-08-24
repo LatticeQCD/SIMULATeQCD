@@ -28,6 +28,8 @@
 #define gpuStream_t                      cudaStream_t
 
 #define gpuComputeModeDefault            cudaComputeModeDefault
+#define gpuDeviceGetAttribute            cudaDeviceGetAttribute
+#define gpuDevAttrComputeMode            cudaDevAttrComputeMode
 #define gpuDeviceCanAccessPeer           cudaDeviceCanAccessPeer
 #define gpuDeviceSynchronize             cudaDeviceSynchronize
 #define gpuEventCreate                   cudaEventCreate
@@ -105,6 +107,8 @@
 #define gpuStream_t                      hipStream_t
 
 #define gpuComputeModeDefault            hipComputeModeDefault
+#define gpuDeviceGetAttribute            hipDeviceGetAttribute
+#define gpuDevAttrComputeMode            hipDeviceAttributeComputeMode
 #define gpuDeviceCanAccessPeer           hipDeviceCanAccessPeer
 #define gpuDeviceSynchronize             hipDeviceSynchronize
 #define gpuEventCreate                   hipEventCreate
