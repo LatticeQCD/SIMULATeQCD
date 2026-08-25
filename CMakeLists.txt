@@ -177,7 +177,11 @@ elseif (USE_HIP_AMD)
 
     add_definitions(-D__HIP_PLATFORM_AMD__)
     set(HIP_HIPCC_FLAGS ${HIP_HIPCC_FLAGS} "-O3 -std=c++17 -D__HIP_PLATFORM_AMD__ --offload-arch=${ARCHITECTURE} -fgpu-rdc")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -O3 -fgpu-rdc --hip-link")
+    if (DEFINED ENV{CRAYPE_VERSION})
+        # HPE Cray's patched clang understands --craype-prepend-opt; vanilla ROCm clang does not.
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --craype-prepend-opt=-Wl,-rpath=${ROCM_PATH}/deps")
+    endif()
 
 elseif (USE_HIP_NVIDIA)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -Wextra -Wno-comment -fPIC")
