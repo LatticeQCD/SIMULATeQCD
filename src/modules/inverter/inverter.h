@@ -10,6 +10,13 @@
 #include "../../base/math/simpleArray.h"
 
 
+struct CGSolveResult {
+    int iterations = 0;
+    double recursiveRelativeResidual = 0.0;
+    bool converged = false;
+};
+
+
 /// Class for multiple right hand side inversion. NStacks is the number of right hand sides. The objects to be inverted
 /// must have the member function vec.dotProductStacked(vec&) and must to be able to use the operator syntax.
 template<typename floatT, size_t NStacks = 1>
@@ -20,10 +27,13 @@ public:
     void invert(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, Spinor_t& spinorIn, int max_iter, double precision);
 
     template <typename Spinor_t>
-    void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
+    void invert_new(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
+                    const int max_iter, const double precision, CGSolveResult *result = nullptr);
 
     template <typename Spinor_t>
-    void invert_deflation(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn, const int max_iter, const double precision);
+    void invert_deflation(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, Spinor_t& spinorIn,
+                          const int max_iter, const double precision, CGSolveResult *result = nullptr,
+                          const bool useRhsNormForStopping = false);
 
     template <typename Spinor_t>
     void invert_res_replace(LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
@@ -42,7 +52,8 @@ public:
     template <bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
     void checkEigenValueEquation(double mass, 
         LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
-        const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>& eigenpair);
+        const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks>& eigenpair,
+        double *maximumResidual = nullptr);
 
     template <bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
     void startVectorTester(double mass, 
@@ -73,4 +84,3 @@ public:
     void invert(LinearOperator<SpinorIn_t>& dslash, SpinorOut_t& spinorOut, const SpinorIn_t& spinorIn,
                  SimpleArray<floatT, NStacks> sigma, const int max_iter, const double precision);
 };
-

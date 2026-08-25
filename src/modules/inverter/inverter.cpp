@@ -3,6 +3,9 @@
  *
  */
 #include "inverter.h"
+#include <algorithm>
+#include <cmath>
+#include <limits>
 #define BLOCKSIZE 64
 
 template<class floatT, size_t NStacks>
@@ -241,7 +244,7 @@ template<class floatT, size_t NStacks>
 template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert_new(
         LinearOperator<Spinor_t>& dslash, Spinor_t& spinorOut, const Spinor_t& spinorIn,
-        const int max_iter, const double precision)
+        const int max_iter, const double precision, CGSolveResult *result)
 {
     Spinor_t spinorSearch(spinorIn.getComm());
     Spinor_t spinorMdMx(spinorIn.getComm());
@@ -302,6 +305,13 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 
     } while ( (max(beta/betaStart) > precision) && (cg<max_iter) );
 
+    const double recursiveRelativeResidualSquared = max(beta/betaStart);
+    if (result != nullptr) {
+        result->iterations = cg;
+        result->recursiveRelativeResidual = std::sqrt(recursiveRelativeResidualSquared);
+        result->converged = recursiveRelativeResidualSquared <= precision;
+    }
+
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
     } else {
@@ -315,8 +325,9 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
 template<class floatT, size_t NStacks>
 template <typename Spinor_t>
 void ConjugateGradient<floatT, NStacks>::invert_deflation( 
-        LinearOperator<Spinor_t>& dslash, Spinor_t& spinorStart, const Spinor_t& spinorRHS,
-        const int max_iter, const double precision)
+        LinearOperator<Spinor_t>& dslash, Spinor_t& spinorStart, Spinor_t& spinorRHS,
+        const int max_iter, const double precision, CGSolveResult *result,
+        const bool useRhsNormForStopping)
 {
     Spinor_t spinorResidual(spinorRHS.getComm());
     Spinor_t spinorSearch(spinorRHS.getComm());
@@ -327,6 +338,7 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     SimpleArray<double, NStacks> stepSize(1.0);
     SimpleArray<double, NStacks> betaScale(0.0);
     SimpleArray<double, NStacks> betaStart(0.0);
+    SimpleArray<double, NStacks> betaStoppingScale(0.0);
     SimpleArray<double, NStacks> betaAlt(0.0);
     SimpleArray<double, NStacks> beta(0.0);
     SimpleArray<double, NStacks> alpha(0.0);
@@ -343,6 +355,11 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
     
     dot = spinorResidual.dotProductStacked(spinorResidual);
     betaStart = real<double>(dot);
+    betaStoppingScale = betaStart;
+    if (useRhsNormForStopping) {
+        dot = spinorRHS.dotProductStacked(spinorRHS);
+        betaStoppingScale = real<double>(dot);
+    }
 
     betaAlt = betaStart;
 
@@ -372,11 +389,18 @@ void ConjugateGradient<floatT, NStacks>::invert_deflation(
 
         spinorSearch.template xpayThisBd<SimpleArray<double, NStacks>,BLOCKSIZE>(betaScale, spinorResidual);
 
-    } while (( sqrt(max(beta/betaStart)) > precision) && (cg<max_iter) );
+    } while (( sqrt(max(beta/betaStoppingScale)) > precision) && (cg<max_iter) );
+
+    const double recursiveRelativeResidual = std::sqrt(max(beta/betaStoppingScale));
+    if (result != nullptr) {
+        result->iterations = cg;
+        result->recursiveRelativeResidual = recursiveRelativeResidual;
+        result->converged = recursiveRelativeResidual <= precision;
+    }
 
     if(cg >= max_iter -1) {
         rootLogger.warn("CG: Warning max iteration reached " ,  cg);
-        rootLogger.info("residual=" ,  sqrt(max(beta/betaStart)));
+        rootLogger.info("residual=" ,  recursiveRelativeResidual);
     } else {
         rootLogger.info("CG: # iterations " ,  cg);
     }
@@ -643,8 +667,10 @@ void ConjugateGradient<floatT, NStacks>::invert_mixed(LinearOperator<Spinor_t>& 
 template<class floatT, size_t NStacks>
 template<bool onDevice, Layout LatticeLayout, size_t HaloDepthGauge, size_t HaloDepthSpin>
 void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, LinearOperator<Spinorfield<floatT, onDevice, LatticeLayout, HaloDepthSpin, NStacks>>& dslash, 
-    const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair) {
+    const Eigenpairs<floatT, onDevice, LatticeLayout, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair,
+    double *maximumResidual) {
     CommunicationBase &commBase = eigenpair.getComm();
+    double maximumResidualSquared = 0.0;
 
     if constexpr (LatticeLayout == Layout::All) {
         // TODO
@@ -679,8 +705,19 @@ void ConjugateGradient<floatT, NStacks>::checkEigenValueEquation(double mass, Li
             for (size_t j = 0; j < NStacks; j++) {
                 rootLogger.info("checkEigenValueEquation: Check stack ",  j);
                 rootLogger.info("checkEigenValueEquation: norm((M†M)v - (m^2+λ)v)**2 =",  normEVeq[j]);
+                if (maximumResidual != nullptr) {
+                    if (std::isfinite(maximumResidualSquared) && std::isfinite(normEVeq[j])) {
+                        maximumResidualSquared = std::max(maximumResidualSquared, normEVeq[j]);
+                    } else {
+                        maximumResidualSquared = std::numeric_limits<double>::quiet_NaN();
+                    }
+                }
             }
         }
+    }
+
+    if (maximumResidual != nullptr) {
+        *maximumResidual = std::sqrt(maximumResidualSquared);
     }
 }
 
@@ -791,11 +828,11 @@ template class ConjugateGradient<floatT, STACKS>;
 template void ConjugateGradient<floatT, STACKS>::invert(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
             Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut, Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, int, double);\
 template void ConjugateGradient<floatT, STACKS>::invert_new(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
+                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, CGSolveResult *); \
 template void ConjugateGradient<floatT, STACKS>::invert_res_replace(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
                                                                     Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, double); \
 template void ConjugateGradient<floatT, STACKS>::invert_deflation(LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double); \
+                                                            Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorOut,Spinorfield<floatT, true, LO, HALOSPIN, STACKS>& spinorIn, const int, const double, CGSolveResult *, const bool); \
 
 #define CLASSCG_STARTVECTOR_INIT(floatT,LO,HALOGAUGE,HALOSPIN,STACKS) \
 template void ConjugateGradient<floatT, STACKS>::startVector<true, LO, HALOGAUGE, HALOSPIN>(double, \
@@ -803,7 +840,7 @@ template void ConjugateGradient<floatT, STACKS>::startVector<true, LO, HALOGAUGE
             const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
 template void ConjugateGradient<floatT, STACKS>::checkEigenValueEquation<true, LO, HALOGAUGE, HALOSPIN>(double, \
             LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
-            const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&); \
+            const Eigenpairs<floatT, true, LO, HALOGAUGE, HALOSPIN, STACKS>&, double *); \
 template void ConjugateGradient<floatT, STACKS>::startVectorTester<true, LO, HALOGAUGE, HALOSPIN>(double, \
             LinearOperator<Spinorfield<floatT, true, LO, HALOSPIN, STACKS> >& dslash, \
             const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, const Spinorfield<floatT, true, LO, HALOSPIN, STACKS>&, \
@@ -836,4 +873,3 @@ INIT_PLHSN_HALF(CLASSCG_HALF_INV_INIT)
 INIT_PLHSN(CLASSMCG_INIT)
 INIT_PN(CLASSAMCG_INIT)
 INIT_PLHSN(CLASSAMCG_INV_INIT)
-
