@@ -62,17 +62,17 @@ class HDF5FileWriter {
         hsize_t initDimsR2Counts[1]; // = {r2max + 1}
         hsize_t maxDimsR2Counts[1]; // = {r2max + 1}
         // 4x4Sym (10 components),  flow-time dependent,                e.g. T_munu(tau_F)
-        hsize_t initDims4x4Sym[2] = {0, 10};
-        hsize_t maxDims4x4Sym[2] = {H5S_UNLIMITED, 10};
-        hsize_t chunkSize4x4Sym[2] = {1, 10};
+        hsize_t initDims4x4Sym[2] = {10, 0};
+        hsize_t maxDims4x4Sym[2] = {10, H5S_UNLIMITED};
+        hsize_t chunkSize4x4Sym[2] = {10, 1};
         // 10 tensor functions,     flow-time and r^2 dependent,        e.g. G_LL(tau_F, r^2)
-        hsize_t initDimsEMTCorrAveragedTau[3]; // = {10, 0, r2max + 1}
-        hsize_t maxDimsEMTCorrAveragedTau[3]; // = {10, H5S_UNLIMITED, r2max + 1}
-        hsize_t chunkSizeEMTCorrAveragedTau[3]; // = {1, 1, r2max + 1}
+        hsize_t initDimsEMTCorrAveragedTau[3];                          // = {10, 0, r2max + 1}
+        hsize_t maxDimsEMTCorrAveragedTau[3];                           // = {10, H5S_UNLIMITED, r2max + 1}
+        hsize_t chunkSizeEMTCorrAveragedTau[3];                         // = {1, 1, r2max + 1}
         // 14 tensor functions,     flow-time, tau and r^2 dependent,   e.g. G_MT(tau_F, tau, r^2)
-        hsize_t initDimsEMTCorrGeneralTau[4]; // = {14, 0, N_t, r2max + 1}
-        hsize_t maxDimsEMTCorrGeneralTau[4]; // = {14, H5S_UNLIMITED, N_t, r2max + 1}
-        hsize_t chunkSizeEMTCorrGeneralTau[4]; // = {1, 1, N_t, r2max + 1}
+        hsize_t initDimsEMTCorrGeneralTau[4];                           // = {14, 0, N_t, r2max + 1}
+        hsize_t maxDimsEMTCorrGeneralTau[4];                            // = {14, H5S_UNLIMITED, N_t, r2max + 1}
+        hsize_t chunkSizeEMTCorrGeneralTau[4];                          // = {1, 1, N_t, r2max + 1}
         
         const H5::DataType* hdf5FloatT = nullptr;
 
@@ -375,9 +375,9 @@ class HDF5FileWriter {
             fileSpace4x4Sym->getSimpleExtentDims(currentDims.data(), NULL);
 
             // set offset, amount and new size
-            hsize_t offset[2] = {currentDims[0], 0};
-            hsize_t amount[2] = {1, 10};
-            hsize_t newsize[2] = {currentDims[0]+1, 10};
+            hsize_t offset[2] = {0, currentDims[1]};
+            hsize_t amount[2] = {10, 1};
+            hsize_t newsize[2] = {10, currentDims[1]+1};
             dataSet.extend(newsize);
 
             // select hyperslab in file
