@@ -427,12 +427,20 @@ inline void NeighborInfo::exchangeProcessInfo() {
 
 inline bool NeighborInfo::IsGPUCapableP2P() const {
     // This requires two processes accessing each device, so we need
-    // to ensure exclusive or prohibited mode is not set
-    if (myProp.computeMode != gpuComputeModeDefault) {
-        throw std::runtime_error(stdLogger.fatal("Device ", myProp.name, " is in an unsupported compute mode (exclusive or prohibited mode is NOT allowed)"));
+    // to ensure exclusive or prohibited mode is not set.
+    int computeMode = 0;
+    gpuError_t gpuErr = gpuDeviceGetAttribute(&computeMode, gpuDevAttrComputeMode, myInfo.deviceRank);
+    if (gpuErr != gpuSuccess) {
+        GpuError("neighborInfo.h: gpuDeviceGetAttribute(compute mode) failed:", gpuErr);
     }
-    return (bool) (myProp.major >= 2);
 
+    if (computeMode != gpuComputeModeDefault) {
+        throw std::runtime_error(stdLogger.fatal(
+            "Device ", myProp.name,
+            " is in an unsupported compute mode (exclusive or prohibited mode is NOT allowed)"));
+    }
+
+    return (bool) (myProp.major >= 2);
 }
 
 
