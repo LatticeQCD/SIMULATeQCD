@@ -6,9 +6,10 @@
  *
  *     dM/depsilon = dM_Wilson/depsilon + dM_clover/depsilon
  *
- * for the current Wilson/clover MDWF path.  It does not accumulate gauge
- * force, update momenta, call RHMC/HMC, touch HISQ, use smearing, or implement
- * a production force kernel.
+ * for the current Wilson/clover MDWF path.  It then writes each validated total
+ * generator component through the sparse one-link accumulator mock.  It does
+ * not construct a full link-force matrix, update momenta, call RHMC/HMC, touch
+ * HISQ, use smearing, or implement a production force kernel.
  */
 
 #include "../simulateqcd.h"
@@ -17,6 +18,7 @@
 #include "../experimental/mdwf/MDWFFermionForceWorkspace.h"
 #include "../experimental/mdwf/MDWFFiniteDifferenceHarness.h"
 #include "../experimental/mdwf/MDWFNormalOperator.h"
+#include "../experimental/mdwf/MDWFOneLinkForceAccumulatorMock.h"
 #include "../experimental/mdwf/MDWFRationalCoefficientAdapter.h"
 
 #include <algorithm>
@@ -539,6 +541,7 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
     Gauge baseGauge(commBase, "MDWF_clover_force_contraction_nonzero_base_gauge");
     Gauge gaugePlus(commBase, "MDWF_clover_force_contraction_nonzero_gauge_plus");
     Gauge gaugeMinus(commBase, "MDWF_clover_force_contraction_nonzero_gauge_minus");
+    Gauge accumulatedForce(commBase, "MDWF_clover_force_contraction_nonzero_one_link_force");
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
     h_rand.make_rng_state(20260514);
@@ -600,6 +603,8 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
 
     double maxAbsDiff = 0.0;
     double maxRelDiff = 0.0;
+    double maxAccumulatorAbsDiff = 0.0;
+    double maxAccumulatorOffProbeNorm = 0.0;
 
     for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
         double wilsonDerivative = 0.0;
@@ -612,9 +617,25 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
         MDWFAnalyticForceContractionResult<double> comparison
             = compareMDWFAnalyticForceContraction(
                 finiteDifferences[probeIndex], analyticDerivative, 5e-3, 5e-4);
+        const SU3<double> selectedLinkActionDerivative
+            = mdwfSingleGeneratorActionDerivativeMatrix(
+                analyticDerivative, probes[probeIndex]);
+        writeMDWFOneLinkForceAccumulatorMock(
+            accumulatedForce, probes[probeIndex], selectedLinkActionDerivative);
+        const MDWFOneLinkForceAccumulatorMockResult<double> accumulatorResult
+            = inspectMDWFOneLinkForceAccumulatorMock(
+                accumulatedForce, probes[probeIndex], selectedLinkActionDerivative,
+                commBase,
+                "MDWF_clover_force_contraction_nonzero_one_link_"
+                    + std::to_string(probeIndex));
+        const double accumulatorAbsDiff = std::abs(
+            accumulatorResult.contracted_derivative - analyticDerivative);
 
         maxAbsDiff = std::max(maxAbsDiff, comparison.absolute_difference);
         maxRelDiff = std::max(maxRelDiff, comparison.relative_difference);
+        maxAccumulatorAbsDiff = std::max(maxAccumulatorAbsDiff, accumulatorAbsDiff);
+        maxAccumulatorOffProbeNorm = std::max(
+            maxAccumulatorOffProbeNorm, accumulatorResult.max_off_probe_norm);
 
         if (mdwfRationalCoefficientRoleName(actionInput.role) != "action"
             || mdwfRationalCoefficientRoleName(forceInput.role) != "force"
@@ -625,6 +646,11 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
             || finiteDifferences[probeIndex].action_imag_relative > 1e-8
             || !std::isfinite(wilsonDerivative)
             || !std::isfinite(cloverDerivative)
+            || accumulatorResult.selected_link_count != 1
+            || accumulatorResult.selected_link_difference > 1e-12
+            || accumulatorResult.max_off_probe_norm > 1e-12
+            || accumulatorAbsDiff > 1e-12
+            || !std::isfinite(accumulatorResult.contracted_derivative)
             || !comparison.passed) {
             const char *side = probes[probeIndex].multiplication_side
                                == MDWFFiniteDifferenceMultiplicationSide::Left ? "left" : "right";
@@ -648,7 +674,12 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
                 ", workspaceConverged = ", workspace.converged(),
                 ", actionMaxResidual = ", finiteDifferences[probeIndex].max_shifted_residual,
                 ", forceMaxResidual = ", maxForceWorkspaceResidue,
-                ", actionImagRel = ", finiteDifferences[probeIndex].action_imag_relative));
+                ", actionImagRel = ", finiteDifferences[probeIndex].action_imag_relative,
+                ", accumulatedDerivative = ", accumulatorResult.contracted_derivative,
+                ", accumulatorAbsDiff = ", accumulatorAbsDiff,
+                ", selectedLinkDifference = ", accumulatorResult.selected_link_difference,
+                ", maxOffProbeNorm = ", accumulatorResult.max_off_probe_norm,
+                ", selectedLinkCount = ", accumulatorResult.selected_link_count));
         }
 
         const char *side = probes[probeIndex].multiplication_side
@@ -666,8 +697,11 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
                         ", wilsonAnalytic = ", wilsonDerivative,
                         ", cloverAnalytic = ", cloverDerivative,
                         ", totalAnalytic = ", comparison.analytic_derivative,
+                        ", accumulated = ", accumulatorResult.contracted_derivative,
                         ", absDiff = ", comparison.absolute_difference,
-                        ", relDiff = ", comparison.relative_difference);
+                        ", relDiff = ", comparison.relative_difference,
+                        ", accumulatorAbsDiff = ", accumulatorAbsDiff,
+                        ", maxOffProbeNorm = ", accumulatorResult.max_off_probe_norm);
     }
 
     rootLogger.info("MDWF nonzero-c_sw clover force-contraction test passed with Ls = ", Ls,
@@ -675,6 +709,8 @@ void runMDWFCloverForceContractionNonzeroTest(CommunicationBase &commBase) {
                     ", probes = ", 2,
                     ", maxAbsDiff = ", maxAbsDiff,
                     ", maxRelDiff = ", maxRelDiff,
+                    ", maxAccumulatorAbsDiff = ", maxAccumulatorAbsDiff,
+                    ", maxAccumulatorOffProbeNorm = ", maxAccumulatorOffProbeNorm,
                     ", actionMaxResidual = ", maxActionResidual,
                     ", forceMaxResidual = ", maxForceWorkspaceResidue);
 }

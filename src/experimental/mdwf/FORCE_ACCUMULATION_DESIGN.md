@@ -83,8 +83,13 @@ This split should remain visible in code and tests until signs and normalization
 2. Add a one-link force-accumulator mock that writes a single selected link and verifies the scalar contraction against the existing analytic helper.
 3. Add a `c_sw = 0` Wilson one-link accumulator check against `mdwfWilsonForceContractionCsw0Test`.
 4. Add a nonzero-`c_sw` Wilson + clover one-link accumulator check against `mdwfCloverForceContractionNonzeroTest`.
-5. Add an all-link random-direction contraction check by contracting the accumulated force with a deterministic anti-Hermitian traceless perturbation field.
-6. Only then discuss HMC/RHMC integration and the final momentum-update sign.
+5. Add the all-link random-direction contraction check defined in `ALL_LINK_RANDOM_DIRECTION_CHECK.md`, using a deterministic anti-Hermitian traceless perturbation field.
+6. Review the direction-independent matrix, projection, momentum-sign, and MPI
+   ownership boundaries in `DIRECTION_INDEPENDENT_FORCE_REVIEW.md`.
+7. Define and validate the single-rank all-link storage/overwrite boundary in
+   `ALL_LINK_DIRECTION_INDEPENDENT_STORAGE.md`.
+8. Only after the review's independent validation gates pass, discuss
+   HMC/RHMC integration and the final momentum-update sign.
 
 ## Open convention checks before code
 
@@ -96,6 +101,10 @@ Before writing production force accumulation, inspect and document:
 - whether force fields need halo updates after accumulation,
 - how link orientation and boundary images are represented for halo-touching clover terms,
 - which sign converts `dS/depsilon` into the existing `p <- p - i eps ipdot` update.
+
+The result of this inspection, including the owner-computes MPI recommendation
+and the required eight-direction reconstruction gate, is recorded in
+`DIRECTION_INDEPENDENT_FORCE_REVIEW.md`.
 
 ## Non-goals
 
