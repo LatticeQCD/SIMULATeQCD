@@ -8,8 +8,10 @@
  *
  * The derivative helper mirrors the `DiracWilsonEvenOdd2` stencil used by the
  * current MDWF Wilson path.  It computes scalar checks for selected links and
- * generators.  It does not accumulate gauge force, update momenta, call
- * RHMC/HMC, touch HISQ, use smearing, or implement a production force kernel.
+ * generators, then writes each validated generator component through the
+ * sparse one-link accumulator mock.  It does not construct a full link-force
+ * matrix, update momenta, call RHMC/HMC, touch HISQ, use smearing, or implement
+ * a production force kernel.
  */
 
 #include "../simulateqcd.h"
@@ -18,6 +20,7 @@
 #include "../experimental/mdwf/MDWFFermionForceWorkspace.h"
 #include "../experimental/mdwf/MDWFFiniteDifferenceHarness.h"
 #include "../experimental/mdwf/MDWFNormalOperator.h"
+#include "../experimental/mdwf/MDWFOneLinkForceAccumulatorMock.h"
 #include "../experimental/mdwf/MDWFRationalCoefficientAdapter.h"
 
 #include <algorithm>
@@ -279,6 +282,7 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
     Gauge baseGauge(commBase, "MDWF_wilson_force_contraction_csw0_base_gauge");
     Gauge gaugePlus(commBase, "MDWF_wilson_force_contraction_csw0_gauge_plus");
     Gauge gaugeMinus(commBase, "MDWF_wilson_force_contraction_csw0_gauge_minus");
+    Gauge accumulatedForce(commBase, "MDWF_wilson_force_contraction_csw0_one_link_force");
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
     h_rand.make_rng_state(20260514);
@@ -340,6 +344,8 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
 
     double maxAbsDiff = 0.0;
     double maxRelDiff = 0.0;
+    double maxAccumulatorAbsDiff = 0.0;
+    double maxAccumulatorOffProbeNorm = 0.0;
 
     for (size_t probeIndex = 0; probeIndex < 2; probeIndex++) {
         const MDWFFiniteDifferenceResult<double> &finiteDifference = finiteDifferences[probeIndex];
@@ -348,9 +354,25 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
                 workspace, baseGauge, forceCoefficients, probes[probeIndex], commBase);
         MDWFAnalyticForceContractionResult<double> comparison
             = compareMDWFAnalyticForceContraction(finiteDifference, analyticDerivative, 5e-3, 5e-4);
+        const SU3<double> selectedLinkActionDerivative
+            = mdwfSingleGeneratorActionDerivativeMatrix(
+                analyticDerivative, probes[probeIndex]);
+        writeMDWFOneLinkForceAccumulatorMock(
+            accumulatedForce, probes[probeIndex], selectedLinkActionDerivative);
+        const MDWFOneLinkForceAccumulatorMockResult<double> accumulatorResult
+            = inspectMDWFOneLinkForceAccumulatorMock(
+                accumulatedForce, probes[probeIndex], selectedLinkActionDerivative,
+                commBase,
+                "MDWF_wilson_force_contraction_csw0_one_link_"
+                    + std::to_string(probeIndex));
+        const double accumulatorAbsDiff = std::abs(
+            accumulatorResult.contracted_derivative - analyticDerivative);
 
         maxAbsDiff = std::max(maxAbsDiff, comparison.absolute_difference);
         maxRelDiff = std::max(maxRelDiff, comparison.relative_difference);
+        maxAccumulatorAbsDiff = std::max(maxAccumulatorAbsDiff, accumulatorAbsDiff);
+        maxAccumulatorOffProbeNorm = std::max(
+            maxAccumulatorOffProbeNorm, accumulatorResult.max_off_probe_norm);
 
         if (mdwfRationalCoefficientRoleName(actionInput.role) != "action"
             || mdwfRationalCoefficientRoleName(forceInput.role) != "force"
@@ -359,6 +381,11 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
             || finiteDifference.max_shifted_residual > 1e-8
             || maxForceWorkspaceResidue > 1e-8
             || finiteDifference.action_imag_relative > 1e-8
+            || accumulatorResult.selected_link_count != 1
+            || accumulatorResult.selected_link_difference > 1e-12
+            || accumulatorResult.max_off_probe_norm > 1e-12
+            || accumulatorAbsDiff > 1e-12
+            || !std::isfinite(accumulatorResult.contracted_derivative)
             || !comparison.passed) {
             const char *side = probes[probeIndex].multiplication_side
                                == MDWFFiniteDifferenceMultiplicationSide::Left ? "left" : "right";
@@ -375,7 +402,12 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
                 ", workspaceConverged = ", workspace.converged(),
                 ", actionMaxResidual = ", finiteDifference.max_shifted_residual,
                 ", forceMaxResidual = ", maxForceWorkspaceResidue,
-                ", actionImagRel = ", finiteDifference.action_imag_relative));
+                ", actionImagRel = ", finiteDifference.action_imag_relative,
+                ", accumulatedDerivative = ", accumulatorResult.contracted_derivative,
+                ", accumulatorAbsDiff = ", accumulatorAbsDiff,
+                ", selectedLinkDifference = ", accumulatorResult.selected_link_difference,
+                ", maxOffProbeNorm = ", accumulatorResult.max_off_probe_norm,
+                ", selectedLinkCount = ", accumulatorResult.selected_link_count));
         }
 
         const char *side = probes[probeIndex].multiplication_side
@@ -386,14 +418,19 @@ void runMDWFWilsonForceContractionCsw0Test(CommunicationBase &commBase) {
                         ", side = ", side,
                         ", finiteDifference = ", comparison.finite_difference_derivative,
                         ", analytic = ", comparison.analytic_derivative,
+                        ", accumulated = ", accumulatorResult.contracted_derivative,
                         ", absDiff = ", comparison.absolute_difference,
-                        ", relDiff = ", comparison.relative_difference);
+                        ", relDiff = ", comparison.relative_difference,
+                        ", accumulatorAbsDiff = ", accumulatorAbsDiff,
+                        ", maxOffProbeNorm = ", accumulatorResult.max_off_probe_norm);
     }
 
     rootLogger.info("MDWF c_sw = 0 Wilson force-contraction test passed with Ls = ", Ls,
                     ", probes = ", 2,
                     ", maxAbsDiff = ", maxAbsDiff,
                     ", maxRelDiff = ", maxRelDiff,
+                    ", maxAccumulatorAbsDiff = ", maxAccumulatorAbsDiff,
+                    ", maxAccumulatorOffProbeNorm = ", maxAccumulatorOffProbeNorm,
                     ", actionMaxResidual = ", maxActionResidual,
                     ", forceMaxResidual = ", maxForceWorkspaceResidue);
 }

@@ -25,6 +25,42 @@ struct MDWFOneLinkForceAccumulatorMockResult {
     size_t selected_link_count;
 };
 
+/*
+ * Represent one already-computed directional component as a link matrix whose
+ * contraction with that same direction returns the component.  This is only a
+ * direction-dependent bridge for accumulator tests; it is not the full
+ * unprojected link derivative or a production gauge-force convention.
+ */
+template<class floatT>
+SU3<floatT> mdwfDirectionalActionDerivativeMatrix(
+    double action_derivative,
+    const SU3<floatT> &direction) {
+
+    const double direction_contraction = static_cast<double>(
+        real(tr_c(direction, direction)));
+    if (!std::isfinite(action_derivative)
+        || !std::isfinite(direction_contraction)
+        || direction_contraction == 0.0) {
+        throw std::runtime_error(stdLogger.fatal(
+            "MDWF direction-dependent accumulator requires a finite derivative "
+            "and nonzero direction contraction"));
+    }
+
+    return static_cast<floatT>(
+               action_derivative / direction_contraction)
+           * direction;
+}
+
+template<class floatT>
+SU3<floatT> mdwfSingleGeneratorActionDerivativeMatrix(
+    double action_derivative,
+    const MDWFFiniteDifferenceProbe<floatT> &probe) {
+
+    return mdwfDirectionalActionDerivativeMatrix(
+        action_derivative,
+        mdwfFiniteDifferenceGenerator<floatT>(probe.generator_id));
+}
+
 template<class floatT>
 __host__ __device__ bool mdwfOneLinkForceAccumulatorMockMatchesProbe(
     const gSiteMu &site_mu,
