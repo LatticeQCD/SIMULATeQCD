@@ -1,0 +1,31 @@
+Lattice = 52 52 52 8
+Nodes = 1 1 1 1
+
+Gaugefile = ../test_conf/l528f21b6315m00282m0759_001.1610
+
+no_pf = 1
+no_md = 10
+no_step_sf = 5
+no_sw = 10
+step_size = 0.02
+mu0 = 0
+integrator = 0
+residue = 1e-12
+residue_force = 1e-07
+cgMax = 6500
+residue_meas = 1e-12
+cgMax_meas = 20000
+always_acc = 0
+cgMixedPrec = 0
+cgMixedPrec_delta = 0.1
+no_updates = 100
+write_every = 10
+
+rat_file = ../parameter/sample_force_test.rat
+mass_ud = 0.00591
+mass_s = 0.0591
+
+rand_file = rand
+seed = 0
+rand_flag = 0
+load_conf = 2
