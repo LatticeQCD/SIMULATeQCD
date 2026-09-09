@@ -470,15 +470,15 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
     });
 
     // Add signed D7 directly with its physical coefficient. _ForceNu holds
-    // F_N, while _Dummy changes from F_R to X_sigma. After the rho-side term,
-    // F_N is dead and _ForceNu can become X_rhosigma.
+    // F_N, while _Dummy changes from F_R to X_sigma. F_N is rebuilt for each
+    // rho branch because _ForceNu becomes X_rhosigma at the end of that branch.
     static_for<1, 4>::apply([&](auto nu_h) {
-        _ForceNu.template iterateOverBulkAllMu<64>(
-            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                _GaugeU3P, Force));
-        _ForceNu.updateAll();
-
         static_for<0, 2>::apply([&](auto rho_h) {
+            _ForceNu.template iterateOverBulkAllMu<64>(
+                outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                    _GaugeU3P, Force));
+            _ForceNu.updateAll();
+
             _Dummy.template iterateOverBulkAllMu<64>(
                 rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
                     _GaugeU3P, _ForceNu));
