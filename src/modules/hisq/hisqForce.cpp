@@ -207,8 +207,7 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
     : _GaugeU3P(GaugeBase.getComm(), "SHARED_GAUGELVL2"), _GaugeLvl1(GaugeBase.getComm(), "SHARED_GAUGENAIK"), _TmpForce(GaugeBase.getComm()),
       _GaugeBase(GaugeBase), _Dummy(GaugeBase.getComm(), "SHARED_DUMMY"),
 
-      _ForceNu1(GaugeBase.getComm()), _ForceNu2(GaugeBase.getComm()), _ForceNu3(GaugeBase.getComm()), _Force3Recursive(GaugeBase.getComm()),
-      _Force5Recursive(GaugeBase.getComm()), _Force7Recursive(GaugeBase.getComm()),
+      _ForceNu(GaugeBase.getComm(), "HisqForceRecursiveScratch"),
 
       _spinor_x(GaugeBase.getComm()), _spinor_y(GaugeBase.getComm(), "SHARED_tmp"), _createF2(_GaugeLvl1, _TmpForce), _finalizeF3(_GaugeU3P, _TmpForce),
       _createNaikF1(_GaugeU3P, _TmpForce), F1_create_3Link(_GaugeU3P, Force), F1_lepagelink(_GaugeU3P, Force), F3_create_3Link(_GaugeU3P, Force),
@@ -408,21 +407,129 @@ __host__ __device__ SU3<floatT> rho_sigma_dressed_primal<floatT, onDevice, HaloD
     return positive + negative;
 }
 
-template <class floatT, bool onDevice, size_t HaloDepth> class negate_force_field {
-  private:
-    SU3Accessor<floatT> _acc;
+template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
+void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::constructF1(
+    Gaugefield<floatT, onDevice, HaloDepth, comp> &Force) {
 
-  public:
-    negate_force_field(Gaugefield<floatT, onDevice, HaloDepth> &in) : _acc(in.getAccessor()) {}
+    const SmearingParameters<floatT> smParams = getLevel2Params<floatT>();
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
-        typedef GIndexer<All, HaloDepth> GInd;
+    // D3 starts in the shared dummy. Stream each middle branch into that
+    // accumulator, so three simultaneously live ForceNu fields are unnecessary.
+    _Dummy.template iterateOverBulkAllMu<64>(
+        recursive_three_link_base_force<floatT, onDevice, HaloDepth, R18>(
+            _GaugeU3P, Force));
 
-        gSite site = GInd::getSite(siteMu.isite);
+    static_for<1, 4>::apply([&](auto nu_h) {
+        _Dummy.template iterateOverBulkAllMu<64>(
+            make_accumulate_scaled_force(
+                _Dummy,
+                outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                    _GaugeU3P, Force),
+                smParams._c_3));
+    });
 
-        return floatT(-1.0) * _acc.getLink(GInd::getSiteMu(site, siteMu.mu));
-    }
-};
+    // Preserve the Naik derivative before _TmpForce stops being the pre-F1
+    // Naik source. Then make _TmpForce the physical F1 accumulator.
+    _ForceNu.template iterateOverBulkAllMu<64>(_createNaikF1);
+    _TmpForce = _Dummy + _ForceNu;
+
+    // Add raw D5 directly with its physical coefficient.
+    static_for<1, 4>::apply([&](auto nu_h) {
+        _ForceNu.template iterateOverBulkAllMu<64>(
+            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                _GaugeU3P, Force));
+        _ForceNu.updateAll();
+
+        static_for<0, 2>::apply([&](auto rho_h) {
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _ForceNu),
+                    smParams._c_5));
+
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    rho_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _ForceNu),
+                    smParams._c_5));
+
+            _Dummy.template iterateOverBulkAllMu<64>(
+                rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P));
+            _Dummy.updateAll();
+
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy, Force),
+                    smParams._c_5));
+        });
+    });
+
+    // Add signed D7 directly with its physical coefficient. _ForceNu holds
+    // F_N, while _Dummy changes from F_R to X_sigma. After the rho-side term,
+    // F_N is dead and _ForceNu can become X_rhosigma.
+    static_for<1, 4>::apply([&](auto nu_h) {
+        _ForceNu.template iterateOverBulkAllMu<64>(
+            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                _GaugeU3P, Force));
+        _ForceNu.updateAll();
+
+        static_for<0, 2>::apply([&](auto rho_h) {
+            _Dummy.template iterateOverBulkAllMu<64>(
+                rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P, _ForceNu));
+            _Dummy.updateAll();
+
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    sigma_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy),
+                    smParams._c_7));
+
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    sigma_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy),
+                    smParams._c_7));
+
+            _Dummy.template iterateOverBulkAllMu<64>(
+                sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P));
+            _Dummy.updateAll();
+
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy, _ForceNu),
+                    smParams._c_7));
+
+            _ForceNu.template iterateOverBulkAllMu<64>(
+                rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P, _Dummy));
+            _ForceNu.updateAll();
+
+            // Production positions 1 + 7 equal negative raw R17.
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _ForceNu, Force),
+                    -smParams._c_7));
+        });
+    });
+
+    // Unchanged production Lepage contribution.
+    _Dummy.iterateOverBulkAllMu(F1_lepagelink);
+    _TmpForce = _TmpForce + _Dummy;
+    _TmpForce.updateAll();
+}
 
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
 void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::TestForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn,
@@ -462,152 +569,9 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 
     staggeredPhaseKernel<floatT, onDevice, HaloDepth, R18> multPhase(_GaugeU3P, _rhmc_param.mu_f());
     _GaugeU3P.iterateOverBulkAllMu(multPhase);
+    _GaugeU3P.updateAll();
 
-    // ============================================================
-    // COMPLETE RECURSIVE D3
-    // ============================================================
-
-    _ForceNu1.template iterateOverBulkAllMu<64>(
-        outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, 1>(_GaugeU3P, Force));
-    _ForceNu2.template iterateOverBulkAllMu<64>(
-        outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, 2>(_GaugeU3P, Force));
-    _ForceNu3.template iterateOverBulkAllMu<64>(
-        outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, 3>(_GaugeU3P, Force));
-
-    _ForceNu1.updateAll();
-    _ForceNu2.updateAll();
-    _ForceNu3.updateAll();
-
-    _Force3Recursive.template iterateOverBulkAllMu<64>(
-        recursive_three_link_force<floatT, onDevice, HaloDepth, R18, false>(
-            _GaugeU3P, Force, _ForceNu1, _ForceNu2, _ForceNu3));
-
-    // ============================================================
-    // COMPLETE RECURSIVE RAW D5
-    // ============================================================
-
-    _Force5Recursive.iterateWithConst(su3_zero<floatT>());
-
-    static_for<1, 4>::apply([&](auto nu_h) {
-        // The D3 intermediates are dead, so rebuild F_N one branch
-        // at a time and reuse the remaining force fields as scratch.
-        _ForceNu1.template iterateOverBulkAllMu<64>(
-            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                _GaugeU3P, Force));
-        _ForceNu1.updateAll();
-
-        static_for<0, 2>::apply([&](auto rho_h) {
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu1));
-            _Force5Recursive = _Force5Recursive + _ForceNu2;
-
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu1));
-            _Force5Recursive = _Force5Recursive + _ForceNu2;
-
-            _Dummy.template iterateOverBulkAllMu<64>(
-                rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P));
-            _Dummy.updateAll();
-
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy, Force));
-            _Force5Recursive = _Force5Recursive + _ForceNu2;
-        });
-    });
-
-    // ============================================================
-    // COMPLETE RECURSIVE SIGNED D7
-    //
-    // D7_signed_recursive = -R17 + R26 + R35 + R4
-    // ============================================================
-
-    _Force7Recursive.iterateWithConst(su3_zero<floatT>());
-
-    static_for<1, 4>::apply([&](auto nu_h) {
-        _ForceNu1.template iterateOverBulkAllMu<64>(
-            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                _GaugeU3P, Force));
-        _ForceNu1.updateAll();
-
-        static_for<0, 2>::apply([&](auto rho_h) {
-            // F_R = rho-middle reverse force.
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu1));
-            _ForceNu2.updateAll();
-
-            // R4: sigma-middle.
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                sigma_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu2));
-            _Force7Recursive = _Force7Recursive + _ForceNu3;
-
-            // R35: sigma-side.
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                sigma_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu2));
-            _Force7Recursive = _Force7Recursive + _ForceNu3;
-
-            // X_sigma = D_sigma[U].
-            _Dummy.template iterateOverBulkAllMu<64>(
-                sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P));
-            _Dummy.updateAll();
-
-            // R26: rho-side.
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy, _ForceNu1));
-            _Force7Recursive = _Force7Recursive + _ForceNu3;
-
-            // F_R is dead. Reuse _ForceNu2 for X_rhosigma.
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy));
-            _ForceNu2.updateAll();
-
-            // R17: raw outer-nu side.
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu2, Force));
-
-            // Production positions 1 + 7 equal -R17.
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                negate_force_field<floatT, onDevice, HaloDepth>(_ForceNu3));
-            _Force7Recursive = _Force7Recursive + _ForceNu2;
-        });
-    });
-
-    // ============================================================
-    // COMPLETE RECURSIVE FAT7
-    // ============================================================
-
-    _ForceNu1.template iterateOverBulkAllMu<64>(
-        recursive_fat7_combined_force<floatT, onDevice, HaloDepth>(
-            _Force3Recursive, _Force5Recursive, _Force7Recursive));
-
-    // ============================================================
-    // COMPLETE PHYSICAL F1
-    // ============================================================
-
-    // _createNaikF1 reads the original pre-F1 _TmpForce, so evaluate
-    // it before replacing _TmpForce with the recursive Fat7 result.
-    _Dummy.template iterateOverBulkAllMu<64>(_createNaikF1);
-
-    // Recursive Fat7 plus unchanged production Naik.
-    _TmpForce = _ForceNu1;
-    _TmpForce = _TmpForce + _Dummy;
-
-    // Unchanged production Lepage.
-    _Dummy.iterateOverBulkAllMu(F1_lepagelink);
-    _TmpForce = _TmpForce + _Dummy;
-
-    // Required before F2.
-    _TmpForce.updateAll();
+    constructF1(Force);
 
     // ============================================================
     // F1 -> F2 : derivative of U(3) projection
@@ -729,121 +693,7 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
     _GaugeU3P.iterateOverBulkAllMu(multPhase);
     _GaugeU3P.updateAll();
 
-    // Complete recursive D3.
-    _ForceNu1.template iterateOverBulkAllMu<64>(
-        outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, 1>(_GaugeU3P, Force));
-    _ForceNu2.template iterateOverBulkAllMu<64>(
-        outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, 2>(_GaugeU3P, Force));
-    _ForceNu3.template iterateOverBulkAllMu<64>(
-        outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, 3>(_GaugeU3P, Force));
-
-    _ForceNu1.updateAll();
-    _ForceNu2.updateAll();
-    _ForceNu3.updateAll();
-
-    _Force3Recursive.template iterateOverBulkAllMu<64>(
-        recursive_three_link_force<floatT, onDevice, HaloDepth, R18, false>(
-            _GaugeU3P, Force, _ForceNu1, _ForceNu2, _ForceNu3));
-
-    // Complete recursive raw D5.
-    _Force5Recursive.iterateWithConst(su3_zero<floatT>());
-
-    static_for<1, 4>::apply([&](auto nu_h) {
-        _ForceNu1.template iterateOverBulkAllMu<64>(
-            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                _GaugeU3P, Force));
-        _ForceNu1.updateAll();
-
-        static_for<0, 2>::apply([&](auto rho_h) {
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu1));
-            _Force5Recursive = _Force5Recursive + _ForceNu2;
-
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu1));
-            _Force5Recursive = _Force5Recursive + _ForceNu2;
-
-            _Dummy.template iterateOverBulkAllMu<64>(
-                rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P));
-            _Dummy.updateAll();
-
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy, Force));
-            _Force5Recursive = _Force5Recursive + _ForceNu2;
-        });
-    });
-
-    // Complete recursive signed D7: -R17 + R26 + R35 + R4.
-    _Force7Recursive.iterateWithConst(su3_zero<floatT>());
-
-    static_for<1, 4>::apply([&](auto nu_h) {
-        _ForceNu1.template iterateOverBulkAllMu<64>(
-            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                _GaugeU3P, Force));
-        _ForceNu1.updateAll();
-
-        static_for<0, 2>::apply([&](auto rho_h) {
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu1));
-            _ForceNu2.updateAll();
-
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                sigma_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu2));
-            _Force7Recursive = _Force7Recursive + _ForceNu3;
-
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                sigma_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu2));
-            _Force7Recursive = _Force7Recursive + _ForceNu3;
-
-            _Dummy.template iterateOverBulkAllMu<64>(
-                sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P));
-            _Dummy.updateAll();
-
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy, _ForceNu1));
-            _Force7Recursive = _Force7Recursive + _ForceNu3;
-
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy));
-            _ForceNu2.updateAll();
-
-            _ForceNu3.template iterateOverBulkAllMu<64>(
-                outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _ForceNu2, Force));
-
-            _ForceNu2.template iterateOverBulkAllMu<64>(
-                negate_force_field<floatT, onDevice, HaloDepth>(_ForceNu3));
-            _Force7Recursive = _Force7Recursive + _ForceNu2;
-        });
-    });
-
-    // Complete recursive Fat7.
-    _ForceNu1.template iterateOverBulkAllMu<64>(
-        recursive_fat7_combined_force<floatT, onDevice, HaloDepth>(
-            _Force3Recursive, _Force5Recursive, _Force7Recursive));
-
-    // _createNaikF1 reads the pre-F1 _TmpForce, so construct it
-    // before replacing _TmpForce with recursive Fat7.
-    _Dummy.template iterateOverBulkAllMu<64>(_createNaikF1);
-
-    _TmpForce = _ForceNu1;
-    _TmpForce = _TmpForce + _Dummy;
-
-    // Unchanged production Lepage contribution.
-    _Dummy.iterateOverBulkAllMu(F1_lepagelink);
-    _TmpForce = _TmpForce + _Dummy;
-
-    _TmpForce.updateAll();
+    constructF1(Force);
 
     staggeredPhaseKernel<floatT, onDevice, HaloDepth, R18> multPhaselv1(_GaugeLvl1, _rhmc_param.mu_f());
     _GaugeLvl1.iterateOverBulkAllMu(multPhaselv1);

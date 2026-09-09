@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
 
     std::string gaugeOutput;
     bool reverse = false;
+    bool showMemorySummary = false;
     std::vector<char *> parameterArgv{argv[0]};
     for (int i = 1; i < argc; ++i) {
         const std::string argument(argv[i]);
@@ -29,6 +30,8 @@ int main(int argc, char *argv[]) {
             gaugeOutput = argv[i];
         } else if (argument == "--reverse") {
             reverse = true;
+        } else if (argument == "--memory-summary") {
+            showMemorySummary = true;
         } else {
             parameterArgv.push_back(argv[i]);
         }
@@ -72,6 +75,12 @@ int main(int argc, char *argv[]) {
     timer.start();
     int accepted = HMC.update(!param.always_acc(), reverse);
     timer.stop();
+
+    if (showMemorySummary) {
+        rootLogger.info("RHMC MemoryManagement device report BEGIN");
+        MemoryManagement::memorySummary(false, false, true, true);
+        rootLogger.info("RHMC MemoryManagement device report END");
+    }
 
     rootLogger.info("RHMC trajectory time: ", sformat("%.3fs", timer.seconds()));
     rootLogger.info("RHMC trajectory status: ", accepted ? "ACCEPTED" : "REJECTED");
