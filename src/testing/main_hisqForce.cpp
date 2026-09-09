@@ -81,14 +81,16 @@ int main(int argc, char *argv[]) {
     rootLogger.info(test1.getLink10(), test1.getLink11(), test1.getLink12());
     rootLogger.info(test1.getLink20(), test1.getLink21(), test1.getLink22());
 
-    Gaugefield<PREC,true,HaloDepth> force_reference(commBase);
+    Gaugefield<PREC,false,HaloDepth> force_reference_host(commBase, "force_reference_host");
+    Gaugefield<PREC,true,HaloDepth> force_reference(commBase, "force_reference");
 
-    force_reference.readconf_nersc(rhmc_param.GaugefileName());
-
-    // readconf_nersc does some reunitarization. Writing and reading makes sure the comparison between this generated
-    // force field and force_reference have both been reunitarized in the same way.
-    force.writeconf_nersc("../test_conf/force_testrun",3,2);
-    force.readconf_nersc("../test_conf/force_testrun");
+    // The reference contains the complete, uncompressed R18 force field (three rows,
+    // double precision). A force is not an SU(3) gauge link, so read the stored data
+    // without the SU(3) projection performed by readconf_nersc(). That projection is
+    // ill-conditioned for force matrices and makes this regression GPU-dependent.
+    force_reference_host.readconf_nersc_host(
+        force_reference_host.getAccessor(), rhmc_param.GaugefileName());
+    force_reference = force_reference_host;
     
     rootLogger.info("starting field comparison");
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(force,force_reference,1e-8);
