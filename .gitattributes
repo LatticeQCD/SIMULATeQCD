@@ -16,3 +16,7 @@ test_conf/smearing_imagmu_reference_conf filter=lfs diff=lfs merge=lfs -text
 test_conf/force_imagmu_reference filter=lfs diff=lfs merge=lfs -text
 test_conf/force_reference filter=lfs diff=lfs merge=lfs -text
 test_conf/ildg.l8t4b3360_QUDA filter=lfs diff=lfs merge=lfs -text
+
+# Unified diff context lines require a leading space, including empty lines.
+scripts/hisqForceBenchmarkTarget.patch whitespace=-blank-at-eol,-blank-at-eof
+scripts/rhmcBenchmarkLegacy.patch whitespace=-blank-at-eol,-blank-at-eof

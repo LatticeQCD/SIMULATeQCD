@@ -4,6 +4,7 @@ set -euo pipefail
 export LC_ALL=C
 
 run_directory=$(realpath -e "${1:-.}")
+script_directory=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 read_time() {
     local repetition=$1
@@ -65,3 +66,15 @@ for index in 0 1 2; do
         'BEGIN { printf " %.2f%%", 100 * (legacy - recursive) / legacy }'
 done
 printf '\n'
+
+summary_file="$run_directory/rhmc_timing_summary.csv"
+printf '%s\n' 'legacy_1_s,legacy_2_s,legacy_3_s,recursive_1_s,recursive_2_s,recursive_3_s,legacy_median_s,recursive_median_s,speedup,reduction_percent' > "$summary_file"
+printf '%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+    "${legacy_times[0]}" "${legacy_times[1]}" "${legacy_times[2]}" \
+    "${recursive_times[0]}" "${recursive_times[1]}" "${recursive_times[2]}" \
+    "$legacy_median" "$recursive_median" "$speedup" "$reduction" >> "$summary_file"
+
+python3 "$script_directory/plotHisqPerformance.py" \
+    --rhmc "$summary_file" --output-dir "$run_directory"
+printf '\nRHMC timing data: %s\n' "$summary_file"
+printf 'RHMC timing plot: %s\n' "$run_directory/rhmc_timing_gain.pdf"

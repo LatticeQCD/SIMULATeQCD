@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
 
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/null", argc, argv);
+    param.readfile(commBase, "../parameter/rhmcTest.param", argc, argv);
 
     const int HaloDepth = 2;
 

@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
     CommunicationBase commBase(&argc, &argv);
 
     std::string forceOutput;
+    bool randomGauge = false;
     std::vector<char *> parameterArgv{argv[0]};
     for (int i = 1; i < argc; ++i) {
         if (std::string(argv[i]) == "--force-output") {
@@ -29,6 +30,8 @@ int main(int argc, char *argv[]) {
                 return 2;
             }
             forceOutput = argv[i];
+        } else if (std::string(argv[i]) == "--random-gauge") {
+            randomGauge = true;
         } else {
             parameterArgv.push_back(argv[i]);
         }
@@ -59,7 +62,18 @@ int main(int argc, char *argv[]) {
     grnd_state<true> d_rand;
     initialize_rng(rhmc_param.seed(), d_rand);
 
-    gauge.readconf_nersc(rhmc_param.GaugefileName());
+    if (randomGauge) {
+        rootLogger.info(
+            "HISQ force input: RANDOM gauge configuration "
+            "(synthetic volume-scaling point; not thermalized)");
+        gauge.random(d_rand.state);
+    } else {
+        rootLogger.info(
+            "HISQ force input: THERMALIZED gauge configuration ",
+            rhmc_param.GaugefileName());
+
+        gauge.readconf_nersc(rhmc_param.GaugefileName());
+    }
     gauge.updateAll();
 
     HisqSmearing<PREC, true, HaloDepth, R18> smearing(gauge, gaugeLvl2, gaugeNaik);
@@ -76,6 +90,8 @@ int main(int argc, char *argv[]) {
     timer.start();
     forceCalculator.TestForce(SpinorIn, force, d_rand);
     timer.stop();
+
+    rootLogger.info("HISQ force time: ", sformat("%.6fs", timer.seconds()));
 
     force_host = force;
     SU3<PREC> result = force_host.getAccessor().getLink(GInd::getSiteMu(0, 0, 0, 3, 3));

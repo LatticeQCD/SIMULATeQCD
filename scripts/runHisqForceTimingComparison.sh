@@ -30,6 +30,11 @@ fi
 legacy_binary=$(realpath -e "$1")
 recursive_binary=$(realpath -e "$2")
 run_directory=$(realpath -e "${3:-.}")
+project_directory=$(dirname "$run_directory")
+plot_script=$(realpath -e "${HISQ_PLOT_SCRIPT:-$project_directory/SIMULATeQCD/scripts/plotHisqPerformance.py}")
+results_directory="${HISQ_FORCE_RESULTS_DIR:-$run_directory/hisq_force_results/$SLURM_JOB_ID}"
+mkdir -p "$results_directory"
+results_directory=$(realpath -e "$results_directory")
 
 if [[ $(basename "$legacy_binary") != "hisqForceBenchmark" ||
       $(basename "$recursive_binary") != "hisqForceBenchmark" ]]; then
@@ -68,12 +73,18 @@ if command -v nvidia-smi >/dev/null 2>&1 &&
     exit 2
 fi
 
+echo "HISQ force benchmark lattice: 52^3 x 8"
+echo "PROVENANCE: 52^3 x 8 is the ONLY REAL THERMALIZED lattice in the force benchmarks"
+echo "HISQ force input: REAL THERMALIZED gauge configuration"
+echo "Gauge configuration: $gauge_file"
+
 run_once() {
     local label=$1
     local binary=$2
     local repetition=$3
     local output
     local time_record
+    local logfile="$results_directory/${label}_${repetition}.log"
 
     echo "Running $label repetition $repetition/3" >&2
 
@@ -84,15 +95,17 @@ run_once() {
         exit 1
     fi
 
-    time_record=$(printf '%s\n' "$output" | grep -Eo 'Time: [0-9]+([.][0-9]+)?s' | tail -n 1 || true)
+    printf '%s\n' "$output" > "$logfile"
+
+    time_record=$(printf '%s\n' "$output" | grep -Eo 'HISQ force time: [0-9]+([.][0-9]+)?s' | tail -n 1 || true)
 
     if [[ -z "$time_record" ]]; then
         printf '%s\n' "$output" >&2
-        echo "$label repetition $repetition did not emit a valid internal Time: line." >&2
+        echo "$label repetition $repetition did not emit a canonical HISQ force time; rebuild both binaries." >&2
         exit 1
     fi
 
-    printf '%s\n' "${time_record#Time: }" | sed 's/s$//'
+    printf '%s\n' "${time_record#HISQ force time: }" | sed 's/s$//'
 }
 
 median_of_three() {
@@ -124,3 +137,15 @@ printf 'Median legacy time:    %ss\n' "$legacy_median"
 printf 'Median recursive time: %ss\n' "$recursive_median"
 printf 'Speedup: %sx\n' "$speedup"
 printf 'Percent time reduction: %s%%\n' "$reduction"
+
+summary_file="$results_directory/hisq_force_timing.csv"
+printf '%s\n' 'spatial_l,nt,sites,gauge_kind,gauge_file,legacy_1_s,legacy_2_s,legacy_3_s,recursive_1_s,recursive_2_s,recursive_3_s,legacy_median_s,recursive_median_s,speedup,reduction_percent' > "$summary_file"
+printf '52,8,1124864,thermalized,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s\n' \
+    "$gauge_file" \
+    "${legacy_times[0]}" "${legacy_times[1]}" "${legacy_times[2]}" \
+    "${recursive_times[0]}" "${recursive_times[1]}" "${recursive_times[2]}" \
+    "$legacy_median" "$recursive_median" "$speedup" "$reduction" >> "$summary_file"
+
+python3 "$plot_script" --hisq-force "$summary_file" --output-dir "$results_directory"
+printf 'HISQ-force timing data: %s\n' "$summary_file"
+printf 'HISQ-force timing plot: %s\n' "$results_directory/hisq_force_timing_gain.pdf"

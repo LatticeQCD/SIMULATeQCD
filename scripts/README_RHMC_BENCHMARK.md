@@ -229,8 +229,10 @@ bash ../SIMULATeQCD/scripts/summarizeRhmcTiming.sh rhmc_results/50100
 ```
 
 Replace `50100` with your actual array ID. This prints all six internal times,
-both medians, speedup, percent time reduction, timing ranges and each pair's gain. Scheduler job duration is never
-used. Different arrays use different directories; do not rebuild binaries or
+both medians, speedup, percent time reduction, timing ranges and each pair's gain.
+It also writes `rhmc_timing_summary.csv` and the quantitative
+`rhmc_timing_gain.pdf` bar plot in the same result directory. Scheduler job
+duration is never used. Different arrays use different directories; do not rebuild binaries or
 change input files during an array. If the paired gains vary materially, collect
 additional independent arrays before quoting a stable percentage; three samples
 do not establish a confidence interval.
@@ -238,6 +240,91 @@ do not establish a confidence interval.
 If the site disallows arrays, submit `timing 1`, `timing 2`, `timing 3` one at a
 time and export the same absolute `RHMC_RESULTS_DIR` for that set. Use a new
 directory for every new comparison.
+
+## RHMC internal GPU-memory report
+
+The memory job runs one legacy and one recursive trajectory, then prints each
+implementation's live device allocations using SIMULATeQCD's existing
+`MemoryManagement::memorySummary()`. This is internal allocation accounting;
+it does not poll `nvidia-smi` and does not report host RSS. From `testrun/`:
+
+```bash
+sbatch ../SIMULATeQCD/scripts/runRhmcMemoryComparison.sh
+```
+
+The report is taken immediately after `HMC.update()` while the RHMC object and
+its persistent gauge, force, smearing, and spinor fields are still alive. The
+job prints the complete device-container names, pointer counts, sizes, total
+managed bytes, and the legacy/recursive difference. It stores the full logs,
+`legacy_device_memory.txt`, `recursive_device_memory.txt`, and
+`rhmc_managed_device_memory.csv` under `rhmc_memory/JOB_ID/`.
+
+This measures memory owned by SIMULATeQCD's memory manager. It is not a CUDA
+driver-level peak measurement and does not include CUDA runtime overhead.
+Gauge fields are device/global-memory allocations; register usage is a separate
+kernel compiler/profiler measurement.
+
+## HISQ-force volume scaling
+
+The force scaling job compares single-GPU internal `TestForce` time at fixed
+`Nt=8` for `L=16,24,32,40,48,52`. The `52^3 x 8` point is the only realistic
+point: it reads the thermalized configuration
+`../test_conf/l528f21b6315m00282m0759_001.1610`. Every other lattice size uses
+a seeded random gauge configuration and is only a synthetic volume-scaling
+point. Gauge loading or generation is outside the timed region. The job prints
+this provenance at startup and before every volume, and records it in the
+`gauge_kind` and `gauge_file` CSV columns.
+
+The benchmark driver has a `--random-gauge` option for the non-52 scaling
+points and a canonical seconds record. Copy the common source to the baseline
+and rebuild both targets:
+
+```bash
+cp ../SIMULATeQCD/src/testing/main_hisqForceBenchmark.cpp \
+   ../SIMULATeQCD-legacy-1732861/src/testing/main_hisqForceBenchmark.cpp
+cmake --build ../buildSIMULATeQCD --target hisqForceBenchmark --parallel 8
+cmake --build ../buildSIMULATeQCD_legacy_1732861 --target hisqForceBenchmark --parallel 8
+```
+
+Then submit from `testrun/`:
+
+```bash
+sbatch ../SIMULATeQCD/scripts/runHisqForceScaling.sh
+```
+
+Each implementation is run three times per volume in alternating order. The job
+writes all measurements and medians to `hisq_force_scaling.csv`, then creates
+`hisq_force_scaling.pdf` and `hisq_force_gain.pdf` under
+`hisq_force_scaling/JOB_ID/`. Plot titles also state that only `52^3 x 8` is
+thermalized. To select other even spatial sizes without editing the script, for
+example:
+
+```bash
+HISQ_SCALING_SIZES="24 32 40 52" \
+    sbatch --export=ALL,HISQ_SCALING_SIZES \
+    ../SIMULATeQCD/scripts/runHisqForceScaling.sh
+```
+
+All plots are PDF files generated with Python's standard library; matplotlib is
+not required. The CSV files, GPU model, binary paths, build options, and commit
+IDs are the quantitative records to attach to a review. If the optimized source
+tree is not named `SIMULATeQCD`, export the absolute `HISQ_PLOT_SCRIPT` path when
+submitting either Slurm measurement script.
+
+For normal use, the three no-argument submission wrappers resolve the standard
+source, build, and `testrun` paths automatically:
+
+```bash
+./scripts/submitHisqForceTiming.sh
+./scripts/submitRhmcTiming.sh
+./scripts/submitRhmcMemory.sh
+```
+
+They can be invoked from any directory. The RHMC timing wrapper submits three
+serialized array tasks and an `afterany` summary job, so one failed timing task
+does not leave the summary permanently pending. The timing jobs generate their
+PDF reports automatically; the memory job prints and saves the internal
+MemoryManagement report.
 
 ## Other sites or directory names
 
