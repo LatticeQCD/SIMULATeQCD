@@ -24,7 +24,7 @@ fi
 submit_directory=${SLURM_SUBMIT_DIR:?Submit this script from the testrun directory}
 project_directory=${HISQ_PROJECT_DIR:-$(dirname "$submit_directory")}
 run_directory=${HISQ_RUN_DIR:-$project_directory/testrun}
-binary=${HISQ_F3_BINARY:-$project_directory/buildSIMULATeQCD_hisq_f3/testing/hisqForce}
+binary=${HISQ_F3_BINARY:-$project_directory/buildSIMULATeQCD/testing/hisqForce}
 
 if [[ ! -d "$run_directory" ]]; then
     echo "Run directory is not available: $run_directory" >&2
@@ -33,7 +33,7 @@ fi
 
 if [[ ! -x "$binary" ]]; then
     echo "F3 diagnostic binary is not executable: $binary" >&2
-    echo "Build target hisqForce in buildSIMULATeQCD_hisq_f3 first." >&2
+    echo "Build target hisqForce in buildSIMULATeQCD first." >&2
     exit 2
 fi
 
