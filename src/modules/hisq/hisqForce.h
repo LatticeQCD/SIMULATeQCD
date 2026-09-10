@@ -85,11 +85,13 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
 
 // D3 without its middle-link branches. The three middle branches are streamed
 // into the same accumulator with accumulate_scaled_force below.
-template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp> class recursive_three_link_base_force {
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, bool lvl1 = false>
+class recursive_three_link_base_force {
   private:
     SU3Accessor<floatT, comp> _gAcc;
     SU3Accessor<floatT> _finAcc;
-    SmearingParameters<floatT> _smParams = getLevel2Params<floatT>();
+    SmearingParameters<floatT> _smParams
+        = lvl1 ? getLevel1Params<floatT>() : getLevel2Params<floatT>();
 
   public:
     recursive_three_link_base_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &Gauge,
@@ -480,9 +482,6 @@ class HisqForce {
 
     contribution_lepagelink<floatT, onDevice, HaloDepth, comp> F1_lepagelink;
 
-    // F3 part
-    contribution_3link<floatT, onDevice, HaloDepth, comp, true> F3_create_3Link;
-
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 1> F3_7link_part_1;
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 2> F3_7link_part_2;
     // contribution_7link<floatT, onDevice, HaloDepth, comp, 3> F3_7link_part_3;
@@ -506,6 +505,9 @@ class HisqForce {
     RationalCoeff _rat;
 
     void constructF1(Gaugefield<floatT, onDevice, HaloDepth, comp> &Force);
+    void constructF3Recursive(
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &Force,
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &ForceOut);
 
   public:
     // Initializer list is in cpp file.

@@ -210,7 +210,7 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
       _ForceNu(GaugeBase.getComm(), "HisqForceRecursiveScratch"),
 
       _spinor_x(GaugeBase.getComm()), _spinor_y(GaugeBase.getComm(), "SHARED_tmp"), _createF2(_GaugeLvl1, _TmpForce), _finalizeF3(_GaugeU3P, _TmpForce),
-      _createNaikF1(_GaugeU3P, _TmpForce), F1_create_3Link(_GaugeU3P, Force), F1_lepagelink(_GaugeU3P, Force), F3_create_3Link(_GaugeU3P, Force),
+      _createNaikF1(_GaugeU3P, _TmpForce), F1_create_3Link(_GaugeU3P, Force), F1_lepagelink(_GaugeU3P, Force),
       _smearing(smearing), _cg(cg), _dslash(dslash), _dslash_multi(dslash_multi), _rhmc_param(rhmc_param), _rat(rat) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
@@ -532,6 +532,116 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 }
 
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
+void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::constructF3Recursive(
+    Gaugefield<floatT, onDevice, HaloDepth, comp> &Force,
+    Gaugefield<floatT, onDevice, HaloDepth, comp> &ForceOut) {
+
+    const SmearingParameters<floatT> smParams = getLevel1Params<floatT>();
+
+    _Dummy.template iterateOverBulkAllMu<64>(
+        recursive_three_link_base_force<floatT, onDevice, HaloDepth, R18, true>(
+            _GaugeU3P, Force));
+
+    static_for<1, 4>::apply([&](auto nu_h) {
+        _Dummy.template iterateOverBulkAllMu<64>(
+            make_accumulate_scaled_force(
+                _Dummy,
+                outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                    _GaugeU3P, Force),
+                smParams._c_3));
+    });
+
+    ForceOut = _Dummy;
+
+    static_for<1, 4>::apply([&](auto nu_h) {
+        _ForceNu.template iterateOverBulkAllMu<64>(
+            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                _GaugeU3P, Force));
+        _ForceNu.updateAll();
+
+        static_for<0, 2>::apply([&](auto rho_h) {
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _ForceNu),
+                    smParams._c_5));
+
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    rho_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _ForceNu),
+                    smParams._c_5));
+
+            _Dummy.template iterateOverBulkAllMu<64>(
+                rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P));
+            _Dummy.updateAll();
+
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy, Force),
+                    smParams._c_5));
+        });
+    });
+
+    static_for<1, 4>::apply([&](auto nu_h) {
+        static_for<0, 2>::apply([&](auto rho_h) {
+            _ForceNu.template iterateOverBulkAllMu<64>(
+                outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                    _GaugeU3P, Force));
+            _ForceNu.updateAll();
+
+            _Dummy.template iterateOverBulkAllMu<64>(
+                rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P, _ForceNu));
+            _Dummy.updateAll();
+
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    sigma_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy),
+                    smParams._c_7));
+
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    sigma_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy),
+                    smParams._c_7));
+
+            _Dummy.template iterateOverBulkAllMu<64>(
+                sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P));
+            _Dummy.updateAll();
+
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy, _ForceNu),
+                    smParams._c_7));
+
+            _ForceNu.template iterateOverBulkAllMu<64>(
+                rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P, _Dummy));
+            _ForceNu.updateAll();
+
+            ForceOut.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    ForceOut,
+                    outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _ForceNu, Force),
+                    -smParams._c_7));
+        });
+    });
+}
+
+template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
 void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::TestForce(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn,
                                                                                               Gaugefield<floatT, onDevice, HaloDepth, comp> &Force,
                                                                                               grnd_state<true> &d_rand) {
@@ -592,61 +702,7 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 
     _GaugeU3P.iterateOverBulkAllMu(multPhaseB);
 
-    // ============================================================
-    // ORIGINAL F3 FORCE
-    // ============================================================
-
-    // 3-link
-    _TmpForce.template iterateOverBulkAllMu<64>(F3_create_3Link);
-
-    // 5-link: small parts
-    static_for<1, 5>::apply([&](auto part) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link<floatT, onDevice, HaloDepth, R18, part>(_GaugeU3P, Force));
-
-        _TmpForce = _TmpForce + _Dummy;
-    });
-
-    // 5-link: large parts
-    static_for<5, 7>::apply([&](auto part) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-    });
-
-    // 7-link
-    static_for<1, 8>::apply([&](auto part) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 4>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 5>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 6>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 7>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-    });
+    constructF3Recursive(Force, _TmpForce);
 
     // ============================================================
     // Final thin-link force
@@ -706,83 +762,7 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 
     _GaugeU3P.updateAll();
 
-    _TmpForce.template iterateOverBulkAllMu<64>(F3_create_3Link);
-    // _Dummy.iterateOverBulkAllMu(F3_5link_part11);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.iterateOverBulkAllMu(F3_5link_part12);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.iterateOverBulkAllMu(F3_5link_part13);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.iterateOverBulkAllMu(F3_5link_part14);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.iterateOverBulkAllMu(F3_5link_part20);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.iterateOverBulkAllMu(F3_5link_part30);
-    // _TmpForce = _TmpForce + _Dummy;
-
-    static_for<1, 5>::apply([&](auto part) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link<floatT, onDevice, HaloDepth, R18, part>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-    });
-
-    static_for<5, 7>::apply([&](auto part) {
-        // static_for<0,4>::apply([&](auto term) { //nvidia compiler cannot handle nested static_for...
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_5link_large<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        // });
-    });
-
-    static_for<1, 8>::apply([&](auto part) {
-        // static_for<0,8>::apply([&](auto term) {
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 0>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 1>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 2>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 3>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 4>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 5>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 6>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-
-        _Dummy.template iterateOverBulkAllMu<64>(contribution_7link<floatT, onDevice, HaloDepth, R18, part, 7>(_GaugeU3P, Force));
-        _TmpForce = _TmpForce + _Dummy;
-        // });
-    });
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_1);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_2);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_3);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_4);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_5);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_6);
-    // _TmpForce = _TmpForce + _Dummy;
-    // _Dummy.template iterateOverBulkAllMu<64>(F3_7link_part_7);
-    // _TmpForce = _TmpForce + _Dummy;
+    constructF3Recursive(Force, _TmpForce);
 
     Force.iterateOverBulkAllMu(_finalizeF3);
 
