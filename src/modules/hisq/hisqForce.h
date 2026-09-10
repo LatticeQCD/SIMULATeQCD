@@ -83,60 +83,63 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
 };
 
-template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, bool lvl1> class recursive_three_link_force {
+// D3 without its middle-link branches. The three middle branches are streamed
+// into the same accumulator with accumulate_scaled_force below.
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp> class recursive_three_link_base_force {
   private:
     SU3Accessor<floatT, comp> _gAcc;
     SU3Accessor<floatT> _finAcc;
-
-    SU3Accessor<floatT, R18> _nu1Acc;
-    SU3Accessor<floatT, R18> _nu2Acc;
-    SU3Accessor<floatT, R18> _nu3Acc;
-
-    SmearingParameters<floatT> _smParams = (lvl1 ? getLevel1Params<floatT>() : getLevel2Params<floatT>());
+    SmearingParameters<floatT> _smParams = getLevel2Params<floatT>();
 
   public:
-    recursive_three_link_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &Gauge, Gaugefield<floatT, onDevice, HaloDepth> &ForceIn,
-                               Gaugefield<floatT, onDevice, HaloDepth, R18> &ForceNu1, Gaugefield<floatT, onDevice, HaloDepth, R18> &ForceNu2,
-                               Gaugefield<floatT, onDevice, HaloDepth, R18> &ForceNu3)
-        : _gAcc(Gauge.getAccessor()), _finAcc(ForceIn.getAccessor()), _nu1Acc(ForceNu1.getAccessor()), _nu2Acc(ForceNu2.getAccessor()),
-          _nu3Acc(ForceNu3.getAccessor()) {}
+    recursive_three_link_base_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &Gauge,
+                                    Gaugefield<floatT, onDevice, HaloDepth> &ForceIn)
+        : _gAcc(Gauge.getAccessor()), _finAcc(ForceIn.getAccessor()) {}
 
     __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
         using GInd = GIndexer<All, HaloDepth>;
 
         gSite site = GInd::getSite(siteMu.isite);
         int mu = siteMu.mu;
-
-        // ----------------------------------------------------
-        // Middle-link pieces.
-        //
-        // ForceNu1/2/3 already contain the minus sign.
-        // ----------------------------------------------------
-        SU3<floatT> middle = _nu1Acc.getLink(siteMu) + _nu2Acc.getLink(siteMu) + _nu3Acc.getLink(siteMu);
-
-        // ----------------------------------------------------
-        // Side-link pieces.
-        // ----------------------------------------------------
         SU3<floatT> side = su3_zero<floatT>();
 
         for (int nu_h = 1; nu_h < 4; ++nu_h) {
             int nu = (mu + nu_h) % 4;
-
             side += outerNuSideGather<floatT, HaloDepth, comp, R18>(_gAcc, _finAcc, site, mu, nu);
         }
 
-        // Since middle and side already carry "-",
-        //
-        // c1 F + c3 (middle + side)
-        //
-        // = c1 F - c3 * legacy_derivative_staple3
-        //
-        // exactly matching threeLinkContribution().
-        return _smParams._c_1 * _finAcc.getLink(siteMu)
-
-               + _smParams._c_3 * (middle + side);
+        return _smParams._c_1 * _finAcc.getLink(siteMu) + _smParams._c_3 * side;
     }
 };
+
+// In-place accumulation is safe because each thread reads and writes only its
+// own accumulator link. The contribution may read other, separately stored
+// fields, but never a neighboring accumulator link.
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType accumulatorComp, class Contribution>
+class accumulate_scaled_force {
+  private:
+    SU3Accessor<floatT, accumulatorComp> _accumulatorAcc;
+    Contribution _contribution;
+    floatT _coefficient;
+
+  public:
+    accumulate_scaled_force(Gaugefield<floatT, onDevice, HaloDepth, accumulatorComp> &Accumulator,
+                            Contribution contribution, floatT coefficient)
+        : _accumulatorAcc(Accumulator.getAccessor()), _contribution(contribution), _coefficient(coefficient) {}
+
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+        return _accumulatorAcc.getLink(siteMu) + _coefficient * _contribution(siteMu);
+    }
+};
+
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType accumulatorComp, class Contribution>
+inline
+accumulate_scaled_force<floatT, onDevice, HaloDepth, accumulatorComp, Contribution>
+make_accumulate_scaled_force(Gaugefield<floatT, onDevice, HaloDepth, accumulatorComp> &Accumulator,
+                             Contribution contribution, floatT coefficient) {
+    return accumulate_scaled_force<floatT, onDevice, HaloDepth, accumulatorComp, Contribution>(
+        Accumulator, contribution, coefficient);
+}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h> class rho_side_force {
   private:
@@ -362,25 +365,6 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
 };
 
-template <class floatT, bool onDevice, size_t HaloDepth> class recursive_fat7_combined_force {
-  private:
-    SU3Accessor<floatT, R18> _d3Acc;
-    SU3Accessor<floatT, R18> _d5Acc;
-    SU3Accessor<floatT, R18> _d7Acc;
-
-    SmearingParameters<floatT> _smParams = getLevel2Params<floatT>();
-
-  public:
-    recursive_fat7_combined_force(Gaugefield<floatT, onDevice, HaloDepth, R18> &D3,
-                                  Gaugefield<floatT, onDevice, HaloDepth, R18> &D5,
-                                  Gaugefield<floatT, onDevice, HaloDepth, R18> &D7)
-        : _d3Acc(D3.getAccessor()), _d5Acc(D5.getAccessor()), _d7Acc(D7.getAccessor()) {}
-
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
-        return _d3Acc.getLink(siteMu) + _smParams._c_5 * _d5Acc.getLink(siteMu) + _smParams._c_7 * _d7Acc.getLink(siteMu);
-    }
-};
-
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp> class contribution_lepagelink {
   private:
     SU3Accessor<floatT, comp> _SU3Accessor;
@@ -465,12 +449,7 @@ class HisqForce {
     Gaugefield<floatT, onDevice, HaloDepth, R18> &_GaugeBase;
     Gaugefield<floatT, onDevice, HaloDepth, R18> _Dummy;
 
-    Gaugefield<floatT, onDevice, HaloDepth, R18> _ForceNu1;
-    Gaugefield<floatT, onDevice, HaloDepth, R18> _ForceNu2;
-    Gaugefield<floatT, onDevice, HaloDepth, R18> _ForceNu3;
-    Gaugefield<floatT, onDevice, HaloDepth, R18> _Force3Recursive;
-    Gaugefield<floatT, onDevice, HaloDepth> _Force5Recursive;
-    Gaugefield<floatT, onDevice, HaloDepth> _Force7Recursive;
+    Gaugefield<floatT, onDevice, HaloDepth, R18> _ForceNu;
 
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, rdeg> _spinor_x;
     Spinorfield<floatT, onDevice, Odd, HaloDepthSpin, rdeg> _spinor_y;
@@ -525,6 +504,8 @@ class HisqForce {
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, rdeg> &_dslash_multi;
     RhmcParameters _rhmc_param;
     RationalCoeff _rat;
+
+    void constructF1(Gaugefield<floatT, onDevice, HaloDepth, comp> &Force);
 
   public:
     // Initializer list is in cpp file.
