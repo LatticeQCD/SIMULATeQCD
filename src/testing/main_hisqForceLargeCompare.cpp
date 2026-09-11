@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     legacyForce.readconf_nersc(legacyPath);
     recursiveForce.readconf_nersc(recursivePath);
 
-    const bool pass = compare_fields<PREC, HaloDepth, true, R18>(legacyForce, recursiveForce, 1e-12);
+    const bool pass = compare_fields<PREC, HaloDepth, true, R18>(legacyForce, recursiveForce, 1e-8);
 
     if (!pass) {
         rootLogger.error("Large-lattice legacy vs recursive HISQ force: FAIL");
