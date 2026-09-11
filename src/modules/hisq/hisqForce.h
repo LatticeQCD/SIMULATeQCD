@@ -349,6 +349,39 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     }
 };
 
+// The D5 middle link and the two D7 sigma derivatives all consume the same
+// live rho-middle reverse force F_R. Linearity lets one accumulation kernel
+// replace the three separate reads and writes of the force accumulator:
+//
+//   c5 * F_R + c7 * (F_sigma_middle + F_sigma_side).
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp,
+          int nu_h, int rho_h>
+class combined_middle_sigma_force {
+  private:
+    SU3Accessor<floatT> _forceRAcc;
+    sigma_middle_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>
+        _sigmaMiddle;
+    sigma_side_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>
+        _sigmaSide;
+    floatT _c5;
+    floatT _c7;
+
+  public:
+    combined_middle_sigma_force(
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn,
+        Gaugefield<floatT, onDevice, HaloDepth> &ForceR,
+        floatT c5, floatT c7)
+        : _forceRAcc(ForceR.getAccessor()),
+          _sigmaMiddle(GaugeIn, ForceR),
+          _sigmaSide(GaugeIn, ForceR),
+          _c5(c5), _c7(c7) {}
+
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+        return _c5 * _forceRAcc.getLink(siteMu)
+             + _c7 * (_sigmaMiddle(siteMu) + _sigmaSide(siteMu));
+    }
+};
+
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h> class sigma_dressed_primal {
   private:
     SU3Accessor<floatT, comp> _SU3Accessor;

@@ -449,28 +449,20 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
                     _GaugeU3P, _ForceNu));
             _Dummy.updateAll();
 
-            // D5 middle contribution. The same F_R below drives both
-            // unchanged D7 sigma contributions.
+            // Fuse every contribution that consumes this live F_R:
+            //
+            //   c5 * F_R
+            //     + c7 * (F_sigma_middle + F_sigma_side).
+            //
+            // This replaces three accumulator kernels with one without
+            // changing any coefficient or reverse-recursive sign.
             _TmpForce.template iterateOverBulkAllMu<64>(
                 make_accumulate_scaled_force(
                     _TmpForce,
-                    _Dummy.getAccessor(),
-                    smParams._c_5));
-
-            // Unchanged D7 sigma-middle and sigma-side contributions.
-            _TmpForce.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    _TmpForce,
-                    sigma_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _Dummy),
-                    smParams._c_7));
-
-            _TmpForce.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    _TmpForce,
-                    sigma_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _Dummy),
-                    smParams._c_7));
+                    combined_middle_sigma_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy,
+                        smParams._c_5, smParams._c_7),
+                    static_cast<floatT>(1)));
 
             _Dummy.template iterateOverBulkAllMu<64>(
                 sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
@@ -553,26 +545,15 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
                     _GaugeU3P, _ForceNu));
             _Dummy.updateAll();
 
-            // Reuse F_R for the D5 middle term and both D7 sigma terms.
+            // Fuse the D5 middle term and both D7 sigma terms while their
+            // common rho-middle reverse force F_R is live.
             ForceOut.template iterateOverBulkAllMu<64>(
                 make_accumulate_scaled_force(
                     ForceOut,
-                    _Dummy.getAccessor(),
-                    smParams._c_5));
-
-            ForceOut.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    ForceOut,
-                    sigma_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _Dummy),
-                    smParams._c_7));
-
-            ForceOut.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    ForceOut,
-                    sigma_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _Dummy),
-                    smParams._c_7));
+                    combined_middle_sigma_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy,
+                        smParams._c_5, smParams._c_7),
+                    static_cast<floatT>(1)));
 
             _Dummy.template iterateOverBulkAllMu<64>(
                 sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
