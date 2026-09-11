@@ -367,6 +367,59 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
 };
 
+// The D5 and D7 rho-side derivatives have the same upstream force F_N.
+// Fuse their accumulation using linearity:
+//
+//   c5 * rho_side_force[U, F_N]
+//     + c7 * rho_side_sigma_dressed_force[X_sigma, F_N].
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
+class combined_rho_side_force {
+  private:
+    rho_side_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h> _d5RhoSide;
+    rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h> _d7RhoSide;
+    floatT _c5;
+    floatT _c7;
+
+  public:
+    combined_rho_side_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn,
+                            Gaugefield<floatT, onDevice, HaloDepth> &SigmaPrimal,
+                            Gaugefield<floatT, onDevice, HaloDepth> &ForceNu,
+                            floatT c5, floatT c7)
+        : _d5RhoSide(GaugeIn, ForceNu),
+          _d7RhoSide(GaugeIn, SigmaPrimal, ForceNu),
+          _c5(c5), _c7(c7) {}
+
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+        return _c5 * _d5RhoSide(siteMu) + _c7 * _d7RhoSide(siteMu);
+    }
+};
+
+// Linearity of the rho dressing combines the two outer-nu primal fields:
+//
+//   c5 * D_rho[U] - c7 * D_rho[X_sigma]
+//     = D_rho[c5 * U - c7 * X_sigma].
+//
+// The minus is the already validated signed-D7 convention for positions 1+7.
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
+class combined_rho_dressed_primal {
+  private:
+    rho_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h> _d5Primal;
+    rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h> _d7Primal;
+    floatT _c5;
+    floatT _c7;
+
+  public:
+    combined_rho_dressed_primal(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn,
+                                Gaugefield<floatT, onDevice, HaloDepth> &SigmaPrimal,
+                                floatT c5, floatT c7)
+        : _d5Primal(GaugeIn), _d7Primal(GaugeIn, SigmaPrimal),
+          _c5(c5), _c7(c7) {}
+
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+        return _c5 * _d5Primal(siteMu) - _c7 * _d7Primal(siteMu);
+    }
+};
+
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp> class contribution_lepagelink {
   private:
     SU3Accessor<floatT, comp> _SU3Accessor;

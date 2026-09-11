@@ -433,45 +433,15 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
     _ForceNu.template iterateOverBulkAllMu<64>(_createNaikF1);
     _TmpForce = _Dummy + _ForceNu;
 
-    // Add raw D5 directly with its physical coefficient.
-    static_for<1, 4>::apply([&](auto nu_h) {
-        _ForceNu.template iterateOverBulkAllMu<64>(
-            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                _GaugeU3P, Force));
-        _ForceNu.updateAll();
-
-        static_for<0, 2>::apply([&](auto rho_h) {
-            _TmpForce.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    _TmpForce,
-                    rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _ForceNu),
-                    smParams._c_5));
-
-            _TmpForce.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    _TmpForce,
-                    rho_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _ForceNu),
-                    smParams._c_5));
-
-            _Dummy.template iterateOverBulkAllMu<64>(
-                rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P));
-            _Dummy.updateAll();
-
-            _TmpForce.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    _TmpForce,
-                    outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _Dummy, Force),
-                    smParams._c_5));
-        });
-    });
-
-    // Add signed D7 directly with its physical coefficient. _ForceNu holds
-    // F_N, while _Dummy changes from F_R to X_sigma. F_N is rebuilt for each
-    // rho branch because _ForceNu becomes X_rhosigma at the end of that branch.
+    // Fuse the D5 and signed-D7 reverse paths. Within each (nu_h, rho_h)
+    // branch, both derivatives use the same
+    //
+    //   F_N = outer_nu_middle_force(F)
+    //   F_R = rho_middle_force(F_N).
+    //
+    // _ForceNu first holds F_N. _Dummy first holds F_R, then X_sigma.
+    // Only after all users of F_N are finished is _ForceNu overwritten by
+    // the combined outer-nu primal field.
     static_for<1, 4>::apply([&](auto nu_h) {
         static_for<0, 2>::apply([&](auto rho_h) {
             _ForceNu.template iterateOverBulkAllMu<64>(
@@ -484,6 +454,15 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
                     _GaugeU3P, _ForceNu));
             _Dummy.updateAll();
 
+            // D5 middle contribution. The same F_R below drives both
+            // unchanged D7 sigma contributions.
+            _TmpForce.template iterateOverBulkAllMu<64>(
+                make_accumulate_scaled_force(
+                    _TmpForce,
+                    _Dummy.getAccessor(),
+                    smParams._c_5));
+
+            // Unchanged D7 sigma-middle and sigma-side contributions.
             _TmpForce.template iterateOverBulkAllMu<64>(
                 make_accumulate_scaled_force(
                     _TmpForce,
@@ -503,25 +482,38 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
                     _GaugeU3P));
             _Dummy.updateAll();
 
+            // Fuse the rho-side kernels:
+            //
+            //   c5 * rho_side[U, F_N]
+            //     + c7 * rho_side[X_sigma, F_N].
             _TmpForce.template iterateOverBulkAllMu<64>(
                 make_accumulate_scaled_force(
                     _TmpForce,
-                    rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _Dummy, _ForceNu),
-                    smParams._c_7));
+                    combined_rho_side_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                        _GaugeU3P, _Dummy, _ForceNu,
+                        smParams._c_5, smParams._c_7),
+                    static_cast<floatT>(1)));
 
+            // By linearity of D_rho, build one outer-nu primal field:
+            //
+            //   D_rho[c5 * U - c7 * X_sigma]
+            //     = c5 * D_rho[U] - c7 * D_rho[X_sigma].
+            //
+            // The minus preserves the signed-D7 positions 1+7 convention.
             _ForceNu.template iterateOverBulkAllMu<64>(
-                rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy));
+                combined_rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
+                    _GaugeU3P, _Dummy,
+                    smParams._c_5, smParams._c_7));
             _ForceNu.updateAll();
 
-            // Production positions 1 + 7 equal negative raw R17.
+            // One outer-nu-side gather now supplies the D5 and signed-D7
+            // positions 1+7 contributions together.
             _TmpForce.template iterateOverBulkAllMu<64>(
                 make_accumulate_scaled_force(
                     _TmpForce,
                     outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
                         _GaugeU3P, _ForceNu, Force),
-                    -smParams._c_7));
+                    static_cast<floatT>(1)));
         });
     });
 
