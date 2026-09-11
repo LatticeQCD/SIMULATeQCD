@@ -72,6 +72,23 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
         return outerNuMiddleGather<floatT, HaloDepth, comp, R18>(_gAcc, _finAcc, site, mu, nu);
     }
 };
+
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
+class scaled_force_field {
+  private:
+    SU3Accessor<floatT, comp> _forceAcc;
+    floatT _coefficient;
+
+  public:
+    scaled_force_field(Gaugefield<floatT, onDevice, HaloDepth, comp> &ForceIn,
+                       floatT coefficient)
+        : _forceAcc(ForceIn.getAccessor()), _coefficient(coefficient) {}
+
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+        return _coefficient * _forceAcc.getLink(siteMu);
+    }
+};
+
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h> class rho_middle_force {
   private:
     SU3Accessor<floatT, comp> _SU3Accessor;
@@ -417,6 +434,88 @@ class combined_rho_dressed_primal {
 
     __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
         return _c5 * _d5Primal(siteMu) - _c7 * _d7Primal(siteMu);
+    }
+};
+
+// Signed D3/D5/D7 primal seen by the common outer-nu side derivative:
+//
+//   -c3 * U
+//   + sum_rho (c5 * D_rho[U] - c7 * D_rho[D_sigma[U]]).
+//
+// The signs are the validated reverse-recursive force convention, not the
+// unsigned forward-smearing coefficients. Building this complete field makes
+// one outer-nu side gather replace the separate D3, D5 and D7 gathers.
+// Lepage is deliberately excluded: its repeated nu steps correlate the two
+// orientations (++ and --), which an unoriented summed primal cannot encode.
+template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h>
+class combined_outer_nu_primal {
+  private:
+    SU3Accessor<floatT, comp> _gAcc;
+    floatT _c3;
+    floatT _c5;
+    floatT _c7;
+
+    __host__ __device__ SU3<floatT> nestedDressedPrimal(
+        gSite site, int mu, int rho, int sigma) {
+        using GInd = GIndexer<All, HaloDepth>;
+
+        const gSite upRho = GInd::site_up(site, rho);
+        const gSite upMu = GInd::site_up(site, mu);
+        const gSite dnRho = GInd::site_dn(site, rho);
+        const gSite dnRhoUpMu = GInd::site_up(dnRho, mu);
+
+        SU3<floatT> dressed =
+            _gAcc.getLink(GInd::getSiteMu(site, rho))
+            * rhoDressPrimalGather<floatT, HaloDepth, comp>(
+                _gAcc, upRho, mu, sigma)
+            * _gAcc.getLinkDagger(GInd::getSiteMu(upMu, rho));
+
+        dressed +=
+            _gAcc.getLinkDagger(GInd::getSiteMu(dnRho, rho))
+            * rhoDressPrimalGather<floatT, HaloDepth, comp>(
+                _gAcc, dnRho, mu, sigma)
+            * _gAcc.getLink(GInd::getSiteMu(dnRhoUpMu, rho));
+
+        return dressed;
+    }
+
+  public:
+    combined_outer_nu_primal(
+        Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn,
+        floatT c3, floatT c5, floatT c7)
+        : _gAcc(GaugeIn.getAccessor()),
+          _c3(c3), _c5(c5), _c7(c7) {}
+
+    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+        using GInd = GIndexer<All, HaloDepth>;
+
+        const gSite site = GInd::getSite(siteMu.isite);
+        const int mu = siteMu.mu;
+        const int nu = (mu + nu_h) % 4;
+
+        SU3<floatT> result =
+            -_c3 * _gAcc.getLink(GInd::getSiteMu(site, mu));
+
+#pragma unroll
+        for (int rho_h = 0; rho_h < 2; ++rho_h) {
+            const int rho =
+                (((mu + nu) % 2)
+                     * ((40 * (mu + nu) - 6 * mu * nu
+                         - 18 * (mu * mu + nu * nu)
+                         + 2 * (mu * mu * mu + nu * nu * nu))
+                            / 12
+                        + rho_h)
+                 + ((mu + nu + 1) % 2) * (mu + 1 + 2 * rho_h))
+                % 4;
+            const int sigma = 6 - mu - nu - rho;
+
+            result +=
+                _c5 * rhoDressPrimalGather<floatT, HaloDepth, comp>(
+                          _gAcc, site, mu, rho)
+                - _c7 * nestedDressedPrimal(site, mu, rho, sigma);
+        }
+
+        return result;
     }
 };
 

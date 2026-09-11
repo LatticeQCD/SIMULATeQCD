@@ -413,42 +413,37 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 
     const SmearingParameters<floatT> smParams = getLevel2Params<floatT>();
 
-    // D3 starts in the shared dummy. Stream each middle branch into that
-    // accumulator, so three simultaneously live ForceNu fields are unnecessary.
+    // Start with the one-link term only. The D3 side and middle branches are
+    // accumulated below through the common outer-nu reverse path.
     _Dummy.template iterateOverBulkAllMu<64>(
-        recursive_three_link_base_force<floatT, onDevice, HaloDepth, R18>(
-            _GaugeU3P, Force));
-
-    static_for<1, 4>::apply([&](auto nu_h) {
-        _Dummy.template iterateOverBulkAllMu<64>(
-            make_accumulate_scaled_force(
-                _Dummy,
-                outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                    _GaugeU3P, Force),
-                smParams._c_3));
-    });
+        scaled_force_field<floatT, onDevice, HaloDepth, R18>(
+            Force, smParams._c_1));
 
     // Preserve the Naik derivative before _TmpForce stops being the pre-F1
     // Naik source. Then make _TmpForce the physical F1 accumulator.
     _ForceNu.template iterateOverBulkAllMu<64>(_createNaikF1);
     _TmpForce = _Dummy + _ForceNu;
 
-    // Fuse the D5 and signed-D7 reverse paths. Within each (nu_h, rho_h)
-    // branch, both derivatives use the same
+    // Fuse D3, D5 and signed D7 at their common outer-nu level.
+    // For each nu_h, construct F_N once and retain it while processing every
+    // internal derivative. The rho branches still share
     //
     //   F_N = outer_nu_middle_force(F)
     //   F_R = rho_middle_force(F_N).
-    //
-    // _ForceNu first holds F_N. _Dummy first holds F_R, then X_sigma.
-    // Only after all users of F_N are finished is _ForceNu overwritten by
-    // the combined outer-nu primal field.
     static_for<1, 4>::apply([&](auto nu_h) {
-        static_for<0, 2>::apply([&](auto rho_h) {
-            _ForceNu.template iterateOverBulkAllMu<64>(
-                outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
-                    _GaugeU3P, Force));
-            _ForceNu.updateAll();
+        _ForceNu.template iterateOverBulkAllMu<64>(
+            outer_nu_middle_force<floatT, onDevice, HaloDepth, R18, nu_h>(
+                _GaugeU3P, Force));
+        _ForceNu.updateAll();
 
+        // D3 middle derivative through the common outer-nu force.
+        _TmpForce.template iterateOverBulkAllMu<64>(
+            make_accumulate_scaled_force(
+                _TmpForce,
+                _ForceNu.getAccessor(),
+                smParams._c_3));
+
+        static_for<0, 2>::apply([&](auto rho_h) {
             _Dummy.template iterateOverBulkAllMu<64>(
                 rho_middle_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
                     _GaugeU3P, _ForceNu));
@@ -493,31 +488,32 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
                         _GaugeU3P, _Dummy, _ForceNu,
                         smParams._c_5, smParams._c_7),
                     static_cast<floatT>(1)));
-
-            // By linearity of D_rho, build one outer-nu primal field:
-            //
-            //   D_rho[c5 * U - c7 * X_sigma]
-            //     = c5 * D_rho[U] - c7 * D_rho[X_sigma].
-            //
-            // The minus preserves the signed-D7 positions 1+7 convention.
-            _ForceNu.template iterateOverBulkAllMu<64>(
-                combined_rho_dressed_primal<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                    _GaugeU3P, _Dummy,
-                    smParams._c_5, smParams._c_7));
-            _ForceNu.updateAll();
-
-            // One outer-nu-side gather now supplies the D5 and signed-D7
-            // positions 1+7 contributions together.
-            _TmpForce.template iterateOverBulkAllMu<64>(
-                make_accumulate_scaled_force(
-                    _TmpForce,
-                    outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, rho_h>(
-                        _GaugeU3P, _ForceNu, Force),
-                    static_cast<floatT>(1)));
         });
+
+        // The signed primal combines every contribution differentiated with
+        // respect to an outer-nu side link:
+        //
+        //   -c3 U + sum_rho D_rho[c5 U - c7 D_sigma[U]].
+        _Dummy.template iterateOverBulkAllMu<64>(
+            combined_outer_nu_primal<floatT, onDevice, HaloDepth, R18, nu_h>(
+                _GaugeU3P,
+                smParams._c_3, smParams._c_5,
+                smParams._c_7));
+        _Dummy.updateAll();
+
+        // One outer-nu-side gather replaces the separate D3, D5 and D7
+        // outer-side gathers for this direction.
+        _TmpForce.template iterateOverBulkAllMu<64>(
+            make_accumulate_scaled_force(
+                _TmpForce,
+                outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, R18, nu_h, 0>(
+                    _GaugeU3P, _Dummy, Force),
+                static_cast<floatT>(1)));
     });
 
-    // Unchanged production Lepage contribution.
+    // Lepage remains separate because its repeated transverse direction has
+    // correlated ++/-- orientations. A single unoriented D_nu field would
+    // incorrectly add mixed +-/-+ paths.
     _Dummy.iterateOverBulkAllMu(F1_lepagelink);
     _TmpForce = _TmpForce + _Dummy;
     _TmpForce.updateAll();
