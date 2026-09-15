@@ -636,6 +636,7 @@ class HisqForce {
     Gaugefield<floatT, onDevice, HaloDepth, R18> &_GaugeBase;
     Gaugefield<floatT, onDevice, HaloDepth, R18> _Dummy;
 
+    // Shares backing memory with _spinor_y; their live ranges do not overlap.
     Gaugefield<floatT, onDevice, HaloDepth, R18> _ForceNu;
 
     Spinorfield<floatT, onDevice, Even, HaloDepthSpin, rdeg> _spinor_x;

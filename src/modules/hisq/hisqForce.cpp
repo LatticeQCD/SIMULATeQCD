@@ -207,7 +207,9 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
     : _GaugeU3P(GaugeBase.getComm(), "SHARED_GAUGELVL2"), _GaugeLvl1(GaugeBase.getComm(), "SHARED_GAUGENAIK"), _TmpForce(GaugeBase.getComm()),
       _GaugeBase(GaugeBase), _Dummy(GaugeBase.getComm(), "SHARED_DUMMY"),
 
-      _ForceNu(GaugeBase.getComm(), "HisqForceRecursiveScratch"),
+      // _spinor_y is dead before constructF1/constructF3Recursive use
+      // _ForceNu, so both logical fields can safely share one allocation.
+      _ForceNu(GaugeBase.getComm(), "SHARED_tmp"),
 
       _spinor_x(GaugeBase.getComm()), _spinor_y(GaugeBase.getComm(), "SHARED_tmp"), _createF2(_GaugeLvl1, _TmpForce), _finalizeF3(_GaugeU3P, _TmpForce),
       _createNaikF1(_GaugeU3P, _TmpForce), F1_create_3Link(_GaugeU3P, Force), F1_lepagelink(_GaugeU3P, Force),
