@@ -28,6 +28,7 @@ struct LanczosTestConfiguration {
     double filterBeta = 1.0;
     double filterOperatorShift = 0.0;
     double filterOperatorScale = 1.0;
+    double operatorMass = 0.0;
 };
 
 int readEnvironmentInteger(const char *name, const int defaultValue) {
@@ -165,6 +166,10 @@ LanczosTestConfiguration readLanczosTestConfiguration() {
             readEnvironmentDouble(
                     "SIMQCD_LANCZOS_FILTER_OPERATOR_SCALE",
                     configuration.filterOperatorScale);
+    configuration.operatorMass =
+            readEnvironmentDouble(
+                    "SIMQCD_LANCZOS_MASS",
+                    configuration.operatorMass);
     return configuration;
 }
 
@@ -231,6 +236,11 @@ void validateLanczosTestConfiguration(
         throw std::runtime_error(
                 "SIMQCD_LANCZOS_FILTER_OPERATOR_SCALE must be finite");
     }
+    if (!std::isfinite(configuration.operatorMass)
+        || configuration.operatorMass < 0.0) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_MASS must be non-negative and finite");
+    }
 }
 
 void printLanczosTestConfiguration(
@@ -264,6 +274,8 @@ void printLanczosTestConfiguration(
               << configuration.filterOperatorShift << "\n";
     std::cout << "SIMQCD_LANCZOS_CONFIG filter_operator_scale = "
               << configuration.filterOperatorScale << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG operator_mass = "
+              << configuration.operatorMass << "\n";
     std::cout.flush();
 }
 
@@ -578,7 +590,8 @@ int main(int argc, char *argv[]){
     smearing.SmearAll();
 
     HisqDSlash<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> dslash(
-            gauge_smeared, gauge_Naik, 0.0, naikEpsilon);
+            gauge_smeared, gauge_Naik,
+            lanczosConfiguration.operatorMass, naikEpsilon);
     
     Eigenpairs<floatT,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairsWrite(commBase);
     TRLanRestartParams lanczosParams;
