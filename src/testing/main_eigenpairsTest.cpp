@@ -23,6 +23,11 @@ struct LanczosTestConfiguration {
     double residualTolerance = 1.0e-6;
     TRLanConvergenceCriterion convergenceCriterion =
             TRLanConvergenceCriterion::MaximumScaledPerMode;
+    int filterOrder = 26;
+    double filterAlpha = 9.0;
+    double filterBeta = 1.0;
+    double filterOperatorShift = 0.0;
+    double filterOperatorScale = 1.0;
 };
 
 int readEnvironmentInteger(const char *name, const int defaultValue) {
@@ -140,6 +145,26 @@ LanczosTestConfiguration readLanczosTestConfiguration() {
                     configuration.residualTolerance);
     configuration.convergenceCriterion =
             readEnvironmentConvergenceCriterion();
+    configuration.filterOrder =
+            readEnvironmentInteger(
+                    "SIMQCD_LANCZOS_FILTER_ORDER",
+                    configuration.filterOrder);
+    configuration.filterAlpha =
+            readEnvironmentDouble(
+                    "SIMQCD_LANCZOS_FILTER_ALPHA",
+                    configuration.filterAlpha);
+    configuration.filterBeta =
+            readEnvironmentDouble(
+                    "SIMQCD_LANCZOS_FILTER_BETA",
+                    configuration.filterBeta);
+    configuration.filterOperatorShift =
+            readEnvironmentDouble(
+                    "SIMQCD_LANCZOS_FILTER_OPERATOR_SHIFT",
+                    configuration.filterOperatorShift);
+    configuration.filterOperatorScale =
+            readEnvironmentDouble(
+                    "SIMQCD_LANCZOS_FILTER_OPERATOR_SCALE",
+                    configuration.filterOperatorScale);
     return configuration;
 }
 
@@ -186,6 +211,26 @@ void validateLanczosTestConfiguration(
                 "SIMQCD_LANCZOS_RESIDUAL_TOL must be positive "
                 "and finite");
     }
+    if (configuration.filterOrder <= 0) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_FILTER_ORDER must be positive");
+    }
+    if (!std::isfinite(configuration.filterAlpha)) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_FILTER_ALPHA must be finite");
+    }
+    if (!std::isfinite(configuration.filterBeta)) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_FILTER_BETA must be finite");
+    }
+    if (!std::isfinite(configuration.filterOperatorShift)) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_FILTER_OPERATOR_SHIFT must be finite");
+    }
+    if (!std::isfinite(configuration.filterOperatorScale)) {
+        throw std::runtime_error(
+                "SIMQCD_LANCZOS_FILTER_OPERATOR_SCALE must be finite");
+    }
 }
 
 void printLanczosTestConfiguration(
@@ -209,6 +254,16 @@ void printLanczosTestConfiguration(
               << trlanConvergenceCriterionName(
                          configuration.convergenceCriterion)
               << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG filter_order = "
+              << configuration.filterOrder << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG filter_alpha = "
+              << configuration.filterAlpha << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG filter_beta = "
+              << configuration.filterBeta << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG filter_operator_shift = "
+              << configuration.filterOperatorShift << "\n";
+    std::cout << "SIMQCD_LANCZOS_CONFIG filter_operator_scale = "
+              << configuration.filterOperatorScale << "\n";
     std::cout.flush();
 }
 
@@ -547,11 +602,13 @@ int main(int argc, char *argv[]){
 
     lanczosParams.chebyshev.enabled = false;
     lanczosParams.exponential.enabled = true;
-    lanczosParams.exponential.order = 26;
-    lanczosParams.exponential.alpha = 9.0;
-    lanczosParams.exponential.beta = 1.0;
-    lanczosParams.exponential.operatorShift = 0.0;
-    lanczosParams.exponential.operatorScale = 1.0;
+    lanczosParams.exponential.order = lanczosConfiguration.filterOrder;
+    lanczosParams.exponential.alpha = lanczosConfiguration.filterAlpha;
+    lanczosParams.exponential.beta = lanczosConfiguration.filterBeta;
+    lanczosParams.exponential.operatorShift =
+            lanczosConfiguration.filterOperatorShift;
+    lanczosParams.exponential.operatorScale =
+            lanczosConfiguration.filterOperatorScale;
 
     eigenpairsWrite.lanczos(dslash, numVec, lanczosParams);
 
