@@ -1,0 +1,351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HISQ action &mdash; SIMULATeQCD 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=3943d584" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=99a3524d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/togglebutton.js?v=3e7854f7"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Dslash" href="dslash.html" />
+    <link rel="prev" title="Gauge Updates (HB and OR)" href="gaugeUpdates.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #343131" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../01_gettingStarted/gettingStarted.html">Getting started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../02_contributions/contributions.html">Contributions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Modules</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gaugeUpdates.html">Gauge Updates (HB and OR)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">HISQ action</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dslash.html">Dslash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inverter.html">Inverter (Conjugate Gradient)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="integrator.html">Integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correlator.html">Correlator Class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="randomNumbers.html">Random Number Generator</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #343131" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">SIMULATeQCD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Modules</a></li>
+      <li class="breadcrumb-item active">HISQ action</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/05_modules/HISQforce.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section class="tex2jax_ignore mathjax_ignore" id="hisq-action">
+<h1>HISQ action<a class="headerlink" href="#hisq-action" title="Link to this heading"></a></h1>
+<p>This code uses the highly improved staggered quark (HISQ) action, first
+introduced <a class="reference external" href="https://doi.org/10.1103/PhysRevD.75.054502">in this paper</a>.
+To carry out the MD of the <a class="reference internal" href="../03_applications/rhmc.html"><span class="doc std std-doc">RHMC</span></a>, one needs the
+fermion and gauge forces. The HISQ force uses AsqTad-like smears to reduce taste
+violations, along with terms to remove further <span class="math notranslate nohighlight">\(\mathcal{O}(a^2)\)</span> errors
+introduced by this smearing. Overall, the HISQ action is expected to have
+no tree-level <span class="math notranslate nohighlight">\(\mathcal{O}(a^2)\)</span> error.</p>
+<p>The fermion force in SIMULATeQCD follows the <a class="reference external" href="https://github.com/milc-qcd/milc_qcd">MILC</a> code.
+A very readable explanation how improved staggered forces are constructed generically
+can be found <a class="reference external" href="https://doi.org/10.22323/1.042.0047">here</a>. Helpful comments on the roles
+of the various terms in the smearing can be found
+<a class="reference external" href="https://github.com/lattice/quda/wiki/HISQ-Stencil">here</a>.</p>
+<section id="gauge-force">
+<h2>Gauge force<a class="headerlink" href="#gauge-force" title="Link to this heading"></a></h2>
+<p>We use the HISQ/tree action, which is a tree-level improved
+Lüscher-Weisz action in the gauge sector. The relative
+weights of the plaquette and rectangle terms are</p>
+<p><span class="math notranslate nohighlight">\(
+    c_\text{plaq} = 5/4,
+\)</span></p>
+<p><span class="math notranslate nohighlight">\(
+    c_\text{rect} = -1/6.
+\)</span></p>
+</section>
+<section id="fermion-force">
+<h2>Fermion force<a class="headerlink" href="#fermion-force" title="Link to this heading"></a></h2>
+<section id="asqtad-like-smears">
+<h3>AsqTad-like smears<a class="headerlink" href="#asqtad-like-smears" title="Link to this heading"></a></h3>
+<p>As stated above, the HISQ force uses smearing to suppress taste exchange.
+We start by establishing some background and terminology before introducing
+the HISQ smear.</p>
+<p>Typically the gauge connection between two neighboring sites <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>
+on the lattice is just a single link <span class="math notranslate nohighlight">\(U(x,y)\)</span>, which is in some sense the
+most local connection imaginable. One can also relax this locality, so that
+the gauge connection contains information from a larger region around
+<span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>; for example the connection could depend on a general sum,
+including many paths connecting <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span>. Let’s call
+this sum <span class="math notranslate nohighlight">\(\Sigma(x,y)\)</span>. Then the gauge connection could be <span class="math notranslate nohighlight">\(V(x,y)\)</span>,
+where <span class="math notranslate nohighlight">\(V\)</span> is chosen by extremizing <span class="math notranslate nohighlight">\(\mathrm{tr} V\Sigma^\dagger\)</span>. These gauge
+connections are called <a class="reference external" href="https://link.aps.org/doi/10.1103/PhysRevD.55.R1133">fat links</a>.
+Fat links modify particle spectra, since they amount to a change of the lattice
+propagator. Including up to 7-link constructs is termed <em>Fat7</em>.</p>
+<p>Fat7 smearing removes <span class="math notranslate nohighlight">\(\mathcal{O}(a^2)\)</span> taste-breaking effects, but introduces
+<span class="math notranslate nohighlight">\(\mathcal{O}(a^2)\)</span> errors not related to taste breaking. These are removed by the
+addition of a 5-link construct called the <a class="reference external" href="https://doi.org/10.1103/PhysRevD.59.074502">LePage term</a>.
+Altogether this defines <a class="reference external" href="https://doi.org/10.1103/PhysRevD.60.054503">AsqTad smears</a>,
+which can be written as</p>
+<p><span class="math notranslate nohighlight">\(
+  V_\mu=~c_1U_\mu
+           +\sum_\nu\left[c_3U_{\mu\nu}^{(3)}
+           +\sum_\rho\left(c_5U_{\mu\nu\rho}^{(5)}
+           +\sum_\sigma c_7U^{(7)}_{\mu\nu\rho\sigma}\right)
+            +c_LU^{(L)}_{\mu\nu}\right],
+\)</span></p>
+<p>where the link constructs are given by</p>
+<p><span class="math notranslate nohighlight">\( U_{\mu\nu}^{(3)}(x)
+       =U_\nu(x)U_\mu(x+a\hat{\nu})U_\nu^\dagger(x+a\hat{\mu})\)</span></p>
+<p><span class="math notranslate nohighlight">\(  U_{\mu\nu\rho}^{(5)}(x)
+       =U_\nu(x)U_{\mu\rho}^{(3)}(x+a\hat{\nu})U_\nu^\dagger(x+a\hat{\mu})\)</span></p>
+<p><span class="math notranslate nohighlight">\(  U_{\mu\nu\rho\sigma}^{(7)}(x)
+       =U_\nu(x)U_{\mu\rho\sigma}^{(5)}(x+a\hat{\nu})
+         U_\nu^\dagger(x+a\hat{\mu})\)</span></p>
+<p><span class="math notranslate nohighlight">\(  U_{\mu\nu}^{(L)}(x)
+       =U_\nu(x)U_{\mu\nu}^{(3)}(x+a\hat{\nu})U_\nu^\dagger(x+a\hat{\mu}).\)</span></p>
+<p>We note the <span class="math notranslate nohighlight">\(n\)</span>-link constructs always move in perpendicular directions. The LePage term
+differs from the 5-link as it is instead restricted to a plane.
+Fat7 smears have the same form, but with <span class="math notranslate nohighlight">\(c_L=0\)</span>. In the parlance of many LQCD practitioners,
+the original fields <span class="math notranslate nohighlight">\(U\)</span> are called <em>thin links</em> and the smeared <span class="math notranslate nohighlight">\(V\)</span> <em>fat links</em>.</p>
+</section>
+<section id="hisq-smearing">
+<h3>HISQ smearing<a class="headerlink" href="#hisq-smearing" title="Link to this heading"></a></h3>
+<p>Taste breaking can be thought of through <em>taste exchange</em>, where
+one quark changes its taste by exchanging a virtual gluon with momentum
+<span class="math notranslate nohighlight">\(p=\pi/a\)</span>; a quark with low enough momentum can thereby be pushed into
+another corner of the Brillouin zone. This is an effect of our discretization,
+so taste breaking vanishes in the continuum limit. A strategy at finite spacing
+to reduce this discretization effect is to
+modify gluon spectra to suppress these taste-exchange processes. This is the
+idea behind HISQ smearing.</p>
+<p>The HISQ smear can be expressed as</p>
+<p><span class="math notranslate nohighlight">\( U^{\rm HISQ}=\mathcal{F}^{\rm corr}\mathcal{U}\mathcal{F}^{\rm Fat7}U, \)</span></p>
+<p>i.e. we Fat7-smear the thin link, followed by a reunitarization and then a “corrected”
+smearing, which is an AsqTad smear equipped with an additional 3-link term,
+the <em>Naik term</em>, which improves the dispersion relation to <span class="math notranslate nohighlight">\(\mathcal{O}(p^4)\)</span>.
+The Naik term marches three steps in one direction, and its construct is thus
+sometimes referred to as <em>long links</em>.</p>
+<p>SIMULATeQCD follows MILC in that it chooses its coefficients according to
+<a class="reference external" href="https://journals.aps.org/prd/abstract/10.1103/PhysRevD.82.074501">the MILC scaling studies paper</a>.
+This means</p>
+<p><span class="math notranslate nohighlight">\(  c_1^{\rm Fat7} = 1/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_3^{\rm Fat7} = 1/16\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_5^{\rm Fat7} = 1/64\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_7^{\rm Fat7} = 1/384\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_1^{\rm corr} = 1+\epsilon/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_3^{\rm corr} = 1/16\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_5^{\rm corr} = 1/64\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_7^{\rm corr} = 1/384\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_L^{\rm corr} = -1/8\)</span></p>
+<p><span class="math notranslate nohighlight">\(  c_\text{Naik}^{\rm corr} = -(1+\epsilon)/24,\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(c_\text{Naik}\)</span> is the coefficient for the Naik term and <span class="math notranslate nohighlight">\(\epsilon\)</span>,
+the so-called <em>Naik</em> <span class="math notranslate nohighlight">\(\epsilon\)</span>, is needed as a correction when one wants to have charm,
+bottom, and/or top quarks. (Note that SIMULATeQCD has some of the machinery
+needed for dynamical charm simulations, but at the moment, it is not
+fully implemented.)</p>
+<p>We adopt the notation of MILC scaling studies paper, where
+<span class="math notranslate nohighlight">\(V \equiv\mathcal{F}^{\rm Fat7}U\)</span>,
+<span class="math notranslate nohighlight">\(W \equiv\mathcal{U} V\)</span>, and
+<span class="math notranslate nohighlight">\(X \equiv\mathcal{F}^{\rm corr} W\)</span>.</p>
+</section>
+<section id="the-u-3-projection">
+<h3>The U(3) projection<a class="headerlink" href="#the-u-3-projection" title="Link to this heading"></a></h3>
+<p>The <span class="math notranslate nohighlight">\(U(3)\)</span> projection in SIMULATeQCD follows the analytic projection in MILC.
+It is carried out exactly as described in Appendix C of the
+MILC scaling studies paper, i.e. it is computed as</p>
+<p><span class="math notranslate nohighlight">\(
+W=VQ^{-1/2}
+\)</span></p>
+<p>for some analytically determined <span class="math notranslate nohighlight">\(Q\)</span>. For the force, we will need also the derivative
+of the projection. Again following the MILC paper, this is done analytically.
+If <span class="math notranslate nohighlight">\(Q\)</span> is sufficiently singular, the computation of <span class="math notranslate nohighlight">\(W\)</span> will be quite inaccurate.
+To circumvent this, there is a <em>force filter</em> that checks whether any of the eigenvalues
+of <span class="math notranslate nohighlight">\(Q\)</span> is less than a threshold <span class="math notranslate nohighlight">\(\delta\)</span>. In SIMULATeQCD, this is hard-coded
+to <span class="math notranslate nohighlight">\(\delta=5\times 10^{-5}\)</span>. When <span class="math notranslate nohighlight">\(Q\)</span> is singular in this sense, its eigenvalues are
+shifted by <span class="math notranslate nohighlight">\(\delta\)</span> to put a hard limit on the severity of the singularity.
+If the force filter is applied too much, this can lower the acceptance rate.</p>
+</section>
+<section id="using-hisq-smearing-in-simulateqcd">
+<h3>Using HISQ smearing in SIMULATeQCD<a class="headerlink" href="#using-hisq-smearing-in-simulateqcd" title="Link to this heading"></a></h3>
+<p>In SIMULATeQCD, the Fat7 smear and 1-, 3-, 5-, and 7-link part of the corrected
+smear are referred to as “level-1” and “level-2” smears, respectively. To do a level-1 smear,</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">V</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<span class="n">V</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel1params</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Next we project the level-1 smeared links back to U(3):</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">W</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<span class="n">W</span><span class="p">.</span><span class="n">u3Project</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Finally we smear again the <span class="math notranslate nohighlight">\(W\)</span> links with the corrected smear:</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">X</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<span class="n">X</span><span class="p">.</span><span class="n">hisqSmearing</span><span class="p">(</span><span class="n">getLevel2params</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>For HISQ dslash,
+the Naik links are constructed from the unitarized links, i.e. using the <span class="math notranslate nohighlight">\(W\)</span> links.
+To use this we have to call</p>
+<div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="n">HisqSmearing</span><span class="o">&lt;</span><span class="n">PREC</span><span class="p">,</span><span class="w"> </span><span class="n">USE_GPU</span><span class="p">,</span><span class="n">HaloDepth</span><span class="o">&gt;</span><span class="w"> </span><span class="n">N</span><span class="p">(</span><span class="n">gauge_in</span><span class="p">,</span><span class="w"> </span><span class="n">gauge_out</span><span class="p">,</span><span class="w"> </span><span class="n">redBase</span><span class="p">);</span>
+<span class="n">N</span><span class="p">.</span><span class="n">naikterm</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The smearing classes are implemented in <code class="docutils literal notranslate"><span class="pre">src/modules/hisq/hisqSmearing.cpp</span></code>.
+How to construct the smeared links is shown in</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>src/testing/main_hisqSmearing*.cpp.
+</pre></div>
+</div>
+</section>
+</section>
+<section id="id1">
+<h2>Fermion force<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
+<p>The fermion part of the action can be expressed as</p>
+<p><span class="math notranslate nohighlight">\(
+S_f=\bra{\Phi}\left(D^{\dagger} D\right)^{-N_f/4}\ket{\Phi},
+\)</span></p>
+<p>where <span class="math notranslate nohighlight">\(\ket{\Phi}\)</span> is the pseudofermion field. As discussed in the
+<a class="reference internal" href="../03_applications/rhmc.html"><span class="doc std std-doc">RHMC</span></a> module, the fourth root is approximated
+via a rational approximation</p>
+<p><span class="math notranslate nohighlight">\(
+\left(D^\dagger D\right)^{-N_f/4}\approx\alpha_0+\sum_l\frac{\alpha_l}{D^\dagger D+\beta_l}.
+\)</span></p>
+<p>The <span class="math notranslate nohighlight">\(\alpha_l\)</span> are often referred to as <em>residues</em> and the <span class="math notranslate nohighlight">\(\beta_l\)</span> as <em>shifts</em>.
+That <span class="math notranslate nohighlight">\(\left(D^\dagger D\right)^{-N_f/4}\)</span> can be expressed in this way allows the possibility
+to solve each term in the sum independently, which is a motivation why we use
+a multi-shift CG, discussed in the <a class="reference internal" href="inverter.html"><span class="doc std std-doc">inverter</span></a> article.</p>
+<p>To carry out MD, we need the derivative of <span class="math notranslate nohighlight">\(S_f\)</span> w.r.t. MC time,
+which translates via the chain rule to a derivative w.r.t. the gauge field
+<span class="math notranslate nohighlight">\(U\)</span>. Successive applications of the chain rule
+show us we need</p>
+<p><span class="math notranslate nohighlight">\(
+\frac{\partial S_f}{\partial U}=\frac{\partial S_f}{\partial X}\frac{\partial X}{\partial W}\frac{\partial W}{\partial V}\frac{\partial V}{\partial U}.
+\)</span></p>
+<p>Ignoring Naik links, the derivative can be written</p>
+<p><span class="math notranslate nohighlight">\(
+\frac{\partial S_f}{\partial\left[U_{x,\mu}\right]_{ab}}=
+\sum_{y,\nu}(-1)^y\eta_{y,\nu}\left(
+\frac{\partial \left[X_{y,\nu}\right]_{mn}}{\partial \left[U_{x,\mu}\right]_{ab}}
+\left[f_{y,\nu}\right]_{mn}+
+\frac{\partial \left[X_{y,\nu}^{\dagger}\right]_{mn}}{\partial \left[U_{x,\mu}\right]_{ab}}
+\left[f^\dagger_{y,\nu}\right]_{mn}
+\right)
+\)</span></p>
+<p>Here, we explicitly write out color indices <span class="math notranslate nohighlight">\(a\)</span>, <span class="math notranslate nohighlight">\(b\)</span>, <span class="math notranslate nohighlight">\(m\)</span>, and <span class="math notranslate nohighlight">\(n\)</span> along with the
+staggered phases <span class="math notranslate nohighlight">\(\eta\)</span>. The outer products</p>
+<p><span class="math notranslate nohighlight">\(
+\left[f_{y,\nu}\right]_{mn}\equiv
+\begin{cases}
+\sum_l\alpha_l\left[R^l_{y+\nu}\right]_n\left[L^{l*}_y\right]_m &amp; {\rm even}~y\\
+\sum_l\alpha_l\left[L^l_{y+\nu}\right]_n\left[R^{l*}_y\right]_m &amp; {\rm odd}~y\\
+\end{cases}
+\)</span></p>
+<p>are expressed in terms of the fields
+<span class="math notranslate nohighlight">\(\ket{L^l}\equiv\left(D^\dagger D+\beta_l\right)^{-1}\ket{\Phi}\)</span> and <span class="math notranslate nohighlight">\(\ket{R^l}\equiv D_0\ket{L^l}\)</span>,
+where <span class="math notranslate nohighlight">\(D_0\)</span> is the massless Dirac operator. Our implementation of the Dirac operator is
+discussed <a class="reference internal" href="dslash.html"><span class="doc std std-doc">here</span></a>.</p>
+<section id="hisq-force-in-simulateqcd">
+<h3>HISQ force in SIMULATeQCD<a class="headerlink" href="#hisq-force-in-simulateqcd" title="Link to this heading"></a></h3>
+<p>The fermion force used at each MD time step is implemented in <code class="docutils literal notranslate"><span class="pre">src/modules/hisq/hisqForce.cpp</span></code>,
+in particular the <code class="docutils literal notranslate"><span class="pre">updateForce()</span></code> method. A high-level schematic overview of this force is
+that it does the following:</p>
+<ol class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make_f0</span></code> populates <code class="docutils literal notranslate"><span class="pre">Force</span></code> and <code class="docutils literal notranslate"><span class="pre">_TmpForce</span></code> with the outer product
+for the 1-link and Naik terms, respectively. (The pseudofermion fields
+in the Naik outer product must be separated by 3 steps rather than 1.)
+<code class="docutils literal notranslate"><span class="pre">_TmpForce</span></code> will accumulate the force contributions.</p></li>
+<li><p>Compute <span class="math notranslate nohighlight">\(V\)</span> with <code class="docutils literal notranslate"><span class="pre">SmearLvl1</span></code> from <span class="math notranslate nohighlight">\(U\)</span>.</p></li>
+<li><p>Compute <span class="math notranslate nohighlight">\(W\)</span> with <code class="docutils literal notranslate"><span class="pre">ProjectU3</span></code> from <span class="math notranslate nohighlight">\(V\)</span>.</p></li>
+<li><p>Multiply staggered phases into <span class="math notranslate nohighlight">\(W\)</span> and apply imaginary <span class="math notranslate nohighlight">\(\mu\)</span> if nonzero.</p></li>
+<li><p>Accumulate Naik, 3-link, 5-link, LePage, and 7-link derivatives. These are computed as a derivative w.r.t. <span class="math notranslate nohighlight">\(W\)</span>, and hence form the <span class="math notranslate nohighlight">\(\partial X/\partial W\)</span> term discussed earlier. They are mostly computed with <code class="docutils literal notranslate"><span class="pre">contribution_*link*</span></code> kernels, except for the Naik and 3-link. There some extra set up is carried out in addition to the derivative calculation by <code class="docutils literal notranslate"><span class="pre">_createNaikF1</span></code> and <code class="docutils literal notranslate"><span class="pre">F1_create_3Link</span></code>.</p></li>
+<li><p>Multiply staggered phases into <span class="math notranslate nohighlight">\(V\)</span> and compute the derivative of the <span class="math notranslate nohighlight">\(U(3)\)</span> projection w.r.t. <span class="math notranslate nohighlight">\(V\)</span>, i.e. <span class="math notranslate nohighlight">\(\partial W/\partial V\)</span>. Besides doing this derivative, <code class="docutils literal notranslate"><span class="pre">_createF2</span></code> multiplies <span class="math notranslate nohighlight">\(\partial X/\partial W\)</span> with <span class="math notranslate nohighlight">\(\partial W/\partial V\)</span>, storing the result in <code class="docutils literal notranslate"><span class="pre">Force</span></code>.</p></li>
+<li><p>Staggered phases are multiplied into <span class="math notranslate nohighlight">\(U\)</span> and stored in <span class="math notranslate nohighlight">\(_GaugeU3P\)</span> to reduce memory burden.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_TmpForce</span></code> is overwritten with <span class="math notranslate nohighlight">\((\partial X/\partial W)(\partial W/\partial V)(\partial V_3/\partial U)\)</span>, where <span class="math notranslate nohighlight">\(V_3\)</span> indicates the 3-link part of <span class="math notranslate nohighlight">\(V\)</span>. This is done by <code class="docutils literal notranslate"><span class="pre">F3_create_3Link</span></code>.</p></li>
+<li><p>We then add to <code class="docutils literal notranslate"><span class="pre">_TmpForce</span></code> contributions from the 5- and 7-link derivatives, completing the chain rule.</p></li>
+<li><p>At the end, <code class="docutils literal notranslate"><span class="pre">_finalizeF3</span></code> multiplies <code class="docutils literal notranslate"><span class="pre">_TmpForce</span></code> by <span class="math notranslate nohighlight">\(U\)</span> on the left, which maintains gauge invariance, then takes the traceless, antihermitian part of the result. This is the fermion force.</p></li>
+</ol>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, LatticeQCD.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

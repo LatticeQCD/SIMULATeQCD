@@ -8,7 +8,7 @@
  * correlations on multiGPU.
  *
  * For the Polyakov loop correlations, this program uses functions defined in the header file. There are more general
- * functions to measure such correlators in ../math/correlators.h, but these functions are slower because they call a
+ * functions to measure such correlators in correlators.h, but these functions are slower because they call a
  * kernel for each type of correlation, rather than one kernel to compute three.
  *
  */

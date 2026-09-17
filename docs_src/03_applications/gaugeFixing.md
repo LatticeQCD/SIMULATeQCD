@@ -89,7 +89,10 @@ The Polyakov loop is gauge-invarant, but several correlators related to the Poly
 interest to renormalize the Polyakov loop or extract the Debye mass.
 The gauge invariant color-averaged Polyakov loop correlator can be decomposed
 into color singlet $F_1$ and color octet $F_8$
-contributions. In particular
+contributions, the physics of which is explained
+[here](https://doi.org/10.1016/0370-2693(81)90986-2),
+[here](https://doi.org/10.1103/PhysRevD.24.450), and
+[here](https://doi.org/10.1103/PhysRevD.33.3738) In particular
 
 $
   \exp\left[-\frac{F_{q\bar{q}}(r,T)}{T}\right]

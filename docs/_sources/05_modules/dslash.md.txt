@@ -6,7 +6,7 @@ $
 \begin{align}
 D[U]\psi_{x}&=\sum_{\mu=0}^{4}\left[c_{1}\left(V_{x,\mu}\psi_{x+\hat{\mu}}-V^{\dagger}_{x-\hat{\mu},\mu}\psi_{x-\hat{\mu}}\right)+c_{3}\left(W_{x,\mu}\psi_{x+3\hat{\mu}}-W^{\dagger}_{x-3\hat{\mu},\mu}\psi_{x-3\hat{\mu}}\right)\right],
 \end{align}$
-where $V_{x,\mu}$ and $W_{x,\mu}$ are the HISQ smeared fields described in [Hisq Smearing](https://latticeqcd.github.io/SIMULATeQCD/05_modules/08_gaugeSmearing.html).
+where $V_{x,\mu}$ and $W_{x,\mu}$ are the HISQ smeared fields described [here](../05_modules/HISQforce.md).
 For staggered fermions, only the nearest neighbor term is present and the basic gauge field $U_{x,\mu}$ is used in place of $V_{x,\mu}$.
 
 In the code, Dslash operators are derived from an abstract base class that defines the interface for Dslash operators.

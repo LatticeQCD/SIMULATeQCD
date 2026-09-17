@@ -62,10 +62,7 @@ Header files should NOT be listed there!
 * Example programs are stored in `src/examples/*`. Ideally, these programs should be as short as possible and strongly commented.
 * Testing programs are stored in `src/testing/*`. These programs should check if everything works properly. Please make sure that your tests return a clear pass/fail message.
 
-An example configuration is stored in `test_conf/l20t20b06498a_nersc.302500`. It is a $20^4$ lattice with a $\beta=0.638$ and it is written in the NERSC format.
-
-
 Nice examples on how to write SIMULATeQCD code may be found in
 `src/examples/main_plaquette.cpp`
-or
+or especially
 `src/testing/main_generalFunctorTest.cpp`.

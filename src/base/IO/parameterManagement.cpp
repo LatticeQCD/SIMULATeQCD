@@ -64,7 +64,6 @@ bool ParameterList::readstream(std::istream& in, int argc, char** argv, const st
     for (auto & i : *this) {
         ParameterBase& p = *i;
 
-        //fix that!!
         if (p.isSet())
             rootLogger.info("# " ,  prefix ,  " :: " ,  p);
         else if (p.hasdefault)

@@ -1,26 +1,27 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gradient Flow &mdash; SIMULATeQCD 0.7 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Gradient Flow &mdash; SIMULATeQCD 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=3943d584" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=99a3524d" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
-        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-        <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/togglebutton.js?v=3e7854f7"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script>window.MathJax = {"options": {"processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -33,11 +34,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -71,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="applications.html">Applications</a> &raquo;</li>
-      <li>Gradient Flow</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="applications.html">Applications</a></li>
+      <li class="breadcrumb-item active">Gradient Flow</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/03_applications/gradientFlow.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -84,20 +89,20 @@
            <div itemprop="articleBody">
              
   <section class="tex2jax_ignore mathjax_ignore" id="gradient-flow">
-<h1>Gradient Flow<a class="headerlink" href="#gradient-flow" title="Permalink to this headline"></a></h1>
+<h1>Gradient Flow<a class="headerlink" href="#gradient-flow" title="Link to this heading"></a></h1>
 <p>Currently there are two different implementations of the gradient flow,
-the Wilson flow and the Zeuthen flow (Symanzik improved flow. See
-<a class="reference external" href="https://arxiv.org/abs/1508.05552">arxiv:1508.05552</a>).
-The flow can be integrated using a standard Runge Kutta 3 or an adaptive
-step size Runge Kutta 3.</p>
+the <a class="reference external" href="http://link.springer.com/10.1007/JHEP08(2010)071">Wilson flow</a> and
+the <a class="reference external" href="https://arxiv.org/abs/1508.05552">Zeuthen flow</a>.
+The flow can be integrated using a standard Runge-Kutta 3 or an adaptive
+step size Runge-Kutta 3.</p>
 <p>To compile the <code class="docutils literal notranslate"><span class="pre">gradientFlow</span></code> executable run:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">gradientFlow</span> <span class="o">-</span><span class="n">j</span><span class="o">&lt;</span><span class="n">NumberOfCores</span><span class="o">&gt;</span>
+<div class="highlight- notranslate"><div class="highlight"><pre><span></span>make gradientFlow -j&lt;NumberOfCores&gt;
 </pre></div>
 </div>
-<p>This can take up to 60+ minutes (depending on the Hardware). If you only
-want to use the zeuthen force and the adaptive step size Runge-Kutta, you
-can also compile <code class="docutils literal notranslate"><span class="pre">gradientFlow_zeuthen</span></code>, which will only take 20 minutes
-to compile. (The most compile time is consumed by <code class="docutils literal notranslate"><span class="pre">topology.cpp</span></code>.)</p>
+<p>This can take quite some time to compile. If you only
+want to use the Zeuthen fflow and the adaptive step size Runge-Kutta, you
+can also compile <code class="docutils literal notranslate"><span class="pre">gradientFlow_zeuthen</span></code>, which compiles much faster.
+(The most compile time is consumed by <code class="docutils literal notranslate"><span class="pre">topology.cpp</span></code>.)</p>
 <p>To run the program, one needs a parameter file. It should take these
 parameters:</p>
 <div class="toggle admonition">
@@ -110,7 +115,7 @@ format = nersc                                       # Format of input configura
 endianness = auto                                    # Endianness of input configuration.
 conf_nr = 302500                                     # Configuration number (optional).
 force = zeuthen                                      # specify if you want to have the Wilson flow (&quot;wilson&quot;) or Zeuthen flow (&quot;zeuthen&quot;).
-start_step_size = 0.01                               # The (start) step size of the Runge Kutta integration.
+start_step_size = 0.01                               # The (start) step size of the Runge-Kutta integration.
 RK_method = adaptive_stepsize                        # Set to fixed_stepsize, adaptive_stepsize or adaptive_stepsize_allgpu (see below).
 accuracy = 0.01                                      # Specify the accuracy of the adaptive step size method.
 
@@ -147,7 +152,7 @@ The options are <code class="docutils literal notranslate"><span class="pre">fix
 Gaugefields on the GPU but is slower) or <code class="docutils literal notranslate"><span class="pre">adaptive_stepsize_allgpu</span></code>
 (needs 4 full Gaugefields on the GPU but is faster).</p>
 <p>Then program should be executed as follows:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">srun</span> <span class="o">-</span><span class="n">n</span> <span class="o">&lt;</span><span class="n">NoOfGPUs</span><span class="o">&gt;</span> <span class="o">./</span><span class="n">gradientFlow</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">parameterFile</span> <span class="o">&lt;</span><span class="n">optionalParam</span><span class="o">&gt;</span>
+<div class="highlight- notranslate"><div class="highlight"><pre><span></span>srun -n &lt;NoOfGPUs&gt; ./gradientFlow /path/to/parameterFile &lt;optionalParam&gt;
 </pre></div>
 </div>
 <p>where <code class="docutils literal notranslate"><span class="pre">&lt;optionalParam&gt;</span></code>{=html} can be one of the above mentioned
@@ -159,15 +164,15 @@ writer in one (ASCII) output file. <code class="docutils literal notranslate"><s
 <code class="docutils literal notranslate"><span class="pre">ColorElectricCorrTimeSlices</span></code> will be written in seperate (ASCII) output
 files.</p>
 <section id="which-flow-times-do-i-want">
-<h2>Which flow times do I want?<a class="headerlink" href="#which-flow-times-do-i-want" title="Permalink to this headline"></a></h2>
+<h2>Which flow times do I want?<a class="headerlink" href="#which-flow-times-do-i-want" title="Link to this heading"></a></h2>
 <div class="toggle admonition">
 <p class="admonition-title">Notation</p>
 <p>This notation may differ from the notation you find in the literature
 (e.g., Lüscher’s papers). Remember temperature <span class="math notranslate nohighlight">\(T=\frac{1}{aN_\tau}\)</span>.</p>
-<table class="colwidths-auto docutils align-default">
+<table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="text-align:left head"><p>lattice spacing</p></th>
-<th class="text-align:right head"><p><span class="math notranslate nohighlight">\(a\)</span></p></th>
+<tr class="row-odd"><th class="head text-align:left"><p>lattice spacing</p></th>
+<th class="head text-align:right"><p><span class="math notranslate nohighlight">\(a\)</span></p></th>
 </tr>
 </thead>
 <tbody>
@@ -279,7 +284,7 @@ computation time.</p></li>
 </div>
 </section>
 <section id="dictating-all-flowtimes-manually-for-improved-speed">
-<h2>Dictating <strong>all</strong> flowtimes manually for improved speed<a class="headerlink" href="#dictating-all-flowtimes-manually-for-improved-speed" title="Permalink to this headline"></a></h2>
+<h2>Dictating <strong>all</strong> flowtimes manually for improved speed<a class="headerlink" href="#dictating-all-flowtimes-manually-for-improved-speed" title="Link to this heading"></a></h2>
 <p>In order to save GPU memory we can run the <code class="docutils literal notranslate"><span class="pre">adaptive_stepsize</span></code> algorithm
 once on one configuration with high accuracy and a small initial
 start-stepsize, then save the flow times it visits and use the
@@ -305,11 +310,11 @@ integration will become unstable quickly and fail!</p></li>
 </ul>
 </section>
 <section id="observables">
-<h2>Observables<a class="headerlink" href="#observables" title="Permalink to this headline"></a></h2>
+<h2>Observables<a class="headerlink" href="#observables" title="Link to this heading"></a></h2>
 <p>In the following, we list some details about some of the observables that can be calculated
 using the gradient flow application.</p>
 <section id="topological-charge">
-<h3>Topological charge<a class="headerlink" href="#topological-charge" title="Permalink to this headline"></a></h3>
+<h3>Topological charge<a class="headerlink" href="#topological-charge" title="Link to this heading"></a></h3>
 <p>We use the field theory motivated definition,</p>
 <p><span class="math notranslate nohighlight">\(
   Q_L=a^4\sum_x q_L(x),
@@ -325,7 +330,7 @@ any gradient flow. Moreover it is a global quantity, so a reasonably chosen amou
 gradient flow, which affects short-distance physics most strongly, is not expected to damage it.</p>
 </section>
 <section id="energy-momentum-tensor">
-<h3>Energy-Momentum Tensor<a class="headerlink" href="#energy-momentum-tensor" title="Permalink to this headline"></a></h3>
+<h3>Energy-Momentum Tensor<a class="headerlink" href="#energy-momentum-tensor" title="Link to this heading"></a></h3>
 <p>The energy-mementum tensor is calculated using blocking method, that is,
 splitting the spatial surface into pieces; each piece of size
 <code class="docutils literal notranslate"><span class="pre">binsize</span> <span class="pre">*</span> <span class="pre">binsize</span> <span class="pre">*</span> <span class="pre">binsize</span></code>. Then the energy-momentum tensor (both the
@@ -333,14 +338,14 @@ traceful part and traceless part) is average over each piece and used
 for the calculation of EMT correlators in shear and bulk channel.</p>
 <p>The improved topological charge is computed using additional rectangles
 in the field strength tensor:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Plaq</span><span class="o">-</span><span class="n">Clover</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">8</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">Q_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">Q_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}</span><span class="o">^</span><span class="n">dagger</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
-<span class="n">Rect</span><span class="o">-</span><span class="n">Clover</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">16</span><span class="p">)</span><span class="o">*</span><span class="p">[</span><span class="n">R_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">R_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}</span><span class="o">^</span><span class="n">dagger</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
-<span class="n">F_</span><span class="p">{</span><span class="n">mu</span><span class="p">,</span><span class="n">nu</span><span class="p">}(</span><span class="n">x</span><span class="p">)</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">Plaq</span><span class="o">-</span><span class="n">Clover</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="mi">3</span> <span class="o">*</span> <span class="n">Rect</span><span class="o">-</span><span class="n">Clover</span><span class="p">,</span>
+<div class="highlight- notranslate"><div class="highlight"><pre><span></span>Plaq-Clover = (1/8)*[Q_{mu,nu}(x) - Q_{mu,nu}^dagger(x)]
+Rect-Clover = (1/16)*[R_{mu,nu}(x) - R_{mu,nu}^dagger(x)]
+F_{mu,nu}(x) = 5/3 * Plaq-Clover - 1/3 * Rect-Clover,
 </pre></div>
 </div>
 </section>
 <section id="polyakov-loop-correlators">
-<h3>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Permalink to this headline"></a></h3>
+<h3>Polyakov loop correlators<a class="headerlink" href="#polyakov-loop-correlators" title="Link to this heading"></a></h3>
 <p>These correlators related to Polyakov loops generally require
 <a class="reference internal" href="gaugeFixing.html"><span class="doc std std-doc">gauge fixing</span></a>. You can also learn more in the
 <a class="reference internal" href="../05_modules/correlator.html"><span class="doc std std-doc">correlator</span></a> article.</p>
@@ -356,7 +361,7 @@ in the field strength tensor:</p>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, LatticeQCD.</p>
+    <p>&#169; Copyright 2025, LatticeQCD.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

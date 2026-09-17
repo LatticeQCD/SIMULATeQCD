@@ -13,6 +13,13 @@
 #include <utility>
 #include <nvtx3/nvToolsExt.h>
 
+// This conditional is needed so that the code works for both older and 
+// newer (12.x+) CUDA toolkits
+#if __has_include(<nvtx3/nvToolsExt.h>)
+#include <nvtx3/nvToolsExt.h>
+#else
+#include "nvToolsExt.h"
+#endif
 
 #define gpuError_t                       cudaError_t
 #define gpuDeviceProp                    cudaDeviceProp

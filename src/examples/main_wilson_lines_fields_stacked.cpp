@@ -666,9 +666,7 @@ int main(int argc, char *argv[]) {
         //    dot = lines.dotProduct(shifted)/3.0/GInd::getLatData().globvol4;
         /// check that dot product is with conjugate, hack
 
-        //    rootLogger.info(0 ,  " " ,  0 ,  " ",  0 ,  " " ,  length ,  " " ,  dot);
-
-        // initial position x0=-1 due to adding dx in first line
+        // initial position x0
         int x0 = -STACKS;
         int y0 = 0;
         int z0 = 0;

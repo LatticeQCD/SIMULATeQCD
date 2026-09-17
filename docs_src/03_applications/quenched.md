@@ -3,7 +3,7 @@
 To learn more about the specifics of the gauge updates, take a look at
 [Gauge Updates (HB and OR)](../05_modules/gaugeUpdates.md).
 To generate quenched gauge configurations, `make` the executable `generateQuenched`.
-You can then find it under `applications/generateQuenched`. The example parameter file is
+You can then find it under `applications/main_generateQuenched`. The example parameter file is
 found under `parameter/generateQuenched.param` and looks like this:
 ```shell
 #parameter file for generateQuenched
@@ -22,6 +22,7 @@ start = one
 nsweeps_thermal_HB_only = 500
 nsweeps_thermal_HBwithOR = 4000
 
+# Use these parameters if you're continuing a chain
 #conf_nr = 500
 #prev_conf = conf_s064t16_b0687361_a_U000500
 #prev_rand = rand_s064t16_b0687361_a_U000500
@@ -39,7 +40,7 @@ rand_s064t16_b0687361_a_U001000
 The configuration number is inferred from `nsweeps_HBwithOR`, i.e. the first configuration is labeled with the suffix "`_U<nsweeps_HBwithOR>`" and the following configuration numbers increase in steps of `nsweeps_HBwithOR`. You should always specify the stream name by setting the parameter `stream`.
 
 With `nconfs` you can specify how many configurations should be generated before the program stops.
-With `nsweeps_ORperHB` you can specify how many OR updates should be done for each HeatBath update.
+With `nsweeps_ORperHB` you can specify how many OR updates should be done for each heatbath update.
 With `nsweeps_HBwithOR` you can specify how many HB updates (with `nsweeps_ORperHB` OR updates per HB) should be done between each saved configuration.
 
 ## Thermalization parameters
