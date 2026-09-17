@@ -1281,10 +1281,30 @@ int TRLanSpinorSolver<
         }
 
         basis.subtractCombination(applied, projections);
+        {
+            const double afterSubtractNormSquared =
+                    applied.realdotProduct(applied);
+            if (!std::isfinite(afterSubtractNormSquared)) {
+                throw std::runtime_error(stdLogger.fatal(
+                        "TRLan residual became non-finite in "
+                        "subtractCombination at column ", column, ": ",
+                        afterSubtractNormSquared));
+            }
+        }
         basis.orthogonalize(
                 applied,
                 column + 1,
                 reorthogonalizationPasses - 1);
+        {
+            const double afterOrthogonalizeNormSquared =
+                    applied.realdotProduct(applied);
+            if (!std::isfinite(afterOrthogonalizeNormSquared)) {
+                throw std::runtime_error(stdLogger.fatal(
+                        "TRLan residual became non-finite in "
+                        "orthogonalize at column ", column, ": ",
+                        afterOrthogonalizeNormSquared));
+            }
+        }
 
         double normSquared =
                 applied.realdotProduct(applied);
