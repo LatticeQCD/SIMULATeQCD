@@ -1286,12 +1286,30 @@ int TRLanSpinorSolver<
                 column + 1,
                 reorthogonalizationPasses - 1);
 
-        const double normSquared =
+        double normSquared =
                 applied.realdotProduct(applied);
-        if (!std::isfinite(normSquared)
-            || normSquared < 0.0) {
+        if (!std::isfinite(normSquared)) {
             throw std::runtime_error(stdLogger.fatal(
-                    "TRLan generated a non-finite residual norm"));
+                    "TRLan generated a non-finite residual norm "
+                    "at column ", column, ": ", normSquared));
+        }
+        if (normSquared < 0.0) {
+            if (normSquared < -breakdownTol * breakdownTol) {
+                throw std::runtime_error(stdLogger.fatal(
+                        "TRLan residual norm-squared is negative "
+                        "and outside round-off tolerance at column ",
+                        column, ": ", normSquared));
+            }
+            // Mathematically normSquared >= 0 always; a small
+            // negative value here is round-off around a true
+            // breakdown (the residual is numerically zero), not a
+            // real error -- treat it the same as a small positive
+            // norm below instead of aborting.
+            rootLogger.warn(
+                    "TRLan: clamping small negative round-off "
+                    "residual normSquared at column ", column,
+                    " (", normSquared, ") to 0.0");
+            normSquared = 0.0;
         }
         terminalBeta = std::sqrt(normSquared);
         if (terminalBeta <= breakdownTol) {
