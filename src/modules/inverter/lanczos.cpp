@@ -1252,6 +1252,16 @@ int TRLanSpinorSolver<
          column < targetDimension;
          ++column) {
         basis.load(column, basisVector);
+        {
+            const double basisVectorNormSquared =
+                    basisVector.realdotProduct(basisVector);
+            if (!std::isfinite(basisVectorNormSquared)) {
+                throw std::runtime_error(stdLogger.fatal(
+                        "TRLan basis vector already non-finite "
+                        "immediately after basis.load at column ", column,
+                        ": ", basisVectorNormSquared));
+            }
+        }
         applyFilteredOperator(
                 op,
                 applied,
