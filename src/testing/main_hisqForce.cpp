@@ -93,12 +93,11 @@ int main(int argc, char *argv[]) {
     rootLogger.info("starting field comparison");
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(force,force_reference,1e-8);
     if (pass) {
-        rootLogger.info(CoutColors::green, "Force is correct", CoutColors::reset);
+        rootLogger.info(CoutColors::green, "Historical HISQ force regression: PASS", CoutColors::reset);
     } else {
-        rootLogger.error("Force is wrong!");
+        rootLogger.error("Historical HISQ force regression: FAIL");
         return 1;
     }
 
     return 0;
 }
-

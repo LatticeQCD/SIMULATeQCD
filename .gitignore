@@ -149,3 +149,18 @@ cython_debug/
 
 # CLion default build folder
 cmake-build-debug/
+
+# Local HISQ legacy-versus-optimized comparison tools
+/scripts/*.patch
+/scripts/README_RHMC_BENCHMARK.md
+/scripts/plotHisqPerformance.py
+/scripts/runHisqForceScaling.sh
+/scripts/runHisqForceTimingComparison.sh
+/scripts/runRhmcMemoryComparison.sh
+/scripts/runRhmcTimingComparison.sh
+/scripts/runRhmcImagMuComparison.sh
+/scripts/runRhmcPrecisionDiagnostic.sh
+/scripts/submitHisqForceTiming.sh
+/scripts/submitRhmcMemory.sh
+/scripts/submitRhmcTiming.sh
+/scripts/summarizeRhmcTiming.sh

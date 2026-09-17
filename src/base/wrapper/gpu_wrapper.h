@@ -11,6 +11,7 @@
 #include <cuda_runtime_api.h>
 #include <cuda_fp16.h>
 #include <utility>
+#include <nvtx3/nvToolsExt.h>
 
 // This conditional is needed so that the code works for both older and 
 // newer (12.x+) CUDA toolkits
