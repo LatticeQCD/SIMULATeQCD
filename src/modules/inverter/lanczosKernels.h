@@ -40,6 +40,28 @@ __host__ __device__ inline gSite basisFullSite(
     return site;
 }
 
+// TEMPORARY DIAGNOSTIC (2026-09-18): mirrors TRLanLinearCombination
+// (lanczos.cpp) but subtracts one complex-scaled stored basis vector from
+// `output` in place, via the generic (already-validated) iterateOverFull
+// path instead of the hand-rolled subtractBasisCombinationKernel below.
+template<class floatT>
+struct TRLanSubtractSingleVector {
+    Vect3arrayAcc<floatT> outputAcc;
+    Vect3arrayAcc<floatT> storedAcc;
+    COMPLEX(floatT) coefficient;
+
+    TRLanSubtractSingleVector(
+            Vect3arrayAcc<floatT> outputAcc,
+            Vect3arrayAcc<floatT> storedAcc,
+            COMPLEX(floatT) coefficient)
+        : outputAcc(outputAcc), storedAcc(storedAcc), coefficient(coefficient) {}
+
+    __host__ __device__ Vect3<floatT> operator()(gSiteStack &site) const {
+        return outputAcc.getElement(site)
+                - coefficient * storedAcc.getElement(site);
+    }
+};
+
 #ifdef __GPUCC__
 
 template<class floatT, Layout LatticeLayout, size_t HaloDepthSpin>
@@ -417,6 +439,34 @@ public:
             return;
         }
         requireUnrotatedMainStorage();
+
+        // TEMPORARY DIAGNOSTIC (2026-09-18): on JLab 21g (AMD), the custom
+        // subtractBasisCombinationKernel path below (disabled via #if 0)
+        // produces a NaN residual at column 0, even though basis.load() and
+        // basis.dot() -- which read the exact same stored data -- do not.
+        // This loop bypasses that kernel entirely: it reuses the
+        // already-validated Basis::load, plus a new TRLanSubtractSingleVector
+        // functor run through the generic (already-validated) iterateOverFull
+        // path instead of a hand-rolled kernel launch. If this stops the
+        // crash, the custom kernel itself is the bug; if it doesn't, the
+        // corruption is coming from somewhere else and this diagnostic
+        // should be reverted.
+        for (size_t j = 0; j < vectorCount; ++j) {
+            Spinor storedVector(_comm);
+            load(j, storedVector);
+            const COMPLEX(floatT) coefficient(
+                    static_cast<floatT>(coefficients[j].cREAL),
+                    static_cast<floatT>(coefficients[j].cIMAG));
+            vector.iterateOverFull(
+                    TRLanSubtractSingleVector<floatT>(
+                            vector.getAccessor(),
+                            storedVector.getAccessor(),
+                            coefficient));
+        }
+        return;
+    }
+
+#if 0
         upload(coefficients);
 
         if constexpr (onDevice) {
@@ -487,6 +537,7 @@ public:
             }
         }
     }
+#endif
 
     double orthogonalize(
             Spinor &vector,
