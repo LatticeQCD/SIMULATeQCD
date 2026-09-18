@@ -3,6 +3,7 @@
 #include "../../base/latticeContainer.h"
 #include "../../base/math/vect3array.h"
 #include "../../base/wrapper/gpu_wrapper.h"
+#include "../../define.h"
 #include "../../spinor/spinorfield.h"
 
 #include <algorithm>
@@ -457,11 +458,72 @@ public:
             const COMPLEX(floatT) coefficient(
                     static_cast<floatT>(coefficients[j].cREAL),
                     static_cast<floatT>(coefficients[j].cIMAG));
+
+            // TEMPORARY DIAGNOSTIC (2026-09-18): dump raw element values
+            // (not just an aggregate isfinite check) at a handful of sites,
+            // for both operands going into this subtraction and for the
+            // result coming out, to see directly whether the corruption is
+            // already present in storedVector's second read of basis vector
+            // j (the same index the top-of-loop basis.load() just validated
+            // clean), or only appears in `vector` after the subtraction
+            // despite clean inputs.
+            if constexpr (onDevice) {
+                Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1>
+                        hostStored(_comm, "TRLanDiag_hostStored");
+                hostStored = storedVector;
+                Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1>
+                        hostBefore(_comm, "TRLanDiag_hostBefore");
+                hostBefore = vector;
+                for (size_t siteIndex = 0;
+                     siteIndex < 4 && siteIndex < _bulkVolume;
+                     ++siteIndex) {
+                    const gSite site =
+                            GIndexer<LatticeLayout, HaloDepthSpin>
+                                    ::getSite(siteIndex);
+                    const Vect3<floatT> storedElement =
+                            hostStored.getAccessor().getElement(site);
+                    const Vect3<floatT> beforeElement =
+                            hostBefore.getAccessor().getElement(site);
+                    rootLogger.info(
+                            "TRLan raw dump (pre-subtract): j=", j,
+                            " site=", siteIndex,
+                            " coeff=(", coefficient.cREAL, ",",
+                            coefficient.cIMAG, ")",
+                            " storedVector[0]=(",
+                            storedElement.getElement0().cREAL, ",",
+                            storedElement.getElement0().cIMAG, ")",
+                            " vectorBefore[0]=(",
+                            beforeElement.getElement0().cREAL, ",",
+                            beforeElement.getElement0().cIMAG, ")");
+                }
+            }
+
             vector.iterateOverFull(
                     TRLanSubtractSingleVector<floatT>(
                             vector.getAccessor(),
                             storedVector.getAccessor(),
                             coefficient));
+
+            if constexpr (onDevice) {
+                Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1>
+                        hostAfter(_comm, "TRLanDiag_hostAfter");
+                hostAfter = vector;
+                for (size_t siteIndex = 0;
+                     siteIndex < 4 && siteIndex < _bulkVolume;
+                     ++siteIndex) {
+                    const gSite site =
+                            GIndexer<LatticeLayout, HaloDepthSpin>
+                                    ::getSite(siteIndex);
+                    const Vect3<floatT> afterElement =
+                            hostAfter.getAccessor().getElement(site);
+                    rootLogger.info(
+                            "TRLan raw dump (post-subtract): j=", j,
+                            " site=", siteIndex,
+                            " vectorAfter[0]=(",
+                            afterElement.getElement0().cREAL, ",",
+                            afterElement.getElement0().cIMAG, ")");
+                }
+            }
         }
         return;
     }
