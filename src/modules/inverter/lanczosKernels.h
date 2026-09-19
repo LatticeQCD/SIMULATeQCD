@@ -490,20 +490,24 @@ public:
                         && std::isfinite(element.getElement2().cREAL)
                         && std::isfinite(element.getElement2().cIMAG);
                 if (!finite) {
-                    rootLogger.info(
-                            "TRLan DIAG scan: ", label,
-                            " first non-finite at fullSite=", fullSite,
-                            " region=",
+                    std::fprintf(stderr,
+                            "DIAG TRLan scan: %s first non-finite at "
+                            "fullSite=%zu region=%s bulkVolume=%zu "
+                            "fullVolume=%zu\n",
+                            label, fullSite,
                             (fullSite < _bulkVolume ? "BULK" : "HALO"),
-                            " bulkVolume=", _bulkVolume,
-                            " fullVolume=", _fullVolume);
+                            static_cast<size_t>(_bulkVolume),
+                            static_cast<size_t>(_fullVolume));
+                    std::fflush(stderr);
                     return;
                 }
             }
-            rootLogger.info(
-                    "TRLan DIAG scan: ", label,
-                    " all finite over full volume (bulkVolume=",
-                    _bulkVolume, " fullVolume=", _fullVolume, ")");
+            std::fprintf(stderr,
+                    "DIAG TRLan scan: %s all finite over full volume "
+                    "(bulkVolume=%zu fullVolume=%zu)\n",
+                    label, static_cast<size_t>(_bulkVolume),
+                    static_cast<size_t>(_fullVolume));
+            std::fflush(stderr);
         };
 
         for (size_t j = 0; j < vectorCount; ++j) {
@@ -542,17 +546,22 @@ public:
                             hostStored.getAccessor().getElement(site);
                     const Vect3<floatT> beforeElement =
                             hostBefore.getAccessor().getElement(site);
-                    rootLogger.info(
-                            "TRLan raw dump (pre-subtract): j=", j,
-                            " site=", siteIndex,
-                            " coeff=(", coefficient.cREAL, ",",
-                            coefficient.cIMAG, ")",
-                            " storedVector[0]=(",
-                            storedElement.getElement0().cREAL, ",",
-                            storedElement.getElement0().cIMAG, ")",
-                            " vectorBefore[0]=(",
-                            beforeElement.getElement0().cREAL, ",",
-                            beforeElement.getElement0().cIMAG, ")");
+                    std::fprintf(stderr,
+                            "DIAG TRLan raw dump (pre-subtract): j=%zu "
+                            "site=%zu coeff=(%g,%g) storedVector[0]=(%g,%g) "
+                            "vectorBefore[0]=(%g,%g)\n",
+                            j, siteIndex,
+                            static_cast<double>(coefficient.cREAL),
+                            static_cast<double>(coefficient.cIMAG),
+                            static_cast<double>(
+                                    storedElement.getElement0().cREAL),
+                            static_cast<double>(
+                                    storedElement.getElement0().cIMAG),
+                            static_cast<double>(
+                                    beforeElement.getElement0().cREAL),
+                            static_cast<double>(
+                                    beforeElement.getElement0().cIMAG));
+                    std::fflush(stderr);
                 }
                 scanFullVolumeForNonFinite(
                         hostStored, "storedVector (pre-subtract)");
@@ -578,12 +587,15 @@ public:
                                     ::getSite(siteIndex);
                     const Vect3<floatT> afterElement =
                             hostAfter.getAccessor().getElement(site);
-                    rootLogger.info(
-                            "TRLan raw dump (post-subtract): j=", j,
-                            " site=", siteIndex,
-                            " vectorAfter[0]=(",
-                            afterElement.getElement0().cREAL, ",",
-                            afterElement.getElement0().cIMAG, ")");
+                    std::fprintf(stderr,
+                            "DIAG TRLan raw dump (post-subtract): j=%zu "
+                            "site=%zu vectorAfter[0]=(%g,%g)\n",
+                            j, siteIndex,
+                            static_cast<double>(
+                                    afterElement.getElement0().cREAL),
+                            static_cast<double>(
+                                    afterElement.getElement0().cIMAG));
+                    std::fflush(stderr);
                 }
                 scanFullVolumeForNonFinite(
                         hostAfter, "vector (post-subtract)");
