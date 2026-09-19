@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -452,12 +453,69 @@ public:
         // crash, the custom kernel itself is the bug; if it doesn't, the
         // corruption is coming from somewhere else and this diagnostic
         // should be reverted.
+        std::fprintf(stderr,
+                "DIAG lanczosKernels.h: subtractCombination entered, "
+                "vectorCount=%zu onDevice=%d bulkVolume=%zu\n",
+                vectorCount, static_cast<int>(onDevice),
+                static_cast<size_t>(_bulkVolume));
+        std::fflush(stderr);
+
+        // TEMPORARY DIAGNOSTIC (2026-09-19): scan a host-side field over the
+        // *entire* full volume (bulk + halo) for the first non-finite site,
+        // and report whether that site falls in the bulk range
+        // ([0, _bulkVolume)) or the halo range ([_bulkVolume, _fullVolume)).
+        // Motivation: basis.dot()'s isfinite check (the one guarding entry
+        // into this function) only scans the bulk, while this function's
+        // kernels -- both the original hand-rolled one and the
+        // iterateOverFull replacement below -- iterate the full volume. If
+        // the halo of `applied`/`_vectors` was never explicitly initialized
+        // (no halo exchange after the exponential/Chebyshev filter), this
+        // would be the first read of that garbage memory, and this scan
+        // will show the offending index landing at/after _bulkVolume.
+        auto scanFullVolumeForNonFinite = [this](
+                const Spinorfield<
+                        floatT, false, LatticeLayout, HaloDepthSpin, 1>
+                        &hostField,
+                const char *label) {
+            const Vect3arrayAcc<floatT> acc = hostField.getAccessor();
+            for (size_t fullSite = 0; fullSite < _fullVolume; ++fullSite) {
+                gSite site;
+                site.isiteFull = fullSite;
+                const Vect3<floatT> element = acc.getElement(site);
+                const bool finite =
+                        std::isfinite(element.getElement0().cREAL)
+                        && std::isfinite(element.getElement0().cIMAG)
+                        && std::isfinite(element.getElement1().cREAL)
+                        && std::isfinite(element.getElement1().cIMAG)
+                        && std::isfinite(element.getElement2().cREAL)
+                        && std::isfinite(element.getElement2().cIMAG);
+                if (!finite) {
+                    rootLogger.info(
+                            "TRLan DIAG scan: ", label,
+                            " first non-finite at fullSite=", fullSite,
+                            " region=",
+                            (fullSite < _bulkVolume ? "BULK" : "HALO"),
+                            " bulkVolume=", _bulkVolume,
+                            " fullVolume=", _fullVolume);
+                    return;
+                }
+            }
+            rootLogger.info(
+                    "TRLan DIAG scan: ", label,
+                    " all finite over full volume (bulkVolume=",
+                    _bulkVolume, " fullVolume=", _fullVolume, ")");
+        };
+
         for (size_t j = 0; j < vectorCount; ++j) {
             Spinor storedVector(_comm);
             load(j, storedVector);
             const COMPLEX(floatT) coefficient(
                     static_cast<floatT>(coefficients[j].cREAL),
                     static_cast<floatT>(coefficients[j].cIMAG));
+            std::fprintf(stderr,
+                    "DIAG lanczosKernels.h: loop j=%zu, reaching dump block\n",
+                    j);
+            std::fflush(stderr);
 
             // TEMPORARY DIAGNOSTIC (2026-09-18): dump raw element values
             // (not just an aggregate isfinite check) at a handful of sites,
@@ -496,6 +554,10 @@ public:
                             beforeElement.getElement0().cREAL, ",",
                             beforeElement.getElement0().cIMAG, ")");
                 }
+                scanFullVolumeForNonFinite(
+                        hostStored, "storedVector (pre-subtract)");
+                scanFullVolumeForNonFinite(
+                        hostBefore, "vector (pre-subtract)");
             }
 
             vector.iterateOverFull(
@@ -523,6 +585,8 @@ public:
                             afterElement.getElement0().cREAL, ",",
                             afterElement.getElement0().cIMAG, ")");
                 }
+                scanFullVolumeForNonFinite(
+                        hostAfter, "vector (post-subtract)");
             }
         }
         return;

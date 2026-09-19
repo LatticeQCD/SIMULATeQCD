@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <numeric>
 #include <type_traits>
@@ -1312,7 +1313,15 @@ int TRLanSpinorSolver<
             }
         }
 
+        std::fprintf(stderr,
+                "DIAG lanczos.cpp: column %d calling subtractCombination, "
+                "nproj=%zu\n", column, projections.size());
+        std::fflush(stderr);
         basis.subtractCombination(applied, projections);
+        std::fprintf(stderr,
+                "DIAG lanczos.cpp: column %d returned from "
+                "subtractCombination\n", column);
+        std::fflush(stderr);
         synchronizeOrThrow(
                 "TRLan: device sync after subtractCombination failed");
         {
