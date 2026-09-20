@@ -42,10 +42,10 @@ __host__ __device__ inline gSite basisFullSite(
     return site;
 }
 
-// TEMPORARY DIAGNOSTIC (2026-09-18): mirrors TRLanLinearCombination
-// (lanczos.cpp) but subtracts one complex-scaled stored basis vector from
-// `output` in place, via the generic (already-validated) iterateOverFull
-// path instead of the hand-rolled subtractBasisCombinationKernel below.
+// Mirrors TRLanLinearCombination (lanczos.cpp): subtracts one
+// complex-scaled stored basis vector from `output` in place, via the
+// generic iterateOverFull path instead of the hand-rolled
+// subtractBasisCombinationKernel below (kept, disabled via #if 0).
 template<class floatT>
 struct TRLanSubtractSingleVector {
     Vect3arrayAcc<floatT> outputAcc;
@@ -388,46 +388,6 @@ public:
 #endif
             checkLastKernel("TRLan basis dot product");
 
-            // TEMPORARY DIAGNOSTIC (2026-09-20): a projection magnitude of
-            // ~1e179 was observed at column 0 -- wildly inconsistent with
-            // the field magnitudes seen elsewhere (storedVector ~1e-4,
-            // applied ~1e6-1e7, so a legitimate sum over ~2e6 sites should
-            // land around 1e8-1e9, not 1e179). That points at the device
-            // reduction pipeline (this kernel's per-block partial sums, or
-            // the CUB DeviceSegmentedReduce inside reduceStacked) returning
-            // garbage rather than a genuine numerical overflow. Dump every
-            // per-block partial sum here, before the segmented reduce, so
-            // we can tell whether the garbage is already present per-block
-            // (kernel/shared-memory bug) or only appears after
-            // reduceStacked (buffer-sizing/indexing bug in the CUB call).
-            {
-                const size_t diagCount =
-                        static_cast<size_t>(vectorCount)
-                        * static_cast<size_t>(partialBlockCount);
-                auto diagHost = MemoryManagement::getMemAt<false>(
-                        "TRLanDiag_partialDotsHost");
-                diagHost->template adjustSize<COMPLEX(double)>(diagCount);
-                diagHost->copyFrom(
-                        _partialDots.getMemPointer(),
-                        diagCount * sizeof(COMPLEX(double)));
-                LatticeContainerAccessor diagAcc(diagHost->getPointer());
-                for (size_t idx = 0; idx < diagCount; ++idx) {
-                    COMPLEX(double) value;
-                    diagAcc.getValue(idx, value);
-                    const double magnitude =
-                            std::hypot(value.cREAL, value.cIMAG);
-                    std::fprintf(stderr,
-                            "DIAG lanczosKernels.h: dot partial idx=%zu "
-                            "(basisVector=%zu block=%zu) value=(%g,%g) "
-                            "magnitude=%g\n",
-                            idx,
-                            idx / partialBlockCount,
-                            idx % partialBlockCount,
-                            value.cREAL, value.cIMAG, magnitude);
-                    std::fflush(stderr);
-                }
-            }
-
             // FIX (2026-09-20): use the sequential-loop path (repeated
             // plain CubReduce, i.e. gpucub::DeviceReduce::Sum) instead of
             // the segmented-reduce path (CubReduceStacked, i.e.
@@ -502,164 +462,27 @@ public:
         }
         requireUnrotatedMainStorage();
 
-        // TEMPORARY DIAGNOSTIC (2026-09-18): on JLab 21g (AMD), the custom
-        // subtractBasisCombinationKernel path below (disabled via #if 0)
-        // produces a NaN residual at column 0, even though basis.load() and
-        // basis.dot() -- which read the exact same stored data -- do not.
-        // This loop bypasses that kernel entirely: it reuses the
-        // already-validated Basis::load, plus a new TRLanSubtractSingleVector
-        // functor run through the generic (already-validated) iterateOverFull
-        // path instead of a hand-rolled kernel launch. If this stops the
-        // crash, the custom kernel itself is the bug; if it doesn't, the
-        // corruption is coming from somewhere else and this diagnostic
-        // should be reverted.
-        std::fprintf(stderr,
-                "DIAG lanczosKernels.h: subtractCombination entered, "
-                "vectorCount=%zu onDevice=%d bulkVolume=%zu\n",
-                vectorCount, static_cast<int>(onDevice),
-                static_cast<size_t>(_bulkVolume));
-        std::fflush(stderr);
-
-        // TEMPORARY DIAGNOSTIC (2026-09-19): scan a host-side field over the
-        // *entire* full volume (bulk + halo) for the first non-finite site,
-        // and report whether that site falls in the bulk range
-        // ([0, _bulkVolume)) or the halo range ([_bulkVolume, _fullVolume)).
-        // Motivation: basis.dot()'s isfinite check (the one guarding entry
-        // into this function) only scans the bulk, while this function's
-        // kernels -- both the original hand-rolled one and the
-        // iterateOverFull replacement below -- iterate the full volume. If
-        // the halo of `applied`/`_vectors` was never explicitly initialized
-        // (no halo exchange after the exponential/Chebyshev filter), this
-        // would be the first read of that garbage memory, and this scan
-        // will show the offending index landing at/after _bulkVolume.
-        auto scanFullVolumeForNonFinite = [this](
-                const Spinorfield<
-                        floatT, false, LatticeLayout, HaloDepthSpin, 1>
-                        &hostField,
-                const char *label) {
-            const Vect3arrayAcc<floatT> acc = hostField.getAccessor();
-            for (size_t fullSite = 0; fullSite < _fullVolume; ++fullSite) {
-                gSite site;
-                site.isiteFull = fullSite;
-                const Vect3<floatT> element = acc.getElement(site);
-                const bool finite =
-                        std::isfinite(element.getElement0().cREAL)
-                        && std::isfinite(element.getElement0().cIMAG)
-                        && std::isfinite(element.getElement1().cREAL)
-                        && std::isfinite(element.getElement1().cIMAG)
-                        && std::isfinite(element.getElement2().cREAL)
-                        && std::isfinite(element.getElement2().cIMAG);
-                if (!finite) {
-                    std::fprintf(stderr,
-                            "DIAG TRLan scan: %s first non-finite at "
-                            "fullSite=%zu region=%s bulkVolume=%zu "
-                            "fullVolume=%zu\n",
-                            label, fullSite,
-                            (fullSite < _bulkVolume ? "BULK" : "HALO"),
-                            static_cast<size_t>(_bulkVolume),
-                            static_cast<size_t>(_fullVolume));
-                    std::fflush(stderr);
-                    return;
-                }
-            }
-            std::fprintf(stderr,
-                    "DIAG TRLan scan: %s all finite over full volume "
-                    "(bulkVolume=%zu fullVolume=%zu)\n",
-                    label, static_cast<size_t>(_bulkVolume),
-                    static_cast<size_t>(_fullVolume));
-            std::fflush(stderr);
-        };
-
+        // This loop-based path (Basis::load + the generic iterateOverFull
+        // path, one basis vector at a time) is used instead of the
+        // hand-rolled subtractBasisCombinationKernel below (kept, disabled
+        // via #if 0). RESOLVED (2026-09-20): the NaN that motivated
+        // bypassing the hand-rolled kernel was never in this function at
+        // all -- it was upstream, in Basis::dot()'s coefficient computation
+        // (see the reduceStacked comment there). The hand-rolled kernel was
+        // never actually at fault, so it is likely safe to restore for
+        // performance (one kernel launch instead of vectorCount separate
+        // load+iterateOverFull round trips); that has not been tried yet.
         for (size_t j = 0; j < vectorCount; ++j) {
             Spinor storedVector(_comm);
             load(j, storedVector);
             const COMPLEX(floatT) coefficient(
                     static_cast<floatT>(coefficients[j].cREAL),
                     static_cast<floatT>(coefficients[j].cIMAG));
-            std::fprintf(stderr,
-                    "DIAG lanczosKernels.h: loop j=%zu, reaching dump block\n",
-                    j);
-            std::fflush(stderr);
-
-            // TEMPORARY DIAGNOSTIC (2026-09-18): dump raw element values
-            // (not just an aggregate isfinite check) at a handful of sites,
-            // for both operands going into this subtraction and for the
-            // result coming out, to see directly whether the corruption is
-            // already present in storedVector's second read of basis vector
-            // j (the same index the top-of-loop basis.load() just validated
-            // clean), or only appears in `vector` after the subtraction
-            // despite clean inputs.
-            if constexpr (onDevice) {
-                Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1>
-                        hostStored(_comm, "TRLanDiag_hostStored");
-                hostStored = storedVector;
-                Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1>
-                        hostBefore(_comm, "TRLanDiag_hostBefore");
-                hostBefore = vector;
-                for (size_t siteIndex = 0;
-                     siteIndex < 4 && siteIndex < _bulkVolume;
-                     ++siteIndex) {
-                    const gSite site =
-                            GIndexer<LatticeLayout, HaloDepthSpin>
-                                    ::getSite(siteIndex);
-                    const Vect3<floatT> storedElement =
-                            hostStored.getAccessor().getElement(site);
-                    const Vect3<floatT> beforeElement =
-                            hostBefore.getAccessor().getElement(site);
-                    std::fprintf(stderr,
-                            "DIAG TRLan raw dump (pre-subtract): j=%zu "
-                            "site=%zu coeff=(%g,%g) storedVector[0]=(%g,%g) "
-                            "vectorBefore[0]=(%g,%g)\n",
-                            j, siteIndex,
-                            static_cast<double>(coefficient.cREAL),
-                            static_cast<double>(coefficient.cIMAG),
-                            static_cast<double>(
-                                    storedElement.getElement0().cREAL),
-                            static_cast<double>(
-                                    storedElement.getElement0().cIMAG),
-                            static_cast<double>(
-                                    beforeElement.getElement0().cREAL),
-                            static_cast<double>(
-                                    beforeElement.getElement0().cIMAG));
-                    std::fflush(stderr);
-                }
-                scanFullVolumeForNonFinite(
-                        hostStored, "storedVector (pre-subtract)");
-                scanFullVolumeForNonFinite(
-                        hostBefore, "vector (pre-subtract)");
-            }
-
             vector.iterateOverFull(
                     TRLanSubtractSingleVector<floatT>(
                             vector.getAccessor(),
                             storedVector.getAccessor(),
                             coefficient));
-
-            if constexpr (onDevice) {
-                Spinorfield<floatT, false, LatticeLayout, HaloDepthSpin, 1>
-                        hostAfter(_comm, "TRLanDiag_hostAfter");
-                hostAfter = vector;
-                for (size_t siteIndex = 0;
-                     siteIndex < 4 && siteIndex < _bulkVolume;
-                     ++siteIndex) {
-                    const gSite site =
-                            GIndexer<LatticeLayout, HaloDepthSpin>
-                                    ::getSite(siteIndex);
-                    const Vect3<floatT> afterElement =
-                            hostAfter.getAccessor().getElement(site);
-                    std::fprintf(stderr,
-                            "DIAG TRLan raw dump (post-subtract): j=%zu "
-                            "site=%zu vectorAfter[0]=(%g,%g)\n",
-                            j, siteIndex,
-                            static_cast<double>(
-                                    afterElement.getElement0().cREAL),
-                            static_cast<double>(
-                                    afterElement.getElement0().cIMAG));
-                    std::fflush(stderr);
-                }
-                scanFullVolumeForNonFinite(
-                        hostAfter, "vector (post-subtract)");
-            }
         }
         return;
     }
