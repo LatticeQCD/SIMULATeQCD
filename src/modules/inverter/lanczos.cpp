@@ -1300,6 +1300,22 @@ int TRLanSpinorSolver<
                 throw std::runtime_error(stdLogger.fatal(
                         "TRLan projection contains a non-finite value"));
             }
+            // TEMPORARY DIAGNOSTIC (2026-09-20): projections are accumulated
+            // in double (lanczosKernels.h Basis::dot) but subtractCombination
+            // immediately narrows them to floatT=float. A projection can be
+            // enormous-but-finite as a double (passes the isfinite check
+            // above) and still silently become +-inf the moment it is cast
+            // to float. Report the raw double magnitude so we can tell
+            // whether that is what is happening here, versus some other
+            // corruption between this check and subtractCombination.
+            const double magnitude = std::hypot(
+                    projection.cREAL, projection.cIMAG);
+            std::fprintf(stderr,
+                    "DIAG lanczos.cpp: column %d projection magnitude=%g "
+                    "(float max=%g)\n",
+                    column, magnitude,
+                    static_cast<double>(std::numeric_limits<float>::max()));
+            std::fflush(stderr);
         }
 
         projected[column][column] =
