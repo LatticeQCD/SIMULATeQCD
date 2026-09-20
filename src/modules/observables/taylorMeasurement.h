@@ -34,6 +34,24 @@ public:
     Parameter<std::string> output_file;
     Parameter<std::string> collected_output_file;
 
+    // Thick-restarted Lanczos knobs, read only by eigenpairsTest (which
+    // generates the deflation eigenpairs); taylorMeasurement just reads
+    // eigen_file and never runs Lanczos, so it declares these but ignores
+    // them. There is no lanczos_mass: eigenpairs are always generated for
+    // the massless Dirac operator (see main_eigenpairsTest.cpp), so that is
+    // not a tunable parameter.
+    Parameter<int> lanczos_num_eigenvectors;
+    Parameter<int> lanczos_krylov_dim;
+    Parameter<int> lanczos_thick_restart_dim;
+    Parameter<int> lanczos_max_restarts;
+    Parameter<double> lanczos_residual_tol;
+    Parameter<std::string> lanczos_convergence_criterion;
+    Parameter<int> lanczos_filter_order;
+    Parameter<double> lanczos_filter_alpha;
+    Parameter<double> lanczos_filter_beta;
+    Parameter<double> lanczos_filter_operator_shift;
+    Parameter<double> lanczos_filter_operator_scale;
+
     TaylorMeasurementParameters() {
         add(operator_ids, "operator_ids");
         add(valence_masses, "valence_masses");
@@ -48,6 +66,22 @@ public:
         add(use_naik_epsilon, "use_naik_epsilon"); // No default to make this very clear in usage!
         addDefault(residue, "residue", 1e-12);
         addDefault(cgMax, "cgMax", 20000);
+
+        addDefault(lanczos_num_eigenvectors, "lanczos_num_eigenvectors", 5);
+        addDefault(lanczos_krylov_dim, "lanczos_krylov_dim", 256);
+        addDefault(lanczos_thick_restart_dim, "lanczos_thick_restart_dim", 80);
+        addDefault(lanczos_max_restarts, "lanczos_max_restarts", 10);
+        addDefault(lanczos_residual_tol, "lanczos_residual_tol", 1.0e-6);
+        addDefault(lanczos_convergence_criterion,
+                   "lanczos_convergence_criterion",
+                   std::string("maximum_scaled_per_mode"));
+        addDefault(lanczos_filter_order, "lanczos_filter_order", 26);
+        addDefault(lanczos_filter_alpha, "lanczos_filter_alpha", 9.0);
+        addDefault(lanczos_filter_beta, "lanczos_filter_beta", 1.0);
+        addDefault(lanczos_filter_operator_shift,
+                   "lanczos_filter_operator_shift", 0.0);
+        addDefault(lanczos_filter_operator_scale,
+                   "lanczos_filter_operator_scale", 1.0);
     }
 };
 
