@@ -387,6 +387,47 @@ public:
                     _fullVolume);
 #endif
             checkLastKernel("TRLan basis dot product");
+
+            // TEMPORARY DIAGNOSTIC (2026-09-20): a projection magnitude of
+            // ~1e179 was observed at column 0 -- wildly inconsistent with
+            // the field magnitudes seen elsewhere (storedVector ~1e-4,
+            // applied ~1e6-1e7, so a legitimate sum over ~2e6 sites should
+            // land around 1e8-1e9, not 1e179). That points at the device
+            // reduction pipeline (this kernel's per-block partial sums, or
+            // the CUB DeviceSegmentedReduce inside reduceStacked) returning
+            // garbage rather than a genuine numerical overflow. Dump every
+            // per-block partial sum here, before the segmented reduce, so
+            // we can tell whether the garbage is already present per-block
+            // (kernel/shared-memory bug) or only appears after
+            // reduceStacked (buffer-sizing/indexing bug in the CUB call).
+            {
+                const size_t diagCount =
+                        static_cast<size_t>(vectorCount)
+                        * static_cast<size_t>(partialBlockCount);
+                auto diagHost = MemoryManagement::getMemAt<false>(
+                        "TRLanDiag_partialDotsHost");
+                diagHost->template adjustSize<COMPLEX(double)>(diagCount);
+                diagHost->copyFrom(
+                        _partialDots.getMemPointer(),
+                        diagCount * sizeof(COMPLEX(double)));
+                LatticeContainerAccessor diagAcc(diagHost->getPointer());
+                for (size_t idx = 0; idx < diagCount; ++idx) {
+                    COMPLEX(double) value;
+                    diagAcc.getValue(idx, value);
+                    const double magnitude =
+                            std::hypot(value.cREAL, value.cIMAG);
+                    std::fprintf(stderr,
+                            "DIAG lanczosKernels.h: dot partial idx=%zu "
+                            "(basisVector=%zu block=%zu) value=(%g,%g) "
+                            "magnitude=%g\n",
+                            idx,
+                            idx / partialBlockCount,
+                            idx % partialBlockCount,
+                            value.cREAL, value.cIMAG, magnitude);
+                    std::fflush(stderr);
+                }
+            }
+
             _partialDots.reduceStacked(
                     result,
                     vectorCount,
