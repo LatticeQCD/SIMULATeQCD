@@ -428,11 +428,30 @@ public:
                 }
             }
 
+            // FIX (2026-09-20): use the sequential-loop path (repeated
+            // plain CubReduce, i.e. gpucub::DeviceReduce::Sum) instead of
+            // the segmented-reduce path (CubReduceStacked, i.e.
+            // gpucub::DeviceSegmentedReduce::Sum). Plain CubReduce for
+            // COMPLEX(double) is proven correct on this AMD hardware --
+            // it's what Spinorfield::dotProduct/dotProductStacked use for
+            // every CG dot product in the working RHMC pipeline
+            // (spinorfield.cpp:158-159, :178). The segmented-reduce path
+            // with a COMPLEX(double) element type and more than one stack
+            // has no other caller anywhere in the codebase: the only CI
+            // -tested instantiation of reduceStacked(...,false)
+            // (wilsonLinesCorrelatorTest) uses a plain real floatT with
+            // NStacks pinned to 1 at compile time, and the only place a
+            // COMPLEX type is combined with this path and multiple stacks
+            // is an examples-only program that isn't part of the test
+            // suite. A projection magnitude of ~1e179 was observed here
+            // (wildly inconsistent with the real field magnitudes elsewhere
+            // in the pipeline), consistent with this untested combination
+            // silently misbehaving on this HIP/hipcub version.
             _partialDots.reduceStacked(
                     result,
                     vectorCount,
                     partialBlockCount,
-                    false);
+                    true);
 #else
             static_assert(
                     !onDevice,
