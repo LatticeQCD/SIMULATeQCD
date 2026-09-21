@@ -193,7 +193,7 @@ public:
     void apply_Dslash_inverse_deflation(SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorOut,
                 const SpinorfieldAll<floatT, onDevice, HaloDepthSpin, NStacks> &spinorIn,
                 const Eigenpairs<floatT, onDevice, Even, HaloDepthGauge, HaloDepthSpin, NStacks> &eigenpair,
-                int cgMax, double residue) {
+                int cgMax, double residue, bool diagnosticInfo = false) {
         // compute the inverse using
         // \chi_e = (1m^2 - D_{eo}D_{oe})^{-1} (m \eta_e - D_{eo} \eta_o)
         // \chi_o = \frac 1m (\eta_o - D_{oe}\chi_e)
@@ -201,11 +201,15 @@ public:
         spinorOut.even = spinorIn.even * mass - spinorOut.even;
 
         Spinorfield<floatT, onDevice, Even, HaloDepthSpin, NStacks> spinorStart(spinorOut.even.getComm());
-        
-        cg.template checkEigenValueEquation<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, eigenpair);
+
+        if (diagnosticInfo) {
+            cg.template checkEigenValueEquation<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, eigenpair);
+        }
         cg.template startVector<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, spinorStart, spinorOut.even, eigenpair);
-        cg.template startVectorTester<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, spinorStart, spinorOut.even, eigenpair);
-    
+        if (diagnosticInfo) {
+            cg.template startVectorTester<onDevice, Even, HaloDepthGauge, HaloDepthSpin>(mass, dslash_oe_inv, spinorStart, spinorOut.even, eigenpair);
+        }
+
         // invert in place is possible since the CG copies the input early on
         cg.invert_deflation(dslash_oe_inv, spinorStart, spinorOut.even, cgMax, residue); //! this takes up most of the computation time
         spinorOut.even = spinorStart;

@@ -29,6 +29,7 @@ public:
     Parameter<bool> use_naik_epsilon;
     Parameter<double> residue;
     Parameter<int> cgMax;
+    Parameter<bool> diagnosticInfo;
 
     Parameter<std::string> eigen_file;
     Parameter<std::string> output_file;
@@ -66,6 +67,13 @@ public:
         add(use_naik_epsilon, "use_naik_epsilon"); // No default to make this very clear in usage!
         addDefault(residue, "residue", 1e-12);
         addDefault(cgMax, "cgMax", 20000);
+        // Verifies eigenpairs against the eigenvalue equation and the deflation
+        // start-vector construction on every solve (checkEigenValueEquation /
+        // startVectorTester in ConjugateGradient). Pure validation, no effect on
+        // the numerics -- off by default since it's expensive (extra full
+        // operator applications and dot products per random vector) and floods
+        // the log.
+        addDefault(diagnosticInfo, "diagnosticInfo", false);
 
         addDefault(lanczos_num_eigenvectors, "lanczos_num_eigenvectors", 5);
         addDefault(lanczos_krylov_dim, "lanczos_krylov_dim", 256);
@@ -387,7 +395,7 @@ private:
         // however the inversion can be done more efficient by exploiting the odd and even structure of the matrix.
 
         //rootLogger.info("CG started");
-        dslash_inv.apply_Dslash_inverse_deflation(spinorOut, spinorIn, eigen, param.cgMax(), param.residue());
+        dslash_inv.apply_Dslash_inverse_deflation(spinorOut, spinorIn, eigen, param.cgMax(), param.residue(), param.diagnosticInfo());
         spinorIn = spinorOut; // spinorIn is the node with the inverse applied from here on
 
         // MemoryManagement::memorySummary();
