@@ -211,7 +211,9 @@ public:
         }
 
         // invert in place is possible since the CG copies the input early on
-        cg.invert_deflation(dslash_oe_inv, spinorStart, spinorOut.even, cgMax, residue); //! this takes up most of the computation time
+        // Stop on |r|/|b| (b = even-site RHS) rather than |r|/|r0| after deflation, matching DenseCode's
+        // invertmultN (sqrt(lambda/norm) < stop_rsd with norm = |phi|^2).
+        cg.invert_deflation(dslash_oe_inv, spinorStart, spinorOut.even, cgMax, residue, nullptr, true); //! this takes up most of the computation time
         spinorOut.even = spinorStart;
     
 
