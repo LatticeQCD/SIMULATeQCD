@@ -316,9 +316,99 @@ Following Section 2.3, `MDWFMobiusMapping.h` adds:
    wired in and not silently ignored.
 
 This does not implement `zMobius` (`s`-dependent `bs[s]`/`cs[s]`), clover
-(`csw != 0`) for the Möbius path, the adjoint of the general Möbius
-operator, or any numerical `M5`/`mf`/`b5` production choice. It does not
-change `MDWFFifthDimCoupling`, `MDWFWilsonSlice`, `MDWFOperator`, or
-`MDWFPhysicalMapping.h`. It does not validate against gauge-dependent
-domain-wall physics (see Section 3); that remains a later, more expensive
-step.
+(`csw != 0`) for the Möbius path, or any numerical `M5`/`mf`/`b5` production
+choice. It does not change `MDWFFifthDimCoupling`, `MDWFWilsonSlice`,
+`MDWFOperator`, or `MDWFPhysicalMapping.h`. It does not validate against
+gauge-dependent domain-wall physics (see Section 3); that remains a later,
+more expensive step. Cluster-validated (`Ls = 8`, `M5 = 1.8`, `mf = 0.05`):
+`maxDinDiff = 0`, `maxShamirRegressionDiff = 0`, `maxGenericDetectionDiff =
+69.3069` at `b5 = 1.5`; see `TODO.md`.
+
+## 6. General Möbius adjoint (this patch)
+
+`MDWFMobiusMapping.h` also adds the adjoint, by the same composition
+principle: since `M = (D_W . Din) + Shift`,
+
+```text
+M^dagger = Din^dagger . D_W^dagger + Shift^dagger
+```
+
+`D_W^dagger = gamma5 D_W gamma5` is the standard Wilson gamma5-Hermiticity
+already used by `MDWFAdjointOperator.h`. `Din^dagger` and `Shift^dagger`
+both reuse the existing, already-validated `MDWFFifthDimAdjointCoupling`
+(the formal transpose-adjoint of `MDWFFifthDimCoupling` for *any* five
+coefficients) applied to `dinCoeff` and `shiftCoeff` respectively. No new
+adjoint machinery is introduced: `applyMDWFMobiusAdjointOperator`,
+`MDWFMobiusAdjointOperatorWorkspace`, and the `MDWFMobiusLinearOperator`/
+`MDWFMobiusAdjointLinearOperator` wrapper pair (matching the existing
+`MDWFLinearOperator`/`MDWFAdjointLinearOperator` interface so they plug
+into `MDWFCoupledSolverAdapter`/`MDWFNormalOperator` later) are all built
+from it.
+
+At `b5 = 1` (`c5 = 0`), `Din^dagger` is the identity (same reasoning as the
+forward operator's `Din`), so this reduces exactly to the existing Shamir
+adjoint (`MDWFAdjointLinearOperator` / `applyMDWFAdjointCloverOperator` at
+`c_sw = 0`).
+
+`mdwfMobiusAdjointMappingTest` validates:
+
+1. At `b5 = 1`, the general adjoint reproduces the existing Shamir adjoint
+   bit-for-bit — the adjoint counterpart of Section 5's forward-operator
+   regression check.
+2. At a generic `b5 = 1.5`, the coupled-5D adjoint identity
+   `<x, M y> = <M^dagger x, y>` holds, using the same aggregated dot product
+   (`MDWFCoupledSolverAdapter::dotProduct5D`) already validated for the
+   Shamir/normal-operator scaffold.
+
+This does not implement `zMobius`, clover for the Mobius path, or any
+CG/RHMC/HMC wiring; it does not validate against gauge-dependent
+domain-wall physics. Cluster-validated (`n2dgx01`, commit `fb95e13`,
+`Ls = 8`, `M5 = 1.8`, `mf = 0.05`): `mass = 1.1`, `maxAdjointRegressionDiff`
+(`b5 = 1` vs Shamir adjoint) `= 3.19744e-14`, `adjointRelDiff` (`b5 = 1.5`
+coupled-5D identity) `= 9.85783e-17`; see `TODO.md`.
+
+## 7. General Möbius clover extension (this patch)
+
+Following the existing clover guardrail ("route clover only through the
+existing Wilson-kernel path; do not duplicate clover storage or alter MDWF
+fifth-direction coupling"), `MDWFMobiusMapping.h` adds
+`applyMDWFMobiusCloverOperator` / `MDWFMobiusCloverOperatorWorkspace` /
+`MDWFMobiusCloverLinearOperator` and their adjoint counterparts
+(`applyMDWFMobiusAdjointCloverOperator` /
+`MDWFMobiusAdjointCloverOperatorWorkspace` /
+`MDWFMobiusCloverAdjointLinearOperator`), purely alongside the existing
+`c_sw = 0` classes from Sections 5–6, which are left completely untouched.
+
+The change is minimal: in the forward operator, the single `D_W(Din)` step
+now calls the existing `applyMDWFCloverWilsonSlice` instead of
+`applyMDWFWilsonSlice`, with an explicit `csw`; in the adjoint, the
+`D_W^dagger(gamma5(x)) = gamma5(D_W(gamma5(x)))` step does the same. `Din`
+/ `Din^dagger`, the fifth-direction shift term, and
+`MDWFFifthDimAdjointCoupling` (which has no `csw` dependence) are
+unchanged.
+
+Two properties make this a strong, independently checkable extension
+rather than a new derivation:
+
+- At `c_sw = 0`, `applyMDWFCloverWilsonSlice` is already proven to
+  reproduce `applyMDWFWilsonSlice` exactly, generically in its input (the
+  Stage 5/6 `mdwfCloverCsw0Test` regression); so the new clover-capable
+  Mobius classes at `csw = 0` are expected to reduce exactly to the
+  existing, already cluster-validated plain Mobius classes at any `b5`.
+- At `b5 = 1` (`c5 = 0`), `Din`/`Din^dagger` still reduce to the identity
+  (unchanged from Section 5/6), so the clover Mobius forward/adjoint
+  operators at `b5 = 1` must reduce exactly to the plain Shamir clover
+  operators (`MDWFLinearOperator` / `MDWFAdjointLinearOperator`, which
+  already route every `apply()` through the clover-capable path at any
+  `csw`) at the same `csw`.
+
+`mdwfMobiusCloverMappingTest` checks both reductions explicitly (rather
+than assuming them), plus a nonzero-`c_sw` finite-response sanity check
+at a generic `b5` and the coupled-5D adjoint identity
+`<x, M y> = <M^dagger x, y>` at a generic `b5` and nonzero `csw`. This does
+not implement `zMobius`, CG/RHMC/HMC wiring, or force code, and does not
+validate against gauge-dependent domain-wall physics. Cluster-validated
+(`n2dgx01`, `Ls = 8`, `M5 = 1.8`, `mf = 0.05`, `c_sw = 0.5`): `c_sw = 0`
+forward/adjoint regression diffs `5.68434e-14` / `4.9738e-14`, `b5 = 1`
+Shamir-clover forward/adjoint regression diffs `0` / `0`, `c_sw` response
+`14.2722`, adjoint identity relative difference `1.49694e-16`; see `TODO.md`.
