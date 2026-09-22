@@ -703,6 +703,18 @@ set_SIMULATeQCD_property(mdwfFifthDimTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(mdwfFifthDimTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_8=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests mdwfFifthDimTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfShamirFifthDimMappingTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfShamirFifthDimMappingTest src/testing/main_mdwfShamirFifthDimMappingTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfShamirFifthDimMappingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfShamirFifthDimMappingTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfShamirFifthDimMappingTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfMobiusFifthDimMappingTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfMobiusFifthDimMappingTest src/testing/main_mdwfMobiusFifthDimMappingTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfMobiusFifthDimMappingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfMobiusFifthDimMappingTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfMobiusFifthDimMappingTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfWilsonSliceTest src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfWilsonSliceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
