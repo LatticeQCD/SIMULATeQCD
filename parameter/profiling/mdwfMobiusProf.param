@@ -1,0 +1,32 @@
+#
+# mdwfMobiusProf.param
+#
+#      Lattice: Nx Ny Nz Nt (global)
+#        Nodes: Number of GPUs per direction (the scaffold benchmark is single-GPU)
+#           Ls: 8, 12, or 16 (compile-time instantiations)
+#  M5, mf, b5: Mobius parameters, RBC/UKQCD convention c5 = b5 - 1
+#         c_sw: clover coefficient for the clover timings and the CG
+#   reps/warmup: timed and untimed applications per operator
+#   run_single: also time the operators in single precision
+#       run_cg: run the double-precision unpreconditioned M^dagger M CG baseline
+#
+# Gauge field: random (seed) by default; use_unit_conf = 1 for a unit field;
+# set Gaugefile (and format, default nersc) to benchmark on the same
+# configuration as the Grid run.
+#
+Lattice      = 16 16 16 16
+Nodes        = 1 1 1 1
+Ls           = 16
+M5           = 1.8
+mf           = 0.05
+b5           = 1.5
+c_sw         = 0.5
+reps         = 20
+warmup       = 3
+seed         = 1337
+run_single   = 1
+run_cg       = 1
+cg_tolerance = 1e-8
+cg_max_iter  = 20000
+#Gaugefile   = /path/to/config.nersc
+#format      = nersc
