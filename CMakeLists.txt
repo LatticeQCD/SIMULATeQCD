@@ -739,6 +739,12 @@ set_SIMULATeQCD_property(mdwfMobiusRationalActionTest PROPERTIES RUNTIME_OUTPUT_
 SIMULATeQCD_target_compile_definitions(mdwfMobiusRationalActionTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfMobiusRationalActionTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfMobiusFiniteDifferenceTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfMobiusFiniteDifferenceTest src/testing/main_mdwfMobiusFiniteDifferenceTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfMobiusFiniteDifferenceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfMobiusFiniteDifferenceTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfMobiusFiniteDifferenceTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfWilsonSliceTest src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfWilsonSliceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
