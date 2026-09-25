@@ -52,7 +52,8 @@ struct MDWFHmcParameters {
     int steps;
     int max_iter;
     double precision;
-    double pv_mass;   // used only by the Pauli-Villars action
+    double pv_mass;       // used only by the Pauli-Villars action
+    int gauge_substeps;   // gauge steps per fermion step (Sexton-Weingarten); <= 0 means 1
 };
 
 /*

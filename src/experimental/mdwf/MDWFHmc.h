@@ -128,6 +128,7 @@ private:
     FermionAction _fermion;
 
     int _forceEvaluations;
+    int _gaugeUpdates;
     double _maxGaugeForceRms;
     double _maxFermionForceRms;
 
@@ -166,6 +167,7 @@ public:
           _ipdotHost(commBase, _prefix + "_ipdot_host"),
           _fermion(commBase, gauge, param),
           _forceEvaluations(0),
+          _gaugeUpdates(0),
           _maxGaugeForceRms(0.0),
           _maxFermionForceRms(0.0) {
         const LatticeData lat = GInd::getLatData();
@@ -229,33 +231,71 @@ public:
         _gauge.updateAll();
     }
 
-    // Applies the gauge and fermion forces as two separate momentum updates, as integrator.cpp does.
-    void evolveP(double stepsize) {
+    void updatePGauge(double stepsize) {
         _ipdot.iterateOverBulkAllMu(MDWFHmcWilsonGaugeForce<HaloDepth>(_gauge.getAccessor(), _param.beta));
         _ipdotHost = _ipdot;
         _maxGaugeForceRms = std::max(_maxGaugeForceRms, forceRms(_ipdotHost));
         _momenta.iterateOverBulkAllMu(MDWFHmcEvolveP<HaloDepth>(_momenta.getAccessor(), _ipdot.getAccessor(), stepsize));
+        _momenta.updateAll();
+        _gaugeUpdates++;
+    }
 
+    void updatePFermion(double stepsize) {
         updateFermionForce();
         _momenta.iterateOverBulkAllMu(MDWFHmcEvolveP<HaloDepth>(_momenta.getAccessor(), _ipdot.getAccessor(), stepsize));
         _momenta.updateAll();
         _forceEvaluations++;
     }
 
-    // Leapfrog P(eps/2) [Q(eps) P(eps)]^(steps-1) Q(eps) P(eps/2), eps = tau / steps.
-    void integrate(int steps) {
-        const double eps = _param.tau / static_cast<double>(steps);
-        evolveP(0.5 * eps);
-        for (int step = 0; step < steps - 1; step++) {
-            evolveQ(eps);
-            evolveP(eps);
+    // Both forces with the same step size, gauge first (a plain leapfrog momentum update).
+    void evolveP(double stepsize) {
+        updatePGauge(stepsize);
+        updatePFermion(stepsize);
+    }
+
+    /*
+     * Sexton-Weingarten two-scale leapfrog, as SWleapfrog in integrator.cpp with one fermion
+     * scale: fermion step eps = tau / steps, gauge step delta = eps / gaugeSubsteps. Each fermion
+     * step is P_f(eps/2) [inner leapfrog of Q and P_g over time eps] P_f(eps/2), with adjacent
+     * half steps merged. At gaugeSubsteps = 1 this performs exactly the plain leapfrog
+     * P(eps/2) [Q(eps) P(eps)]^(steps-1) Q(eps) P(eps/2), operation by operation.
+     */
+    void integrate(int steps, int gaugeSubsteps) {
+        if (steps <= 0) {
+            throw std::runtime_error(stdLogger.fatal("MDWF HMC integrate requires steps > 0"));
         }
-        evolveQ(eps);
-        evolveP(0.5 * eps);
+        const int substeps = std::max(1, gaugeSubsteps);
+        const double eps = _param.tau / static_cast<double>(steps);
+        const double delta = eps / static_cast<double>(substeps);
+
+        updatePGauge(0.5 * delta);
+        updatePFermion(0.5 * eps);
+        for (int step = 0; step < steps - 1; step++) {
+            for (int sub = 0; sub < substeps; sub++) {
+                evolveQ(delta);
+                updatePGauge(delta);
+            }
+            updatePFermion(eps);
+        }
+        for (int sub = 0; sub < substeps - 1; sub++) {
+            evolveQ(delta);
+            updatePGauge(delta);
+        }
+        evolveQ(delta);
+        updatePGauge(0.5 * delta);
+        updatePFermion(0.5 * eps);
+    }
+
+    void integrate(int steps) {
+        integrate(steps, _param.gauge_substeps);
     }
 
     int forceEvaluations() const {
         return _forceEvaluations;
+    }
+
+    int gaugeUpdates() const {
+        return _gaugeUpdates;
     }
 
     void resetForceStatistics() {
