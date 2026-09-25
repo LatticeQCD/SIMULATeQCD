@@ -1,41 +1,33 @@
 /*
- * Test-only single-rank MDWF two-flavour HMC driver (step 2 of the MDWF RHMC
- * plan in TODO.md), following MDWF_HMC_CONVENTIONS.md:
+ * Test-only single-rank MDWF HMC driver (steps 2 and 4 of the MDWF RHMC plan
+ * in TODO.md), following MDWF_HMC_CONVENTIONS.md:
  *
  *   H = (1/2) sum_links tr(P P) + S_g + S_f,
  *   U -> exp(i eps P) U,   P -> P - i eps ipdot,   ipdot_l = K_l = TA(B_l),
  *
- * with
+ * with the Wilson gauge action S_g = -(beta/3) sum_plaquettes Re tr U_p and
+ * ipdot_g = -(beta/3) gaugeActionDerivPlaq (identity confirmed by
+ * mdwfMobiusHmcConventionTest). The fermion action is a template parameter
+ * from MDWFHmcFermionActions.h:
  *
- *   S_g = -(beta/3) sum_plaquettes Re tr U_p          (Wilson gauge action),
- *   ipdot_g = -(beta/3) gaugeActionDerivPlaq,          (identity confirmed by
- *                                                       mdwfMobiusHmcConventionTest)
- *   S_f = phi^\dagger (M^\dagger M)^{-1} phi,          heatbath phi = M^\dagger eta,
- *   ipdot_f = stored all-link MDWF matrices K_l        (Mobius clover operator,
- *            from MDWFMobiusForceWorkspaceView)         rational c0 = 0, {1}, {0}).
+ *   MDWFTwoFlavorHmc              bare det(M^\dagger M)          (validated by mdwfHmcTrajectoryTest)
+ *   MDWFPauliVillarsTwoFlavorHmc  det(M_f^\dagger M_f) / det(M_1^\dagger M_1)
  *
  * The Symanzik gauge action is deliberately not offered: its rectangle force
  * does not yet match its action (TODO.md). The two MD update formulas
  * reproduce do_evolve_Q / do_evolve_P from src/modules/rhmc/integrator.cpp,
  * which are file-local there; that module is not modified.
  *
- * This is a correctness scaffold: single rank, no Pauli-Villars factor (so
- * it samples det(M^\dagger M) of the bare 5D operator, not physical 2-flavour
- * MDWF), plain leapfrog, the force stored on the host each step, and
- * unpreconditioned solves from a zero initial guess. It is intended for
- * reversibility, Delta H scaling, and <exp(-Delta H)> checks on small
- * lattices, not for production.
+ * This is a correctness scaffold: single rank, plain leapfrog with the gauge
+ * and fermion forces applied as separate momentum updates, the fermion force
+ * stored on the host each step, and unpreconditioned solves from a zero
+ * initial guess. It is intended for reversibility, Delta H scaling, and
+ * <exp(-Delta H)> checks on small lattices, not for production.
  */
 
 #pragma once
 
-#include "MDWFAllLinkDirectionIndependentStorage.h"
-#include "MDWFFermionForceWorkspace.h"
-#include "MDWFMobiusForceWorkspace.h"
-#include "MDWFMobiusMapping.h"
-#include "MDWFNormalOperator.h"
-#include "MDWFPseudofermionAction.h"
-#include "MDWFRationalCoefficientAdapter.h"
+#include "MDWFHmcFermionActions.h"
 #include "../../gauge/gaugeAction.h"
 #include "../../gauge/gaugeActionDeriv.h"
 
@@ -44,18 +36,6 @@
 #include <random>
 #include <stdexcept>
 #include <string>
-
-struct MDWFHmcParameters {
-    double beta;
-    double M5;
-    double mf;
-    double b5;
-    double csw;
-    double tau;
-    int steps;
-    int max_iter;
-    double precision;
-};
 
 struct MDWFHmcEnergy {
     double kinetic;
@@ -124,18 +104,12 @@ struct MDWFHmcWilsonGaugeForce {
     }
 };
 
-template<size_t HaloDepth, size_t Ls>
-class MDWFTwoFlavorHmc {
+template<size_t HaloDepth, size_t Ls, class FermionAction>
+class MDWFHmcDriver {
 public:
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
     using Spinor = MDWFSpinor<double, true, All, HaloDepth, Ls>;
-    using Forward = MDWFMobiusCloverLinearOperator<double, HaloDepth, HaloDepth, Ls>;
-    using Adjoint = MDWFMobiusCloverAdjointLinearOperator<double, HaloDepth, HaloDepth, Ls>;
-    using Normal = MDWFNormalOperator<Forward, Adjoint>;
-    using NormalAdapter = MDWFCoupledSolverAdapter<double, HaloDepth, HaloDepth, Ls, Normal>;
-    using Workspace = MDWFFermionForceWorkspace<double, HaloDepth, HaloDepth, Ls, Normal, Forward>;
-    using View = MDWFMobiusForceWorkspaceView<double, HaloDepth, Ls, Workspace>;
 
 private:
     typedef GIndexer<All, HaloDepth> GInd;
@@ -144,27 +118,16 @@ private:
     Gauge &_gauge;
     MDWFHmcParameters _param;
     uint4 *_randState;
+    std::string _prefix;
 
     Gauge _momenta;
     Gauge _savedGauge;
     Gauge _ipdot;
     HostGauge _gaugeHost;
     HostGauge _ipdotHost;
-    Spinor _phi;
-    Spinor _eta;
-    Spinor _actionWorkspace;
+    FermionAction _fermion;
 
-    // The operators hold a reference to _gauge and recompute the clover term on every
-    // application, so they stay valid while the gauge field evolves in place.
-    Forward _forward;
-    Adjoint _adjoint;
-    Normal _normal;
-    NormalAdapter _normalAdapter;
-
-    MDWFRationalCoefficients<double> _actionCoefficients;
-    MDWFRationalCoefficients<double> _forceCoefficients;
     int _forceEvaluations;
-    double _noiseNorm2;
     double _maxGaugeForceRms;
     double _maxFermionForceRms;
 
@@ -182,59 +145,32 @@ private:
         return std::sqrt(sum / (4.0 * static_cast<double>(GInd::getLatData().vol4)));
     }
 
-    static MDWFRationalCoefficients<double> makeInverse(MDWFRationalCoefficientRole role, const std::string &name) {
-        MDWFExplicitRationalInput<double> input{name, role, 0.0, {1.0}, {0.0}};
-        return makeMDWFRationalCoefficients(input);
-    }
-
     void updateFermionForce() {
-        Workspace workspace;
-        workspace.prepare(_normal, _forward, _phi, _forceCoefficients, _param.max_iter, _param.precision,
-                          "MDWF_hmc_force_workspace");
-        if (!workspace.converged()) {
-            throw std::runtime_error(stdLogger.fatal("MDWF HMC fermion force solve did not converge"));
-        }
-        View view(workspace, _forward.params().dinCoeff, "MDWF_hmc_force_view");
-
         _gaugeHost = _gauge;
-        if (_param.csw != 0.0) {
-            overwriteMDWFCloverAllLinkDirectionIndependentStorageNonzero<HaloDepth, Ls>(
-                _ipdotHost, _gaugeHost, view, _forceCoefficients, _param.csw, _commBase, "MDWF_hmc_force_storage");
-        } else {
-            overwriteMDWFWilsonAllLinkDirectionIndependentStorageCsw0<HaloDepth, Ls>(
-                _ipdotHost, _gaugeHost, view, _forceCoefficients, _commBase, "MDWF_hmc_force_storage");
-        }
+        _fermion.force(_ipdotHost, _gaugeHost);
         _maxFermionForceRms = std::max(_maxFermionForceRms, forceRms(_ipdotHost));
         _ipdot = _ipdotHost;
     }
 
 public:
-    MDWFTwoFlavorHmc(CommunicationBase &commBase, Gauge &gauge, const MDWFHmcParameters &param, uint4 *randState)
+    MDWFHmcDriver(CommunicationBase &commBase, Gauge &gauge, const MDWFHmcParameters &param, uint4 *randState)
         : _commBase(commBase),
           _gauge(gauge),
           _param(param),
           _randState(randState),
-          _momenta(commBase, "MDWF_hmc_momenta"),
-          _savedGauge(commBase, "MDWF_hmc_saved_gauge"),
-          _ipdot(commBase, "MDWF_hmc_ipdot"),
-          _gaugeHost(commBase, "MDWF_hmc_gauge_host"),
-          _ipdotHost(commBase, "MDWF_hmc_ipdot_host"),
-          _phi(commBase, "MDWF_hmc_phi"),
-          _eta(commBase, "MDWF_hmc_eta"),
-          _actionWorkspace(commBase, "MDWF_hmc_action_workspace"),
-          _forward(gauge, param.M5, param.mf, param.b5, param.csw, "MDWF_hmc_forward"),
-          _adjoint(gauge, param.M5, param.mf, param.b5, param.csw, "MDWF_hmc_adjoint"),
-          _normal(commBase, _forward, _adjoint, "MDWF_hmc_normal"),
-          _normalAdapter(_normal),
-          _actionCoefficients(makeInverse(MDWFRationalCoefficientRole::Action, "MDWF_hmc_action")),
-          _forceCoefficients(makeInverse(MDWFRationalCoefficientRole::Force, "MDWF_hmc_force")),
+          _prefix(mdwfHmcInstancePrefix("MDWF_hmc_drv")),
+          _momenta(commBase, _prefix + "_momenta"),
+          _savedGauge(commBase, _prefix + "_saved_gauge"),
+          _ipdot(commBase, _prefix + "_ipdot"),
+          _gaugeHost(commBase, _prefix + "_gauge_host"),
+          _ipdotHost(commBase, _prefix + "_ipdot_host"),
+          _fermion(commBase, gauge, param),
           _forceEvaluations(0),
-          _noiseNorm2(0.0),
           _maxGaugeForceRms(0.0),
           _maxFermionForceRms(0.0) {
         const LatticeData lat = GInd::getLatData();
         if (lat.vol4 != lat.globvol4) {
-            throw std::runtime_error(stdLogger.fatal("MDWF two-flavour HMC scaffold is single-rank only"));
+            throw std::runtime_error(stdLogger.fatal("MDWF HMC scaffold is single-rank only"));
         }
         if (param.steps <= 0 || !(param.tau > 0.0) || param.max_iter <= 0 || !(param.precision > 0.0)) {
             throw std::runtime_error(stdLogger.fatal("MDWF HMC requires positive tau, steps, max_iter, precision"));
@@ -246,12 +182,8 @@ public:
         _momenta.updateAll();
     }
 
-    // phi = M^\dagger eta with eta distributed as exp(-eta^\dagger eta); then S_f = eta^\dagger eta.
     void heatbath() {
-        _eta.gauss(_randState);
-        _eta.updateAll();
-        _noiseNorm2 = _normalAdapter.norm2(_eta);
-        _adjoint.apply(_phi, _eta, true);
+        _fermion.heatbath(_randState);
     }
 
     void flipMomenta() {
@@ -260,11 +192,11 @@ public:
     }
 
     double noiseNorm2() const {
-        return _noiseNorm2;
+        return _fermion.noiseNorm2();
     }
 
     double kineticEnergy() {
-        HostGauge momentaHost(_commBase, "MDWF_hmc_momenta_host");
+        HostGauge momentaHost(_commBase, _prefix + "_kinetic_host");
         momentaHost = _momenta;
         const SU3Accessor<double> pAcc = momentaHost.getAccessor();
         double sum = 0.0;
@@ -285,13 +217,7 @@ public:
     }
 
     double fermionAction() {
-        const MDWFRationalActionResult<double> result = computeMDWFRationalAction<double, NormalAdapter>(
-            _normalAdapter, _actionWorkspace, _phi, _actionCoefficients, _param.max_iter, _param.precision,
-            "MDWF_hmc_action");
-        if (!result.rational_result.converged()) {
-            throw std::runtime_error(stdLogger.fatal("MDWF HMC fermion action solve did not converge"));
-        }
-        return result.action_real;
+        return _fermion.action();
     }
 
     MDWFHmcEnergy energy() {
@@ -345,12 +271,23 @@ public:
         return _maxFermionForceRms;
     }
 
+    // Fermion force of the current state and phi, without changing the momenta.
+    double currentFermionForceRms() {
+        _gaugeHost = _gauge;
+        _fermion.force(_ipdotHost, _gaugeHost);
+        return forceRms(_ipdotHost);
+    }
+
     Gauge &momenta() {
         return _momenta;
     }
 
     Spinor &phi() {
-        return _phi;
+        return _fermion.phi();
+    }
+
+    FermionAction &fermion() {
+        return _fermion;
     }
 
     MDWFHmcTrajectoryResult trajectory(bool metropolis, std::mt19937_64 &acceptRng) {
@@ -376,3 +313,9 @@ public:
         return {before, after, deltaH, accepted, _forceEvaluations - forceEvaluationsBefore};
     }
 };
+
+template<size_t HaloDepth, size_t Ls>
+using MDWFTwoFlavorHmc = MDWFHmcDriver<HaloDepth, Ls, MDWFBareTwoFlavorFermionAction<HaloDepth, Ls>>;
+
+template<size_t HaloDepth, size_t Ls>
+using MDWFPauliVillarsTwoFlavorHmc = MDWFHmcDriver<HaloDepth, Ls, MDWFPauliVillarsTwoFlavorFermionAction<HaloDepth, Ls>>;

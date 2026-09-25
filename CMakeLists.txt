@@ -769,6 +769,18 @@ set_SIMULATeQCD_property(mdwfHmcTrajectoryTest PROPERTIES RUNTIME_OUTPUT_DIRECTO
 SIMULATeQCD_target_compile_definitions(mdwfHmcTrajectoryTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfHmcTrajectoryTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfPauliVillarsActionTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfPauliVillarsActionTest src/testing/main_mdwfPauliVillarsActionTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfPauliVillarsActionTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfPauliVillarsActionTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfPauliVillarsActionTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfPauliVillarsHmcTrajectoryTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfPauliVillarsHmcTrajectoryTest src/testing/main_mdwfPauliVillarsHmcTrajectoryTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfPauliVillarsHmcTrajectoryTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfPauliVillarsHmcTrajectoryTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfPauliVillarsHmcTrajectoryTest)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfWilsonSliceTest src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfWilsonSliceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
