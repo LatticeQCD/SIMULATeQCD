@@ -1,0 +1,45 @@
+#
+# mdwfPauliVillarsHmcRun.param
+#
+# MDWF Pauli-Villars two-flavour HMC run (<exp(-Delta H)> = 1 check).
+# Wilson gauge action, Mobius clover kernel (c5 = b5 - 1), Ls = 8 (compile time).
+#
+#          Lattice: Nx Ny Nz Nt
+#            Nodes: single rank only
+#             beta: Wilson gauge coupling
+#   M5, mf, b5, c_sw, pv_mass: Mobius domain-wall parameters (Pauli-Villars mass pv_mass)
+#              tau: trajectory length
+#    fermion_steps: fermion-force steps per trajectory (eps = tau / fermion_steps)
+#   gauge_substeps: gauge steps per fermion step (Sexton-Weingarten)
+#           n_traj: number of trajectories
+#          n_therm: trajectories excluded from the statistics
+#        n_nometro: first trajectories without accept/reject (<= n_therm), to leave the cold start
+#       block_size: block length for the blocked error
+#        precision: CG relative residual for actions, heatbath, and forces
+# measurements_dir: output directory (must be writable from the job)
+#      output_name: per-trajectory data file
+#     Gaugefile_out: optional final configuration (NERSC), written into measurements_dir
+#         Gaugefile: optional NERSC start configuration (default: cold start)
+#
+Lattice          = 6 6 6 6
+Nodes            = 1 1 1 1
+beta             = 6.0
+M5               = 1.8
+mf               = 0.1
+b5               = 1.5
+c_sw             = 0.5
+pv_mass          = 1.0
+tau              = 0.5
+fermion_steps    = 20
+gauge_substeps   = 8
+n_traj           = 50
+n_therm          = 15
+n_nometro        = 5
+block_size       = 5
+seed             = 20260925
+max_iter         = 20000
+precision        = 1e-10
+measurements_dir = ./
+output_name      = mdwfPauliVillarsHmcRun.dat
+#Gaugefile_out   = mdwfPauliVillarsHmcRun_final.nersc
+#Gaugefile       = /path/to/start.nersc

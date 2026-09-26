@@ -787,6 +787,12 @@ set_SIMULATeQCD_property(mdwfPauliVillarsMultiscaleTest PROPERTIES RUNTIME_OUTPU
 SIMULATeQCD_target_compile_definitions(mdwfPauliVillarsMultiscaleTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfPauliVillarsMultiscaleTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfPauliVillarsHmcRun.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfPauliVillarsHmcRun src/testing/main_mdwfPauliVillarsHmcRun.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfPauliVillarsHmcRun PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfPauliVillarsHmcRun PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfPauliVillarsHmcRun)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfWilsonSliceTest src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfWilsonSliceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
