@@ -827,8 +827,28 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
                                ${CMAKE_CURRENT_SOURCE_DIR}/src/tools/rational_approx)
     target_link_libraries(mdwfRemezTest PRIVATE ${MDWF_MPFR_LIBRARY} ${MDWF_GMP_LIBRARY})
     set_target_properties(mdwfRemezTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+
+    # The same two host sources as a static library for the GPU RHMC targets (MDWFRhmcFermionActions.h).
+    # Linked with the plain target_link_libraries signature, which add_SIMULATeQCD_executable also uses.
+    add_library(mdwfRemez STATIC
+                src/experimental/mdwf/MDWFRemez.cpp
+                src/tools/rational_approx/alg_remez.C)
+    target_include_directories(mdwfRemez PRIVATE ${MDWF_GMP_INCLUDE_DIR} ${MDWF_MPFR_INCLUDE_DIR}
+                               ${CMAKE_CURRENT_SOURCE_DIR}/src/tools/rational_approx)
+    target_link_libraries(mdwfRemez ${MDWF_MPFR_LIBRARY} ${MDWF_GMP_LIBRARY})
+    set_target_properties(mdwfRemez PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+    foreach(MDWF_RHMC_TARGET mdwfOneFlavorRhmcActionTest mdwfTwoPlusOneHmcTrajectoryTest)
+        set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_RHMC_TARGET}.cpp src/spinor/spinorfield.cpp)
+        add_SIMULATeQCD_executable(${MDWF_RHMC_TARGET} src/testing/main_${MDWF_RHMC_TARGET}.cpp src/spinor/spinorfield.cpp)
+        set_SIMULATeQCD_property(${MDWF_RHMC_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+        SIMULATeQCD_target_compile_definitions(${MDWF_RHMC_TARGET} PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+        target_link_libraries(${MDWF_RHMC_TARGET} mdwfRemez)
+        target_link_libraries(_${MDWF_RHMC_TARGET} mdwfRemez)
+        add_to_compound_SIMULATeQCD_target(tests ${MDWF_RHMC_TARGET})
+    endforeach()
 else()
-    message(STATUS "MDWF Remez: GMP/MPFR not found, mdwfRemezTest disabled")
+    message(STATUS "MDWF Remez: GMP/MPFR not found, mdwfRemezTest and the MDWF RHMC targets disabled")
 endif()
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)

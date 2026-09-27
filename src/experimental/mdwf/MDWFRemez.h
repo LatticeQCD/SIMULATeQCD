@@ -45,6 +45,17 @@ struct MDWFRemezApproximation {
 MDWFRemezApproximation mdwfRemezPower(int pnum, int pden, double lambda_low, double lambda_high,
                                       int order, int digits);
 
+/*
+ * Lowest order in [minOrder, maxOrder] whose max relative error (as returned by
+ * AlgRemez) is at most targetError, found by increasing the order one at a
+ * time. Results are cached per (pnum, pden, interval, order, digits), so
+ * repeated construction of the same approximation (for example one RHMC
+ * action per gauge field in a finite-difference test) costs nothing. Throws if
+ * maxOrder does not reach the target.
+ */
+MDWFRemezApproximation mdwfRemezPowerForError(int pnum, int pden, double lambda_low, double lambda_high,
+                                              double targetError, int maxOrder, int digits, int minOrder = 2);
+
 double mdwfRemezEvaluate(const MDWFRemezPartialFractions &pf, double x);
 
 std::string mdwfRemezDescribe(const MDWFRemezApproximation &approx);

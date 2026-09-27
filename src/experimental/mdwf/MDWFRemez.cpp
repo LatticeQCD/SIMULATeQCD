@@ -9,8 +9,10 @@
 
 #include <cmath>
 #include <iomanip>
+#include <map>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 
 MDWFRemezApproximation mdwfRemezPower(int pnum, int pden, double lambda_low, double lambda_high,
                                       int order, int digits) {
@@ -51,6 +53,33 @@ MDWFRemezApproximation mdwfRemezPower(int pnum, int pden, double lambda_low, dou
     result.inverse = {norm, residues, poles};
 
     return result;
+}
+
+MDWFRemezApproximation mdwfRemezPowerForError(int pnum, int pden, double lambda_low, double lambda_high,
+                                              double targetError, int maxOrder, int digits, int minOrder) {
+    if (!(targetError > 0.0) || minOrder <= 0 || maxOrder < minOrder) {
+        throw std::runtime_error("mdwfRemezPowerForError requires targetError > 0 and 0 < minOrder <= maxOrder");
+    }
+    using Key = std::tuple<int, int, double, double, int, int>;
+    static std::map<Key, MDWFRemezApproximation> cache;
+
+    double lastError = 0.0;
+    for (int order = minOrder; order <= maxOrder; order++) {
+        const Key key{pnum, pden, lambda_low, lambda_high, order, digits};
+        auto found = cache.find(key);
+        if (found == cache.end()) {
+            found = cache.emplace(key, mdwfRemezPower(pnum, pden, lambda_low, lambda_high, order, digits)).first;
+        }
+        lastError = found->second.max_relative_error;
+        if (std::isfinite(lastError) && lastError <= targetError) {
+            return found->second;
+        }
+    }
+    std::ostringstream message;
+    message << "mdwfRemezPowerForError: x^(" << pnum << "/" << pden << ") on [" << lambda_low << ", " << lambda_high
+            << "] reaches only max relative error " << lastError << " at order " << maxOrder << ", target "
+            << targetError;
+    throw std::runtime_error(message.str());
 }
 
 double mdwfRemezEvaluate(const MDWFRemezPartialFractions &pf, double x) {

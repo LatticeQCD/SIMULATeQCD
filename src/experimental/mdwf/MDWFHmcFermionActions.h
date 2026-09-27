@@ -42,6 +42,19 @@
 #include <string>
 #include <vector>
 
+// One-flavour RHMC action (MDWFRhmcFermionActions.h); unused by the two-flavour actions.
+struct MDWFRhmcParameters {
+    double ms;               // boundary mass of the one-flavour (strange) operator M_s
+    double lambda_low_s;     // approximation interval of M_s^\dagger M_s
+    double lambda_high_s;
+    double lambda_low_pv;    // approximation interval of M_1^\dagger M_1, M_1 = M(pv_mass)
+    double lambda_high_pv;
+    double action_error;     // target max relative error of the heatbath and action approximations
+    double force_error;      // target for the force approximations; <= 0 means use the action ones
+    int max_order;           // highest Remez order tried; <= 0 means 30
+    int digits;              // AlgRemez working precision in digits; <= 0 means 50
+};
+
 struct MDWFHmcParameters {
     double beta;
     double M5;
@@ -54,6 +67,7 @@ struct MDWFHmcParameters {
     double precision;
     double pv_mass;       // used only by the Pauli-Villars action
     int gauge_substeps;   // gauge steps per fermion step (Sexton-Weingarten); <= 0 means 1
+    MDWFRhmcParameters rhmc;  // used only by the one-flavour RHMC action
 };
 
 /*
