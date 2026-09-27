@@ -37,10 +37,11 @@ MDWFPseudofermionHeatbathResult<floatT> applyMDWFPseudofermionHeatbath(
     const MDWFRationalCoefficients<floatT> &coefficients,
     int max_iter,
     double precision,
-    const std::string &name = "MDWF_pseudofermion_heatbath") {
+    const std::string &name = "MDWF_pseudofermion_heatbath",
+    MDWFMultiShiftStrategy strategy = MDWFMultiShiftStrategy::Independent) {
 
     MDWFRationalOperator<floatT, CoupledAdapter, BlockSize> rational_operator(
-        coefficients, max_iter, precision, name);
+        coefficients, max_iter, precision, name, strategy);
     MDWFCoupledMultiShiftCGResults<floatT> rational_result
         = rational_operator.apply(adapter, pseudofermion, noise, true);
 
@@ -59,10 +60,11 @@ MDWFRationalActionResult<floatT> computeMDWFRationalAction(
     const MDWFRationalCoefficients<floatT> &coefficients,
     int max_iter,
     double precision,
-    const std::string &name = "MDWF_rational_action") {
+    const std::string &name = "MDWF_rational_action",
+    MDWFMultiShiftStrategy strategy = MDWFMultiShiftStrategy::Independent) {
 
     MDWFRationalOperator<floatT, CoupledAdapter, BlockSize> rational_operator(
-        coefficients, max_iter, precision, name);
+        coefficients, max_iter, precision, name, strategy);
     MDWFCoupledMultiShiftCGResults<floatT> rational_result
         = rational_operator.apply(adapter, action_workspace, field, true);
 

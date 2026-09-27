@@ -57,16 +57,19 @@ private:
     int _max_iter;
     double _precision;
     std::string _name;
+    MDWFMultiShiftStrategy _strategy;
 
 public:
     MDWFRationalOperator(MDWFRationalCoefficients<floatT> coefficients,
                          int max_iter,
                          double precision,
-                         std::string name = "MDWF_rational_operator")
+                         std::string name = "MDWF_rational_operator",
+                         MDWFMultiShiftStrategy strategy = MDWFMultiShiftStrategy::Independent)
         : _coefficients(coefficients),
           _max_iter(max_iter),
           _precision(precision),
-          _name(name) {
+          _name(name),
+          _strategy(strategy) {
         _coefficients.validate();
         if (_max_iter <= 0 || _precision <= 0.0 || !std::isfinite(_precision)) {
             throw std::runtime_error(stdLogger.fatal(
@@ -98,7 +101,7 @@ public:
             shifted_solution_ptrs.push_back(shifted_solutions.back().get());
         }
 
-        MDWFCoupledMultiShiftCG<floatT, CoupledAdapter, BlockSize> multishift_cg;
+        MDWFCoupledMultiShiftCG<floatT, CoupledAdapter, BlockSize> multishift_cg(_strategy);
         MDWFCoupledMultiShiftCGResults<floatT> results = multishift_cg.invert(
             adapter, shifted_solution_ptrs, spinor_in, _coefficients.shift, _max_iter, _precision, true);
 
