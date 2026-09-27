@@ -793,6 +793,38 @@ set_SIMULATeQCD_property(mdwfPauliVillarsHmcRun PROPERTIES RUNTIME_OUTPUT_DIRECT
 SIMULATeQCD_target_compile_definitions(mdwfPauliVillarsHmcRun PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfPauliVillarsHmcRun)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfSpectralBounds.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfSpectralBounds src/testing/main_mdwfSpectralBounds.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfSpectralBounds PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfSpectralBounds PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfSpectralBounds)
+
+# MDWF RHMC rational approximations: AlgRemez (src/tools/rational_approx, unchanged) behind the
+# host-only wrapper src/experimental/mdwf/MDWFRemez.cpp. Needs GMP and MPFR; the hints cover the
+# EasyBuild installations of the GCCcore 14.2.0 toolchain used for this build. Without them only the
+# Remez targets are skipped.
+find_path(MDWF_GMP_INCLUDE_DIR gmp.h
+          HINTS $ENV{EBROOTGMP}/include /opt/software/pc2/EB-SW/software/GMP/6.3.0-GCCcore-14.2.0/include)
+find_path(MDWF_MPFR_INCLUDE_DIR mpf2mpfr.h
+          HINTS $ENV{EBROOTMPFR}/include /opt/software/pc2/EB-SW/software/MPFR/4.2.2-GCCcore-14.2.0/include)
+find_library(MDWF_GMP_LIBRARY gmp
+             HINTS $ENV{EBROOTGMP}/lib /opt/software/pc2/EB-SW/software/GMP/6.3.0-GCCcore-14.2.0/lib)
+find_library(MDWF_MPFR_LIBRARY mpfr
+             HINTS $ENV{EBROOTMPFR}/lib /opt/software/pc2/EB-SW/software/MPFR/4.2.2-GCCcore-14.2.0/lib)
+if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF_MPFR_LIBRARY)
+    message(STATUS "MDWF Remez: GMP ${MDWF_GMP_LIBRARY}, MPFR ${MDWF_MPFR_LIBRARY}")
+    add_executable(mdwfRemezTest
+                   src/testing/main_mdwfRemezTest.cpp
+                   src/experimental/mdwf/MDWFRemez.cpp
+                   src/tools/rational_approx/alg_remez.C)
+    target_include_directories(mdwfRemezTest PRIVATE ${MDWF_GMP_INCLUDE_DIR} ${MDWF_MPFR_INCLUDE_DIR}
+                               ${CMAKE_CURRENT_SOURCE_DIR}/src/tools/rational_approx)
+    target_link_libraries(mdwfRemezTest PRIVATE ${MDWF_MPFR_LIBRARY} ${MDWF_GMP_LIBRARY})
+    set_target_properties(mdwfRemezTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+else()
+    message(STATUS "MDWF Remez: GMP/MPFR not found, mdwfRemezTest disabled")
+endif()
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfWilsonSliceTest src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfWilsonSliceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

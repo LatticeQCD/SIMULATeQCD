@@ -1,0 +1,24 @@
+#
+# mdwfSpectralBounds.param
+#
+# Lanczos estimates of the extreme eigenvalues of the Mobius clover M(m)^dagger M(m)
+# (c5 = b5 - 1, Ls = 8 at compile time) for three boundary masses, to choose the
+# AlgRemez intervals of the MDWF RHMC.
+#
+#       Lattice: Nx Ny Nz Nt;  Nodes: single rank only
+#      Gaugefile: NERSC configuration (random hot field if unset: not representative)
+#     M5, b5, c_sw: Mobius parameters
+#         masses: three boundary masses mf (e.g. light, strange candidate, Pauli-Villars 1.0)
+#  lanczos_steps: Lanczos iterations (Ritz extremes printed at 25, 50, 100, ... steps)
+#         margin: suggested interval [lambda_min / margin, lambda_max * margin]
+#
+Lattice       = 6 6 6 6
+Nodes         = 1 1 1 1
+M5            = 1.8
+b5            = 1.5
+c_sw          = 0.5
+masses        = 0.02 0.1 1.0
+lanczos_steps = 1000
+margin        = 2.0
+seed          = 20260927
+#Gaugefile    = /path/to/config.nersc
