@@ -2,7 +2,8 @@
  * MDWF 2+1 flavour HMC run (step 5 of the MDWF RHMC plan: <exp(-Delta H)> = 1
  * over Metropolis trajectories with the one-flavour RHMC strange quark).
  *
- * Runs MDWFTwoPlusOneHmc (Wilson gauge action, Mobius clover Pauli-Villars
+ * Runs MDWFTwoPlusOneHmc (Wilson gauge action, or tree-level Symanzik with
+ * symanzik_gauge = 1, as S_g = -(3 beta/5) symanzik(); Mobius clover Pauli-Villars
  * two-flavour light pseudofermion at mf and one-flavour Pauli-Villars RHMC
  * strange pseudofermion at ms, sampling
  * det(M_l^\dagger M_l / M_1^\dagger M_1) det(M_s^\dagger M_s / M_1^\dagger M_1)^(1/2))
@@ -66,6 +67,7 @@ public:
     Parameter<int> max_order;
     Parameter<int> remez_digits;
     Parameter<int> check_steps;
+    Parameter<int> symanzik_gauge;
     Parameter<double> tau;
     Parameter<int> fermion_steps;
     Parameter<int> gauge_substeps;
@@ -95,6 +97,7 @@ public:
         addDefault(max_order, "max_order", 30);
         addDefault(remez_digits, "remez_digits", 50);
         addDefault(check_steps, "check_steps", 500);
+        addDefault(symanzik_gauge, "symanzik_gauge", 0);
         addDefault(tau, "tau", 0.5);
         addDefault(fermion_steps, "fermion_steps", 20);
         addDefault(gauge_substeps, "gauge_substeps", 8);
@@ -210,6 +213,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     param.gauge_substeps = runParam.gauge_substeps();
     param.max_iter = runParam.max_iter();
     param.precision = runParam.precision();
+    param.symanzik_gauge = runParam.symanzik_gauge() != 0;
     param.rhmc.ms = runParam.ms();
     param.rhmc.lambda_low_s = runParam.lambda_low_s();
     param.rhmc.lambda_high_s = runParam.lambda_high_s();
@@ -233,7 +237,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     const bool saveConf = runParam.GaugefileName_out.isSet();
     const std::string confPath = saveConf ? runParam.measurements_dir() + "/" + runParam.GaugefileName_out() : "";
 
-    rootLogger.info("MDWF 2+1 HMC run: Wilson beta = ", param.beta, ", M5 = ", param.M5, ", mf = ", param.mf,
+    rootLogger.info("MDWF 2+1 HMC run: ", param.symanzik_gauge ? "Symanzik" : "Wilson", " beta = ", param.beta, ", M5 = ", param.M5, ", mf = ", param.mf,
                     ", ms = ", param.rhmc.ms, ", pv_mass = ", param.pv_mass, ", b5 = ", param.b5,
                     ", c5 = ", param.b5 - 1.0, ", c_sw = ", param.csw, ", Ls = ", Ls, ", tau = ", param.tau,
                     ", fermion steps = ", param.steps, ", gauge substeps = ", param.gauge_substeps,

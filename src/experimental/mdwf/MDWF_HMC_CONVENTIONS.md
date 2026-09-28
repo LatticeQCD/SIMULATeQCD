@@ -147,6 +147,21 @@ action rate is `+40.493`, but the rectangle part of `gauge_force` predicts
 rectangle term is localized and resolved, the MDWF HMC driver uses the
 plaquette (Wilson) gauge action.
 
+**Resolved (`mdwfSymanzikGaugeForceTest`, job `34554300`).** The mismatch is
+a host-only indexer bug, not a force error: `GIndexer::site_up_2dn(s, mu, nu)`
+is `site_move<1, -2>` (`s + mu - 2 nu`) on the GPU, but its host fallback is
+`site_up_dn_dn(s, mu, mu, nu)` (`s - nu`). `gauge_force` uses it in the one
+1x2 rectangle staple below the link, and the convention test evaluated
+`gauge_force` through a host accessor. Evaluated on the device, as
+SIMULATeQCD's HMC does, `gauge_force` is exact: `dS_g/dtau = -759.438` versus
+`759.438` (relative `5.3e-8`), rectangle part `40.493` versus `-40.493`
+(`1.5e-7`). The host force plus a correction for exactly that staple equals
+the device force to `2.8e-15`, and reproduces the old host numbers (`777.655`,
+rectangle `-22.2759`). The MDWF HMC driver therefore offers the Symanzik
+action (`MDWFHmcParameters::symanzik_gauge`) with `gauge_force` evaluated on
+the device only. Never evaluate `gauge_force` or `symanzikGaugeActionDeriv`
+on the host until `site_up_2dn`'s host path is fixed upstream.
+
 ## 6. Numerical confirmation (`mdwfMobiusHmcConventionTest`)
 
 For Gaussian `P` from `Gaugefield::gauss`, along `U -> exp(i epsilon P) U`:

@@ -7,14 +7,21 @@
  *
  * with the Wilson gauge action S_g = -(beta/3) sum_plaquettes Re tr U_p and
  * ipdot_g = -(beta/3) gaugeActionDerivPlaq (identity confirmed by
- * mdwfMobiusHmcConventionTest). The fermion action is a template parameter
- * from MDWFHmcFermionActions.h:
+ * mdwfMobiusHmcConventionTest), or, with MDWFHmcParameters::symanzik_gauge,
+ * SIMULATeQCD's tree-level Symanzik action S_g = -(3 beta/5) symanzik() =
+ * -(beta/3) sum Re tr U_p + (beta/60) sum Re tr U_rect with ipdot_g =
+ * gauge_force (gaugeActionDeriv.h), as in SIMULATeQCD's own HMC. Both gauge
+ * forces are evaluated on the device. gauge_force must not be evaluated on the
+ * host: there GIndexer::site_up_2dn(s, mu, nu) falls back to
+ * site_up_dn_dn(s, mu, mu, nu) = s - nu instead of s + mu - 2 nu, which
+ * corrupts one of the six rectangle staples (the GPU path site_move<1, -2> is
+ * correct; see TODO.md and mdwfSymanzikGaugeForceTest). The fermion action is
+ * a template parameter from MDWFHmcFermionActions.h:
  *
  *   MDWFTwoFlavorHmc              bare det(M^\dagger M)          (validated by mdwfHmcTrajectoryTest)
  *   MDWFPauliVillarsTwoFlavorHmc  det(M_f^\dagger M_f) / det(M_1^\dagger M_1)
  *
- * The Symanzik gauge action is deliberately not offered: its rectangle force
- * does not yet match its action (TODO.md). The two MD update formulas
+ * The two MD update formulas
  * reproduce do_evolve_Q / do_evolve_P from src/modules/rhmc/integrator.cpp,
  * which are file-local there; that module is not modified.
  *
@@ -101,6 +108,19 @@ struct MDWFHmcWilsonGaugeForce {
         typedef GIndexer<All, HaloDepth> GInd;
         const gSite site = GInd::getSite(siteMu.isite);
         return (-_beta / 3.0) * gaugeActionDerivPlaq<double, HaloDepth>(_gAcc, site, siteMu.mu);
+    }
+};
+
+// Symanzik gauge force; device only (see the header comment on site_up_2dn).
+template<size_t HaloDepth>
+struct MDWFHmcSymanzikGaugeForce {
+    SU3Accessor<double, R18> _gAcc;
+    double _beta;
+
+    MDWFHmcSymanzikGaugeForce(SU3Accessor<double, R18> gAcc, double beta) : _gAcc(gAcc), _beta(beta) {}
+
+    __host__ __device__ SU3<double> operator()(gSiteMu siteMu) {
+        return gauge_force<double, HaloDepth, R18>(_gAcc, siteMu, _beta);
     }
 };
 
@@ -214,6 +234,9 @@ public:
 
     double gaugeAction() {
         GaugeAction<double, true, HaloDepth, R18> action(_gauge);
+        if (_param.symanzik_gauge) {
+            return -(3.0 * _param.beta / 5.0) * static_cast<double>(action.symanzik());
+        }
         return -(_param.beta / 3.0) * 18.0 * static_cast<double>(GInd::getLatData().globvol4)
                * static_cast<double>(action.plaquette());
     }
@@ -232,7 +255,11 @@ public:
     }
 
     void updatePGauge(double stepsize) {
-        _ipdot.iterateOverBulkAllMu(MDWFHmcWilsonGaugeForce<HaloDepth>(_gauge.getAccessor(), _param.beta));
+        if (_param.symanzik_gauge) {
+            _ipdot.iterateOverBulkAllMu(MDWFHmcSymanzikGaugeForce<HaloDepth>(_gauge.getAccessor(), _param.beta));
+        } else {
+            _ipdot.iterateOverBulkAllMu(MDWFHmcWilsonGaugeForce<HaloDepth>(_gauge.getAccessor(), _param.beta));
+        }
         _ipdotHost = _ipdot;
         _maxGaugeForceRms = std::max(_maxGaugeForceRms, forceRms(_ipdotHost));
         _momenta.iterateOverBulkAllMu(MDWFHmcEvolveP<HaloDepth>(_momenta.getAccessor(), _ipdot.getAccessor(), stepsize));

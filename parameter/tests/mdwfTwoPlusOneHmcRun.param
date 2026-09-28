@@ -7,7 +7,8 @@
 #
 #          Lattice: Nx Ny Nz Nt
 #            Nodes: single rank only
-#             beta: Wilson gauge coupling
+#             beta: gauge coupling
+#   symanzik_gauge: 0 = Wilson plaquette action, 1 = tree-level Symanzik -(3 beta/5) symanzik()
 #   M5, mf, ms, b5, c_sw, pv_mass: Mobius domain-wall parameters (light mf, strange ms,
 #                    Pauli-Villars mass pv_mass)
 #   lambda_low_s, lambda_high_s: AlgRemez interval for M_s^dagger M_s (measure it,
@@ -36,6 +37,7 @@
 Lattice          = 6 6 6 6
 Nodes            = 1 1 1 1
 beta             = 6.0
+symanzik_gauge   = 0
 M5               = 1.8
 mf               = 0.1
 ms               = 0.2

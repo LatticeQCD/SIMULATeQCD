@@ -68,6 +68,7 @@ struct MDWFHmcParameters {
     double pv_mass;       // used only by the Pauli-Villars action
     int gauge_substeps;   // gauge steps per fermion step (Sexton-Weingarten); <= 0 means 1
     MDWFRhmcParameters rhmc;  // used only by the one-flavour RHMC action
+    bool symanzik_gauge;      // HMC driver: tree-level Symanzik instead of Wilson gauge action (MDWFHmc.h)
 };
 
 /*
