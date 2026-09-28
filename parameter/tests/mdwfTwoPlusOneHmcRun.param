@@ -1,0 +1,68 @@
+#
+# mdwfTwoPlusOneHmcRun.param
+#
+# MDWF 2+1 flavour HMC run (<exp(-Delta H)> = 1 check): Pauli-Villars two-flavour
+# light quark (mf) plus one-flavour Pauli-Villars RHMC strange quark (ms).
+# Wilson gauge action, Mobius clover kernel (c5 = b5 - 1), Ls = 8 (compile time).
+#
+#          Lattice: Nx Ny Nz Nt
+#            Nodes: single rank only
+#             beta: Wilson gauge coupling
+#   M5, mf, ms, b5, c_sw, pv_mass: Mobius domain-wall parameters (light mf, strange ms,
+#                    Pauli-Villars mass pv_mass)
+#   lambda_low_s, lambda_high_s: AlgRemez interval for M_s^dagger M_s (measure it,
+#                    e.g. with mdwfSpectralBounds, and keep a margin)
+#   lambda_low_pv, lambda_high_pv: AlgRemez interval for M_1^dagger M_1
+#     action_error: target max relative error of the heatbath/action approximations
+#      force_error: target for the force approximations (<= 0: same as action)
+#        max_order: highest Remez order tried
+#     remez_digits: AlgRemez working precision
+#      check_steps: Lanczos steps for the interval check on the start and final
+#                   configurations (0 disables; the run stops if the start is outside)
+#              tau: trajectory length
+#    fermion_steps: fermion-force steps per trajectory (eps = tau / fermion_steps)
+#   gauge_substeps: gauge steps per fermion step (Sexton-Weingarten)
+#           n_traj: number of trajectories
+#          n_therm: trajectories excluded from the statistics
+#        n_nometro: first trajectories without accept/reject (<= n_therm)
+#       block_size: block length for the blocked error
+#        precision: CG relative residual for actions, heatbath, and forces
+#       save_every: write Gaugefile_out every save_every trajectories (0: only at the end)
+# measurements_dir: output directory (must be writable from the job)
+#      output_name: per-trajectory data file
+#     Gaugefile_out: optional configuration output (NERSC), written into measurements_dir
+#         Gaugefile: optional NERSC start configuration (default: cold start)
+#
+Lattice          = 6 6 6 6
+Nodes            = 1 1 1 1
+beta             = 6.0
+M5               = 1.8
+mf               = 0.1
+ms               = 0.2
+b5               = 1.5
+c_sw             = 0.5
+pv_mass          = 1.0
+lambda_low_s     = 0.04
+lambda_high_s    = 180
+lambda_low_pv    = 0.2
+lambda_high_pv   = 180
+action_error     = 1e-12
+force_error      = 1e-8
+max_order        = 30
+remez_digits     = 50
+check_steps      = 500
+tau              = 0.5
+fermion_steps    = 20
+gauge_substeps   = 8
+n_traj           = 40
+n_therm          = 5
+n_nometro        = 0
+block_size       = 5
+seed             = 20260928
+max_iter         = 20000
+precision        = 1e-10
+save_every       = 5
+measurements_dir = ./
+output_name      = mdwfTwoPlusOneHmcRun.dat
+#Gaugefile_out   = mdwfTwoPlusOneHmcRun_final.nersc
+#Gaugefile       = /path/to/start.nersc
