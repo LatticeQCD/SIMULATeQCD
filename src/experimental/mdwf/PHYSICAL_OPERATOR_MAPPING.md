@@ -59,11 +59,22 @@ structure. No change is proposed here.
 
 ### 1.3 Per-slice Wilson kernel mass normalization
 
-`gamma5DiracWilson` / `DiracWilsonEvenOdd2` (`src/experimental/DWilson.h`)
-compute, per 4D site with `r = 1`:
+**Correction (2026-09-30, superseding the first version of this section):**
+the first version read the kernel as `2 * mass * psi - (1/2) sum_mu [...]`
+and concluded `mass = (m_std + 4) / 2`, i.e. `mass = 2 - M5/2`. That is
+wrong: `gamma5DiracWilson` starts from `outSC = 2.0*_mass*psi`, subtracts the
+eight hopping terms, and then halves the *whole* sum (`outSC = 0.5*outSC`),
+and the clover path adds `mass` itself to the diagonal of the 6x6 blocks in
+`preCalcFmunu`. With the old mapping every run simulated
+`D_W(p = 0) = -(2 + M5/2)`, an effective `M5 = 2.9` for `M5 = 1.8`, outside the
+domain-wall window `0 < M5 < 2`: no light surface mode at `p = 0`, four at the
+momenta with one component `pi`. Everything below uses the corrected form.
+
+`gamma5DiracWilson` / `DiracWilsonEvenOdd2` + `DiracWilsonEvenEven2`
+(`src/experimental/DWilson.h`) compute, per 4D site with `r = 1`:
 
 ```text
-(D_W psi)(x) = 2 * mass * psi(x)
+(D_W psi)(x) = mass * psi(x)
              - (1/2) * sum_mu [ (1 - gamma_mu) U_mu(x)   psi(x+mu)
                                + (1 + gamma_mu) U_mu(x-mu)^dagger psi(x-mu) ]
 ```
@@ -71,17 +82,21 @@ compute, per 4D site with `r = 1`:
 For `U = 1` this gives, in momentum space,
 
 ```text
-D_W(p) = [2 * mass - sum_mu cos(p_mu)] + i * sum_mu gamma_mu sin(p_mu)
+D_W(p) = [mass - sum_mu cos(p_mu)] + i * sum_mu gamma_mu sin(p_mu)
 ```
 
-so `D_W(p=0) = 2 * mass - 4`. Comparing to the standard Wilson-fermion form
+so `D_W(p=0) = mass - 4`. Comparing to the standard Wilson-fermion form
 `D_W(p) = (m_std + 4r) - r * sum_mu cos(p_mu) + i * sum_mu gamma_mu sin(p_mu)`
 (`r = 1`), the existing `mass` argument relates to the standard bare Wilson
 mass `m_std` by
 
 ```text
-mass = (m_std + 4) / 2                      i.e.   m_std = 2 * mass - 4
+mass = m_std + 4                            i.e.   m_std = mass - 4
 ```
+
+`mdwfWilsonKernelNormalizationTest` checks this numerically on a unit gauge
+field (`D_W const = -M5 const`, and `2 - M5` for a plane wave with one
+momentum component `pi`) for both the plain and the clover path.
 
 This is an existing normalization fact, not a proposal; it is required to
 translate `M5` into the `mass` argument below. `applyMDWFWilsonSlice` applies
@@ -126,7 +141,7 @@ operator,
 the proposed mapping onto the existing scaffold inputs is:
 
 ```text
-mass              = 2 - M5 / 2          (from Section 1.3, m_std = -M5)
+mass              = 4 - M5              (from Section 1.3, m_std = -M5)
 diagonal          = 1
 forward_hop       = -1
 backward_hop      = -1

@@ -35,10 +35,10 @@ namespace {
 
 template<class floatT>
 floatT independentShamirKernelMass(floatT M5) {
-    // Recomputed directly from PHYSICAL_OPERATOR_MAPPING.md Sections 1.3/2:
-    // mass = (m_std + 4) / 2 with m_std = -M5.
+    // Recomputed directly from PHYSICAL_OPERATOR_MAPPING.md Sections 1.3/2
+    // (corrected): mass = m_std + 4 with m_std = -M5.
     const floatT m_std = -M5;
-    return (m_std + static_cast<floatT>(4.0)) / static_cast<floatT>(2.0);
+    return m_std + static_cast<floatT>(4.0);
 }
 
 template<class floatT>
