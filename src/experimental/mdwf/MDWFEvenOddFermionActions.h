@@ -1,6 +1,6 @@
 /*
- * Even-site (even/odd preconditioned) MDWF pseudofermion actions, stage E2a of
- * EVEN_ODD_DESIGN.md: c_sw = 0 only.
+ * Even-site (even/odd preconditioned) MDWF pseudofermion actions, stages E2a
+ * (c_sw = 0) and E2b (clover) of EVEN_ODD_DESIGN.md.
  *
  * With Mhat = M_ee - M_eo M_oo^-1 M_oe (MDWFMobiusEvenOdd.h), det M = det M_oo
  * det Mhat. For c_sw = 0, M_oo = A Din + Shift with A = mass is gauge
@@ -32,8 +32,29 @@
  * The one-flavour approximation intervals (MDWFRhmcParameters lambda_*) are
  * those of Mhat^+ Mhat, not of M^+ M.
  *
- * c_sw != 0 (E2b) additionally needs dM_ee, dM_oo (clover) and the
- * gauge-dependent det M_oo; the constructors reject it.
+ * Clover (stage E2b). For c_sw != 0, dM_ee = dA_e Din and dM_oo = dA_o Din
+ * no longer vanish, and
+ *
+ *   Re[u^+ dMhat v] = Re[u^+ dM_ee v] - Re[u^+ dM_eo w] - Re[u~^+ dM_oe v] + Re[u~^+ dM_oo w]
+ *                   = Re[U^+ dM V]
+ *
+ * with the same U, V: the all-link storage of full-lattice vectors already
+ * contains the site-diagonal clover variation, so the pseudofermion force
+ * terms are unchanged. det M_oo now depends on the gauge field, so the actions
+ * carry S_oo = -n_f log det M_oo(m) + n_f log det M_oo(pv_mass), n_f = 2 for the
+ * two-flavour and 1 for the one-flavour action (det M = det M_oo det Mhat).
+ * Since log det M_oo = sum_{x odd, chi} [Ls log det P - log det W] and P = b5 A + 1
+ * does not depend on the boundary mass, the P terms cancel exactly in the
+ * ratio and S_oo = n_f sum [log det W(m) - log det W(pv)], which is O(m R^Ls)
+ * per site (|R| ~ 0.15, so ~1e-7 at Ls = 8). Its force is sum_x Tr[H dA] with
+ * the closed-form 6x6 H = G_W(m) - G_W(pv), G_W(m) = (-1)^Ls Ls R^(Ls-1) P^-1
+ * (c5 - b5 R) m W(m) (MDWFMobiusCloverEvenOdd::logDetWDifferenceColumns), fed to
+ * the storage as sum_b e_b^+ dA h_b with left e_b and right h_b = H e_b on the
+ * odd sites at s = 0: the hopping part of the storage then vanishes (it only
+ * connects even and odd sites), leaving exactly the clover part. (The general
+ * single-mass form, G = sum_s [M_oo^-1 Din]_ss from logDetMooColumns, is kept
+ * as a cross-check: mdwfEvenOddStoreLogDetForce.) For c_sw = 0, S_oo is a
+ * constant and is omitted.
  */
 
 #pragma once
@@ -142,12 +163,111 @@ public:
     }
 };
 
+// Force terms sum_b -2 n Re[e_b^+ dD_W g_b] with left e_b (unit, odd sites, s = 0) and right g_b = G e_b.
 template<size_t HaloDepth, size_t Ls>
-void mdwfEvenOddRequireCsw0(const MDWFHmcParameters &param, const char *what) {
-    if (param.csw != 0.0) {
-        throw std::runtime_error(stdLogger.fatal(what, " (even/odd stage E2a) supports c_sw = 0 only, got c_sw = ",
-                                                 param.csw, "; the clover case needs det M_oo (EVEN_ODD_DESIGN.md)"));
+class MDWFEvenOddLogDetForceTerms {
+public:
+    using Types = MDWFEvenOddTypes<HaloDepth, Ls>;
+    using EvenOdd = typename Types::EvenOdd;
+    using SpinorE = typename Types::SpinorE;
+    using SpinorO = typename Types::SpinorO;
+    using SpinorAll = typename Types::SpinorAll;
+    using Columns = std::vector<std::unique_ptr<SpinorO>>;
+
+private:
+    const Columns *_g;
+    SpinorAll *_chi;
+    SpinorAll *_eta;
+    SpinorE *_zero;
+    SpinorO *_unit;
+
+public:
+    MDWFEvenOddLogDetForceTerms(const Columns &g, SpinorAll &chi, SpinorAll &eta, SpinorE &zero, SpinorO &unit)
+        : _g(&g), _chi(&chi), _eta(&eta), _zero(&zero), _unit(&unit) {
+        _zero->template iterateOverBulk<BLOCKSIZE>(MDWFUnitSliceField<double, Even, HaloDepth, Ls>(-1, 0));
     }
+
+    size_t size() const {
+        return 12;
+    }
+
+    const SpinorAll &chi(size_t b) const {
+        EvenOdd::merge(*_chi, *_zero, *(*_g).at(b));
+        return *_chi;
+    }
+
+    const SpinorAll &eta(size_t b) const {
+        _unit->template iterateOverBulk<BLOCKSIZE>(MDWFUnitSliceField<double, Odd, HaloDepth, Ls>(static_cast<int>(b), 0));
+        EvenOdd::merge(*_eta, *_zero, *_unit);
+        return *_eta;
+    }
+};
+
+/*
+ * Overwrites ipdotHost with the force of S = -nf log det M_oo(eo), i.e. storage numerators nf / 2
+ * for the 12 terms e_b^+ dA g_b (dS = -nf sum Tr[G dA] = sum_b -2 (nf/2) Re[e_b^+ dA g_b]).
+ * eo must be refresh()ed for the current gauge field; c_sw must be nonzero.
+ */
+template<size_t HaloDepth, size_t Ls>
+void mdwfEvenOddStoreLogDetForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHost,
+                                 const Gaugefield<double, false, HaloDepth, R18> &gaugeHost,
+                                 typename MDWFEvenOddTypes<HaloDepth, Ls>::EvenOdd &eo, double nf, double csw,
+                                 CommunicationBase &commBase, const std::string &name) {
+    using Types = MDWFEvenOddTypes<HaloDepth, Ls>;
+    using SpinorE = typename Types::SpinorE;
+    using SpinorO = typename Types::SpinorO;
+    using SpinorAll = typename Types::SpinorAll;
+
+    std::vector<std::unique_ptr<SpinorO>> g;
+    for (int b = 0; b < 12; b++) {
+        g.emplace_back(new SpinorO(commBase, name + "_g" + std::to_string(b) + "c"));
+    }
+    SpinorO unit(commBase, name + "_unit");
+    SpinorO work1(commBase, name + "_ow1");
+    SpinorO work2(commBase, name + "_ow2");
+    eo.logDetMooColumns(g, unit, work1, work2);
+
+    SpinorAll chi(commBase, name + "_dchi");
+    SpinorAll eta(commBase, name + "_deta");
+    SpinorE zero(commBase, name + "_dzero");
+    MDWFEvenOddLogDetForceTerms<HaloDepth, Ls> terms(g, chi, eta, zero, unit);
+    const MDWFRationalCoefficients<double> coefficients{0.0, std::vector<double>(12, 0.5 * nf),
+                                                         std::vector<double>(12, 0.0)};
+    mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, csw, commBase,
+                                            name + "_store");
+}
+
+/*
+ * Overwrites ipdotHost with the force of S = nf [log det W(m) - log det W(m')] = -nf [log det M_oo(m)
+ * - log det M_oo(m')] for two operators differing only in the boundary mass: dS = -nf sum Tr[H dA],
+ * storage numerators nf / 2 for the 12 terms e_b^+ dA h_b. Both must be refresh()ed; c_sw nonzero.
+ */
+template<size_t HaloDepth, size_t Ls>
+void mdwfEvenOddStoreOddDetRatioForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHost,
+                                      const Gaugefield<double, false, HaloDepth, R18> &gaugeHost,
+                                      typename MDWFEvenOddTypes<HaloDepth, Ls>::EvenOdd &eoM,
+                                      typename MDWFEvenOddTypes<HaloDepth, Ls>::EvenOdd &eoPrime, double nf,
+                                      double csw, CommunicationBase &commBase, const std::string &name) {
+    using Types = MDWFEvenOddTypes<HaloDepth, Ls>;
+    using SpinorE = typename Types::SpinorE;
+    using SpinorO = typename Types::SpinorO;
+    using SpinorAll = typename Types::SpinorAll;
+
+    std::vector<std::unique_ptr<SpinorO>> h;
+    for (int b = 0; b < 12; b++) {
+        h.emplace_back(new SpinorO(commBase, name + "_h" + std::to_string(b) + "c"));
+    }
+    Types::EvenOdd::logDetWDifferenceColumns(eoM, eoPrime, h);
+
+    SpinorO unit(commBase, name + "_unit");
+    SpinorAll chi(commBase, name + "_dchi");
+    SpinorAll eta(commBase, name + "_deta");
+    SpinorE zero(commBase, name + "_dzero");
+    MDWFEvenOddLogDetForceTerms<HaloDepth, Ls> terms(h, chi, eta, zero, unit);
+    const MDWFRationalCoefficients<double> coefficients{0.0, std::vector<double>(12, 0.5 * nf),
+                                                         std::vector<double>(12, 0.0)};
+    mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, csw, commBase,
+                                            name + "_store");
 }
 
 template<size_t HaloDepth, size_t Ls>
@@ -175,11 +295,13 @@ private:
     Adapter _adapter1;
     Spinor _phi, _eta, _tmp, _y, _psi, _chi, _mchi;
     typename Terms::Buffers _buffers;
+    HostGauge _ipdotDet;
     double _noiseNorm2;
+    double _lastPseudofermionAction;
+    double _lastDetAction;
     int _lastIterations;
 
     static MDWFHmcParameters validated(const MDWFHmcParameters &param) {
-        mdwfEvenOddRequireCsw0<HaloDepth, Ls>(param, "MDWF even/odd Pauli-Villars action");
         if (!(param.pv_mass > 0.0)) {
             throw std::runtime_error(stdLogger.fatal("MDWF even/odd Pauli-Villars action requires pv_mass > 0"));
         }
@@ -222,10 +344,13 @@ public:
           _chi(commBase, _prefix + "_chi"),
           _mchi(commBase, _prefix + "_mchi"),
           _buffers(commBase, _prefix + "_fb"),
+          _ipdotDet(commBase, _prefix + "_ipdet"),
           _noiseNorm2(0.0),
+          _lastPseudofermionAction(0.0),
+          _lastDetAction(0.0),
           _lastIterations(0) {}
 
-    // phi = Mhat_1 (Mhat_1^+ Mhat_1)^-1 Mhat_f^+ eta; then S = eta^+ eta.
+    // phi = Mhat_1 (Mhat_1^+ Mhat_1)^-1 Mhat_f^+ eta; then the pseudofermion part of S is eta^+ eta.
     void heatbath(uint4 *randState) {
         refresh();
         _lastIterations = 0;
@@ -241,12 +366,23 @@ public:
         return _noiseNorm2;
     }
 
+    // S = psi^+ (Mhat_f^+ Mhat_f)^-1 psi + S_oo, S_oo = 2 [log det W(mf) - log det W(pv)] (c_sw != 0).
     double action() {
         refresh();
         _lastIterations = 0;
         _eo1.schur(_psi, _phi, true);
         solve(_adapterF, _chi, _psi, "action");
-        return real<double>(_adapterF.dotProduct5D(_psi, _chi));
+        _lastPseudofermionAction = real<double>(_adapterF.dotProduct5D(_psi, _chi));
+        _lastDetAction = (_param.csw != 0.0) ? 2.0 * (_eoF.logDetW() - _eo1.logDetW()) : 0.0;
+        return _lastPseudofermionAction + _lastDetAction;
+    }
+
+    double lastPseudofermionAction() const {
+        return _lastPseudofermionAction;
+    }
+
+    double lastDetAction() const {
+        return _lastDetAction;
     }
 
     // dS = -2 Re[(Mhat_f chi)^+ dMhat_f chi] + 2 Re[phi^+ dMhat_1 chi], chi = (Mhat_f^+ Mhat_f)^-1 Mhat_1^+ phi.
@@ -263,6 +399,11 @@ public:
         const MDWFRationalCoefficients<double> coefficients{0.0, {1.0, -1.0}, {0.0, 0.0}};
         mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, _param.csw, _commBase,
                                                 _prefix + "_fstore");
+        if (_param.csw != 0.0) {
+            mdwfEvenOddStoreOddDetRatioForce<HaloDepth, Ls>(_ipdotDet, gaugeHost, _eoF, _eo1, 2.0, _param.csw,
+                                                            _commBase, _prefix + "_det");
+            mdwfHmcAddHostForce<HaloDepth>(ipdotHost, _ipdotDet);
+        }
     }
 
     Spinor &phi() {
@@ -303,11 +444,13 @@ private:
     Spinor _phi, _eta, _hbtmp, _chi, _psi;
     Solutions _solS, _solPv, _solPvZ;
     typename Terms::Buffers _buffers;
+    HostGauge _ipdotDet;
     double _noiseNorm2;
+    double _lastPseudofermionAction;
+    double _lastDetAction;
     int _lastIterations;
 
     static MDWFHmcParameters validated(const MDWFHmcParameters &param) {
-        mdwfEvenOddRequireCsw0<HaloDepth, Ls>(param, "MDWF even/odd one-flavour RHMC action");
         const MDWFRhmcParameters &r = param.rhmc;
         if (!(param.pv_mass > 0.0) || !(r.ms > 0.0) || !(r.lambda_low_s > 0.0) || !(r.lambda_high_s > r.lambda_low_s)
             || !(r.lambda_low_pv > 0.0) || !(r.lambda_high_pv > r.lambda_low_pv) || !(r.action_error > 0.0)) {
@@ -405,7 +548,10 @@ public:
           _chi(commBase, _prefix + "_chi"),
           _psi(commBase, _prefix + "_psi"),
           _buffers(commBase, _prefix + "_fb"),
+          _ipdotDet(commBase, _prefix + "_ipdet"),
           _noiseNorm2(0.0),
+          _lastPseudofermionAction(0.0),
+          _lastDetAction(0.0),
           _lastIterations(0) {
         allocate(_solS, std::max(_heatbathS.shift.size(), std::max(_actionS.shift.size(), _forceS.shift.size())), "_xs");
         allocate(_solPv, std::max(_heatbathPv.shift.size(), std::max(_actionPv.shift.size(), _forcePv.shift.size())),
@@ -432,7 +578,17 @@ public:
         _lastIterations = 0;
         applyRational(_adapter1, _solPv, _chi, _phi, _actionPv, "action (B^(1/4))");
         applyRational(_adapterS, _solS, _psi, _chi, _actionS, "action (A^(-1/2))");
-        return real<double>(_adapterS.dotProduct5D(_chi, _psi));
+        _lastPseudofermionAction = real<double>(_adapterS.dotProduct5D(_chi, _psi));
+        _lastDetAction = (_param.csw != 0.0) ? _eoS.logDetW() - _eo1.logDetW() : 0.0;
+        return _lastPseudofermionAction + _lastDetAction;
+    }
+
+    double lastPseudofermionAction() const {
+        return _lastPseudofermionAction;
+    }
+
+    double lastDetAction() const {
+        return _lastDetAction;
     }
 
     void force(HostGauge &ipdotHost, const HostGauge &gaugeHost) {
@@ -457,6 +613,11 @@ public:
         const MDWFRationalCoefficients<double> coefficients{0.0, numerators, std::vector<double>(numerators.size(), 0.0)};
         mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, _param.csw, _commBase,
                                                 _prefix + "_fstore");
+        if (_param.csw != 0.0) {
+            mdwfEvenOddStoreOddDetRatioForce<HaloDepth, Ls>(_ipdotDet, gaugeHost, _eoS, _eo1, 1.0, _param.csw,
+                                                            _commBase, _prefix + "_det");
+            mdwfHmcAddHostForce<HaloDepth>(ipdotHost, _ipdotDet);
+        }
     }
 
     Spinor &phi() {

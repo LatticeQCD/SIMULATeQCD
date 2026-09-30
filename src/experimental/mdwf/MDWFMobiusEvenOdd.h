@@ -64,8 +64,10 @@
 #include "MDWFMobiusMapping.h"
 
 #include <cmath>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 template<class floatT>
 __host__ __device__ inline Matrix6x6<floatT> mdwf6x6Mul(const Matrix6x6<floatT> &a, const Matrix6x6<floatT> &b) {
@@ -94,6 +96,173 @@ __host__ __device__ inline Matrix6x6<floatT> mdwf6x6Affine(const Matrix6x6<float
     }
     return out;
 }
+
+// log det of a Hermitian positive-definite 6x6 matrix (Gaussian elimination without pivoting).
+template<class floatT>
+__host__ __device__ inline double mdwf6x6HermitianLogDet(const Matrix6x6<floatT> &m) {
+    COMPLEX(floatT) a[6][6];
+    for (int i = 0; i < 6; i++) {
+        for (int j = 0; j < 6; j++) {
+            a[i][j] = m.val[i][j];
+        }
+    }
+    double logDet = 0.0;
+    for (int i = 0; i < 6; i++) {
+        logDet += log(static_cast<double>(real(a[i][i])));
+        for (int j = i + 1; j < 6; j++) {
+            const COMPLEX(floatT) factor = a[j][i] * (static_cast<floatT>(1.0) / a[i][i]);
+            for (int k = i; k < 6; k++) {
+                a[j][k] -= factor * a[i][k];
+            }
+        }
+    }
+    return logDet;
+}
+
+// Per odd site: log det M_oo(x) = sum_chi [Ls log det P_chi - log det W_chi] = sum_chi [-Ls log det P^-1 - log det W].
+template<class floatT, size_t HaloDepthGauge, size_t Ls>
+struct MDWFMooLogDetKernel {
+    Vect18ArrayAcc<floatT> _pinvUpper, _pinvLower, _wUpper, _wLower;
+    using Field = Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1>;
+
+    MDWFMooLogDetKernel(const Field &pinvUpper, const Field &pinvLower, const Field &wUpper, const Field &wLower)
+        : _pinvUpper(pinvUpper.getAccessor()), _pinvLower(pinvLower.getAccessor()),
+          _wUpper(wUpper.getAccessor()), _wLower(wLower.getAccessor()) {}
+
+    __host__ __device__ double operator()(gSite site) {
+        const gSite allSite = GIndexer<Odd, HaloDepthGauge>::template convertSite<All, HaloDepthGauge>(site);
+        Vect18<floatT> v = _pinvUpper.getElement(allSite);
+        Matrix6x6<floatT> pu(v);
+        v = _pinvLower.getElement(allSite);
+        Matrix6x6<floatT> pl(v);
+        v = _wUpper.getElement(allSite);
+        Matrix6x6<floatT> wu(v);
+        v = _wLower.getElement(allSite);
+        Matrix6x6<floatT> wl(v);
+        return -static_cast<double>(Ls) * (mdwf6x6HermitianLogDet(pu) + mdwf6x6HermitianLogDet(pl))
+               - mdwf6x6HermitianLogDet(wu) - mdwf6x6HermitianLogDet(wl);
+    }
+};
+
+// Per odd site: sum_chi log det W_chi (the mass-dependent part of log det M_oo).
+template<class floatT, size_t HaloDepthGauge>
+struct MDWFMooLogDetWKernel {
+    Vect18ArrayAcc<floatT> _wUpper, _wLower;
+    using Field = Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1>;
+
+    MDWFMooLogDetWKernel(const Field &wUpper, const Field &wLower)
+        : _wUpper(wUpper.getAccessor()), _wLower(wLower.getAccessor()) {}
+
+    __host__ __device__ double operator()(gSite site) {
+        const gSite allSite = GIndexer<Odd, HaloDepthGauge>::template convertSite<All, HaloDepthGauge>(site);
+        Vect18<floatT> v = _wUpper.getElement(allSite);
+        Matrix6x6<floatT> wu(v);
+        v = _wLower.getElement(allSite);
+        Matrix6x6<floatT> wl(v);
+        return mdwf6x6HermitianLogDet(wu) + mdwf6x6HermitianLogDet(wl);
+    }
+};
+
+/*
+ * Column b of H(x) = G_W(m) - G_W(m'), G_W(m) = (-1)^Ls Ls R^(Ls-1) P^-1 (c5 - b5 R) m W(m), at s = 0
+ * (other stacks zero), on the odd sites. d log det W(m)^-1 = Tr[G_W(m) dA] (R, P^-1, W commute as
+ * functions of A); P and R do not depend on the boundary mass, only W and the explicit m do.
+ */
+template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls>
+struct MDWFLogDetWDifferenceColumn {
+    Vect18ArrayAcc<floatT> _pinvUpper, _pinvLower, _rUpper, _rLower, _wmUpper, _wmLower, _wpUpper, _wpLower;
+    int _column;
+    floatT _m, _mPrime, _b5, _c5;
+    using Field = Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1>;
+
+    MDWFLogDetWDifferenceColumn(int column, const Field &pinvUpper, const Field &pinvLower, const Field &rUpper,
+                                const Field &rLower, const Field &wmUpper, const Field &wmLower,
+                                const Field &wpUpper, const Field &wpLower, floatT m, floatT mPrime,
+                                floatT b5, floatT c5)
+        : _pinvUpper(pinvUpper.getAccessor()), _pinvLower(pinvLower.getAccessor()),
+          _rUpper(rUpper.getAccessor()), _rLower(rLower.getAccessor()),
+          _wmUpper(wmUpper.getAccessor()), _wmLower(wmLower.getAccessor()),
+          _wpUpper(wpUpper.getAccessor()), _wpLower(wpLower.getAccessor()),
+          _column(column), _m(m), _mPrime(mPrime), _b5(b5), _c5(c5) {}
+
+    __host__ __device__ Matrix6x6<floatT> block(Vect18ArrayAcc<floatT> pinvAcc, Vect18ArrayAcc<floatT> rAcc,
+                                                Vect18ArrayAcc<floatT> wmAcc, Vect18ArrayAcc<floatT> wpAcc,
+                                                gSite allSite) {
+        Vect18<floatT> v = pinvAcc.getElement(allSite);
+        Matrix6x6<floatT> pinv(v);
+        v = rAcc.getElement(allSite);
+        Matrix6x6<floatT> R(v);
+        v = wmAcc.getElement(allSite);
+        Matrix6x6<floatT> wm(v);
+        v = wpAcc.getElement(allSite);
+        Matrix6x6<floatT> wp(v);
+        Matrix6x6<floatT> rPower = mdwf6x6Affine(R, static_cast<floatT>(0.0), static_cast<floatT>(1.0));
+        for (size_t n = 1; n < Ls; n++) {
+            rPower = mdwf6x6Mul(rPower, R);
+        }
+        const floatT sign = (Ls % 2 == 0) ? static_cast<floatT>(1.0) : static_cast<floatT>(-1.0);
+        Matrix6x6<floatT> left = mdwf6x6Mul(mdwf6x6Mul(rPower, pinv), mdwf6x6Affine(R, -_b5, _c5));
+        Matrix6x6<floatT> diff;
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+                diff.val[i][j] = _m * wm.val[i][j] - _mPrime * wp.val[i][j];
+            }
+        }
+        Matrix6x6<floatT> h = mdwf6x6Mul(left, diff);
+        return mdwf6x6Affine(h, sign * static_cast<floatT>(Ls), static_cast<floatT>(0.0));
+    }
+
+    __host__ __device__ Vect12<floatT> operator()(gSiteStack site) {
+        Vect12<floatT> out(0.0);
+        if (site.stack != 0) {
+            return out;
+        }
+        const gSite allSite = GIndexer<Odd, HaloDepthSpin>::template convertSite<All, HaloDepthGauge>(site);
+        const int half = _column / 6;
+        const int col = _column % 6;
+        Matrix6x6<floatT> h = (half == 0) ? block(_pinvUpper, _rUpper, _wmUpper, _wpUpper, allSite)
+                                          : block(_pinvLower, _rLower, _wmLower, _wpLower, allSite);
+        for (int i = 0; i < 6; i++) {
+            out.data[i + 6 * half] = h.val[i][col];
+        }
+        return out;
+    }
+};
+
+// Unit vector (component, stack) on every site of the layout; component < 0 gives the zero field.
+template<class floatT, Layout LatLayout, size_t HaloDepthSpin, size_t Ls>
+struct MDWFUnitSliceField {
+    int _component;
+    size_t _stack;
+
+    MDWFUnitSliceField(int component, size_t stack) : _component(component), _stack(stack) {}
+
+    __host__ __device__ Vect12<floatT> operator()(gSiteStack site) {
+        Vect12<floatT> out(0.0);
+        if (_component >= 0 && site.stack == _stack) {
+            out.data[_component] = COMPLEX(floatT)(1.0, 0.0);
+        }
+        return out;
+    }
+};
+
+// Slice `stack` of the input copied to stack 0; all other stacks zero.
+template<class floatT, Layout LatLayout, size_t HaloDepthSpin, size_t Ls>
+struct MDWFSliceToStackZero {
+    Vect12ArrayAcc<floatT> _in;
+    size_t _stack;
+
+    MDWFSliceToStackZero(const MDWFSpinor<floatT, true, LatLayout, HaloDepthSpin, Ls> &in, size_t stack)
+        : _in(in.getAccessor()), _stack(stack) {}
+
+    __host__ __device__ Vect12<floatT> operator()(gSiteStack site) {
+        typedef GIndexer<LatLayout, HaloDepthSpin> GInd;
+        if (site.stack != 0) {
+            return Vect12<floatT>(0.0);
+        }
+        return _in.getElement(GInd::getSiteStack(site, _stack));
+    }
+};
 
 // Precomputes P^-1, R = P^-1 Q, W = (1 + (-1)^Ls mf R^Ls)^-1 per site and chirality from the clover blocks A.
 template<class floatT, size_t HaloDepthGauge, size_t Ls>
@@ -411,6 +580,79 @@ public:
             Mee(out, in, true);
         }
         out.template axpyThisB<64>(static_cast<floatT>(-1.0), _e3);
+    }
+
+    // log det M_oo, summed over the odd sites (real: P, W are Hermitian positive definite).
+    double logDetMoo() {
+        requireFresh();
+        typedef GIndexer<Odd, HaloDepthGauge> GIndO;
+        const size_t elems = GIndO::getLatData().sizeh;
+        LatticeContainer<true, double> reduction(_gauge.getComm());
+        reduction.adjustSize(elems);
+        reduction.template iterateOverBulk<Odd, HaloDepthGauge>(
+            MDWFMooLogDetKernel<floatT, HaloDepthGauge, Ls>(_pinvUpper, _pinvLower, _wUpper, _wLower));
+        double result = 0.0;
+        reduction.reduce(result, elems);
+        return result;
+    }
+
+    // sum over the odd sites of log det W (log det M_oo = sum [Ls log det P - log det W]; P is mass independent).
+    double logDetW() {
+        requireFresh();
+        typedef GIndexer<Odd, HaloDepthGauge> GIndO;
+        const size_t elems = GIndO::getLatData().sizeh;
+        LatticeContainer<true, double> reduction(_gauge.getComm());
+        reduction.adjustSize(elems);
+        reduction.template iterateOverBulk<Odd, HaloDepthGauge>(
+            MDWFMooLogDetWKernel<floatT, HaloDepthGauge>(_wUpper, _wLower));
+        double result = 0.0;
+        reduction.reduce(result, elems);
+        return result;
+    }
+
+    /*
+     * Columns h[b](x, s = 0) = H(x) e_b of H = G_W(m) - G_W(m') for two operators that differ only in the
+     * boundary mass (same gauge field, M5, b5, c_sw): d[log det W(m)^-1 - log det W(m')^-1] = sum_x Tr[H dA].
+     */
+    static void logDetWDifferenceColumns(MDWFMobiusCloverEvenOdd &m, MDWFMobiusCloverEvenOdd &mPrime,
+                                         std::vector<std::unique_ptr<SpinorO>> &h) {
+        m.requireFresh();
+        mPrime.requireFresh();
+        if (h.size() != 12 || m._params.b5 != mPrime._params.b5 || m._params.mass != mPrime._params.mass
+            || m._csw != mPrime._csw) {
+            throw std::runtime_error(stdLogger.fatal("MDWF logDetWDifferenceColumns: needs 12 columns and two "
+                                                     "operators differing only in the boundary mass"));
+        }
+        for (int b = 0; b < 12; b++) {
+            h[b]->template iterateOverBulk<BLOCKSIZE>(MDWFLogDetWDifferenceColumn<floatT, HaloDepthGauge, HaloDepthSpin, Ls>(
+                b, m._pinvUpper, m._pinvLower, m._rUpper, m._rLower, m._wUpper, m._wLower, mPrime._wUpper,
+                mPrime._wLower, m._mf, mPrime._mf, m._params.b5, m._params.c5));
+            h[b]->updateAll();
+        }
+    }
+
+    /*
+     * Columns of G(x) = sum_s [M_oo^-1 Din]_ss (a 12x12 matrix per odd site, block diagonal in
+     * chirality): g[b](x, s = 0) = G(x) e_b, other stacks zero, so that
+     * d log det M_oo = Tr[M_oo^-1 dA Din] = sum_x Tr[G(x) dA(x)] = sum_b sum_x e_b^+ dA(x) g_b(x)
+     * (A and Din commute). Built from unit fields with the block inverse: 12 Ls applications.
+     */
+    void logDetMooColumns(std::vector<std::unique_ptr<SpinorO>> &g, SpinorO &unit, SpinorO &work1, SpinorO &work2) {
+        requireFresh();
+        if (g.size() != 12) {
+            throw std::runtime_error(stdLogger.fatal("MDWF logDetMooColumns needs 12 column fields"));
+        }
+        for (int b = 0; b < 12; b++) {
+            g[b]->template iterateOverBulk<BLOCKSIZE>(MDWFUnitSliceField<floatT, Odd, HaloDepthSpin, Ls>(-1, 0));
+            for (size_t s0 = 0; s0 < Ls; s0++) {
+                unit.template iterateOverBulk<BLOCKSIZE>(MDWFUnitSliceField<floatT, Odd, HaloDepthSpin, Ls>(b, s0));
+                applyMDWFFifthDimCoupling<floatT, true, Odd, HaloDepthSpin, Ls>(work1, unit, _params.dinCoeff);
+                diagInverse<Odd>(work2, work1, false);
+                unit.template iterateOverBulk<BLOCKSIZE>(MDWFSliceToStackZero<floatT, Odd, HaloDepthSpin, Ls>(work2, s0));
+                *g[b] += unit;
+            }
+            g[b]->updateAll();
+        }
     }
 
     // All <-> even/odd.

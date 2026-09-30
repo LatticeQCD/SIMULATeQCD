@@ -1,8 +1,17 @@
 /*
- * Even-site MDWF pseudofermion action test (EVEN_ODD_DESIGN.md stage E2a,
- * c_sw = 0), MDWFEvenOddFermionActions.h.
+ * Even-site MDWF pseudofermion action test (EVEN_ODD_DESIGN.md stages E2a and
+ * E2b), MDWFEvenOddFermionActions.h.
  *
- * Random gauge field, 6^4, Ls = 8, M5 = 1.8, b5 = 1.5, c_sw = 0, pv_mass = 1:
+ * Random gauge field, 6^4, Ls = 8, M5 = 1.8, b5 = 1.5, pv_mass = 1, for
+ * c_sw = 0 and c_sw = 0.5 (with clover the actions include
+ * S_oo = -n_f log det M_oo(m) + n_f log det M_oo(pv); the heatbath identity
+ * compares the pseudofermion part, the energy identity the total):
+ *
+ *   0. (c_sw = 0.5 only) log det M_oo force alone: d(-log det M_oo)/dtau
+ *      versus sum tr(P(-i K_oo)) from mdwfEvenOddStoreLogDetForce (1e-6); and the
+ *      closed-form ratio force the actions use, S = log det W(mf) - log det W(pv),
+ *      versus its finite difference at b5 = 3 (relative 1e-6; at b5 = 1.5 it is
+ *      O(mf R^Ls) ~ 1e-7 and only reported).
  *
  *   A. MDWFEvenOddPauliVillarsTwoFlavorFermionAction, mf = 0.1:
  *      heatbath identity S = eta^+ eta (1e-10); force/energy identity
@@ -99,7 +108,7 @@ MDWFLanczosCheckpoint mdwfEoActSchurBounds(CommunicationBase &commBase, Gaugefie
 }
 
 template<size_t Ls>
-void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
+bool runMDWFEvenOddActionTest(CommunicationBase &commBase, double csw) {
     const size_t HaloDepth = 2;
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
@@ -112,7 +121,7 @@ void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
     param.M5 = 1.8;
     param.mf = 0.1;
     param.b5 = 1.5;
-    param.csw = 0.0;
+    param.csw = csw;
     param.tau = 1.0;
     param.steps = 1;
     param.max_iter = 20000;
@@ -152,11 +161,58 @@ void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
                     ", mf = ", param.mf, ", ms = ", param.rhmc.ms, ", pv_mass = ", param.pv_mass, ", Ls = ", Ls,
                     ", solver precision = ", param.precision, ", random gauge");
 
+    // --- 0. log det M_oo force alone (clover only). ---
+    bool detPassed = true;
+    if (csw != 0.0) {
+        using Types = MDWFEvenOddTypes<HaloDepth, Ls>;
+        typename Types::EvenOdd eo0(gauge, param.M5, param.mf, param.b5, csw, "MDWF_eoact_ld0");
+        typename Types::EvenOdd eoP(gaugePlus, param.M5, param.mf, param.b5, csw, "MDWF_eoact_ldp");
+        typename Types::EvenOdd eoM(gaugeMinus, param.M5, param.mf, param.b5, csw, "MDWF_eoact_ldm");
+        eo0.refresh();
+        eoP.refresh();
+        eoM.refresh();
+        const double logDet = eo0.logDetMoo();
+        const double detRate = -(eoP.logDetMoo() - eoM.logDetMoo()) / (2.0 * eps);   // S = -log det M_oo
+        mdwfEvenOddStoreLogDetForce<HaloDepth, Ls>(ipdotHost, gaugeHost, eo0, 1.0, csw, commBase, "MDWF_eoact_ldf");
+        const double detKinetic = mdwfEoActKineticRate<HaloDepth>(momentaHost, ipdotHost);
+        const double detRelSum = std::abs(detRate + detKinetic) / std::max(1.0, std::abs(detRate));
+        detPassed = std::abs(detRate) > 1e-8 && detRelSum <= 1e-6;
+        rootLogger.info("MDWF even/odd action test log det M_oo (mf = ", param.mf, ", c_sw = ", csw,
+                        "): log det = ", logDet, ", d(-log det)/dtau = ", detRate, ", sum tr(P(-i K_oo)) = ",
+                        detKinetic, ", relSum = ", detRelSum, ", rms K_oo = ", mdwfEoActForceRms<HaloDepth>(ipdotHost),
+                        ", passed = ", detPassed);
+
+        // Closed-form ratio force used by the actions: S = log det W(mf) - log det W(pv). At b5 = 1.5 it is
+        // O(mf R^Ls) ~ 1e-7; b5 = 3 (c5 = 2, |R| ~ 0.45) makes it large enough for a relative check.
+        for (int k = 0; k < 2; k++) {
+            const double b5r = (k == 0) ? param.b5 : 3.0;
+            typename Types::EvenOdd m0(gauge, param.M5, param.mf, b5r, csw, "MDWF_eoact_rm0");
+            typename Types::EvenOdd p0(gauge, param.M5, param.pv_mass, b5r, csw, "MDWF_eoact_rp0");
+            typename Types::EvenOdd mP(gaugePlus, param.M5, param.mf, b5r, csw, "MDWF_eoact_rmp");
+            typename Types::EvenOdd pP(gaugePlus, param.M5, param.pv_mass, b5r, csw, "MDWF_eoact_rpp");
+            typename Types::EvenOdd mM(gaugeMinus, param.M5, param.mf, b5r, csw, "MDWF_eoact_rmm");
+            typename Types::EvenOdd pM(gaugeMinus, param.M5, param.pv_mass, b5r, csw, "MDWF_eoact_rpm");
+            m0.refresh(); p0.refresh(); mP.refresh(); pP.refresh(); mM.refresh(); pM.refresh();
+            const double sRatio = m0.logDetW() - p0.logDetW();
+            const double ratioRate = ((mP.logDetW() - pP.logDetW()) - (mM.logDetW() - pM.logDetW())) / (2.0 * eps);
+            mdwfEvenOddStoreOddDetRatioForce<HaloDepth, Ls>(ipdotHost, gaugeHost, m0, p0, 1.0, csw, commBase,
+                                                            "MDWF_eoact_rf");
+            const double ratioKinetic = mdwfEoActKineticRate<HaloDepth>(momentaHost, ipdotHost);
+            const double ratioRelSum = std::abs(ratioRate + ratioKinetic) / std::max(std::abs(ratioRate), 1e-300);
+            const bool ok = (k == 0) || (std::abs(ratioRate) > 1e-8 && ratioRelSum <= 1e-6);
+            detPassed = detPassed && ok;
+            rootLogger.info("MDWF even/odd action test S_oo ratio (b5 = ", b5r, ", mf = ", param.mf, ", pv = ",
+                            param.pv_mass, "): S_oo = ", sRatio, ", dS/dtau = ", ratioRate, ", sum tr(P(-i K)) = ",
+                            ratioKinetic, ", relSum = ", ratioRelSum, (k == 0) ? " (diagnostic)" : "",
+                            ", passed = ", ok);
+        }
+    }
+
     // --- A. Even-site Pauli-Villars two-flavour action. ---
     EoPv pv(commBase, gauge, param);
     pv.heatbath(d_rand.state);
     const double pvAction = pv.action();
-    const double pvHeatbath = std::abs(pvAction - pv.noiseNorm2()) / std::max(1.0, pv.noiseNorm2());
+    const double pvHeatbath = std::abs(pv.lastPseudofermionAction() - pv.noiseNorm2()) / std::max(1.0, pv.noiseNorm2());
     auto start = std::chrono::steady_clock::now();
     pv.force(ipdotHost, gaugeHost);
     const double eoPvForceSeconds = mdwfEoActSeconds(start);
@@ -185,7 +241,8 @@ void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
     const double fullPvForceRms = mdwfEoActForceRms<HaloDepth>(ipdotOtherHost);
 
     const bool pvPassed = pvHeatbath <= 1e-10 && std::abs(pvRate) > 1e-8 && pvRelSum <= 1e-5 && pvCancellation <= 1e-6;
-    rootLogger.info("MDWF even/odd action test PV two-flavour: heatbath S = ", pvAction, ", eta^+ eta = ",
+    rootLogger.info("MDWF even/odd action test PV two-flavour (c_sw = ", csw, "): S = ", pvAction, " (det part ",
+                    pv.lastDetAction(), "), pseudofermion part = ", pv.lastPseudofermionAction(), ", eta^+ eta = ",
                     pv.noiseNorm2(), ", relDiff = ", pvHeatbath, "; dS/dtau = ", pvRate, ", sum tr(P(-i K)) = ",
                     pvKinetic, ", relSum = ", pvRelSum, "; cancellation (mf = pv_mass) = ", pvCancellation,
                     ", passed = ", pvPassed);
@@ -212,7 +269,8 @@ void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
     rhmc.heatbath(d_rand.state);
     const int hbIterations = rhmc.lastIterations();
     const double rAction = rhmc.action();
-    const double rHeatbath = std::abs(rAction - rhmc.noiseNorm2()) / std::max(1.0, rhmc.noiseNorm2());
+    const double rHeatbath = std::abs(rhmc.lastPseudofermionAction() - rhmc.noiseNorm2())
+                             / std::max(1.0, rhmc.noiseNorm2());
     start = std::chrono::steady_clock::now();
     rhmc.force(ipdotHost, gaugeHost);
     const double rForceSeconds = mdwfEoActSeconds(start);
@@ -242,7 +300,8 @@ void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
 
     const bool rPassed = rHeatbath <= 1e-6 && std::abs(rRate) > 1e-8 && rRelSum <= 1e-5 && rCancellation <= 1e-6
                          && rSplitDiff <= 1e-4;
-    rootLogger.info("MDWF even/odd action test one-flavour RHMC: heatbath S = ", rAction, ", eta^+ eta = ",
+    rootLogger.info("MDWF even/odd action test one-flavour RHMC (c_sw = ", csw, "): S = ", rAction, " (det part ",
+                    rhmc.lastDetAction(), "), pseudofermion part = ", rhmc.lastPseudofermionAction(), ", eta^+ eta = ",
                     rhmc.noiseNorm2(), ", relDiff = ", rHeatbath, " (multishift ", hbIterations,
                     " iterations); dS/dtau = ", rRate, ", sum tr(P(-i K)) = ", rKinetic, ", relSum = ", rRelSum,
                     "; cancellation (ms = pv_mass) = ", rCancellation, "; split force (1e-8) relative diff = ",
@@ -251,11 +310,10 @@ void runMDWFEvenOddActionTest(CommunicationBase &commBase) {
                     rForceIterations, " iterations, rms force ", rForceRms, " (ratio to even/odd PV ",
                     rForceRms / pvForceRms, ")");
 
-    if (!pvPassed || !rPassed) {
-        throw std::runtime_error(stdLogger.fatal("MDWF even/odd action test failed: PV passed = ", pvPassed,
-                                                 ", RHMC passed = ", rPassed, " (see diagnostics above)"));
-    }
-    rootLogger.info("MDWF even/odd action test passed with Ls = ", Ls);
+    const bool passed = detPassed && pvPassed && rPassed;
+    rootLogger.info("MDWF even/odd action test (c_sw = ", csw, "): log det passed = ", detPassed, ", PV passed = ",
+                    pvPassed, ", RHMC passed = ", rPassed);
+    return passed;
 }
 
 int main(int argc, char **argv) {
@@ -270,7 +328,14 @@ int main(int argc, char **argv) {
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
 
-        runMDWFEvenOddActionTest<8>(commBase);
+        const bool cloverPassed = runMDWFEvenOddActionTest<8>(commBase, 0.5);
+        const bool wilsonPassed = runMDWFEvenOddActionTest<8>(commBase, 0.0);
+        if (!cloverPassed || !wilsonPassed) {
+            throw std::runtime_error(stdLogger.fatal("MDWF even/odd action test failed: c_sw = 0.5 passed = ",
+                                                     cloverPassed, ", c_sw = 0 passed = ", wilsonPassed,
+                                                     " (see diagnostics above)"));
+        }
+        rootLogger.info("MDWF even/odd action test passed with Ls = 8");
         return 0;
     }
     catch (const std::runtime_error &error) {

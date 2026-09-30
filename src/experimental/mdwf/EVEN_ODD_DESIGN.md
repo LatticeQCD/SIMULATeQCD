@@ -65,17 +65,33 @@ one block inverse, i.e. about one unpreconditioned `M`, on half-size vectors.
 The gain is the iteration ratio. For `M^+ M` (two solves) the gain is roughly
 half of that, so the RHMC should move to even-site pseudofermions (E2).
 
-## 4. Next stages
+## 4. Even-site actions (stages E2a, E2b)
 
-- **E2 — even/odd pseudofermion actions.** Pseudofermions on even sites with
-  `Mhat^+ Mhat` for both the Pauli-Villars two-flavour and the one-flavour RHMC
-  actions (the multishift acts on `Mhat^+ Mhat`). `det M_oo` depends on the
-  gauge field through the clover term (for `c_sw = 0` it is constant and
-  drops out): `log det M_oo = sum_{x odd, chi} [Ls log det P - log det W]`,
-  whose force needs `G_chi(x) = sum_s [(P + Q K)^-1 Din]_ss` (a 6x6 per site)
-  contracted with the clover derivative. The Pauli-Villars ratio does not
-  cancel it (it depends on the mass). Validate with the existing ladder
-  (heatbath, energy identity, cancellation, trajectory tests, `<exp(-dH)>`).
+`MDWFEvenOddFermionActions.h`. For even-site vectors `u, v`, with
+`w = M_oo^-1 M_oe v`, `u~ = M_oo^-+ M_eo^+ u`, `U = (u, -u~)`, `V = (v, -w)`:
+
+```text
+Re[u^+ dMhat v] = Re[u^+ dM_ee v] - Re[u^+ dM_eo w] - Re[u~^+ dM_oe v] + Re[u~^+ dM_oo w] = Re[U^+ dM V],
+```
+
+for any `c_sw` (for `c_sw = 0` the diagonal terms vanish). Every even-site
+force term is therefore an existing full-lattice storage term (right `Din V`,
+left `U`). With clover, `det M_oo` depends on the gauge field and the actions
+carry `S_oo = -n_f log det M_oo(m) + n_f log det M_oo(pv)`:
+
+```text
+log det M_oo = sum_{x odd, chi} [Ls log det P - log det W]      (K^Ls = -mf gives det(1 + R K) = det W^-1)
+d log det M_oo = sum_{x odd} Tr[G dA],   G = sum_s [M_oo^-1 Din]_ss (12x12 per site)
+```
+
+`G` is built from unit fields with the block inverse and fed to the storage as
+`sum_b e_b^+ dA g_b` with vectors on the odd sites only, where the hopping part
+of the storage vanishes.
+
+## 5. Next stages
+
+- **E2c — production.** `even_odd` switch in the run program, with the Lanczos
+  interval check on `Mhat^+ Mhat`; then the 2+1 chain with the even/odd actions.
 - **E3 — performance.** Cache the clover field per gauge configuration (the
   unpreconditioned scaffold recomputes `preCalcFmunu` on every application),
   fuse `Din`/hop/diagonal passes, mixed precision, and a GPU force; then the

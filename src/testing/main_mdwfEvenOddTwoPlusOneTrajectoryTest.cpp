@@ -1,15 +1,16 @@
 /*
- * Even/odd 2+1 flavour MDWF HMC trajectory test (EVEN_ODD_DESIGN.md stage E2a,
- * c_sw = 0).
+ * Even/odd 2+1 flavour MDWF HMC trajectory test (EVEN_ODD_DESIGN.md stage E2b,
+ * clover c_sw = 0.5; the c_sw = 0 version passed in job 34574588).
  *
  * MDWFEvenOddTwoPlusOneHmc (MDWFEvenOddFermionActions.h): Wilson gauge action,
  * even-site Pauli-Villars light pair (mf = 0.1) and even-site one-flavour RHMC
- * strange quark (ms = 0.2), pv_mass = 1, M5 = 1.8, b5 = 1.5, c_sw = 0, unit
+ * strange quark (ms = 0.2), pv_mass = 1, M5 = 1.8, b5 = 1.5, c_sw = 0.5, unit
  * start on 6^4, Ls = 8, beta = 6, tau = 0.2, solver precision 1e-10. Strange
  * intervals [lambda_min / 3, 1.5 lambda_max] of Mhat^+ Mhat on the start
  * configuration, errors 1e-12 (heatbath, action) and 1e-8 (force).
  *
- *   1. Heatbath identity per pseudofermion (1e-6).
+ *   1. Heatbath identity per pseudofermion, pseudofermion part of the action
+ *      (the log det M_oo part is not sampled by the heatbath) (1e-6).
  *   2. Reversibility over 8 steps (1e-8 links and momenta, 1e-6 in H).
  *   3. Delta H ratios between 3 and 6 for 8/16/32 steps.
  *   4. Cost: wall time of one 8-step trajectory from the same start with the
@@ -77,7 +78,7 @@ void runMDWFEvenOddTwoPlusOneTrajectoryTest(CommunicationBase &commBase) {
     param.M5 = 1.8;
     param.mf = 0.1;
     param.b5 = 1.5;
-    param.csw = 0.0;
+    param.csw = 0.5;
     param.pv_mass = 1.0;
     param.tau = 0.2;
     param.steps = 8;
@@ -148,8 +149,14 @@ void runMDWFEvenOddTwoPlusOneTrajectoryTest(CommunicationBase &commBase) {
     // --- 1. Heatbath identity. ---
     hmc.refreshMomenta();
     hmc.heatbath();
-    const double lightRel = std::abs(light.action() - light.noiseNorm2()) / std::max(1.0, light.noiseNorm2());
-    const double strangeRel = std::abs(strange.action() - strange.noiseNorm2()) / std::max(1.0, strange.noiseNorm2());
+    light.action();
+    strange.action();
+    const double lightRel = std::abs(light.lastPseudofermionAction() - light.noiseNorm2())
+                            / std::max(1.0, light.noiseNorm2());
+    const double strangeRel = std::abs(strange.lastPseudofermionAction() - strange.noiseNorm2())
+                              / std::max(1.0, strange.noiseNorm2());
+    rootLogger.info("MDWF even/odd 2+1 test log det M_oo action parts: light ", light.lastDetAction(), ", strange ",
+                    strange.lastDetAction());
     const bool heatbathPassed = lightRel <= 1e-6 && strangeRel <= 1e-6;
     rootLogger.info("MDWF even/odd 2+1 test heatbath: light relDiff = ", lightRel, ", strange relDiff = ", strangeRel,
                     ", passed = ", heatbathPassed);
