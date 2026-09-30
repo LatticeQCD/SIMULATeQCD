@@ -29,6 +29,7 @@
 #       block_size: block length for the blocked error
 #        precision: CG relative residual for actions, heatbath, and forces
 #       save_every: write Gaugefile_out every save_every trajectories (0: only at the end)
+#      max_seconds: wall-clock budget; no trajectory is started past it (0: no limit)
 # measurements_dir: output directory (must be writable from the job)
 #      output_name: per-trajectory data file
 #     Gaugefile_out: optional configuration output (NERSC), written into measurements_dir
@@ -64,6 +65,7 @@ seed             = 20260928
 max_iter         = 20000
 precision        = 1e-10
 save_every       = 5
+max_seconds      = 0
 measurements_dir = ./
 output_name      = mdwfTwoPlusOneHmcRun.dat
 #Gaugefile_out   = mdwfTwoPlusOneHmcRun_final.nersc

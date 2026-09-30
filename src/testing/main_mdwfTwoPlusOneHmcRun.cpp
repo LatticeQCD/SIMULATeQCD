@@ -29,6 +29,10 @@
  * and the mean plaquette. Correct sampling requires <exp(-Delta H)> = 1
  * within errors. With Gaugefile_out set, the configuration is written into
  * measurements_dir every save_every trajectories (if > 0) and at the end.
+ * With max_seconds > 0 the run starts no further trajectory once the elapsed
+ * wall-clock time plus 1.25 times the longest trajectory so far would exceed
+ * max_seconds, then writes the summary and configuration as usual, so a
+ * chained batch segment ends cleanly before its time limit.
  *
  * Usage (from the build's testing directory):
  *   ./mdwfTwoPlusOneHmcRun <param file> [key=value ...]
@@ -79,6 +83,7 @@ public:
     Parameter<double> precision;
     Parameter<int> block_size;
     Parameter<int> save_every;
+    Parameter<double> max_seconds;
     Parameter<std::string> output_name;
 
     MDWFTwoPlusOneRunParameters() {
@@ -109,6 +114,7 @@ public:
         addDefault(precision, "precision", 1e-10);
         addDefault(block_size, "block_size", 5);
         addDefault(save_every, "save_every", 5);
+        addDefault(max_seconds, "max_seconds", 0.0);
         addDefault(output_name, "output_name", std::string("mdwfTwoPlusOneHmcRun.dat"));
     }
 };
@@ -196,6 +202,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     const size_t HaloDepth = 2;
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     using Hmc = MDWFTwoPlusOneHmc<HaloDepth, Ls>;
+    const auto runStart = std::chrono::steady_clock::now();
 
     if (!runParam.beta.isSet()) {
         throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run requires beta in the parameter file"));
@@ -303,10 +310,21 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     std::vector<double> accepted;
     std::vector<double> plaquette;
 
+    const double maxSeconds = runParam.max_seconds();
+    double longestTrajectory = 0.0;
+    int completed = 0;
     for (int traj = 1; traj <= nTraj; traj++) {
         const auto startTime = std::chrono::steady_clock::now();
+        const double elapsed = std::chrono::duration<double>(startTime - runStart).count();
+        if (maxSeconds > 0.0 && traj > 1 && elapsed + 1.25 * longestTrajectory > maxSeconds) {
+            rootLogger.info("MDWF 2+1 HMC run: stopping before trajectory ", traj, " (elapsed ", elapsed,
+                            " s, longest trajectory ", longestTrajectory, " s, max_seconds ", maxSeconds, ")");
+            break;
+        }
         const MDWFHmcTrajectoryResult result = hmc.trajectory(traj > nNoMetro, acceptRng);
         const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime).count();
+        longestTrajectory = std::max(longestTrajectory, seconds);
+        completed = traj;
         GaugeAction<double, true, HaloDepth, R18> action(gauge);
         const double plaq = static_cast<double>(action.plaquette());
         const double expMdH = std::exp(-result.delta_h);
@@ -346,8 +364,8 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     const double expError = std::max(expStat.naiveError, expStat.blockedError);
     const double expPull = expError > 0.0 ? (expStat.mean - 1.0) / expError : 0.0;
 
-    rootLogger.info("MDWF 2+1 HMC run summary (", deltaH.size(), " trajectories after ", nTherm,
-                    " thermalization, block size ", blockSize, "):");
+    rootLogger.info("MDWF 2+1 HMC run summary (", completed, " of ", nTraj, " trajectories run; statistics over ",
+                    deltaH.size(), " after ", nTherm, " thermalization, block size ", blockSize, "):");
     rootLogger.info("  acceptance = ", accStat.mean, " +- ", accStat.naiveError);
     rootLogger.info("  <exp(-Delta H)> = ", expStat.mean, " +- ", expStat.naiveError, " (naive), +- ",
                     expStat.blockedError, " (blocked); (mean - 1) / error = ", expPull);
