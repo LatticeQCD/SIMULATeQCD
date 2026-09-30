@@ -865,6 +865,17 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
         target_link_libraries(_${MDWF_RHMC_TARGET} mdwfRemez)
         add_to_compound_SIMULATeQCD_target(tests ${MDWF_RHMC_TARGET})
     endforeach()
+
+    # Even/odd (Schur-complement) RHMC targets: also instantiate the Even/Odd spinor layouts.
+    foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest)
+        set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
+        add_SIMULATeQCD_executable(${MDWF_EO_TARGET} src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
+        set_SIMULATeQCD_property(${MDWF_EO_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+        SIMULATeQCD_target_compile_definitions(${MDWF_EO_TARGET} PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+        target_link_libraries(${MDWF_EO_TARGET} mdwfRemez)
+        target_link_libraries(_${MDWF_EO_TARGET} mdwfRemez)
+        add_to_compound_SIMULATeQCD_target(tests ${MDWF_EO_TARGET})
+    endforeach()
 else()
     message(STATUS "MDWF Remez: GMP/MPFR not found, mdwfRemezTest and the MDWF RHMC targets disabled")
 endif()
