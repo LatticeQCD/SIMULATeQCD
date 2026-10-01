@@ -1,0 +1,42 @@
+#
+# mdwfResidualMass.param -- residual mass of Mobius (clover) domain-wall fermions
+# (Grid conventions: import with D_- = 1 - c5 D_W, export P_- psi(0) + P_+ psi(Ls-1),
+# J5q midpoint P_+ psi(Ls/2-1) + P_- psi(Ls/2)).
+#
+#          Lattice: Nx Ny Nz Nt;  Nodes: single rank only
+#   M5, mf, b5, c_sw: Mobius parameters (c5 = b5 - 1), c_sw = 0 for the plain Mobius kernel
+#               ls: 8 or 16 (compiled in)
+#   antiperiodic_t: 1 = antiperiodic fermion boundary conditions in time
+#           source: point source x y z t
+#       components: first last source spin-colour components solved by this run (0 11 = all); each
+#                   finished one is saved to <output_name>.cNN and skipped on a rerun, and the
+#                   result is assembled once all 12 exist (split long runs over several jobs)
+#        direction: analysis direction x | y | z | t | spatial (sum over x, y, z); every solve is
+#                   contracted along all four, so changing it needs no new solves. Finite T: spatial
+#   plateau_min/max: distances from the source (along direction) averaged for m_res
+#        precision: CG relative residual of the even/odd normal equation
+#        Gaugefile: NERSC configuration; without it: start = random | unit (tests), seed
+# measurements_dir, output_name: per-distance correlators and m_res(d)
+#   reference_file: optional "mu n C_PP C_J5q" file to compare the raw correlators with (fails beyond
+#                   reference_tolerance, relative); Grid/GPT regression: mdwfResidualMassGridReference.param
+#
+Lattice          = 6 6 6 6
+Nodes            = 1 1 1 1
+M5               = 1.8
+mf               = 0.1
+b5               = 1.5
+c_sw             = 0.0
+ls               = 8
+antiperiodic_t   = 1
+source           = 0 0 0 0
+components       = 0 11
+direction        = t
+plateau_min      = 2
+plateau_max      = 3
+max_iter         = 40000
+precision        = 1e-10
+start            = random
+seed             = 20261007
+measurements_dir = ./
+output_name      = mdwfResidualMass.dat
+#Gaugefile       = /path/to/conf.nersc

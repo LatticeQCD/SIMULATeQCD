@@ -1,0 +1,36 @@
+#
+# mdwfResidualMassGridReference.param -- regression test of mdwfResidualMass against Grid/GPT
+#
+# Reproduces the reference correlators test_conf/mdwf_mres_grid_reference_b1801_b.txt (cross-checked
+# against an independent Grid/GPT measurement, 2026-10-01) on the HotQCD configuration
+# l328b1801ml00133ms04345_Ls16M18b20c10_b000.2400 (32^3 x 8, beta = 1.801, T = 186 MeV), which is not
+# in the repository: set Gaugefile to its location. 12 solves, about 1 h on one A100 (split over
+# jobs with components = first last; finished components are reused, see main_mdwfResidualMass.cpp).
+#
+#   ./mdwfResidualMass ../parameter/tests/mdwfResidualMassGridReference.param Gaugefile=/path/to/conf
+#
+# Passes ("MDWF m_res reference comparison passed") if every slice of C_PP, C_J5q and m_res along
+# x, y, z, t agrees with the reference to reference_tolerance (relative). Grid itself agrees with the
+# reference to 1e-5 at worst (far spatial slices), so 1e-4 leaves room for solver changes (precision,
+# mixed precision) while catching any convention or operator error.
+#
+Lattice             = 32 32 32 8
+Nodes               = 1 1 1 1
+M5                  = 1.8
+mf                  = 0.00133
+b5                  = 2.0
+c_sw                = 0.0
+ls                  = 16
+antiperiodic_t      = 1
+source              = 0 0 0 0
+components          = 0 11
+direction           = spatial
+plateau_min         = 9
+plateau_max         = 16
+max_iter            = 100000
+precision           = 1e-9
+measurements_dir    = ./
+output_name         = mdwfResidualMassGridReference.dat
+reference_file      = ../test_conf/mdwf_mres_grid_reference_b1801_b.txt
+reference_tolerance = 1e-4
+Gaugefile           = /scratch/hpc-prf-ecfqcd/jgoswami/DeVrunMDWF/MDWFconfs/l328b1801ml00133ms04345_Ls16M18b20c10_b000.2400
