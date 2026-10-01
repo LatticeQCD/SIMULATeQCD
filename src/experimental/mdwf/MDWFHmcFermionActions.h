@@ -30,6 +30,7 @@
 #pragma once
 
 #include "MDWFAllLinkDirectionIndependentStorage.h"
+#include "MDWFDeviceForceStorage.h"
 #include "MDWFCoupledCG.h"
 #include "MDWFFermionForceWorkspace.h"
 #include "MDWFMobiusForceWorkspace.h"
@@ -132,6 +133,14 @@ inline MDWFForceStorageTiming &mdwfForceStorageTiming() {
     return timing;
 }
 
+// true: force storage through overwriteMDWFAllLinkStorageDevice (per-term work on the device, clover-leaf
+// products once per call); false: the original host storage. Both give the same force to rounding
+// (mdwfDeviceForceStorageTest).
+inline bool &mdwfForceStorageOnDevice() {
+    static bool onDevice = true;
+    return onDevice;
+}
+
 template<size_t HaloDepth, size_t Ls, class Terms>
 void mdwfHmcStoreFermionForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHost,
                               const Gaugefield<double, false, HaloDepth, R18> &gaugeHost,
@@ -141,7 +150,10 @@ void mdwfHmcStoreFermionForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHo
                               CommunicationBase &commBase,
                               const std::string &name) {
     const auto start = std::chrono::steady_clock::now();
-    if (csw != 0.0) {
+    if (mdwfForceStorageOnDevice()) {
+        overwriteMDWFAllLinkStorageDevice<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, csw, commBase,
+                                                         name);
+    } else if (csw != 0.0) {
         overwriteMDWFCloverAllLinkDirectionIndependentStorageNonzero<HaloDepth, Ls>(
             ipdotHost, gaugeHost, terms, coefficients, csw, commBase, name);
     } else {

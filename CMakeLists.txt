@@ -823,6 +823,12 @@ set_SIMULATeQCD_property(mdwfMobiusEvenOddTest PROPERTIES RUNTIME_OUTPUT_DIRECTO
 SIMULATeQCD_target_compile_definitions(mdwfMobiusEvenOddTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfMobiusEvenOddTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfDeviceForceStorageTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfDeviceForceStorageTest src/testing/main_mdwfDeviceForceStorageTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfDeviceForceStorageTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfDeviceForceStorageTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfDeviceForceStorageTest)
+
 # MDWF RHMC rational approximations: AlgRemez (src/tools/rational_approx, unchanged) behind the
 # host-only wrapper src/experimental/mdwf/MDWFRemez.cpp. Needs GMP and MPFR; the hints cover the
 # EasyBuild installations of the GCCcore 14.2.0 toolchain used for this build. Without them only the
