@@ -856,7 +856,7 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
     target_link_libraries(mdwfRemez ${MDWF_MPFR_LIBRARY} ${MDWF_GMP_LIBRARY})
     set_target_properties(mdwfRemez PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    foreach(MDWF_RHMC_TARGET mdwfOneFlavorRhmcActionTest mdwfTwoPlusOneHmcTrajectoryTest mdwfTwoPlusOneHmcRun)
+    foreach(MDWF_RHMC_TARGET mdwfOneFlavorRhmcActionTest mdwfTwoPlusOneHmcTrajectoryTest)
         set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_RHMC_TARGET}.cpp src/spinor/spinorfield.cpp)
         add_SIMULATeQCD_executable(${MDWF_RHMC_TARGET} src/testing/main_${MDWF_RHMC_TARGET}.cpp src/spinor/spinorfield.cpp)
         set_SIMULATeQCD_property(${MDWF_RHMC_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -867,7 +867,7 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
     endforeach()
 
     # Even/odd (Schur-complement) RHMC targets: also instantiate the Even/Odd spinor layouts.
-    foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest)
+    foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest mdwfTwoPlusOneHmcRun)
         set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         add_SIMULATeQCD_executable(${MDWF_EO_TARGET} src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         set_SIMULATeQCD_property(${MDWF_EO_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")

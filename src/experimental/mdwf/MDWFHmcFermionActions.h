@@ -38,6 +38,7 @@
 #include "MDWFPseudofermionAction.h"
 #include "MDWFRationalCoefficientAdapter.h"
 
+#include <chrono>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -118,6 +119,19 @@ public:
     }
 };
 
+// Wall-clock time spent in mdwfHmcStoreFermionForce (host all-link storage, including the lazy
+// construction of the term vectors) and the number of terms stored; for cost breakdowns only.
+struct MDWFForceStorageTiming {
+    double seconds = 0.0;
+    long terms = 0;
+    long calls = 0;
+};
+
+inline MDWFForceStorageTiming &mdwfForceStorageTiming() {
+    static MDWFForceStorageTiming timing;
+    return timing;
+}
+
 template<size_t HaloDepth, size_t Ls, class Terms>
 void mdwfHmcStoreFermionForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHost,
                               const Gaugefield<double, false, HaloDepth, R18> &gaugeHost,
@@ -126,6 +140,7 @@ void mdwfHmcStoreFermionForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHo
                               double csw,
                               CommunicationBase &commBase,
                               const std::string &name) {
+    const auto start = std::chrono::steady_clock::now();
     if (csw != 0.0) {
         overwriteMDWFCloverAllLinkDirectionIndependentStorageNonzero<HaloDepth, Ls>(
             ipdotHost, gaugeHost, terms, coefficients, csw, commBase, name);
@@ -133,6 +148,10 @@ void mdwfHmcStoreFermionForce(Gaugefield<double, false, HaloDepth, R18> &ipdotHo
         overwriteMDWFWilsonAllLinkDirectionIndependentStorageCsw0<HaloDepth, Ls>(
             ipdotHost, gaugeHost, terms, coefficients, commBase, name);
     }
+    MDWFForceStorageTiming &timing = mdwfForceStorageTiming();
+    timing.seconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    timing.terms += static_cast<long>(terms.size());
+    timing.calls++;
 }
 
 template<size_t HaloDepth, size_t Ls>

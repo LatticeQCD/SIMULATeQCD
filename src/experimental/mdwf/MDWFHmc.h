@@ -39,6 +39,7 @@
 #include "../../gauge/gaugeActionDeriv.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <random>
 #include <stdexcept>
@@ -149,6 +150,7 @@ private:
 
     int _forceEvaluations;
     int _gaugeUpdates;
+    double _fermionForceSeconds;
     double _maxGaugeForceRms;
     double _maxFermionForceRms;
 
@@ -167,10 +169,12 @@ private:
     }
 
     void updateFermionForce() {
+        const auto start = std::chrono::steady_clock::now();
         _gaugeHost = _gauge;
         _fermion.force(_ipdotHost, _gaugeHost);
         _maxFermionForceRms = std::max(_maxFermionForceRms, forceRms(_ipdotHost));
         _ipdot = _ipdotHost;
+        _fermionForceSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
     }
 
 public:
@@ -188,6 +192,7 @@ public:
           _fermion(commBase, gauge, param),
           _forceEvaluations(0),
           _gaugeUpdates(0),
+          _fermionForceSeconds(0.0),
           _maxGaugeForceRms(0.0),
           _maxFermionForceRms(0.0) {
         const LatticeData lat = GInd::getLatData();
@@ -323,6 +328,11 @@ public:
 
     int gaugeUpdates() const {
         return _gaugeUpdates;
+    }
+
+    // Accumulated wall-clock time of the fermion force evaluations (solves, host storage, transfers).
+    double fermionForceSeconds() const {
+        return _fermionForceSeconds;
     }
 
     void resetForceStatistics() {

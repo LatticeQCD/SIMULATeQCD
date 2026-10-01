@@ -34,6 +34,12 @@
  * max_seconds, then writes the summary and configuration as usual, so a
  * chained batch segment ends cleanly before its time limit.
  *
+ * With even_odd = 1 the run uses MDWFEvenOddTwoPlusOneHmc (EVEN_ODD_DESIGN.md):
+ * even-site pseudofermions on the Schur complement Mhat^+ Mhat, plus the
+ * log det M_oo ratio term for c_sw != 0. The strange-quark intervals then refer
+ * to Mhat^+ Mhat (a different, better conditioned spectrum than M^+ M), and the
+ * Lanczos checks measure Mhat^+ Mhat.
+ *
  * Usage (from the build's testing directory):
  *   ./mdwfTwoPlusOneHmcRun <param file> [key=value ...]
  * Parameters: see parameter/tests/mdwfTwoPlusOneHmcRun.param. Ls = 8 is fixed
@@ -41,6 +47,7 @@
  */
 
 #include "../simulateqcd.h"
+#include "../experimental/mdwf/MDWFEvenOddFermionActions.h"
 #include "../experimental/mdwf/MDWFRhmcFermionActions.h"
 #include "../experimental/mdwf/MDWFSpectralBounds.h"
 
@@ -72,6 +79,7 @@ public:
     Parameter<int> remez_digits;
     Parameter<int> check_steps;
     Parameter<int> symanzik_gauge;
+    Parameter<int> even_odd;
     Parameter<double> tau;
     Parameter<int> fermion_steps;
     Parameter<int> gauge_substeps;
@@ -103,6 +111,7 @@ public:
         addDefault(remez_digits, "remez_digits", 50);
         addDefault(check_steps, "check_steps", 500);
         addDefault(symanzik_gauge, "symanzik_gauge", 0);
+        addDefault(even_odd, "even_odd", 0);
         addDefault(tau, "tau", 0.5);
         addDefault(fermion_steps, "fermion_steps", 20);
         addDefault(gauge_substeps, "gauge_substeps", 8);
@@ -167,21 +176,9 @@ MDWFTwoPlusOneRunStatistic mdwfTwoPlusOneRunStatistic(const std::vector<double> 
 }
 
 // Lanczos estimate of the spectral range of M(mass)^\dagger M(mass); true if it lies inside [low, high].
-template<size_t HaloDepth, size_t Ls>
-bool mdwfTwoPlusOneRunCheckBounds(CommunicationBase &commBase, Gaugefield<double, true, HaloDepth, R18> &gauge,
-                                  const MDWFHmcParameters &param, double mass, double low, double high, int steps,
-                                  uint4 *randState, const std::string &label, const std::string &name) {
-    using Forward = MDWFMobiusCloverLinearOperator<double, HaloDepth, HaloDepth, Ls>;
-    using Adjoint = MDWFMobiusCloverAdjointLinearOperator<double, HaloDepth, HaloDepth, Ls>;
-    using Normal = MDWFNormalOperator<Forward, Adjoint>;
-    using Adapter = MDWFCoupledSolverAdapter<double, HaloDepth, HaloDepth, Ls, Normal>;
-    using Spinor = MDWFSpinor<double, true, All, HaloDepth, Ls>;
-
-    Forward forward(gauge, param.M5, mass, param.b5, param.csw, name + "_forward");
-    Adjoint adjoint(gauge, param.M5, mass, param.b5, param.csw, name + "_adjoint");
-    Normal normal(commBase, forward, adjoint, name + "_normal");
-    Adapter adapter(normal);
-    Spinor start(commBase, name + "_start");
+template<class Adapter, class Spinor>
+bool mdwfTwoPlusOneRunLanczosReport(Adapter &adapter, Spinor &start, double mass, double low, double high, int steps,
+                                    uint4 *randState, const std::string &label, const std::string &name) {
     start.gauss(randState);
     start.updateAll();
     const MDWFLanczosResult result = mdwfLanczosExtremes(adapter, start, steps, {steps / 2, steps}, name + "_lanczos");
@@ -197,11 +194,40 @@ bool mdwfTwoPlusOneRunCheckBounds(CommunicationBase &commBase, Gaugefield<double
     return inside;
 }
 
-template<size_t Ls>
+// Lanczos range of M^+ M (evenOdd = false) or of Mhat^+ Mhat on the even sites (evenOdd = true), the operator the
+// strange-quark approximation of the chosen action acts on; true if inside [low, high].
+template<size_t HaloDepth, size_t Ls>
+bool mdwfTwoPlusOneRunCheckBounds(CommunicationBase &commBase, Gaugefield<double, true, HaloDepth, R18> &gauge,
+                                  const MDWFHmcParameters &param, double mass, double low, double high, int steps,
+                                  uint4 *randState, const std::string &label, const std::string &name, bool evenOdd) {
+    if (evenOdd) {
+        using Types = MDWFEvenOddTypes<HaloDepth, Ls>;
+        typename Types::EvenOdd eo(gauge, param.M5, mass, param.b5, param.csw, name + "_eo");
+        typename Types::NormalOp normal(eo, commBase, name + "_nrm");
+        typename Types::Adapter adapter(normal);
+        typename Types::SpinorE start(commBase, name + "_starte");
+        eo.refresh();
+        return mdwfTwoPlusOneRunLanczosReport(adapter, start, mass, low, high, steps, randState,
+                                              label + ", Mhat^+Mhat", name);
+    }
+    using Forward = MDWFMobiusCloverLinearOperator<double, HaloDepth, HaloDepth, Ls>;
+    using Adjoint = MDWFMobiusCloverAdjointLinearOperator<double, HaloDepth, HaloDepth, Ls>;
+    using Normal = MDWFNormalOperator<Forward, Adjoint>;
+    using Adapter = MDWFCoupledSolverAdapter<double, HaloDepth, HaloDepth, Ls, Normal>;
+    using Spinor = MDWFSpinor<double, true, All, HaloDepth, Ls>;
+
+    Forward forward(gauge, param.M5, mass, param.b5, param.csw, name + "_forward");
+    Adjoint adjoint(gauge, param.M5, mass, param.b5, param.csw, name + "_adjoint");
+    Normal normal(commBase, forward, adjoint, name + "_normal");
+    Adapter adapter(normal);
+    Spinor start(commBase, name + "_start");
+    return mdwfTwoPlusOneRunLanczosReport(adapter, start, mass, low, high, steps, randState, label + ", M^+M", name);
+}
+
+template<size_t Ls, class Hmc, bool EvenOdd>
 void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParameters &runParam) {
     const size_t HaloDepth = 2;
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
-    using Hmc = MDWFTwoPlusOneHmc<HaloDepth, Ls>;
     const auto runStart = std::chrono::steady_clock::now();
 
     if (!runParam.beta.isSet()) {
@@ -244,6 +270,8 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     const bool saveConf = runParam.GaugefileName_out.isSet();
     const std::string confPath = saveConf ? runParam.measurements_dir() + "/" + runParam.GaugefileName_out() : "";
 
+    rootLogger.info("MDWF 2+1 HMC run: ", EvenOdd ? "even/odd preconditioned (Mhat^+ Mhat, even-site pseudofermions)"
+                                                  : "unpreconditioned (M^+ M)", " actions");
     rootLogger.info("MDWF 2+1 HMC run: ", param.symanzik_gauge ? "Symanzik" : "Wilson", " beta = ", param.beta, ", M5 = ", param.M5, ", mf = ", param.mf,
                     ", ms = ", param.rhmc.ms, ", pv_mass = ", param.pv_mass, ", b5 = ", param.b5,
                     ", c5 = ", param.b5 - 1.0, ", c_sw = ", param.csw, ", Ls = ", Ls, ", tau = ", param.tau,
@@ -275,10 +303,10 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     if (checkSteps > 0) {
         const bool insideS = mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(
             commBase, gauge, param, param.rhmc.ms, param.rhmc.lambda_low_s, param.rhmc.lambda_high_s, checkSteps,
-            d_rand.state, "start", "MDWF_2p1_run_check_start_s");
+            d_rand.state, "start", "MDWF_2p1_run_check_start_s", EvenOdd);
         const bool insidePv = mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(
             commBase, gauge, param, param.pv_mass, param.rhmc.lambda_low_pv, param.rhmc.lambda_high_pv, checkSteps,
-            d_rand.state, "start", "MDWF_2p1_run_check_start_pv");
+            d_rand.state, "start", "MDWF_2p1_run_check_start_pv", EvenOdd);
         if (!insideS || !insidePv) {
             throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run: the start configuration's spectrum is outside "
                                                      "the approximation intervals; widen them in the parameter file"));
@@ -314,6 +342,8 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     double longestTrajectory = 0.0;
     int completed = 0;
     for (int traj = 1; traj <= nTraj; traj++) {
+        const double forceSecondsBefore = hmc.fermionForceSeconds();
+        const MDWFForceStorageTiming storageBefore = mdwfForceStorageTiming();
         const auto startTime = std::chrono::steady_clock::now();
         const double elapsed = std::chrono::duration<double>(startTime - runStart).count();
         if (maxSeconds > 0.0 && traj > 1 && elapsed + 1.25 * longestTrajectory > maxSeconds) {
@@ -329,6 +359,13 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
         const double plaq = static_cast<double>(action.plaquette());
         const double expMdH = std::exp(-result.delta_h);
 
+        const double forceSeconds = hmc.fermionForceSeconds() - forceSecondsBefore;
+        const double storageSeconds = mdwfForceStorageTiming().seconds - storageBefore.seconds;
+        const long storageTerms = mdwfForceStorageTiming().terms - storageBefore.terms;
+        rootLogger.info("MDWF 2+1 HMC run trajectory ", traj, " cost: fermion forces ", forceSeconds, " s, of which host force "
+                        "storage (incl. term vectors) ", storageSeconds, " s for ", storageTerms, " terms, solves and the "
+                        "rest ", forceSeconds - storageSeconds, " s; outside the fermion forces (heatbath, actions, gauge "
+                        "updates) ", seconds - forceSeconds, " s");
         rootLogger.info("MDWF 2+1 HMC run trajectory ", traj, ": Delta H = ", result.delta_h,
                         ", exp(-Delta H) = ", expMdH, ", accepted = ", result.accepted,
                         ", plaquette = ", plaq, ", fermion forces = ", result.force_evaluations,
@@ -384,10 +421,10 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     if (checkSteps > 0) {
         mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(commBase, gauge, param, param.rhmc.ms, param.rhmc.lambda_low_s,
                                                     param.rhmc.lambda_high_s, checkSteps, d_rand.state, "final",
-                                                    "MDWF_2p1_run_check_final_s");
+                                                    "MDWF_2p1_run_check_final_s", EvenOdd);
         mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(commBase, gauge, param, param.pv_mass, param.rhmc.lambda_low_pv,
                                                     param.rhmc.lambda_high_pv, checkSteps, d_rand.state, "final",
-                                                    "MDWF_2p1_run_check_final_pv");
+                                                    "MDWF_2p1_run_check_final_pv", EvenOdd);
     }
 }
 
@@ -403,7 +440,11 @@ int main(int argc, char **argv) {
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
 
-        runMDWFTwoPlusOneHmcRun<8>(commBase, param);
+        if (param.even_odd() != 0) {
+            runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);
+        } else {
+            runMDWFTwoPlusOneHmcRun<8, MDWFTwoPlusOneHmc<HaloDepth, 8>, false>(commBase, param);
+        }
         return 0;
     }
     catch (const std::runtime_error &error) {
