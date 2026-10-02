@@ -71,6 +71,7 @@ struct MDWFHmcParameters {
     int gauge_substeps;   // gauge steps per fermion step (Sexton-Weingarten); <= 0 means 1
     MDWFRhmcParameters rhmc;  // used only by the one-flavour RHMC action
     bool symanzik_gauge;      // HMC driver: tree-level Symanzik instead of Wilson gauge action (MDWFHmc.h)
+    bool antiperiodic_t;      // HMC driver: antiperiodic temporal fermion BCs (MDWFFermionBoundary.h); false = periodic
 };
 
 /*

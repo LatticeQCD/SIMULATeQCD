@@ -25,6 +25,15 @@
  * reproduce do_evolve_Q / do_evolve_P from src/modules/rhmc/integrator.cpp,
  * which are file-local there; that module is not modified.
  *
+ * Fermion boundary conditions in time: periodic by default; with
+ * MDWFHmcParameters::antiperiodic_t the fermion action, its heatbath and its
+ * force all see MDWFFermionGauge (MDWFFermionBoundary.h), a copy of the gauge
+ * field with -U_t on the last time slice, re-derived from the thin field
+ * before every heatbath, action and force evaluation (so external changes to
+ * the gauge field, such as a restore or a configuration read, are picked up).
+ * The force is then the force with respect to the thin links (see
+ * MDWFFermionBoundary.h); the gauge action and force use the thin field.
+ *
  * This is a correctness scaffold: single rank, plain leapfrog with the gauge
  * and fermion forces applied as separate momentum updates, the fermion force
  * stored on the host each step, and unpreconditioned solves from a zero
@@ -34,6 +43,7 @@
 
 #pragma once
 
+#include "MDWFFermionBoundary.h"
 #include "MDWFHmcFermionActions.h"
 #include "../../gauge/gaugeAction.h"
 #include "../../gauge/gaugeActionDeriv.h"
@@ -146,6 +156,7 @@ private:
     Gauge _ipdot;
     HostGauge _gaugeHost;
     HostGauge _ipdotHost;
+    MDWFFermionGauge<HaloDepth> _fermionGauge;   // before _fermion: the action binds to _fermionGauge.get()
     FermionAction _fermion;
 
     int _forceEvaluations;
@@ -170,7 +181,8 @@ private:
 
     void updateFermionForce() {
         const auto start = std::chrono::steady_clock::now();
-        _gaugeHost = _gauge;
+        _fermionGauge.sync();
+        _gaugeHost = _fermionGauge.get();
         _fermion.force(_ipdotHost, _gaugeHost);
         _maxFermionForceRms = std::max(_maxFermionForceRms, forceRms(_ipdotHost));
         _ipdot = _ipdotHost;
@@ -189,7 +201,8 @@ public:
           _ipdot(commBase, _prefix + "_ipdot"),
           _gaugeHost(commBase, _prefix + "_gauge_host"),
           _ipdotHost(commBase, _prefix + "_ipdot_host"),
-          _fermion(commBase, gauge, param),
+          _fermionGauge(commBase, gauge, param.antiperiodic_t, _prefix + "_fermion_bc_links"),
+          _fermion(commBase, _fermionGauge.get(), param),
           _forceEvaluations(0),
           _gaugeUpdates(0),
           _fermionForceSeconds(0.0),
@@ -210,6 +223,7 @@ public:
     }
 
     void heatbath() {
+        _fermionGauge.sync();
         _fermion.heatbath(_randState);
     }
 
@@ -247,6 +261,7 @@ public:
     }
 
     double fermionAction() {
+        _fermionGauge.sync();
         return _fermion.action();
     }
 
@@ -350,9 +365,40 @@ public:
 
     // Fermion force of the current state and phi, without changing the momenta.
     double currentFermionForceRms() {
-        _gaugeHost = _gauge;
+        _fermionGauge.sync();
+        _gaugeHost = _fermionGauge.get();
         _fermion.force(_ipdotHost, _gaugeHost);
         return forceRms(_ipdotHost);
+    }
+
+    /*
+     * i sum_links tr(P_l ipdot_l) of the fermion force at the current gauge field and pseudofermions, with the
+     * current momenta P: the derivative d S_f / dt along U(t) = exp(i t P) U predicted by the force (MD equations
+     * U' = i P U, P' = -i ipdot conserve H only if this matches), for finite-difference checks.
+     */
+    double fermionForceAlongMomenta() {
+        _fermionGauge.sync();
+        _gaugeHost = _fermionGauge.get();
+        _fermion.force(_ipdotHost, _gaugeHost);
+        HostGauge momentaHost(_commBase, _prefix + "_fdmom_host");
+        momentaHost = _momenta;
+        const SU3Accessor<double> pAcc = momentaHost.getAccessor();
+        const SU3Accessor<double, R18> fAcc = _ipdotHost.getAccessor();
+        COMPLEX(double) sum(0.0, 0.0);
+        for (size_t siteIndex = 0; siteIndex < GInd::getLatData().vol4; siteIndex++) {
+            const gSite site = GInd::getSite(siteIndex);
+            for (uint8_t mu = 0; mu < 4; mu++) {
+                const gSiteMu siteMu = GInd::getSiteMu(site, mu);
+                sum += tr_c(pAcc.getLink(siteMu), fAcc.getLink(siteMu));
+            }
+        }
+        return real(COMPLEX(double)(0.0, 1.0) * sum);
+    }
+
+    // The gauge field the fermion action sees (the thin field, or its antiperiodic copy).
+    Gauge &fermionGauge() {
+        _fermionGauge.sync();
+        return _fermionGauge.get();
     }
 
     Gauge &momenta() {

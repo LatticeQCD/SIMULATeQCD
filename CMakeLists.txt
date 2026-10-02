@@ -832,7 +832,7 @@ add_to_compound_SIMULATeQCD_target(tests mdwfDeviceForceStorageTest)
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfResidualMass.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfResidualMass src/testing/main_mdwfResidualMass.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfResidualMass PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-SIMULATeQCD_target_compile_definitions(mdwfResidualMass PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+SIMULATeQCD_target_compile_definitions(mdwfResidualMass PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfResidualMass)
 
 # MDWF RHMC rational approximations: AlgRemez (src/tools/rational_approx, unchanged) behind the
@@ -879,7 +879,8 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
     endforeach()
 
     # Even/odd (Schur-complement) RHMC targets: also instantiate the Even/Odd spinor layouts.
-    foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest mdwfTwoPlusOneHmcRun)
+    foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest mdwfTwoPlusOneHmcRun
+                           mdwfAntiperiodicHmcTest)
         set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         add_SIMULATeQCD_executable(${MDWF_EO_TARGET} src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         set_SIMULATeQCD_property(${MDWF_EO_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -1279,7 +1280,7 @@ add_to_compound_SIMULATeQCD_target(profilers cgProf)
 set_SIMULATeQCD_gpu_backend(src/profiling/main_mdwfMobiusProf.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfMobiusProf src/profiling/main_mdwfMobiusProf.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfMobiusProf PROPERTIES RUNTIME_OUTPUT_DIRECTORY "profiling")
-SIMULATeQCD_target_compile_definitions(mdwfMobiusProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_12=1 NSTACKS_16=1 LAYOUT_ALL=1)
+SIMULATeQCD_target_compile_definitions(mdwfMobiusProf PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_12=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 add_to_compound_SIMULATeQCD_target(profilers mdwfMobiusProf)
 
 

@@ -53,7 +53,13 @@
  * the fifth-dimension stack: SpinorfieldAll's conversion (returnSpinor) reads
  * its source through a gSite without stack index.
  *
- * Correctness scaffold: single rank, no fused kernels, double precision.
+ * Precision: floatT = double is the reference. floatT = float (the inner
+ * operator of MDWFMixedPrecisionSolver.h) uses the float-safe copies of the
+ * hopping term and gamma5 in MDWFFloatSafeWilson.h, and takes its clover blocks
+ * and block-inverse matrices from a refreshed double operator (refreshFrom),
+ * since the shared clover precompute only compiles in double.
+ *
+ * Correctness scaffold: single rank, no fused kernels.
  */
 
 #pragma once
@@ -61,12 +67,14 @@
 #include "MDWFAdjointOperator.h"
 #include "MDWFCoupledCG.h"
 #include "MDWFCoupledSolverAdapter.h"
+#include "MDWFFloatSafeWilson.h"
 #include "MDWFMobiusMapping.h"
 
 #include <cmath>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 template<class floatT>
@@ -421,6 +429,11 @@ struct MDWFEvenOddMerge {
 
 template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls>
 class MDWFMobiusCloverEvenOdd {
+    template<class, size_t, size_t, size_t>
+    friend class MDWFMobiusCloverEvenOdd;
+
+    static constexpr bool isDouble = std::is_same<floatT, double>::value;
+
 public:
     using Gauge = Gaugefield<floatT, true, HaloDepthGauge, R18>;
     using SpinorAll = MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls>;
@@ -487,17 +500,39 @@ private:
              MDWFSpinor<floatT, true, LOut, HaloDepthSpin, Ls> &tOut, bool dagger) {
         if (!dagger) {
             applyMDWFFifthDimCoupling<floatT, true, LIn, HaloDepthSpin, Ls>(tIn, in, _params.dinCoeff, true);
-            out.template iterateOverBulk<BLOCKSIZE>(
-                DiracWilsonEvenOdd2<floatT, LOut, LIn, HaloDepthGauge, HaloDepthSpin, Ls, false>(
-                    _gauge, tIn, 0.0, 0.0));
+            wilsonHop<LOut, LIn>(out, tIn);
         } else {
-            applyMDWFGamma5<floatT, true, LIn, HaloDepthSpin, Ls>(tIn, in, true);
-            tOut.template iterateOverBulk<BLOCKSIZE>(
-                DiracWilsonEvenOdd2<floatT, LOut, LIn, HaloDepthGauge, HaloDepthSpin, Ls, false>(
-                    _gauge, tIn, 0.0, 0.0));
-            applyMDWFGamma5<floatT, true, LOut, HaloDepthSpin, Ls>(out, tOut);
+            gamma5Into<LIn>(tIn, in, true);
+            wilsonHop<LOut, LIn>(tOut, tIn);
+            gamma5Into<LOut>(out, tOut, false);
             tOut = out;
             applyMDWFFifthDimAdjointCoupling<floatT, true, LOut, HaloDepthSpin, Ls>(out, tOut, _params.dinCoeff);
+        }
+    }
+
+    // Wilson hopping block (DiracWilsonEvenOdd2 in double, its float-safe copy otherwise).
+    template<Layout LOut, Layout LIn>
+    void wilsonHop(MDWFSpinor<floatT, true, LOut, HaloDepthSpin, Ls> &out,
+                   const MDWFSpinor<floatT, true, LIn, HaloDepthSpin, Ls> &in) {
+        if constexpr (isDouble) {
+            out.template iterateOverBulk<BLOCKSIZE>(
+                DiracWilsonEvenOdd2<floatT, LOut, LIn, HaloDepthGauge, HaloDepthSpin, Ls, false>(_gauge, in, 0.0, 0.0));
+        } else {
+            out.template iterateOverBulk<BLOCKSIZE>(
+                MDWFWilsonHopEvenOdd<floatT, LOut, LIn, HaloDepthGauge, HaloDepthSpin, Ls>(_gauge, in));
+        }
+    }
+
+    template<Layout L>
+    void gamma5Into(MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls> &out,
+                    const MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls> &in, bool update) {
+        if constexpr (isDouble) {
+            applyMDWFGamma5<floatT, true, L, HaloDepthSpin, Ls>(out, in, update);
+        } else {
+            out.template iterateOverBulk<BLOCKSIZE>(MDWFGamma5Functor<floatT, L, HaloDepthSpin, Ls>(in));
+            if (update) {
+                out.updateAll();
+            }
         }
     }
 
@@ -533,18 +568,43 @@ public:
 
     // Recomputes the clover blocks A and the block-inverse matrices from the current gauge field.
     void refresh() {
-        typedef GIndexer<All, HaloDepthGauge> GInd;
-        CalcGSite<All, HaloDepthGauge> calcGSite;
-        const size_t elems = GInd::getLatData().vol4;
-        iterateFunctorNoReturn<true, BLOCKSIZE>(
-            preCalcFmunu<floatT, HaloDepthGauge>(_gauge, _aUpper, _aLower, _aInvUpper, _aInvLower,
-                                                 _params.mass, _csw),
-            calcGSite, elems);
-        iterateFunctorNoReturn<true, BLOCKSIZE>(
-            MDWFMooeeInverseSetup<floatT, HaloDepthGauge, Ls>(_aUpper, _aLower, _pinvUpper, _pinvLower,
-                                                              _rUpper, _rLower, _wUpper, _wLower,
-                                                              _params.b5, _params.c5, _mf),
-            calcGSite, elems);
+        if constexpr (isDouble) {
+            typedef GIndexer<All, HaloDepthGauge> GInd;
+            CalcGSite<All, HaloDepthGauge> calcGSite;
+            const size_t elems = GInd::getLatData().vol4;
+            iterateFunctorNoReturn<true, BLOCKSIZE>(
+                preCalcFmunu<floatT, HaloDepthGauge>(_gauge, _aUpper, _aLower, _aInvUpper, _aInvLower,
+                                                     _params.mass, _csw),
+                calcGSite, elems);
+            iterateFunctorNoReturn<true, BLOCKSIZE>(
+                MDWFMooeeInverseSetup<floatT, HaloDepthGauge, Ls>(_aUpper, _aLower, _pinvUpper, _pinvLower,
+                                                                  _rUpper, _rLower, _wUpper, _wLower,
+                                                                  _params.b5, _params.c5, _mf),
+                calcGSite, elems);
+            _fresh = true;
+        } else {
+            throw std::runtime_error(stdLogger.fatal("MDWF even/odd: the single-precision operator is set up with "
+                                                     "refreshFrom(a refreshed double operator)"));
+        }
+    }
+
+    /*
+     * Clover blocks and block-inverse matrices converted from a refreshed operator of the other precision with
+     * the same parameters (the gauge field of this operator must hold the same links, converted).
+     */
+    template<class srcFloatT>
+    void refreshFrom(MDWFMobiusCloverEvenOdd<srcFloatT, HaloDepthGauge, HaloDepthSpin, Ls> &src) {
+        src.requireFresh();
+        _aUpper.convert_precision(src._aUpper);
+        _aLower.convert_precision(src._aLower);
+        _aInvUpper.convert_precision(src._aInvUpper);
+        _aInvLower.convert_precision(src._aInvLower);
+        _pinvUpper.convert_precision(src._pinvUpper);
+        _pinvLower.convert_precision(src._pinvLower);
+        _rUpper.convert_precision(src._rUpper);
+        _rLower.convert_precision(src._rLower);
+        _wUpper.convert_precision(src._wUpper);
+        _wLower.convert_precision(src._wLower);
         _fresh = true;
     }
 

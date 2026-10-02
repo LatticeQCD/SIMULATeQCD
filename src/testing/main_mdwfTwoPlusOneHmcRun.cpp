@@ -34,6 +34,11 @@
  * max_seconds, then writes the summary and configuration as usual, so a
  * chained batch segment ends cleanly before its time limit.
  *
+ * Fermion boundary conditions in time: antiperiodic_t = 1 gives antiperiodic
+ * temporal BCs (required for finite-temperature ensembles; MDWFHmc.h and
+ * MDWFFermionBoundary.h), default 0 = periodic (as all runs before it). The
+ * Lanczos interval checks then measure the operator with those BCs.
+ *
  * With even_odd = 1 the run uses MDWFEvenOddTwoPlusOneHmc (EVEN_ODD_DESIGN.md):
  * even-site pseudofermions on the Schur complement Mhat^+ Mhat, plus the
  * log det M_oo ratio term for c_sw != 0. The strange-quark intervals then refer
@@ -79,6 +84,7 @@ public:
     Parameter<int> remez_digits;
     Parameter<int> check_steps;
     Parameter<int> symanzik_gauge;
+    Parameter<int> antiperiodic_t;
     Parameter<int> even_odd;
     Parameter<double> tau;
     Parameter<int> fermion_steps;
@@ -111,6 +117,7 @@ public:
         addDefault(remez_digits, "remez_digits", 50);
         addDefault(check_steps, "check_steps", 500);
         addDefault(symanzik_gauge, "symanzik_gauge", 0);
+        addDefault(antiperiodic_t, "antiperiodic_t", 0);
         addDefault(even_odd, "even_odd", 0);
         addDefault(tau, "tau", 0.5);
         addDefault(fermion_steps, "fermion_steps", 20);
@@ -247,6 +254,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     param.max_iter = runParam.max_iter();
     param.precision = runParam.precision();
     param.symanzik_gauge = runParam.symanzik_gauge() != 0;
+    param.antiperiodic_t = runParam.antiperiodic_t() != 0;
     param.rhmc.ms = runParam.ms();
     param.rhmc.lambda_low_s = runParam.lambda_low_s();
     param.rhmc.lambda_high_s = runParam.lambda_high_s();
@@ -278,6 +286,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
                     ", fermion steps = ", param.steps, ", gauge substeps = ", param.gauge_substeps,
                     ", n_traj = ", nTraj, ", n_therm = ", nTherm, ", n_nometro = ", nNoMetro,
                     ", seed = ", runParam.seed(), ", solver precision = ", param.precision,
+                    ", fermion BCs in time: ", param.antiperiodic_t ? "antiperiodic" : "periodic",
                     ", output = ", outputPath);
     rootLogger.info("MDWF 2+1 HMC run strange approximations: M_s^dagger M_s interval [", param.rhmc.lambda_low_s,
                     ", ", param.rhmc.lambda_high_s, "], M_1^dagger M_1 interval [", param.rhmc.lambda_low_pv, ", ",
@@ -300,12 +309,14 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     }
     gauge.updateAll();
 
+    // Lanczos checks on the operator the fermion action uses (with the fermion BCs).
+    MDWFFermionGauge<HaloDepth> checkGauge(commBase, gauge, param.antiperiodic_t, "MDWF_2p1_run_bc_links");
     if (checkSteps > 0) {
         const bool insideS = mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(
-            commBase, gauge, param, param.rhmc.ms, param.rhmc.lambda_low_s, param.rhmc.lambda_high_s, checkSteps,
+            commBase, checkGauge.get(), param, param.rhmc.ms, param.rhmc.lambda_low_s, param.rhmc.lambda_high_s, checkSteps,
             d_rand.state, "start", "MDWF_2p1_run_check_start_s", EvenOdd);
         const bool insidePv = mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(
-            commBase, gauge, param, param.pv_mass, param.rhmc.lambda_low_pv, param.rhmc.lambda_high_pv, checkSteps,
+            commBase, checkGauge.get(), param, param.pv_mass, param.rhmc.lambda_low_pv, param.rhmc.lambda_high_pv, checkSteps,
             d_rand.state, "start", "MDWF_2p1_run_check_start_pv", EvenOdd);
         if (!insideS || !insidePv) {
             throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run: the start configuration's spectrum is outside "
@@ -419,10 +430,11 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     }
 
     if (checkSteps > 0) {
-        mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(commBase, gauge, param, param.rhmc.ms, param.rhmc.lambda_low_s,
+        checkGauge.sync();
+        mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(commBase, checkGauge.get(), param, param.rhmc.ms, param.rhmc.lambda_low_s,
                                                     param.rhmc.lambda_high_s, checkSteps, d_rand.state, "final",
                                                     "MDWF_2p1_run_check_final_s", EvenOdd);
-        mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(commBase, gauge, param, param.pv_mass, param.rhmc.lambda_low_pv,
+        mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(commBase, checkGauge.get(), param, param.pv_mass, param.rhmc.lambda_low_pv,
                                                     param.rhmc.lambda_high_pv, checkSteps, d_rand.state, "final",
                                                     "MDWF_2p1_run_check_final_pv", EvenOdd);
     }

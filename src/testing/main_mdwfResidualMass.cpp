@@ -22,6 +22,17 @@
  * all 12 present; a run with nothing left to solve only assembles, so another
  * `direction` or plateau costs no solves.
  *
+ * Kernel smearing (MDWFKernelSmearing.h): smearing = none | fat7_u3 | fat7_su3,
+ * smear_steps = n: the kernel uses HISQ level-1 fat7 links projected to U(3)
+ * (and to SU(3) for fat7_su3), applied n times to the thin links, before the
+ * fermion boundary phases. The gauge field itself is not changed. Valence only.
+ *
+ * Solver: mixed_precision = 1 uses single-precision CG iterations with
+ * double-precision reliable updates (MDWFMixedPrecisionSolver.h; update when
+ * the residual has dropped by reliable_delta); it stops at the same true
+ * residual as the double solver, so results and component files are
+ * interchangeable (the solver is not part of the component key).
+ *
  * Regression test against Grid/GPT: with reference_file set, the raw per-slice
  * correlators (all four directions) are compared with a reference file
  * (lines "mu n C_PP C_J5q"), and the run fails if any slice of C_PP, C_J5q or
@@ -39,6 +50,8 @@
  */
 
 #include "../simulateqcd.h"
+#include "../experimental/mdwf/MDWFKernelSmearing.h"
+#include "../experimental/mdwf/MDWFMixedPrecisionSolver.h"
 #include "../experimental/mdwf/MDWFResidualMass.h"
 #include "../gauge/gaugeAction.h"
 
@@ -51,6 +64,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 class MDWFResidualMassParameters : public LatticeParameters {
@@ -72,6 +86,10 @@ public:
     Parameter<std::string> start;
     Parameter<std::string> output_name;
     Parameter<std::string> reference_file;
+    Parameter<std::string> smearing;
+    Parameter<int> smear_steps;
+    Parameter<int> mixed_precision;
+    Parameter<double> reliable_delta;
     Parameter<double> reference_tolerance;
 
     MDWFResidualMassParameters() {
@@ -94,6 +112,10 @@ public:
         addDefault(start, "start", std::string("random"));
         addDefault(output_name, "output_name", std::string("mdwfResidualMass.dat"));
         addDefault(reference_file, "reference_file", std::string(""));
+        addDefault(smearing, "smearing", std::string("none"));
+        addDefault(smear_steps, "smear_steps", 1);
+        addDefault(mixed_precision, "mixed_precision", 0);
+        addDefault(reliable_delta, "reliable_delta", 0.1);
         addDefault(reference_tolerance, "reference_tolerance", 1e-4);
     }
 };
@@ -216,9 +238,11 @@ bool mdwfCompareResidualMassReference(const std::string &path, const MDWFResidua
     return passed;
 }
 
-template<size_t Ls>
+template<size_t Ls, bool Mixed>
 void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters &param) {
     const size_t HaloDepth = 2;
+    using Solver = std::conditional_t<Mixed, MDWFMobiusEvenOddMixedSolver<HaloDepth, HaloDepth, Ls>,
+                                      MDWFMobiusEvenOddSolver<double, HaloDepth, HaloDepth, Ls>>;
     typedef GIndexer<All, HaloDepth> GInd;
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
 
@@ -264,14 +288,29 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
     gauge.updateAll();
     GaugeAction<double, true, HaloDepth, R18> action(gauge);
     const double plaquette = static_cast<double>(action.plaquette());
-    mdwfFermionGaugeField<HaloDepth>(fermionGauge, gauge, param.antiperiodic_t() != 0);
+
+    // Kernel links: thin or smeared, then the fermion boundary phases.
+    const MDWFKernelSmearingType smearingType = mdwfKernelSmearingFromString(param.smearing());
+    const bool smeared = smearingType != MDWFKernelSmearingType::None;
+    Gauge kernelGauge(commBase, "MDWF_mres_kgauge");
+    mdwfSmearKernelLinks<HaloDepth>(kernelGauge, gauge, smearingType, param.smear_steps(), "MDWF_mres_ksmear");
+    if (smeared) {
+        const MDWFKernelLinkReport report = mdwfKernelLinkReport<HaloDepth>(kernelGauge, "MDWF_mres_krep");
+        rootLogger.info("MDWF m_res: kernel smearing ", param.smearing(), " x ", param.smear_steps(),
+                        ": plaquette thin ", plaquette, ", smeared ", report.plaquette,
+                        "; smeared links max |W^+ W - 1| = ", report.maxUnitarityViolation, ", max |det W - 1| = ",
+                        report.maxDetDeviation);
+    }
+    mdwfFermionGaugeField<HaloDepth>(fermionGauge, kernelGauge, param.antiperiodic_t() != 0);
 
     const std::array<int, 4> src = {param.source[0], param.source[1], param.source[2], param.source[3]};
     rootLogger.info("MDWF m_res: ", lat.globLX, "x", lat.globLY, "x", lat.globLZ, "x", lat.globLT, ", Ls = ", Ls,
                     ", M5 = ", param.M5(), ", b5 = ", param.b5(), ", c5 = ", param.b5() - 1.0, ", mf = ", param.mf(),
                     ", c_sw = ", param.csw(), ", ", param.antiperiodic_t() ? "antiperiodic" : "periodic",
                     " fermion BCs in time, source (", src[0], ",", src[1], ",", src[2], ",", src[3],
-                    "), plaquette = ", plaquette, ", solver precision = ", param.precision(),
+                    "), plaquette = ", plaquette, ", kernel links ",
+                    smeared ? param.smearing() + " x " + std::to_string(param.smear_steps()) : std::string("thin"),
+                    ", solver precision = ", param.precision(),
                     ", analysis direction ", param.direction());
 
     const int first = param.components[0], last = param.components[1];
@@ -291,6 +330,9 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
     } else {
         keyStream << param.start() << " seed " << param.seed();
     }
+    if (smeared) {   // thin-link keys stay as before, so earlier component files remain valid
+        keyStream << " smearing " << param.smearing() << " x" << param.smear_steps();
+    }
     const std::string key = keyStream.str();
 
     std::vector<MDWFResidualMassComponent> components(12);
@@ -299,8 +341,12 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
         present[a] = mdwfReadResidualMassComponent(mdwfResidualMassComponentPath(outputPath, a), key, a, extents,
                                                    components[a]);
     }
-    MDWFResidualMassMeasurement<HaloDepth, Ls> measurement(fermionGauge, param.M5(), param.mf(), param.b5(),
-                                                           param.csw(), "MDWF_mres_meas");
+    MDWFResidualMassMeasurement<HaloDepth, Ls, Solver> measurement(fermionGauge, param.M5(), param.mf(), param.b5(),
+                                                                   param.csw(), "MDWF_mres_meas");
+    if constexpr (Mixed) {
+        measurement.solver().setDelta(param.reliable_delta());
+        rootLogger.info("MDWF m_res: mixed-precision solver, reliable_delta = ", param.reliable_delta());
+    }
     for (int a = first; a <= last; a++) {
         const std::string path = mdwfResidualMassComponentPath(outputPath, a);
         if (present[a]) {
@@ -375,7 +421,9 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
         for (const int mu : directions) {
             out << directionNames[mu];
         }
-        out << "), length " << length << ", plaquette " << std::setprecision(12) << plaquette << std::endl;
+        out << "), length " << length << ", plaquette " << std::setprecision(12) << plaquette << ", kernel links "
+            << (smeared ? param.smearing() + " x " + std::to_string(param.smear_steps()) : std::string("thin"))
+            << std::endl;
         out << "# d  C_PP(d)  C_J5q(d)  m_res(d) = C_J5q / C_PP   (folded, distance from source)" << std::endl;
     }
     double sumPP = 0.0, sumJ5q = 0.0, sumRatio = 0.0;
@@ -421,10 +469,11 @@ int main(int argc, char **argv) {
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
 
+        const bool mixed = param.mixed_precision() != 0;
         if (param.ls() == 8) {
-            runMDWFResidualMass<8>(commBase, param);
+            mixed ? runMDWFResidualMass<8, true>(commBase, param) : runMDWFResidualMass<8, false>(commBase, param);
         } else if (param.ls() == 16) {
-            runMDWFResidualMass<16>(commBase, param);
+            mixed ? runMDWFResidualMass<16, true>(commBase, param) : runMDWFResidualMass<16, false>(commBase, param);
         } else {
             throw std::runtime_error(stdLogger.fatal("MDWF m_res supports ls = 8 or 16, got ", param.ls()));
         }

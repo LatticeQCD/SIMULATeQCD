@@ -17,6 +17,10 @@
 #        precision: CG relative residual of the even/odd normal equation
 #        Gaugefile: NERSC configuration; without it: start = random | unit (tests), seed
 # measurements_dir, output_name: per-distance correlators and m_res(d)
+#        smearing: kernel links none | fat7_u3 | fat7_su3 (HISQ level-1 fat7 + U(3) / SU(3) projection),
+#      smear_steps: number of smearing steps (fat7_* only)
+#  mixed_precision: 1 = single-precision CG with double reliable updates (same stopping rule as double)
+#   reliable_delta: reliable update when the residual has dropped by this factor (0 < delta < 1)
 #   reference_file: optional "mu n C_PP C_J5q" file to compare the raw correlators with (fails beyond
 #                   reference_tolerance, relative); Grid/GPT regression: mdwfResidualMassGridReference.param
 #
@@ -31,6 +35,10 @@ antiperiodic_t   = 1
 source           = 0 0 0 0
 components       = 0 11
 direction        = t
+smearing         = none
+smear_steps      = 1
+mixed_precision  = 0
+reliable_delta   = 0.1
 plateau_min      = 2
 plateau_max      = 3
 max_iter         = 40000

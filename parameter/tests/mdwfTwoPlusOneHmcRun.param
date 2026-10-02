@@ -9,6 +9,7 @@
 #            Nodes: single rank only
 #             beta: gauge coupling
 #   symanzik_gauge: 0 = Wilson plaquette action, 1 = tree-level Symanzik -(3 beta/5) symanzik()
+#   antiperiodic_t: fermion BCs in time, 0 = periodic, 1 = antiperiodic (finite temperature)
 #         even_odd: 0 = unpreconditioned actions on M^+ M, 1 = even/odd preconditioned (Mhat^+ Mhat);
 #                   with 1 the lambda_* intervals refer to Mhat^+ Mhat
 #   M5, mf, ms, b5, c_sw, pv_mass: Mobius domain-wall parameters (light mf, strange ms,
@@ -41,6 +42,7 @@ Lattice          = 6 6 6 6
 Nodes            = 1 1 1 1
 beta             = 6.0
 symanzik_gauge   = 0
+antiperiodic_t   = 0
 even_odd         = 0
 M5               = 1.8
 mf               = 0.1

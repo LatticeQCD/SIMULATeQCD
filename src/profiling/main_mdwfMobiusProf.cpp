@@ -5,7 +5,11 @@
  * Wilson kernel, the fifth-direction coupling, the clover field-strength
  * precompute, the clover slice, the full Mobius operator (c_sw = 0 and
  * clover), its adjoint, the normal operator, and optionally a coupled-CG
- * solve. It records a baseline for the performance roadmap and the SIMULATeQCD
+ * solve. With run_even_odd (default on) also the even/odd pieces the m_res and
+ * RHMC solves use (MDWFMobiusEvenOdd.h): refresh (clover blocks and block
+ * inverses), M_ee, M_oo^-1, the hopping block, the Schur complement, the
+ * normal operator Mhat^+ Mhat, the per-iteration halo update and CG vector
+ * operations on even-site fields, and (double, run_cg) an even/odd CG solve. It records a baseline for the performance roadmap and the SIMULATeQCD
  * side of the Grid comparison; see src/experimental/mdwf/BENCHMARK_PROTOCOL.md
  * for the measurement definitions and the comparison protocol.
  *
@@ -18,6 +22,7 @@
 
 #include "../simulateqcd.h"
 #include "../experimental/mdwf/MDWFCoupledCG.h"
+#include "../experimental/mdwf/MDWFMobiusEvenOdd.h"
 #include "../experimental/mdwf/MDWFMobiusMapping.h"
 #include "../experimental/mdwf/MDWFNormalOperator.h"
 
@@ -40,6 +45,8 @@ public:
     Parameter<int> seed;
     Parameter<bool> run_single;
     Parameter<bool> run_cg;
+    Parameter<bool> run_even_odd;
+    Parameter<bool> run_cg_unpreconditioned;
     Parameter<double> cg_tolerance;
     Parameter<int> cg_max_iter;
 
@@ -54,6 +61,8 @@ public:
         addDefault(seed, "seed", 1337);
         addDefault(run_single, "run_single", true);
         addDefault(run_cg, "run_cg", true);
+        addDefault(run_even_odd, "run_even_odd", true);
+        addDefault(run_cg_unpreconditioned, "run_cg_unpreconditioned", true);
         addDefault(cg_tolerance, "cg_tolerance", 1e-8);
         addDefault(cg_max_iter, "cg_max_iter", 20000);
     }
@@ -130,8 +139,17 @@ void runMDWFMobiusProfile(CommunicationBase &commBase, MDWFMobiusProfParameters 
                     ", c5 = ", param.b5() - 1.0, ", c_sw = ", param.csw(),
                     ", reps = ", reps, ", warmup = ", warmup);
 
+    constexpr bool isDouble = std::is_same<floatT, double>::value;
+    // Read (or generate) in double; the single-precision pass uses the same links converted.
+    Gaugefield<double, true, HaloDepth, R18> gaugeD(commBase, "MDWF_mobius_prof_dlinks");
+    setupMDWFMobiusProfGauge(gaugeD, param);
     Gauge gauge(commBase, "MDWF_mobius_prof_gauge");
-    setupMDWFMobiusProfGauge(gauge, param);
+    if constexpr (isDouble) {
+        gauge = gaugeD;
+    } else {
+        gauge.convert_precision(gaugeD);
+    }
+    gauge.updateAll();
 
     Spinor in(commBase, "MDWF_mobius_prof_in");
     Spinor out(commBase, "MDWF_mobius_prof_out");
@@ -166,72 +184,137 @@ void runMDWFMobiusProfile(CommunicationBase &commBase, MDWFMobiusProfParameters 
                         " hop_gflops=", hopGflops);
     };
 
-    timeOperation("wilson_slice", 1.0, [&]() {
-        applyMDWFWilsonSlice<floatT, HaloDepth, HaloDepth, Ls>(out, gauge, tmp, in, mass, static_cast<floatT>(0.0));
-    });
+    // Unpreconditioned operator: double only (the shared Wilson/clover functors it uses compile only in double).
+    if constexpr (isDouble) {
+        timeOperation("wilson_slice", 1.0, [&]() {
+            applyMDWFWilsonSlice<floatT, HaloDepth, HaloDepth, Ls>(out, gauge, tmp, in, mass, static_cast<floatT>(0.0));
+        });
 
-    timeOperation("fifth_dim_coupling", 0.0, [&]() {
-        applyMDWFFifthDimCoupling<floatT, true, All, HaloDepth, Ls>(out, in, shiftCoeff);
-    });
+        timeOperation("fifth_dim_coupling", 0.0, [&]() {
+            applyMDWFFifthDimCoupling<floatT, true, All, HaloDepth, Ls>(out, in, shiftCoeff);
+        });
 
-    // Mirrors the precompute that applyMDWFCloverWilsonSlice repeats on every call.
-    timeOperation("clover_fmunu_precompute", 0.0, [&]() {
-        CalcGSite<All, HaloDepth> calcGSite;
-        iterateFunctorNoReturn<true, BLOCKSIZE>(
-            preCalcFmunu<floatT, HaloDepth>(gauge, fmunuUpper, fmunuLower, fmunuInvUpper, fmunuInvLower, mass, csw),
-            calcGSite, GInd::getLatData().vol4);
-        fmunuUpper.updateAll();
-        fmunuLower.updateAll();
-    });
+        // Mirrors the precompute that applyMDWFCloverWilsonSlice repeats on every call.
+        timeOperation("clover_fmunu_precompute", 0.0, [&]() {
+            CalcGSite<All, HaloDepth> calcGSite;
+            iterateFunctorNoReturn<true, BLOCKSIZE>(
+                preCalcFmunu<floatT, HaloDepth>(gauge, fmunuUpper, fmunuLower, fmunuInvUpper, fmunuInvLower, mass, csw),
+                calcGSite, GInd::getLatData().vol4);
+            fmunuUpper.updateAll();
+            fmunuLower.updateAll();
+        });
 
-    timeOperation("clover_slice", 1.0, [&]() {
-        applyMDWFCloverWilsonSlice<floatT, HaloDepth, HaloDepth, Ls>(
-            out, gauge, tmp, fmunuUpper, fmunuLower, fmunuInvUpper, fmunuInvLower, in, mass, csw);
-    });
+        timeOperation("clover_slice", 1.0, [&]() {
+            applyMDWFCloverWilsonSlice<floatT, HaloDepth, HaloDepth, Ls>(
+                out, gauge, tmp, fmunuUpper, fmunuLower, fmunuInvUpper, fmunuInvLower, in, mass, csw);
+        });
 
-    PlainForward plainForward(gauge, M5, mf, b5, "MDWF_mobius_prof_plain_forward");
-    timeOperation("mobius_M_csw0", 1.0, [&]() { plainForward.apply(out, in, false); });
+        PlainForward plainForward(gauge, M5, mf, b5, "MDWF_mobius_prof_plain_forward");
+        timeOperation("mobius_M_csw0", 1.0, [&]() { plainForward.apply(out, in, false); });
 
-    CloverForward cloverForward(gauge, M5, mf, b5, csw, "MDWF_mobius_prof_clover_forward");
-    timeOperation("mobius_M_clover", 1.0, [&]() { cloverForward.apply(out, in, false); });
+        CloverForward cloverForward(gauge, M5, mf, b5, csw, "MDWF_mobius_prof_clover_forward");
+        timeOperation("mobius_M_clover", 1.0, [&]() { cloverForward.apply(out, in, false); });
 
-    CloverAdjoint cloverAdjoint(gauge, M5, mf, b5, csw, "MDWF_mobius_prof_clover_adjoint");
-    timeOperation("mobius_Mdag_clover", 1.0, [&]() { cloverAdjoint.apply(out, in, false); });
+        CloverAdjoint cloverAdjoint(gauge, M5, mf, b5, csw, "MDWF_mobius_prof_clover_adjoint");
+        timeOperation("mobius_Mdag_clover", 1.0, [&]() { cloverAdjoint.apply(out, in, false); });
 
-    Normal normal(commBase, cloverForward, cloverAdjoint, "MDWF_mobius_prof_normal");
-    timeOperation("mobius_MdagM_clover", 2.0, [&]() { normal.apply(out, in, false); });
+        Normal normal(commBase, cloverForward, cloverAdjoint, "MDWF_mobius_prof_normal");
+        timeOperation("mobius_MdagM_clover", 2.0, [&]() { normal.apply(out, in, false); });
 
-    // The scaffold CG has no mixed-precision or reliable-update logic, so the
-    // time-to-solution baseline is taken in double precision only.
-    if constexpr (std::is_same<floatT, double>::value) {
-        if (!runCG) {
-            return;
+        // The scaffold CG has no mixed-precision or reliable-update logic, so the
+        // time-to-solution baseline is taken in double precision only.
+        {
+            if (runCG && param.run_cg_unpreconditioned()) {
+            NormalAdapter adapter(normal);
+            MDWFCoupledCG<floatT, NormalAdapter> cg;
+            Spinor solution(commBase, "MDWF_mobius_prof_cg_solution");
+            Spinor check(commBase, "MDWF_mobius_prof_cg_check");
+
+            timer.reset();
+            timer.start();
+            const MDWFCoupledCGResult<floatT> result
+                = cg.invert(adapter, solution, in, param.cg_max_iter(), param.cg_tolerance(), true);
+            timer.stop();
+
+            normal.apply(check, solution, true);
+            check -= in;
+            const double trueResidual = std::sqrt(adapter.norm2(check) / std::max(adapter.norm2(in), 1.0));
+            const double seconds = timer.seconds();
+            const double msPerIteration = result.iterations > 0 ? timer.milliseconds() / result.iterations : 0.0;
+
+            rootLogger.info("MDWF_BENCH precision=", precision, " Ls=", Ls, " lattice=", latticeLabel,
+                            " op=cg_MdagM_clover_unpreconditioned",
+                            " iterations=", result.iterations, " converged=", result.converged,
+                            " tolerance=", param.cg_tolerance(), " residue=", result.residue,
+                            " true_residual=", trueResidual, " seconds=", seconds,
+                            " ms_per_iteration=", msPerIteration);
+            }
         }
-
-        NormalAdapter adapter(normal);
-        MDWFCoupledCG<floatT, NormalAdapter> cg;
-        Spinor solution(commBase, "MDWF_mobius_prof_cg_solution");
-        Spinor check(commBase, "MDWF_mobius_prof_cg_check");
-
-        timer.reset();
-        timer.start();
-        const MDWFCoupledCGResult<floatT> result
-            = cg.invert(adapter, solution, in, param.cg_max_iter(), param.cg_tolerance(), true);
-        timer.stop();
-
-        normal.apply(check, solution, true);
-        check -= in;
-        const double trueResidual = std::sqrt(adapter.norm2(check) / std::max(adapter.norm2(in), 1.0));
-        const double seconds = timer.seconds();
-        const double msPerIteration = result.iterations > 0 ? timer.milliseconds() / result.iterations : 0.0;
-
-        rootLogger.info("MDWF_BENCH precision=", precision, " Ls=", Ls, " lattice=", latticeLabel,
-                        " op=cg_MdagM_clover_unpreconditioned",
-                        " iterations=", result.iterations, " converged=", result.converged,
-                        " tolerance=", param.cg_tolerance(), " residue=", result.residue,
-                        " true_residual=", trueResidual, " seconds=", seconds,
-                        " ms_per_iteration=", msPerIteration);
     }
+
+    if (param.run_even_odd()) {
+        using EvenOdd = MDWFMobiusCloverEvenOdd<floatT, HaloDepth, HaloDepth, Ls>;
+        using SpinorE = typename EvenOdd::SpinorE;
+        using SpinorO = typename EvenOdd::SpinorO;
+        using SchurNormal = MDWFMobiusSchurNormalOperator<EvenOdd>;
+        using SchurAdapter = MDWFCoupledSolverAdapter<floatT, HaloDepth, HaloDepth, Ls, SchurNormal>;
+        const double half = 0.5;   // even-site fields: half the 5D sites
+
+        using EvenOddD = MDWFMobiusCloverEvenOdd<double, HaloDepth, HaloDepth, Ls>;
+        EvenOddD refEo(gaugeD, param.M5(), param.mf(), param.b5(), param.csw(), "MDWF_mobius_prof_refeo");
+        EvenOdd eo(gauge, M5, mf, b5, csw, "MDWF_mobius_prof_eo");
+        // double: eo.refresh(); float: blocks converted from the refreshed double operator (as in the mixed solver).
+        auto refreshEo = [&]() {
+            if constexpr (isDouble) {
+                eo.refresh();
+            } else {
+                refEo.refresh();
+                eo.refreshFrom(refEo);
+            }
+        };
+        SpinorE inE(commBase, "MDWF_mobius_prof_eo_ine");
+        SpinorE outE(commBase, "MDWF_mobius_prof_eo_oute");
+        SpinorO inO(commBase, "MDWF_mobius_prof_eo_ino");
+        SpinorO outO(commBase, "MDWF_mobius_prof_eo_outo");
+        refreshEo();
+        EvenOdd::split(inE, inO, in);
+        inE.updateAll();
+        inO.updateAll();
+
+        timeOperation(isDouble ? "eo_refresh" : "eo_refresh_from_double", 0.0, [&]() { refreshEo(); });
+        timeOperation("eo_Mee", 0.0, [&]() { eo.Mee(outE, inE); });
+        timeOperation("eo_MooInv", 0.0, [&]() { eo.MooInv(outO, inO); });
+        timeOperation("eo_Meo_hop", half, [&]() { eo.Meo(outE, inO); });
+        timeOperation("eo_schur", 2.0 * half, [&]() { eo.schur(outE, inE, false); });
+        timeOperation("eo_schur_dagger", 2.0 * half, [&]() { eo.schur(outE, inE, true); });
+        SchurNormal schurNormal(eo, commBase, "MDWF_mobius_prof_eo_normal");
+        timeOperation("eo_MhatdagMhat", 4.0 * half, [&]() { schurNormal.apply(outE, inE, false); });
+        // The rest of one CG iteration: halo update of the search vector, two reductions, three vector updates.
+        SchurAdapter schurAdapter(schurNormal);
+        timeOperation("eo_cg_updateAll", 0.0, [&]() { inE.updateAll(); });
+        timeOperation("eo_cg_norm2", 0.0, [&]() { volatile double n = schurAdapter.norm2(inE); (void)n; });
+        timeOperation("eo_cg_axpy", 0.0, [&]() {
+            outE.template axpyThisB<64>(static_cast<floatT>(1e-3), inE);
+        });
+
+        if constexpr (std::is_same<floatT, double>::value) {
+            if (runCG) {
+                MDWFCoupledCG<floatT, SchurAdapter> cg;
+                SpinorE solutionE(commBase, "MDWF_mobius_prof_eo_cg_sol");
+                timer.reset();
+                timer.start();
+                const MDWFCoupledCGResult<floatT> result
+                    = cg.invert(schurAdapter, solutionE, inE, param.cg_max_iter(), param.cg_tolerance(), true);
+                timer.stop();
+                rootLogger.info("MDWF_BENCH precision=", precision, " Ls=", Ls, " lattice=", latticeLabel,
+                                " op=cg_MhatdagMhat_clover_even_odd iterations=", result.iterations,
+                                " converged=", result.converged, " tolerance=", param.cg_tolerance(),
+                                " residue=", result.residue, " seconds=", timer.seconds(), " ms_per_iteration=",
+                                result.iterations > 0 ? timer.milliseconds() / result.iterations : 0.0);
+            }
+        }
+    }
+
 }
 
 template<size_t Ls>

@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include "MDWFFermionBoundary.h"
 #include "MDWFMobiusEvenOdd.h"
 
 #include <algorithm>
@@ -37,40 +38,6 @@
 #include <chrono>
 #include <string>
 #include <vector>
-
-// Copy of the gauge field with U_t(x) -> -U_t(x) on the last time slice (antiperiodic fermion BCs in time).
-template<size_t HaloDepth>
-struct MDWFAntiperiodicTimeLinks {
-    SU3Accessor<double, R18> _gauge;
-    int _ltLast;
-
-    MDWFAntiperiodicTimeLinks(Gaugefield<double, true, HaloDepth, R18> &gauge, int ltLast)
-        : _gauge(gauge.getAccessor()), _ltLast(ltLast) {}
-
-    __host__ __device__ SU3<double> operator()(gSiteMu siteMu) {
-        const SU3<double> link = _gauge.getLink(siteMu);
-        if (siteMu.mu == 3 && static_cast<int>(siteMu.coord.t) == _ltLast) {
-            return static_cast<double>(-1.0) * link;
-        }
-        return link;
-    }
-};
-
-template<size_t HaloDepth>
-void mdwfFermionGaugeField(Gaugefield<double, true, HaloDepth, R18> &fermionGauge,
-                           Gaugefield<double, true, HaloDepth, R18> &gauge, bool antiperiodicTime) {
-    typedef GIndexer<All, HaloDepth> GInd;
-    const LatticeData lat = GInd::getLatData();
-    if (lat.vol4 != lat.globvol4) {
-        throw std::runtime_error(stdLogger.fatal("MDWF fermion boundary phases are single-rank only"));
-    }
-    if (antiperiodicTime) {
-        fermionGauge.iterateOverBulkAllMu(MDWFAntiperiodicTimeLinks<HaloDepth>(gauge, static_cast<int>(lat.lt) - 1));
-    } else {
-        fermionGauge = gauge;
-    }
-    fermionGauge.updateAll();
-}
 
 // Unprojected 5D point source: e_a at x0 on slices 0 (P_+ part) and Ls-1 (P_- part), zero elsewhere.
 template<size_t HaloDepth, size_t Ls>
@@ -171,13 +138,14 @@ inline void mdwfResizeDirectionalCorrelators(std::array<std::vector<double>, 4> 
  * C_PP and C_J5q for a point source at (x, y, z, t) with the Mobius clover operator on fermionGauge
  * (already carrying the fermion boundary phases), via 12 even/odd preconditioned solves.
  */
-template<size_t HaloDepth, size_t Ls>
+template<size_t HaloDepth, size_t Ls, class SolverT = MDWFMobiusEvenOddSolver<double, HaloDepth, HaloDepth, Ls>>
 class MDWFResidualMassMeasurement {
 public:
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     using Spinor = MDWFSpinor<double, true, All, HaloDepth, Ls>;
     using CloverField = Spinorfield<double, true, All, HaloDepth, 18, 1>;
-    using Solver = MDWFMobiusEvenOddSolver<double, HaloDepth, HaloDepth, Ls>;
+    // MDWFMobiusEvenOddSolver (double) or MDWFMobiusEvenOddMixedSolver (MDWFMixedPrecisionSolver.h).
+    using Solver = SolverT;
 
 private:
     Gauge &_gauge;
