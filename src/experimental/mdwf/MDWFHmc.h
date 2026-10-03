@@ -53,7 +53,11 @@
 #include <cmath>
 #include <random>
 #include <stdexcept>
+#include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 struct MDWFHmcEnergy {
     double kinetic;
@@ -135,6 +139,35 @@ struct MDWFHmcSymanzikGaugeForce {
     }
 };
 
+/*
+ * Force terms of a fermion action, for the multi-level integrator. An action with forceTermCount() and
+ * forceTerm(i, ipdotHost, gaugeHost) splits its force into separately integrable terms (Hasenbusch factors, the strange
+ * RHMC, ...); any other action is a single term (its force()).
+ */
+template<class Action, class = void>
+struct MDWFHasForceTerms : std::false_type {};
+
+template<class Action>
+struct MDWFHasForceTerms<Action, std::void_t<decltype(std::declval<Action &>().forceTermCount())>> : std::true_type {};
+
+template<class Action>
+size_t mdwfForceTermCount(Action &action) {
+    if constexpr (MDWFHasForceTerms<Action>::value) {
+        return action.forceTermCount();
+    } else {
+        return 1;
+    }
+}
+
+template<class Action, class HostGauge>
+void mdwfForceTerm(Action &action, size_t term, HostGauge &ipdotHost, const HostGauge &gaugeHost) {
+    if constexpr (MDWFHasForceTerms<Action>::value) {
+        action.forceTerm(term, ipdotHost, gaugeHost);
+    } else {
+        action.force(ipdotHost, gaugeHost);
+    }
+}
+
 template<size_t HaloDepth, size_t Ls, class FermionAction>
 class MDWFHmcDriver {
 public:
@@ -164,6 +197,15 @@ private:
     double _fermionForceSeconds;
     double _maxGaugeForceRms;
     double _maxFermionForceRms;
+
+    // Multi-level integrator: force caches, valid while the gauge field is unchanged (_gaugeVersion counts evolveQ).
+    long _gaugeVersion;
+    std::vector<std::unique_ptr<Gauge>> _termForce;
+    std::vector<long> _termVersion;
+    std::vector<int> _termEvaluations;
+    std::vector<double> _termMaxForceRms;
+    std::unique_ptr<Gauge> _gaugeForce;
+    long _gaugeForceVersion;
 
     // sqrt of the mean over bulk links of -tr(K K) for anti-Hermitian K (cf. forceinfo in integrator.cpp).
     static double forceRms(const HostGauge &ipdot) {
@@ -207,7 +249,9 @@ public:
           _gaugeUpdates(0),
           _fermionForceSeconds(0.0),
           _maxGaugeForceRms(0.0),
-          _maxFermionForceRms(0.0) {
+          _maxFermionForceRms(0.0),
+          _gaugeVersion(0),
+          _gaugeForceVersion(-1) {
         const LatticeData lat = GInd::getLatData();
         if (lat.vol4 != lat.globvol4) {
             throw std::runtime_error(stdLogger.fatal("MDWF HMC scaffold is single-rank only"));
@@ -270,6 +314,7 @@ public:
     }
 
     void evolveQ(double stepsize) {
+        _gaugeVersion++;
         _gauge.iterateOverBulkAllMu(MDWFHmcEvolveQ<HaloDepth>(_gauge.getAccessor(), _momenta.getAccessor(), stepsize));
         _gauge.updateAll();
     }
@@ -334,8 +379,146 @@ public:
     }
 
     void integrate(int steps) {
-        integrate(steps, _param.gauge_substeps);
+        if (!_param.term_level.empty()) {
+            integrateMultiLevel(steps);
+        } else {
+            integrate(steps, _param.gauge_substeps);
+        }
     }
+
+    /*
+     * Nested (Sexton-Weingarten) leapfrog over the fermion force terms grouped by MDWFHmcParameters::term_level, with
+     * the gauge force on the finest level: level l evolves time dt in n_l steps h = dt / n_l, each
+     * P_l(h/2) [level l + 1 over h] P_l(h/2), P_l = all terms of level l, n_0 = steps, n_l = level_substeps[l - 1],
+     * the gauge level gauge_substeps steps of P_g(d/2) Q(d) P_g(d/2). A term's force is computed once per gauge
+     * configuration (cache by _gaugeVersion) and reused for the adjacent half kicks, so a level makes n + 1 force
+     * evaluations per evolution and level l in total n_0 n_1 ... n_l + 1 per trajectory. With one level, term_level
+     * all 0, this is the two-scale integrator above with the merged kicks split in two halves.
+     */
+    void integrateMultiLevel(int steps) {
+        const size_t terms = mdwfForceTermCount(_fermion);
+        const size_t levels = 1 + _param.level_substeps.size();
+        if (_param.term_level.size() != terms) {
+            throw std::runtime_error(stdLogger.fatal("MDWF multi-level integrator: term_level has ", _param.term_level.size(),
+                                                     " entries, the fermion action has ", terms, " force terms"));
+        }
+        for (const int l : _param.term_level) {
+            if (l < 0 || static_cast<size_t>(l) >= levels) {
+                throw std::runtime_error(stdLogger.fatal("MDWF multi-level integrator: term level ", l, " outside 0 ... ",
+                                                         levels - 1, " (level_substeps has ", levels - 1, " entries)"));
+            }
+        }
+        for (const int n : _param.level_substeps) {
+            if (n <= 0) {
+                throw std::runtime_error(stdLogger.fatal("MDWF multi-level integrator: level_substeps must be positive"));
+            }
+        }
+        if (steps <= 0) {
+            throw std::runtime_error(stdLogger.fatal("MDWF HMC integrate requires steps > 0"));
+        }
+        if (_termForce.size() != terms) {
+            _termForce.clear();
+            for (size_t t = 0; t < terms; t++) {
+                _termForce.push_back(std::make_unique<Gauge>(_commBase, _prefix + "_tforce" + std::to_string(t) + "x"));
+            }
+            _termVersion.assign(terms, -1);
+            _termEvaluations.assign(terms, 0);
+            _termMaxForceRms.assign(terms, 0.0);
+        }
+        if (!_gaugeForce) {
+            _gaugeForce = std::make_unique<Gauge>(_commBase, _prefix + "_gforcecache");
+        }
+        // The gauge field may have been set from outside since the last call.
+        std::fill(_termVersion.begin(), _termVersion.end(), -1);
+        _gaugeForceVersion = -1;
+        evolveLevel(0, _param.tau, steps);
+    }
+
+    // Force evaluations per fermion term and largest rms force per term (multi-level integrator).
+    const std::vector<int> &termForceEvaluations() const {
+        return _termEvaluations;
+    }
+
+    const std::vector<double> &termMaxForceRms() const {
+        return _termMaxForceRms;
+    }
+
+    void setIntegratorLevels(const std::vector<int> &termLevel, const std::vector<int> &levelSubsteps) {
+        _param.term_level = termLevel;
+        _param.level_substeps = levelSubsteps;
+    }
+
+private:
+    void kickTerm(size_t t, double stepsize) {
+        if (_termVersion[t] != _gaugeVersion) {
+            const auto start = std::chrono::steady_clock::now();
+            _fermionGauge.sync();
+            _gaugeHost = _fermionGauge.get();
+            mdwfForceTerm(_fermion, t, _ipdotHost, _gaugeHost);
+            const double rms = forceRms(_ipdotHost);
+            _termMaxForceRms[t] = std::max(_termMaxForceRms[t], rms);
+            _maxFermionForceRms = std::max(_maxFermionForceRms, rms);
+            *_termForce[t] = _ipdotHost;
+            _termVersion[t] = _gaugeVersion;
+            _termEvaluations[t]++;
+            _forceEvaluations++;
+            _fermionForceSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+        }
+        _momenta.iterateOverBulkAllMu(
+            MDWFHmcEvolveP<HaloDepth>(_momenta.getAccessor(), _termForce[t]->getAccessor(), stepsize));
+        _momenta.updateAll();
+    }
+
+    void kickLevel(size_t level, double stepsize) {
+        for (size_t t = 0; t < _param.term_level.size(); t++) {
+            if (static_cast<size_t>(_param.term_level[t]) == level) {
+                kickTerm(t, stepsize);
+            }
+        }
+    }
+
+    void kickGauge(double stepsize) {
+        if (_gaugeForceVersion != _gaugeVersion) {
+            if (_param.symanzik_gauge) {
+                _gaugeForce->iterateOverBulkAllMu(MDWFHmcSymanzikGaugeForce<HaloDepth>(_gauge.getAccessor(), _param.beta));
+            } else {
+                _gaugeForce->iterateOverBulkAllMu(MDWFHmcWilsonGaugeForce<HaloDepth>(_gauge.getAccessor(), _param.beta));
+            }
+            _ipdotHost = *_gaugeForce;
+            _maxGaugeForceRms = std::max(_maxGaugeForceRms, forceRms(_ipdotHost));
+            _gaugeForceVersion = _gaugeVersion;
+            _gaugeUpdates++;
+        }
+        _momenta.iterateOverBulkAllMu(
+            MDWFHmcEvolveP<HaloDepth>(_momenta.getAccessor(), _gaugeForce->getAccessor(), stepsize));
+        _momenta.updateAll();
+    }
+
+    void evolveGaugeLevel(double dt) {
+        const int m = std::max(1, _param.gauge_substeps);
+        const double d = dt / static_cast<double>(m);
+        for (int k = 0; k < m; k++) {
+            kickGauge(0.5 * d);
+            evolveQ(d);
+            kickGauge(0.5 * d);
+        }
+    }
+
+    void evolveLevel(size_t level, double dt, int n) {
+        const double h = dt / static_cast<double>(n);
+        const size_t levels = 1 + _param.level_substeps.size();
+        for (int k = 0; k < n; k++) {
+            kickLevel(level, 0.5 * h);
+            if (level + 1 < levels) {
+                evolveLevel(level + 1, h, _param.level_substeps[level]);
+            } else {
+                evolveGaugeLevel(h);
+            }
+            kickLevel(level, 0.5 * h);
+        }
+    }
+
+public:
 
     int forceEvaluations() const {
         return _forceEvaluations;

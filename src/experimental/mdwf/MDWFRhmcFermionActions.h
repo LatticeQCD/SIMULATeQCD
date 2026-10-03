@@ -429,6 +429,20 @@ public:
         mdwfHmcAddHostForce<HaloDepth>(ipdotHost, _ipdotPart);
     }
 
+    // Force terms for the multi-level integrator: the first action's terms, then the second's.
+    size_t forceTermCount() {
+        return mdwfForceTermCount(_first) + mdwfForceTermCount(_second);
+    }
+
+    void forceTerm(size_t i, HostGauge &ipdotHost, const HostGauge &gaugeHost) {
+        const size_t n1 = mdwfForceTermCount(_first);
+        if (i < n1) {
+            mdwfForceTerm(_first, i, ipdotHost, gaugeHost);
+        } else {
+            mdwfForceTerm(_second, i - n1, ipdotHost, gaugeHost);
+        }
+    }
+
     // The first action's pseudofermion (the driver's phi() accessor).
     typename First::Spinor &phi() {
         return _first.phi();

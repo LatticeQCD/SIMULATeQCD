@@ -72,6 +72,16 @@ struct MDWFHmcParameters {
     MDWFRhmcParameters rhmc;  // used only by the one-flavour RHMC action
     bool symanzik_gauge;      // HMC driver: tree-level Symanzik instead of Wilson gauge action (MDWFHmc.h)
     bool antiperiodic_t;      // HMC driver: antiperiodic temporal fermion BCs (MDWFFermionBoundary.h); false = periodic
+    // Even/odd Hasenbusch ladder (MDWFEvenOddHasenbuschTwoFlavorFermionAction): intermediate masses between mf and
+    // pv_mass, strictly increasing; empty = the single ratio det(Mhat_f^+ Mhat_f) / det(Mhat_1^+ Mhat_1).
+    std::vector<double> hasenbusch_masses;
+    // Multi-level integrator (MDWFHmcDriver::integrateMultiLevel), used when term_level is not empty: term_level[t] =
+    // level of fermion force term t (0 = coarsest; terms as the action's forceTerm order, e.g. Hasenbusch factors
+    // lightest first, then the strange RHMC); level 0 makes `steps` steps per trajectory, level l > 0 makes
+    // level_substeps[l - 1] steps per step of level l - 1, and the gauge force sits below the finest fermion level with
+    // gauge_substeps steps. Empty term_level = the original two-scale integrator.
+    std::vector<int> term_level;
+    std::vector<int> level_substeps;
 };
 
 /*

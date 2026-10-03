@@ -39,6 +39,12 @@
  * MDWFFermionBoundary.h), default 0 = periodic (as all runs before it). The
  * Lanczos interval checks then measure the operator with those BCs.
  *
+ * Hasenbusch: with even_odd = 1, hasenbusch_masses = m_1 ... m_k (strictly between mf and pv_mass) splits the light
+ * pair into k + 1 ratio factors (MDWFEvenOddHasenbuschTwoFlavorFermionAction), each with its own pseudofermion;
+ * Multi-level integrator: term_level = one level per fermion force term (Hasenbusch factors lightest first, then the
+ * strange RHMC; 0 = coarsest, `fermion_steps` steps), level_substeps = steps per step of the level above for levels
+ * 1, 2, ...; the gauge force sits below the finest level with gauge_substeps. Unset = the two-scale integrator.
+ *
  * With even_odd = 1 the run uses MDWFEvenOddTwoPlusOneHmc (EVEN_ODD_DESIGN.md):
  * even-site pseudofermions on the Schur complement Mhat^+ Mhat, plus the
  * log det M_oo ratio term for c_sw != 0. The strange-quark intervals then refer
@@ -62,6 +68,7 @@
 #include <fstream>
 #include <iomanip>
 #include <random>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -85,6 +92,9 @@ public:
     Parameter<int> check_steps;
     Parameter<int> symanzik_gauge;
     Parameter<int> antiperiodic_t;
+    DynamicParameter<double> hasenbusch_masses;
+    DynamicParameter<int> term_level;
+    DynamicParameter<int> level_substeps;
     Parameter<int> even_odd;
     Parameter<double> tau;
     Parameter<int> fermion_steps;
@@ -118,6 +128,9 @@ public:
         addDefault(check_steps, "check_steps", 500);
         addDefault(symanzik_gauge, "symanzik_gauge", 0);
         addDefault(antiperiodic_t, "antiperiodic_t", 0);
+        addOptional(hasenbusch_masses, "hasenbusch_masses");
+        addOptional(term_level, "term_level");
+        addOptional(level_substeps, "level_substeps");
         addDefault(even_odd, "even_odd", 0);
         addDefault(tau, "tau", 0.5);
         addDefault(fermion_steps, "fermion_steps", 20);
@@ -255,6 +268,15 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     param.precision = runParam.precision();
     param.symanzik_gauge = runParam.symanzik_gauge() != 0;
     param.antiperiodic_t = runParam.antiperiodic_t() != 0;
+    if (runParam.hasenbusch_masses.isSet()) {
+        param.hasenbusch_masses = runParam.hasenbusch_masses.get();
+    }
+    if (runParam.term_level.isSet()) {
+        param.term_level = runParam.term_level.get();
+    }
+    if (runParam.level_substeps.isSet()) {
+        param.level_substeps = runParam.level_substeps.get();
+    }
     param.rhmc.ms = runParam.ms();
     param.rhmc.lambda_low_s = runParam.lambda_low_s();
     param.rhmc.lambda_high_s = runParam.lambda_high_s();
@@ -278,6 +300,28 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     const bool saveConf = runParam.GaugefileName_out.isSet();
     const std::string confPath = saveConf ? runParam.measurements_dir() + "/" + runParam.GaugefileName_out() : "";
 
+    if (!param.hasenbusch_masses.empty()) {
+        std::ostringstream ladder;
+        ladder << param.mf;
+        for (const double m : param.hasenbusch_masses) {
+            ladder << " < " << m;
+        }
+        ladder << " < " << param.pv_mass;
+        rootLogger.info("MDWF 2+1 HMC run: light Hasenbusch ladder ", ladder.str(), " (",
+                        param.hasenbusch_masses.size() + 1, " ratio factors)");
+    }
+    if (!param.term_level.empty()) {
+        std::ostringstream levels;
+        for (const int l : param.term_level) {
+            levels << l << " ";
+        }
+        levels << "| level substeps ";
+        for (const int n : param.level_substeps) {
+            levels << n << " ";
+        }
+        rootLogger.info("MDWF 2+1 HMC run: multi-level integrator, term levels ", levels.str(), "| gauge substeps ",
+                        param.gauge_substeps);
+    }
     rootLogger.info("MDWF 2+1 HMC run: ", EvenOdd ? "even/odd preconditioned (Mhat^+ Mhat, even-site pseudofermions)"
                                                   : "unpreconditioned (M^+ M)", " actions");
     rootLogger.info("MDWF 2+1 HMC run: ", param.symanzik_gauge ? "Symanzik" : "Wilson", " beta = ", param.beta, ", M5 = ", param.M5, ", mf = ", param.mf,
@@ -423,6 +467,10 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     rootLogger.info("  <plaquette> = ", plaqStat.mean, " +- ", plaqStat.naiveError, " (naive), +- ",
                     plaqStat.blockedError, " (blocked)");
     rootLogger.info("  total fermion forces = ", hmc.forceEvaluations(), ", gauge updates = ", hmc.gaugeUpdates());
+    for (size_t t = 0; t < hmc.termForceEvaluations().size(); t++) {
+        rootLogger.info("  force term ", t, " (level ", param.term_level.at(t), "): ", hmc.termForceEvaluations()[t],
+                        " evaluations, largest rms force ", hmc.termMaxForceRms()[t]);
+    }
 
     if (saveConf) {
         rootLogger.info("MDWF 2+1 HMC run: writing final configuration ", confPath);
@@ -452,7 +500,13 @@ int main(int argc, char **argv) {
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
 
-        if (param.even_odd() != 0) {
+        const bool hasenbusch = param.hasenbusch_masses.isSet() && param.hasenbusch_masses.numberValues() > 0;
+        if (hasenbusch && param.even_odd() == 0) {
+            throw std::runtime_error(stdLogger.fatal("hasenbusch_masses needs even_odd = 1"));
+        }
+        if (param.even_odd() != 0 && hasenbusch) {
+            runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddHasenbuschTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);
+        } else if (param.even_odd() != 0) {
             runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);
         } else {
             runMDWFTwoPlusOneHmcRun<8, MDWFTwoPlusOneHmc<HaloDepth, 8>, false>(commBase, param);

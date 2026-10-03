@@ -270,8 +270,14 @@ void mdwfEvenOddStoreOddDetRatioForce(Gaugefield<double, false, HaloDepth, R18> 
                                             name + "_store");
 }
 
+/*
+ * Two-flavour even-site ratio det(Mhat_a^+ Mhat_a) / det(Mhat_b^+ Mhat_b) of two boundary masses a (numerator, the
+ * lighter one in a Hasenbusch ladder) and b (denominator), all other operator parameters equal, including the clover
+ * term S_oo = 2 [log det W(a) - log det W(b)] for c_sw != 0. With a = mf and b = pv_mass it is the Pauli-Villars light
+ * pair (MDWFEvenOddPauliVillarsTwoFlavorFermionAction); a chain of these is the Hasenbusch ladder.
+ */
 template<size_t HaloDepth, size_t Ls>
-class MDWFEvenOddPauliVillarsTwoFlavorFermionAction {
+class MDWFEvenOddTwoFlavorRatioFermionAction {
 public:
     using Types = MDWFEvenOddTypes<HaloDepth, Ls>;
     using EvenOdd = typename Types::EvenOdd;
@@ -286,6 +292,8 @@ public:
 private:
     CommunicationBase &_commBase;
     MDWFHmcParameters _param;
+    double _massNum;
+    double _massDen;
     std::string _prefix;
     EvenOdd _eoF;
     EvenOdd _eo1;
@@ -301,9 +309,10 @@ private:
     double _lastDetAction;
     int _lastIterations;
 
-    static MDWFHmcParameters validated(const MDWFHmcParameters &param) {
-        if (!(param.pv_mass > 0.0)) {
-            throw std::runtime_error(stdLogger.fatal("MDWF even/odd Pauli-Villars action requires pv_mass > 0"));
+    static MDWFHmcParameters validated(const MDWFHmcParameters &param, double massNum, double massDen) {
+        if (!(massDen > 0.0) || !(massDen > massNum)) {
+            throw std::runtime_error(stdLogger.fatal("MDWF even/odd two-flavour ratio requires a denominator mass > 0 "
+                                                     "and above the numerator mass, got ", massNum, " / ", massDen));
         }
         return param;
     }
@@ -324,14 +333,16 @@ private:
     }
 
 public:
-    MDWFEvenOddPauliVillarsTwoFlavorFermionAction(CommunicationBase &commBase, Gauge &gauge,
-                                                  const MDWFHmcParameters &param,
-                                                  const std::string &name = "MDWF_hmc_eopv")
+    MDWFEvenOddTwoFlavorRatioFermionAction(CommunicationBase &commBase, Gauge &gauge, const MDWFHmcParameters &param,
+                                           double massNum, double massDen,
+                                           const std::string &name = "MDWF_hmc_eoratio")
         : _commBase(commBase),
-          _param(validated(param)),
+          _param(validated(param, massNum, massDen)),
+          _massNum(massNum),
+          _massDen(massDen),
           _prefix(mdwfHmcInstancePrefix(name)),
-          _eoF(gauge, param.M5, param.mf, param.b5, param.csw, _prefix + "_eof"),
-          _eo1(gauge, param.M5, param.pv_mass, param.b5, param.csw, _prefix + "_eo1"),
+          _eoF(gauge, param.M5, massNum, param.b5, param.csw, _prefix + "_eof"),
+          _eo1(gauge, param.M5, massDen, param.b5, param.csw, _prefix + "_eo1"),
           _normalF(_eoF, commBase, _prefix + "_nrmf"),
           _normal1(_eo1, commBase, _prefix + "_nrm1"),
           _adapterF(_normalF),
@@ -412,6 +423,165 @@ public:
 
     int lastIterations() const {
         return _lastIterations;
+    }
+
+    double massNumerator() const {
+        return _massNum;
+    }
+
+    double massDenominator() const {
+        return _massDen;
+    }
+};
+
+// The light pair det(Mhat_f^+ Mhat_f) / det(Mhat_1^+ Mhat_1), masses mf and pv_mass.
+template<size_t HaloDepth, size_t Ls>
+class MDWFEvenOddPauliVillarsTwoFlavorFermionAction : public MDWFEvenOddTwoFlavorRatioFermionAction<HaloDepth, Ls> {
+public:
+    using Base = MDWFEvenOddTwoFlavorRatioFermionAction<HaloDepth, Ls>;
+    using Gauge = typename Base::Gauge;
+
+    MDWFEvenOddPauliVillarsTwoFlavorFermionAction(CommunicationBase &commBase, Gauge &gauge,
+                                                  const MDWFHmcParameters &param,
+                                                  const std::string &name = "MDWF_hmc_eopv")
+        : Base(commBase, gauge, param, param.mf, param.pv_mass, name) {}
+};
+
+/*
+ * Hasenbusch ladder of the two-flavour light determinant ratio (MDWF_DETERMINANT_FACTORIZATION.md section 3):
+ *
+ *   det(Mhat_f^+ Mhat_f) / det(Mhat_1^+ Mhat_1) = prod_{i=0}^{k} det(Mhat(m_i)^+ Mhat(m_i)) / det(Mhat(m_{i+1})^+ Mhat(m_{i+1})),
+ *   m_0 = mf < m_1 < ... < m_k < m_{k+1} = pv_mass,   m_1 ... m_k = MDWFHmcParameters::hasenbusch_masses,
+ *
+ * an identity of determinants (adjacent endpoints cancel; the clover log det W terms telescope as well), with one
+ * pseudofermion per factor. Each factor's force is smaller and smoother than the single ratio's, so the factors can
+ * be integrated on different time scales (factor 0, the lightest, carries the most fluctuating, smallest force).
+ * With no intermediate masses it is the single ratio, identical to MDWFEvenOddPauliVillarsTwoFlavorFermionAction.
+ */
+template<size_t HaloDepth, size_t Ls>
+class MDWFEvenOddHasenbuschTwoFlavorFermionAction {
+public:
+    using Factor = MDWFEvenOddTwoFlavorRatioFermionAction<HaloDepth, Ls>;
+    using Spinor = typename Factor::Spinor;
+    using Gauge = Gaugefield<double, true, HaloDepth, R18>;
+    using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
+
+private:
+    std::string _prefix;
+    std::vector<double> _masses;
+    std::vector<std::unique_ptr<Factor>> _factors;
+    HostGauge _ipdotPart;
+
+    static std::vector<double> ladder(const MDWFHmcParameters &param) {
+        std::vector<double> m{param.mf};
+        m.insert(m.end(), param.hasenbusch_masses.begin(), param.hasenbusch_masses.end());
+        m.push_back(param.pv_mass);
+        for (size_t i = 0; i + 1 < m.size(); i++) {
+            if (!(m[i + 1] > m[i])) {
+                throw std::runtime_error(stdLogger.fatal("MDWF Hasenbusch ladder must increase strictly from mf to "
+                                                         "pv_mass; mass ", i + 1, " = ", m[i + 1], " after ", m[i]));
+            }
+        }
+        return m;
+    }
+
+public:
+    MDWFEvenOddHasenbuschTwoFlavorFermionAction(CommunicationBase &commBase, Gauge &gauge,
+                                                const MDWFHmcParameters &param,
+                                                const std::string &name = "MDWF_hmc_eohb")
+        : _prefix(mdwfHmcInstancePrefix(name)),
+          _masses(ladder(param)),
+          _ipdotPart(commBase, _prefix + "_ipdot_part") {
+        for (size_t i = 0; i + 1 < _masses.size(); i++) {
+            _factors.push_back(std::make_unique<Factor>(commBase, gauge, param, _masses[i], _masses[i + 1],
+                                                        _prefix + "_f" + std::to_string(i)));
+        }
+    }
+
+    size_t factorCount() const {
+        return _factors.size();
+    }
+
+    Factor &factor(size_t i) {
+        return *_factors.at(i);
+    }
+
+    const std::vector<double> &masses() const {
+        return _masses;
+    }
+
+    void heatbath(uint4 *randState) {
+        for (auto &f : _factors) {
+            f->heatbath(randState);
+        }
+    }
+
+    double noiseNorm2() const {
+        double sum = 0.0;
+        for (const auto &f : _factors) {
+            sum += f->noiseNorm2();
+        }
+        return sum;
+    }
+
+    double action() {
+        double sum = 0.0;
+        for (auto &f : _factors) {
+            sum += f->action();
+        }
+        return sum;
+    }
+
+    double lastPseudofermionAction() const {
+        double sum = 0.0;
+        for (const auto &f : _factors) {
+            sum += f->lastPseudofermionAction();
+        }
+        return sum;
+    }
+
+    double lastDetAction() const {
+        double sum = 0.0;
+        for (const auto &f : _factors) {
+            sum += f->lastDetAction();
+        }
+        return sum;
+    }
+
+    // Force of all factors (a single-time-scale integrator).
+    void force(HostGauge &ipdotHost, const HostGauge &gaugeHost) {
+        _factors.front()->force(ipdotHost, gaugeHost);
+        for (size_t i = 1; i < _factors.size(); i++) {
+            _factors[i]->force(_ipdotPart, gaugeHost);
+            mdwfHmcAddHostForce<HaloDepth>(ipdotHost, _ipdotPart);
+        }
+    }
+
+    // Force of factor i alone (a multi-level integrator puts the factors on separate time scales).
+    void forceFactor(size_t i, HostGauge &ipdotHost, const HostGauge &gaugeHost) {
+        _factors.at(i)->force(ipdotHost, gaugeHost);
+    }
+
+    // Force terms for the multi-level integrator (MDWFHmc.h): one per factor, lightest first.
+    size_t forceTermCount() const {
+        return _factors.size();
+    }
+
+    void forceTerm(size_t i, HostGauge &ipdotHost, const HostGauge &gaugeHost) {
+        forceFactor(i, ipdotHost, gaugeHost);
+    }
+
+    // The lightest factor's pseudofermion (the driver's phi() accessor).
+    Spinor &phi() {
+        return _factors.front()->phi();
+    }
+
+    int lastIterations() const {
+        int m = 0;
+        for (const auto &f : _factors) {
+            m = std::max(m, f->lastIterations());
+        }
+        return m;
     }
 };
 
@@ -642,3 +812,22 @@ using MDWFEvenOddTwoPlusOneFermionAction =
 
 template<size_t HaloDepth, size_t Ls>
 using MDWFEvenOddTwoPlusOneHmc = MDWFHmcDriver<HaloDepth, Ls, MDWFEvenOddTwoPlusOneFermionAction<HaloDepth, Ls>>;
+
+// 2+1 with the light pair as a Hasenbusch ladder (MDWFHmcParameters::hasenbusch_masses).
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddHasenbuschTwoPlusOneFermionAction =
+    MDWFSumFermionAction<HaloDepth, MDWFEvenOddHasenbuschTwoFlavorFermionAction<HaloDepth, Ls>,
+                         MDWFEvenOddOneFlavorRhmcFermionAction<HaloDepth, Ls>>;
+
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddHasenbuschTwoPlusOneHmc =
+    MDWFHmcDriver<HaloDepth, Ls, MDWFEvenOddHasenbuschTwoPlusOneFermionAction<HaloDepth, Ls>>;
+
+// The light Hasenbusch ladder alone (two flavours), for tests.
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddHasenbuschTwoFlavorHmc =
+    MDWFHmcDriver<HaloDepth, Ls, MDWFEvenOddHasenbuschTwoFlavorFermionAction<HaloDepth, Ls>>;
+
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddPauliVillarsTwoFlavorHmc =
+    MDWFHmcDriver<HaloDepth, Ls, MDWFEvenOddPauliVillarsTwoFlavorFermionAction<HaloDepth, Ls>>;

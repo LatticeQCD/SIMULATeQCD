@@ -19,6 +19,9 @@ Analysis, per configuration with all 12 components:
 Per beta (read from 'b<4 digits>' in the configuration name):
   - HotQCD-style estimate: mean over the plateau of <C_J5q(d)> / <C_PP(d)>, correlators averaged over the
     configurations first, with a delete-one jackknife error over configurations;
+  - the same ratio R(d) = <C_J5q(d)> / <C_PP(d)> fitted to a constant over the plateau with uncorrelated
+    weights 1/sigma(d)^2 (sigma(d): jackknife error of R(d)), the fit repeated on every jackknife sample with
+    the same weights for its error;
   - mean of the per-configuration values, with its jackknife error.
 With a second variant: per-configuration ratios m_res(B) / m_res(A) over the common configurations, their
 jackknife mean and error, and the ratio of total solve times.
@@ -144,6 +147,40 @@ def averaged_estimate(corrs, lo, hi):
     return full, math.sqrt((n - 1) / n * sum((j - mean) ** 2 for j in jk))
 
 
+def fitted_estimate(corrs, lo, hi):
+    """Uncorrelated constant fit of R(d) = <C_J5q(d)>/<C_PP(d)> over [lo, hi]; (fit, jackknife error, chi2/dof)."""
+    n = len(corrs)
+    nd = len(corrs[0][0])
+
+    def ratios(sel):
+        pp = [sum(corrs[i][0][d] for i in sel) for d in range(nd)]
+        j5 = [sum(corrs[i][1][d] for i in sel) for d in range(nd)]
+        return [j5[d] / pp[d] for d in range(lo, hi + 1)]
+
+    full = ratios(range(n))
+    if n < 2:
+        return sum(full) / len(full), float('nan'), float('nan')
+    samples = [ratios([i for i in range(n) if i != k]) for k in range(n)]
+    sigma = []
+    for j in range(len(full)):
+        m = sum(sm[j] for sm in samples) / n
+        sigma.append(math.sqrt((n - 1) / n * sum((sm[j] - m) ** 2 for sm in samples)))
+    if min(sigma) <= 0.0:   # noiseless data (e.g. the selftest): plain mean
+        sigma = [1.0] * len(full)
+    w = [1.0 / x ** 2 for x in sigma]
+
+    def fit(r):
+        return sum(wi * ri for wi, ri in zip(w, r)) / sum(w)
+
+    c = fit(full)
+    jk = [fit(sm) for sm in samples]
+    mean = sum(jk) / n
+    err = math.sqrt((n - 1) / n * sum((j - mean) ** 2 for j in jk))
+    dof = len(full) - 1
+    chi2 = sum(((ri - c) / si) ** 2 for ri, si in zip(full, sigma)) / dof if dof > 0 else float('nan')
+    return c, err, chi2
+
+
 def analyze(directory, label, direction, lo, hi, profile, out=sys.stdout):
     configs, incomplete = load(directory)
     print(f'== {label} ({directory}): {len(configs)} complete configurations, {incomplete} incomplete; '
@@ -160,11 +197,14 @@ def analyze(directory, label, direction, lo, hi, profile, out=sys.stdout):
                   + ' '.join(f'{j5[d] / pp[d]:.1e}' for d in range(0, len(pp), 2)), file=out)
     for beta, names in sorted(by_beta.items()):
         avg, avg_err = averaged_estimate([corrs[n] for n in names], lo, hi)
+        fit, fit_err, chi2 = fitted_estimate([corrs[n] for n in names], lo, hi)
         mean, err = jackknife([per[n][1] for n in names])
         hours = sum(per[n][3] for n in names) / len(names) / 3600
         print(f'  beta {beta:.3f}: m_res = {avg:.4e} +- {avg_err:.1e} (configuration-averaged correlators, '
               f'jackknife), {mean:.4e} +- {err:.1e} (mean of per-configuration values); {len(names)} '
               f'configurations, {hours:.2f} h of solves per configuration', file=out)
+        print(f'  beta {beta:.3f}: m_res = {fit:.4e} +- {fit_err:.1e} (constant fit of the averaged ratio over '
+              f'd = {lo}..{hi}, weights 1/sigma^2, chi2/dof (uncorrelated) {chi2:.2f})', file=out)
     return per
 
 
@@ -232,6 +272,8 @@ def selftest():
         avg, avg_err = averaged_estimate(corrs, 1, 3)
         check('averaged-correlator estimate (equal C_PP, so the mean ratio)', avg, 2e-4)
         check('its jackknife error (two configurations: |r_A - r_B| / 2)', avg_err, 1e-4)
+        fit, fit_err, _ = fitted_estimate(corrs, 1, 3)
+        check('constant fit of the averaged ratio (d-independent ratio: the same value)', fit, 2e-4)
         mean, err = jackknife([1.0, 2.0, 3.0, 4.0])
         check('jackknife mean of 1..4', mean, 2.5)
         check('jackknife error of 1..4 (= standard error)', err, math.sqrt(5.0 / 12.0))

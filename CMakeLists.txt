@@ -880,7 +880,7 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
 
     # Even/odd (Schur-complement) RHMC targets: also instantiate the Even/Odd spinor layouts.
     foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest mdwfTwoPlusOneHmcRun
-                           mdwfAntiperiodicHmcTest)
+                           mdwfAntiperiodicHmcTest mdwfHasenbuschTest)
         set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         add_SIMULATeQCD_executable(${MDWF_EO_TARGET} src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         set_SIMULATeQCD_property(${MDWF_EO_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
