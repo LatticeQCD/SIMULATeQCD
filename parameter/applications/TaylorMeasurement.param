@@ -14,6 +14,8 @@
 #    Eigenvectorfile: Eigenvalues and Eigenvectors to be read in
 #
 # num_random_vectors: The number of random vectors in the trace estimation for the operators
+#            num_rhs: Number of random vectors solved simultaneously (1, 2, 4, 5 or 8; default 2).
+#                     num_random_vectors is rounded up to a multiple of this.
 #     valence_masses: The masses at which to measure all operators
 #       operator_ids: The operator ids to measure.
 #                     The ids represent the measured operator directly in the decimal representation.

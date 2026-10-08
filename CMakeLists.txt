@@ -972,10 +972,12 @@ set_SIMULATeQCD_property(sublatticeUpdates PROPERTIES RUNTIME_OUTPUT_DIRECTORY "
 SIMULATeQCD_target_compile_definitions(sublatticeUpdates PRIVATE HALODEPTH_1=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(applications sublatticeUpdates)
 
+# NSTACKS 5 offers a good speed up for both NVIDIA and HIP, and allows multiples
+# of 10 for the number of random vectors you sample
 set_SIMULATeQCD_gpu_backend(src/applications/main_taylorMeasurement.cpp)
 add_SIMULATeQCD_executable(taylorMeasurement src/applications/main_taylorMeasurement.cpp ${SOURCE_FILES_TAYLORMEASUREMENT})
 set_SIMULATeQCD_property(taylorMeasurement PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
-SIMULATeQCD_target_compile_definitions(taylorMeasurement PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 ${ALL_NSTACK} NSTACKS_32=1 ${ALL_LAYOUTS})
+SIMULATeQCD_target_compile_definitions(taylorMeasurement PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_U3R14=1 COMP_R14=1 ${ALL_NSTACK} NSTACKS_5=1 NSTACKS_32=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications taylorMeasurement)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_wilsonLinesCorrelatorMultiGPUStacked.cpp src/modules/gaugeFixing/gfix.cpp src/modules/observables/wilsonLineCorrelatorMultiGPU.cpp src/modules/hyp/hypSmearing.cpp)

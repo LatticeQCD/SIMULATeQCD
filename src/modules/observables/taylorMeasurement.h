@@ -22,6 +22,7 @@ public:
 
     Parameter<int> num_random_vectors;
     Parameter<int> num_toread_vectors;
+    Parameter<int> num_rhs;
     Parameter<int> seed;
 
     // Dslash related values
@@ -58,6 +59,12 @@ public:
         add(valence_masses, "valence_masses");
         add(num_random_vectors, "num_random_vectors");
         add(num_toread_vectors, "num_toread_vectors");
+        // Number of random vectors solved simultaneously (the NStacks template
+        // parameter of the stacked CG). Must be one of the values dispatched in
+        // main_taylorMeasurement.cpp (NSTACKS_<n> must also be enabled for the
+        // taylorMeasurement target in CMakeLists.txt). num_random_vectors is rounded up to a
+        // multiple of this.
+        addDefault(num_rhs, "num_rhs", 2);
         addDefault(seed, "seed", 0);
         addOptional(eigen_file, "eigen_file");
         addOptional(output_file, "output_file");

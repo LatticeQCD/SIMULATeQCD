@@ -11,6 +11,53 @@
 #include "../modules/hisq/hisqSmearing.h"
 #include "../testing/testing.h" // for comparing stuff
 
+const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
+const size_t HaloDepthSpin = 4;
+typedef float floatT; // Define the precision here
+typedef float PREC;
+
+// Everything that depends on the number of simultaneous right-hand sides (NStacks)
+template<size_t NStacks>
+int runTaylorMeasurement(TaylorMeasurementParameters &param, CommunicationBase &commBase,
+                         Gaugefield<floatT,true,HaloDepthGauge,R18> &gauge, grnd_state<true> &d_rand) {
+
+    rootLogger.info("Solving for ", NStacks, " right-hand sides simultaneously");
+
+    // Read the Eigenvalues and Eigenvectors
+    Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
+    rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
+    eigenpairs.readEigenpairsFromFile(param.eigen_file());
+    eigenpairs.updateAll();
+
+    for (double mass : param.valence_masses.get()) {
+        rootLogger.info("Using mass ", mass);
+
+        TaylorMeasurement<floatT, true, HaloDepthGauge, HaloDepthSpin, NStacks> taylor_measurement(gauge, eigenpairs, param, mass, param.use_naik_epsilon(), d_rand);
+        try {
+            for (const auto& id : param.operator_ids.get()) {
+                taylor_measurement.insertOperator(id);
+            }
+        }
+        catch (const std::runtime_error& e) {
+            rootLogger.error(e.what());
+            return 1;
+        }
+        rootLogger.info("Operators added");
+        taylor_measurement.write_output_file_header();
+        taylor_measurement.computeOperators();
+        rootLogger.info("Operators computed");
+
+        std::vector<DerivativeOperatorMeasurement> results;
+        taylor_measurement.collectResults(results);
+        rootLogger.info("Results collected");
+        for (DerivativeOperatorMeasurement &meas : results) {
+            rootLogger.info("ID: ", meas.operatorId, ", Measurement: ", meas.measurement, ", Error: ", meas.std);
+        }
+        
+    }
+    return 0;
+}
+
 // main
 int main(int argc, char **argv) {
 
@@ -28,12 +75,6 @@ int main(int argc, char **argv) {
     // if (commBase.getNumberProcesses() == 1) {
     //     commBase.forceHalos(true);
     // }
-
-    const size_t HaloDepthGauge = 2; // >= 1 for multi gpu
-    const size_t HaloDepthSpin = 4;
-    const size_t NStacks = 2; // NOTE: this only works for NStacks=8 after the blocksize fix
-    typedef float floatT; // Define the precision here
-    typedef float PREC;
 
     rootLogger.info("STARTING Taylor Measurement:");
 
@@ -64,15 +105,6 @@ int main(int argc, char **argv) {
     smearing.SmearAll();
 
     
-    // Read the Eigenvalues and Eigenvectors
-    Eigenpairs<PREC,true,Even,HaloDepthGauge,HaloDepthSpin,NStacks> eigenpairs(commBase);
-    rootLogger.info("Read eigenvectors and eigenvalues from ", param.eigen_file());
-    eigenpairs.readEigenpairsFromFile(param.eigen_file());
-    eigenpairs.updateAll();
-
-    
-    
-
     if (param.valence_masses.numberValues() == 0) {
         rootLogger.error("No valence masses specified, aborting");
         return 1;
@@ -91,31 +123,20 @@ int main(int argc, char **argv) {
 
         
 
-    for (double mass : param.valence_masses.get()) {
-        rootLogger.info("Using mass ", mass);
-
-        TaylorMeasurement<floatT, true, HaloDepthGauge, HaloDepthSpin, NStacks> taylor_measurement(gauge, eigenpairs, param, mass, param.use_naik_epsilon(), d_rand);
-        try {
-            for (const auto& id : param.operator_ids.get()) {
-                taylor_measurement.insertOperator(id);
-            }
-        }
-        catch (const std::runtime_error& e) {
-            rootLogger.error(e.what());
+    // NStacks is a template parameter, so only the values instantiated here can be chosen
+    int status;
+    switch (param.num_rhs()) {
+        case 1: status = runTaylorMeasurement<1>(param, commBase, gauge, d_rand); break;
+        case 2: status = runTaylorMeasurement<2>(param, commBase, gauge, d_rand); break;
+        case 4: status = runTaylorMeasurement<4>(param, commBase, gauge, d_rand); break;
+        case 5: status = runTaylorMeasurement<5>(param, commBase, gauge, d_rand); break;
+        case 8: status = runTaylorMeasurement<8>(param, commBase, gauge, d_rand); break;
+        default:
+            rootLogger.error("num_rhs = ", param.num_rhs(), " not supported; choose one of 1, 2, 4, 5, 8");
             return 1;
-        }
-        rootLogger.info("Operators added");
-        taylor_measurement.write_output_file_header();
-        taylor_measurement.computeOperators();
-        rootLogger.info("Operators computed");
-
-        std::vector<DerivativeOperatorMeasurement> results;
-        taylor_measurement.collectResults(results);
-        rootLogger.info("Results collected");
-        for (DerivativeOperatorMeasurement &meas : results) {
-            rootLogger.info("ID: ", meas.operatorId, ", Measurement: ", meas.measurement, ", Error: ", meas.std);
-        }
-        
+    }
+    if (status != 0) {
+        return status;
     }
 
     // output file
