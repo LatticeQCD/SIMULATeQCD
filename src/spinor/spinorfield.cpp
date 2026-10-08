@@ -726,6 +726,7 @@ template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStack
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<2,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,2>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<3,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,3>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<4,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,4>&);\
+template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<5,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,5>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<8,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,8>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<10,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,10>&);\
 template void Spinorfield<floatT,false,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<12,0,0>(const Spinorfield<floatT,false,LO,HALOSPIN,12>&);\
@@ -752,6 +753,7 @@ template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackD
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<2,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,2>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<3,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,3>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<4,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,4>&);\
+template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<5,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,5>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<8,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,8>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<10,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,10>&);\
 template void Spinorfield<floatT,true,LO,HALOSPIN,STACKS>::copyFromStackToStackDevice<12,0,0>(const Spinorfield<floatT,true,LO,HALOSPIN,12>&);\
