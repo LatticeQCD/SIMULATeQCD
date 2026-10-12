@@ -43,6 +43,16 @@ struct sitexyzt {
         return stream;
     }
 
+    __device__ __host__ inline sitexyzt getSpatialPart() {
+        sitexyzt r = {x, y, z, 0};
+        return r;
+    }
+
+    __device__ __host__ inline int getNormSquared() {
+        int r2 = x*x + y*y + z*z;
+        return r2;
+    }
+
 };
 
 struct gSite {

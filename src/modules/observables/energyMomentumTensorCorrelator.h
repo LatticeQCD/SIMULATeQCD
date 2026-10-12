@@ -95,24 +95,6 @@ struct EMTtimesEMTStar {
 
 };
 
-template<class floatT>
-struct DivideBySqrtVolume {
-
-    LatticeContainerAccessor accessor;
-    typedef GIndexer<All> GInd;
-    int globvol4 = GInd::getLatData().globvol4;
-
-    DivideBySqrtVolume(LatticeContainerAccessor firstAccessor) : accessor(firstAccessor) {}
-
-    __device__ __host__ inline Tensor4x4Symx4x4SymComplex<floatT> operator()(gSite site) {
-
-        Tensor4x4Symx4x4SymComplex<floatT> element(accessor.getElement<Tensor4x4Symx4x4SymComplex<floatT>>(site));
-
-        return element / sqrt(globvol4);
-    }
-
-};
-
 
 template<class floatT, size_t HaloDepth>
 void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
@@ -164,7 +146,13 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
 
     // divide by sqrt of the 4D global volume as
     timer.start();
-    G.template iterateOverBulk<All, HaloDepth>(DivideBySqrtVolume<floatT>(G.getAccessor()));
+    floatT divisor;
+    if (matsubara) {
+        divisor = sqrt(GInd::getLatData().vol3);
+    } else {
+        divisor = sqrt(GInd::getLatData().vol4);
+    }
+    G.template iterateOverBulk<All, HaloDepth>(DivideByValue<Tensor4x4Symx4x4SymComplex<floatT>, int>(G.getAccessor(), divisor));
     timer.stop();
     rootLogger.debug("   G normalization took      ", timer.seconds(), "s.");
 

@@ -26,22 +26,9 @@ struct floatTVector {
     }
 };
 
-__device__ __host__ inline sitexyzt getSpatialPart(sitexyzt rt) {
-    sitexyzt r = {rt[0], rt[1], rt[2], 0};
-    return r;
-}
-
-__device__ __host__ inline int getNormSquared(sitexyzt rt) {
-    int r2 = 0;
-    for (int i = 0; i <= 3; i++) {
-        r2 += rt[i] * rt[i];
-    }
-    return r2;
-}
-
 template<class floatT>
 __device__ __host__ inline floatT getNorm(sitexyzt rt) {
-    int normSquared = getNormSquared(rt);
+    int normSquared = rt.getNormSquared();
     floatT norm = sqrt(normSquared);
     return norm;
 }
@@ -49,9 +36,7 @@ __device__ __host__ inline floatT getNorm(sitexyzt rt) {
 template<class floatT>
 __device__ __host__ inline floatTVector<floatT> normalize(sitexyzt rt) {
     floatT norm = getNorm<floatT>(rt);
-
     floatTVector<floatT> normalized = {rt[0]/norm, rt[1]/norm, rt[2]/norm, rt[3]/norm};
-
     return normalized;
 }
 
@@ -138,8 +123,8 @@ __device__ __host__ inline int deltaSpace(int mu, int nu) {
 template<class floatT>
 __device__ __host__ inline floatT deltaSpaceTransversal(sitexyzt rt, int mu, int nu) {
     
-    sitexyzt r = getSpatialPart(rt);
-    int r2 = getNormSquared(r);
+    sitexyzt r = rt.getSpatialPart();
+    int r2 = r.getNormSquared();
     
     if (r2 == 0) {
         return (2.0/3.0) * deltaSpace(mu, nu); // because r_mu*r_nu/r^2 approaches delta^s_munu/d at 0
@@ -152,10 +137,10 @@ __device__ __host__ inline floatT deltaSpaceTransversal(sitexyzt rt, int mu, int
 template<class floatT, HalfProjector halfProjector>
 __device__ __host__ inline floatT halfProjectorFunction(sitexyzt rt, int mu, int nu) {
     
-    sitexyzt r = getSpatialPart(rt);
+    sitexyzt r = rt.getSpatialPart();
     sitexyzt u = {0, 0, 0, 1};
     
-    int r2 = getNormSquared(r);
+    int r2 = r.getNormSquared();
     
     floatT result = 0.0;
     
@@ -199,10 +184,10 @@ __device__ __host__ inline floatT halfProjectorFunction(sitexyzt rt, int mu, int
 template<class floatT, Projector projector>
 __device__ __host__ inline floatT projectorFunction(sitexyzt rt, int mu, int nu, int rho, int sigma) {
 
-    sitexyzt r = getSpatialPart(rt);
+    sitexyzt r = rt.getSpatialPart();
     sitexyzt u = {0, 0, 0, 1};
     
-    int r2 = getNormSquared(r);
+    int r2 = r.getNormSquared();
     
     floatT result = 0.0;
     
@@ -481,7 +466,7 @@ class TensorDecomposition {
             GXFieldHost.copyFromLatticeContainer(GXFieldDevice);
     
             // reduce to r^2-dependent function and store in array
-            reduceR2averageTau(GXFieldHost.getAccessor(), componentFunctions[idx]);
+            GXFieldHost.reduceR2averageTau(componentFunctions[idx], getR2max());
         }
 
         // helper function: get the r^2-dependent, tau-dependent component function for a given projector
@@ -510,111 +495,9 @@ class TensorDecomposition {
             GXFieldHost.copyFromLatticeContainer(GXFieldDevice);
     
             // reduce to r^2-dependent function and store in array
-            reduceR2generalTau(GXFieldHost.getAccessor(), componentFunctions[idx]);
-        }
-    
-        // helper function: reduce a lattice container to an r^2-dependent (spatial) array, sum time coordinate
-        void reduceR2averageTau(
-            LatticeContainerAccessor latticeAccessor,
-            std::vector<COMPLEX(floatT)>& array
-        ) {
-            typedef GIndexer<All> GInd;
-    
-            int lx = GInd::getLatData().lx;
-            int ly = GInd::getLatData().ly;
-            int lz = GInd::getLatData().lz;
-            int lt = GInd::getLatData().lt;
-    
-            int r2max = getR2max();
-    
-            // set array to zero initially
-            for (int r2 = 0; r2 < array.size(); r2++) {
-                array[r2] = 0.0;
-            }
-    
-            for (int x = 0; x < lx; x++)
-            for (int y = 0; y < ly; y++)
-            for (int z = 0; z < lz; z++)
-            for (int t = 0; t < lt; t++) {
-                sitexyzt site(x, y, z, t);
-                sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
-                int r2 = getNormSquared(getSpatialPart(rt));
-                if (r2 < r2max + 1) {
-                    array[r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
-                }
-            }
-
-            // divide by r2 counts to account for degeneracy
-            std::vector<int> r2Counts = std::vector<int>(r2max + 1);
-            getR2Counts(r2Counts);
-            
-            for (int r2 = 0; r2 < array.size(); r2++) {
-                if (r2Counts[r2] != 0) {
-                    array[r2] /= r2Counts[r2];
-                }
-            }
-
-            // divide by temporal extend of the lattice as it is a temporal average
-            int globLT = GInd::getLatData().globLT;
-            for (int r2 = 0; r2 < array.size(); r2++) {
-                array[r2] /= globLT;
-            }
+            GXFieldHost.reduceR2generalTau(componentFunctions[idx], getTauMax(), getR2max());
         }
 
-        // helper function: reduce a lattice container to an r^2-dependent (spatial) array, keep time coordinates separate
-        void reduceR2generalTau(
-            LatticeContainerAccessor latticeAccessor,
-            std::vector<std::vector<COMPLEX(floatT)>>& array
-        ) {
-            typedef GIndexer<All> GInd;
-    
-            int lx = GInd::getLatData().lx;
-            int ly = GInd::getLatData().ly;
-            int lz = GInd::getLatData().lz;
-            int lt = GInd::getLatData().lt;
-    
-            int tauMax = getTauMax();
-            int r2max = getR2max();
-    
-            // set array to zero initially
-            for (int t = 0; t < array.size(); t++)
-            for (int r2 = 0; r2 < array[0].size(); r2++){
-                array[t][r2] = 0.0;
-            }
-
-            for (int x = 0; x < lx; x++)
-            for (int y = 0; y < ly; y++)
-            for (int z = 0; z < lz; z++)
-            for (int t = 0; t < tauMax + 1; t++) {
-                sitexyzt site(x, y, z, t);
-                sitexyzt rHalf = GInd::getLatData().globalPosSymAroundHalf(site);
-                sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
-                int r2 = getNormSquared(getSpatialPart(rt));
-
-                if (r2 < r2max + 1) {
-                    // values for tau = rHalf[3] in (0,N_tau/2) (exluding 0, excluding N_tau/2) are counted twice
-                    // e.g. the values for tau=1 and tau=N_tau-1 are equal up to a sign
-                    // therefore, in these cases, their values are averaged
-                    // if (rHalf[3] > 0 && rHalf[3] < GInd::getLatData().lt / 2.0) {
-                        // array[rHalf[3]][r2] += 0.5 * latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
-                    // } else {
-                        array[rHalf[3]][r2] += latticeAccessor.getElement<COMPLEX(floatT)>(GInd::getSite(x,y,z,t));
-                    // }
-                }
-            }
-
-            // divide by r2 counts to account for degeneracy
-            std::vector<int> r2Counts = std::vector<int>(r2max + 1);
-            getR2Counts(r2Counts);
-            
-            for (int t = 0; t < array.size(); t++)
-            for (int r2 = 0; r2 < array[t].size(); r2++) {
-                if (r2Counts[r2] != 0) {
-                    array[t][r2] /= r2Counts[r2];
-                }
-            }
-        }
-    
     public:
         // standard constructor
         TensorDecomposition(CommunicationBase& commBase) {}
@@ -689,7 +572,7 @@ class TensorDecomposition {
             for (int z = 0; z < lz; z++) {
                 sitexyzt site(x, y, z, 0); // t is irrelevant for r^2
                 sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
-                int r2 = getNormSquared(getSpatialPart(rt)); // getSpatialPart to be safe
+                int r2 = rt.getSpatialPart().getNormSquared(); // getSpatialPart to be safe
                 if (r2 < r2max + 1) {
                     r2Counts[r2] += 1;
                 }

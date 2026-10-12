@@ -377,6 +377,109 @@ public:
         markerEnd();
     }
 
+    // helper function: reduce a lattice container to an r^2-dependent (spatial) array, sum time coordinate
+    void reduceR2averageTau(
+        std::vector<elemType>& array,
+        int r2max
+    ) {
+        typedef GIndexer<All> GInd;
+
+        LatticeContainerAccessor latticeAccessor = getAccessor();
+
+        int lx = GInd::getLatData().lx;
+        int ly = GInd::getLatData().ly;
+        int lz = GInd::getLatData().lz;
+        int lt = GInd::getLatData().lt;
+
+        // set array to zero initially
+        for (int r2 = 0; r2 < array.size(); r2++) {
+            array[r2] = 0.0;
+        }
+
+        std::vector<int> r2Counts = std::vector<int>(r2max + 1);
+        for (int r2 = 0; r2 < r2Counts.size(); r2++) {
+            r2Counts[r2] = 0;
+        }
+
+        for (int x = 0; x < lx; x++)
+        for (int y = 0; y < ly; y++)
+        for (int z = 0; z < lz; z++)
+        for (int t = 0; t < lt; t++) {
+            sitexyzt site(x, y, z, t);
+            sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
+            int r2 = rt.getSpatialPart().getNormSquared();
+            if (r2 < r2max + 1) {
+                array[r2] += latticeAccessor.getElement<elemType>(GInd::getSite(x,y,z,t));
+                // r2Counts should only count the spatial r2, but the loop runs over t as well, so just count when t=0
+                if (t == 0) {
+                    r2Counts[r2] += 1;
+                }
+            }
+        }
+
+        // divide by r2 counts to account for degeneracy and Nt to account for 
+        int globLT = GInd::getLatData().globLT;
+        for (int r2 = 0; r2 < array.size(); r2++) {
+            if (r2Counts[r2] != 0) {
+                array[r2] /= (r2Counts[r2] * globLT);
+            }
+        }
+
+    }
+
+    // helper function: reduce a lattice container to an r^2-dependent (spatial) array, keep time coordinates separate
+    void reduceR2generalTau(
+        std::vector<std::vector<elemType>>& array,
+        int tauMax,
+        int r2max
+    ) {
+        typedef GIndexer<All> GInd;
+
+        LatticeContainerAccessor latticeAccessor = getAccessor();
+
+        int lx = GInd::getLatData().lx;
+        int ly = GInd::getLatData().ly;
+        int lz = GInd::getLatData().lz;
+        int lt = GInd::getLatData().lt;
+
+        // set array to zero initially
+        for (int t = 0; t < array.size(); t++)
+        for (int r2 = 0; r2 < array[0].size(); r2++){
+            array[t][r2] = 0.0;
+        }
+
+        std::vector<int> r2Counts = std::vector<int>(r2max + 1);
+        for (int r2 = 0; r2 < r2Counts.size(); r2++) {
+            r2Counts[r2] = 0;
+        }
+
+        for (int x = 0; x < lx; x++)
+        for (int y = 0; y < ly; y++)
+        for (int z = 0; z < lz; z++)
+        for (int t = 0; t < tauMax + 1; t++) {
+            sitexyzt site(x, y, z, t);
+            sitexyzt rHalf = GInd::getLatData().globalPosSymAroundHalf(site);
+            sitexyzt rt = GInd::getLatData().globalPosRelativeToOrigin(site);
+            int r2 = rt.getSpatialPart().getNormSquared();
+
+            if (r2 < r2max + 1) {
+                array[rHalf[3]][r2] += latticeAccessor.getElement<elemType>(GInd::getSite(x,y,z,t));
+                // r2Counts should only count the spatial r2, but the loop runs over t as well, so just count when t=0
+                if (t == 0) {
+                    r2Counts[r2] += 1;
+                }
+            }
+        }
+
+        // divide by r2 counts to account for degeneracy
+        for (int t = 0; t < array.size(); t++)
+        for (int r2 = 0; r2 < array[t].size(); r2++) {
+            if (r2Counts[r2] != 0) {
+                array[t][r2] /= r2Counts[r2];
+            }
+        }
+    }
+
     LatticeContainerAccessor getAccessor() const { return LatticeContainerAccessor(ContainerArray->getPointer()); }
 
     gMemoryPtr<onDevice> getMemPointer() { return ContainerArray; }
@@ -548,6 +651,22 @@ template<bool onDeviceRHS>
 void LatticeContainer<onDevice, elemType>::copyFromLatticeContainer(LatticeContainer<onDeviceRHS, elemType> &latticeContainerRHS) {
     this->ContainerArray->copyFrom(latticeContainerRHS.get_ContainerArrayPtr(), latticeContainerRHS.get_ContainerArrayPtr()->getSize());
 }
+
+template<typename elemType, class scalarType>
+struct DivideByValue {
+
+    LatticeContainerAccessor accessor;
+    scalarType divisor;
+
+    DivideByValue(LatticeContainerAccessor firstAccessor, scalarType _divisor) :
+        accessor(firstAccessor), divisor(_divisor) {}
+
+    __device__ __host__ inline elemType operator()(gSite site) {
+        elemType element(accessor.getElement<elemType>(site));
+        return element / divisor;
+    }
+
+};
 
 template<typename elemType>
 struct compareLatticeContainers {
