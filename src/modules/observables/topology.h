@@ -196,3 +196,33 @@ struct topChargeDensKernel {
 
 };
 
+template<class floatT, size_t HaloDepth, bool onDevice, bool improved, bool improved_O6>
+struct topChargeDensKernelComplex {
+    //Gauge accessor to access the gauge field
+    SU3Accessor<floatT> gAcc;
+
+    topChargeDens<floatT,HaloDepth,onDevice> topChDens;
+    topChargeDens_imp<floatT,HaloDepth,onDevice> topChDens_imp;
+    topChargeDens_imp_imp<floatT,HaloDepth,onDevice> topChDens_imp_imp;
+    typedef GIndexer<All, HaloDepth> GInd;
+
+    topChargeDensKernelComplex(Gaugefield<floatT, onDevice, HaloDepth> &gauge) : gAcc(gauge.getAccessor()),
+    topChDens(gAcc), topChDens_imp(gAcc), topChDens_imp_imp(gAcc) {}
+
+    __device__ __host__ inline COMPLEX(floatT) operator()(gSite site) {
+        COMPLEX(floatT) result;
+        if (improved_O6) {
+            result = topChDens_imp_imp(site);
+        } 
+        else if (improved) {
+            result = topChDens_imp(site);
+        } 
+        else {
+            result = topChDens(site);
+        }
+
+        return result;
+    }
+
+};
+

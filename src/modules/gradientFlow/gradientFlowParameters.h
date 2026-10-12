@@ -55,6 +55,8 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> energyMomentumTensorCorrFunctionsAveragedTau;
     Parameter<bool> energyMomentumTensorCorrFunctionsGeneralTau;
     Parameter<bool> energyMomentumTensorCorrFunctionsGeneralTauMatsubara;
+    Parameter<bool> topChargeImpCorrFunctionsGeneralTau;
+    Parameter<bool> topChargeImpCorrFunctionsGeneralTauMatsubara;
     Parameter<int> binsize; //! the binsize used in the blocking method
 
     Parameter<bool> PolyakovLoopCorrelator;
@@ -121,6 +123,8 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(energyMomentumTensorCorrFunctionsAveragedTau, "energyMomentumTensorCorrFunctionsAveragedTau", false);
         addDefault(energyMomentumTensorCorrFunctionsGeneralTau, "energyMomentumTensorCorrFunctionsGeneralTau", false);
         addDefault(energyMomentumTensorCorrFunctionsGeneralTauMatsubara, "energyMomentumTensorCorrFunctionsGeneralTauMatsubara", false);
+        addDefault(topChargeImpCorrFunctionsGeneralTau, "topChargeImpCorrFunctionsGeneralTau", false);
+        addDefault(topChargeImpCorrFunctionsGeneralTauMatsubara, "topChargeImpCorrFunctionsGeneralTauMatsubara", false);
         addDefault(ColorElectricCorrTimeSlices_naive, "ColorElectricCorrTimeSlices_naive", false);
         addDefault(ColorElectricCorrTimeSlices_clover, "ColorElectricCorrTimeSlices_clover", false);
         addDefault(ColorMagneticCorrTimeSlices_naive, "ColorMagneticCorrTimeSlices_naive", false);
