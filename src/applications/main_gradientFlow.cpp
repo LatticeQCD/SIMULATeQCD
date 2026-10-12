@@ -19,6 +19,7 @@
 #include "../modules/observables/blocking.h"
 #include "../modules/observables/energyMomentumTensor.h"
 #include "../modules/observables/energyMomentumTensorCorrelator.h"
+#include "../modules/observables/topologicalChargeCorrelator.h"
 #include "../modules/observables/colorElectricCorr.h"
 #include "../modules/observables/colorMagneticCorr.h"
 #include "../modules/gaugeFixing/gfix.h"
@@ -378,6 +379,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     Weinberg<floatT, USE_GPU, HaloDepth> weinberg(gauge);
     EnergyMomentumTensor<floatT, USE_GPU, HaloDepth> EMT(gauge);
     EnergyMomentumTensorCorrelator<floatT, HaloDepth> EMTCorr(commBase);
+    TopologicalChargeCorrelator<floatT, HaloDepth> TopChargeCorr(commBase);
 
     BlockingMethod<floatT, true, HaloDepth, floatT, topChargeDens_imp<floatT, HaloDepth, true>, CorrType<floatT>> BlockTopChDens(gauge);
     BlockingMethod<floatT, true, HaloDepth, floatT, EMTtrace<floatT, true, HaloDepth>, CorrType<floatT>> BlockBulk(gauge);
@@ -419,7 +421,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     }
     
     std::vector<int> vecCounts;
-    if (lp.energyMomentumTensorCorrFunctionsAveragedTau() || lp.energyMomentumTensorCorrFunctionsGeneralTau()) {
+    if (lp.energyMomentumTensorCorrFunctionsAveragedTau() || lp.energyMomentumTensorCorrFunctionsGeneralTau() || lp.topChargeImpCorrFunctionsGeneralTau()) {
         hsize_t r2max = EMTCorr.getR2max();
         vecCounts = std::vector<int>(r2max+1);
         EMTCorr.getR2Counts(vecCounts);
@@ -440,6 +442,13 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         hsize_t r2max = EMTCorr.getR2max();
         hsize_t tauMax = EMTCorr.getTauMax();
         vecEMTCorrGeneralTau = std::vector<std::vector<std::vector<COMPLEX(PREC)>>>(14, std::vector<std::vector<COMPLEX(PREC)>>(tauMax + 1, std::vector<COMPLEX(PREC)>(r2max+1)));
+    }
+
+    std::vector<std::vector<COMPLEX(PREC)>> vecTopChargeCorrGeneralTau;
+    if (lp.topChargeImpCorrFunctionsGeneralTau()) {
+        hsize_t r2max = TopChargeCorr.getR2max();
+        hsize_t tauMax = TopChargeCorr.getTauMax();
+        vecTopChargeCorrGeneralTau = std::vector<std::vector<COMPLEX(PREC)>>(tauMax + 1, std::vector<COMPLEX(PREC)>(r2max+1));
     }
 
     std::vector<Matrix4x4Sym<floatT>> EMTUBlock(numBlocks*numBlocks*numBlocks*lp.latDim()[3]);
@@ -753,6 +762,22 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             hdf5File.writeEMTCorrGeneralTauData(vecEMTCorrGeneralTau, vecCounts, lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara());
             hdf5Timer.stop();
             rootLogger.debug("writeEMTCorrData took  ", hdf5Timer.seconds(), "s.");
+        }
+
+        if (lp.topChargeImpCorrFunctionsGeneralTau() && gradFlow.checkIfMeasuredTime()) {
+            StopWatch<true> topChargeCorrTimer;
+            StopWatch<true> hdf5Timer;
+
+            topChargeCorrTimer.start();
+            TopChargeCorr.template topChargeCorrGeneralTau<true, false>(gauge, vecTopChargeCorrGeneralTau, lp.topChargeImpCorrFunctionsGeneralTauMatsubara());
+            topChargeCorrTimer.stop();
+            rootLogger.debug("topChargeCorr took           ", topChargeCorrTimer.seconds(), "s.");
+            
+            // write data in hdf5 file anyway (regardless of useHDF5 setting)
+            hdf5Timer.start();
+            hdf5File.writeTopChargeGeneralTauData(vecTopChargeCorrGeneralTau, vecCounts, lp.topChargeImpCorrFunctionsGeneralTauMatsubara());
+            hdf5Timer.stop();
+            rootLogger.debug("writeTopChargeCorrData took  ", hdf5Timer.seconds(), "s.");
         }
 
         if (lp.shear_bulk_corr_block() && gradFlow.checkIfMeasuredTime()) {
