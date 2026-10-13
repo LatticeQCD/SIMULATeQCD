@@ -5,8 +5,8 @@
  *
  * This is plain (not zMobius) Mobius: constant b5, c5 per slice, with the
  * project's chosen RBC/UKQCD convention c5 = b5 - 1. It does not implement
- * s-dependent bs[s]/cs[s], clover (csw != 0) for this path, or a production
- * M5/mf/b5 choice. It does not change MDWFFifthDimCoupling,
+ * s-dependent bs[s]/cs[s] or a production M5/mf/b5 choice; the clover
+ * (csw != 0) forms are added further below (MDWFMobiusCloverLinearOperator). It does not change MDWFFifthDimCoupling,
  * MDWFFifthDimAdjointCoupling, MDWFWilsonSlice, MDWFOperator,
  * MDWFAdjointOperator.h, or MDWFPhysicalMapping.h: the composition below
  * calls them unmodified.

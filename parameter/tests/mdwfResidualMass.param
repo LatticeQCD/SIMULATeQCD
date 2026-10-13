@@ -14,7 +14,8 @@
 #        direction: analysis direction x | y | z | t | spatial (sum over x, y, z); every solve is
 #                   contracted along all four, so changing it needs no new solves. Finite T: spatial
 #   plateau_min/max: distances from the source (along direction) averaged for m_res
-#        precision: CG relative residual of the even/odd normal equation
+#        precision: CG stopping residual of the even/odd normal equation, |r| <= precision * max(|Mhat^+ bhat_e|, 1)
+#                   (not the full-system residual; that is recorded per solve as true_residual in the component files)
 #        Gaugefile: NERSC configuration; without it: start = random | unit (tests), seed
 # measurements_dir, output_name: per-distance correlators and m_res(d)
 #        smearing: kernel links none | fat7_u3 | fat7_su3 (HISQ level-1 fat7 + U(3) / SU(3) projection),

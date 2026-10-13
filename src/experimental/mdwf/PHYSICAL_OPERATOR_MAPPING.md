@@ -378,7 +378,7 @@ adjoint (`MDWFAdjointLinearOperator` / `applyMDWFAdjointCloverOperator` at
 This does not implement `zMobius`, clover for the Mobius path, or any
 CG/RHMC/HMC wiring; it does not validate against gauge-dependent
 domain-wall physics. Cluster-validated (`n2dgx01`, commit `fb95e13`,
-`Ls = 8`, `M5 = 1.8`, `mf = 0.05`): `mass = 1.1`, `maxAdjointRegressionDiff`
+`Ls = 8`, `M5 = 1.8`, `mf = 0.05`): `mass = 1.1` (the old 2 - M5/2 kernel mass, before the kernel-mass fix; the current mapping gives 4 - M5 = 2.2), `maxAdjointRegressionDiff`
 (`b5 = 1` vs Shamir adjoint) `= 3.19744e-14`, `adjointRelDiff` (`b5 = 1.5`
 coupled-5D identity) `= 9.85783e-17`; see `TODO.md`.
 

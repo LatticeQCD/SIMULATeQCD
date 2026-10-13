@@ -29,9 +29,21 @@
  *
  * Solver: mixed_precision = 1 uses single-precision CG iterations with
  * double-precision reliable updates (MDWFMixedPrecisionSolver.h; update when
- * the residual has dropped by reliable_delta); it stops at the same true
- * residual as the double solver, so results and component files are
- * interchangeable (the solver is not part of the component key).
+ * the residual has dropped by reliable_delta). Both solvers stop on the same
+ * criterion: the double-precision residual of the even/odd normal equation
+ * Mhat^+ Mhat x_e = Mhat^+ bhat_e, |r| <= precision * max(|Mhat^+ bhat_e|, 1)
+ * (recursive in the double solver, recomputed at reliable updates in the mixed
+ * one). That residue is not the residual of the full system; each solve also
+ * records the true residual |b - M x| / |b| of the unpreconditioned 5D system.
+ *
+ * Component files: key line (physics parameters; neither solver nor precision,
+ * so files of earlier runs stay readable), "a iterations residue seconds",
+ * the correlators, and a trailing line
+ *   meta true_residual R refresh_seconds S import_seconds S warmup 0|1 precision P solver double|mixed
+ * (files written before 2026-10-04 have no meta line). On resume a component
+ * whose meta line names another precision or solver is fatal, so results of
+ * different tolerances or solvers are never mixed silently; one without a meta
+ * line is accepted with a note in the log.
  *
  * Regression test against Grid/GPT: with reference_file set, the raw per-slice
  * correlators (all four directions) are compared with a reference file
@@ -126,9 +138,11 @@ std::string mdwfResidualMassComponentPath(const std::string &base, int a) {
     return path.str();
 }
 
-// Reads a finished component; false if the file does not exist. A file written with other parameters is fatal.
+// Reads a finished component; false if the file does not exist. A file written with other parameters, or (meta
+// line) with another solver precision or solver, is fatal.
 bool mdwfReadResidualMassComponent(const std::string &path, const std::string &key, int a,
-                                   const std::array<size_t, 4> &extents, MDWFResidualMassComponent &c) {
+                                   const std::array<size_t, 4> &extents, MDWFResidualMassComponent &c,
+                                   double precision, const std::string &solverName) {
     std::ifstream in(path);
     if (!in) {
         return false;
@@ -162,13 +176,51 @@ bool mdwfReadResidualMassComponent(const std::string &path, const std::string &k
     if (!in || fileA != a) {
         throw std::runtime_error(stdLogger.fatal("MDWF m_res: ", path, " is incomplete or corrupt"));
     }
+    c.trueResidual = c.refreshSeconds = c.importSeconds = -1.0;
+    c.warmup = false;
+    std::string word;
+    if (!(in >> word) || word != "meta") {
+        rootLogger.info("MDWF m_res: ", path, " has no meta line (written before 2026-10-04): solver precision and "
+                        "true residual unknown");
+        return true;
+    }
+    double filePrecision = -1.0;
+    std::string fileSolver;
+    std::string name;
+    while (in >> name) {
+        if (name == "true_residual") {
+            in >> c.trueResidual;
+        } else if (name == "refresh_seconds") {
+            in >> c.refreshSeconds;
+        } else if (name == "import_seconds") {
+            in >> c.importSeconds;
+        } else if (name == "warmup") {
+            int w = 0;
+            in >> w;
+            c.warmup = w != 0;
+        } else if (name == "precision") {
+            in >> filePrecision;
+        } else if (name == "solver") {
+            in >> fileSolver;
+        } else {
+            std::string ignored;
+            in >> ignored;
+        }
+    }
+    if (std::abs(filePrecision - precision) > 1e-12 * precision || fileSolver != solverName) {
+        throw std::runtime_error(stdLogger.fatal("MDWF m_res: ", path, " was solved with precision ", filePrecision,
+                                                 " and the ", fileSolver, " solver, this run uses ", precision,
+                                                 " and ", solverName, "; use another output directory"));
+    }
     return true;
 }
 
 // Written to a temporary file and renamed, so a killed job never leaves a partial component behind.
-// Format: key line; "a iterations residue seconds"; per direction mu: "mu L", then L lines "n C_PP C_J5q".
+// Format: key line; "a iterations residue seconds"; per direction mu: "mu L", then L lines "n C_PP C_J5q"; then
+// "meta true_residual R refresh_seconds S import_seconds S warmup 0|1 precision P solver NAME".
 void mdwfWriteResidualMassComponent(const std::string &path, const std::string &key, int a,
-                                    const MDWFResidualMassComponent &c) {
+                                    const MDWFResidualMassComponent &c, double precision,
+                                    const std::string &solverName) {
     const std::string tmp = path + ".tmp";
     {
         std::ofstream out(tmp, std::ios::out | std::ios::trunc);
@@ -180,6 +232,9 @@ void mdwfWriteResidualMassComponent(const std::string &path, const std::string &
                 out << n << " " << c.pp[mu][n] << " " << c.j5q[mu][n] << "\n";
             }
         }
+        out << "meta true_residual " << c.trueResidual << " refresh_seconds " << c.refreshSeconds
+            << " import_seconds " << c.importSeconds << " warmup " << (c.warmup ? 1 : 0) << " precision "
+            << precision << " solver " << solverName << "\n";
         out.flush();
         if (!out) {
             throw std::runtime_error(stdLogger.fatal("MDWF m_res cannot write ", tmp));
@@ -334,12 +389,14 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
         keyStream << " smearing " << param.smearing() << " x" << param.smear_steps();
     }
     const std::string key = keyStream.str();
+    const std::string solverName = Mixed ? "mixed" : "double";
+    const double precision = param.precision();
 
     std::vector<MDWFResidualMassComponent> components(12);
     std::vector<bool> present(12, false);
     for (int a = 0; a < 12; a++) {
         present[a] = mdwfReadResidualMassComponent(mdwfResidualMassComponentPath(outputPath, a), key, a, extents,
-                                                   components[a]);
+                                                   components[a], precision, solverName);
     }
     MDWFResidualMassMeasurement<HaloDepth, Ls, Solver> measurement(fermionGauge, param.M5(), param.mf(), param.b5(),
                                                                    param.csw(), "MDWF_mres_meas");
@@ -354,14 +411,14 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
             continue;
         }
         // Another job on a disjoint range may have finished it meanwhile.
-        if (mdwfReadResidualMassComponent(path, key, a, extents, components[a])) {
+        if (mdwfReadResidualMassComponent(path, key, a, extents, components[a], precision, solverName)) {
             present[a] = true;
             continue;
         }
         components[a] = measurement.measureComponent(a, src[0], src[1], src[2], src[3], param.max_iter(),
                                                      param.precision());
         if (commBase.IamRoot()) {
-            mdwfWriteResidualMassComponent(path, key, a, components[a]);
+            mdwfWriteResidualMassComponent(path, key, a, components[a], precision, solverName);
         }
         present[a] = true;
     }
@@ -370,7 +427,7 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
     for (int a = 0; a < 12; a++) {
         if (!present[a]) {
             present[a] = mdwfReadResidualMassComponent(mdwfResidualMassComponentPath(outputPath, a), key, a, extents,
-                                                       components[a]);
+                                                       components[a], precision, solverName);
         }
         if (!present[a]) {
             missing << " " << a;
@@ -386,11 +443,16 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
     MDWFResidualMassCorrelators c{{}, {}, 0, 0.0};
     mdwfResizeDirectionalCorrelators(c.pp, lat);
     mdwfResizeDirectionalCorrelators(c.j5q, lat);
-    double seconds = 0.0;
+    double seconds = 0.0, maxTrueResidual = -1.0;
+    int nTrueResidual = 0;
     for (const MDWFResidualMassComponent &component : components) {
         c.iterations += component.iterations;
         c.maxResidue = std::max(c.maxResidue, component.residue);
         seconds += component.seconds;
+        if (component.trueResidual >= 0.0) {
+            maxTrueResidual = std::max(maxTrueResidual, component.trueResidual);
+            nTrueResidual++;
+        }
         for (int mu = 0; mu < 4; mu++) {
             for (size_t n = 0; n < extents[mu]; n++) {
                 c.pp[mu].at(n) += component.pp[mu].at(n);
@@ -444,8 +506,9 @@ void runMDWFResidualMass(CommunicationBase &commBase, MDWFResidualMassParameters
     }
     rootLogger.info("MDWF m_res: ", param.direction(), " plateau d in [", param.plateau_min(), ", ",
                     param.plateau_max(), "]: m_res = ", sumJ5q / sumPP, " (ratio of sums), ", sumRatio / nPlateau,
-                    " (mean of ratios); 12 solves, ", c.iterations, " CG iterations, max residue ", c.maxResidue,
-                    ", ", seconds, " s of solves");
+                    " (mean of ratios); 12 solves, ", c.iterations, " CG iterations, max CG residue ", c.maxResidue,
+                    ", max true residual |b - M x| / |b| = ", maxTrueResidual, " (recorded for ", nTrueResidual,
+                    " of 12 components), ", seconds, " s of solves");
 
     if (!param.reference_file().empty()) {
         rootLogger.info("MDWF m_res: comparing with reference ", param.reference_file(), ", relative tolerance ",

@@ -25,6 +25,15 @@
  * for the fermions are applied by solving on a copy of the gauge field whose
  * temporal links on the last time slice carry a factor -1.
  *
+ * Per solve the measurement also records:
+ *   trueResidual    |b - M x| / |b| of the full unpreconditioned 5D system M x = b (M = the Mobius clover
+ *                   operator, b = the imported source), recomputed after the solve; the CG's own residue is
+ *                   the recursively updated residual of the even/odd normal equation and is kept as well
+ *   seconds         the solver call (it includes the solver's clover / block-inverse refresh), GPU-synchronized
+ *   refreshSeconds  one even/odd clover and block-inverse refresh, timed once per measurement object
+ *   importSeconds   the D_- source import
+ *   warmup          true for the first solve of the process (first kernel launches and allocations)
+ *
  * Single rank.
  */
 
@@ -32,10 +41,12 @@
 
 #include "MDWFFermionBoundary.h"
 #include "MDWFMobiusEvenOdd.h"
+#include "MDWFCoupledSolverAdapter.h"
 
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <string>
 #include <vector>
 
@@ -112,8 +123,12 @@ struct MDWFResidualMassComponent {
     std::array<std::vector<double>, 4> pp;     // pp[mu][n] = sum_{x, x_mu = n} |q_a(x)|^2, n = global coordinate
     std::array<std::vector<double>, 4> j5q;    // j5q[mu][n] = sum_{x, x_mu = n} |p_a(x)|^2
     int iterations;
-    double residue;
+    double residue;                            // CG residue (even/odd normal equation, recursive)
     double seconds;
+    double trueResidual = -1.0;                // |b - M x| / |b|, full 5D system; < 0: not recorded (older files)
+    double refreshSeconds = -1.0;              // < 0: not recorded
+    double importSeconds = -1.0;
+    bool warmup = false;
 };
 
 struct MDWFResidualMassCorrelators {
@@ -154,6 +169,29 @@ private:
     Solver _solver;
     Spinor _source, _imported, _solution, _wilson, _wilsonTmp;
     CloverField _fUpper, _fLower, _fInvUpper, _fInvLower;
+    double _M5, _mf, _b5;
+    std::string _name;
+    bool _firstSolve = true;
+    double _refreshSeconds = -1.0;
+
+    static double secondsSince(const std::chrono::steady_clock::time_point &start) {
+        gpuDeviceSynchronize();
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+    }
+
+    // |b - M x| / |b| with the full unpreconditioned Mobius clover operator. The operator (four 5D work fields) is
+    // built here and released at return, so it does not add to the memory held during the CG.
+    double trueResidual(Spinor &x, Spinor &b) {
+        using FullOp = MDWFMobiusCloverLinearOperator<double, HaloDepth, HaloDepth, Ls>;
+        FullOp full(_gauge, _M5, _mf, _b5, _csw, _name + "_trueres");
+        MDWFCoupledSolverAdapter<double, HaloDepth, HaloDepth, Ls, FullOp> adapter(full);
+        x.updateAll();
+        full.apply(_wilson, x, false);
+        _wilsonTmp = b;
+        _wilsonTmp.template axpyThisB<64>(-1.0, _wilson);
+        const double bNorm = adapter.norm2(b);
+        return bNorm > 0.0 ? std::sqrt(adapter.norm2(_wilsonTmp) / bNorm) : 0.0;
+    }
 
 public:
     MDWFResidualMassMeasurement(Gauge &fermionGauge, double M5, double mf, double b5, double csw,
@@ -170,7 +208,8 @@ public:
           _fUpper(fermionGauge.getComm(), name + "_fup"),
           _fLower(fermionGauge.getComm(), name + "_flo"),
           _fInvUpper(fermionGauge.getComm(), name + "_fiup"),
-          _fInvLower(fermionGauge.getComm(), name + "_filo") {}
+          _fInvLower(fermionGauge.getComm(), name + "_filo"),
+          _M5(M5), _mf(mf), _b5(b5), _name(name) {}
 
     // imported = (1 - c5 D_W) source, slice by slice (Grid's Dminus).
     void importSource(Spinor &imported, const Spinor &source) {
@@ -189,14 +228,28 @@ public:
         MDWFResidualMassComponent result{{}, {}, 0, 0.0, 0.0};
         _source.template iterateOverBulk<BLOCKSIZE>(MDWFPhysicalPointSource<HaloDepth, Ls>(x, y, z, t, a));
         _source.updateAll();
+        gpuDeviceSynchronize();
+        const auto importStart = std::chrono::steady_clock::now();
         importSource(_imported, _source);
+        result.importSeconds = secondsSince(importStart);
+        if (_refreshSeconds < 0.0) {   // the solver refreshes on every solve; this times one refresh on its own
+            const auto refreshStart = std::chrono::steady_clock::now();
+            _solver.evenOdd().refresh();
+            _refreshSeconds = secondsSince(refreshStart);
+        }
+        result.refreshSeconds = _refreshSeconds;
+        result.warmup = _firstSolve;
+        _firstSolve = false;
         const auto solveStart = std::chrono::steady_clock::now();
         _solver.solve(_solution, _imported, maxIter, precision);
-        result.seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - solveStart).count();
+        result.seconds = secondsSince(solveStart);
         result.iterations = _solver.lastIterations();
         result.residue = _solver.lastResidue();
+        result.trueResidual = trueResidual(_solution, _imported);
         rootLogger.info("MDWF m_res: source component ", a, " of 12: ", result.iterations,
-                        " even/odd CG iterations, residue ", result.residue, ", ", result.seconds, " s");
+                        " even/odd CG iterations, CG residue ", result.residue, ", true residual |b - M x| / |b| = ",
+                        result.trueResidual, ", ", result.seconds, " s (refresh ", result.refreshSeconds,
+                        " s, import ", result.importSeconds, " s", result.warmup ? ", warm-up solve)" : ")");
         LatticeContainer<true, double> reduction(_gauge.getComm());
         reduction.adjustSize(lat.vol4);
         const std::array<size_t, 4> extents = mdwfLatticeExtents(lat);

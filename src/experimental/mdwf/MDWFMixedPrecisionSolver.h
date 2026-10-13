@@ -16,7 +16,10 @@
  *
  * Convergence is decided on the double residual of a reliable update only, with
  * the stopping rule of MDWFCoupledCG (|r|^2 <= precision^2 max(|b|^2, 1)), so a
- * mixed and a double solve stop at the same true residual. Iterations counts the
+ * mixed and a double solve stop on the same criterion. Here A = Mhat^+ Mhat and b =
+ * Mhat^+ bhat_e (even/odd normal equation), so this is not the residual of the
+ * full 5D system M x = b; mdwfResidualMass recomputes that one after each solve
+ * (MDWFResidualMass.h). Iterations counts the
  * single-precision operator applications; each reliable update adds one double
  * application.
  *

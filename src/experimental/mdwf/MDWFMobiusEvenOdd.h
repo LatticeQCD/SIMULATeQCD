@@ -761,9 +761,11 @@ public:
  *   y_o = M_oo^-dagger (b_o - M_eo^dagger y_e).
  * solveNormal(x, b), M^dagger M x = b: solveDagger then solve.
  *
- * The CG precision is the relative residual of the even-site normal equation;
- * trueResidual() recomputes |M x - b| / |b| with the unpreconditioned operator
- * the caller supplies, for validation.
+ * The CG precision is the recursively updated residual of the even-site normal
+ * equation relative to max(|Mhat^+ bhat_e|, 1) (MDWFCoupledCG); this class does not
+ * recompute |M x - b| / |b|. Callers that need the true residual of the full
+ * system apply the unpreconditioned operator themselves (MDWFResidualMass.h does
+ * after every solve; the even/odd unit test checks it).
  */
 template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls>
 class MDWFMobiusEvenOddSolver {

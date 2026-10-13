@@ -917,6 +917,24 @@ set_SIMULATeQCD_property(mdwfCloverNonzeroTest PROPERTIES RUNTIME_OUTPUT_DIRECTO
 SIMULATeQCD_target_compile_definitions(mdwfCloverNonzeroTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfCloverNonzeroTest)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfCloverAbelianFluxTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfCloverAbelianFluxTest src/testing/main_mdwfCloverAbelianFluxTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfCloverAbelianFluxTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfCloverAbelianFluxTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfCloverAbelianFluxTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfKernelSmearingTest.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfKernelSmearingTest src/testing/main_mdwfKernelSmearingTest.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfKernelSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfKernelSmearingTest PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfKernelSmearingTest)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfKernelSpectrum.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfKernelSpectrum src/testing/main_mdwfKernelSpectrum.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfKernelSpectrum PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfKernelSpectrum PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfKernelSpectrum)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfOperatorWorkspaceTest.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(mdwfOperatorWorkspaceTest src/testing/main_mdwfOperatorWorkspaceTest.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(mdwfOperatorWorkspaceTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
