@@ -342,7 +342,7 @@ void init(CommunicationBase &commBase,
         gradientFlow<floatT, HaloDepth, input_RK_method, force> gradFlow(gauge, lp.start_step_size(),
                                                                    lp.measurement_intervall()[0],
                                                                    lp.measurement_intervall()[1],
-                                                                   lp.necessary_flow_times.get(), lp.accuracy());
+                                                                   lp.necessary_flow_times.get(), std::vector<PREC>(), lp.accuracy());
         floatT topchar_tmp;
         run_flow<floatT, HaloDepth, gradientFlow<floatT, HaloDepth, input_RK_method, force>>(gradFlow, gauge, lp, topchar_tmp,
                                                                                        (false));
@@ -374,7 +374,7 @@ void init(CommunicationBase &commBase,
             gradientFlow<floatT, HaloDepth, input_RK_method, force> gradFlow(gauge, lp.start_step_size(),
                                                                        lp.measurement_intervall()[0],
                                                                        lp.measurement_intervall()[1],
-                                                                       lp.necessary_flow_times.get(), lp.accuracy());
+                                                                       lp.necessary_flow_times.get(), std::vector<PREC>(), lp.accuracy());
             floatT topchar;
             run_flow<floatT, HaloDepth, gradientFlow<floatT, HaloDepth, input_RK_method, force>>(gradFlow, gauge, lp, topchar, (k+1 == n_topo_meas_btwn_saved_confs)  );
             rootLogger.info("Done top. charge meas. " ,  k+1 ,  "/" ,  n_topo_meas_btwn_saved_confs ,  " Q=" ,  topchar);

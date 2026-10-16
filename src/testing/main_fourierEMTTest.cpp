@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
     _redBaseEMTUFourierTransformedForwardsBackwards.adjustSize(GInd::getLatData().vol4);
 
     // calculate EMT for the EMT-designated fields
-    _redBaseEMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
-    _redBaseEMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTtracelessComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
+    _redBaseEMTUComplexHost.template iterateOverBulk<All, HaloDepth>(EMTFullComplex<PREC, false, HaloDepth>(gaugeHost.getAccessor()));
+    _redBaseEMTUComplexDevice.template iterateOverBulk<All, HaloDepth>(EMTFullComplex<PREC, true, HaloDepth>(gaugeDevice.getAccessor()));
 
     // create Fourier class
     FourierClass<PREC> fourierClass(gaugeDevice.getComm());

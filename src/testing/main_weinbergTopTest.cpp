@@ -59,7 +59,7 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
         unsigned int &flow_time_count){
 
     gradientFlow<floatT, HaloDepth, RKmethod, force> gFlow(gauge, lp.start_step_size(), lp.measurement_intervall()[0],
-    lp.measurement_intervall()[1], lp.necessary_flow_times.get(), lp.accuracy());
+    lp.measurement_intervall()[1], lp.necessary_flow_times.get(), std::vector<floatT>(), lp.accuracy());
 
     //! initialize some values for the measurement
     floatT flow_time = 0;
