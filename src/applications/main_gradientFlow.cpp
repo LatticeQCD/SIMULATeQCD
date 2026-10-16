@@ -12,6 +12,7 @@
 
 #include <filesystem> 
 #include "../simulateqcd.h"
+#include "base/IO/hdf5fileWriter.h"
 #include "../modules/gradientFlow/gradientFlowParameters.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/observables/topology.h"
