@@ -139,7 +139,13 @@ void TopologicalChargeCorrelator<floatT, HaloDepth>::topChargeCorrGeneralTau(
     
     // divide by sqrt of the 4D global volume as
     timer.start();
-    GFieldDevice.template iterateOverBulk<All, HaloDepth>(DivideByValue<COMPLEX(floatT), int>(GFieldDevice.getAccessor(), sqrt(GInd::getLatData().vol4)));
+    floatT divisor;
+    if (matsubara) {
+        divisor = sqrt(GInd::getLatData().vol3);
+    } else {
+        divisor = sqrt(GInd::getLatData().vol4);
+    }
+    GFieldDevice.template iterateOverBulk<All, HaloDepth>(DivideByValue<COMPLEX(floatT), floatT>(GFieldDevice.getAccessor(), divisor));
     timer.stop();
     rootLogger.debug("   G normalization took      ", timer.seconds(), "s.");
     
