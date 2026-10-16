@@ -729,6 +729,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             StopWatch<true> emtCorrTimer;
             StopWatch<true> hdf5Timer;
 
+            rootLogger.debug("Measuring G_EMT averaged tau");
+
             emtCorrTimer.start();
             EMTCorr.EMTCorrGFunctionsAveragedTau(gauge, vecEMTCorrAveragedTau);
             emtCorrTimer.stop();
@@ -746,6 +748,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         if (lp.energyMomentumTensorCorrFunctionsGeneralTau() && gradFlow.checkIfMeasuredTime()) {
             StopWatch<true> emtCorrTimer;
             StopWatch<true> hdf5Timer;
+
+            rootLogger.debug("Measuring G_EMT general tau");
 
             emtCorrTimer.start();
             EMTCorr.EMTCorrGFunctionsGeneralTau(gauge, vecEMTCorrGeneralTau, lp.energyMomentumTensorCorrFunctionsGeneralTauMatsubara());
@@ -767,6 +771,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         if (lp.topChargeImpCorrFunctionsGeneralTau() && gradFlow.checkIfMeasuredTime()) {
             StopWatch<true> topChargeCorrTimer;
             StopWatch<true> hdf5Timer;
+
+            rootLogger.debug("Measuring G_Qtop general tau");
 
             topChargeCorrTimer.start();
             TopChargeCorr.template topChargeCorrGeneralTau<true, false>(gauge, vecTopChargeCorrGeneralTau, lp.topChargeImpCorrFunctionsGeneralTauMatsubara());
@@ -995,7 +1001,7 @@ int main(int argc, char *argv[]) {
         }
 
         size_t input_HaloDepth = 1;
-        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp() || lp.topCharge_imp_imp() || lp.topChargeTimeSlices_imp_imp())) {
+        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp() || lp.topCharge_imp_imp() || lp.topChargeTimeSlices_imp_imp() || lp.energyMomentumTensorCorrFunctionsAveragedTau() || lp.energyMomentumTensorCorrFunctionsGeneralTau() || lp.topChargeImpCorrFunctionsGeneralTau())) {
             input_HaloDepth = 2;
         } else if (input_force == zeuthen ) {
             input_HaloDepth = 3;
