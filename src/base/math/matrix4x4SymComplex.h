@@ -42,7 +42,7 @@ struct Matrix4x4SymComplex {
         elems[indexPair] = value;
     }
 
-    __device__ __host__ inline floatT operator()(int mu, int nu) const {
+    __device__ __host__ inline COMPLEX(floatT) operator()(int mu, int nu) const {
         if (mu == 0 && nu == 0) return elems[entry::e00]; // 0 & 0 = 0
         else if (mu == 1 && nu == 1) return elems[entry::e11]; // 1 & 1 = 1
         else if (mu == 2 && nu == 2) return elems[entry::e22]; // 2 & 2 = 2
@@ -64,7 +64,7 @@ struct Matrix4x4SymComplex {
         return 0;
     }
 
-    __device__ __host__ inline void operator()(int mu, int nu, floatT value) {
+    __device__ __host__ inline void operator()(int mu, int nu, COMPLEX(floatT) value) {
         if (mu == 0 && nu == 0) elems[entry::e00] = value;
         else if (mu == 1 && nu == 1) elems[entry::e11] = value;
         else if (mu == 2 && nu == 2) elems[entry::e22] = value;
