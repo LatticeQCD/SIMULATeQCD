@@ -152,7 +152,7 @@ void EnergyMomentumTensorCorrelator<floatT, HaloDepth>::EMTCorrGTensor(
     } else {
         divisor = sqrt(GInd::getLatData().vol4);
     }
-    G.template iterateOverBulk<All, HaloDepth>(DivideByValue<Tensor4x4Symx4x4SymComplex<floatT>, int>(G.getAccessor(), divisor));
+    G.template iterateOverBulk<All, HaloDepth>(DivideByValue<Tensor4x4Symx4x4SymComplex<floatT>, floatT>(G.getAccessor(), divisor));
     timer.stop();
     rootLogger.debug("   G normalization took      ", timer.seconds(), "s.");
 
