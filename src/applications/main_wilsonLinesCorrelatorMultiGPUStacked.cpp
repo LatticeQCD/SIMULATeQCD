@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
         PREC stop  = param.wilson_stop();
         PREC step_size = param.wilson_step();
         const auto force = static_cast<Force>(static_cast<int>(0));
-        gradientFlow<PREC, HaloDepth, fixed_stepsize,force> gradFlow(gauge,step_size,start,stop,flowTimes,0.0001);
+        gradientFlow<PREC, HaloDepth, fixed_stepsize,force> gradFlow(gauge,step_size,start,stop,flowTimes,std::vector<PREC>(),0.0001);
 
         bool continueFlow =  gradFlow.continueFlow();
 //	rootLogger.info() << "step " << gradFlow._step_size;

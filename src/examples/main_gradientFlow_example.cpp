@@ -95,14 +95,14 @@ int main(int argc, char *argv[]) {
 
         gradientFlow<PREC, HaloDepth, adaptive_stepsize, zeuthen> gradFlow(gauge, lp.start_step_size(),
                                               lp.measurement_intervall()[0], lp.measurement_intervall()[1],
-                                              lp.necessary_flow_times.get(), lp.accuracy());
+                                              lp.necessary_flow_times.get(), std::vector<PREC>(), lp.accuracy());
         run<PREC, HaloDepth, gradientFlow<PREC, HaloDepth, adaptive_stepsize, zeuthen> >(gradFlow, gauge, lp);
 
     } else if (lp.RK_method() == "adaptive_stepsize_allgpu") {
 
         gradientFlow<PREC, HaloDepth, adaptive_stepsize_allgpu, zeuthen> gradFlow(gauge, lp.start_step_size(),
                                               lp.measurement_intervall()[0], lp.measurement_intervall()[1],
-                                              lp.necessary_flow_times.get(), lp.accuracy());
+                                              lp.necessary_flow_times.get(), std::vector<PREC>(), lp.accuracy());
         run<PREC, HaloDepth, gradientFlow<PREC, HaloDepth, adaptive_stepsize_allgpu, zeuthen> >(gradFlow, gauge, lp);
     }
 
