@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFFiniteDifferenceHarness.h"
 
 #include <algorithm>
@@ -290,7 +292,7 @@ void applyMDWFSingleLinkExplicitDirectionPerturbation(
     gauge_out.template iterateOverBulkAllMu<>(
         MDWFSingleLinkExplicitDirectionPerturbation<floatT, comp>(
             gauge_in.getAccessor(), probe, direction, sign));
-    gauge_out.updateAll();
+    mdwfUpdateHalo(gauge_out);
 }
 
 template<class floatT,

@@ -1,0 +1,16 @@
+# mdwfProfileBench (tests/profile): b1829 production operator, 32^3x8, Ls 16; lists stay in this file
+Lattice       = 32 32 32 8
+Nodes         = 1 1 1 1
+M5            = 1.8
+b5            = 1.9
+mf            = 0.00084525
+cg_masses     = 0.00084525 0.006
+cg_precisions = 1e-10 1e-8
+max_iter      = 100000
+mixed_delta   = 0.1
+mmdag         = 1
+noise_seed    = profile
+n_apply       = 200
+n_warm        = 10
+n_cg_repeat   = 2
+force_halos   = 0

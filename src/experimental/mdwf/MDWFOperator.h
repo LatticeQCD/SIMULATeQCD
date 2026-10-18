@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFFifthDim.h"
 #include "MDWFWilsonSlice.h"
 
@@ -35,7 +37,7 @@ void applyMDWFOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &spinor_
     spinor_out += fifth_part;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -65,7 +67,7 @@ void applyMDWFCloverOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &s
     spinor_out += fifth_part;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 

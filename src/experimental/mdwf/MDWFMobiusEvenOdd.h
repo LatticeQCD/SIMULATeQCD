@@ -64,6 +64,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFAdjointOperator.h"
 #include "MDWFCoupledCG.h"
 #include "MDWFCoupledSolverAdapter.h"
@@ -71,6 +73,7 @@
 #include "MDWFMobiusMapping.h"
 
 #include <cmath>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -392,6 +395,207 @@ struct MDWFMooeeInverseKernel {
     }
 };
 
+// Dense c_sw = 0 block inverse (below) on unless MDWF_DENSE_MOOINV=0 (then the per-site sweep kernel, for checks).
+inline bool mdwfDenseMooeeInverse() {
+    static const bool on = [] {
+        const char *env = std::getenv("MDWF_DENSE_MOOINV");
+        return env == nullptr || std::string(env) != "0";
+    }();
+    return on;
+}
+
+/*
+ * M_xx^-1 (or M_xx^-dagger) for c_sw = 0, where A = a 1 and the block inverse is the same Ls x Ls matrix per chirality
+ * at every site: with p = b5 a + 1, r = (c5 a - 1) / p and boundary mass m of the chirality,
+ * (1 + r K)^-1 = sum_k (-r)^k K^k / (1 + (-r)^Ls m), so
+ *
+ *   backward shape (P_+ of M, wrap mass m_+):  x(s) = sum_t c_+[(s - t) mod Ls] (t <= s ? 1 : -m_+) z(t),
+ *   forward shape  (P_- of M, wrap mass m_-):  x(s) = sum_t c_-[(t - s) mod Ls] (t >= s ? 1 : -m_-) z(t),
+ *
+ * c_m[k] = (-r)^k / (p (1 + (-r)^Ls m)). The matrices are real, so M_xx^-dagger is the transpose: each chirality
+ * keeps its coefficients and mass and takes the other shape. One thread per (site, s); the Ls input vectors of a site
+ * are shared through the cache by its Ls threads. Replaces the per-site sweep kernel above (Ls-long per-thread
+ * arrays, register spills) when there is no clover term; it also allows m_+ != m_- (EOFA operators).
+ */
+template<class floatT, Layout LatLayout, size_t HaloDepthSpin, size_t Ls, bool Dagger>
+struct MDWFMooeeInverseDenseKernel {
+    Vect12ArrayAcc<floatT> _in;
+    Vect12ArrayAcc<floatT> _out;
+    floatT _cPlus[Ls], _cMinus[Ls];
+    floatT _mPlus, _mMinus;
+
+    typedef GIndexer<LatLayout, HaloDepthSpin> GInd;
+    using Spinor = MDWFSpinor<floatT, true, LatLayout, HaloDepthSpin, Ls>;
+
+    MDWFMooeeInverseDenseKernel(Spinor &out, const Spinor &in, const double (&cPlus)[Ls], const double (&cMinus)[Ls],
+                                double mPlus, double mMinus)
+        : _in(in.getAccessor()), _out(out.getAccessor()), _mPlus(static_cast<floatT>(mPlus)),
+          _mMinus(static_cast<floatT>(mMinus)) {
+        for (size_t k = 0; k < Ls; k++) {
+            _cPlus[k] = static_cast<floatT>(cPlus[k]);
+            _cMinus[k] = static_cast<floatT>(cMinus[k]);
+        }
+    }
+
+    __host__ __device__ void operator()(gSiteStack site) {
+        const int s = static_cast<int>(site.stack);
+        const int L = static_cast<int>(Ls);
+        const floatT one = 1.0;
+        Vect12<floatT> acc(0.0);
+        for (int t = 0; t < L; t++) {
+            const Vect12<floatT> z = _in.getElement(GInd::getSiteStack(static_cast<const gSite &>(site), t));
+            const int back = (s - t + L) % L;   // backward shape index, factor (t <= s ? 1 : -m)
+            const int fwd = (t - s + L) % L;    // forward shape index, factor (t >= s ? 1 : -m)
+            const floatT up = Dagger ? _cPlus[fwd] * (t >= s ? one : -_mPlus) : _cPlus[back] * (t <= s ? one : -_mPlus);
+            const floatT lo = Dagger ? _cMinus[back] * (t <= s ? one : -_mMinus)
+                                     : _cMinus[fwd] * (t >= s ? one : -_mMinus);
+            for (size_t i = 0; i < 6; i++) {
+                acc.data[i] += up * z.data[i];
+                acc.data[i + 6] += lo * z.data[i + 6];
+            }
+        }
+        _out.setElement(site, acc);
+    }
+};
+
+// Fused Schur operator for c_sw = 0 (MDWFMobiusCloverEvenOdd::schur): on unless MDWF_FUSED_SCHUR=0 (then the block
+// path Mee - Meo MooInv Moe, for checks); settable at run time by tests.
+inline bool &mdwfFusedSchur() {
+    static bool on = [] {
+        const char *env = std::getenv("MDWF_FUSED_SCHUR");
+        return env == nullptr || std::string(env) != "0";
+    }();
+    return on;
+}
+
+/*
+ * (K v)(s) and (K^T v)(s) on one site for the fifth-direction shift K of the Mobius operator (P_+ couples to s - 1
+ * with wrap factor -m_+ at s = 0, P_- to s + 1 with wrap -m_- at s = Ls - 1); K^T exchanges the directions. Every
+ * fifth-direction operator of the c_sw = 0 operator is a polynomial in K: Din = b5 + c5 K, M_xx = p + q K
+ * (p = b5 a + 1, q = c5 a - 1), M_xx^-1 and Din M_xx^-1 (MDWFMooeeInverseDenseKernel coefficients).
+ */
+template<class floatT, Layout L, size_t HaloDepthSpin, size_t Ls, bool Transposed>
+__host__ __device__ inline Vect12<floatT> mdwfShiftK(const Vect12ArrayAcc<floatT> &acc, const gSite &site, int s,
+                                                    floatT mPlus, floatT mMinus) {
+    typedef GIndexer<L, HaloDepthSpin> GInd;
+    const int last = static_cast<int>(Ls) - 1;
+    Vect12<floatT> out;
+    if (!Transposed) {
+        out = (s >= 1) ? mdwfProjectPlus(acc.getElement(GInd::getSiteStack(site, s - 1)))
+                       : (-mPlus) * mdwfProjectPlus(acc.getElement(GInd::getSiteStack(site, last)));
+        out += (s < last) ? mdwfProjectMinus(acc.getElement(GInd::getSiteStack(site, s + 1)))
+                          : (-mMinus) * mdwfProjectMinus(acc.getElement(GInd::getSiteStack(site, 0)));
+    } else {
+        out = (s < last) ? mdwfProjectPlus(acc.getElement(GInd::getSiteStack(site, s + 1)))
+                         : (-mPlus) * mdwfProjectPlus(acc.getElement(GInd::getSiteStack(site, 0)));
+        out += (s >= 1) ? mdwfProjectMinus(acc.getElement(GInd::getSiteStack(site, s - 1)))
+                        : (-mMinus) * mdwfProjectMinus(acc.getElement(GInd::getSiteStack(site, last)));
+    }
+    return out;
+}
+
+// dv = (b5 + c5 K) v and mv = (p + q K) v in one pass (Din v and M_xx v, c_sw = 0).
+template<class floatT, Layout L, size_t HaloDepthSpin, size_t Ls>
+struct MDWFFusedDinMxx {
+    Vect12ArrayAcc<floatT> _v, _dv, _mv;
+    floatT _b, _c, _p, _q, _mPlus, _mMinus;
+
+    using Spinor = MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls>;
+
+    MDWFFusedDinMxx(Spinor &dv, Spinor &mv, const Spinor &v, floatT b, floatT c, floatT p, floatT q, floatT mPlus,
+                    floatT mMinus)
+        : _v(v.getAccessor()), _dv(dv.getAccessor()), _mv(mv.getAccessor()), _b(b), _c(c), _p(p), _q(q),
+          _mPlus(mPlus), _mMinus(mMinus) {}
+
+    __host__ __device__ void operator()(gSiteStack site) {
+        const Vect12<floatT> v = _v.getElement(site);
+        const Vect12<floatT> kv = mdwfShiftK<floatT, L, HaloDepthSpin, Ls, false>(
+            _v, static_cast<const gSite &>(site), static_cast<int>(site.stack), _mPlus, _mMinus);
+        _dv.setElement(site, _b * v + _c * kv);
+        _mv.setElement(site, _p * v + _q * kv);
+    }
+};
+
+// out = (p + q K^T) v - (b5 + c5 K^T) g5 w (M_xx^+ v - Din^+ g5 w, the last step of Mhat^+).
+template<class floatT, Layout L, size_t HaloDepthSpin, size_t Ls>
+struct MDWFFusedMxxDagMinusDinDagG5 {
+    Vect12ArrayAcc<floatT> _v, _w;
+    floatT _b, _c, _p, _q, _mPlus, _mMinus;
+
+    using Spinor = MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls>;
+
+    MDWFFusedMxxDagMinusDinDagG5(const Spinor &v, const Spinor &w, floatT b, floatT c, floatT p, floatT q,
+                                 floatT mPlus, floatT mMinus)
+        : _v(v.getAccessor()), _w(w.getAccessor()), _b(b), _c(c), _p(p), _q(q), _mPlus(mPlus), _mMinus(mMinus) {}
+
+    __host__ __device__ Vect12<floatT> operator()(gSiteStack site) {
+        const gSite &s4 = static_cast<const gSite &>(site);
+        const int s = static_cast<int>(site.stack);
+        const Vect12<floatT> kv = mdwfShiftK<floatT, L, HaloDepthSpin, Ls, true>(_v, s4, s, _mPlus, _mMinus);
+        const Vect12<floatT> kw = mdwfShiftK<floatT, L, HaloDepthSpin, Ls, true>(_w, s4, s, _mPlus, _mMinus);
+        Vect12<floatT> dw = _b * _w.getElement(site) + _c * kw;   // Din^+ w; g5 commutes with it
+        for (size_t i = 6; i < 12; i++) {
+            dw.data[i] = -dw.data[i];
+        }
+        Vect12<floatT> out = _p * _v.getElement(site) + _q * kv;
+        out -= dw;
+        return out;
+    }
+};
+
+/*
+ * Wilson hopping block (the arithmetic of MDWFWilsonHopEvenOdd, -1/2 included), fused with what surrounds it in the
+ * Schur operator: G5In applies gamma5 to the input spinors as they are read; Subtract returns base - Hop u.
+ */
+template<class floatT, Layout LOut, Layout LIn, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls, bool G5In,
+         bool Subtract>
+struct MDWFFusedHop {
+    SU3Accessor<floatT> _U;
+    SpinorColorAcc<floatT> _in;
+    Vect12ArrayAcc<floatT> _base;
+
+    typedef GIndexer<LOut, HaloDepthSpin> GInd;
+
+    MDWFFusedHop(Gaugefield<floatT, true, HaloDepthGauge, R18> &gauge,
+                 const MDWFSpinor<floatT, true, LIn, HaloDepthSpin, Ls> &in,
+                 const MDWFSpinor<floatT, true, LOut, HaloDepthSpin, Ls> &base)
+        : _U(gauge.getAccessor()), _in(in.getAccessor()), _base(base.getAccessor()) {}
+
+    __device__ __host__ ColorVect<floatT> read(const gSiteStack &site) {
+        ColorVect<floatT> v = _in.getColorVect(site);
+        if (G5In) {
+            v = mdwfGamma5Mult(v);
+        }
+        return v;
+    }
+
+    __device__ __host__ Vect12<floatT> operator()(gSiteStack site) {
+        ColorVect<floatT> outSC;
+        outSC = static_cast<floatT>(0.0) * outSC;
+        ColorVect<floatT> temp, temp2;
+#define MDWF_FUSED_HOP_DIR(MU, GAMMA)                                                                                \
+        temp = _U.getLink(GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(site, MU)))                \
+               * read(GInd::site_up(site, MU));                                                                       \
+        temp2 = _U.getLinkDagger(                                                                                    \
+                    GInd::template convertSite<All, HaloDepthGauge>(GInd::getSiteMu(GInd::site_dn(site, MU), MU)))   \
+                * read(GInd::site_dn(site, MU));                                                                      \
+        outSC = outSC - temp - temp2 + GAMMA(temp - temp2);
+        MDWF_FUSED_HOP_DIR(0, mdwfGammaXMult)
+        MDWF_FUSED_HOP_DIR(1, mdwfGammaYMult)
+        MDWF_FUSED_HOP_DIR(2, mdwfGammaZMult)
+        MDWF_FUSED_HOP_DIR(3, mdwfGammaTMult)
+#undef MDWF_FUSED_HOP_DIR
+        outSC = static_cast<floatT>(0.5) * outSC;
+        Vect12<floatT> out = convertColorVectToVect12(outSC);
+        if (Subtract) {
+            Vect12<floatT> b = _base.getElement(site);
+            b -= out;
+            return b;
+        }
+        return out;
+    }
+};
+
 // Even/odd part of an All-layout MDWF spinor, stack by stack.
 template<class floatT, Layout LatLayout, size_t HaloDepthSpin, size_t Ls>
 struct MDWFEvenOddExtract {
@@ -441,11 +645,25 @@ public:
     using SpinorO = MDWFSpinor<floatT, true, Odd, HaloDepthSpin, Ls>;
     using Field = Spinorfield<floatT, true, All, HaloDepthGauge, 18, 1>;
 
+    static std::string sharedEvenName(const std::string &role) {
+        return mdwfSharedSpinorName<floatT, Even, HaloDepthSpin, Ls>(role);
+    }
+
+    static std::string sharedOddName(const std::string &role) {
+        return mdwfSharedSpinorName<floatT, Odd, HaloDepthSpin, Ls>(role);
+    }
+
+    static std::string sharedAllName(const std::string &role) {
+        return mdwfSharedSpinorName<floatT, All, HaloDepthSpin, Ls>(role);
+    }
+
 private:
     Gauge &_gauge;
     MDWFMobiusOperatorParameters<floatT> _params;
-    floatT _mf;
+    floatT _mf;        // boundary mass of P_+ (Grid's mass_plus); also the mass of the single-mass operator
+    floatT _mfMinus;   // boundary mass of P_- (Grid's mass_minus); = _mf unless setMasses() made them differ
     floatT _csw;
+    floatT _M5;
     Field _aUpper, _aLower, _aInvUpper, _aInvLower;
     Field _pinvUpper, _pinvLower, _rUpper, _rLower, _wUpper, _wLower;
     SpinorE _e1, _e2, _e3;
@@ -472,11 +690,123 @@ private:
         out += t2;
     }
 
+    /*
+     * Coefficients of M_xx^-1 = sum_k c[k] K^k per chirality (c_sw = 0): c[k] = (-r)^k / (p (1 + (-r)^Ls m)); with
+     * withDin the coefficients of Din M_xx^-1 = (b5 + c5 K) M_xx^-1 (K^Ls = -m): e[k] = b5 c[k] + c5 c[k - 1],
+     * e[0] = b5 c[0] - c5 m c[Ls - 1].
+     */
+    void inverseCoefficients(double (&cPlus)[Ls], double (&cMinus)[Ls], bool withDin) const {
+        const double a = static_cast<double>(_params.mass);
+        const double b = static_cast<double>(_params.b5);
+        const double c = static_cast<double>(_params.c5);
+        const double p = b * a + 1.0;
+        const double r = (c * a - 1.0) / p;
+        const double mPlus = static_cast<double>(_mf);
+        const double mMinus = static_cast<double>(_mfMinus);
+        double rk = 1.0;
+        for (size_t k = 0; k < Ls; k++) {
+            cPlus[k] = rk;
+            cMinus[k] = rk;
+            rk *= -r;
+        }
+        const double normPlus = 1.0 / (p * (1.0 + rk * mPlus));   // rk = (-r)^Ls
+        const double normMinus = 1.0 / (p * (1.0 + rk * mMinus));
+        for (size_t k = 0; k < Ls; k++) {
+            cPlus[k] *= normPlus;
+            cMinus[k] *= normMinus;
+        }
+        if (withDin) {
+            double ePlus[Ls], eMinus[Ls];
+            ePlus[0] = b * cPlus[0] - c * mPlus * cPlus[Ls - 1];
+            eMinus[0] = b * cMinus[0] - c * mMinus * cMinus[Ls - 1];
+            for (size_t k = 1; k < Ls; k++) {
+                ePlus[k] = b * cPlus[k] + c * cPlus[k - 1];
+                eMinus[k] = b * cMinus[k] + c * cMinus[k - 1];
+            }
+            for (size_t k = 0; k < Ls; k++) {
+                cPlus[k] = ePlus[k];
+                cMinus[k] = eMinus[k];
+            }
+        }
+    }
+
+    // out = sum_k c[k] K^k in per chirality (transpose with dagger), MDWFMooeeInverseDenseKernel.
+    template<Layout L>
+    void denseApply(MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls> &out,
+                    const MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls> &in, const double (&cPlus)[Ls],
+                    const double (&cMinus)[Ls], bool dagger) {
+        const size_t elems = GIndexer<L, HaloDepthSpin>::getLatData().sizeh;
+        const double mPlus = static_cast<double>(_mf);
+        const double mMinus = static_cast<double>(_mfMinus);
+        CalcGSiteStack<L, HaloDepthSpin> calcSiteStack;
+        static_assert(Ls <= DEFAULT_NBLOCKS, "dense M_xx^-1 kernel: one block holds all Ls slices of a site");
+        constexpr size_t block = (DEFAULT_NBLOCKS / Ls) * Ls;   // performFunctorNoReturn launch bound
+        if (dagger) {
+            iterateFunctorNoReturn<true, block>(
+                MDWFMooeeInverseDenseKernel<floatT, L, HaloDepthSpin, Ls, true>(out, in, cPlus, cMinus, mPlus, mMinus),
+                calcSiteStack, elems, Ls);
+        } else {
+            iterateFunctorNoReturn<true, block>(
+                MDWFMooeeInverseDenseKernel<floatT, L, HaloDepthSpin, Ls, false>(out, in, cPlus, cMinus, mPlus,
+                                                                                 mMinus),
+                calcSiteStack, elems, Ls);
+        }
+    }
+
+    /*
+     * Mhat (or Mhat^+) for c_sw = 0 in four passes, with E = Din M_oo^-1 (one dense fifth-direction matrix) and
+     * gamma5 Hop_eo gamma5 = Hop_oe^+ (g5 commutes with every fifth-direction operator):
+     *   Mhat v   = M_ee v - Hop_eo E Hop_oe Din v:            (Din v, M_ee v), Hop_oe, E, M_ee v - Hop_eo (.)
+     *   Mhat^+ v = M_ee^+ v - Din^+ g5 Hop_eo E^T Hop_oe g5 v:  Hop_oe g5, E^T, Hop_eo, M_ee^+ v - Din^+ g5 (.)
+     * Work fields _e1, _e2 (even), _o2, _o3 (odd); out must not alias in.
+     */
+    void fusedSchur(SpinorE &out, const SpinorE &in, bool dagger) {
+        const floatT a = _params.mass;
+        const floatT b = _params.b5;
+        const floatT c = _params.c5;
+        const floatT p = b * a + static_cast<floatT>(1.0);
+        const floatT q = c * a - static_cast<floatT>(1.0);
+        double ePlus[Ls], eMinus[Ls];
+        inverseCoefficients(ePlus, eMinus, true);
+        const size_t elems = GIndexer<Even, HaloDepthSpin>::getLatData().sizeh;
+        constexpr size_t block = (DEFAULT_NBLOCKS / Ls) * Ls;
+        if (!dagger) {
+            CalcGSiteStack<Even, HaloDepthSpin> calcSiteStack;
+            iterateFunctorNoReturn<true, block>(
+                MDWFFusedDinMxx<floatT, Even, HaloDepthSpin, Ls>(_e1, _e2, in, b, c, p, q, _mf, _mfMinus),
+                calcSiteStack, elems, Ls);
+            mdwfOverlapHop<BLOCKSIZE>(_o2, _e1,
+                MDWFFusedHop<floatT, Odd, Even, HaloDepthGauge, HaloDepthSpin, Ls, false, false>(_gauge, _e1, _o2), MDWFHaloHalf);
+            denseApply<Odd>(_o3, _o2, ePlus, eMinus, false);
+            mdwfOverlapHop<BLOCKSIZE>(out, _o3,
+                MDWFFusedHop<floatT, Even, Odd, HaloDepthGauge, HaloDepthSpin, Ls, false, true>(_gauge, _o3, _e2), MDWFHaloHalf);
+        } else {
+            mdwfOverlapHop<BLOCKSIZE>(_o2, const_cast<SpinorE &>(in),
+                MDWFFusedHop<floatT, Odd, Even, HaloDepthGauge, HaloDepthSpin, Ls, true, false>(_gauge, in, _o2), MDWFHaloHalfG5);
+            denseApply<Odd>(_o3, _o2, ePlus, eMinus, true);
+            mdwfOverlapHop<BLOCKSIZE>(_e1, _o3,
+                MDWFFusedHop<floatT, Even, Odd, HaloDepthGauge, HaloDepthSpin, Ls, false, false>(_gauge, _o3, _e1), MDWFHaloHalf);
+            out.template iterateOverBulk<BLOCKSIZE>(
+                MDWFFusedMxxDagMinusDinDagG5<floatT, Even, HaloDepthSpin, Ls>(in, _e1, b, c, p, q, _mf, _mfMinus));
+        }
+    }
+
     template<Layout L>
     void diagInverse(MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls> &out,
                      const MDWFSpinor<floatT, true, L, HaloDepthSpin, Ls> &in, bool dagger) {
         CalcGSite<L, HaloDepthSpin> calcGSite;
         const size_t elems = GIndexer<L, HaloDepthSpin>::getLatData().sizeh;
+        if (_csw == static_cast<floatT>(0.0) && mdwfDenseMooeeInverse()) {
+            // No clover term: the same Ls x Ls inverse at every site (MDWFMooeeInverseDenseKernel).
+            double cPlus[Ls], cMinus[Ls];
+            inverseCoefficients(cPlus, cMinus, false);
+            denseApply<L>(out, in, cPlus, cMinus, dagger);
+            return;
+        }
+        if (_mf != _mfMinus) {
+            throw std::runtime_error(stdLogger.fatal("MDWF even/odd: different boundary masses per chirality need "
+                                                     "c_sw = 0 and the dense M_oo^-1 kernel"));
+        }
         if (dagger) {
             iterateFunctorNoReturn<true, BLOCKSIZE>(
                 MDWFMooeeInverseKernel<floatT, L, HaloDepthGauge, HaloDepthSpin, Ls, true>(
@@ -531,7 +861,7 @@ private:
         } else {
             out.template iterateOverBulk<BLOCKSIZE>(MDWFGamma5Functor<floatT, L, HaloDepthSpin, Ls>(in));
             if (update) {
-                out.updateAll();
+                mdwfUpdateHalo(out);
             }
         }
     }
@@ -547,7 +877,9 @@ public:
         : _gauge(gauge),
           _params(M5, mf, b5),
           _mf(mf),
+          _mfMinus(mf),
           _csw(csw),
+          _M5(M5),
           _aUpper(gauge.getComm(), name + "_a_up"),
           _aLower(gauge.getComm(), name + "_a_lo"),
           _aInvUpper(gauge.getComm(), name + "_ainv_up"),
@@ -558,12 +890,13 @@ public:
           _rLower(gauge.getComm(), name + "_r_lo"),
           _wUpper(gauge.getComm(), name + "_w_up"),
           _wLower(gauge.getComm(), name + "_w_lo"),
-          _e1(gauge.getComm(), name + "_ework1"),
-          _e2(gauge.getComm(), name + "_ework2"),
-          _e3(gauge.getComm(), name + "_ework3"),
-          _o1(gauge.getComm(), name + "_owork1"),
-          _o2(gauge.getComm(), name + "_owork2"),
-          _o3(gauge.getComm(), name + "_owork3"),
+          // Work fields hold nothing between calls: one set shared by all even/odd operators of this type.
+          _e1(gauge.getComm(), mdwfSharedSpinorName<floatT, Even, HaloDepthSpin, Ls>("eo_work1")),
+          _e2(gauge.getComm(), mdwfSharedSpinorName<floatT, Even, HaloDepthSpin, Ls>("eo_work2")),
+          _e3(gauge.getComm(), mdwfSharedSpinorName<floatT, Even, HaloDepthSpin, Ls>("eo_work3")),
+          _o1(gauge.getComm(), mdwfSharedSpinorName<floatT, Odd, HaloDepthSpin, Ls>("eo_work1")),
+          _o2(gauge.getComm(), mdwfSharedSpinorName<floatT, Odd, HaloDepthSpin, Ls>("eo_work2")),
+          _o3(gauge.getComm(), mdwfSharedSpinorName<floatT, Odd, HaloDepthSpin, Ls>("eo_work3")),
           _fresh(false) {}
 
     // Recomputes the clover blocks A and the block-inverse matrices from the current gauge field.
@@ -589,12 +922,19 @@ public:
     }
 
     /*
-     * Clover blocks and block-inverse matrices converted from a refreshed operator of the other precision with
-     * the same parameters (the gauge field of this operator must hold the same links, converted).
+     * Clover blocks and block-inverse matrices converted from a refreshed operator of the other precision; the mass
+     * parameters (M5, mf, b5, c_sw) are taken over as well, so one operator can follow several source operators
+     * (one single-precision operator for all masses of a Hasenbusch ladder). The gauge field of this operator must
+     * hold the same links, converted.
      */
     template<class srcFloatT>
     void refreshFrom(MDWFMobiusCloverEvenOdd<srcFloatT, HaloDepthGauge, HaloDepthSpin, Ls> &src) {
         src.requireFresh();
+        _M5 = static_cast<floatT>(src._M5);
+        _mf = static_cast<floatT>(src._mf);
+        _mfMinus = static_cast<floatT>(src._mfMinus);
+        _csw = static_cast<floatT>(src._csw);
+        _params = MDWFMobiusOperatorParameters<floatT>(_M5, _mf, static_cast<floatT>(src._params.b5), _mfMinus);
         _aUpper.convert_precision(src._aUpper);
         _aLower.convert_precision(src._aLower);
         _aInvUpper.convert_precision(src._aInvUpper);
@@ -610,6 +950,29 @@ public:
 
     const MDWFMobiusOperatorParameters<floatT> &params() const {
         return _params;
+    }
+
+    /*
+     * Boundary masses m_+ (P_+, Grid's mass_plus) and m_- (P_-, mass_minus); m_+ != m_- needs c_sw = 0 (EOFA
+     * operators). Call refresh() (or refreshFrom) before the next use.
+     */
+    void setMasses(floatT mPlus, floatT mMinus) {
+        _mf = mPlus;
+        _mfMinus = mMinus;
+        _params = MDWFMobiusOperatorParameters<floatT>(_M5, mPlus, _params.b5, mMinus);
+        _fresh = false;
+    }
+
+    floatT massPlus() const {
+        return _mf;
+    }
+
+    floatT massMinus() const {
+        return _mfMinus;
+    }
+
+    Gauge &gauge() const {
+        return _gauge;
     }
 
     // Blocks (all inputs need no halo; outputs of the hopping blocks are halo-updated by the next hop).
@@ -628,6 +991,10 @@ public:
     // Mhat = M_ee - M_eo M_oo^-1 M_oe, or its adjoint.
     void schur(SpinorE &out, const SpinorE &in, bool dagger = false) {
         requireFresh();
+        if (_csw == static_cast<floatT>(0.0) && mdwfDenseMooeeInverse() && mdwfFusedSchur()) {
+            fusedSchur(out, in, dagger);
+            return;
+        }
         if (!dagger) {
             Moe(_o2, in);
             MooInv(_o3, _o2);
@@ -687,7 +1054,7 @@ public:
             h[b]->template iterateOverBulk<BLOCKSIZE>(MDWFLogDetWDifferenceColumn<floatT, HaloDepthGauge, HaloDepthSpin, Ls>(
                 b, m._pinvUpper, m._pinvLower, m._rUpper, m._rLower, m._wUpper, m._wLower, mPrime._wUpper,
                 mPrime._wLower, m._mf, mPrime._mf, m._params.b5, m._params.c5));
-            h[b]->updateAll();
+            mdwfUpdateHalo(*h[b]);
         }
     }
 
@@ -711,7 +1078,7 @@ public:
                 unit.template iterateOverBulk<BLOCKSIZE>(MDWFSliceToStackZero<floatT, Odd, HaloDepthSpin, Ls>(work2, s0));
                 *g[b] += unit;
             }
-            g[b]->updateAll();
+            mdwfUpdateHalo(*g[b]);
         }
     }
 
@@ -723,29 +1090,114 @@ public:
 
     static void merge(SpinorAll &all, const SpinorE &even, const SpinorO &odd) {
         all.template iterateOverBulk<BLOCKSIZE>(MDWFEvenOddMerge<floatT, HaloDepthSpin, Ls>(even, odd));
-        all.updateAll();
+        mdwfUpdateHalo(all);
     }
 };
 
-// Mhat^dagger Mhat on the even sites, in the shape MDWFCoupledSolverAdapter / MDWFCoupledCG expect.
+// Mhat^dagger Mhat on the even sites, in the shape MDWFCoupledSolverAdapter / MDWFCoupledCG expect; with setMMdag(true)
+// Mhat Mhat^dagger instead (GPT's light ratio form, MDWFHmcParameters::light_form = 1).
 template<class EvenOdd>
 class MDWFMobiusSchurNormalOperator {
 public:
     using Spinor = typename EvenOdd::SpinorE;
+    // schur() never reads the halo of its input: the hops read work fields (fused: _e1, or in through mdwfOverlapHop,
+    // which exchanges it; block path: tIn written with a halo update); M_ee is site local.
+    static constexpr bool readsInputHalo = false;
 
 private:
     EvenOdd &_eo;
     Spinor _tmp;
+    bool _mmdag = false;
 
 public:
+    // _tmp is shared by all Schur normal operators of this type (it holds nothing between calls); name unused.
     MDWFMobiusSchurNormalOperator(EvenOdd &eo, CommunicationBase &comm, const std::string &name)
-        : _eo(eo), _tmp(comm, name + "_tmp") {}
+        : _eo(eo), _tmp(comm, EvenOdd::sharedEvenName("schur_normal_tmp")) {
+        (void)name;
+    }
+
+    void setMMdag(bool mmdag) {
+        _mmdag = mmdag;
+    }
+
+    bool mmdag() const {
+        return _mmdag;
+    }
 
     void apply(Spinor &out, const Spinor &in, bool update = false) {
-        _eo.schur(_tmp, in, false);
-        _eo.schur(out, _tmp, true);
+        _eo.schur(_tmp, in, _mmdag);    // Mhat x (or Mhat^+ x), then
+        _eo.schur(out, _tmp, !_mmdag);  // Mhat^+ (Mhat x) (or Mhat (Mhat^+ x))
         if (update) {
-            out.updateAll();
+            mdwfUpdateHalo(out);
+        }
+    }
+};
+
+/*
+ * Grid's / GPT's second Schur form on the odd sites (Grid SchurDiagTwoOperator, GPT schur_complement_two with
+ * parity odd, as in GPT's eo2_ne solver used for EOFA), in normal-equation form for MDWFCoupledCG:
+ *   N = 1 - M_oe M_ee^-1 M_eo M_oo^-1,  apply = N^dagger N.
+ * With setDagger(true) it is the same form of M^dagger: N' = 1 - M_eo^dagger M_ee^-dagger M_oe^dagger M_oo^-dagger.
+ * det M = det M_ee det M_oo det N, the same determinant as Mhat up to the gauge-independent det M_oo.
+ */
+template<class EvenOdd>
+class MDWFMobiusSchurTwoNormalOperator {
+public:
+    using Spinor = typename EvenOdd::SpinorO;
+    using SpinorE = typename EvenOdd::SpinorE;
+    // M_oo^-1 is site local and the hops read their own work fields (written with a halo update).
+    static constexpr bool readsInputHalo = false;
+
+private:
+    EvenOdd &_eo;
+    Spinor _o1, _o2, _n;
+    SpinorE _e1, _e2;
+    bool _dagger = false;
+
+public:
+    // The work fields are shared by all operators of this type (they hold nothing between calls).
+    MDWFMobiusSchurTwoNormalOperator(EvenOdd &eo, CommunicationBase &comm)
+        : _eo(eo), _o1(comm, EvenOdd::sharedOddName("schur2_o1")), _o2(comm, EvenOdd::sharedOddName("schur2_o2")),
+          _n(comm, EvenOdd::sharedOddName("schur2_n")), _e1(comm, EvenOdd::sharedEvenName("schur2_e1")),
+          _e2(comm, EvenOdd::sharedEvenName("schur2_e2")) {}
+
+    void setDagger(bool dagger) {
+        _dagger = dagger;
+    }
+
+    // out = N in, or N^dagger in (adjoint), of M (setDagger(false)) or of M^dagger (setDagger(true)); out must not be
+    // a work field of this class.
+    void schurTwo(Spinor &out, const Spinor &in, bool adjoint) {
+        if (!_dagger && !adjoint) {         // N = 1 - M_oe M_ee^-1 M_eo M_oo^-1
+            _eo.MooInv(_o1, in);
+            _eo.Meo(_e1, _o1);
+            _eo.MeeInv(_e2, _e1);
+            _eo.Moe(_o2, _e2);
+        } else if (!_dagger && adjoint) {   // N^dagger = 1 - M_oo^-dagger M_eo^dagger M_ee^-dagger M_oe^dagger
+            _eo.MoeDagger(_e1, in);
+            _eo.MeeInv(_e2, _e1, true);
+            _eo.MeoDagger(_o1, _e2);
+            _eo.MooInv(_o2, _o1, true);
+        } else if (_dagger && !adjoint) {   // N' = 1 - M_eo^dagger M_ee^-dagger M_oe^dagger M_oo^-dagger
+            _eo.MooInv(_o1, in, true);
+            _eo.MoeDagger(_e1, _o1);
+            _eo.MeeInv(_e2, _e1, true);
+            _eo.MeoDagger(_o2, _e2);
+        } else {                            // N'^dagger = 1 - M_oo^-1 M_oe M_ee^-1 M_eo
+            _eo.Meo(_e1, in);
+            _eo.MeeInv(_e2, _e1);
+            _eo.Moe(_o1, _e2);
+            _eo.MooInv(_o2, _o1);
+        }
+        out = in;
+        out.template axpyThisB<64>(static_cast<typename MDWFSpinorTraits<Spinor>::floatT>(-1.0), _o2);
+    }
+
+    void apply(Spinor &out, const Spinor &in, bool update = false) {
+        schurTwo(_n, in, false);
+        schurTwo(out, _n, true);
+        if (update) {
+            mdwfUpdateHalo(out);
         }
     }
 };
@@ -761,6 +1213,13 @@ public:
  *   y_o = M_oo^-dagger (b_o - M_eo^dagger y_e).
  * solveNormal(x, b), M^dagger M x = b: solveDagger then solve.
  *
+ * setSchurTwo(true): Grid's / GPT's second Schur form on the odd sites instead (GPT eo2_ne = normal_equation(
+ * schur_complement_two(parity odd)), GPT's EOFA solver), N = 1 - M_oe M_ee^-1 M_eo M_oo^-1:
+ *   r_o = b_o - M_oe M_ee^-1 b_e,  N^dagger N y = N^dagger r_o (CG, zero guess),  x_o = M_oo^-1 y,
+ *   x_e = M_ee^-1 (b_e - M_eo x_o);
+ * solveDagger the same with the blocks of M^dagger (MDWFMobiusSchurTwoNormalOperator::setDagger). Same solution to
+ * the tolerance, and the same CG iterations as GPT's EOFA solves.
+ *
  * The CG precision is the recursively updated residual of the even-site normal
  * equation relative to max(|Mhat^+ bhat_e|, 1) (MDWFCoupledCG); this class does not
  * recompute |M x - b| / |b|. Callers that need the true residual of the full
@@ -774,6 +1233,9 @@ public:
     using NormalOp = MDWFMobiusSchurNormalOperator<EvenOdd>;
     using Adapter = MDWFCoupledSolverAdapter<floatT, HaloDepthGauge, HaloDepthSpin, Ls, NormalOp>;
     using CG = MDWFCoupledCG<floatT, Adapter>;
+    using NormalTwoOp = MDWFMobiusSchurTwoNormalOperator<EvenOdd>;
+    using AdapterTwo = MDWFCoupledSolverAdapter<floatT, HaloDepthGauge, HaloDepthSpin, Ls, NormalTwoOp>;
+    using CGTwo = MDWFCoupledCG<floatT, AdapterTwo>;
     using SpinorAll = typename EvenOdd::SpinorAll;
     using SpinorE = typename EvenOdd::SpinorE;
     using SpinorO = typename EvenOdd::SpinorO;
@@ -786,10 +1248,14 @@ private:
     SpinorO _bo, _xo, _to, _uo;
     int _lastIterations;
     double _lastResidue;
+    // setSchurTwo(true) only (created on demand: no extra fields otherwise).
+    std::unique_ptr<NormalTwoOp> _normalTwo;
+    std::unique_ptr<AdapterTwo> _adapterTwo;
 
-    void runCG(SpinorE &x, const SpinorE &b, int maxIter, double precision, const char *what) {
-        CG cg;
-        const MDWFCoupledCGResult<floatT> result = cg.invert(_adapter, x, b, maxIter, precision, true);
+    template<class Cg, class Ad, class S>
+    void runCG(Ad &adapter, S &x, const S &b, int maxIter, double precision, const char *what) {
+        Cg cg;
+        const MDWFCoupledCGResult<floatT> result = cg.invert(adapter, x, b, maxIter, precision, true);
         _lastIterations += result.iterations;
         _lastResidue = result.residue;
         if (!result.converged) {
@@ -816,6 +1282,22 @@ public:
 
     Adapter &adapter() {
         return _adapter;
+    }
+
+    // Solve with Grid's / GPT's second Schur form on the odd sites (see above) instead of Mhat on the even sites.
+    void setSchurTwo(bool on) {
+        if (on && !_normalTwo) {
+            _normalTwo = std::make_unique<NormalTwoOp>(_eo, _be.getComm());
+            _adapterTwo = std::make_unique<AdapterTwo>(*_normalTwo);
+        }
+        if (!on) {
+            _adapterTwo.reset();
+            _normalTwo.reset();
+        }
+    }
+
+    bool schurTwo() const {
+        return static_cast<bool>(_normalTwo);
     }
 
     // M x = b.
@@ -849,7 +1331,40 @@ public:
     }
 
 private:
+    // M x = b (dagger = false) or M^dagger x = b with the second Schur form on the odd sites.
+    void solveSchurTwo(SpinorAll &x, const SpinorAll &b, int maxIter, double precision, bool dagger) {
+        EvenOdd::split(_be, _bo, b);
+        // r_o = b_o - M_oe M_ee^-1 b_e  (M^dagger: b_o - M_eo^dagger M_ee^-dagger b_e)
+        _eo.MeeInv(_te, _be, dagger);
+        if (dagger) {
+            _eo.MeoDagger(_to, _te);
+        } else {
+            _eo.Moe(_to, _te);
+        }
+        _uo = _bo;
+        _uo.template axpyThisB<64>(static_cast<floatT>(-1.0), _to);
+        // N^dagger N y = N^dagger r_o
+        _normalTwo->setDagger(dagger);
+        _normalTwo->schurTwo(_to, _uo, true);
+        runCG<CGTwo>(*_adapterTwo, _xo, _to, maxIter, precision, dagger ? "M^dagger (Schur two)" : "M (Schur two)");
+        // x_o = M_oo^-1 y,  x_e = M_ee^-1 (b_e - M_eo x_o)  (M^dagger: M_oo^-dagger, M_ee^-dagger, M_oe^dagger)
+        _eo.MooInv(_uo, _xo, dagger);
+        if (dagger) {
+            _eo.MoeDagger(_te, _uo);
+        } else {
+            _eo.Meo(_te, _uo);
+        }
+        _ue = _be;
+        _ue.template axpyThisB<64>(static_cast<floatT>(-1.0), _te);
+        _eo.MeeInv(_xe, _ue, dagger);
+        EvenOdd::merge(x, _xe, _uo);
+    }
+
     void solveNoRefresh(SpinorAll &x, const SpinorAll &b, int maxIter, double precision) {
+        if (_normalTwo) {
+            solveSchurTwo(x, b, maxIter, precision, false);
+            return;
+        }
         EvenOdd::split(_be, _bo, b);
         // bhat_e = b_e - M_eo M_oo^-1 b_o
         _eo.MooInv(_to, _bo);
@@ -858,7 +1373,7 @@ private:
         _ue.template axpyThisB<64>(static_cast<floatT>(-1.0), _te);
         // Mhat^dagger Mhat x_e = Mhat^dagger bhat_e
         _eo.schur(_te, _ue, true);
-        runCG(_xe, _te, maxIter, precision, "M");
+        runCG<CG>(_adapter, _xe, _te, maxIter, precision, "M");
         // x_o = M_oo^-1 (b_o - M_oe x_e)
         _eo.Moe(_to, _xe);
         _uo = _bo;
@@ -868,6 +1383,10 @@ private:
     }
 
     void solveDaggerNoRefresh(SpinorAll &y, const SpinorAll &b, int maxIter, double precision) {
+        if (_normalTwo) {
+            solveSchurTwo(y, b, maxIter, precision, true);
+            return;
+        }
         EvenOdd::split(_be, _bo, b);
         // bhat_e = b_e - M_oe^dagger M_oo^-dagger b_o
         _eo.MooInv(_to, _bo, true);
@@ -875,7 +1394,7 @@ private:
         _ue = _be;
         _ue.template axpyThisB<64>(static_cast<floatT>(-1.0), _te);
         // Mhat^dagger Mhat w = bhat_e, y_e = Mhat w
-        runCG(_te, _ue, maxIter, precision, "M^dagger");
+        runCG<CG>(_adapter, _te, _ue, maxIter, precision, "M^dagger");
         _eo.schur(_xe, _te, false);
         // y_o = M_oo^-dagger (b_o - M_eo^dagger y_e)
         _eo.MeoDagger(_to, _xe);

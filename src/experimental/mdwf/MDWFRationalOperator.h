@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFCoupledMultiShiftCG.h"
 
 #include <cmath>
@@ -85,7 +87,7 @@ public:
 
         if (_coefficients.shift.empty()) {
             if (update) {
-                spinor_out.updateAll();
+                mdwfUpdateHalo(spinor_out);
             }
             return {};
         }
@@ -110,7 +112,7 @@ public:
         }
 
         if (update) {
-            spinor_out.updateAll();
+            mdwfUpdateHalo(spinor_out);
         }
         return results;
     }

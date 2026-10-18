@@ -835,6 +835,21 @@ set_SIMULATeQCD_property(mdwfResidualMass PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(mdwfResidualMass PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 add_to_compound_SIMULATeQCD_target(tests mdwfResidualMass)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfMeasure.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfMeasure src/testing/main_mdwfMeasure.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfMeasure PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfMeasure PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+add_to_compound_SIMULATeQCD_target(tests mdwfMeasure)
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfOperatorBench.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfOperatorBench src/testing/main_mdwfOperatorBench.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfOperatorBench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfOperatorBench PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+# tests/profile: operator pieces + light CG solves, same measurements as the GPT driver (MDWF-only target)
+set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfProfileBench.cpp src/spinor/spinorfield.cpp)
+add_SIMULATeQCD_executable(mdwfProfileBench src/testing/main_mdwfProfileBench.cpp src/spinor/spinorfield.cpp)
+set_SIMULATeQCD_property(mdwfProfileBench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(mdwfProfileBench PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+
 # MDWF RHMC rational approximations: AlgRemez (src/tools/rational_approx, unchanged) behind the
 # host-only wrapper src/experimental/mdwf/MDWFRemez.cpp. Needs GMP and MPFR; the hints cover the
 # EasyBuild installations of the GCCcore 14.2.0 toolchain used for this build. Without them only the
@@ -880,15 +895,20 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
 
     # Even/odd (Schur-complement) RHMC targets: also instantiate the Even/Odd spinor layouts.
     foreach(MDWF_EO_TARGET mdwfEvenOddActionTest mdwfEvenOddTwoPlusOneTrajectoryTest mdwfTwoPlusOneHmcRun
-                           mdwfAntiperiodicHmcTest mdwfHasenbuschTest)
+                           mdwfAntiperiodicHmcTest mdwfHasenbuschTest mdwfDSDRTest)
         set_SIMULATeQCD_gpu_backend(src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         add_SIMULATeQCD_executable(${MDWF_EO_TARGET} src/testing/main_${MDWF_EO_TARGET}.cpp src/spinor/spinorfield.cpp)
         set_SIMULATeQCD_property(${MDWF_EO_TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
-        SIMULATeQCD_target_compile_definitions(${MDWF_EO_TARGET} PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+        # SINGLEPREC: the even/odd actions include the mixed-precision Schur solver (MDWFMixedPrecisionSolver.h).
+        SIMULATeQCD_target_compile_definitions(${MDWF_EO_TARGET} PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
         target_link_libraries(${MDWF_EO_TARGET} mdwfRemez)
         target_link_libraries(_${MDWF_EO_TARGET} mdwfRemez)
         add_to_compound_SIMULATeQCD_target(tests ${MDWF_EO_TARGET})
     endforeach()
+    # mdwfTwoPlusOneHmcRun also runs Ls = 16 (DSDR path): instantiate 16-stack spinors there only.
+    SIMULATeQCD_target_compile_definitions(mdwfTwoPlusOneHmcRun PRIVATE NSTACKS_16=1)
+    # mdwfDSDRTest mode = gptmdwf (G6, light factors vs GPT) runs Ls = 16.
+    SIMULATeQCD_target_compile_definitions(mdwfDSDRTest PRIVATE NSTACKS_16=1)
 else()
     message(STATUS "MDWF Remez: GMP/MPFR not found, mdwfRemezTest and the MDWF RHMC targets disabled")
 endif()

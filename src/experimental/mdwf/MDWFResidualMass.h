@@ -39,6 +39,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFFermionBoundary.h"
 #include "MDWFMobiusEvenOdd.h"
 #include "MDWFCoupledSolverAdapter.h"
@@ -185,7 +187,7 @@ private:
         using FullOp = MDWFMobiusCloverLinearOperator<double, HaloDepth, HaloDepth, Ls>;
         FullOp full(_gauge, _M5, _mf, _b5, _csw, _name + "_trueres");
         MDWFCoupledSolverAdapter<double, HaloDepth, HaloDepth, Ls, FullOp> adapter(full);
-        x.updateAll();
+        mdwfUpdateHalo(x);
         full.apply(_wilson, x, false);
         _wilsonTmp = b;
         _wilsonTmp.template axpyThisB<64>(-1.0, _wilson);
@@ -218,7 +220,25 @@ public:
                                                                     _csw, false);
         imported = source;
         imported.template axpyThisB<64>(-_params.c5, _wilson);
-        imported.updateAll();
+        mdwfUpdateHalo(imported);
+    }
+
+    // Unprojected 5D source (slices 0 and Ls-1 set, MDWFPhysicalPointSource) and 5D solution of the last solve.
+    Spinor &source5D() {
+        return _source;
+    }
+
+    const Spinor &solution5D() const {
+        return _solution;
+    }
+
+    // solution = M^-1 D_- source (Grid's ImportPhysicalFermionSource, then the even/odd solve); returns seconds.
+    double solveSource(int maxIter, double precision) {
+        mdwfUpdateHalo(_source);
+        importSource(_imported, _source);
+        const auto solveStart = std::chrono::steady_clock::now();
+        _solver.solve(_solution, _imported, maxIter, precision);
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() - solveStart).count();
     }
 
     // One solve: source component a (0..11) of the point source at (x, y, z, t), contracted along all directions.
@@ -227,7 +247,7 @@ public:
         const LatticeData lat = GInd::getLatData();
         MDWFResidualMassComponent result{{}, {}, 0, 0.0, 0.0};
         _source.template iterateOverBulk<BLOCKSIZE>(MDWFPhysicalPointSource<HaloDepth, Ls>(x, y, z, t, a));
-        _source.updateAll();
+        mdwfUpdateHalo(_source);
         gpuDeviceSynchronize();
         const auto importStart = std::chrono::steady_clock::now();
         importSource(_imported, _source);

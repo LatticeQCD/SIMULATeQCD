@@ -33,6 +33,9 @@
  * wall-clock time plus 1.25 times the longest trajectory so far would exceed
  * max_seconds, then writes the summary and configuration as usual, so a
  * chained batch segment ends cleanly before its time limit.
+ * Ensemble streams: traj_offset = n numbers the trajectories n+1, n+2, ... (a chained segment continuing a stream;
+ * the output file is then appended to instead of overwritten), and save_series = 1 writes every saved
+ * configuration to its own file <Gaugefile_out>.<trajectory> instead of overwriting Gaugefile_out.
  *
  * Fermion boundary conditions in time: antiperiodic_t = 1 gives antiperiodic
  * temporal BCs (required for finite-temperature ensembles; MDWFHmc.h and
@@ -44,6 +47,9 @@
  * Multi-level integrator: term_level = one level per fermion force term (Hasenbusch factors lightest first, then the
  * strange RHMC; 0 = coarsest, `fermion_steps` steps), level_substeps = steps per step of the level above for levels
  * 1, 2, ...; the gauge force sits below the finest level with gauge_substeps. Unset = the two-scale integrator.
+ * md_scheme / gauge_scheme: 0 leapfrog, 1 OMF2 (omf2_lambda), 2 OMF2 force-gradient (GPT's OMF2_force_gradient) per
+ * step of the fermion levels / gauge level (MDWFHmcParameters). MD time: t_GPT = sqrt(2) t here (GPT pi = c_a T_a with
+ * c_a ~ N(0,1); here P = p_a lambda_a with p_a ~ N(0,1/2)), so GPT tau = 1 is tau = 0.70710678.
  *
  * With even_odd = 1 the run uses MDWFEvenOddTwoPlusOneHmc (EVEN_ODD_DESIGN.md):
  * even-site pseudofermions on the Schur complement Mhat^+ Mhat, plus the
@@ -51,13 +57,30 @@
  * to Mhat^+ Mhat (a different, better conditioned spectrum than M^+ M), and the
  * Lanczos checks measure Mhat^+ Mhat.
  *
+ * DSDR: with even_odd = 1, dsdr_twists = eps_0 < eps_1 < ... < eps_k multiplies the weight by the DSDR ladder
+ * prod_i det(D_W^+ D_W + eps_i^2) / det(D_W^+ D_W + eps_(i+1)^2), D_W = D_W(-dsdr_M5) the 4D Wilson operator
+ * (MDWFDSDRFermionActions.h; GPT's tm_ratios eps_i:eps_(i+1)), dsdr_M5 <= 0 meaning M5. Its k force terms come after
+ * the Hasenbusch factors and the strange RHMC in term_level.
+ *
+ * Reversibility: reversibility_check = n > 0 runs, instead of the trajectories, n checks on the start configuration
+ * (fresh momenta and pseudofermions each; integrate tau, flip P, integrate tau, flip P) with the full action and
+ * solver settings (mixed precision, chronological guesses), prints max |U_back - U_0|, max |P_back - P_0| (infnorm
+ * per link) and H_back - H_0, and exits without writing output.
+ *
+ * conf_double = 1 writes Gaugefile_out with full 3x3 links in double precision (default: 2 rows, single).
+ *
+ * Gauge action: rectangle_gauge = 1 uses S_g = -(beta/3) [(1 - 8 c1) sum Re tr U_p + c1 sum Re tr U_rect] with
+ * c1 = gauge_c1 (Iwasaki -0.331, GPT's normalization of beta) instead of symanzik_gauge / Wilson.
+ *
  * Usage (from the build's testing directory):
  *   ./mdwfTwoPlusOneHmcRun <param file> [key=value ...]
- * Parameters: see parameter/tests/mdwfTwoPlusOneHmcRun.param. Ls = 8 is fixed
- * at compile time. Single rank; test-only scaffold, not a production RHMC.
+ * Parameters: see parameter/tests/mdwfTwoPlusOneHmcRun.param. Ls is a compile-time
+ * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only. Single rank; test-only scaffold, not a production RHMC.
  */
 
 #include "../simulateqcd.h"
+#include "../experimental/mdwf/MDWFDSDRFermionActions.h"
+#include "../experimental/mdwf/MDWFEofaFermionAction.h"
 #include "../experimental/mdwf/MDWFEvenOddFermionActions.h"
 #include "../experimental/mdwf/MDWFRhmcFermionActions.h"
 #include "../experimental/mdwf/MDWFSpectralBounds.h"
@@ -65,12 +88,14 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <cstdio>
 #include <fstream>
 #include <iomanip>
 #include <random>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 class MDWFTwoPlusOneRunParameters : public LatticeParameters {
@@ -89,12 +114,31 @@ public:
     Parameter<double> force_error;
     Parameter<int> max_order;
     Parameter<int> remez_digits;
+    Parameter<int> strange_eofa;          // 1: EOFA strange action (GPT exact_one_flavor_ratio) instead of the RHMC
+    Parameter<double> eofa_lambda_low;    // EOFA heatbath: x^(-1/2) approximation interval and error
+    Parameter<double> eofa_lambda_high;
+    Parameter<double> eofa_error;
+    Parameter<int> eofa_check_heatbath;
+    Parameter<int> force_halos;   // 1: halo buffers and exchanges even on one rank (old behaviour); 0: periodic wrap
     Parameter<int> check_steps;
     Parameter<int> symanzik_gauge;
+    Parameter<int> rectangle_gauge;
+    Parameter<double> gauge_c1;
+    DynamicParameter<double> dsdr_twists;
+    Parameter<double> dsdr_M5;
     Parameter<int> antiperiodic_t;
+    Parameter<int> Ls;
+    Parameter<int> mixed_precision;
+    Parameter<double> mixed_delta;
+    Parameter<double> force_precision;
+    Parameter<int> chrono_size;
     DynamicParameter<double> hasenbusch_masses;
+    Parameter<int> light_form;            // light ratio factors: 1 = GPT form (default), 0 = original SQ form
     DynamicParameter<int> term_level;
     DynamicParameter<int> level_substeps;
+    Parameter<int> md_scheme;
+    Parameter<int> gauge_scheme;
+    Parameter<double> omf2_lambda;
     Parameter<int> even_odd;
     Parameter<double> tau;
     Parameter<int> fermion_steps;
@@ -107,7 +151,11 @@ public:
     Parameter<double> precision;
     Parameter<int> block_size;
     Parameter<int> save_every;
+    Parameter<int> conf_double;
     Parameter<double> max_seconds;
+    Parameter<int> traj_offset;
+    Parameter<int> save_series;
+    Parameter<int> reversibility_check;
     Parameter<std::string> output_name;
 
     MDWFTwoPlusOneRunParameters() {
@@ -125,12 +173,31 @@ public:
         addDefault(force_error, "force_error", 1e-8);
         addDefault(max_order, "max_order", 30);
         addDefault(remez_digits, "remez_digits", 50);
+        addDefault(strange_eofa, "strange_eofa", 0);
+        addDefault(eofa_lambda_low, "eofa_lambda_low", 1.0);
+        addDefault(eofa_lambda_high, "eofa_lambda_high", 12.0);
+        addDefault(eofa_error, "eofa_error", 1e-10);
+        addDefault(eofa_check_heatbath, "eofa_check_heatbath", 1);
+        addDefault(force_halos, "force_halos", 1);
         addDefault(check_steps, "check_steps", 500);
         addDefault(symanzik_gauge, "symanzik_gauge", 0);
+        addDefault(rectangle_gauge, "rectangle_gauge", 0);
+        addDefault(gauge_c1, "gauge_c1", -0.331);
+        addOptional(dsdr_twists, "dsdr_twists");
+        addDefault(dsdr_M5, "dsdr_M5", 0.0);
         addDefault(antiperiodic_t, "antiperiodic_t", 0);
+        addDefault(Ls, "Ls", 8);
+        addDefault(mixed_precision, "mixed_precision", 0);
+        addDefault(mixed_delta, "mixed_delta", 0.1);
+        addDefault(force_precision, "force_precision", 0.0);
+        addDefault(chrono_size, "chrono_size", 0);
         addOptional(hasenbusch_masses, "hasenbusch_masses");
+        addDefault(light_form, "light_form", 1);
         addOptional(term_level, "term_level");
         addOptional(level_substeps, "level_substeps");
+        addDefault(md_scheme, "md_scheme", 0);
+        addDefault(gauge_scheme, "gauge_scheme", -1);
+        addDefault(omf2_lambda, "omf2_lambda", 0.18);
         addDefault(even_odd, "even_odd", 0);
         addDefault(tau, "tau", 0.5);
         addDefault(fermion_steps, "fermion_steps", 20);
@@ -143,7 +210,11 @@ public:
         addDefault(precision, "precision", 1e-10);
         addDefault(block_size, "block_size", 5);
         addDefault(save_every, "save_every", 5);
+        addDefault(conf_double, "conf_double", 0);
         addDefault(max_seconds, "max_seconds", 0.0);
+        addDefault(traj_offset, "traj_offset", 0);
+        addDefault(save_series, "save_series", 0);
+        addDefault(reversibility_check, "reversibility_check", 0);
         addDefault(output_name, "output_name", std::string("mdwfTwoPlusOneHmcRun.dat"));
     }
 };
@@ -244,6 +315,50 @@ bool mdwfTwoPlusOneRunCheckBounds(CommunicationBase &commBase, Gaugefield<double
     return mdwfTwoPlusOneRunLanczosReport(adapter, start, mass, low, high, steps, randState, label + ", M^+M", name);
 }
 
+// EOFA strange (strange_eofa = 1): light Hasenbusch ladder + EOFA (+ DSDR ladder). Force terms as with the RHMC.
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddHasenbuschEofaTwoPlusOneFermionAction =
+    MDWFSumFermionAction<HaloDepth, MDWFEvenOddHasenbuschTwoFlavorFermionAction<HaloDepth, Ls>,
+                         MDWFEofaRatioFermionAction<HaloDepth, Ls>>;
+
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc =
+    MDWFHmcDriver<HaloDepth, Ls,
+                  MDWFSumFermionAction<HaloDepth, MDWFEvenOddHasenbuschEofaTwoPlusOneFermionAction<HaloDepth, Ls>,
+                                       MDWFDSDRFermionAction<HaloDepth>>>;
+
+// GPT's sector labels for the force terms (Hasenbusch lightest first, strange, DSDR): mdwf_<m>_<m'>, eofa_ or
+// rhmc_<ms>_<pv>, tm_<eps>_<eps'> (python's :g formatting).
+inline std::vector<std::string> mdwfTwoPlusOneRunSectorLabels(const MDWFHmcParameters &param, bool eofa) {
+    auto g = [](double x) {
+        std::ostringstream s;
+        s << x;
+        return s.str();
+    };
+    std::vector<std::string> labels;
+    std::vector<double> m{param.mf};
+    m.insert(m.end(), param.hasenbusch_masses.begin(), param.hasenbusch_masses.end());
+    m.push_back(param.pv_mass);
+    for (size_t i = 0; i + 1 < m.size(); i++) {
+        labels.push_back("mdwf_" + g(m[i]) + "_" + g(m[i + 1]));
+    }
+    labels.push_back((eofa ? "eofa_" : "rhmc_") + g(param.rhmc.ms) + "_" + g(param.pv_mass));
+    for (size_t i = 0; i + 1 < param.dsdr_twists.size(); i++) {
+        labels.push_back("tm_" + g(param.dsdr_twists[i]) + "_" + g(param.dsdr_twists[i + 1]));
+    }
+    return labels;
+}
+
+// The strange action of the fermion action (the second summand, or the first summand's second with DSDR).
+template<class Fermion>
+auto &mdwfTwoPlusOneRunStrange(Fermion &fermion) {
+    if constexpr (std::is_same<std::decay_t<decltype(fermion.second())>, MDWFDSDRFermionAction<2>>::value) {
+        return fermion.first().second();
+    } else {
+        return fermion.second();
+    }
+}
+
 template<size_t Ls, class Hmc, bool EvenOdd>
 void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParameters &runParam) {
     const size_t HaloDepth = 2;
@@ -260,14 +375,38 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     param.mf = runParam.mf();
     param.b5 = runParam.b5();
     param.csw = runParam.csw();
+    {
+        const LatticeData lat = GIndexer<All, HaloDepth>::getLatData();
+        if (param.csw != 0.0 && lat.vol4 != lat.globvol4) {
+            throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run: c_sw != 0 (clover all-link force) is single-rank "
+                                                     "only; use c_sw = 0 on several ranks"));
+        }
+    }
     param.pv_mass = runParam.pv_mass();
     param.tau = runParam.tau();
     param.steps = runParam.fermion_steps();
     param.gauge_substeps = runParam.gauge_substeps();
     param.max_iter = runParam.max_iter();
     param.precision = runParam.precision();
+    param.mixed_precision = runParam.mixed_precision() != 0;
+    param.mixed_delta = runParam.mixed_delta();
+    param.force_precision = runParam.force_precision();
+    param.chrono_size = runParam.chrono_size();
+    if (param.chrono_size > 0 && !param.mixed_precision) {
+        throw std::runtime_error(stdLogger.fatal("chrono_size > 0 needs mixed_precision = 1"));
+    }
     param.symanzik_gauge = runParam.symanzik_gauge() != 0;
+    param.rectangle_gauge = runParam.rectangle_gauge() != 0;
+    param.gauge_c1 = runParam.gauge_c1();
+    if (param.symanzik_gauge && param.rectangle_gauge) {
+        throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run: set symanzik_gauge or rectangle_gauge, not both"));
+    }
+    if (runParam.dsdr_twists.isSet()) {
+        param.dsdr_twists = runParam.dsdr_twists.get();
+    }
+    param.dsdr_M5 = runParam.dsdr_M5();
     param.antiperiodic_t = runParam.antiperiodic_t() != 0;
+    param.light_form = runParam.light_form();
     if (runParam.hasenbusch_masses.isSet()) {
         param.hasenbusch_masses = runParam.hasenbusch_masses.get();
     }
@@ -277,6 +416,9 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     if (runParam.level_substeps.isSet()) {
         param.level_substeps = runParam.level_substeps.get();
     }
+    param.md_scheme = runParam.md_scheme();
+    param.gauge_scheme = runParam.gauge_scheme();
+    param.omf2_lambda = runParam.omf2_lambda();
     param.rhmc.ms = runParam.ms();
     param.rhmc.lambda_low_s = runParam.lambda_low_s();
     param.rhmc.lambda_high_s = runParam.lambda_high_s();
@@ -286,6 +428,13 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     param.rhmc.force_error = runParam.force_error();
     param.rhmc.max_order = runParam.max_order();
     param.rhmc.digits = runParam.remez_digits();
+    const bool eofa = runParam.strange_eofa() != 0;
+    param.eofa.lambda_low = runParam.eofa_lambda_low();
+    param.eofa.lambda_high = runParam.eofa_lambda_high();
+    param.eofa.error = runParam.eofa_error();
+    param.eofa.check_heatbath = runParam.eofa_check_heatbath() != 0;
+    param.eofa.max_order = runParam.max_order();
+    param.eofa.digits = runParam.remez_digits();
 
     const int nTraj = runParam.n_traj();
     const int nTherm = runParam.n_therm();
@@ -299,6 +448,29 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     const std::string outputPath = runParam.measurements_dir() + "/" + runParam.output_name();
     const bool saveConf = runParam.GaugefileName_out.isSet();
     const std::string confPath = saveConf ? runParam.measurements_dir() + "/" + runParam.GaugefileName_out() : "";
+    // conf_double = 1: full 3x3 links in double precision (read back unchanged, e.g. by GPT); default 2 rows, single.
+    const int confRows = runParam.conf_double() != 0 ? 3 : 2;
+    const int confPrec = runParam.conf_double() != 0 ? 2 : 1;
+    // writeconf_nersc only logs a failed write; a segment that cannot save has no restart point, so stop instead.
+    // The probe catches a bad path (e.g. an absolute Gaugefile_out, which is relative to measurements_dir) at start.
+    auto requireFile = [&](const std::string &path, const char *what) {
+        commBase.globalBarrier();
+        if (!std::ifstream(path).good()) {
+            throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run: ", what, " ", path, " was not written "
+                                                     "(Gaugefile_out is relative to measurements_dir)"));
+        }
+    };
+    auto writeConf = [&](Gauge &field, const std::string &path) {
+        field.writeconf_nersc(path, confRows, confPrec);
+        requireFile(path, "configuration");
+    };
+    if (saveConf) {
+        const std::string probe = confPath + ".writeprobe";
+        if (commBase.IamRoot()) { std::ofstream(probe) << "probe\n"; }
+        requireFile(probe, "write probe");
+        commBase.globalBarrier();
+        if (commBase.IamRoot()) { std::remove(probe.c_str()); }
+    }
 
     if (!param.hasenbusch_masses.empty()) {
         std::ostringstream ladder;
@@ -308,7 +480,8 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
         }
         ladder << " < " << param.pv_mass;
         rootLogger.info("MDWF 2+1 HMC run: light Hasenbusch ladder ", ladder.str(), " (",
-                        param.hasenbusch_masses.size() + 1, " ratio factors)");
+                        param.hasenbusch_masses.size() + 1, " ratio factors), form ",
+                        param.light_form == 1 ? "GPT phi^+ B^+ (A A^+)^-1 B phi" : "SIMULATeQCD phi^+ B (A^+ A)^-1 B^+ phi");
     }
     if (!param.term_level.empty()) {
         std::ostringstream levels;
@@ -322,9 +495,30 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
         rootLogger.info("MDWF 2+1 HMC run: multi-level integrator, term levels ", levels.str(), "| gauge substeps ",
                         param.gauge_substeps);
     }
+    {
+        const char *schemeName[] = {"leapfrog", "OMF2", "OMF2 force-gradient"};
+        const int gs = param.gauge_scheme < 0 ? param.md_scheme : param.gauge_scheme;
+        if (param.md_scheme < 0 || param.md_scheme > 2 || gs < 0 || gs > 2) {
+            throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run: md_scheme / gauge_scheme must be 0, 1 or 2"));
+        }
+        rootLogger.info("MDWF 2+1 HMC run: integrator scheme ", schemeName[param.md_scheme], " (fermion levels), ",
+                        schemeName[gs], " (gauge level), OMF2 lambda = ", param.omf2_lambda,
+                        "; tau in GPT units = sqrt(2) tau");
+    }
+    if (!param.dsdr_twists.empty()) {
+        std::ostringstream twists;
+        for (size_t i = 0; i < param.dsdr_twists.size(); i++) {
+            twists << (i ? " < " : "") << param.dsdr_twists[i];
+        }
+        rootLogger.info("MDWF 2+1 HMC run: DSDR ladder, twists ", twists.str(), " (", param.dsdr_twists.size() - 1,
+                        " factors), D_W(-M5) with M5 = ", param.dsdr_M5 > 0.0 ? param.dsdr_M5 : param.M5);
+    }
     rootLogger.info("MDWF 2+1 HMC run: ", EvenOdd ? "even/odd preconditioned (Mhat^+ Mhat, even-site pseudofermions)"
                                                   : "unpreconditioned (M^+ M)", " actions");
-    rootLogger.info("MDWF 2+1 HMC run: ", param.symanzik_gauge ? "Symanzik" : "Wilson", " beta = ", param.beta, ", M5 = ", param.M5, ", mf = ", param.mf,
+    const std::string gaugeName = param.rectangle_gauge
+                                      ? "plaquette + rectangle (c1 = " + std::to_string(param.gauge_c1) + ")"
+                                      : (param.symanzik_gauge ? "Symanzik" : "Wilson");
+    rootLogger.info("MDWF 2+1 HMC run: ", gaugeName, " beta = ", param.beta, ", M5 = ", param.M5, ", mf = ", param.mf,
                     ", ms = ", param.rhmc.ms, ", pv_mass = ", param.pv_mass, ", b5 = ", param.b5,
                     ", c5 = ", param.b5 - 1.0, ", c_sw = ", param.csw, ", Ls = ", Ls, ", tau = ", param.tau,
                     ", fermion steps = ", param.steps, ", gauge substeps = ", param.gauge_substeps,
@@ -332,10 +526,17 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
                     ", seed = ", runParam.seed(), ", solver precision = ", param.precision,
                     ", fermion BCs in time: ", param.antiperiodic_t ? "antiperiodic" : "periodic",
                     ", output = ", outputPath);
-    rootLogger.info("MDWF 2+1 HMC run strange approximations: M_s^dagger M_s interval [", param.rhmc.lambda_low_s,
-                    ", ", param.rhmc.lambda_high_s, "], M_1^dagger M_1 interval [", param.rhmc.lambda_low_pv, ", ",
-                    param.rhmc.lambda_high_pv, "], action error ", param.rhmc.action_error, ", force error ",
-                    param.rhmc.force_error, ", max order ", param.rhmc.max_order, ", ", param.rhmc.digits, " digits");
+    if (eofa) {
+        rootLogger.info("MDWF 2+1 HMC run strange: EOFA ratio det M(ms) / det M(pv_mass) (GPT exact_one_flavor_ratio), "
+                        "heatbath x^(-1/2) on [", param.eofa.lambda_low, ", ", param.eofa.lambda_high, "], error ",
+                        param.eofa.error, ", heatbath check ", param.eofa.check_heatbath);
+    } else {
+        rootLogger.info("MDWF 2+1 HMC run strange approximations: M_s^dagger M_s interval [", param.rhmc.lambda_low_s,
+                        ", ", param.rhmc.lambda_high_s, "], M_1^dagger M_1 interval [", param.rhmc.lambda_low_pv, ", ",
+                        param.rhmc.lambda_high_pv, "], action error ", param.rhmc.action_error, ", force error ",
+                        param.rhmc.force_error, ", max order ", param.rhmc.max_order, ", ", param.rhmc.digits,
+                        " digits");
+    }
 
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
@@ -355,7 +556,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
 
     // Lanczos checks on the operator the fermion action uses (with the fermion BCs).
     MDWFFermionGauge<HaloDepth> checkGauge(commBase, gauge, param.antiperiodic_t, "MDWF_2p1_run_bc_links");
-    if (checkSteps > 0) {
+    if (checkSteps > 0 && !eofa) {
         const bool insideS = mdwfTwoPlusOneRunCheckBounds<HaloDepth, Ls>(
             commBase, checkGauge.get(), param, param.rhmc.ms, param.rhmc.lambda_low_s, param.rhmc.lambda_high_s, checkSteps,
             d_rand.state, "start", "MDWF_2p1_run_check_start_s", EvenOdd);
@@ -369,22 +570,46 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     }
 
     Hmc hmc(commBase, gauge, param, d_rand.state);
-    const auto &strange = hmc.fermion().second();
-    rootLogger.info("MDWF 2+1 HMC run strange approximation orders: A^(1/4) ", strange.quarterS().order, " (error ",
-                    strange.quarterS().max_relative_error, "), A^(-1/2) ", strange.halfS().order, " (",
-                    strange.halfS().max_relative_error, "), force ", strange.halfSForce().order, " (",
-                    strange.halfSForce().max_relative_error, "); B^(1/4) ", strange.quarterPv().order, " (",
-                    strange.quarterPv().max_relative_error, "), force ", strange.quarterPvForce().order, " (",
-                    strange.quarterPvForce().max_relative_error, ")");
+    const auto &strange = mdwfTwoPlusOneRunStrange(hmc.fermion());
+    if constexpr (std::is_same<std::decay_t<decltype(strange)>, MDWFEofaRatioFermionAction<HaloDepth, Ls>>::value) {
+        rootLogger.info("MDWF 2+1 HMC run EOFA heatbath approximation order ", strange.inverseSqrt().order,
+                        " (error ", strange.inverseSqrt().max_relative_error, ")");
+    } else {
+        rootLogger.info("MDWF 2+1 HMC run strange approximation orders: A^(1/4) ", strange.quarterS().order,
+                        " (error ", strange.quarterS().max_relative_error, "), A^(-1/2) ", strange.halfS().order, " (",
+                        strange.halfS().max_relative_error, "), force ", strange.halfSForce().order, " (",
+                        strange.halfSForce().max_relative_error, "); B^(1/4) ", strange.quarterPv().order, " (",
+                        strange.quarterPv().max_relative_error, "), force ", strange.quarterPvForce().order, " (",
+                        strange.quarterPvForce().max_relative_error, ")");
+    }
+
+    if (runParam.reversibility_check() > 0) {
+        for (int i = 1; i <= runParam.reversibility_check(); i++) {
+            const auto startTime = std::chrono::steady_clock::now();
+            const MDWFHmcReversibilityResult r = hmc.reversibilityCheck();
+            const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime).count();
+            rootLogger.info(std::setprecision(12), "MDWF 2+1 HMC run reversibility check ", i, ": H_0 = ",
+                            r.start.total(), ", forward Delta H = ", r.forward.total() - r.start.total(),
+                            ", H_back - H_0 = ", r.back.total() - r.start.total(), " (kinetic ",
+                            r.back.kinetic - r.start.kinetic, ", gauge ", r.back.gauge - r.start.gauge, ", fermion ",
+                            r.back.fermion - r.start.fermion, "), max link diff = ", r.max_link_diff,
+                            ", max momentum diff = ", r.max_momentum_diff, ", fermion forces = ", r.force_evaluations,
+                            ", seconds = ", seconds);
+        }
+        return;
+    }
 
     std::ofstream out;
     if (commBase.IamRoot()) {
-        out.open(outputPath, std::ios::out | std::ios::trunc);
+        const bool append = runParam.traj_offset() > 0;
+        out.open(outputPath, std::ios::out | (append ? std::ios::app : std::ios::trunc));
         if (!out) {
             throw std::runtime_error(stdLogger.fatal("MDWF 2+1 HMC run cannot open output file ", outputPath));
         }
-        out << "# traj accepted deltaH exp(-deltaH) plaquette kinetic_before gauge_before fermion_before "
-               "fermion_forces seconds" << std::endl;
+        if (!append) {
+            out << "# traj accepted deltaH exp(-deltaH) plaquette kinetic_before gauge_before fermion_before "
+                   "fermion_forces seconds" << std::endl;
+        }
         out << std::setprecision(12);
     }
 
@@ -398,9 +623,16 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     int completed = 0;
     for (int traj = 1; traj <= nTraj; traj++) {
         const double forceSecondsBefore = hmc.fermionForceSeconds();
+        const double heatbathSecondsBefore = hmc.heatbathSeconds();
+        const double actionSecondsBefore = hmc.actionSeconds();
+        const std::vector<double> termSecondsBefore = hmc.termForceSeconds();
+        const std::vector<double> termNorm2Before = hmc.termForceNorm2Sum();
+        const std::vector<double> termNorm2SqBefore = hmc.termForceNorm2SumSq();
+        const std::vector<int> termEvalsBefore = hmc.termForceEvaluations();
         const MDWFForceStorageTiming storageBefore = mdwfForceStorageTiming();
         const auto startTime = std::chrono::steady_clock::now();
-        const double elapsed = std::chrono::duration<double>(startTime - runStart).count();
+        // Max over ranks, so that all ranks take the same stop decision (otherwise a deadlock in the next collective).
+        const double elapsed = commBase.reduceMax(std::chrono::duration<double>(startTime - runStart).count());
         if (maxSeconds > 0.0 && traj > 1 && elapsed + 1.25 * longestTrajectory > maxSeconds) {
             rootLogger.info("MDWF 2+1 HMC run: stopping before trajectory ", traj, " (elapsed ", elapsed,
                             " s, longest trajectory ", longestTrajectory, " s, max_seconds ", maxSeconds, ")");
@@ -408,7 +640,7 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
         }
         const MDWFHmcTrajectoryResult result = hmc.trajectory(traj > nNoMetro, acceptRng);
         const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime).count();
-        longestTrajectory = std::max(longestTrajectory, seconds);
+        longestTrajectory = std::max(longestTrajectory, commBase.reduceMax(seconds));
         completed = traj;
         GaugeAction<double, true, HaloDepth, R18> action(gauge);
         const double plaq = static_cast<double>(action.plaquette());
@@ -420,13 +652,37 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
         rootLogger.info("MDWF 2+1 HMC run trajectory ", traj, " cost: fermion forces ", forceSeconds, " s, of which host force "
                         "storage (incl. term vectors) ", storageSeconds, " s for ", storageTerms, " terms, solves and the "
                         "rest ", forceSeconds - storageSeconds, " s; outside the fermion forces (heatbath, actions, gauge "
-                        "updates) ", seconds - forceSeconds, " s");
+                        "updates) ", seconds - forceSeconds, " s: heatbath ", hmc.heatbathSeconds() - heatbathSecondsBefore,
+                        " s, actions (before + after) ", hmc.actionSeconds() - actionSecondsBefore, " s");
+        if (!hmc.termForceSeconds().empty()) {
+            std::ostringstream terms;
+            for (size_t t = 0; t < hmc.termForceSeconds().size(); t++) {
+                const double before = t < termSecondsBefore.size() ? termSecondsBefore[t] : 0.0;
+                terms << " " << t << ":" << hmc.termForceSeconds()[t] - before;
+            }
+            rootLogger.info("MDWF 2+1 HMC run trajectory ", traj, " force seconds per term (Hasenbusch lightest first, "
+                            "strange, DSDR):", terms.str());
+            // Per sector, in GPT's labels and units (its "<label> <i> force norm2/sites = mean +- std" lines).
+            const std::vector<std::string> labels = mdwfTwoPlusOneRunSectorLabels(param, eofa);
+            for (size_t t = 0; t < hmc.termForceSeconds().size(); t++) {
+                const auto diff = [&](const auto &now, const auto &before) {
+                    return static_cast<double>(now[t]) - (t < before.size() ? static_cast<double>(before[t]) : 0.0);
+                };
+                const double n = diff(hmc.termForceEvaluations(), termEvalsBefore);
+                const double mean = n > 0 ? diff(hmc.termForceNorm2Sum(), termNorm2Before) / n : 0.0;
+                const double var = n > 0 ? diff(hmc.termForceNorm2SumSq(), termNorm2SqBefore) / n - mean * mean : 0.0;
+                rootLogger.info("MDWF 2+1 HMC run trajectory ", traj, " sector ",
+                                t < labels.size() ? labels[t] : "term" + std::to_string(t), " force norm2/sites = ",
+                                mean, " +- ", std::sqrt(std::max(var, 0.0)), " (", n, " evaluations, ",
+                                diff(hmc.termForceSeconds(), termSecondsBefore), " s)");
+            }
+        }
         rootLogger.info("MDWF 2+1 HMC run trajectory ", traj, ": Delta H = ", result.delta_h,
                         ", exp(-Delta H) = ", expMdH, ", accepted = ", result.accepted,
                         ", plaquette = ", plaq, ", fermion forces = ", result.force_evaluations,
                         ", seconds = ", seconds);
         if (commBase.IamRoot()) {
-            out << traj << " " << (result.accepted ? 1 : 0) << " " << result.delta_h << " " << expMdH << " "
+            out << traj + runParam.traj_offset() << " " << (result.accepted ? 1 : 0) << " " << result.delta_h << " " << expMdH << " "
                 << plaq << " " << result.before.kinetic << " " << result.before.gauge << " "
                 << result.before.fermion << " " << result.force_evaluations << " " << seconds << std::endl;
         }
@@ -437,9 +693,13 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
             accepted.push_back(result.accepted ? 1.0 : 0.0);
             plaquette.push_back(plaq);
         }
-        if (saveConf && saveEvery > 0 && traj % saveEvery == 0 && traj < nTraj) {
-            rootLogger.info("MDWF 2+1 HMC run: writing configuration after trajectory ", traj, " to ", confPath);
-            gauge.writeconf_nersc(confPath);
+        if (saveConf && saveEvery > 0 && (traj + runParam.traj_offset()) % saveEvery == 0
+            && (traj < nTraj || runParam.save_series() != 0)) {
+            const std::string path = runParam.save_series() != 0
+                                     ? confPath + "." + std::to_string(traj + runParam.traj_offset()) : confPath;
+            rootLogger.info("MDWF 2+1 HMC run: writing configuration after trajectory ",
+                            traj + runParam.traj_offset(), " to ", path);
+            writeConf(gauge, path);
         }
     }
 
@@ -468,13 +728,17 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
                     plaqStat.blockedError, " (blocked)");
     rootLogger.info("  total fermion forces = ", hmc.forceEvaluations(), ", gauge updates = ", hmc.gaugeUpdates());
     for (size_t t = 0; t < hmc.termForceEvaluations().size(); t++) {
-        rootLogger.info("  force term ", t, " (level ", param.term_level.at(t), "): ", hmc.termForceEvaluations()[t],
+        const int level = param.term_level.empty() ? 0 : param.term_level.at(t);
+        rootLogger.info("  force term ", t, " (level ", level, "): ", hmc.termForceEvaluations()[t],
                         " evaluations, largest rms force ", hmc.termMaxForceRms()[t]);
     }
 
     if (saveConf) {
-        rootLogger.info("MDWF 2+1 HMC run: writing final configuration ", confPath);
-        gauge.writeconf_nersc(confPath);
+        // save_series: the final configuration is numbered too (restart point of the next segment).
+        const std::string path = runParam.save_series() != 0
+                                 ? confPath + "." + std::to_string(completed + runParam.traj_offset()) : confPath;
+        rootLogger.info("MDWF 2+1 HMC run: writing final configuration ", path);
+        writeConf(gauge, path);
     }
 
     if (checkSteps > 0) {
@@ -495,16 +759,36 @@ int main(int argc, char **argv) {
         MDWFTwoPlusOneRunParameters param;
         CommunicationBase commBase(&argc, &argv, true);
         param.readfile(commBase, "../parameter/tests/mdwfTwoPlusOneHmcRun.param", argc, argv);
+        commBase.forceHalos(param.force_halos() != 0);
         commBase.init(param.nodeDim());
 
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
 
         const bool hasenbusch = param.hasenbusch_masses.isSet() && param.hasenbusch_masses.numberValues() > 0;
+        const bool dsdr = param.dsdr_twists.isSet() && param.dsdr_twists.numberValues() > 0;
         if (hasenbusch && param.even_odd() == 0) {
             throw std::runtime_error(stdLogger.fatal("hasenbusch_masses needs even_odd = 1"));
         }
-        if (param.even_odd() != 0 && hasenbusch) {
+        if (dsdr && param.even_odd() == 0) {
+            throw std::runtime_error(stdLogger.fatal("dsdr_twists needs even_odd = 1"));
+        }
+        if (param.Ls() != 8 && !(dsdr && param.Ls() == 16)) {
+            throw std::runtime_error(stdLogger.fatal("Ls = ", param.Ls(), " not instantiated (Ls = 8, or Ls = 16 with dsdr_twists)"));
+        }
+        if (param.strange_eofa() != 0 && !(dsdr && hasenbusch)) {
+            throw std::runtime_error(stdLogger.fatal("strange_eofa = 1 is instantiated with hasenbusch_masses and "
+                                                     "dsdr_twists (even_odd = 1, c_sw = 0)"));
+        }
+        if (param.strange_eofa() != 0 && param.Ls() == 16) {
+            runMDWFTwoPlusOneHmcRun<16, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 16>, true>(commBase, param);
+        } else if (param.strange_eofa() != 0) {
+            runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);
+        } else if (dsdr && param.Ls() == 16) {
+            runMDWFTwoPlusOneHmcRun<16, MDWFEvenOddHasenbuschDSDRTwoPlusOneHmc<HaloDepth, 16>, true>(commBase, param);
+        } else if (dsdr) {
+            runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddHasenbuschDSDRTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);
+        } else if (param.even_odd() != 0 && hasenbusch) {
             runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddHasenbuschTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);
         } else if (param.even_odd() != 0) {
             runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);

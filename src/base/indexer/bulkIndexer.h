@@ -182,7 +182,7 @@ struct LatticeData {
     //! this will be 0 0 0 0 on rank 0, and 10 0 0 0 on rank 1
     size_t gPosX, gPosY, gPosZ, gPosT;
 
-    LatticeData() {}
+    LatticeData() = default;
 
     __host__ __device__ LatticeData(size_t _lx, size_t _ly, size_t _lz, size_t _lt, size_t _HaloDepth, unsigned int _Nodes[4],
                                     size_t _globX, size_t _globY, size_t _globZ, size_t _globT,

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFOneLinkForceAccumulatorMock.h"
 
 #include <cmath>
@@ -79,7 +81,7 @@ void applyMDWFAllLinkPerturbation(
     gauge_out.template iterateOverBulkAllMu<>(
         MDWFAllLinkPerturbation<floatT, HaloDepth, comp>(
             gauge_in.getAccessor(), epsilon, sign));
-    gauge_out.updateAll();
+    mdwfUpdateHalo(gauge_out);
 }
 
 template<class floatT>

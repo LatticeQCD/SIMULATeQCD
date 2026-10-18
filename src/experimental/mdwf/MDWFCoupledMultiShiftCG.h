@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFCoupledSolverAdapter.h"
 
 #include <algorithm>
@@ -37,6 +39,64 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+
+/*
+ * Fused shift update of the simultaneous multishift CG for up to MaxShifts shifts per launch:
+ *   x_i += a_i d_i,   d_i = z_i r + b_i d_i,
+ * one pass over r and over each x_i, d_i (separate axpy / scale / axpy kernels: 8 passes per shift plus one r read).
+ */
+template<class Spinor>
+struct MDWFMultiShiftUpdateKernel {
+    using T = MDWFSpinorTraits<Spinor>;
+    using floatT = typename T::floatT;
+    using Acc = VectArrayAcc<floatT, T::elems>;
+    static constexpr size_t MaxShifts = 8;   // 2 * 8 accessors of 12 pointers: kernel parameters stay below 4 KB
+
+    Acc _r;
+    Acc _x[MaxShifts];
+    Acc _d[MaxShifts];
+    floatT _a[MaxShifts], _b[MaxShifts], _z[MaxShifts];
+    int _n;
+
+    explicit MDWFMultiShiftUpdateKernel(const Spinor &r) : _r(r.getAccessor()), _n(0) {}
+
+    void add(Spinor &x, Spinor &d, double a, double b, double z) {
+        _x[_n] = x.getAccessor();
+        _d[_n] = d.getAccessor();
+        _a[_n] = static_cast<floatT>(a);
+        _b[_n] = static_cast<floatT>(b);
+        _z[_n] = static_cast<floatT>(z);
+        _n++;
+    }
+
+    bool full() const {
+        return _n == static_cast<int>(MaxShifts);
+    }
+
+    __host__ __device__ void operator()(gSiteStack site) {
+        const Vect<floatT, T::elems> r = _r.getElement(site);
+        for (int i = 0; i < _n; i++) {
+            const Vect<floatT, T::elems> d = _d[i].getElement(site);
+            Vect<floatT, T::elems> x = _x[i].getElement(site);
+            x += _a[i] * d;
+            _x[i].setElement(site, x);
+            _d[i].setElement(site, _z[i] * r + _b[i] * d);
+        }
+    }
+
+    void launch() {
+        if (_n == 0) {
+            return;
+        }
+        typedef GIndexer<T::layout, T::halo> GInd;
+        const size_t sites = (T::layout == All) ? GInd::getLatData().vol4 : GInd::getLatData().sizeh;
+        static_assert(T::stacks <= DEFAULT_NBLOCKS, "fused multishift update: one block row per stack");
+        CalcGSiteStack<T::layout, T::halo> calcSiteStack;
+        iterateFunctorNoReturn<true, (DEFAULT_NBLOCKS / T::stacks) * T::stacks>(*this, calcSiteStack, sites, T::stacks);
+        _n = 0;
+    }
+};
 
 template<class floatT>
 struct MDWFCoupledMultiShiftCGResult {
@@ -169,7 +229,7 @@ private:
         double bOld = 0.0;
         int iteration = 0;
         for (; iteration < max_iter && std::find(active.begin(), active.end(), true) != active.end(); iteration++) {
-            search.updateAll();
+            mdwfPrepareInput(adapter, search);
             adapter.apply(applied, search, false);
             applied.template axpyThisB<BlockSize>(static_cast<floatT>(sigma0), search);
 
@@ -181,31 +241,36 @@ private:
             const double a = residualNorm / denominator;
 
             std::vector<double> zetaNew(nShift, 0.0);
+            std::vector<double> aShift(nShift, 0.0);
             for (size_t i = 0; i < nShift; i++) {
                 if (!active[i]) {
                     continue;
                 }
                 zetaNew[i] = zeta[i] * zetaOld[i] * aOld
                              / (a * bOld * (zetaOld[i] - zeta[i]) + zetaOld[i] * aOld * (1.0 + shiftOffset[i] * a));
-                const double aShift = a * zetaNew[i] / zeta[i];
-                spinor_out[i]->template axpyThisB<BlockSize>(static_cast<floatT>(aShift), *directions[i]);
+                aShift[i] = a * zetaNew[i] / zeta[i];
             }
 
             residual.template axpyThisB<BlockSize>(static_cast<floatT>(-a), applied);
             const double nextResidualNorm = adapter.norm2(residual);
             const double b = nextResidualNorm / residualNorm;
 
+            // x_i += aShift_i d_i (old d_i), then d_i = zetaNew_i r + bShift_i d_i, fused over the active shifts.
+            MDWFMultiShiftUpdateKernel<Spinor> update(residual);
             for (size_t i = 0; i < nShift; i++) {
                 if (!active[i]) {
                     continue;
                 }
                 const double ratio = zetaNew[i] / zeta[i];
                 const double bShift = b * ratio * ratio;
-                *directions[i] *= COMPLEX(floatT)(static_cast<floatT>(bShift), 0.0);
-                directions[i]->template axpyThisB<BlockSize>(static_cast<floatT>(zetaNew[i]), residual);
+                update.add(*spinor_out[i], *directions[i], aShift[i], bShift, zetaNew[i]);
+                if (update.full()) {
+                    update.launch();
+                }
                 zetaOld[i] = zeta[i];
                 zeta[i] = zetaNew[i];
             }
+            update.launch();
             search *= COMPLEX(floatT)(static_cast<floatT>(b), 0.0);
             search += residual;
 
@@ -224,7 +289,7 @@ private:
                 results.shifts[i] = {iteration, std::sqrt(zeta[i] * zeta[i] * residualNorm / normScale), false};
             }
             if (update) {
-                spinor_out[i]->updateAll();
+                mdwfUpdateHalo(*spinor_out[i]);
             }
         }
         return results;
@@ -250,13 +315,13 @@ private:
 
         if (residual_norm <= target_norm) {
             if (update) {
-                spinor_out.updateAll();
+                mdwfUpdateHalo(spinor_out);
             }
             return {0, std::sqrt(residual_norm / std::max(source_norm, 1.0)), true};
         }
 
         for (int iteration = 0; iteration < max_iter; iteration++) {
-            search.updateAll();
+            mdwfPrepareInput(adapter, search);
             adapter.apply(operator_search, search, false);
             operator_search.template axpyThisB<BlockSize>(sigma, search);
 
@@ -273,7 +338,7 @@ private:
             const double next_residual_norm = adapter.norm2(residual);
             if (next_residual_norm <= target_norm) {
                 if (update) {
-                    spinor_out.updateAll();
+                    mdwfUpdateHalo(spinor_out);
                 }
                 return {iteration + 1,
                         std::sqrt(next_residual_norm / std::max(source_norm, 1.0)),
@@ -287,7 +352,7 @@ private:
         }
 
         if (update) {
-            spinor_out.updateAll();
+            mdwfUpdateHalo(spinor_out);
         }
         return {max_iter, std::sqrt(residual_norm / std::max(source_norm, 1.0)), false};
     }

@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFPseudofermionAction.h"
 
 #include <algorithm>
@@ -158,7 +160,7 @@ void applyMDWFSingleLinkPerturbation(
 
     gauge_out.template iterateOverFullAllMu<>(
         MDWFSingleLinkPerturbation<floatT, comp>(gauge_in.getAccessor(), probe, sign));
-    gauge_out.updateAll();
+    mdwfUpdateHalo(gauge_out);
 }
 
 template<class floatT,

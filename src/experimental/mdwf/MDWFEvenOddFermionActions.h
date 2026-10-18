@@ -59,10 +59,14 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
+#include "MDWFMixedPrecisionSolver.h"
 #include "MDWFMobiusEvenOdd.h"
 #include "MDWFRhmcFermionActions.h"
 
 #include <algorithm>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -99,9 +103,13 @@ public:
         SpinorE even;
         SpinorO odd1, odd2;
 
+        // Shared by all force-term users of this type (filled per term, nothing kept between force calls).
         Buffers(CommunicationBase &comm, const std::string &name)
-            : chi(comm, name + "_tchi"), eta(comm, name + "_teta"), merged(comm, name + "_tmerged"),
-              even(comm, name + "_teven"), odd1(comm, name + "_todd1"), odd2(comm, name + "_todd2") {}
+            : chi(comm, EvenOdd::sharedAllName("fterm_chi")), eta(comm, EvenOdd::sharedAllName("fterm_eta")),
+              merged(comm, EvenOdd::sharedAllName("fterm_merged")), even(comm, EvenOdd::sharedEvenName("fterm_even")),
+              odd1(comm, EvenOdd::sharedOddName("fterm_odd1")), odd2(comm, EvenOdd::sharedOddName("fterm_odd2")) {
+            (void)name;
+        }
     };
 
 private:
@@ -288,6 +296,7 @@ public:
     using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
     using CG = MDWFCoupledCG<double, Adapter>;
     using Terms = MDWFEvenOddForceTerms<HaloDepth, Ls>;
+    using Mixed = MDWFEvenOddMixedSchurSolver<HaloDepth, Ls>;
 
 private:
     CommunicationBase &_commBase;
@@ -295,8 +304,10 @@ private:
     double _massNum;
     double _massDen;
     std::string _prefix;
-    EvenOdd _eoF;
-    EvenOdd _eo1;
+    std::unique_ptr<EvenOdd> _ownF;  // empty when the operators are shared (Hasenbusch ladder)
+    std::unique_ptr<EvenOdd> _own1;
+    EvenOdd &_eoF;
+    EvenOdd &_eo1;
     NormalOp _normalF;
     NormalOp _normal1;
     Adapter _adapterF;
@@ -304,6 +315,8 @@ private:
     Spinor _phi, _eta, _tmp, _y, _psi, _chi, _mchi;
     typename Terms::Buffers _buffers;
     HostGauge _ipdotDet;
+    Mixed *_mixed;                                     // shared mixed-precision solver, or nullptr (double CG)
+    std::unique_ptr<typename Mixed::History> _forceHistory;
     double _noiseNorm2;
     double _lastPseudofermionAction;
     double _lastDetAction;
@@ -314,6 +327,13 @@ private:
             throw std::runtime_error(stdLogger.fatal("MDWF even/odd two-flavour ratio requires a denominator mass > 0 "
                                                      "and above the numerator mass, got ", massNum, " / ", massDen));
         }
+        if (param.light_form != 0 && param.light_form != 1) {
+            throw std::runtime_error(stdLogger.fatal("MDWF light_form must be 0 (SIMULATeQCD) or 1 (GPT), got ",
+                                                     param.light_form));
+        }
+        if (param.light_form == 1 && param.csw != 0.0) {
+            throw std::runtime_error(stdLogger.fatal("MDWF light_form = 1 (GPT form) is implemented for c_sw = 0 only"));
+        }
         return param;
     }
 
@@ -322,9 +342,28 @@ private:
         _eo1.refresh();
     }
 
-    void solve(Adapter &adapter, Spinor &out, const Spinor &in, const char *what) {
+    // (eo^+ eo) out = in; MD force solves use force_precision and the chronological guess.
+    void solve(EvenOdd &eo, Adapter &adapter, Spinor &out, Spinor &in, const char *what, bool forceSolve = false) {
+        const double precision = (forceSolve && _param.force_precision > 0.0) ? _param.force_precision
+                                                                             : _param.precision;
+        if (_mixed != nullptr) {
+            const auto start = std::chrono::steady_clock::now();
+            const MDWFCoupledMixedCGResult result = _mixed->solve(eo, adapter, out, in, _param.max_iter, precision,
+                                                                  forceSolve ? _forceHistory.get() : nullptr,
+                                                                  gptForm());
+            _lastIterations = std::max(_lastIterations, result.iterations);
+            rootLogger.info("MDWF even/odd ratio solve (", _prefix, " ", what, "): ", result.iterations,
+                            " single-precision iterations, ", result.reliableUpdates, " reliable updates, ",
+                            std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count(), " s");
+            if (!result.converged) {
+                throw std::runtime_error(stdLogger.fatal("MDWF even/odd ratio ", what, " mixed-precision solve did not "
+                                                         "converge: iterations = ", result.iterations, ", residue = ",
+                                                         result.residue));
+            }
+            return;
+        }
         CG cg;
-        const MDWFCoupledCGResult<double> result = cg.invert(adapter, out, in, _param.max_iter, _param.precision, true);
+        const MDWFCoupledCGResult<double> result = cg.invert(adapter, out, in, _param.max_iter, precision, true);
         _lastIterations = std::max(_lastIterations, result.iterations);
         if (!result.converged) {
             throw std::runtime_error(stdLogger.fatal("MDWF even/odd Pauli-Villars ", what,
@@ -336,53 +375,112 @@ public:
     MDWFEvenOddTwoFlavorRatioFermionAction(CommunicationBase &commBase, Gauge &gauge, const MDWFHmcParameters &param,
                                            double massNum, double massDen,
                                            const std::string &name = "MDWF_hmc_eoratio")
+        : MDWFEvenOddTwoFlavorRatioFermionAction(commBase, param, massNum, massDen, mdwfHmcInstancePrefix(name), &gauge,
+                                                 nullptr, nullptr) {}
+
+    // Operators owned elsewhere (one per mass, shared by adjacent Hasenbusch factors; refreshed by every user).
+    // mixed: shared mixed-precision solver (nullptr: double CG); with chrono_size > 0 the factor keeps its own
+    // history of force solutions.
+    MDWFEvenOddTwoFlavorRatioFermionAction(CommunicationBase &commBase, const MDWFHmcParameters &param, EvenOdd &eoNum,
+                                           EvenOdd &eoDen, double massNum, double massDen, const std::string &name,
+                                           Mixed *mixed = nullptr)
+        : MDWFEvenOddTwoFlavorRatioFermionAction(commBase, param, massNum, massDen, mdwfHmcInstancePrefix(name), nullptr,
+                                                 &eoNum, &eoDen) {
+        _mixed = mixed;
+        if (_mixed != nullptr && param.chrono_size > 0) {
+            _forceHistory = std::make_unique<typename Mixed::History>(commBase, static_cast<size_t>(param.chrono_size),
+                                                                      _prefix + "_force");
+        }
+    }
+
+private:
+    // gauge != nullptr: own both operators; otherwise use eoNum / eoDen.
+    MDWFEvenOddTwoFlavorRatioFermionAction(CommunicationBase &commBase, const MDWFHmcParameters &param, double massNum,
+                                           double massDen, const std::string &prefix, Gauge *gauge, EvenOdd *eoNum,
+                                           EvenOdd *eoDen)
         : _commBase(commBase),
           _param(validated(param, massNum, massDen)),
           _massNum(massNum),
           _massDen(massDen),
-          _prefix(mdwfHmcInstancePrefix(name)),
-          _eoF(gauge, param.M5, massNum, param.b5, param.csw, _prefix + "_eof"),
-          _eo1(gauge, param.M5, massDen, param.b5, param.csw, _prefix + "_eo1"),
+          _prefix(prefix),
+          _ownF(gauge ? std::make_unique<EvenOdd>(*gauge, param.M5, massNum, param.b5, param.csw, prefix + "_eof")
+                      : nullptr),
+          _own1(gauge ? std::make_unique<EvenOdd>(*gauge, param.M5, massDen, param.b5, param.csw, prefix + "_eo1")
+                      : nullptr),
+          _eoF(gauge ? *_ownF : *eoNum),
+          _eo1(gauge ? *_own1 : *eoDen),
           _normalF(_eoF, commBase, _prefix + "_nrmf"),
           _normal1(_eo1, commBase, _prefix + "_nrm1"),
           _adapterF(_normalF),
           _adapter1(_normal1),
           _phi(commBase, _prefix + "_phi"),
-          _eta(commBase, _prefix + "_eta"),
-          _tmp(commBase, _prefix + "_tmp"),
-          _y(commBase, _prefix + "_y"),
-          _psi(commBase, _prefix + "_psi"),
-          _chi(commBase, _prefix + "_chi"),
-          _mchi(commBase, _prefix + "_mchi"),
+          // Scratch (written before it is read in every call): the shared pool, also used by the strange RHMC.
+          _eta(commBase, EvenOdd::sharedEvenName("pool0")),
+          _tmp(commBase, EvenOdd::sharedEvenName("pool1")),
+          _y(commBase, EvenOdd::sharedEvenName("pool2")),
+          _psi(commBase, EvenOdd::sharedEvenName("pool3")),
+          _chi(commBase, EvenOdd::sharedEvenName("pool4")),
+          _mchi(commBase, EvenOdd::sharedEvenName("pool5")),
           _buffers(commBase, _prefix + "_fb"),
           _ipdotDet(commBase, _prefix + "_ipdet"),
+          _mixed(nullptr),
           _noiseNorm2(0.0),
           _lastPseudofermionAction(0.0),
           _lastDetAction(0.0),
-          _lastIterations(0) {}
+          _lastIterations(0) {
+        // GPT form: every solve of this factor is with Mhat Mhat^+ (heatbath with B, action and force with A).
+        _normalF.setMMdag(gptForm());
+        _normal1.setMMdag(gptForm());
+    }
 
+    bool gptForm() const {
+        return _param.light_form == 1;
+    }
+
+public:
     // phi = Mhat_1 (Mhat_1^+ Mhat_1)^-1 Mhat_f^+ eta; then the pseudofermion part of S is eta^+ eta.
     void heatbath(uint4 *randState) {
+        _eta.gauss(randState);
+        heatbathFromNoise();
+    }
+
+    // The same with eta already in noise() (exact-comparison suite tests/exact8 fills it from hash fields). noise() is
+    // the shared scratch pool0: fill it right before this call.
+    void heatbathFromNoise() {
         refresh();
         _lastIterations = 0;
-        _eta.gauss(randState);
-        _eta.updateAll();
+        mdwfUpdateHalo(_eta);
         _noiseNorm2 = _adapterF.norm2(_eta);
-        _eoF.schur(_tmp, _eta, true);
-        solve(_adapter1, _y, _tmp, "heatbath");
-        _eo1.schur(_phi, _y, false);
+        if (gptForm()) {
+            // phi = B^+ (B B^+)^-1 A eta (GPT two_flavor_ratio_base.draw)
+            _eoF.schur(_tmp, _eta, false);
+            solve(_eo1, _adapter1, _y, _tmp, "heatbath");
+            _eo1.schur(_phi, _y, true);
+        } else {
+            _eoF.schur(_tmp, _eta, true);
+            solve(_eo1, _adapter1, _y, _tmp, "heatbath");
+            _eo1.schur(_phi, _y, false);
+        }
+    }
+
+    Spinor &noise() {
+        return _eta;
     }
 
     double noiseNorm2() const {
         return _noiseNorm2;
     }
 
+    double phiNorm2() {
+        return _adapterF.norm2(_phi);
+    }
+
     // S = psi^+ (Mhat_f^+ Mhat_f)^-1 psi + S_oo, S_oo = 2 [log det W(mf) - log det W(pv)] (c_sw != 0).
     double action() {
         refresh();
         _lastIterations = 0;
-        _eo1.schur(_psi, _phi, true);
-        solve(_adapterF, _chi, _psi, "action");
+        _eo1.schur(_psi, _phi, !gptForm());   // psi = B^+ phi, or B phi (GPT form)
+        solve(_eoF, _adapterF, _chi, _psi, "action");
         _lastPseudofermionAction = real<double>(_adapterF.dotProduct5D(_psi, _chi));
         _lastDetAction = (_param.csw != 0.0) ? 2.0 * (_eoF.logDetW() - _eo1.logDetW()) : 0.0;
         return _lastPseudofermionAction + _lastDetAction;
@@ -400,13 +498,20 @@ public:
     void force(HostGauge &ipdotHost, const HostGauge &gaugeHost) {
         refresh();
         _lastIterations = 0;
-        _eo1.schur(_psi, _phi, true);
-        solve(_adapterF, _chi, _psi, "force");
-        _eoF.schur(_mchi, _chi, false);
+        _eo1.schur(_psi, _phi, !gptForm());
+        solve(_eoF, _adapterF, _chi, _psi, "force", true);
+        _eoF.schur(_mchi, _chi, gptForm());
 
         Terms terms(_buffers);
-        terms.add(_chi, _mchi, _eoF, false);
-        terms.add(_chi, _phi, _eo1, false);
+        if (gptForm()) {
+            // S = phi^+ B^+ (A A^+)^-1 B phi, chi = (A A^+)^-1 B phi, w = A^+ chi (in _mchi):
+            // dS = -2 Re[chi^+ dA w] + 2 Re[chi^+ dB phi] (GPT two_flavor_ratio_base.gradient)
+            terms.add(_mchi, _chi, _eoF, false);
+            terms.add(_phi, _chi, _eo1, false);
+        } else {
+            terms.add(_chi, _mchi, _eoF, false);
+            terms.add(_chi, _phi, _eo1, false);
+        }
         const MDWFRationalCoefficients<double> coefficients{0.0, {1.0, -1.0}, {0.0, 0.0}};
         mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, _param.csw, _commBase,
                                                 _prefix + "_fstore");
@@ -462,6 +567,7 @@ template<size_t HaloDepth, size_t Ls>
 class MDWFEvenOddHasenbuschTwoFlavorFermionAction {
 public:
     using Factor = MDWFEvenOddTwoFlavorRatioFermionAction<HaloDepth, Ls>;
+    using EvenOdd = typename Factor::EvenOdd;
     using Spinor = typename Factor::Spinor;
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
@@ -469,6 +575,8 @@ public:
 private:
     std::string _prefix;
     std::vector<double> _masses;
+    std::vector<std::unique_ptr<EvenOdd>> _ops;  // one per ladder mass; factor i uses _ops[i] / _ops[i + 1]
+    std::unique_ptr<typename Factor::Mixed> _mixed;  // one single-precision operator for all masses (mixed_precision)
     std::vector<std::unique_ptr<Factor>> _factors;
     HostGauge _ipdotPart;
 
@@ -492,9 +600,18 @@ public:
         : _prefix(mdwfHmcInstancePrefix(name)),
           _masses(ladder(param)),
           _ipdotPart(commBase, _prefix + "_ipdot_part") {
+        for (size_t i = 0; i < _masses.size(); i++) {
+            _ops.push_back(std::make_unique<EvenOdd>(gauge, param.M5, _masses[i], param.b5, param.csw,
+                                                     _prefix + "_m" + std::to_string(i)));
+        }
+        if (param.mixed_precision) {
+            _mixed = std::make_unique<typename Factor::Mixed>(gauge, param.M5, param.b5, param.csw, param.mixed_delta,
+                                                              _prefix + "_mixed");
+        }
         for (size_t i = 0; i + 1 < _masses.size(); i++) {
-            _factors.push_back(std::make_unique<Factor>(commBase, gauge, param, _masses[i], _masses[i + 1],
-                                                        _prefix + "_f" + std::to_string(i)));
+            _factors.push_back(std::make_unique<Factor>(commBase, param, *_ops[i], *_ops[i + 1], _masses[i],
+                                                        _masses[i + 1], _prefix + "_f" + std::to_string(i),
+                                                        _mixed.get()));
         }
     }
 
@@ -612,9 +729,10 @@ private:
     Adapter _adapterS;
     Adapter _adapter1;
     Spinor _phi, _eta, _hbtmp, _chi, _psi;
-    Solutions _solS, _solPv, _solPvZ;
+    Solutions _solS, _solPv;  // force: z_j (B shifts on psi) reuse _solS once the x_i terms are stored
     typename Terms::Buffers _buffers;
     HostGauge _ipdotDet;
+    HostGauge _ipdotPart;
     double _noiseNorm2;
     double _lastPseudofermionAction;
     double _lastDetAction;
@@ -641,9 +759,10 @@ private:
         return param.rhmc.force_error > 0.0 ? param.rhmc.force_error : param.rhmc.action_error;
     }
 
-    void allocate(Solutions &solutions, size_t count, const std::string &stem) {
+    // Solutions take consecutive pool slots after the four scratch fields (pool0 ... pool3).
+    void allocate(Solutions &solutions, size_t count, size_t &slot) {
         for (size_t i = 0; i < count; i++) {
-            solutions.emplace_back(new Spinor(_commBase, _prefix + stem + std::to_string(i) + "v"));
+            solutions.emplace_back(new Spinor(_commBase, EvenOdd::sharedEvenName("pool" + std::to_string(slot++))));
         }
     }
 
@@ -652,8 +771,13 @@ private:
         _eo1.refresh();
     }
 
+    // MD force solves use force_precision (<= 0: precision), heatbath and action solves precision.
+    double precisionFor(bool forceSolve) const {
+        return (forceSolve && _param.force_precision > 0.0) ? _param.force_precision : _param.precision;
+    }
+
     void multishift(Adapter &adapter, Solutions &solutions, const Spinor &in,
-                    const MDWFRationalCoefficients<double> &c, const char *what) {
+                    const MDWFRationalCoefficients<double> &c, const char *what, bool forceSolve = false) {
         if (c.shift.empty()) {
             return;
         }
@@ -662,13 +786,17 @@ private:
             out.push_back(solutions.at(i).get());
         }
         MultiShiftCG cg(MDWFMultiShiftStrategy::Simultaneous);
+        const auto start = std::chrono::steady_clock::now();
         const MDWFCoupledMultiShiftCGResults<double> results
-            = cg.invert(adapter, out, in, c.shift, _param.max_iter, _param.precision, true);
+            = cg.invert(adapter, out, in, c.shift, _param.max_iter, precisionFor(forceSolve), true);
         int iterations = 0;
         for (const auto &result : results.shifts) {
             iterations = std::max(iterations, result.iterations);
         }
         _lastIterations = std::max(_lastIterations, iterations);
+        rootLogger.info("MDWF even/odd RHMC multishift (", what, "): ", c.shift.size(), " shifts, ", iterations,
+                        " iterations, ", std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count(),
+                        " s");
         if (!results.converged()) {
             throw std::runtime_error(stdLogger.fatal("MDWF even/odd one-flavour RHMC ", what,
                                                      " multishift solve did not converge: iterations = ", iterations));
@@ -680,12 +808,12 @@ private:
         for (size_t i = 0; i < c.numerator.size(); i++) {
             out.template axpyThisB<64>(c.numerator[i], *solutions[i]);
         }
-        out.updateAll();
+        mdwfUpdateHalo(out);
     }
 
     void applyRational(Adapter &adapter, Solutions &solutions, Spinor &out, const Spinor &in,
-                       const MDWFRationalCoefficients<double> &c, const char *what) {
-        multishift(adapter, solutions, in, c, what);
+                       const MDWFRationalCoefficients<double> &c, const char *what, bool forceSolve = false) {
+        multishift(adapter, solutions, in, c, what, forceSolve);
         combine(out, in, solutions, c);
     }
 
@@ -713,27 +841,29 @@ public:
           _adapterS(_normalS),
           _adapter1(_normal1),
           _phi(commBase, _prefix + "_phi"),
-          _eta(commBase, _prefix + "_eta"),
-          _hbtmp(commBase, _prefix + "_hbtmp"),
-          _chi(commBase, _prefix + "_chi"),
-          _psi(commBase, _prefix + "_psi"),
+          // Scratch and the per-pole solutions below: the shared pool (pool0 ...), also used by the light factors.
+          _eta(commBase, EvenOdd::sharedEvenName("pool0")),
+          _hbtmp(commBase, EvenOdd::sharedEvenName("pool1")),
+          _chi(commBase, EvenOdd::sharedEvenName("pool2")),
+          _psi(commBase, EvenOdd::sharedEvenName("pool3")),
           _buffers(commBase, _prefix + "_fb"),
           _ipdotDet(commBase, _prefix + "_ipdet"),
+          _ipdotPart(commBase, _prefix + "_ipdot_part"),
           _noiseNorm2(0.0),
           _lastPseudofermionAction(0.0),
           _lastDetAction(0.0),
           _lastIterations(0) {
-        allocate(_solS, std::max(_heatbathS.shift.size(), std::max(_actionS.shift.size(), _forceS.shift.size())), "_xs");
-        allocate(_solPv, std::max(_heatbathPv.shift.size(), std::max(_actionPv.shift.size(), _forcePv.shift.size())),
-                 "_ypv");
-        allocate(_solPvZ, _forcePv.shift.size(), "_zpv");
+        size_t slot = 4;
+        allocate(_solS, std::max({_heatbathS.shift.size(), _actionS.shift.size(), _forceS.shift.size(),
+                                  _forcePv.shift.size()}), slot);
+        allocate(_solPv, std::max({_heatbathPv.shift.size(), _actionPv.shift.size(), _forcePv.shift.size()}), slot);
     }
 
     void heatbath(uint4 *randState) {
         refresh();
         _lastIterations = 0;
         _eta.gauss(randState);
-        _eta.updateAll();
+        mdwfUpdateHalo(_eta);
         _noiseNorm2 = _adapterS.norm2(_eta);
         applyRational(_adapterS, _solS, _hbtmp, _eta, _heatbathS, "heatbath (A^(1/4))");
         applyRational(_adapter1, _solPv, _phi, _hbtmp, _heatbathPv, "heatbath (B^(-1/4))");
@@ -764,25 +894,38 @@ public:
     void force(HostGauge &ipdotHost, const HostGauge &gaugeHost) {
         refresh();
         _lastIterations = 0;
-        applyRational(_adapter1, _solPv, _chi, _phi, _forcePv, "force (B^(1/4) phi)");     // y_j = _solPv[j]
-        applyRational(_adapterS, _solS, _psi, _chi, _forceS, "force (A^(-1/2) chi)");      // x_i = _solS[i]
-        multishift(_adapter1, _solPvZ, _psi, _forcePv, "force (B shifts on psi)");          // z_j = _solPvZ[j]
+        applyRational(_adapter1, _solPv, _chi, _phi, _forcePv, "force (B^(1/4) phi)", true);   // y_j = _solPv[j]
+        applyRational(_adapterS, _solS, _psi, _chi, _forceS, "force (A^(-1/2) chi)", true);    // x_i = _solS[i]
 
-        Terms terms(_buffers);
-        std::vector<double> numerators;
-        for (size_t i = 0; i < _forceS.shift.size(); i++) {
-            terms.add(*_solS[i], *_solS[i], _eoS, true);        // -2 a_i Re[(Mhat_s x_i)^+ dMhat_s x_i]
-            numerators.push_back(_forceS.numerator[i]);
+        // Strange-mass terms first; then z_j overwrite the x_i in _solS (one set of pole vectors less in memory).
+        {
+            Terms terms(_buffers);
+            std::vector<double> numerators;
+            for (size_t i = 0; i < _forceS.shift.size(); i++) {
+                terms.add(*_solS[i], *_solS[i], _eoS, true);    // -2 a_i Re[(Mhat_s x_i)^+ dMhat_s x_i]
+                numerators.push_back(_forceS.numerator[i]);
+            }
+            const MDWFRationalCoefficients<double> coefficients{0.0, numerators,
+                                                                std::vector<double>(numerators.size(), 0.0)};
+            mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, _param.csw, _commBase,
+                                                    _prefix + "_fstore");
         }
-        for (size_t j = 0; j < _forcePv.shift.size(); j++) {
-            terms.add(*_solPv[j], *_solPvZ[j], _eo1, true);     // -2 b_j Re[(Mhat_1 z_j)^+ dMhat_1 y_j]
-            numerators.push_back(_forcePv.numerator[j]);
-            terms.add(*_solPvZ[j], *_solPv[j], _eo1, true);     // -2 b_j Re[(Mhat_1 y_j)^+ dMhat_1 z_j]
-            numerators.push_back(_forcePv.numerator[j]);
+        multishift(_adapter1, _solS, _psi, _forcePv, "force (B shifts on psi)", true);       // z_j = _solS[j]
+        {
+            Terms terms(_buffers);
+            std::vector<double> numerators;
+            for (size_t j = 0; j < _forcePv.shift.size(); j++) {
+                terms.add(*_solPv[j], *_solS[j], _eo1, true);   // -2 b_j Re[(Mhat_1 z_j)^+ dMhat_1 y_j]
+                numerators.push_back(_forcePv.numerator[j]);
+                terms.add(*_solS[j], *_solPv[j], _eo1, true);   // -2 b_j Re[(Mhat_1 y_j)^+ dMhat_1 z_j]
+                numerators.push_back(_forcePv.numerator[j]);
+            }
+            const MDWFRationalCoefficients<double> coefficients{0.0, numerators,
+                                                                std::vector<double>(numerators.size(), 0.0)};
+            mdwfHmcStoreFermionForce<HaloDepth, Ls>(_ipdotPart, gaugeHost, terms, coefficients, _param.csw, _commBase,
+                                                    _prefix + "_fstore");
+            mdwfHmcAddHostForce<HaloDepth>(ipdotHost, _ipdotPart);
         }
-        const MDWFRationalCoefficients<double> coefficients{0.0, numerators, std::vector<double>(numerators.size(), 0.0)};
-        mdwfHmcStoreFermionForce<HaloDepth, Ls>(ipdotHost, gaugeHost, terms, coefficients, _param.csw, _commBase,
-                                                _prefix + "_fstore");
         if (_param.csw != 0.0) {
             mdwfEvenOddStoreOddDetRatioForce<HaloDepth, Ls>(_ipdotDet, gaugeHost, _eoS, _eo1, 1.0, _param.csw,
                                                             _commBase, _prefix + "_det");

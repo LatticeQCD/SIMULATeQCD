@@ -29,6 +29,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFAllLinkDirectionIndependentStorage.h"
 #include "MDWFDeviceForceStorage.h"
 #include "MDWFCoupledCG.h"
@@ -57,6 +59,21 @@ struct MDWFRhmcParameters {
     int digits;              // AlgRemez working precision in digits; <= 0 means 50
 };
 
+// Exact one-flavour (EOFA) strange action (MDWFEofaFermionAction.h); unused otherwise. The heatbath applies K^(-1/2)
+// with the AlgRemez approximation of x^(-1/2) on [lambda_low, lambda_high] (spectrum of the EOFA operator K) of the
+// lowest order with relative error <= error; check_heatbath recomputes S(phi) after the heatbath and logs
+// |S(phi) / |eta|^2 - 1| (GPT's "EOFA draw check"). zolotarev_order > 0 replaces the Remez approximation by GPT's
+// zolotarev_inverse_square_root of that order on the same interval (same poles as GPT; error is then unused).
+struct MDWFEofaParameters {
+    double lambda_low = 1.0;
+    double lambda_high = 12.0;
+    double error = 1e-10;
+    bool check_heatbath = true;
+    int max_order = 30;
+    int digits = 50;
+    int zolotarev_order = 0;
+};
+
 struct MDWFHmcParameters {
     double beta;
     double M5;
@@ -75,6 +92,17 @@ struct MDWFHmcParameters {
     // Even/odd Hasenbusch ladder (MDWFEvenOddHasenbuschTwoFlavorFermionAction): intermediate masses between mf and
     // pv_mass, strictly increasing; empty = the single ratio det(Mhat_f^+ Mhat_f) / det(Mhat_1^+ Mhat_1).
     std::vector<double> hasenbusch_masses;
+    // Pseudofermion form of each light ratio factor det(A^+ A) / det(B^+ B), A = Mhat(m_i), B = Mhat(m_i+1) (same
+    // determinant ratio, different action and force): 0 = S = phi^+ B (A^+ A)^-1 B^+ phi (SIMULATeQCD's original form),
+    // 1 = S = phi^+ B^+ (A A^+)^-1 B phi (GPT's two_flavor_ratio_evenodd_schur; ~1.5x smaller rms force). c_sw = 0 only.
+    // Production uses 1 (mdwfTwoPlusOneHmcRun default, since 2026-10-17); the library default stays 0 so the validated
+    // unit tests (incl. c_sw != 0) and the G6 S_SQ-vs-GPT check keep their original form.
+    int light_form = 0;
+    // Even/odd form of the EOFA solves (MDWFEofaRatioFermionAction, double precision only): 0 = Mhat^dagger Mhat on the
+    // even sites, Mhat = M_ee - M_eo M_oo^-1 M_oe (SIMULATeQCD's form, the light and DSDR factors in both codes);
+    // 2 = Grid's / GPT's second Schur form on the odd sites, N = 1 - M_oe M_ee^-1 M_eo M_oo^-1 (GPT's eo2_ne EOFA
+    // solver): same solutions to the tolerance, and the same CG iterations as GPT.
+    int eofa_schur = 0;
     // Multi-level integrator (MDWFHmcDriver::integrateMultiLevel), used when term_level is not empty: term_level[t] =
     // level of fermion force term t (0 = coarsest; terms as the action's forceTerm order, e.g. Hasenbusch factors
     // lightest first, then the strange RHMC); level 0 makes `steps` steps per trajectory, level l > 0 makes
@@ -82,6 +110,34 @@ struct MDWFHmcParameters {
     // gauge_substeps steps. Empty term_level = the original two-scale integrator.
     std::vector<int> term_level;
     std::vector<int> level_substeps;
+    // DSDR ladder (MDWFDSDRFermionActions.h): twists eps_0 < eps_1 < ... < eps_k of the 4D twisted-mass Wilson
+    // operators D_W(-dsdr_M5) + i eps gamma5, product det(D_W^+ D_W + eps_0^2) / det(D_W^+ D_W + eps_k^2); empty = no
+    // DSDR. dsdr_M5 <= 0 means M5.
+    std::vector<double> dsdr_twists;
+    double dsdr_M5;
+    // HMC driver: plaquette + rectangle gauge action S_g = -(beta/3) [(1 - 8 c1) sum Re tr U_p + c1 sum Re tr U_rect]
+    // (GPT's improved_with_rectangle up to a constant; Iwasaki c1 = -0.331, DBW2 c1 = -1.4088, tree-level Symanzik
+    // c1 = -1/12) instead of symanzik_gauge / Wilson; both orientations of the 1x2 rectangles are summed.
+    bool rectangle_gauge;
+    double gauge_c1;
+    // Solvers of the even/odd Hasenbusch ladder (MDWFMixedPrecisionSolver.h): mixed_precision = single-precision CG
+    // with double reliable updates (delta mixed_delta); force_precision = tolerance of the MD force solves (<= 0:
+    // precision; heatbath and action solves always use precision); chrono_size = number of previous force solutions
+    // per factor for the chronological initial guess (0: start from zero; needs mixed_precision).
+    bool mixed_precision = false;
+    double mixed_delta = 0.1;
+    double force_precision = 0.0;
+    int chrono_size = 0;
+    // Step scheme of the multi-level integrator (MDWFHmcDriver::evolveLevel), as GPT's integrator/symplectic/schemes.py:
+    // 0 = leapfrog P(h/2) I(h) P(h/2); 1 = OMF2 P(l h) I(h/2) P((1 - 2l) h) I(h/2) P(l h), l = omf2_lambda; 2 = OMF2
+    // force-gradient P(h/6) I(h/2) Pfg(2h/3) I(h/2) P(h/6), Pfg = kick with the force at exp(i (h^2/24) Pf) U, Pf =
+    // the level's own unit kick -i ipdot from zero (arXiv:0910.2950; GPT update_p_force_gradient). I = the next finer
+    // level, or Q for the gauge level. md_scheme for the fermion levels, gauge_scheme (< 0: md_scheme) for the gauge
+    // level. A non-leapfrog scheme with empty term_level puts every fermion term on level 0.
+    int md_scheme = 0;
+    int gauge_scheme = -1;
+    double omf2_lambda = 0.18;
+    MDWFEofaParameters eofa;
 };
 
 /*
@@ -227,7 +283,7 @@ public:
     // phi = M^\dagger eta with eta distributed as exp(-eta^\dagger eta); then S = eta^\dagger eta.
     void heatbath(uint4 *randState) {
         _eta.gauss(randState);
-        _eta.updateAll();
+        mdwfUpdateHalo(_eta);
         _noiseNorm2 = _normalAdapter.norm2(_eta);
         _adjoint.apply(_phi, _eta, true);
     }
@@ -352,7 +408,7 @@ public:
     // phi = M_1 (M_1^\dagger M_1)^{-1} M_f^\dagger eta = (M_1^\dagger)^{-1} M_f^\dagger eta; then S = eta^\dagger eta.
     void heatbath(uint4 *randState) {
         _eta.gauss(randState);
-        _eta.updateAll();
+        mdwfUpdateHalo(_eta);
         _noiseNorm2 = _adapterF.norm2(_eta);
         _adjointF.apply(_tmp, _eta, true);
         solve(_adapter1, _y, _tmp, "heatbath");

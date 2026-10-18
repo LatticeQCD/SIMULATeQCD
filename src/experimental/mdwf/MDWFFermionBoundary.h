@@ -21,23 +21,28 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "../../gauge/gaugefield.h"
 
 #include <stdexcept>
 #include <string>
 
-// Copy of the gauge field with U_t(x) -> -U_t(x) on the last time slice (antiperiodic fermion BCs in time).
+// Copy of the gauge field with U_t(x) -> -U_t(x) on the last GLOBAL time slice (antiperiodic fermion BCs in time; with
+// the lattice split in t only the rank holding t = globLT - 1 flips, as staggeredPhases.h).
 template<size_t HaloDepth>
 struct MDWFAntiperiodicTimeLinks {
     SU3Accessor<double, R18> _gauge;
-    int _ltLast;
+    int _globalTLast;
 
-    MDWFAntiperiodicTimeLinks(Gaugefield<double, true, HaloDepth, R18> &gauge, int ltLast)
-        : _gauge(gauge.getAccessor()), _ltLast(ltLast) {}
+    MDWFAntiperiodicTimeLinks(Gaugefield<double, true, HaloDepth, R18> &gauge, int globalTLast)
+        : _gauge(gauge.getAccessor()), _globalTLast(globalTLast) {}
 
     __host__ __device__ SU3<double> operator()(gSiteMu siteMu) {
+        typedef GIndexer<All, HaloDepth> GInd;
         const SU3<double> link = _gauge.getLink(siteMu);
-        if (siteMu.mu == 3 && static_cast<int>(siteMu.coord.t) == _ltLast) {
+        LatticeData lat = GInd::getLatData();
+        if (siteMu.mu == 3 && static_cast<int>(lat.globalPos(siteMu.coord).t) == _globalTLast) {
             return static_cast<double>(-1.0) * link;
         }
         return link;
@@ -49,15 +54,12 @@ void mdwfFermionGaugeField(Gaugefield<double, true, HaloDepth, R18> &fermionGaug
                            Gaugefield<double, true, HaloDepth, R18> &gauge, bool antiperiodicTime) {
     typedef GIndexer<All, HaloDepth> GInd;
     const LatticeData lat = GInd::getLatData();
-    if (lat.vol4 != lat.globvol4) {
-        throw std::runtime_error(stdLogger.fatal("MDWF fermion boundary phases are single-rank only"));
-    }
     if (antiperiodicTime) {
-        fermionGauge.iterateOverBulkAllMu(MDWFAntiperiodicTimeLinks<HaloDepth>(gauge, static_cast<int>(lat.lt) - 1));
+        fermionGauge.iterateOverBulkAllMu(MDWFAntiperiodicTimeLinks<HaloDepth>(gauge, static_cast<int>(lat.globLT) - 1));
     } else {
         fermionGauge = gauge;
     }
-    fermionGauge.updateAll();
+    mdwfUpdateHalo(fermionGauge);
 }
 
 // Gauge field seen by the fermions: the thin field itself (periodic) or a -U_t copy on the last time slice

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFCoupledSolverAdapter.h"
 
 #include <algorithm>
@@ -20,6 +22,13 @@ struct MDWFCoupledCGResult {
     double residue;
     bool converged;
 };
+
+// Running total of MDWFCoupledCG iterations (operator applications) on this rank, for timing reports
+// (mdwfDSDRTest mode = exact with exact_timing = 1). Not reset by the solver.
+inline long long &mdwfCoupledCGIterationCount() {
+    static long long count = 0;
+    return count;
+}
 
 template<class floatT, class CoupledAdapter, size_t BlockSize = 64>
 class MDWFCoupledCG {
@@ -46,13 +55,13 @@ public:
 
         if (residual_norm <= target_norm) {
             if (update) {
-                spinor_out.updateAll();
+                mdwfUpdateHalo(spinor_out);
             }
             return {0, std::sqrt(residual_norm / std::max(source_norm, 1.0)), true};
         }
 
         for (int iteration = 0; iteration < max_iter; iteration++) {
-            search.updateAll();
+            mdwfPrepareInput(adapter, search);
             adapter.apply(operator_search, search, false);
 
             const double denominator = real<double>(adapter.dotProduct5D(search, operator_search));
@@ -67,8 +76,9 @@ public:
             const double next_residual_norm = adapter.norm2(residual);
             if (next_residual_norm <= target_norm) {
                 if (update) {
-                    spinor_out.updateAll();
+                    mdwfUpdateHalo(spinor_out);
                 }
+                mdwfCoupledCGIterationCount() += iteration + 1;
                 return {iteration + 1,
                         std::sqrt(next_residual_norm / std::max(source_norm, 1.0)),
                         true};
@@ -81,8 +91,9 @@ public:
         }
 
         if (update) {
-            spinor_out.updateAll();
+            mdwfUpdateHalo(spinor_out);
         }
+        mdwfCoupledCGIterationCount() += max_iter;
         return {max_iter, std::sqrt(residual_norm / std::max(source_norm, 1.0)), false};
     }
 };
