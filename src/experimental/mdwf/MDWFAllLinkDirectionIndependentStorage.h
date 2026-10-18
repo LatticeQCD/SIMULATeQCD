@@ -44,13 +44,8 @@ overwriteMDWFWilsonAllLinkDirectionIndependentStorageCsw0(
     typedef GIndexer<All, HaloDepth> GInd;
     using HostSpinor = MDWFSpinor<double, false, All, HaloDepth, Ls>;
 
+    // Wilson part only (c_sw = 0): a gather over x and x + mu, valid on any decomposition.
     const LatticeData lat = GInd::getLatData();
-    if (lat.vol4 != lat.globvol4) {
-        throw std::runtime_error(stdLogger.fatal(
-            "MDWF all-link direction-independent storage is single-rank "
-            "only: local volume = ", lat.vol4,
-            ", global volume = ", lat.globvol4));
-    }
     if (workspace.size() != force_coefficients.numerator.size()) {
         throw std::runtime_error(stdLogger.fatal(
             "MDWF all-link direction-independent storage workspace/coefficient "

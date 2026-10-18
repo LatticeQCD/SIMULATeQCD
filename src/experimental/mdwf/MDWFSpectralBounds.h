@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -98,7 +100,7 @@ MDWFLanczosResult mdwfLanczosExtremes(Adapter &adapter, const Spinor &start, int
     };
 
     for (int step = 0; step < maxSteps; step++) {
-        current.updateAll();
+        mdwfUpdateHalo(current);
         adapter.apply(work, current, false);
         if (step > 0) {
             work.template axpyThisB<64>(-beta[step - 1], previous);

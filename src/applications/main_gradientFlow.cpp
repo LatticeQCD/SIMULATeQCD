@@ -514,7 +514,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         logStream.str("");
         logStream << std::fixed << std::setprecision(7) << "   t = " << flow_time << ": ";
-        LineFormatter newLine = file.tag("");
+        LineFormatter newLine = file.tag("", 15);   // 15 digits (parity test T9 compares to 1e-9)
         newLine << flow_time;
 
         //! -------------------------------calculate observables on flowed field----------------------------------------

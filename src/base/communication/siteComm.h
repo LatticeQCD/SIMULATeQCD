@@ -27,6 +27,23 @@
 #include "deviceEvent.h"
 #include "deviceStream.h"
 #include "../wrapper/marker.h"
+#include <cstdlib>
+#include <string>
+
+/*
+ * Opt-in lean halo exchange for the GPU-aware MPI path (USE_GPU_AWARE_MPI, no P2P): environment SIMULATEQCD_LEAN_HALO=1.
+ * Drops the cudaDeviceSynchronize and the MPI barriers around each exchange. Ordering is kept by (a) the legacy default
+ * stream (compute kernels) synchronising with the blocking halo streams, (b) MPI request completion, and (c) a sync of
+ * the halo streams after the inject kernels (the shared receive buffer must not be overwritten by the next exchange
+ * before it has been read). The P2P path and the default behaviour are unchanged.
+ */
+inline bool simulateqcdLeanHalo() {
+    static const bool lean = [] {
+        const char *env = std::getenv("SIMULATEQCD_LEAN_HALO");
+        return env != nullptr && std::string(env) == "1";
+    }();
+    return lean;
+}
 
 
 #include "../indexer/haloIndexer.h"
@@ -477,12 +494,15 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         COMPLEX(floatT) *HaloBuffer,
         unsigned int param) {
 
-    gpuError_t gpuErr = gpuDeviceSynchronize();
-    if (gpuErr != gpuSuccess) {
-        GpuError("siteComm.h: _extractHalosSeg gpuDeviceSynchronize failed:", gpuErr);
-    }
+    const bool lean = simulateqcdLeanHalo() && onDevice && _commBase.gpuAwareMPIAvail() && !_commBase.useGpuP2P();
+    if (!lean) {
+        gpuError_t gpuErr = gpuDeviceSynchronize();
+        if (gpuErr != gpuSuccess) {
+            GpuError("siteComm.h: _extractHalosSeg gpuDeviceSynchronize failed:", gpuErr);
+        }
 
-    _commBase.globalBarrier();
+        _commBase.globalBarrier();
+    }
 
     typedef HaloIndexer<LatLayout, HaloDepth> HInd;
     for (auto &HSegConfig : HSegConfig_send_vec){
@@ -532,7 +552,9 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
     }
 
     HaloInfo.syncAllStreamRequests();
-    _commBase.globalBarrier();
+    if (!lean) {
+        _commBase.globalBarrier();
+    }
 }
 
 
@@ -613,6 +635,12 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
         }
     }
 
+    const bool lean = simulateqcdLeanHalo() && onDevice && _commBase.gpuAwareMPIAvail() && !_commBase.useGpuP2P();
+    if (lean) {
+        // Only the halo streams (inject kernels) must finish before the shared receive buffer is reused.
+        HaloInfo.syncAllStreamRequests();
+        return;
+    }
     gpuError_t gpuErr = gpuDeviceSynchronize();
     if (gpuErr != gpuSuccess) {
         GpuError("siteComm.h: _injectHalosSeg, gpuDeviceSynchronize failed:", gpuErr);

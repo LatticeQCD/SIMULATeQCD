@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFAnalyticForceContractionCheck.h"
 
 #include <algorithm>
@@ -107,7 +109,7 @@ void writeMDWFOneLinkForceAccumulatorMock(
     force_out.template iterateOverBulkAllMu<>(
         MDWFOneLinkForceAccumulatorMockFunctor<floatT>(
             probe, selected_link_action_derivative));
-    force_out.updateAll();
+    mdwfUpdateHalo(force_out);
 }
 
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>

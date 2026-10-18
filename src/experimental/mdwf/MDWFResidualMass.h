@@ -30,6 +30,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFFermionBoundary.h"
 #include "MDWFMobiusEvenOdd.h"
 
@@ -179,7 +181,25 @@ public:
                                                                     _csw, false);
         imported = source;
         imported.template axpyThisB<64>(-_params.c5, _wilson);
-        imported.updateAll();
+        mdwfUpdateHalo(imported);
+    }
+
+    // Unprojected 5D source (slices 0 and Ls-1 set, MDWFPhysicalPointSource) and 5D solution of the last solve.
+    Spinor &source5D() {
+        return _source;
+    }
+
+    const Spinor &solution5D() const {
+        return _solution;
+    }
+
+    // solution = M^-1 D_- source (Grid's ImportPhysicalFermionSource, then the even/odd solve); returns seconds.
+    double solveSource(int maxIter, double precision) {
+        mdwfUpdateHalo(_source);
+        importSource(_imported, _source);
+        const auto solveStart = std::chrono::steady_clock::now();
+        _solver.solve(_solution, _imported, maxIter, precision);
+        return std::chrono::duration<double>(std::chrono::steady_clock::now() - solveStart).count();
     }
 
     // One solve: source component a (0..11) of the point source at (x, y, z, t), contracted along all directions.
@@ -188,11 +208,7 @@ public:
         const LatticeData lat = GInd::getLatData();
         MDWFResidualMassComponent result{{}, {}, 0, 0.0, 0.0};
         _source.template iterateOverBulk<BLOCKSIZE>(MDWFPhysicalPointSource<HaloDepth, Ls>(x, y, z, t, a));
-        _source.updateAll();
-        importSource(_imported, _source);
-        const auto solveStart = std::chrono::steady_clock::now();
-        _solver.solve(_solution, _imported, maxIter, precision);
-        result.seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - solveStart).count();
+        result.seconds = solveSource(maxIter, precision);
         result.iterations = _solver.lastIterations();
         result.residue = _solver.lastResidue();
         rootLogger.info("MDWF m_res: source component ", a, " of 12: ", result.iterations,

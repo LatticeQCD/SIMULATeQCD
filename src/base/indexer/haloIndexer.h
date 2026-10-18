@@ -97,7 +97,7 @@ public:
     size_t h_offsetsHalf[80];
 
 
-    __device__ __host__ HaloData() {}
+    __device__ __host__ HaloData() = default;
 
     __device__ __host__ HaloData(size_t lx, size_t ly, size_t lz, size_t lt, size_t halo_depth, unsigned int Nodes[4]) {
 

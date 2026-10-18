@@ -43,6 +43,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFHmc.h"
 #include "MDWFRemez.h"
 
@@ -246,7 +248,7 @@ private:
         for (size_t i = 0; i < c.numerator.size(); i++) {
             out.template axpyThisB<64>(c.numerator[i], *solutions[i]);
         }
-        out.updateAll();
+        mdwfUpdateHalo(out);
     }
 
     void applyRational(NormalAdapter &adapter, Solutions &solutions, Spinor &out, const Spinor &in,
@@ -298,7 +300,7 @@ public:
     void heatbath(uint4 *randState) {
         _lastIterations = 0;
         _eta.gauss(randState);
-        _eta.updateAll();
+        mdwfUpdateHalo(_eta);
         _noiseNorm2 = _adapterS.norm2(_eta);
         applyRational(_adapterS, _solS, _hbtmp, _eta, _heatbathS, "heatbath (A^(1/4))");
         applyRational(_adapter1, _solPv, _phi, _hbtmp, _heatbathPv, "heatbath (B^(-1/4))");
@@ -395,6 +397,7 @@ class MDWFSumFermionAction {
 public:
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
+    using Spinor = typename First::Spinor;   // so that sums can be nested
 
 private:
     std::string _prefix;
@@ -444,7 +447,7 @@ public:
     }
 
     // The first action's pseudofermion (the driver's phi() accessor).
-    typename First::Spinor &phi() {
+    Spinor &phi() {
         return _first.phi();
     }
 

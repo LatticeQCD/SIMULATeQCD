@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "../../gauge/gaugefield.h"
 #include "../../gauge/gaugeAction.h"
 #include "../../modules/hisq/hisqSmearing.h"
@@ -102,7 +104,7 @@ void mdwfSmearKernelLinks(Gaugefield<double, true, HaloDepth, R18> &smeared,
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     if (type == MDWFKernelSmearingType::None) {
         smeared = thin;
-        smeared.updateAll();
+        mdwfUpdateHalo(smeared);
         return;
     }
     if (steps < 1) {
@@ -114,7 +116,7 @@ void mdwfSmearKernelLinks(Gaugefield<double, true, HaloDepth, R18> &smeared,
     Gauge unusedLvl2(comm, name + "_nolvl2");
     Gauge unusedNaik(comm, name + "_nonaik");
     work = thin;
-    work.updateAll();
+    mdwfUpdateHalo(work);
     // The staples read work through its accessor, so later steps only refill work.
     HisqSmearing<double, true, HaloDepth, R18, R18, R18, R18> smearing(work, unusedLvl2, unusedNaik);
     for (int step = 0; step < steps; step++) {
@@ -125,11 +127,11 @@ void mdwfSmearKernelLinks(Gaugefield<double, true, HaloDepth, R18> &smeared,
             rootLogger.info("MDWF kernel smearing step ", step + 1, ": U(3) links, max |arg det| = ",
                             beforeFix.maxDetPhase, " (removed)");
             smeared.iterateOverBulkAllMu(MDWFRemoveDeterminantPhase<HaloDepth>(smeared));
-            smeared.updateAll();
+            mdwfUpdateHalo(smeared);
         }
         if (step + 1 < steps) {
             work = smeared;
-            work.updateAll();
+            mdwfUpdateHalo(work);
         }
     }
 }

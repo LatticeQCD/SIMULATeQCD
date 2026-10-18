@@ -31,6 +31,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFAllLinkDirectionIndependentStorage.h"
 
 #include <string>
@@ -286,21 +288,23 @@ void overwriteMDWFAllLinkStorageDevice(Gaugefield<double, false, HaloDepth, R18>
     using HostGauge = Gaugefield<double, false, HaloDepth, R18>;
 
     const LatticeData lat = GInd::getLatData();
-    if (lat.vol4 != lat.globvol4) {
-        throw std::runtime_error(stdLogger.fatal("MDWF device all-link storage is single-rank only"));
-    }
     if (terms.size() != force_coefficients.numerator.size()) {
         throw std::runtime_error(stdLogger.fatal("MDWF device all-link storage: ", terms.size(), " terms but ",
                                                  force_coefficients.numerator.size(), " numerators"));
     }
     const bool clover = (csw != 0.0);
+    // The Wilson part is a gather over x and x + mu (halos updated), valid on any decomposition. The clover-leaf part
+    // scatters into links by global index (mdwfAllLinkCloverPhysicalLinkIndex) and is single-rank only.
+    if (clover && lat.vol4 != lat.globvol4) {
+        throw std::runtime_error(stdLogger.fatal("MDWF device all-link storage: c_sw != 0 is single-rank only"));
+    }
 
     DevGauge gauge(comm_base, name + "_dgauge");
     DevGauge wilsonAcc(comm_base, name + "_dwilson");
     DevGauge yFirst(comm_base, name + "_dyfirst");
     DevGauge ySecond(comm_base, name + "_dysecond");
     gauge = gaugeHost;
-    gauge.updateAll();
+    mdwfUpdateHalo(gauge);
     wilsonAcc.iterateOverBulkAllMu(MDWFDevZeroLinks<HaloDepth>());
     if (clover) {
         yFirst.iterateOverBulkAllMu(MDWFDevZeroLinks<HaloDepth>());

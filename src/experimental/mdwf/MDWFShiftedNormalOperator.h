@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include <string>
 
 template<class NormalOperatorT, class floatT, size_t BlockSize = 64>
@@ -35,7 +37,7 @@ public:
         spinor_out.template axpyThisB<BlockSize>(_sigma, spinor_in);
 
         if (update) {
-            spinor_out.updateAll();
+            mdwfUpdateHalo(spinor_out);
         }
     }
 

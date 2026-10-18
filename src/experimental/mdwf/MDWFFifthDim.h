@@ -93,6 +93,6 @@ void applyMDWFFifthDimCoupling(MDWFSpinor<floatT, onDevice, LatLayout, HaloDepth
         MDWFFifthDimCoupling<floatT, LatLayout, HaloDepth, Ls>(spinor_in, coeff));
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }

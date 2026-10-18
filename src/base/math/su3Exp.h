@@ -57,7 +57,8 @@ __device__ __host__ inline void SU3Exp(const SU3<floatT> inSU3, SU3<floatT> &out
     }
 
     COMPLEX(floatT) d = det(inSU3);
-    COMPLEX(floatT) t = -0.5 * tr_c(inSU3);
+    // Luscher (su3fcts.pdf): t = -tr(X^2)/2. Was tr_c(inSU3) = tr X = 0 for su(3) -> exp wrong at O(X^3), RK3 flow only 2nd order.
+    COMPLEX(floatT) t = -0.5 * tr_c(inSU3 * inSU3);
 
     COMPLEX(floatT) q_0_old = c_i[N], q_1_old = 0, q_2_old = 0;
     COMPLEX(floatT) q_0, q_1, q_2;

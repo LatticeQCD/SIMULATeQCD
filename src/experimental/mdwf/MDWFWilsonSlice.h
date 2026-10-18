@@ -26,7 +26,7 @@ void applyMDWFWilsonSlice(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &spin
         gamma5<floatT, All, HaloDepthSpin, Ls>(spinor_tmp));
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -50,8 +50,8 @@ void applyMDWFCloverWilsonSlice(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls>
         preCalcFmunu<floatT, HaloDepthGauge>(
             gauge, fmunu_upper, fmunu_lower, fmunu_inv_upper, fmunu_inv_lower, mass, csw),
         calcGSite, elems);
-    fmunu_upper.updateAll();
-    fmunu_lower.updateAll();
+    mdwfUpdateHalo(fmunu_upper);
+    mdwfUpdateHalo(fmunu_lower);
 
     spinor_tmp.template iterateOverBulk<BLOCKSIZE>(
         DiracWilsonEvenOdd2<floatT, All, All, HaloDepthGauge, HaloDepthSpin, Ls, false>(
@@ -63,6 +63,6 @@ void applyMDWFCloverWilsonSlice(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls>
     spinor_out += spinor_tmp;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }

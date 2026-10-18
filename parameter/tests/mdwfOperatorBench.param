@@ -1,0 +1,9 @@
+# mdwfOperatorBench (CPC F3): Mhat^+ Mhat timing, fused vs block path, double and single precision, Ls = 16
+Lattice     = 32 32 32 8
+Nodes       = 1 1 1 1
+M5          = 1.8
+b5          = 1.9
+mf          = 0.00084525
+n_apply     = 200
+n_warm      = 10
+force_halos = 0

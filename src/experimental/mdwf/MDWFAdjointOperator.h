@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFOperator.h"
 
 #include <string>
@@ -21,7 +23,7 @@ void applyMDWFGamma5(MDWFSpinor<floatT, onDevice, LatLayout, HaloDepth, Ls> &spi
         gamma5<floatT, LatLayout, HaloDepth, Ls>(spinor_in));
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -67,7 +69,7 @@ void applyMDWFFifthDimAdjointCoupling(MDWFSpinor<floatT, onDevice, LatLayout, Ha
         MDWFFifthDimAdjointCoupling<floatT, LatLayout, HaloDepth, Ls>(spinor_in, coeff));
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -103,7 +105,7 @@ void applyMDWFAdjointCloverOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin,
     spinor_out += fifth_part;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 

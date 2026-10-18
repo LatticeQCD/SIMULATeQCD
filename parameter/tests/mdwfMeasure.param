@@ -1,0 +1,39 @@
+#
+# mdwfMeasure.param -- Mobius domain-wall measurements in the GPT production formats (main_mdwfMeasure.cpp)
+#
+#          Lattice: Nx Ny Nz Nt;  Nodes: single rank only
+#   M5, b5, c_sw, ls: Mobius parameters (c5 = b5 - 1), ls = 8 or 16
+#   antiperiodic_t: 1 = antiperiodic fermion boundary conditions in time
+#        Gaugefile: NERSC configuration; without it: start = random | unit (tests), seed
+#     label, out_prefix: TSV label column and file prefix (default: configuration basename,
+#                   measurements_dir/<label>) -> <prefix>_mres_spatial.tsv, _screening_spatial.tsv, _condensates.tsv
+#  mixed_precision: 1 = single-precision CG with double reliable updates; reliable_delta, max_iter
+#   mres_screening: 1 = point source at `source`, mass mres_mass: m_res + connected screening correlators
+#       directions: letters of xyzt (z = GPT's default spatial_z), screening_channels: old (22) | minimal | list
+#       condensate: 1 = stochastic traces, condensate_masses flavour:mass,..., nrv vectors from i_start,
+#                   noise_seed (default <label>_noise), measure_connected (S2), measure_pseudoscalar (P5)
+#
+Lattice              = 4 4 4 4
+Nodes                = 1 1 1 1
+M5                   = 1.8
+b5                   = 1.9
+c_sw                 = 0.0
+ls                   = 8
+antiperiodic_t       = 1
+start                = random
+seed                 = 20261007
+measurements_dir     = ./
+label                = mdwfMeasureTest
+mixed_precision      = 0
+mres_screening       = 1
+mres_mass            = 0.1
+source               = 0 0 0 0
+directions           = z
+screening_channels   = old
+screening_precision  = 1e-12
+condensate           = 1
+condensate_masses    = light:0.1,strange:0.3
+nrv                  = 2
+measure_connected    = 1
+measure_pseudoscalar = 1
+condensate_precision = 1e-12

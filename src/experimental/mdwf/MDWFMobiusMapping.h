@@ -33,6 +33,8 @@
 
 #pragma once
 
+#include "MDWFSpinor.h"
+
 #include "MDWFAdjointOperator.h"
 #include "MDWFPhysicalMapping.h"
 #include "MDWFWilsonSlice.h"
@@ -67,6 +69,17 @@ struct MDWFMobiusOperatorParameters {
           c5(b5_in - static_cast<floatT>(1.0)),
           dinCoeff(mdwfMobiusDinCoefficients(b5_in, b5_in - static_cast<floatT>(1.0), mf)),
           shiftCoeff(mdwfShamirFifthDimCoefficients(mf)) {}
+
+    // Different boundary masses for the two chiralities (Grid's CayleyFermion5D mass_plus / mass_minus, used by EOFA):
+    // P_+ couples to s - 1 and wraps at s = 0 with mfPlus (backward boundary), P_- couples to s + 1 and wraps at
+    // s = Ls - 1 with mfMinus (forward boundary).
+    __host__ __device__ MDWFMobiusOperatorParameters(floatT M5, floatT mfPlus, floatT b5_in, floatT mfMinus)
+        : mass(mdwfShamirKernelMass(M5)),
+          b5(b5_in),
+          c5(b5_in - static_cast<floatT>(1.0)),
+          dinCoeff(b5_in, b5_in - static_cast<floatT>(1.0), b5_in - static_cast<floatT>(1.0),
+                   -mfMinus * (b5_in - static_cast<floatT>(1.0)), -mfPlus * (b5_in - static_cast<floatT>(1.0))),
+          shiftCoeff(static_cast<floatT>(1.0), static_cast<floatT>(-1.0), static_cast<floatT>(-1.0), mfMinus, mfPlus) {}
 };
 
 template<class floatT, size_t HaloDepthGauge, size_t HaloDepthSpin, size_t Ls>
@@ -98,7 +111,7 @@ void applyMDWFMobiusOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin, Ls> &s
     spinor_out += shift_part;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -209,7 +222,7 @@ void applyMDWFMobiusAdjointOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin,
     spinor_out += shift_dagger;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -326,7 +339,7 @@ void applyMDWFMobiusCloverOperator(MDWFSpinor<floatT, true, All, HaloDepthSpin, 
     spinor_out += shift_part;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
@@ -448,7 +461,7 @@ void applyMDWFMobiusAdjointCloverOperator(MDWFSpinor<floatT, true, All, HaloDept
     spinor_out += shift_dagger;
 
     if (update) {
-        spinor_out.updateAll();
+        mdwfUpdateHalo(spinor_out);
     }
 }
 
