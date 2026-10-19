@@ -156,12 +156,18 @@ void runMDWFDiracModes(CommunicationBase &commBase, MDWFDiracModesParameters &pa
                                    : param.smearing() + " x" + std::to_string(param.smear_steps());
 
     Kernel kernel(fermionGauge, param.M5(), param.csw(), "MDWF_dm_kernel");
+    // The 5D Pauli-Villars solver (several Ls = 16 fields) and the Lanczos basis do not fit on a 40 GB A100 together
+    // for nbasis ~ 100: for the kernel spectrum it is built only after the eigensolver, once the basis is trimmed to
+    // the nev eigenvectors.
     std::unique_ptr<Effective> effective;
     std::unique_ptr<Normal> normal;
-    if (dirac || param.gw_defect() != 0) {
+    auto makeEffective = [&]() {
         effective.reset(new Effective(fermionGauge, param.M5(), param.mass(), param.b5(), param.csw(),
                                       param.pv_max_iter(), param.pv_precision(), "MDWF_dm_eff"));
         normal.reset(new Normal(*effective));
+    };
+    if (dirac) {
+        makeEffective();
     }
     rootLogger.info("MDWF modes: ", param.GaugefileName(), ", spectrum ", param.spectrum(), ", kernel links ",
                     kernelName, ", M5 = ", param.M5(), ", c_sw = ", param.csw(), ", b5 = ", param.b5(), ", c5 = ",
@@ -206,6 +212,10 @@ void runMDWFDiracModes(CommunicationBase &commBase, MDWFDiracModesParameters &pa
     }
     const double eigenSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
     const long eigenSolves = effective ? effective->solves() : 0;
+    vecs.resize(param.nev());   // frees the rest of the Lanczos basis
+    if (!effective && param.gw_defect() != 0) {
+        makeEffective();
+    }
     rootLogger.info("MDWF modes: eigensolver converged = ", result.converged, " after ", result.restarts,
                     " restarts, ", result.applications, " filtered-operator calls, ", eigenSolves, " PV solves, ",
                     eigenSeconds, " s");
