@@ -810,6 +810,19 @@ __host__ inline std::istream &operator>>(std::istream &s, SU3<floatT> &x) {
 template<class floatT>
 __device__ __host__ void SU3<floatT>::random(uint4 *state) {
 
+#ifdef USE_CPU
+    // Sequence the draws explicitly. Function-argument evaluation order in
+    // COMPLEX(get_rand(state), get_rand(state)) is unspecified; GCC may draw
+    // the imaginary component first. Use real-then-imaginary for CPU/GPU
+    // historical-reference comparison. Leave the established GPU path intact.
+    for (int row = 0; row < 3; ++row) {
+        for (int col = 0; col < 3; ++col) {
+            const floatT re = get_rand<floatT>(state);
+            const floatT im = get_rand<floatT>(state);
+            (*this)(row, col) = floatT(1.0) - floatT(2.0) * COMPLEX(floatT)(re, im);
+        }
+    }
+#else
     COMPLEX(floatT)
             rnd;
 
@@ -831,6 +844,7 @@ __device__ __host__ void SU3<floatT>::random(uint4 *state) {
     _e21 = (floatT) 1.0 - (floatT) 2.0 * rnd;
     rnd = COMPLEX(floatT)(get_rand<floatT>(state), get_rand<floatT>(state));
     _e22 = (floatT) 1.0 - (floatT) 2.0 * rnd;
+#endif
 
     (*this).su3unitarize();
 }

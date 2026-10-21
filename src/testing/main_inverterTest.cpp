@@ -10,7 +10,7 @@
 
 //Run function. Please start reading here.
 template<class floatT, Layout LatLayout, Layout LatLayoutRHS, size_t NStacks, size_t Multistack, bool onDevice>
-void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat)
+bool run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff &rat)
 {
     bool success = true;
 
@@ -231,8 +231,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     double diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     double phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_lf^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_lf^4 * phi - phi = " ,  std::abs(diff_normsq/phi_sq));
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
 
@@ -289,8 +289,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_bar_lf^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    rootLogger.info("relative error of (Dl^+Dl) * (Ds^+ Ds)^-1 * r_bar_lf^4 * phi - phi = " ,  std::abs(diff_normsq/phi_sq));
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
 
@@ -335,8 +335,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinortmp.dotProduct(spinortmp));
     phi_sq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
 
-    rootLogger.info("relative error of r_inv_lf^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " ,  abs(diff_normsq/phi_sq));
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    rootLogger.info("relative error of r_inv_lf^4 * phi - (Dl^+Dl) * (Ds^+ Ds)^-1 * phi = " ,  std::abs(diff_normsq/phi_sq));
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
     //////////////////////////////////
@@ -393,8 +393,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_sf^8 * phi - phi = " ,  abs(diff_normsq/phi_sq));
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_sf^8 * phi - phi = " ,  std::abs(diff_normsq/phi_sq));
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
 
@@ -436,8 +436,8 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_bar_sf^4 * phi - phi = " ,  abs(diff_normsq/phi_sq));
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    rootLogger.info("relative error of (Ds^+*Ds)^3 * r_bar_sf^4 * phi - phi = " ,  std::abs(diff_normsq/phi_sq));
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
     //////////////////////////////////
     // r_inv_sf test
@@ -476,17 +476,18 @@ void run_func(CommunicationBase &commBase, RhmcParameters &param, RationalCoeff 
     diff_normsq = real<double>(spinorOutSingle.dotProduct(spinorOutSingle));
     phi_sq = real<double>(phi.dotProduct(phi));
 
-    rootLogger.info("relative error of  r_inv_sf^8 * phi - (Ds^+*Ds)^3 *phi = " ,  abs(diff_normsq/phi_sq));
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    rootLogger.info("relative error of  r_inv_sf^8 * phi - (Ds^+*Ds)^3 *phi = " ,  std::abs(diff_normsq/phi_sq));
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
-    if (!(abs(diff_normsq/phi_sq) < 1e-5))
+    if (!(std::abs(diff_normsq/phi_sq) < 1e-5))
         success = success && false;
 
     if (success)
         rootLogger.info("Inverter tests: " ,  CoutColors::green ,  "passed" ,  CoutColors::reset);
     else
         rootLogger.info("Inverter tests: " ,  CoutColors::red ,  "failed" ,  CoutColors::reset);
+    return success;
 }
 
 
@@ -513,7 +514,13 @@ int main(int argc, char **argv) {
 
         rootLogger.info("Testing Even - Odd");
         rootLogger.info("------------------");
-        run_func<float, Even, Odd, 1, 14, true>(commBase, param, rat);
+        bool pass = run_func<float, Even, Odd, 1, 14, true>(commBase, param, rat);
+#ifdef USE_CPU
+        rootLogger.info("Double-precision inverter checks:");
+        pass = run_func<double, Even, Odd, 1, 14, true>(commBase, param, rat) && pass;
+#endif
+        rootLogger.info("Inverter regression: ", pass ? "PASS" : "FAIL");
+        return pass ? 0 : 1;
     }
     catch (std::runtime_error& error){
         rootLogger.error("Test failed!");

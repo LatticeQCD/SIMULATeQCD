@@ -192,11 +192,18 @@ int main(int argc, char **argv) {
     rootLogger.info("-------------------------------------");
     rootLogger.info("Testing Even - Odd");
     rootLogger.info("------------------");
-    lerror = (lerror || test_dslash<float, Even, Odd, 1, true>(commBase));
+    lerror = test_dslash<float, Even, Odd, 1, true>(commBase) || lerror;
     rootLogger.info("------------------");
     rootLogger.info("Testing Odd - Even");
     rootLogger.info("------------------");
-    lerror = (lerror || test_dslash<float, Odd, Even, 1, true>(commBase));
+    lerror = test_dslash<float, Odd, Even, 1, true>(commBase) || lerror;
+#ifdef USE_CPU
+    rootLogger.info("Double-precision Dslash checks:");
+    lerror = test_dslash<double, Even, Odd, 1, true>(commBase) || lerror;
+    lerror = test_dslash<double, Odd, Even, 1, true>(commBase) || lerror;
+#endif
+    rootLogger.info("Dslash regression: ", lerror ? "FAIL" : "PASS");
+    return lerror ? 1 : 0;
 }
 
 

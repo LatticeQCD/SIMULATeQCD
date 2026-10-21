@@ -16,10 +16,14 @@ execute_process(
 
 message(STATUS "Using git version ${GIT_HASH}")
 
-set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
+set(BACKEND "cuda" CACHE STRING "Backend: cuda, hip_nvidia, hip_amd, or cpu (experimental HISQ tests)")
 
 # Determine the backend for GPU acceleration
-if (BACKEND STREQUAL "cuda")
+if (BACKEND STREQUAL "cpu")
+    set(USE_CPU ON)
+    add_definitions(-DUSE_CPU -DCPUONLY)
+    message(STATUS "Using experimental CPU backend (HISQ tests only)")
+elseif (BACKEND STREQUAL "cuda")
     set(USE_CUDA ON)
     add_definitions(-DUSE_CUDA)
     message(STATUS "Using CUDA backend")
@@ -45,7 +49,9 @@ endif()
 
 
 
-if (USE_CUDA)
+if (USE_CPU)
+    project(SIMULATeQCD LANGUAGES CXX)
+elseif (USE_CUDA)
     project(SIMULATeQCD LANGUAGES CXX CUDA)
 elseif (USE_HIP_AMD)
     # This will hopefully work in the future
@@ -122,13 +128,16 @@ elseif (USE_HIP_AMD)
     set(CMAKE_HIP_ARCHITECTURES "${ARCHITECTURE}")
 endif()
 
-if(NOT ARCHITECTURE)
+if(NOT ARCHITECTURE AND NOT USE_CPU)
     message(FATAL_ERROR "No GPU architecture set!")
 endif()
 
 set(USE_GPU_AWARE_MPI OFF CACHE BOOL "Set to ON to build gpu-aware MPI code (default = OFF)")
 if (USE_GPU_AWARE_MPI)
     add_definitions(-DUSE_GPU_AWARE_MPI)
+endif()
+if(USE_CPU)
+    set(USE_GPU_P2P OFF CACHE BOOL "GPU Direct P2P (unavailable on CPU)")
 endif()
 set(USE_GPU_P2P ON CACHE BOOL "Set to ON to build with GPU Direct P2P (default = ON)")
 if (USE_GPU_P2P)
@@ -287,6 +296,11 @@ set(ALL_HALODEPTHS
 
 
 #-------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: CODEBASE
+
+if(USE_CPU)
+    include(cmake/CPUHisq.cmake)
+    return()
+endif()
 
 
 FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)

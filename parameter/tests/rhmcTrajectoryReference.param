@@ -1,0 +1,31 @@
+# Small frozen-legacy reference cases in the existing rhmcTest executable.
+# Script overrides no_md=1/10 and mu0=0/0.4; Metropolis is disabled in the mode.
+Lattice = 8 8 8 4
+Nodes = 1 1 1 1
+Topology = 0 0 0 0
+beta = 3.360
+mass_ud = 0.00591
+mass_s = 0.0591
+mu0 = 0
+no_pf = 1
+step_size = 0.02
+no_md = 10
+no_step_sf = 5
+no_sw = 10
+integrator = 0
+residue = 1e-12
+residue_force = 1e-7
+cgMax = 6500
+residue_meas = 1e-12
+cgMax_meas = 20000
+cgMixedPrec = 0
+cgMixedPrec_delta = 0.1
+always_acc = 1
+rat_file = ../parameter/sample_force_test.rat
+seed = 1337
+rand_flag = 0
+load_conf = 2
+gauge_file = ../test_conf/gauge12750
+conf_nr = 0
+no_updates = 1
+write_every = 1000

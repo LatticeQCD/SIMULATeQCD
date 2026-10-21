@@ -189,7 +189,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     rootLogger.info("H_initial = ", old_hamiltonian);
 
     //do the integration
-    integrator.integrate(phi_lf_container, phi_sf_container);
+    _integrator.integrate(phi_lf_container, phi_sf_container);
 
     //possible reversibility check
     if (reverse)
@@ -198,7 +198,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
         _p = -floatT(1.0) * _p;
 
-        integrator.integrate(phi_lf_container, phi_sf_container);
+        _integrator.integrate(phi_lf_container, phi_sf_container);
 
         Gaugefield<floatT,false,HaloDepth> saved_h(_p.getComm());
         Gaugefield<floatT,false,HaloDepth> gauge_h(_p.getComm());
@@ -308,7 +308,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     __attribute__((unused))floatT old_hamiltonian = get_Hamiltonian(energy_dens_old);
 
     //do the integration
-    integrator.integrate(phi_lf_container, phi_sf_container);
+    _integrator.integrate(phi_lf_container, phi_sf_container);
 
     //get newaction
     __attribute__((unused))floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
@@ -496,7 +496,11 @@ bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
 
     dens_delta.reduce(delta_E, elems_full);
 
+#ifdef USE_CPU
+    rootLogger.info("Delta H = ", sformat("%.17g", delta_E));
+#else
     rootLogger.info("Delta H = " ,  delta_E);
+#endif
 
     uint4 state;
 

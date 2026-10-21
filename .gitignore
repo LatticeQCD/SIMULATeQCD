@@ -1,5 +1,10 @@
 # Files that might be made by the container
 build/*
+build-cpu*/
+*.patch
+notes/
+RHMC_REFERENCE_TODO.md
+slurm-*.out
 podman-build/*
 
 # Byte-compiled / optimized / DLL files

@@ -3,7 +3,9 @@
 //
 
 #pragma once
-#ifdef USE_CUDA
+#ifdef USE_CPU
+#include "cpu_wrapper.h"
+#elif defined USE_CUDA
 
 #include <cuda.h>
 #include <cuda_runtime.h>

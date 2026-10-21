@@ -74,6 +74,16 @@ echo '  '"${rhmcExec}"' using 1 GPU, no_pf == 1'
 $run_command 1 ./${rhmcExec} ../parameter/tests/rhmcTest.param Nodes="1 1 1 1" > ${rhmcOut} 2> ${rhmcErr}
 echo '  '"${rhmcExec}"' using 1 GPU, no_pf == 4'
 $run_command 1 ./${rhmcExec} ../parameter/tests/rhmcTest_4pf.param Nodes="1 1 1 1" >> ${rhmcOut}_4pf 2>> ${rhmcErr}_4pf
+# Same rhmcTest executable; frozen legacy float/double, zero/imaginary-mu
+# trajectories. Collaborators need no legacy worktree or timing benchmark.
+echo '  '"${rhmcExec}"' legacy-reference trajectory regressions'
+if $run_command 1 ./${rhmcExec} --trajectory-regression-suite \
+    ../parameter/tests/rhmcTrajectoryReference.param \
+    ../test_conf/rhmc_trajectory_references >> ${rhmcOut} 2>> ${rhmcErr}; then
+    echo 'RHMC legacy-reference regression suite: PASS'
+else
+    echo 'RHMC legacy-reference regression suite: FAIL' | tee -a ${rhmcOut}
+fi
 if [ ! -s ${rhmcErr} ]; then rm ${rhmcErr}; fi
 if [ ! -s ${rhmcErr}_4pf ]; then rm ${rhmcErr}_4pf; fi
 
