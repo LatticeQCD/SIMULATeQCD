@@ -77,6 +77,9 @@ add_library(CpuRhmc STATIC src/modules/rhmc/rhmc.cpp
 target_link_libraries(CpuRhmc PUBLIC CpuHisqFermions)
 add_executable(rhmcTest src/testing/main_rhmc_test.cpp)
 target_link_libraries(rhmcTest PRIVATE CpuRhmc)
+add_executable(rhmc src/applications/main_rhmc.cpp)
+target_link_libraries(rhmc PRIVATE CpuRhmc)
+set_target_properties(rhmc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/applications")
 set_target_properties(cpuBackendTest hisqSmearingTest hisqSmearingRecursiveTest hisqForce
     dslashTest inverterTest rhmcTest
     PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/testing")
