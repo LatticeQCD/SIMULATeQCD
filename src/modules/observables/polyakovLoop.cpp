@@ -10,20 +10,20 @@
 /// Kernel to calculate the PolyakovLoop (at each space point)
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct PolyakovLoopKernel{
-    SU3Accessor<floatT, comp> SU3Accessor;
+    SU3Accessor<floatT, comp> gaugeAccessor;
 
-    PolyakovLoopKernel(Gaugefield<floatT,onDevice,HaloDepth, comp> &gauge) : SU3Accessor(gauge.getAccessor()){
+    PolyakovLoopKernel(Gaugefield<floatT,onDevice,HaloDepth, comp> &gauge) : gaugeAccessor(gauge.getAccessor()){
     }
 
     __device__ __host__ COMPLEX(floatT) operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         const int Ntau  = GInd::getLatData().lt;
         /// Start off at this site, pointing in N_tau direction.
-        SU3<floatT> tmp = SU3Accessor.getLink(GInd::getSiteMu(site, 3));
+        SU3<floatT> tmp = gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
         /// Loop over N_tau direction.
         for(int tau = 1; tau < Ntau; tau++){
             site = GInd::site_up(site,3);
-            tmp *= SU3Accessor.getLink(GInd::getSiteMu(site, 3));
+            tmp *= gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
         }
         return tr_c(tmp) / 3; /// tr(unity matrix)=3
     }
@@ -32,18 +32,18 @@ struct PolyakovLoopKernel{
 /// Kernel to compute untraced, unnormalized Polyakov loop and store in the array _ploop.
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct CalcPloopKernel{
-    SU3Accessor<floatT, comp> SU3Accessor;
+    SU3Accessor<floatT, comp> gaugeAccessor;
     MemoryAccessor _ploop;
     CalcPloopKernel(Gaugefield<floatT,onDevice,HaloDepth, comp> &_gauge, MemoryAccessor ploop) :
-            SU3Accessor(_gauge.getAccessor()), _ploop(ploop) {}
+            gaugeAccessor(_gauge.getAccessor()), _ploop(ploop) {}
     __device__ __host__ void operator()(gSite site) {
         typedef GIndexer<All,HaloDepth> GInd;
         const int Ntau=GInd::getLatData().lt;
         size_t       pind = site.isite;
-        SU3<floatT> temp = SU3Accessor.getLink(GInd::getSiteMu(site, 3));
+        SU3<floatT> temp = gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
         for(int tau = 1; tau < Ntau; tau++){
             site = GInd::site_up(site,3);
-            temp*= SU3Accessor.getLink(GInd::getSiteMu(site, 3));
+            temp*= gaugeAccessor.getLink(GInd::getSiteMu(site, 3));
         }
         _ploop.setValue<SU3<floatT>>(pind,temp);
     }

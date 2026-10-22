@@ -11,6 +11,7 @@
 #include "../../gauge/constructs/fat7LinkConstructs.h"
 #include "../../gauge/constructs/projectU3.h"
 #include "smearParameters.h"
+#include "hisqSmearingRecursive.h"
 
 // Staples that appear in the fat link. Each staple object is one local staple.
 template<class floatT, size_t HaloDepth, CompressionType comp, int linkNumber, int partNumber = 0>
@@ -131,9 +132,21 @@ private:
 
     void SmearAll(floatT mu_f=0.0, bool multiplyPhase = true);
 
-    // Will be used in the force calculation
+    // Explicit-path oracle for the smearing regression test.
+    void SmearAllLegacy(floatT mu_f=0.0, bool multiplyPhase = true);
+
+    // Also reconstructs the level-1 links needed by the HISQ force.
     template<CompressionType comp_tmp>
     void SmearLvl1(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_out) {
+        gauge_out.iterateOverBulkAllMu(
+            hisq_smearing::RecursiveFat7Lvl1<floatT, HaloDepth, comp>(
+                _gauge_base.getAccessor(), _Lvl1));
+        gauge_out.updateAll();
+    }
+
+    // Explicit-path oracle for the smearing regression test.
+    template<CompressionType comp_tmp>
+    void SmearLvl1Legacy(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_out) {
 
         _dummy.iterateOverBulkAllMu(staple3_lvl1);
         gauge_out = _Lvl1._c_1 * _gauge_base + _Lvl1._c_3 * _dummy;

@@ -146,6 +146,8 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+    // CPU compute fields use the same host loops as host-domain fields.
+#ifndef USE_CPU
     if (onDevice) {
 #ifdef __GPUCC__
         markerBegin(type_name<Functor>(), "KernelCall");
@@ -161,7 +163,9 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif // !USE_CPU
+    {
         auto resAcc = getAccessor();
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -217,6 +221,8 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+    // CPU compute fields use the same host loops as host-domain fields.
+#ifndef USE_CPU
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -234,7 +240,9 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif // !USE_CPU
+    {
         auto resAcc = getAccessor();
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -292,6 +300,8 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+    // CPU compute fields use the same host loops as host-domain fields.
+#ifndef USE_CPU
     if (onDevice) {
 #ifdef __GPUCC__
         markerBegin(type_name<Object>(), "KernelCall (const object)");
@@ -308,7 +318,9 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif // !USE_CPU
+    {
         auto resAcc = getAccessor();
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -380,6 +392,8 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                 / static_cast<float> (blockDim.x)));
 
+    // CPU compute fields use the same host loops as host-domain fields.
+#ifndef USE_CPU
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -398,7 +412,9 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif // !USE_CPU
+    {
         uint3 blockIdx;
         blockIdx.y = 0;
         blockIdx.z = 0;
@@ -466,6 +482,8 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
     const dim3 gridDim = static_cast<int> (ceilf(static_cast<float> (elems_x)
                                                  / static_cast<float> (blockDim.x)));
 
+    // CPU compute fields use the same host loops as host-domain fields.
+#ifndef USE_CPU
     if (onDevice) {
 #ifdef __GPUCC__
 
@@ -483,7 +501,9 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
 #else
         static_assert(!onDevice, "Functor construction not available for device code outside .cpp files");
 #endif
-    } else {
+    } else
+#endif // !USE_CPU
+    {
         uint3 blockIdx;
         blockIdx.y = 0;
         blockIdx.z = 0;

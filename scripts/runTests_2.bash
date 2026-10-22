@@ -74,6 +74,16 @@ echo '  '"${rhmcExec}"' using 1 GPU, no_pf == 1'
 $run_command 1 ./${rhmcExec} ../parameter/tests/rhmcTest.param Nodes="1 1 1 1" > ${rhmcOut} 2> ${rhmcErr}
 echo '  '"${rhmcExec}"' using 1 GPU, no_pf == 4'
 $run_command 1 ./${rhmcExec} ../parameter/tests/rhmcTest_4pf.param Nodes="1 1 1 1" >> ${rhmcOut}_4pf 2>> ${rhmcErr}_4pf
+# Same rhmcTest executable; frozen legacy float/double, zero/imaginary-mu
+# trajectories. Collaborators need no legacy worktree or timing benchmark.
+echo '  '"${rhmcExec}"' legacy-reference trajectory regressions'
+if $run_command 1 ./${rhmcExec} --trajectory-regression-suite \
+    ../parameter/tests/rhmcTrajectoryReference.param \
+    ../test_conf/rhmc_trajectory_references >> ${rhmcOut} 2>> ${rhmcErr}; then
+    echo 'RHMC legacy-reference regression suite: PASS'
+else
+    echo 'RHMC legacy-reference regression suite: FAIL' | tee -a ${rhmcOut}
+fi
 if [ ! -s ${rhmcErr} ]; then rm ${rhmcErr}; fi
 if [ ! -s ${rhmcErr}_4pf ]; then rm ${rhmcErr}_4pf; fi
 
@@ -111,4 +121,31 @@ echo
 date
 
 echo
-echo "${cyan}All tests done!${endc}"
+
+# runTests_0.bash removes results from older runs, so the files here belong
+# to this complete runTests_0/1/2 sequence. Give collaborators one clear
+# final verdict instead of requiring them to inspect every output file.
+shopt -s nullglob
+outFiles=(OUT_*)
+errFiles=(runERR_*)
+testSuiteFailed=0
+
+if ((${#errFiles[@]} > 0)); then
+    echo -e "${cred}Non-empty test error logs:${endc} ${errFiles[*]}"
+    testSuiteFailed=1
+fi
+
+if ((${#outFiles[@]} > 0)) && \
+   grep -Eiq '(^|[^[:alpha:]])(FAILED|FAIL)([^[:alpha:]]|$)' "${outFiles[@]}"; then
+    echo -e "${cred}Explicit test failures were reported in:${endc}"
+    grep -Eil '(^|[^[:alpha:]])(FAILED|FAIL)([^[:alpha:]]|$)' "${outFiles[@]}"
+    testSuiteFailed=1
+fi
+shopt -u nullglob
+
+if ((testSuiteFailed == 0)); then
+    echo -e "${cyan}ALL TESTS PASSED${endc}"
+else
+    echo -e "${cred}ALL TESTS FAILED${endc}"
+    return 1 2>/dev/null || exit 1
+fi

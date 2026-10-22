@@ -14,10 +14,20 @@
 /// This can be used on the GPU.
 template<class T>
 __host__ __device__ bool cmp_rel(const T a, const T b, const double rel, const double prec) {
+#ifdef USE_CPU
+    // Qualify abs to prevent selection of the integer overload in host builds.
+    // Avoid the relative denominator for equal zero components.
+    if (!std::isfinite(a) || !std::isfinite(b)) return false;
+    const auto difference = std::abs(a-b);
+    const auto scale = std::abs(a+b);
+    if (difference == 0) return true;
+    return scale > 0 && difference / scale < rel && difference < prec;
+#else
     if (abs(a-b) / abs(a+b) < rel && abs(a-b) < prec) {
         return true;
     }
     return false;
+#endif
 }
 
 /// Implements relative method - do not use for comparing with zero. Use this most of the time, tolerance needs to

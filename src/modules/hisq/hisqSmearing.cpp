@@ -10,6 +10,39 @@
 template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, CompressionType compLvl1, CompressionType compLvl2, CompressionType compNaik>
 void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNaik>::SmearAll(floatT mu_f, bool multiplyPhase) {
 
+    // Both levels use the recursive path definitions from the smearing test.
+    _gauge_lvl1.iterateOverBulkAllMu(
+        hisq_smearing::RecursiveFat7Lvl1<floatT, HaloDepth, comp>(
+            _gauge_base.getAccessor(), _Lvl1));
+
+    // Preserve the projection, staggered phases and Naik construction order.
+    _gauge_lvl1.iterateOverBulkAllMu(
+        U3ProjectStruct<floatT, HaloDepth, compLvl1>(_gauge_lvl1.getAccessor()));
+    _gauge_lvl1.updateAll();
+
+    _gauge_lvl2.iterateOverBulkAllMu(
+        hisq_smearing::RecursiveFat7Lvl2<floatT, HaloDepth, compLvl1>(
+            _gauge_lvl1.getAccessor(), _Lvl2));
+
+    if (multiplyPhase) {
+        staggeredPhaseKernel<floatT,onDevice,HaloDepth,compLvl2> multPhase(_gauge_lvl2,mu_f);
+        _gauge_lvl2.iterateOverBulkAllMu(multPhase);
+    }
+    _gauge_lvl2.updateAll();
+
+    if (multiplyPhase) {
+        staggeredPhaseKernel<floatT, onDevice, HaloDepth,compLvl1> multPhase(_gauge_lvl1,mu_f);
+        _gauge_lvl1.iterateOverBulkAllMu(multPhase);
+        _gauge_lvl1.updateAll();
+    }
+    _gauge_naik.iterateOverBulkAllMu(stapleNaik);
+
+    _gauge_naik.updateAll();
+}
+
+template<class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, CompressionType compLvl1, CompressionType compLvl2, CompressionType compNaik>
+void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNaik>::SmearAllLegacy(floatT mu_f, bool multiplyPhase) {
+
     // Level 1 smearing.
     _dummy.iterateOverBulkAllMu(staple3_lvl1);
     _gauge_lvl1 = _Lvl1._c_1 * _gauge_base + _Lvl1._c_3 * _dummy;

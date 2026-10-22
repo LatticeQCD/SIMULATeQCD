@@ -8,6 +8,8 @@
 #include "rhmc.h"
 #include "../../gauge/gauge_kernels.cpp"
 
+#include <memory>
+
 
 template <bool onDevice, class floatT>
 struct add_f_r_f_r
@@ -164,6 +166,12 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     rootLogger.info("generating momenta");
     generate_momenta();
 
+    std::unique_ptr<Gaugefield<floatT, false, HaloDepth>> initial_momentum_h;
+    if (reverse) {
+        initial_momentum_h = std::make_unique<Gaugefield<floatT, false, HaloDepth>>(_p.getComm());
+        *initial_momentum_h = _p;
+    }
+
     rootLogger.info("Constructing peudo-fermion fields");
 
     for(int i = 0; i < _no_pf; i++) {
@@ -177,10 +185,11 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
     rootLogger.info("phi_lf: done");
 
     //get oldaction
-    __attribute__((unused))double old_hamiltonian = get_Hamiltonian(energy_dens_old);
+    double old_hamiltonian = get_Hamiltonian(energy_dens_old);
+    rootLogger.info("H_initial = ", old_hamiltonian);
 
     //do the integration
-    integrator.integrate(phi_lf_container, phi_sf_container);
+    _integrator.integrate(phi_lf_container, phi_sf_container);
 
     //possible reversibility check
     if (reverse)
@@ -189,13 +198,18 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
         _p = -floatT(1.0) * _p;
 
-        integrator.integrate(phi_lf_container, phi_sf_container);
+        _integrator.integrate(phi_lf_container, phi_sf_container);
 
         Gaugefield<floatT,false,HaloDepth> saved_h(_p.getComm());
         Gaugefield<floatT,false,HaloDepth> gauge_h(_p.getComm());
+        Gaugefield<floatT,false,HaloDepth> momentum_back_h(_p.getComm());
 
         saved_h = _savedField;
         gauge_h = _gaugeField;
+        momentum_back_h = _p;
+
+        double max_gauge_violation = 0.0;
+        double max_momentum_violation = 0.0;
 
         for (int x = 0; x < (int) GInd::getLatData().lx; x++)
         for (int y = 0; y < (int) GInd::getLatData().ly; y++)
@@ -208,15 +222,32 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update(bool metro, bool re
 
                 SU3<double> tmpB = gauge_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
 
+                SU3<double> momentum_initial = initial_momentum_h->getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
+                SU3<double> momentum_back = momentum_back_h.getAccessor().template getLink<double>(GInd::getSiteMu(site, mu));
+
+                double gauge_violation = infnorm(tmpA - tmpB);
+                double momentum_violation = infnorm(momentum_initial + momentum_back);
+
+                if (gauge_violation > max_gauge_violation)
+                    max_gauge_violation = gauge_violation;
+                if (momentum_violation > max_momentum_violation)
+                    max_momentum_violation = momentum_violation;
+
                     if (!compareSU3(tmpA, tmpB, 1e-4)) {
                         rootLogger.error("Difference in saved and evolved Gaugefields at " ,  LatticeDimensions(x, y, z, t) , ", mu = " ,  mu);
-                        rootLogger.error("|| S - G ||_inf = " ,  infnorm(tmpA-tmpB));
+                        rootLogger.error("|| S - G ||_inf = " ,  gauge_violation);
                     }
         }
+
+        max_gauge_violation = _p.getComm().reduceMax(max_gauge_violation);
+        max_momentum_violation = _p.getComm().reduceMax(max_momentum_violation);
+        rootLogger.info("Reversibility max ||U_back-U_initial||_inf = ", max_gauge_violation);
+        rootLogger.info("Reversibility max ||P_back+P_initial||_inf = ", max_momentum_violation);
     }
 
     //get newaction
-    __attribute__((unused)) double new_hamiltonian = get_Hamiltonian(energy_dens_new);
+    double new_hamiltonian = get_Hamiltonian(energy_dens_new);
+    rootLogger.info("H_final = ", new_hamiltonian);
 
     int ret;
 
@@ -277,7 +308,7 @@ int rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::update_test(){
     __attribute__((unused))floatT old_hamiltonian = get_Hamiltonian(energy_dens_old);
 
     //do the integration
-    integrator.integrate(phi_lf_container, phi_sf_container);
+    _integrator.integrate(phi_lf_container, phi_sf_container);
 
     //get newaction
     __attribute__((unused))floatT new_hamiltonian = get_Hamiltonian(energy_dens_new);
@@ -465,7 +496,11 @@ bool rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::Metropolis(){
 
     dens_delta.reduce(delta_E, elems_full);
 
+#ifdef USE_CPU
+    rootLogger.info("Delta H = ", sformat("%.17g", delta_E));
+#else
     rootLogger.info("Delta H = " ,  delta_E);
+#endif
 
     uint4 state;
 
@@ -604,4 +639,3 @@ void rhmc<floatT, onDevice, HaloDepth, HaloDepthSpin>::make_const_phi(Spinorfiel
 template class rhmc<floatT,true, HALO, HALOSPIN>;
 
 INIT_PHHS(CLASS_INIT)
-
