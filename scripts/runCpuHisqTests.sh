@@ -21,13 +21,16 @@ for fixture in gauge12750 smearing_reference_conf force_reference; do
         exit 2
     fi
 done
-out=$(mktemp -d "$build/cpu-hisq-results.XXXXXXXX")
+out="$build/cpu-hisq-results"
 mkdir -p "$out/run" "$out/test_conf" "$out/parameter/tests"
+# Reuse the readable output path, without leaving verdicts/logs from an older run.
+rm -f -- "$out/RESULT.txt" "$out/cpuBackendTest.log" \
+    "$out/hisqSmearingTest.log" "$out/hisqSmearingRecursiveTest.log" "$out/hisqForce.log"
 cp "$repo/parameter/tests/hisqForce.param" "$out/parameter/tests/"
 cp "$repo/parameter/tests/hisqSmearingTest.param" "$out/parameter/tests/"
 cp "$repo/parameter/sample_force_test.rat" "$out/parameter/"
 for fixture in gauge12750 smearing_reference_conf force_reference; do
-    ln -s "$repo/test_conf/$fixture" "$out/test_conf/$fixture"
+    ln -sfn "$repo/test_conf/$fixture" "$out/test_conf/$fixture"
 done
 # The recursive test's second stage normally uses 52^3 x 8. Keep this CPU
 # correctness run at 8^3 x 4, with the same saved input as its historical stage.

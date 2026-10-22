@@ -14,8 +14,11 @@ grep -qx 'BACKEND:STRING=cpu' "$build/CMakeCache.txt" || { echo "Not a CPU build
 for target in cpuBackendTest dslashTest inverterTest rhmcTest; do
     [[ -x "$build/testing/$target" ]] || { echo "Missing $target; build cpuRhmcTests first" >&2; exit 2; }
 done
-out=$(mktemp -d "$build/cpu-rhmc-results.XXXXXXXX")
+out="$build/cpu-rhmc-results"
 mkdir -p "$out/run" "$out/parameter/tests" "$out/test_conf"
+# Clear prior results so a failed rerun cannot leave an old PASS or summary.
+rm -f -- "$out/RESULT.txt" "$out/NUMBERS.txt" \
+    "$out/"{runtime,dslash,inverter,rhmc}.{log,txt}
 cp "$repo/parameter/tests/"{dslashTest,inverterTest,rhmcTrajectoryReference,rhmcTest}.param "$out/parameter/tests/"
 cp "$repo/parameter/"{sample_force_test,sample_eo}.rat "$out/parameter/"
 fixtures=(gauge12750)
@@ -25,7 +28,7 @@ for fixture in "${fixtures[@]}"; do
     if head -c 80 "$repo/test_conf/$fixture" | grep -q 'git-lfs.github.com/spec'; then
         echo "Missing LFS contents for $fixture" >&2; exit 2
     fi
-    ln -s "$repo/test_conf/$fixture" "$out/test_conf/$fixture"
+    ln -sfn "$repo/test_conf/$fixture" "$out/test_conf/$fixture"
 done
 cp "$build/CMakeCache.txt" "$out/CMakeCache.txt"
 git -C "$repo" rev-parse HEAD > "$out/commit.txt"
