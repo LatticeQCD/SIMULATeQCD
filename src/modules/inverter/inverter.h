@@ -51,7 +51,7 @@ public:
 
 /// This is a reimplementation of the old BielefeldGPUcode MultishiftCG, the cool feature here is that parts of the
 /// stack that have already converged are not updated any more in the CGM iterations. Might produce better results for
-/// the rational approximations. Not finished yet.
+/// the rational approximations.
 template <typename floatT, size_t NStacks = 14>
 class AdvancedMultiShiftCG {
 public:

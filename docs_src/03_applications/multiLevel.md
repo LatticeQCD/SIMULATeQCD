@@ -1,13 +1,13 @@
 # Multi-level algorithm
 
 
-The Multi-level algorithm has been implemented according to Martin Lüscher and Peter Weisz's idea of sub-lattice updates,
+The Multi-level algorithm has been implemented according to Martin Lüscher and Peter Weisz's idea of sublattice updates,
 see  [hep-lat/0108014v1](https://doi.org/10.1088/1126-6708/2001/09/010) (and also Harvey Meyer's
-paper [hep-lat/0209145](https://doi.org/10.1088/1126-6708/2003/01/048)). There are two sub-lattice updates:
+paper [hep-lat/0209145](https://doi.org/10.1088/1126-6708/2003/01/048)). There are two sublattice updates:
 HB and OR,  same as the standard ones [Gauge Updates (HB and OR)](../05_modules/gaugeUpdates.md#gauge-updates-hb-and-or)
-but performed within a sub lattice. For details see luscherweisz.h and luscherweisz.cpp.
+but performed within a sublattice. For details see luscherweisz.h and luscherweisz.cpp.
 
-After the sub-lattice updates, the observables will be measured. Currently the calculations of energy-momentum tensor,
+After the sublattice updates, the observables will be measured. Currently the calculations of energy-momentum tensor,
 polyakovloop and color-electric correlators have been implemented. For details, see `subLatMeas.h` and `subLatMeas.cpp`.
 
 To compile, one can `make` the executable `sublatticeUpdates`. You can then find it under `applications/sublatticeUpdates`.
@@ -38,13 +38,13 @@ tensor correlators in both shear and bulk channel and also the traceless part of
 anomaly (which can be used to remove the disconnected part of the correlators), polyakovloop and
 color-electric correlators, all  saved in plain text.  The corresponding observables calculated without multi-level improvement will also be given.
 
-`sublattice_lt` in the above parameter file means the temporal extension of a sub lattice. The
-spatial extensions of a sub lattice are the same as the full lattice.  `num_update` means after
+`sublattice_lt` in the above parameter file means the temporal extension of a sublattice. The
+spatial extensions of a sublattice are the same as the full lattice.  `num_update` means after
  how many sweeps(1 sweep = 1*HB + 4*OR) the observables will be measured. The total number of measuring is set by `num_meas`.
 
-`min_dist` means the minimum distance between the right boundary of the left sub-lattice and the left boundary of
-the right sub-lattice.  For instance when `min_dist` is set to 0, the smallest time distance of the color-electric
-correlator available will be 3. This is because the `square` within a sub lattice can not hit the boundary. For
+`min_dist` means the minimum distance between the right boundary of the left sublattice and the left boundary of
+the right sublattice.  For instance when `min_dist` is set to 0, the smallest time distance of the color-electric
+correlator available will be 3. This is because the `square` within a sublattice can not hit the boundary. For
 the similar reason the smallest time distance for the EMT correlator is 4.
 
 `PzMax` means the maximum integer value of the finite momentum in z-direction. Used only in the calculation of

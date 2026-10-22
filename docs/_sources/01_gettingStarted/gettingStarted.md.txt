@@ -1,9 +1,12 @@
 # Getting started
 
-There are two possible ways to build SIMULATeQCD. If you are running on your own laptop or desktop and have an NVIDIA GPU,
-we recommend that you use the container build. The container will automatically grab all software you need.
-If you are running on an HPC system or want to use AMD, we recommmend you compile manually and ensure that all needed
-software already exists on the system you're using.
+There are two possible ways to build SIMULATeQCD: 
+1. If you are running on your own laptop or desktop and have an NVIDIA GPU, we would have 
+   recommended that you use the container build. The container will automatically grab all 
+   software you need. Unfortunately, the container build is currently broken.
+2. If you are running on an HPC system or want to use AMD, we recommmend you compile manually 
+   and ensure that all needed software already exists on the system you're using.
+
 ## Prerequisites
 
 Before cloning anything, we recommend you get `git-lfs`. The reason we recommend this is that we have several configurations
@@ -92,7 +95,7 @@ You can also set the CUDA installation path manually by setting the `cmake` para
 `-DARCHITECTURE` sets the GPU architecture.
 `-DUSE_GPU_P2P=ON` is not yet supported by this backend.
 
-### Building source with HIP for AMD platforms (Experimental!)
+### Building source with HIP for AMD platforms
 
 In order to build the source with HIP for AMD platforms,
 you need to make sure that
@@ -118,7 +121,8 @@ Inside the build folder, you can now begin to use `make` to compile your executa
 ```shell
 make NameOfExecutable
 ```
-If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
+If you would like to speed up the compiling process, add the option `-j`, which will compile in parallel 
+using all available CPU threads. You can also specify the number of threads manually using, for example, `-j 4`.
 
 You also have the option to compile certain subsets of executables. For instance `make tests` will make all the executables used for testing.
 One can also compile `applications`, `examples`, `profilers`, `tools`, and `everything`. To see a full list of available executables,
@@ -127,19 +131,25 @@ look at `SIMULATeQCD/CMakeLists.txt`.
 ## Build (container) 
 
 If you just want to get something running quickly on your laptop or desktop, this is likely the easiest way to go.
+** The container build is currently broken!**
+
 ### Install Podman
 
 #### On RHEL-based (Rocky/CentOS/RHEL) systems
 
-Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` and then reboot with `sudo reboot`. (The reboot just makes avoiding permissions/kernel issues easy because that stuff is reread on boot.)
+Before continuing make sure there are no updates pending with `sudo dnf update -y && sudo dnf install -y podman` 
+and then reboot with `sudo reboot`. (The reboot just makes avoiding permissions/kernel issues easy because that stuff is reread on boot.)
 
 #### On Arch-based systems
 
-See [install instructions](https://wiki.archlinux.org/title/Podman). If you have installed Arch before the upgrade to shadow (as in /etc/shadow) 4.11.1-3 rootless podman may encounter some issues. The build script will check for these anomalies and prompt you if you need to fix them.
+See [install instructions](https://wiki.archlinux.org/title/Podman). If you have installed Arch before the 
+upgrade to shadow (as in /etc/shadow) 4.11.1-3 rootless podman may encounter some issues. The build script will 
+check for these anomalies and prompt you if you need to fix them.
 
 #### Other \*NIX Systems
 
-If you have a non RHEL-based OS see [here](https://podman.io/getting-started/installation.html#linux-distributions) for installation instructions.
+If you have a non RHEL-based OS see [here](https://podman.io/getting-started/installation.html#linux-distributions) 
+for installation instructions.
 
 ### Make sure Podman works
 
@@ -162,6 +172,8 @@ this indicates someone has modified the standard user privileges or you are runn
    1. You can run `<where_you_downloaded>/simulate_qcd.sh list` to get a list of possible build targets.
    2. If you want to change where the code outputs to, you need to update OUTPUT_DIRECTORY in `podman-build/config.yml`. It will create a folder called build in the specified folder.
 2. Run `chmod +x ./simulate_qcd.sh && ./simulate_qcd.sh build`
+
+
 
 ## How to run
 

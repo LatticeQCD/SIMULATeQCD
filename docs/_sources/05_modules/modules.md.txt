@@ -6,11 +6,11 @@ Modules
 ---
 maxdepth: 1
 ---
-inverter.md
-correlator.md
 gaugeUpdates.md
+HISQforce.md
 dslash.md
+inverter.md
 integrator.md
+correlator.md
 randomNumbers.md
-gaugeSmearing.md
 ```
