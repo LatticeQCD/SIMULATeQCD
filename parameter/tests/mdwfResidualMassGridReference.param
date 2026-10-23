@@ -33,4 +33,4 @@ measurements_dir    = ./
 output_name         = mdwfResidualMassGridReference.dat
 reference_file      = ../test_conf/mdwf_mres_grid_reference_b1801_b.txt
 reference_tolerance = 1e-4
-Gaugefile           = /scratch/hpc-prf-ecfqcd/jgoswami/DeVrunMDWF/MDWFconfs/l328b1801ml00133ms04345_Ls16M18b20c10_b000.2400
+#Gaugefile          = /path/to/l328b1801ml00133ms04345_Ls16M18b20c10_b000.2400

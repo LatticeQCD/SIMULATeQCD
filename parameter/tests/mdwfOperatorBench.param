@@ -1,4 +1,6 @@
-# mdwfOperatorBench (CPC F3): Mhat^+ Mhat timing, fused vs block path, double and single precision, Ls = 16
+# mdwfOperatorBench: time per application of the even/odd normal operator Mhat^+ Mhat (Ls = 16, c_sw = 0), fused and
+# block path, double and single precision, on random links (or Gaugefile). One GPU.
+#   M5, b5, mf: Mobius parameters;  n_apply: timed applications after n_warm warm-up applications
 Lattice     = 32 32 32 8
 Nodes       = 1 1 1 1
 M5          = 1.8

@@ -1,8 +1,9 @@
 #
-# mdwfFifthDimTest.param
+# mdwfFifthDimTest.param -- lattice of the MDWF tests whose physics parameters are built in
+# (most mdwf*Test programs read this file by default; the name is historical)
 #
 #    Lattice: Nx Ny Nz Nt
-#      Nodes: Number of sublattices per direction
+#      Nodes: ranks per direction (the tests run on one rank)
 #
 Lattice    = 6  6  6  6
 Nodes      = 1  1  1  1

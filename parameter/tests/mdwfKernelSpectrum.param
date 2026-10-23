@@ -1,16 +1,18 @@
 # mdwfKernelSpectrum: lowest and highest eigenvalue of H_W^2 = (gamma5 D_W(-M5))^2 against M5 (kernel spectral gap).
-#   Gaugefile       NERSC configuration (required)
+#   Gaugefile       NERSC configuration (required; the example uses the 8^3 x 4 test configuration of the
+#                   repository, git lfs pull)
 #   smearing        none | fat7_su3 | fat7_u3 (kernel links), smear_steps = 2
 #   c_sw            clover coefficient of the kernel
 #   M5              list of M5 values
 #   lanczos_steps   plain Lanczos steps; extremes are reported at steps/8, /4, /2 and steps
-Lattice          = 32 32 32 8
+Lattice          = 8 8 8 4
 Nodes            = 1 1 1 1
 c_sw             = 0.0
 antiperiodic_t   = 1
 smearing         = none
 smear_steps      = 2
-M5               = 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0 2.2 2.4
-lanczos_steps    = 2000
+M5               = 1.0 1.4 1.8
+lanczos_steps    = 400
 measurements_dir = ./
 output_name      = mdwfKernelSpectrum.dat
+Gaugefile        = ../test_conf/nersc.l8t4b3360_bieHB

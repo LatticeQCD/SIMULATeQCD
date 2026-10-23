@@ -1,4 +1,8 @@
-# mdwfProfileBench (tests/profile): b1829 production operator, 32^3x8, Ls 16; lists stay in this file
+# mdwfProfileBench: timing of the even/odd operator pieces and of the light-quark CG solves (Ls = 16, c_sw = 0) on
+# random links (or Gaugefile), one or more GPUs (Nodes).
+#   M5, b5, mf: operator part (n_apply timed applications after n_warm warm-up ones)
+#   cg_masses, cg_precisions: one double and one mixed-precision (mixed_delta) solve per pair, n_cg_repeat times;
+#   mmdag = 1 solves Mhat Mhat^+, 0 Mhat^+ Mhat;  noise_seed: source;  run_ops, run_cg: parts to run (default 1)
 Lattice       = 32 32 32 8
 Nodes         = 1 1 1 1
 M5            = 1.8

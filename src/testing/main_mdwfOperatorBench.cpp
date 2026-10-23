@@ -1,5 +1,5 @@
 /*
- * MDWF operator benchmark (CPC paper F3): the even/odd Schur normal operator Mhat^+ Mhat (MDWFMobiusSchurNormalOperator,
+ * MDWF operator benchmark: the even/odd Schur normal operator Mhat^+ Mhat (MDWFMobiusSchurNormalOperator,
  * the operator of every light and EOFA CG iteration) on one GPU, in double and single precision, fused (four kernels
  * per Mhat, MDWFMobiusCloverEvenOdd::fusedSchur) and unfused (block path M_ee - M_eo M_oo^-1 M_oe, mdwfFusedSchur() =
  * false), c_sw = 0, Ls = 16.

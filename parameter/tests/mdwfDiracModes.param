@@ -1,6 +1,7 @@
 # mdwfDiracModes: low eigenmodes of the MDWF kernel (spectrum = kernel: H_W^2) or of the 4D effective MDWF Dirac
 # operator (spectrum = dirac: D(m)^dagger D(m)), with per-mode IPR, chirality and Ginsparg-Wilson defect 1 - eps^2.
-#   Gaugefile          NERSC configuration (required)
+#   Gaugefile          NERSC configuration (required; the example uses the 8^3 x 4 test configuration of the
+#                      repository, git lfs pull)
 #   smearing           none | fat7_su3 | fat7_u3 (kernel links), smear_steps
 #   M5, b5, c_sw, ls   Mobius kernel (c5 = b5 - 1), Ls = 8 or 16; mass = m of D(m) (dirac)
 #   nev, nbasis, nkeep thick-restart Lanczos: wanted modes, basis size, kept Ritz vectors (nev <= nkeep < nbasis - 1)
@@ -8,20 +9,20 @@
 #                      eigenvalues, cheb_hi <= 0: automatic (kernel: 1.05 x plain-Lanczos lambda_max; dirac: 1.02)
 #   gw_defect          1: compute <y|1 - eps^2|y> per mode (one Pauli-Villars solve each)
 #   pv_precision       Pauli-Villars solves inside D(m); mixed_precision = 1: mixed-precision solver
-Lattice          = 32 32 32 8
+Lattice          = 8 8 8 4
 Nodes            = 1 1 1 1
 spectrum         = kernel
 smearing         = none
 smear_steps      = 2
 M5               = 1.8
-b5               = 2.0
+b5               = 1.5
 c_sw             = 0.0
-ls               = 16
+ls               = 8
 mass             = 0.0
 antiperiodic_t   = 1
-nev              = 40
-nbasis           = 100
-nkeep            = 60
+nev              = 10
+nbasis           = 40
+nkeep            = 20
 tol              = 1e-8
 max_restarts     = 500
 cheb_degree      = 0
@@ -32,3 +33,4 @@ mixed_precision  = 0
 pv_precision     = 1e-11
 measurements_dir = ./
 output_name      = mdwfDiracModes.dat
+Gaugefile        = ../test_conf/nersc.l8t4b3360_bieHB

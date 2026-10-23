@@ -117,6 +117,8 @@ Please check out [the documentation](https://latticeqcd.github.io/SIMULATeQCD) t
 including how to make contributions, details for installation, and to see what kinds of modules and applications are
 already available.
 
+Möbius domain-wall fermions (programs, tests, parameter files): [src/experimental/mdwf/USERGUIDE.md](src/experimental/mdwf/USERGUIDE.md).
+
 ## Getting help and bug report
 Open an [issue](https://github.com/LatticeQCD/SIMULATeQCD/issues), if...
 - you have troubles compiling/running the code.
