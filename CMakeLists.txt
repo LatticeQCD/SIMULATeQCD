@@ -851,18 +851,30 @@ set_SIMULATeQCD_property(mdwfProfileBench PROPERTIES RUNTIME_OUTPUT_DIRECTORY "t
 SIMULATeQCD_target_compile_definitions(mdwfProfileBench PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 NSTACKS_1=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 
 # MDWF RHMC rational approximations: AlgRemez (src/tools/rational_approx, unchanged) behind the
-# host-only wrapper src/experimental/mdwf/MDWFRemez.cpp. Needs GMP and MPFR; the hints cover the
-# EasyBuild installations of the GCCcore 14.2.0 toolchain used for this build. Without them only the
-# Remez targets are skipped.
-find_path(MDWF_GMP_INCLUDE_DIR gmp.h
-          HINTS $ENV{EBROOTGMP}/include /opt/software/pc2/EB-SW/software/GMP/6.3.0-GCCcore-14.2.0/include)
-find_path(MDWF_MPFR_INCLUDE_DIR mpf2mpfr.h
-          HINTS $ENV{EBROOTMPFR}/include /opt/software/pc2/EB-SW/software/MPFR/4.2.2-GCCcore-14.2.0/include)
-find_library(MDWF_GMP_LIBRARY gmp
-             HINTS $ENV{EBROOTGMP}/lib /opt/software/pc2/EB-SW/software/GMP/6.3.0-GCCcore-14.2.0/lib)
-find_library(MDWF_MPFR_LIBRARY mpfr
-             HINTS $ENV{EBROOTMPFR}/lib /opt/software/pc2/EB-SW/software/MPFR/4.2.2-GCCcore-14.2.0/lib)
-if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF_MPFR_LIBRARY)
+# host-only wrapper src/experimental/mdwf/MDWFRemez.cpp. Needs GMP and MPFR. Besides the system paths
+# and CMAKE_PREFIX_PATH, the installation prefixes can be given as GMP_ROOT / MPFR_ROOT (CMake or
+# environment variables) or come from the EasyBuild modules (EBROOTGMP / EBROOTMPFR). Without them
+# only the Remez targets are skipped.
+set(MDWF_GMP_HINTS ${GMP_ROOT} $ENV{GMP_ROOT} $ENV{EBROOTGMP})
+set(MDWF_MPFR_HINTS ${MPFR_ROOT} $ENV{MPFR_ROOT} $ENV{EBROOTMPFR})
+find_path(MDWF_GMP_INCLUDE_DIR gmp.h HINTS ${MDWF_GMP_HINTS} PATH_SUFFIXES include)
+find_path(MDWF_MPFR_INCLUDE_DIR mpf2mpfr.h HINTS ${MDWF_MPFR_HINTS} PATH_SUFFIXES include)
+find_library(MDWF_GMP_LIBRARY gmp HINTS ${MDWF_GMP_HINTS} PATH_SUFFIXES lib lib64)
+find_library(MDWF_MPFR_LIBRARY mpfr HINTS ${MDWF_MPFR_HINTS} PATH_SUFFIXES lib lib64)
+set(MDWF_REMEZ_MISSING "")
+if (NOT MDWF_GMP_INCLUDE_DIR)
+    list(APPEND MDWF_REMEZ_MISSING "GMP header gmp.h")
+endif()
+if (NOT MDWF_MPFR_INCLUDE_DIR)
+    list(APPEND MDWF_REMEZ_MISSING "MPFR header mpf2mpfr.h")
+endif()
+if (NOT MDWF_GMP_LIBRARY)
+    list(APPEND MDWF_REMEZ_MISSING "GMP library libgmp")
+endif()
+if (NOT MDWF_MPFR_LIBRARY)
+    list(APPEND MDWF_REMEZ_MISSING "MPFR library libmpfr")
+endif()
+if (NOT MDWF_REMEZ_MISSING)
     message(STATUS "MDWF Remez: GMP ${MDWF_GMP_LIBRARY}, MPFR ${MDWF_MPFR_LIBRARY}")
     add_executable(mdwfRemezTest
                    src/testing/main_mdwfRemezTest.cpp
@@ -910,7 +922,10 @@ if (MDWF_GMP_INCLUDE_DIR AND MDWF_MPFR_INCLUDE_DIR AND MDWF_GMP_LIBRARY AND MDWF
     # mdwfDSDRTest mode = gptmdwf (G6, light factors vs GPT) runs Ls = 16.
     SIMULATeQCD_target_compile_definitions(mdwfDSDRTest PRIVATE NSTACKS_16=1)
 else()
-    message(STATUS "MDWF Remez: GMP/MPFR not found, mdwfRemezTest and the MDWF RHMC targets disabled")
+    string(REPLACE ";" ", " MDWF_REMEZ_MISSING "${MDWF_REMEZ_MISSING}")
+    message(WARNING "MDWF Remez: not found: ${MDWF_REMEZ_MISSING}. mdwfRemezTest and the MDWF RHMC "
+                    "targets are disabled. Give the installation prefixes with -DCMAKE_PREFIX_PATH=<prefix>, "
+                    "-DGMP_ROOT=<prefix> or -DMPFR_ROOT=<prefix>.")
 endif()
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_mdwfWilsonSliceTest.cpp src/spinor/spinorfield.cpp)
