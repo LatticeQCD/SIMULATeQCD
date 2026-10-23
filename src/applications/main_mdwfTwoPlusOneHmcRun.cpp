@@ -72,10 +72,10 @@
  * Gauge action: rectangle_gauge = 1 uses S_g = -(beta/3) [(1 - 8 c1) sum Re tr U_p + c1 sum Re tr U_rect] with
  * c1 = gauge_c1 (Iwasaki -0.331, GPT's normalization of beta) instead of symanzik_gauge / Wilson.
  *
- * Usage (from the build's testing directory):
+ * Usage (from the build's applications directory):
  *   ./mdwfTwoPlusOneHmcRun <param file> [key=value ...]
- * Parameters: see parameter/tests/mdwfTwoPlusOneHmcRun.param. Ls is a compile-time
- * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only. Single rank; test-only scaffold, not a production RHMC.
+ * Parameters: see parameter/applications/mdwfTwoPlusOneHmcRun.param. Ls is a compile-time
+ * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only. Several ranks need c_sw = 0.
  */
 
 #include "../simulateqcd.h"
@@ -758,7 +758,7 @@ int main(int argc, char **argv) {
 
         MDWFTwoPlusOneRunParameters param;
         CommunicationBase commBase(&argc, &argv, true);
-        param.readfile(commBase, "../parameter/tests/mdwfTwoPlusOneHmcRun.param", argc, argv);
+        param.readfile(commBase, "../parameter/applications/mdwfTwoPlusOneHmcRun.param", argc, argv);
         commBase.forceHalos(param.force_halos() != 0);
         commBase.init(param.nodeDim());
 

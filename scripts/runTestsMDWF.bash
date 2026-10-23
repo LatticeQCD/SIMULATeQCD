@@ -27,19 +27,22 @@ for killFile in OUT_mdwf* OUTmdwf* runERR_mdwf* runERRmdwf*; do
 done
 
 
-# Run one executable on one GPU; the remaining arguments are passed on (parameter file).
+# Run one executable (name in this directory, or path) on one GPU; the remaining arguments are passed on
+# (parameter file).
 function runMDWFRoutine {
-    routine="$1"
+    exe="$1"
     shift
+    [[ ${exe} == */* ]] || exe=./${exe}
+    routine=$(basename ${exe})
     outFile='OUT'"${routine}"
     errFile='runERR'"${routine}"
-    echo '  '${routine}' '"$@"
-    if [ ! -x ./${routine} ]; then
+    echo '  '${exe}' '"$@"
+    if [ ! -x ${exe} ]; then
         echo "not built (make -j mdwftests mdwf)" >> ${errFile}
         echo -e "  ${cred}not built${endc}"
         return
     fi
-    $run_command 1 ./${routine} "$@" >> ${outFile} 2>> ${errFile}
+    $run_command 1 ${exe} "$@" >> ${outFile} 2>> ${errFile}
     status=$?
     if [ ${status} -ne 0 ]; then
         echo "exit status ${status}" >> ${errFile}
@@ -85,9 +88,9 @@ testRoutines=(
     _mdwfDSDRTest
 )
 
-# Programs, each with its example parameter file parameter/tests/<program>.param.
+# Programs, each with its example parameter file parameter/tests/<program>.param; the HMC is an application
+# (<build>/applications, parameter/applications) and runs first.
 programRoutines=(
-    _mdwfTwoPlusOneHmcRun
     _mdwfResidualMass
     _mdwfMeasure
     _mdwfSpectralBounds
@@ -111,6 +114,7 @@ fi
 if [ "${part}" == "all" ] || [ "${part}" == "programs" ]; then
     echo
     echo -e "${cyan}MDWF programs with the example parameter files${endc}"
+    runMDWFRoutine ../applications/_mdwfTwoPlusOneHmcRun ../parameter/applications/mdwfTwoPlusOneHmcRun.param
     for routine in "${programRoutines[@]}"; do
         runMDWFRoutine "${routine}" "../parameter/tests/${routine:1}.param"
     done

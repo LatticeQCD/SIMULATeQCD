@@ -5,7 +5,8 @@
 # Iwasaki gauge action, even/odd preconditioning, c_sw = 0, light quark pair with one Hasenbusch mass,
 # DSDR weight, exact one-flavour (EOFA) strange quark, mixed-precision solvers, antiperiodic fermions in time.
 #
-#   ./mdwfTwoPlusOneHmcRun ../parameter/tests/mdwfTwoPlusOneHmcRun.param [key=value ...]
+#   cd <build>/applications
+#   ./mdwfTwoPlusOneHmcRun ../parameter/applications/mdwfTwoPlusOneHmcRun.param [key=value ...]
 #
 # Each trajectory appends one line to <measurements_dir>/<output_name>:
 #   traj accepted deltaH exp(-deltaH) plaquette kinetic_before gauge_before fermion_before fermion_forces seconds

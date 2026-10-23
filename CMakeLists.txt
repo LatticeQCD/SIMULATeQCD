@@ -698,8 +698,9 @@ SIMULATeQCD_target_compile_definitions(stackedSpinorTest PRIVATE HALODEPTH_4=1 H
 add_to_compound_SIMULATeQCD_target(tests stackedSpinorTest)
 
 #----------------------------------------------------------------------------------- MOBIUS DOMAIN-WALL FERMIONS (MDWF)
-# Sources in src/experimental/mdwf (overview of programs and tests: src/experimental/mdwf/USERGUIDE.md), example
-# parameter files in parameter/tests/mdwf*.param. All MDWF executables go to <build>/testing.
+# Sources in src/experimental/mdwf (overview of programs and tests: src/experimental/mdwf/USERGUIDE.md). The HMC
+# (src/applications, parameter/applications) goes to <build>/applications, the other programs and the tests
+# (src/testing, parameter/tests) to <build>/testing.
 #   make mdwf        programs: HMC, residual mass, measurements, spectra, benchmarks
 #   make mdwftests   test suite; run with scripts/runTestsMDWF.bash from <build>/testing
 # The RHMC/EOFA targets (marked "Remez" in USERGUIDE.md) need GMP and MPFR, see below.
@@ -715,6 +716,17 @@ FUNCTION(add_mdwf_executable TARGET GROUP)
     SIMULATeQCD_target_compile_definitions(${TARGET} PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 ${ARGN})
     add_to_compound_SIMULATeQCD_target(${GROUP} ${TARGET})
     add_to_compound_SIMULATeQCD_target(tests ${TARGET})
+ENDFUNCTION()
+
+# add_mdwf_application(<target> <compile definitions>): src/applications/main_<target>.cpp, part of "mdwf" and
+# "applications".
+FUNCTION(add_mdwf_application TARGET)
+    set_SIMULATeQCD_gpu_backend(src/applications/main_${TARGET}.cpp src/spinor/spinorfield.cpp)
+    add_SIMULATeQCD_executable(${TARGET} src/applications/main_${TARGET}.cpp src/spinor/spinorfield.cpp)
+    set_SIMULATeQCD_property(${TARGET} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
+    SIMULATeQCD_target_compile_definitions(${TARGET} PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_2=1 DOUBLEPREC=1 COMP_R18=1 ${ARGN})
+    add_to_compound_SIMULATeQCD_target(mdwf ${TARGET})
+    add_to_compound_SIMULATeQCD_target(applications ${TARGET})
 ENDFUNCTION()
 
 set(MDWF_DEFS NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
@@ -805,7 +817,7 @@ if (NOT MDWF_REMEZ_MISSING)
     add_dependencies(mdwftests mdwfRemezTest)
 
     # Targets with the RHMC strange quark, EOFA, Hasenbusch or DSDR: link the Remez library.
-    add_mdwf_executable(mdwfTwoPlusOneHmcRun mdwf ${MDWF_DEFS_SOLVE})
+    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_DEFS_SOLVE})
     add_mdwf_executable(mdwfOneFlavorRhmcActionTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfTwoPlusOneHmcTrajectoryTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfEvenOddActionTest mdwftests SINGLEPREC=1 ${MDWF_DEFS_EO})

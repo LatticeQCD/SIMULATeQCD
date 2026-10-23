@@ -13,7 +13,8 @@ Möbius domain-wall fermions with a Wilson(-clover) kernel D_W(-M5), c5 = b5 - 1
   effective Dirac operator
 
 The code is in this directory (headers only, plus `MDWFRemez.cpp`), the programs and tests in
-`src/testing/main_mdwf*.cpp`, their parameter files in `parameter/tests/mdwf*.param`.
+`src/testing/main_mdwf*.cpp`, their parameter files in `parameter/tests/mdwf*.param`; the HMC is an application
+(`src/applications/main_mdwfTwoPlusOneHmcRun.cpp`, `parameter/applications/mdwfTwoPlusOneHmcRun.param`).
 
 ## Build
 
@@ -28,8 +29,8 @@ make mdwfResidualMass      # one target: testing/mdwfResidualMass
 ```
 
 As for the other SIMULATeQCD compound targets (`tests`, `applications`), executables built through `mdwf` and
-`mdwftests` carry a leading `_`. Each target takes a few minutes to compile. All executables are written to
-`<build>/testing`.
+`mdwftests` carry a leading `_`. Each target takes a few minutes to compile. The HMC is written to
+`<build>/applications`, all other executables to `<build>/testing`.
 
 ## Run
 
@@ -38,6 +39,9 @@ cd <build>/testing
 ./mdwfResidualMass                                    # reads ../parameter/tests/mdwfResidualMass.param
 ./_mdwfResidualMass                                   # the same, built by make mdwf
 ./mdwfResidualMass my.param Gaugefile=/path/conf      # own parameter file, keys overridden on the command line
+
+cd <build>/applications
+./mdwfTwoPlusOneHmcRun                                # reads ../parameter/applications/mdwfTwoPlusOneHmcRun.param
 mpirun -np 2 ./mdwfTwoPlusOneHmcRun my.param          # several ranks: set Nodes (programs marked "ranks")
 ```
 
@@ -48,7 +52,7 @@ for one GPU (the two benchmarks use a 32^3 x 8 lattice).
 
 | program | what it does | needs |
 |---|---|---|
-| `mdwfTwoPlusOneHmcRun` | 2+1 flavour HMC; the example is the DSDR setup: Iwasaki, Hasenbusch, EOFA strange, even/odd, mixed precision | Remez; ranks at c_sw = 0 |
+| `mdwfTwoPlusOneHmcRun` | (application) 2+1 flavour HMC; the example is the DSDR setup: Iwasaki, Hasenbusch, EOFA strange, even/odd, mixed precision | Remez; ranks at c_sw = 0 |
 | `mdwfResidualMass` | residual mass from 12 point-source solves, correlators along x, y, z, t; jobs can be split by spin-colour component | |
 | `mdwfMeasure` | m_res, screening correlators and stochastic condensates in the GPT output format | |
 | `mdwfSpectralBounds` | Lanczos estimate of the extreme eigenvalues of M^+ M, to choose the RHMC intervals | |
