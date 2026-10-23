@@ -39,6 +39,17 @@ have run script `0`, run scripts `1` and `2`.
 
 At the end of your test run, if there are no `runERR` files, then you are done.
 
+## Möbius domain-wall fermion tests
+
+The MDWF tests and programs have their own compound targets and script (all on one GPU):
+```shell
+make -j mdwftests mdwf
+cd testing
+../scripts/runTestsMDWF.bash
+```
+It runs every MDWF test and then every MDWF program with its example parameter file; as above, no `runERR`
+files means that everything passed. See `src/experimental/mdwf/USERGUIDE.md`.
+
 ## Adding your test to the `runTests` scripts
 
 After your test is working, please add it to the last `runTests` script. This way your

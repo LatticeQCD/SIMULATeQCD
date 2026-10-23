@@ -23,13 +23,12 @@ prints which file is missing and skips only those targets). The test configurati
 `git lfs pull`.
 
 ```shell
-cmake ../SIMULATeQCD -DARCHITECTURE=80 -DUSE_GPU_AWARE_MPI=ON -DUSE_GPU_P2P=OFF
-make -j 8 mdwf          # the programs below
-make -j 8 mdwftests     # the tests below
-make mdwfResidualMass   # or single targets
+make -j mdwf mdwftests     # all programs and tests: testing/_mdwfResidualMass, testing/_mdwfMobiusEvenOddTest, ...
+make mdwfResidualMass      # one target: testing/mdwfResidualMass
 ```
 
-Each target takes a few minutes to compile, so build only what you need. All executables are written to
+As for the other SIMULATeQCD compound targets (`tests`, `applications`), executables built through `mdwf` and
+`mdwftests` carry a leading `_`. Each target takes a few minutes to compile. All executables are written to
 `<build>/testing`.
 
 ## Run
@@ -37,6 +36,7 @@ Each target takes a few minutes to compile, so build only what you need. All exe
 ```shell
 cd <build>/testing
 ./mdwfResidualMass                                    # reads ../parameter/tests/mdwfResidualMass.param
+./_mdwfResidualMass                                   # the same, built by make mdwf
 ./mdwfResidualMass my.param Gaugefile=/path/conf      # own parameter file, keys overridden on the command line
 mpirun -np 2 ./mdwfTwoPlusOneHmcRun my.param          # several ranks: set Nodes (programs marked "ranks")
 ```
@@ -64,11 +64,18 @@ on a 32^3 x 8 configuration that is not part of the repository.
 ## Tests (`make mdwftests`)
 
 Tests take no arguments (lattice from `parameter/tests/mdwfFifthDimTest.param`, 6^4, unless noted), run on one
-GPU, print what they compare, and exit with 0 when they pass. All of them:
+GPU, print what they compare, and exit with 0 when they pass. To run all tests and then all programs with their
+example parameter files, as the other `runTests` scripts (see the SIMULATeQCD documentation, "Testing the code"):
 
 ```shell
-cd <build>/testing && bash ../scripts/mdwf/run_mdwf_tests.sh
+make -j mdwftests mdwf
+cd testing
+../scripts/runTestsMDWF.bash          # or: ../scripts/runTestsMDWF.bash tests | programs
 ```
+
+The output of each executable goes to `OUT_<name>`; a `runERR_<name>` file is left when it failed (output on
+stderr or a nonzero exit status). No `runERR` files: everything passed. The launcher is `run_command` in
+`scripts/testingTools.bash` (`mpiexec` or `srun`).
 
 | test | checks |
 |---|---|

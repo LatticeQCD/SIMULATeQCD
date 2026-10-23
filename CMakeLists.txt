@@ -701,7 +701,7 @@ add_to_compound_SIMULATeQCD_target(tests stackedSpinorTest)
 # Sources in src/experimental/mdwf (overview of programs and tests: src/experimental/mdwf/USERGUIDE.md), example
 # parameter files in parameter/tests/mdwf*.param. All MDWF executables go to <build>/testing.
 #   make mdwf        programs: HMC, residual mass, measurements, spectra, benchmarks
-#   make mdwftests   test suite (exit status 0 = passed)
+#   make mdwftests   test suite; run with scripts/runTestsMDWF.bash from <build>/testing
 # The RHMC/EOFA targets (marked "Remez" in USERGUIDE.md) need GMP and MPFR, see below.
 add_custom_target(mdwf)
 add_custom_target(mdwftests)
