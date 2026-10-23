@@ -1,9 +1,5 @@
 #
-# mdwfTwoPlusOneHmcRun.param -- 2+1 flavour Mobius domain-wall HMC (main_mdwfTwoPlusOneHmcRun.cpp)
-#
-# This example: the DSDR production setup on a small lattice (8^4, Ls = 8, a few minutes on one GPU):
-# Iwasaki gauge action, even/odd preconditioning, c_sw = 0, light quark pair with one Hasenbusch mass,
-# DSDR weight, exact one-flavour (EOFA) strange quark, mixed-precision solvers, antiperiodic fermions in time.
+# mdwfTwoPlusOneHmcRun.param -- 2+1 flavour Mobius domain-wall HMC (src/applications/main_mdwfTwoPlusOneHmcRun.cpp)
 #
 #   cd <build>/applications
 #   ./mdwfTwoPlusOneHmcRun ../parameter/applications/mdwfTwoPlusOneHmcRun.param [key=value ...]
@@ -11,91 +7,135 @@
 # Each trajectory appends one line to <measurements_dir>/<output_name>:
 #   traj accepted deltaH exp(-deltaH) plaquette kinetic_before gauge_before fermion_before fermion_forces seconds
 #
-# Lattice
-#            Lattice: Nx Ny Nz Nt
-#              Nodes: ranks per direction (more than one rank needs c_sw = 0)
-# Gauge action (default: Wilson plaquette)
-#    rectangle_gauge: 1 = plaquette + rectangle, S_g = -(beta/3) [(1 - 8 c1) sum Re tr U_p + c1 sum Re tr U_rect]
-#           gauge_c1: rectangle coefficient c1 (Iwasaki -0.331, DBW2 -1.4088)
-#     symanzik_gauge: 1 = tree-level Symanzik instead (not together with rectangle_gauge)
-# Fermions
-#     antiperiodic_t: fermion boundary condition in time (1 = antiperiodic, needed at finite temperature)
-#           even_odd: 1 = even/odd preconditioned actions (needed for Hasenbusch, DSDR, EOFA), 0 = M^+ M
-#                 Ls: 8, or 16 together with dsdr_twists
-#   M5, b5, c_sw: Mobius kernel D_W(-M5), c5 = b5 - 1; c_sw = 0 for the even/odd light form used here
-#             mf, ms: light and strange quark mass;  pv_mass: Pauli-Villars mass (1.0)
-#  hasenbusch_masses: intermediate light masses mf < m_1 < ... < pv_mass (empty: one ratio)
-#        dsdr_twists: DSDR twists eps_0 < eps_1 < ... (empty: no DSDR); D_W at dsdr_M5 (default: M5)
-#       strange_eofa: 1 = EOFA strange quark, det M(ms) / det M(pv_mass) (needs hasenbusch_masses and dsdr_twists);
-#                     0 = rational (RHMC) strange quark, see below
-#   eofa_lambda_low, eofa_lambda_high: interval of the EOFA heatbath approximation x^(-1/2)
-# Molecular dynamics
-#                tau: trajectory length (GPT units: tau_GPT = sqrt(2) tau, so 0.70710678 = GPT's tau 1)
-#      fermion_steps: steps of the fermion level per trajectory
-#     gauge_substeps: gauge steps per fermion step
-#          md_scheme: 0 leapfrog, 1 OMF2 (omf2_lambda), 2 OMF2 force-gradient
-#   term_level, level_substeps: optional multi-level integrator (one level per fermion force term:
-#                     Hasenbusch factors lightest first, strange, then DSDR factors); unset = two levels
-# Solvers
-#          precision: CG residual of the action and heatbath solves;  force_precision: of the force solves
-#    mixed_precision: 1 = single-precision CG with double reliable updates;  chrono_size: number of previous
-#                     force solutions used for the initial guess (needs mixed_precision = 1)
-#           max_iter: CG iteration limit
-# Run control
-#             n_traj: trajectories;  n_therm: excluded from the statistics;  n_nometro (<= n_therm): accepted
-#                     without Metropolis test;  block_size: block length of the blocked error
-#               seed: random number seed
-#   check_steps: Lanczos check of the RHMC intervals on the start configuration (0 = off; not used by EOFA)
-#   measurements_dir, output_name: per-trajectory output
-#      Gaugefile_out: configuration written (NERSC) into measurements_dir every save_every trajectories (0: at
-#                     the end only);  Gaugefile: start configuration (unset: cold start)
-#        max_seconds: start no trajectory past this wall-clock budget (0: no limit)
+# This file: the recommended setup on a small lattice (8^4, Ls = 8, one GPU): Iwasaki gauge action, DSDR, light
+# quark pair with one Hasenbusch mass, EOFA strange quark, even/odd preconditioning, c_sw = 0, mixed precision.
+# The blocks below say how to switch each option. A key that is not set takes its default, given in [brackets];
+# comments must be on their own lines.
 #
-# Further keys (defaults in brackets): RHMC strange quark (strange_eofa = 0): lambda_low_s [0.04],
-# lambda_high_s [180], lambda_low_pv [0.2], lambda_high_pv [180] (intervals of M^+ M or Mhat^+ Mhat, measure them
-# with mdwfSpectralBounds), action_error [1e-12], force_error [1e-8], max_order [30], remez_digits [50];
-# eofa_error [1e-10], eofa_check_heatbath [1], light_form [1 = GPT form, needs c_sw = 0; 0 = original form],
-# mixed_delta [0.1], gauge_scheme [-1 = md_scheme], omf2_lambda [0.18], conf_double [0: 2 rows, single
-# precision], traj_offset [0] and save_series [0] (chained segments), reversibility_check [0 = off; n > 0: n
-# forward/backward checks instead of the run], force_halos [1].
+# Choices
+#   strange quark    EOFA (recommended): strange_eofa = 1; needs even_odd = 1, c_sw = 0, hasenbusch_masses and
+#                      dsdr_twists
+#                    RHMC: strange_eofa = 0 and the AlgRemez intervals (block "strange quark, RHMC")
+#   DSDR             on: dsdr_twists = eps_0 < eps_1 < ...;  off: remove dsdr_twists (RHMC strange quark)
+#   Hasenbusch       on: hasenbusch_masses = m_1 < m_2 < ... between mf and pv_mass;  off: remove the key (RHMC
+#                      strange quark)
+#   gauge action     Iwasaki: rectangle_gauge = 1, gauge_c1 = -0.331;  DBW2: gauge_c1 = -1.4088;
+#                    tree-level Symanzik: symanzik_gauge = 1, rectangle_gauge = 0;  Wilson plaquette: both 0
+#   preconditioning  even_odd = 1 (needed by Hasenbusch, DSDR and EOFA);  0: unpreconditioned M^+ M, RHMC only
+#   Ls               8, or 16 together with dsdr_twists
+#   clover           c_sw = 0 (needed by EOFA, by light_form = 1 and by more than one rank);  c_sw > 0: one rank,
+#                      light_form = 0, RHMC strange quark
+#   integrator       two levels [default]: fermion_steps, gauge_substeps;  multi-level: term_level, level_substeps;
+#                    md_scheme 0 leapfrog [default], 1 OMF2 (omf2_lambda), 2 OMF2 force-gradient
+#   solver           mixed_precision = 1: single-precision CG with double reliable updates;  0: double precision
 #
+# Lattice: Nx Ny Nz Nt;  Nodes: ranks per direction (more than one rank: c_sw = 0)
 Lattice           = 8 8 8 8
 Nodes             = 1 1 1 1
+seed              = 20261023
+
+# ----- gauge action. Iwasaki here; tree-level Symanzik: symanzik_gauge = 1 and rectangle_gauge = 0
 beta              = 1.8
 rectangle_gauge   = 1
 gauge_c1          = -0.331
-antiperiodic_t    = 1
+#symanzik_gauge   = 1
+
+# ----- Mobius domain-wall fermions: kernel D_W(-M5), c5 = b5 - 1, Pauli-Villars mass pv_mass,
+#       antiperiodic_t = 1: antiperiodic in time (finite temperature)
 even_odd          = 1
 Ls                = 8
 M5                = 1.8
 b5                = 1.5
 c_sw              = 0.0
-mf                = 0.05
-ms                = 0.1
+antiperiodic_t    = 1
 pv_mass           = 1.0
+
+# ----- light quark pair det(M(mf)^+ M(mf)) / det(M(pv_mass)^+ M(pv_mass)), split by the Hasenbusch masses.
+#       No Hasenbusch: remove hasenbusch_masses (RHMC strange quark only).
+#       light_form [1]: GPT's form of each ratio (c_sw = 0);  0: original form
+mf                = 0.05
 hasenbusch_masses = 0.3
+#light_form       = 1
+
+# ----- DSDR weight prod_i det(D_W^+ D_W + eps_i^2) / det(D_W^+ D_W + eps_(i+1)^2), D_W = D_W(-dsdr_M5), dsdr_M5 [M5].
+#       No DSDR: remove dsdr_twists (RHMC strange quark only).
 dsdr_twists       = 0.02 0.07 0.18 0.5
+#dsdr_M5          = 1.8
+
+# ----- strange quark, EOFA (recommended): det M(ms) / det M(pv_mass).
+#       eofa_lambda_low/high: interval of the heatbath approximation x^(-1/2); eofa_error [1e-10] its error;
+#       eofa_check_heatbath [1]: check the heatbath against the exact action
+ms                = 0.1
 strange_eofa      = 1
 eofa_lambda_low   = 1.0
 eofa_lambda_high  = 12.0
+#eofa_error       = 1e-10
+#eofa_check_heatbath = 1
+
+# ----- strange quark, RHMC: strange_eofa = 0 and the AlgRemez intervals [defaults shown] of M^+ M (even_odd = 0) or
+#       Mhat^+ Mhat (even_odd = 1) at ms (lambda_*_s) and at pv_mass (lambda_*_pv). To measure them, run once with
+#       check_steps = 500: Lanczos on the start configuration prints both ranges, and the run stops if one lies
+#       outside its interval (keep a margin). action_error, force_error: errors of the heatbath/action and force
+#       approximations; max_order: highest Remez order tried; remez_digits: AlgRemez working precision.
+#       check_steps = 0: no check (EOFA does not use it).
+#lambda_low_s     = 0.04
+#lambda_high_s    = 180
+#lambda_low_pv    = 0.2
+#lambda_high_pv   = 180
+#action_error     = 1e-12
+#force_error      = 1e-8
+#max_order        = 30
+#remez_digits     = 50
+check_steps       = 0
+
+# ----- molecular dynamics. tau: trajectory length (tau = 0.70710678 is GPT's tau = 1, tau_GPT = sqrt(2) tau);
+#       fermion_steps: steps of the coarsest fermion level per trajectory; gauge_substeps: gauge steps per step of
+#       the finest fermion level; md_scheme: 0 leapfrog, 1 OMF2, 2 OMF2 force-gradient; gauge_scheme [-1: md_scheme]
+#       for the gauge level; omf2_lambda [0.18].
+#       Multi-level integrator: term_level = level of each fermion force term (Hasenbusch factors lightest first,
+#       then the strange quark, then the DSDR factors; 0 = coarsest), level_substeps = steps per step of the level
+#       above, for levels 1, 2, ...  Unset: two levels.
 tau               = 0.70710678
 fermion_steps     = 6
 gauge_substeps    = 4
 md_scheme         = 2
+#gauge_scheme     = -1
+#omf2_lambda      = 0.18
+#term_level       = 0 1 1 0 1 1
+#level_substeps   = 2
+
+# ----- solvers. precision: CG residual of action and heatbath solves; force_precision: of the force solves
+#       (<= 0: precision); chrono_size: previous force solutions used as initial guess (needs mixed_precision = 1);
+#       mixed_delta [0.1]: reliable update after the residual has dropped by this factor
 precision         = 1e-10
 force_precision   = 1e-8
 mixed_precision   = 1
 chrono_size       = 6
+#mixed_delta      = 0.1
 max_iter          = 100000
+
+# ----- run control. n_therm: trajectories excluded from the statistics; n_nometro (<= n_therm): accepted without
+#       Metropolis test; block_size: block length of the blocked error of <exp(-deltaH)>; max_seconds: start no
+#       trajectory past this wall-clock time (0: no limit)
 n_traj            = 10
 n_therm           = 5
 n_nometro         = 2
 block_size        = 1
-seed              = 20261023
-check_steps       = 0
-save_every        = 0
 max_seconds       = 0
+
+# ----- output. Gaugefile_out (NERSC) is written into measurements_dir every save_every trajectories (0: at the end
+#       only); conf_double [0]: 1 writes full links in double precision; Gaugefile: start configuration [cold start];
+#       traj_offset [0]: continue a stream (trajectories numbered from traj_offset + 1, output appended);
+#       save_series [0]: 1 writes every saved configuration to <Gaugefile_out>.<trajectory>;
+#       reversibility_check [0]: n > 0 runs n forward/backward checks on the start configuration instead;
+#       force_halos [1]: halo exchange even on one rank, 0: periodic wrap
 measurements_dir  = ./
 output_name       = mdwfTwoPlusOneHmcRun.dat
 Gaugefile_out     = mdwfTwoPlusOneHmcRun.nersc
+save_every        = 0
+#conf_double      = 0
 #Gaugefile        = /path/to/start.nersc
+#traj_offset      = 0
+#save_series      = 0
+#reversibility_check = 0
+#force_halos      = 1
