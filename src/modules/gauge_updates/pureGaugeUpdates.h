@@ -15,6 +15,8 @@
 #include "../../base/math/su2.h"
 #include "../../base/math/random.h"
 
+/// Maximum number of lambda^2 draws per SU2 heatbath step before the update is rejected.
+constexpr int HB_MAX_ATTEMPTS = 20;
 
 template<class floatT, bool onDevice, size_t HaloDepth>
 class GaugeUpdate {
@@ -25,11 +27,14 @@ private:
     typedef GIndexer<All, HaloDepth> GInd;
     const size_t elems = GInd::getLatData().sizeh;
 
+    template<int maxAttempts>
+    void sweepHB(uint4 *state, floatT beta, bool ltest);          /// HB sweep with fixed number of lambda^2 attempts
+
 public:
     explicit GaugeUpdate(Gaugefield<floatT, onDevice, HaloDepth> &gaugefield) : _gauge(gaugefield) {}
 
     void updateOR();                                              /// OR update of entire lattice
-    void updateHB(uint4 *state, floatT beta, bool ltest=false);   /// HB update of entire lattice
+    void updateHB(uint4 *state, floatT beta, bool ltest=false, bool retry=true);   /// HB update of entire lattice
     void set_gauge_to_reference();
 };
 
@@ -109,7 +114,7 @@ __device__ __host__ inline SU3<floatT> OR_GPUSU3(const SU3<floatT> &U, const SU3
 
 /// Heatbath update for SU2 matrices. If the ltest flag is true, RNG is turned off. This is to check whether the update
 /// works independently of the RNG.
-template<typename floatT>
+template<typename floatT, int maxAttempts = HB_MAX_ATTEMPTS>
 __device__ __host__ inline SU2<floatT> HB_GPUSU2(const SU2<floatT> &U, const floatT inv_4beta, uint4 *stateElem,
                                                   bool ltest)
 {
@@ -122,23 +127,29 @@ __device__ __host__ inline SU2<floatT> HB_GPUSU2(const SU2<floatT> &U, const flo
     z = znorm * U;
     alpha = inv_4beta * znorm;    /// for SU2 this would be 1/(2*a*beta). With SU3 subgroup update this is 3/(4*a*beta)
 
-    hb_1 = get_rand_excl0<floatT>(stateElem);
-    if(ltest) hb_1 = 0.215;
-    x1 = log(hb_1);
+    // Draw lambda^2 until the acceptance condition is met, giving up after maxAttempts tries. With ltest the
+    /// random numbers are fixed, so retrying is pointless.
+    for (int attempt = 0; attempt < maxAttempts; attempt++) {
+        hb_1 = get_rand_excl0<floatT>(stateElem);
+        if(ltest) hb_1 = 0.215;
+        x1 = log(hb_1);
 
-    hb_1 = get_rand_excl0<floatT>(stateElem);
-    if(ltest) hb_1 = 0.839;
-    x2 = log(hb_1);
+        hb_1 = get_rand_excl0<floatT>(stateElem);
+        if(ltest) hb_1 = 0.839;
+        x2 = log(hb_1);
 
-    hb_1 = get_rand_excl0<floatT>(stateElem);
-    if(ltest) hb_1 = 0.390;
-    x3 = cos(2.0 * M_PI * hb_1);
+        hb_1 = get_rand_excl0<floatT>(stateElem);
+        if(ltest) hb_1 = 0.390;
+        x3 = cos(2.0 * M_PI * hb_1);
 
-    x0 = (x1 + x2 * x3 * x3) * alpha;        /// lambda^2 Gattringer Lang eq. (4.45)
+        x0 = (x1 + x2 * x3 * x3) * alpha;        /// lambda^2 Gattringer Lang eq. (4.45)
 
-    hb_1 = get_rand_excl0<floatT>(stateElem);
-    if(ltest) hb_1 = 0.004;
-    x4 = hb_1 * hb_1 - x0;                   /// eq. (4.46)
+        hb_1 = get_rand_excl0<floatT>(stateElem);
+        if(ltest) hb_1 = 0.004;
+        x4 = hb_1 * hb_1 - x0;                   /// eq. (4.46)
+
+        if (x4 < 1.0 || ltest) break;
+    }
 
     hb_1 = get_rand_excl0<floatT>(stateElem);
     hb_2 = get_rand_excl0<floatT>(stateElem);
@@ -162,8 +173,8 @@ __device__ __host__ inline SU2<floatT> HB_GPUSU2(const SU2<floatT> &U, const flo
 }
 
 /// Heatbath update of SU2 subgroups embedded in SU3.
-template<typename floatT>
-__device__ __host__ inline SU3<float> HB_GPUSU3(const SU3<floatT> &U, SU3<floatT> &Ustaple,
+template<typename floatT, int maxAttempts = HB_MAX_ATTEMPTS>
+__device__ __host__ inline SU3<floatT> HB_GPUSU3(const SU3<floatT> &U, SU3<floatT> &Ustaple,
                                                  uint4 *state, const floatT beta, bool ltest) {
     SU2<floatT> z;
     SU3<floatT> x;
@@ -171,15 +182,15 @@ __device__ __host__ inline SU3<float> HB_GPUSU3(const SU3<floatT> &U, SU3<floatT
 
     x = U;
     z = sub12(x, Ustaple);                              /// According to Gattringer: Calc relevant part of W eq. (4.48)
-    z = HB_GPUSU2<floatT>(z, inv_75beta, state, ltest); /// distribution according to eq. (4.41)
+    z = HB_GPUSU2<floatT, maxAttempts>(z, inv_75beta, state, ltest); /// distribution according to eq. (4.41)
     x = sub12(z, x);                                    /// Mult new SU2 into U (4.49)
 
     z = sub13(x, Ustaple);
-    z = HB_GPUSU2<floatT>(z, inv_75beta, state, ltest);
+    z = HB_GPUSU2<floatT, maxAttempts>(z, inv_75beta, state, ltest);
     x = sub13(z, x);
 
     z = sub23(x, Ustaple);
-    z = HB_GPUSU2<floatT>(z, inv_75beta, state, ltest);
+    z = HB_GPUSU2<floatT, maxAttempts>(z, inv_75beta, state, ltest);
     x = sub23(z, x);
 
     return x;

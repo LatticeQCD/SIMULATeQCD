@@ -32,7 +32,7 @@ struct ORKernel{
 };
 
 /// Kernel to perform heatbath. Runs over sites, and loops over directions.
-template<class floatT,Layout LatLayout,size_t HaloDepth>
+template<class floatT,Layout LatLayout,size_t HaloDepth, int maxAttempts>
 struct HBKernel{
     SU3Accessor<floatT> SU3Accessor;
     uint4*  _state;
@@ -55,7 +55,7 @@ struct HBKernel{
         U = SU3Accessor.getLink(GInd::getSiteMu(site,_mu));                  /// Original link
         Ustaple=SU3Staple<floatT,LatLayout,HaloDepth>(SU3Accessor,site,_mu); /// Staple attached to it
         /// Perform the HB update.
-        Uprime=HB_GPUSU3(U,Ustaple,stateElem,_beta,_ltest);
+        Uprime=HB_GPUSU3<floatT, maxAttempts>(U,Ustaple,stateElem,_beta,_ltest);
         Uprime.su3unitarize();
         /// Replace the link.
         SU3Accessor.setLink(GInd::getSiteMu(site,_mu),Uprime);
@@ -78,20 +78,31 @@ void GaugeUpdate<floatT,onDevice,HaloDepth>::updateOR(){
     }
 }
 
-/// Checkerboard update using heatbath.
+/// Checkerboard heatbath sweep with the number of lambda^2 attempts fixed at compile time.
 template<class floatT, bool onDevice, size_t HaloDepth>
-void GaugeUpdate<floatT,onDevice,HaloDepth>::updateHB(uint4* state, floatT beta, bool ltest){
+template<int maxAttempts>
+void GaugeUpdate<floatT,onDevice,HaloDepth>::sweepHB(uint4* state, floatT beta, bool ltest){
     ReadIndexEvenOdd<Even,HaloDepth> calcReadIndexEven;
     ReadIndexEvenOdd<Odd, HaloDepth> calcReadIndexOdd;
     for (uint8_t mu=0; mu<4; mu++) {
         /// HB update red sites.
-        iterateFunctorNoReturn<onDevice>(HBKernel<floatT,Even,HaloDepth>(_gauge,state,beta,mu,ltest),
+        iterateFunctorNoReturn<onDevice>(HBKernel<floatT,Even,HaloDepth,maxAttempts>(_gauge,state,beta,mu,ltest),
                                                 calcReadIndexEven,elems);
         _gauge.updateAll(Hyperplane | Plane | COMM_BOTH);
         /// HB update black sites.
-        iterateFunctorNoReturn<onDevice>(HBKernel<floatT,Odd, HaloDepth>(_gauge,state,beta,mu,ltest),
+        iterateFunctorNoReturn<onDevice>(HBKernel<floatT,Odd, HaloDepth,maxAttempts>(_gauge,state,beta,mu,ltest),
                                                 calcReadIndexOdd, elems);
         _gauge.updateAll(Hyperplane | Plane | COMM_BOTH);
+    }
+}
+
+/// Checkerboard update using heatbath.
+template<class floatT, bool onDevice, size_t HaloDepth>
+void GaugeUpdate<floatT,onDevice,HaloDepth>::updateHB(uint4* state, floatT beta, bool ltest, bool retry){
+    if (retry) {
+        sweepHB<HB_MAX_ATTEMPTS>(state, beta, ltest);
+    } else {
+        sweepHB<1>(state, beta, ltest);
     }
 }
 
@@ -104,7 +115,7 @@ void GaugeUpdate<floatT, onDevice, HaloDepth>::set_gauge_to_reference() {
     host_state.make_rng_state(0);
     dev_state = host_state;
     for (int i = 0; i < 100; ++i) {
-        this->updateHB(dev_state.state, 8.0);
+        this->updateHB(dev_state.state, 8.0, false, false);
     }
 }
 
