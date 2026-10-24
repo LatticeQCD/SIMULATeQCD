@@ -38,7 +38,7 @@ struct measureHadronsParam : LatticeParameters {
     Parameter<std::string> action; //FIXME this feature isn't implemented yet-
     Parameter<std::string> source_type; //FIXME this feature isn't implemented yet
 
-    Parameter<std::string> correlator_axis;
+    DynamicParameter<std::string> correlator_axes;
     Parameter<std::string> measurements_dir;
     DynamicParameter<floatT> masses;
     DynamicParameter<std::string> mass_labels;
@@ -63,7 +63,7 @@ struct measureHadronsParam : LatticeParameters {
         add(mass_labels, "mass_labels");
         add(source_type, "source_type");
         add(source_coords, "source_coords");
-        addDefault(correlator_axis, "correlator_axis", std::string("t"));
+        add(correlator_axes, "correlator_axes");
 
         addDefault(cg_residue, "cg_residue", static_cast<floatT>(1e-6));
         addDefault(cg_max_iter, "cg_max_iter", static_cast<int>(10000));
@@ -100,8 +100,11 @@ struct measureHadronsParam : LatticeParameters {
         if ((source_coords()[0]+source_coords()[1]+source_coords()[2]+source_coords()[3]) % 2 != 0 ){
             throw std::runtime_error(stdLogger.fatal("Pointsource is odd but needs to be even!"));
         }
-        if (nodeDim()[correlator_axis_map[correlator_axis()]] != 1){
-            throw std::runtime_error(stdLogger.fatal("Don't split the lattice along the correlator axis!"));
+        for ( size_t i = 0 ; i <  correlator_axes.numberValues() ; i++ ){
+            std::string correlator_axis = correlator_axes.get()[i] ;
+            if (nodeDim()[correlator_axis_map[correlator_axis]] != 1){
+                throw std::runtime_error(stdLogger.fatal("Don't split the lattice along the correlator axis!"));
+            }
         }
     }
 };
@@ -119,9 +122,10 @@ private:
     //! parameters derived from the ones set in the parameter struct:
     const size_t _n_masses;
     const size_t _n_channels = 8;
+    const size_t _n_correlator_axes;
+    size_t _n_correlator_elements ;
     const source_type _src_type; //FIXME support for different sources
     const action_type _act_type; //FIXME support for wilson,clover fermions
-    const correlator_axis _corr_axis;
 
     const bool _use_individual_naik_epsilons;
     const bool _use_individual_cg_max_iters;
@@ -132,9 +136,11 @@ private:
 
     const size_t _vol4;
     std::array<size_t,4> _lat_extents; // "lx, ly, lz, lt"
-    std::array<size_t,4> _axis_indices; // [0] is corr axis, [1-3] are not corr axis
+    std::array<size_t,4> _tmp_axis_indices;
+    std::vector<size_t> _axes_indices; // later of size 4*_n_correlator_axes where [4*_n_correlator_axes + 0] is corr axis, 4*_n_correlator_axes + (1 to 3)] are not corr axis
+    std::vector<size_t> _corr_axes_start_index ;
 
-    size_t _corr_l;
+    std::vector<size_t> _corr_ls ;
 
     sitexyzt _current_source;
 
@@ -151,9 +157,9 @@ public:
             _commBase(commBase),
             _lp(lp),
             _n_masses(_lp.masses.get().size()),
+            _n_correlator_axes(_lp.correlator_axes.get().size()),
             _src_type(source_type_map[_lp.source_type()]),
             _act_type(action_type_map[_lp.action()]),
-            _corr_axis(correlator_axis_map[lp.correlator_axis()]),
             _use_individual_naik_epsilons(lp.naik_epsilons_individual.isSet()),
             _use_individual_cg_max_iters(lp.cg_max_iters_individual.isSet()),
             _use_individual_cg_residues(lp.cg_residues_individual.isSet()),
@@ -168,25 +174,54 @@ public:
             _gauge(gauge),
             _current_source(lp.source_coords()[0], lp.source_coords()[1],lp.source_coords()[2],lp.source_coords()[3])
     {
-
-        switch(_corr_axis){
+        //! set up things which depend on _n_correlator_axes
+        //! i.e. _axes_indices, _corr_ls, _n_correlator_elements
+        _axes_indices.resize(4 * _n_correlator_axes);
+        std::fill(_axes_indices.begin(), _axes_indices.end(), 0);
+ 
+        _corr_ls.resize(_n_correlator_axes);
+        _corr_axes_start_index.resize(_n_correlator_axes);
+        _n_correlator_elements = 0 ;
+        for (size_t i = 0; i < _n_correlator_axes; i++)
+        {
+            correlator_axis _tmp_corr_axis(correlator_axis_map[lp.correlator_axes.get()[i]]);
+            switch(_tmp_corr_axis){
             case x_axis:
-                _axis_indices = {0, 1, 2, 3};
+                _tmp_axis_indices = {0, 1, 2, 3};
                 break;
             case y_axis:
-                _axis_indices = {1, 0, 2, 3};
+                _tmp_axis_indices = {1, 0, 2, 3};
                 break;
             case z_axis:
-                _axis_indices = {2, 0, 1, 3};
+                _tmp_axis_indices = {2, 0, 1, 3};
                 break;
             case t_axis:
-                _axis_indices = {3, 0, 1, 2};
+                _tmp_axis_indices = {3, 0, 1, 2};
                 break;
             default:
                 throw std::runtime_error(stdLogger.fatal("Unknown correlator axis! Choose one from {x, y, z, t}."));
         }
+            for (size_t j = 0; j < 4; j++)
+            {
+                _axes_indices[4 * i + j] = _tmp_axis_indices[j] ;
+            }
+            
+            _corr_ls[i] = _lat_extents[_axes_indices[ i * 4 ]] ;
+             
+            _n_correlator_elements += _n_masses * _n_masses * _corr_ls[i] * _n_channels;
+            if ( i == 0)
+            {
+                _corr_axes_start_index[i] = 0 ;
+            }
+            else
+            {
+                _corr_axes_start_index[i] = _n_masses * _n_masses * _corr_ls[i-1] * _n_channels ;
+            }
+            
+            
+        }
+                
 
-        _corr_l = _lat_extents[_axis_indices[0]];
 
         //! set up _contracted_propagators
         for(size_t i = 0; i < _n_masses; i++) {
@@ -198,9 +233,10 @@ public:
                 _contracted_propagators.back().adjustSize(_vol4);
             }
         }
+        
 
         //! set up _correlators
-        _correlators.resize(_n_masses * _n_masses * _corr_l * _n_channels);
+        _correlators.resize(_n_correlator_elements);
         std::fill(_correlators.begin(), _correlators.end(), 0);
 
         //! set up source
@@ -241,10 +277,12 @@ public:
     void write_correlators_to_file();
 
 private:
-
-    [[nodiscard]] inline int corr_index(const int w, const int channel, const int mass_index) const{
+    [[nodiscard]] inline int corr_index(const int w, const int channel, const int mass_index , const int corr_axis_index) const{
         //! Channels start at 1 but arrays at 0, so it's channel-1
-        return mass_index * _n_channels * _corr_l + (channel - 1) * _corr_l + w;
+        return _corr_axes_start_index[corr_axis_index] 
+                + mass_index * _n_channels * _corr_ls[corr_axis_index] 
+                + (channel - 1) * _corr_ls[corr_axis_index] 
+                + w;
     }
 
     //FIXME implement arbitrary correlator axis support

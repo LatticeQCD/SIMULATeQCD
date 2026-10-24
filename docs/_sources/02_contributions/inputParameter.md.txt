@@ -153,7 +153,8 @@ r_bar_1f_const, r_bar_1f_num, r_bar_1f_den,
 r_bar_2f_const, r_bar_2f_num, r_bar_2f_den.
 ```
 
-CAVE: The rhmc class assumes that r_1f, r_2f, r_inv_1f and r_inv_2f are of the same order! Same goes for r_bar_1f and r_bar_2f.
+CAVE: The rhmc class assumes that `r_1f`, `r_2f`, `r_inv_1f`, and `r_inv_2f` are of the same order. 
+Same goes for `r_bar_1f` and `r_bar_2f`.
 
 
 ## Using your own Parameter Class

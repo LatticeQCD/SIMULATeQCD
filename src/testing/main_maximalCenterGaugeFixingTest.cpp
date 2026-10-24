@@ -119,12 +119,7 @@ int main(int argc, char *argv[]) {
     Gaugefield<PREC,true,HaloDepth> gauge(commBase);
     Gaugefield<PREC,true,HaloDepth> gaugeZ(commBase);
 
-    /// Read the configuration. Remember a halo exchange is needed every time the gauge field changes.
-    rootLogger.info("Read configuration");
-    //gauge.readconf_nersc(param.GaugefileName());
-
     // random generated gauge file
-    
     grnd_state<false> h_rand;
     grnd_state<true> d_rand;
     h_rand.make_rng_state(12345);

@@ -1,5 +1,5 @@
 /*
- * main_ploop.cpp
+ * main_polyakovloop.cpp
  *
  * David Clarke, 30 Oct 2018
  *

@@ -107,8 +107,7 @@ COMPLEX(floatT) WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gDotAlong
 template<class floatT, size_t HaloDepth,int stacks>
 void WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gWilson(Gaugefield<floatT,true,HaloDepth> &gauge , size_t length){
 
-    gauge.template iterateOverBulkAtMu<0,256>(CalcWilson<floatT,HaloDepth>(gauge,length));
-//    rootLogger.info(spinor.dotProduct(spinor));
+    gauge.template iterateOverBulkAtMu<0,64>(CalcWilson<floatT,HaloDepth>(gauge,length));
     return;
 
 }
@@ -120,33 +119,33 @@ void WilsonLineCorrelatorMultiGPU<floatT,HaloDepth,stacks>::gMoveOne( Gaugefield
     /// move gauge field in mu=1 specified direction  and save it into mu=2
     if(direction == 0){
         if(up ==1){
-            gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,0,true>(gauge));
+            gauge.template iterateOverBulkAtMu<2,64>(ShiftVectorOne<floatT,HaloDepth,All,0,true>(gauge));
         }
         else{
-            gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,0,false>(gauge));
+            gauge.template iterateOverBulkAtMu<2,64>(ShiftVectorOne<floatT,HaloDepth,All,0,false>(gauge));
         }
     }
 
     if(direction == 1){
         if(up ==1){
-            gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,1,true>(gauge));
+            gauge.template iterateOverBulkAtMu<2,64>(ShiftVectorOne<floatT,HaloDepth,All,1,true>(gauge));
         }
         else{
-            gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,1,false>(gauge));
+            gauge.template iterateOverBulkAtMu<2,64>(ShiftVectorOne<floatT,HaloDepth,All,1,false>(gauge));
         }
     }
 
     if(direction == 2){
         if(up ==1){
-            gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,2,true>(gauge));
+            gauge.template iterateOverBulkAtMu<2,64>(ShiftVectorOne<floatT,HaloDepth,All,2,true>(gauge));
         }
         else{
-            gauge.template iterateOverBulkAtMu<2,256>(ShiftVectorOne<floatT,HaloDepth,All,2,false>(gauge));
+            gauge.template iterateOverBulkAtMu<2,64>(ShiftVectorOne<floatT,HaloDepth,All,2,false>(gauge));
         }
     }
 
     // copy back from mu=2 to mu=1
-    gauge.template iterateOverBulkAtMu<1,256>(CopyFromMu<floatT,HaloDepth,All,2>(gauge));
+    gauge.template iterateOverBulkAtMu<1,64>(CopyFromMu<floatT,HaloDepth,All,2>(gauge));
 
 
     return;

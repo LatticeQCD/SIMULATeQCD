@@ -28,8 +28,7 @@
 #include <array>
 #include <algorithm>
 #include <functional>
-#include <iostream>       ///TODO: move kernels to cu file
-                          ///TODO: implement correlateAtRestricted
+#include <iostream>
 
 /// Initialize the correlator to zero, regardless of type. ---------------------------------- FUNCTIONS FOR CORRELATIONS
 template<class floatT>
@@ -240,7 +239,7 @@ public:
         divmod(rem   ,svol1,dy,dx);
     }
 
-    /// Accessors for certain variables relevant to the problem at hand. TODO: Maybe make into maps or an enum
+    /// Accessors for certain variables relevant to the problem at hand.
     inline int getr2max(std::string domain) {
         int r2max;
         if(domain=="spacetime") {
@@ -371,7 +370,7 @@ public:
 
 /// ----------------------------------------------------------------------------------------------------------- INDEXING
 
-/// Trivial read index, in case you need/want to do indexing inside the Kernel. TODO: Probably should be in indexer?
+/// Trivial read index, in case you need/want to do indexing inside the Kernel.
 struct PassIndex {
     inline __host__ __device__ size_t operator()(const dim3& blockDim, const uint3& blockIdx, const uint3& threadIdx) {
         return blockDim.x * blockIdx.x + threadIdx.x;

@@ -1,9 +1,9 @@
 # Our coding style
 
 SIMULATeQCD exists in a space of many lattice codes, all of which perform extremely well, many of which are favorites
-for large collaborations. Besides being one of the only lattice codes supporting multiple HISQ GPUs for multiple APIs,
-the main reason to use SIMULATeQCD at all is that it's readable, well structured, and for relatively simple computing
-clusters works "out of the box".
+for large collaborations. Besides being one of the only HISQ codes supporting multiple GPUs for multiple APIs,
+we have tried to keep SIMULATeQCD readable, well structured, and for relatively simple computing
+clusters, ensure it works "out of the box", without depending on other lattice code bases.
 
 In order for our code to stay this way, we need you to please follow these coding practices to the best of your
 ability when you make contributions.

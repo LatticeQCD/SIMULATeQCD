@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
         WilsonClass.gWilson(gauge, length);
 
         /// copy from mu=0 to mu=1
-        gauge.template iterateOverBulkAtMu<1,256>(CopyFromMu<PREC,HaloDepth,All,0>(gauge));
+        gauge.template iterateOverBulkAtMu<1,64>(CopyFromMu<PREC,HaloDepth,All,0>(gauge));
         gauge.updateAll();
 
         // initial position x0=-1 due to adding dx in first line

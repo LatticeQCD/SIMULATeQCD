@@ -1,24 +1,25 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SIMULATeQCD &mdash; SIMULATeQCD 0.7 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
-      <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>SIMULATeQCD &mdash; SIMULATeQCD 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="_static/togglebutton.css?v=3943d584" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=99a3524d" />
+
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/togglebutton.js"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=6efca38a"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/togglebutton.js?v=3e7854f7"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -30,11 +31,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="#" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="#" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -61,8 +66,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>SIMULATeQCD</li>
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">SIMULATeQCD</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -73,9 +78,19 @@
            <div itemprop="articleBody">
              
   <section class="tex2jax_ignore mathjax_ignore" id="simulateqcd">
-<h1>SIMULATeQCD<a class="headerlink" href="#simulateqcd" title="Permalink to this headline"></a></h1>
-<p>The goal of SIMULATeQCD is to establish a multi-GPU interface that makes it simple and easy for developers to implement lattice QCD formulas while still providing the best possible performance.</p>
-<p>It is written in C++, allowing developers to write code which is close to hardware level (opening many possibilities for optimization), and it is an object-oriented language, facilitating organized code structure and encapsulation (making the code human-readable).</p>
+<h1>SIMULATeQCD<a class="headerlink" href="#simulateqcd" title="Link to this heading"></a></h1>
+<p>The goal of SIMULATeQCD is to establish a multi-GPU interface that makes it relatively straightforward
+for developers to implement lattice QCD formulae while still providing the competitive performance.</p>
+<p>It is written in C++, allowing developers to write code which is close to hardware level
+(opening many possibilities for optimization), and it is an object-oriented language,
+facilitating organized code structure and encapsulation (making the code human-readable).</p>
+<p>In this documentation, we try to cover many of the core features of SIMULATeQCD, some of its modules,
+how to use SIMULATeQCD, how to contribute to SIMULATeQCD, and so on. We are not always able to keep
+the documentation completely up-to-date, but we do the best we can:
+Remember the code itself is the ground truth.</p>
+<p>More information about SIMULATeQCD can be found in <a class="reference external" href="https://doi.org/10.4119/unibi/2956493">this PhD thesis</a>,
+<a class="reference external" href="https://doi.org/10.22323/1.396.0196">these proceedings</a>, and
+<a class="reference external" href="https://doi.org/10.1016/j.cpc.2024.109164">this publication</a>.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="01_gettingStarted/gettingStarted.html">Getting started</a></li>
@@ -95,7 +110,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, LatticeQCD.</p>
+    <p>&#169; Copyright 2025, LatticeQCD.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

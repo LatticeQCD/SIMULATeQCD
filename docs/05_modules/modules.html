@@ -1,28 +1,29 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Modules &mdash; SIMULATeQCD 0.7 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+  <title>Modules &mdash; SIMULATeQCD 1.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="../_static/togglebutton.css?v=3943d584" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=99a3524d" />
+
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/togglebutton.js"></script>
-        <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=6efca38a"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/togglebutton.js?v=3e7854f7"></script>
+      <script>var togglebuttonSelector = '.toggle, .admonition.dropdown';</script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Inverter (Conjugate Gradient)" href="inverter.html" />
+    <link rel="next" title="Gauge Updates (HB and OR)" href="gaugeUpdates.html" />
     <link rel="prev" title="Input and output formats for gauge configurations" href="../04_codeBase/configurationIO.html" /> 
 </head>
 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search"  style="background: #343131" >
-            <a href="../index.html" class="icon icon-home"> SIMULATeQCD
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            SIMULATeQCD
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -47,13 +52,13 @@
 <li class="toctree-l1"><a class="reference internal" href="../03_applications/applications.html">Applications</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../04_codeBase/codeBase.html">Code base</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Modules</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="inverter.html">Inverter (Conjugate Gradient)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="correlator.html">Correlator Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gaugeUpdates.html">Gauge Updates (HB and OR)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HISQforce.html">HISQ action</a></li>
 <li class="toctree-l2"><a class="reference internal" href="dslash.html">Dslash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inverter.html">Inverter (Conjugate Gradient)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="integrator.html">Integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="correlator.html">Correlator Class</a></li>
 <li class="toctree-l2"><a class="reference internal" href="randomNumbers.html">Random Number Generator</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gaugeSmearing.html">HISQ smearing</a></li>
 </ul>
 </li>
 </ul>
@@ -71,8 +76,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Modules</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Modules</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/05_modules/modules.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -83,16 +88,16 @@
            <div itemprop="articleBody">
              
   <section class="tex2jax_ignore mathjax_ignore" id="modules">
-<h1>Modules<a class="headerlink" href="#modules" title="Permalink to this headline"></a></h1>
+<h1>Modules<a class="headerlink" href="#modules" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="inverter.html">Inverter (Conjugate Gradient)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="correlator.html">Correlator Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gaugeUpdates.html">Gauge Updates (HB and OR)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HISQforce.html">HISQ action</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dslash.html">Dslash</a></li>
+<li class="toctree-l1"><a class="reference internal" href="inverter.html">Inverter (Conjugate Gradient)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="integrator.html">Integrator</a></li>
+<li class="toctree-l1"><a class="reference internal" href="correlator.html">Correlator Class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="randomNumbers.html">Random Number Generator</a></li>
-<li class="toctree-l1"><a class="reference internal" href="gaugeSmearing.html">HISQ smearing</a></li>
 </ul>
 </div>
 </section>
@@ -105,7 +110,7 @@
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2021, LatticeQCD.</p>
+    <p>&#169; Copyright 2025, LatticeQCD.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
