@@ -1107,67 +1107,41 @@ template void FourierClass<double>::performFourierTransformDirectionPolymorph<2,
 template void FourierClass<double>::performFourierTransformDirectionPolymorph<3, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
 
 
-template void FourierClass<double>::performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Spatial>(
-    LatticeContainer<true, Matrix4x4SymComplex<double>> &emtIn,
-    LatticeContainer<true, Matrix4x4SymComplex<double>> &emtOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
-    int sign
-);
 template void FourierClass<double>::performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Both>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emtIn,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emtOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
+    int sign
+);
+template void FourierClass<double>::performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Spatial>(
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &emtIn,
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &emtOut,
     int sign
 );
 template void FourierClass<double>::performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Temporal>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emtIn,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &emtOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
 
-template void FourierClass<double>::performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Spatial>(
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtIn,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
-    int sign
-);
 template void FourierClass<double>::performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Both>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtIn,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
+    int sign
+);
+template void FourierClass<double>::performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Spatial>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtOut,
     int sign
 );
 template void FourierClass<double>::performFourierTransformationTensor4x4Symx4x4SymComplexComponentwise<SpatialTemporal::Temporal>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtIn,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &emtOut,
-    // LatticeContainer<true, COMPLEX(double)> & _redBaseDevice,
-    // LatticeContainer<false, COMPLEX(double)> & _redBaseHost, // TODO: Why this not onDevice? Memory on cpu for mpi handling
     int sign
 );
+
 template void FourierClass<double>::performFourierTransformPolymorph<COMPLEX(double), SpatialTemporal::Both>(
     LatticeContainer<true, COMPLEX(double)> &latticeIn,
     LatticeContainer<true, COMPLEX(double)> &latticeOut,
-    int sign
-);
-template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Both>(
-    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
-    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
-    int sign
-);
-template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Both>(
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
-    int sign
-);
-template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
     int sign
 );
 template void FourierClass<double>::performFourierTransformPolymorph<COMPLEX(double), SpatialTemporal::Spatial>(
@@ -1175,9 +1149,31 @@ template void FourierClass<double>::performFourierTransformPolymorph<COMPLEX(dou
     LatticeContainer<true, COMPLEX(double)> &latticeOut,
     int sign
 );
+template void FourierClass<double>::performFourierTransformPolymorph<COMPLEX(double), SpatialTemporal::Temporal>(
+    LatticeContainer<true, COMPLEX(double)> &latticeIn,
+    LatticeContainer<true, COMPLEX(double)> &latticeOut,
+    int sign
+);
+
+template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Both>(
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
+    int sign
+);
 template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Spatial>(
     LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
     LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4SymComplex<double>, SpatialTemporal::Temporal>(
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Matrix4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+
+template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Both>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
     int sign
 );
 template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Spatial>(
@@ -1185,7 +1181,23 @@ template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Sy
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
     int sign
 );
+template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Temporal>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+
+template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+    int sign
+);
 template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Spatial>(
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+    int sign
+);
+template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Temporal>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
     int sign
