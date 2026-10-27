@@ -75,7 +75,8 @@
  * Usage (from the build's applications directory):
  *   ./mdwfTwoPlusOneHmcRun <param file> [key=value ...]
  * Parameters: see parameter/applications/mdwfTwoPlusOneHmcRun.param. Ls is a compile-time
- * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only. Several ranks need c_sw = 0.
+ * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only, Ls = 24 for the DSDR + EOFA path only.
+ * Several ranks need c_sw = 0.
  */
 
 #include "../simulateqcd.h"
@@ -773,14 +774,17 @@ int main(int argc, char **argv) {
         if (dsdr && param.even_odd() == 0) {
             throw std::runtime_error(stdLogger.fatal("dsdr_twists needs even_odd = 1"));
         }
-        if (param.Ls() != 8 && !(dsdr && param.Ls() == 16)) {
-            throw std::runtime_error(stdLogger.fatal("Ls = ", param.Ls(), " not instantiated (Ls = 8, or Ls = 16 with dsdr_twists)"));
+        if (param.Ls() != 8 && !(dsdr && param.Ls() == 16) && !(dsdr && param.strange_eofa() != 0 && param.Ls() == 24)) {
+            throw std::runtime_error(stdLogger.fatal("Ls = ", param.Ls(), " not instantiated (Ls = 8, Ls = 16 with "
+                                                     "dsdr_twists, or Ls = 24 with dsdr_twists and strange_eofa = 1)"));
         }
         if (param.strange_eofa() != 0 && !(dsdr && hasenbusch)) {
             throw std::runtime_error(stdLogger.fatal("strange_eofa = 1 is instantiated with hasenbusch_masses and "
                                                      "dsdr_twists (even_odd = 1, c_sw = 0)"));
         }
-        if (param.strange_eofa() != 0 && param.Ls() == 16) {
+        if (param.strange_eofa() != 0 && param.Ls() == 24) {
+            runMDWFTwoPlusOneHmcRun<24, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 24>, true>(commBase, param);
+        } else if (param.strange_eofa() != 0 && param.Ls() == 16) {
             runMDWFTwoPlusOneHmcRun<16, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 16>, true>(commBase, param);
         } else if (param.strange_eofa() != 0) {
             runMDWFTwoPlusOneHmcRun<8, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 8>, true>(commBase, param);

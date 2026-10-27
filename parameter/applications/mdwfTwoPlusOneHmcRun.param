@@ -22,7 +22,7 @@
 #   gauge action     Iwasaki: rectangle_gauge = 1, gauge_c1 = -0.331;  DBW2: gauge_c1 = -1.4088;
 #                    tree-level Symanzik: symanzik_gauge = 1, rectangle_gauge = 0;  Wilson plaquette: both 0
 #   preconditioning  even_odd = 1 (needed by Hasenbusch, DSDR and EOFA);  0: unpreconditioned M^+ M, RHMC only
-#   Ls               8, or 16 together with dsdr_twists
+#   Ls               8, 16 together with dsdr_twists, or 24 together with dsdr_twists and strange_eofa = 1
 #   clover           c_sw = 0 (needed by EOFA, by light_form = 1 and by more than one rank);  c_sw > 0: one rank,
 #                      light_form = 0, RHMC strange quark
 #   integrator       two levels [default]: fermion_steps, gauge_substeps;  multi-level: term_level, level_substeps;

@@ -733,11 +733,13 @@ set(MDWF_DEFS NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1)
 set(MDWF_DEFS_EO NSTACKS_1=1 NSTACKS_8=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 # Even/odd solves in double and single precision (mixed-precision Schur CG), Ls = 8 and 16.
 set(MDWF_DEFS_SOLVE SINGLEPREC=1 NSTACKS_1=1 NSTACKS_8=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
+# Production programs also take Ls = 24 (DSDR + EOFA HMC, measurements).
+set(MDWF_DEFS_SOLVE_LS24 ${MDWF_DEFS_SOLVE} NSTACKS_24=1)
 set(MDWF_DEFS_BENCH SINGLEPREC=1 NSTACKS_1=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EVEN=1 LAYOUT_ODD=1)
 
 # Programs
 add_mdwf_executable(mdwfResidualMass mdwf ${MDWF_DEFS_SOLVE})
-add_mdwf_executable(mdwfMeasure mdwf ${MDWF_DEFS_SOLVE})
+add_mdwf_executable(mdwfMeasure mdwf ${MDWF_DEFS_SOLVE_LS24})
 add_mdwf_executable(mdwfDiracModes mdwf ${MDWF_DEFS_SOLVE})
 add_mdwf_executable(mdwfKernelSpectrum mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfSpectralBounds mdwf ${MDWF_DEFS})
@@ -817,7 +819,7 @@ if (NOT MDWF_REMEZ_MISSING)
     add_dependencies(mdwftests mdwfRemezTest)
 
     # Targets with the RHMC strange quark, EOFA, Hasenbusch or DSDR: link the Remez library.
-    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_DEFS_SOLVE})
+    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_DEFS_SOLVE_LS24})
     add_mdwf_executable(mdwfOneFlavorRhmcActionTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfTwoPlusOneHmcTrajectoryTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfEvenOddActionTest mdwftests SINGLEPREC=1 ${MDWF_DEFS_EO})

@@ -2,7 +2,7 @@
 # mdwfMeasure.param -- Mobius domain-wall measurements in the GPT production formats (main_mdwfMeasure.cpp)
 #
 #          Lattice: Nx Ny Nz Nt;  Nodes: single rank only
-#   M5, b5, c_sw, ls: Mobius parameters (c5 = b5 - 1), ls = 8 or 16
+#   M5, b5, c_sw, ls: Mobius parameters (c5 = b5 - 1), ls = 8, 16 or 24
 #   antiperiodic_t: 1 = antiperiodic fermion boundary conditions in time
 #        Gaugefile: NERSC configuration; without it: start = random | unit (tests), seed
 #     label, out_prefix: TSV label column and file prefix (default: configuration basename,
