@@ -32,6 +32,7 @@
 #include "../indexer/haloIndexer.h"
 
 #include "calcGSiteHalo_dynamic.h"
+#include "cpuHaloCopy.h"
 
 
 template<size_t ElemCount, Layout LatLayout, size_t HaloDepth>
@@ -82,7 +83,11 @@ class HaloSegmentConfig {
 
 
 template<class floatT, bool onDevice, class Accessor, class AccType, size_t EntryCount, size_t ElemCount, Layout LatLayout, size_t HaloDepth>
-class SiteComm : public RunFunctors<onDevice, Accessor> {
+class SiteComm : public RunFunctors<onDevice, Accessor>
+#ifdef USE_CPU
+        , public cpuHalo::PendingExchange
+#endif
+{
 private:
     CommunicationBase &_commBase;
 
@@ -112,6 +117,9 @@ private:
 
     std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_send_vec;
     std::vector<HaloSegmentConfig<ElemCount, LatLayout, HaloDepth>> HSegConfig_recv_vec;
+#ifdef USE_CPU
+    unsigned int _pendingHaltype = 0;
+#endif
 
 public:
     //! constructor
@@ -275,7 +283,28 @@ public:
     }
 
     virtual ~SiteComm() {
+#ifdef USE_CPU
+        if (haloExchangePending()) {
+            // Only complete the messages: the field is going away.
+            cpuHalo::PendingExchange::current() = nullptr;
+            _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | _pendingHaltype);
+        }
+#endif
     }
+
+#ifdef USE_CPU
+    //! True between updateAll(COMM_START | ...) and the end of the exchange.
+    bool haloExchangePending() const { return cpuHalo::PendingExchange::current() == this; }
+
+    void finishPendingExchange() override {
+        cpuHalo::PendingExchange::current() = nullptr;
+        {
+            cpuProfile::Scope profile("MPI halo wait");
+            _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | _pendingHaltype);
+        }
+        _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<COMPLEX(floatT) >());
+    }
+#endif
 
     virtual Accessor getAccessor() const = 0;
 
@@ -308,9 +337,25 @@ public:
             param = param | COMM_BOTH;
         }
 
+#ifdef USE_CPU
+        // "Device" memory is host memory: pack straight into the MPI buffers instead of
+        // staging the whole halo buffer through two extra serial copies.
+        constexpr bool deviceHalos = false;
+        // COMM_START alone leaves the exchange running (see cpuHalo::PendingExchange);
+        // COMM_FINISH alone finishes it, and does nothing if none is running.
+        if (commtype == COMM_FINISH) {
+            if (haloExchangePending()) finishPendingExchange();
+            markerEnd();
+            return;
+        }
+        cpuHalo::PendingExchange::finishCurrent();
+#else
+        constexpr bool deviceHalos = onDevice;
+#endif
+
         if (commtype & COMM_START) {
 
-            if (onDevice) {
+            if (deviceHalos) {
                 if (!(_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P())) {
                     _extractHalos(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >());
                     gpuErr = gpuMemcpy(_haloBuffer_Host->template getPointer<COMPLEX(floatT) >(),
@@ -326,14 +371,23 @@ public:
                 }
             } else {
                 _extractHalos(getAccessor(), _haloBuffer_Host->template getPointer<COMPLEX(floatT) >());
+#ifdef USE_CPU
+                cpuProfile::Scope profile("MPI halo post (Isend/Irecv)");
+#endif
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_START | haltype);
+#ifdef USE_CPU
+                if (commtype == COMM_START) {
+                    _pendingHaltype = haltype;
+                    cpuHalo::PendingExchange::current() = this;
+                }
+#endif
             }
         }
 
         if (commtype & COMM_FINISH) {
 
 
-            if (onDevice) {
+            if (deviceHalos) {
                 if (_commBase.gpuAwareMPIAvail() || _commBase.useGpuP2P()) {
                     _injectHalosSeg(getAccessor(), _haloBuffer_Device_recv->template getPointer<COMPLEX(floatT) >(),
                                     param);
@@ -347,7 +401,14 @@ public:
                     _injectHalos(getAccessor(), _haloBuffer_Device->template getPointer<COMPLEX(floatT) >());
                 }
             } else {
+#ifdef USE_CPU
+                {
+                    cpuProfile::Scope profile("MPI halo wait");
+                    _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | haltype);
+                }
+#else
                 _commBase.updateAll<onDevice>(HaloInfo, COMM_FINISH | haltype);
+#endif
                 _injectHalos(getAccessor(), _haloBuffer_Host_recv->template getPointer<COMPLEX(floatT) >());
             }
         }
@@ -394,6 +455,13 @@ void SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLay
     size_t size = HaloIndexer<LatLayout, HaloDepth>::getBufferSize();
     if (size == 0) return;
 
+#ifdef USE_CPU
+    if (cpuHalo::enabled()) {
+        static const std::string name = "table " + std::string(type_name<ExtractInnerHalo<floatT, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>>());
+        if (cpuHalo::copy<floatT, Accessor, EntryCount, ElemCount, LatLayout, HaloDepth, true>(acc, HaloBuffer, name)) return;
+    }
+#endif
+
     CalcInnerHaloIndexComm<floatT, LatLayout, HaloDepth> calcIndex;
 
     ExtractInnerHalo<floatT, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth> extract(acc, HaloBuffer);
@@ -439,6 +507,13 @@ SiteComm<floatT, onDevice, Accessor, AccType, EntryCount, ElemCount, LatLayout, 
 
     size_t size = HaloIndexer<LatLayout, HaloDepth>::getBufferSize();
     if (size == 0) return;
+
+#ifdef USE_CPU
+    if (cpuHalo::enabled()) {
+        static const std::string name = "table " + std::string(type_name<InjectOuterHalo<floatT, Accessor, AccType, EntryCount, ElemCount, LatLayout, HaloDepth>>());
+        if (cpuHalo::copy<floatT, Accessor, EntryCount, ElemCount, LatLayout, HaloDepth, false>(acc, HaloBuffer, name)) return;
+    }
+#endif
 
     CalcOuterHaloIndexComm<floatT, LatLayout, HaloDepth> calcIndex;
 

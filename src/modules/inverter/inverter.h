@@ -14,7 +14,26 @@ template <typename Vector>
 class LinearOperator{
 public:
     virtual void applyMdaggM(Vector&, const Vector&, bool update = true) = 0;
+#ifdef USE_CPU
+    //! True if applyMdaggM finishes a Hyperplane halo exchange of its input that was only
+    //! started, overlapping it with the sites that need no halo.
+    virtual bool finishesInputHalos() const { return false; }
+#endif
 };
+
+//! The Hyperplane halo update of the input of dslash.applyMdaggM before the call. Only
+//! started if the operator finishes it itself; then nothing may come between this and
+//! applyMdaggM (see cpuHalo::PendingExchange).
+template <typename Vector>
+inline void updateInputHalos(LinearOperator<Vector> &dslash, Vector &in) {
+#ifdef USE_CPU
+    if (dslash.finishesInputHalos()) {
+        in.updateAll(COMM_START | Hyperplane);
+        return;
+    }
+#endif
+    in.updateAll(COMM_BOTH | Hyperplane);
+}
 
 
 /// Class for multiple right hand side inversion. NStacks is the number of right hand sides. The objects to be inverted

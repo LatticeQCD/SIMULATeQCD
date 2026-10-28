@@ -13,6 +13,7 @@
 #include "../base/gutils.h"
 #include "../base/IO/misc.h"
 #include "../base/communication/siteComm.h"
+#include "laneIterate.h"
 
 template<class floatT_source, class floatT_target, bool onDevice, size_t HaloDepth, CompressionType comp>
 struct convert_prec;
@@ -158,6 +159,11 @@ template<unsigned BlockSize, typename Functor>
 deviceStream<onDevice> Gaugefield<floatT, onDevice, HaloDepth, comp>::iterateOverBulkAllMu(Functor op, bool useStream) {
     CalcGSiteAllMu<All, HaloDepth> calcGSiteAllMu;
     deviceStream<onDevice> stream(useStream);
+#ifdef CPU_LANE_SIMD
+    if constexpr (comp == R18 && cpuSimd::laneFunctor<Functor, floatT>) {
+        if (cpuSimd::iterateLanesBulkAllMu<HaloDepth>(this->getAccessor(), op)) return stream;
+    }
+#endif
     WriteAtReadMu writeAtReadMu;
     this->template iterateFunctor<BlockSize>(op, calcGSiteAllMu, writeAtReadMu, GInd::getLatData().vol4, 4, 1, stream._stream);
     return stream;

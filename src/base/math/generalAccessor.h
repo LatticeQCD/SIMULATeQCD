@@ -27,6 +27,11 @@ protected:
 
 public:
 
+    //! Base pointer of entry elem (for vectorised CPU kernels that gather by index).
+    __host__ inline object_memory *getEntryPointer(const size_t elem) const {
+        return _elements[elem];
+    }
+
     template<int elem>
     __host__ __device__ inline object_memory getElementEntry(const size_t idx) const {
         return (_elements[elem][idx]);

@@ -52,6 +52,10 @@ public:
         addDefault(always_acc, "always_acc", false);
         addDefault(cgMixedPrec, "cgMixedPrec", false);
         addDefault(cgMixedPrec_delta, "cgMixedPrec_delta",0.1);
+        // cgMixedPrec = 1: the multi-shift solves of the fermion force iterate in single precision
+        // and accumulate the solutions in double; the residual is recomputed in double whenever
+        // |r|^2 has dropped by cgMixedPrec_delta, and shifts still above residue_force are refined.
+        // Heatbath and action solves (residue) stay in double precision.
         add(no_updates, "no_updates");
         addDefault(write_every, "write_every", 1);
         add(rat_file, "rat_file");

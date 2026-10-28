@@ -18,6 +18,30 @@
 
 #define DEFAULT_NBLOCKS  64
 #define DEFAULT_NBLOCKS_LOOP  128
+
+#ifdef USE_CPU
+//! Host replacement for a kernel launch: visits every (blockIdx, threadIdx) of the
+//! virtual grid with i = blockDim.x*blockIdx.x + threadIdx.x < elems_x, in the same
+//! order as a serial loop. Each OpenMP thread works on its own copy of body (and so of
+//! the functor it captured), just as every GPU thread receives its own kernel arguments.
+template<typename Body>
+inline void cpuIterateGrid(std::string_view name, const dim3 &blockDim, const size_t elems_x, Body body) {
+    cpuProfile::Scope profile(name);
+#pragma omp parallel firstprivate(body)
+    {
+#pragma omp for schedule(static)
+        for (size_t i = 0; i < elems_x; i++) {
+            const uint3 blockIdx{static_cast<unsigned>(i / blockDim.x), 0, 0};
+            uint3 threadIdx{static_cast<unsigned>(i % blockDim.x), 0, 0};
+            for (threadIdx.y = 0; threadIdx.y < blockDim.y; threadIdx.y++) {
+                for (threadIdx.z = 0; threadIdx.z < blockDim.z; threadIdx.z++) {
+                    body(blockIdx, threadIdx);
+                }
+            }
+        }
+    }
+}
+#endif
 #define DEFAULT_NBLOCKS_CONST  256
 
 
@@ -165,6 +189,14 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
 #endif
     } else
 #endif // !USE_CPU
+#ifdef USE_CPU
+    {
+        cpuIterateGrid(type_name<Functor>(), blockDim, elems_x, [=, resAcc = getAccessor()](const uint3 &blockIdx, const uint3 &threadIdx) mutable {
+            auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+            resAcc.setElement(calcWriteInd(site), op(site));
+        });
+    }
+#else
     {
         auto resAcc = getAccessor();
         uint3 blockIdx;
@@ -196,6 +228,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctor(Functor op, CalcReadInd cal
             }
         }
     }
+#endif
 }
 
 
@@ -242,6 +275,18 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
 #endif
     } else
 #endif // !USE_CPU
+#ifdef USE_CPU
+    {
+        cpuIterateGrid(type_name<Functor>(), blockDim, elems_x, [=, resAcc = getAccessor()](const uint3 &blockIdx, const uint3 &threadIdx) mutable {
+            auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+            op.initialize(site);
+            for (size_t loopIdx = 0; loopIdx < Nloops; loopIdx++) {
+                if (loopIdx >= Nmax) break;
+                resAcc.setElement(calcWriteInd(site, loopIdx), op(site, loopIdx));
+            }
+        });
+    }
+#else
     {
         auto resAcc = getAccessor();
         uint3 blockIdx;
@@ -278,6 +323,7 @@ void RunFunctors<onDevice, Accessor>::iterateFunctorLoop(Functor op,
             }
         }
     }
+#endif
 }
 
 
@@ -320,6 +366,14 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
 #endif
     } else
 #endif // !USE_CPU
+#ifdef USE_CPU
+    {
+        cpuIterateGrid(type_name<Object>(), blockDim, elems_x, [=, resAcc = getAccessor()](const uint3 &blockIdx, const uint3 &threadIdx) mutable {
+            auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+            resAcc.setElement(calcWriteInd(site), ob);
+        });
+    }
+#else
     {
         auto resAcc = getAccessor();
         uint3 blockIdx;
@@ -351,6 +405,7 @@ void RunFunctors<onDevice, Accessor>::iterateWithConstObject(Object ob, CalcRead
             }
         }
     }
+#endif
 }
 
 
@@ -414,6 +469,14 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
 #endif
     } else
 #endif // !USE_CPU
+#ifdef USE_CPU
+    {
+        cpuIterateGrid(type_name<Functor>(), blockDim, elems_x, [=](const uint3 &blockIdx, const uint3 &threadIdx) mutable {
+            auto site = calcReadInd(blockDim, blockIdx, threadIdx);
+            op(site);
+        });
+    }
+#else
     {
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -443,6 +506,7 @@ void iterateFunctorNoReturn(Functor op, CalcReadInd calcReadInd, const size_t el
             }
         }
     }
+#endif
 }
 
 #ifdef __GPUCC__
@@ -503,6 +567,17 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
 #endif
     } else
 #endif // !USE_CPU
+#ifdef USE_CPU
+    {
+        cpuIterateGrid(type_name<Functor>(), blockDim, elems_x, [=](const uint3 &blockIdx, const uint3 &threadIdx) mutable {
+            size_t HaloMuIndex = blockDim.x * blockIdx.x + threadIdx.x;
+            size_t HaloIndex = HaloMuIndex % subHaloSize;
+            size_t mu = HaloMuIndex / subHaloSize;
+            auto site = calcReadWriteInd(HaloIndex,mu);
+            acc.setElement(site, op(site));
+        });
+    }
+#else
     {
         uint3 blockIdx;
         blockIdx.y = 0;
@@ -536,6 +611,7 @@ void iterateFunctorComm(Functor op, Accessor acc, CalcReadWriteInd calcReadWrite
             }
         }
     }
+#endif
 }
 
 //Simple functions to calculate lattice indices. These functions are usually passed to

@@ -13,6 +13,8 @@
 #include "hisqSmearing.h"
 #include "../inverter/inverter.h"
 #include "../dslash/dslash.h"
+#include "../dslash/hisqMixedSolver.h"
+#include <type_traits>
 #include "../rhmc/rhmcParameters.h"
 
 template <bool RunTesting> // template selector to change between rat approx used in RHMC and rat approx used in Testing
@@ -61,10 +63,10 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     outer_nu_middle_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &Gauge, Gaugefield<floatT, onDevice, HaloDepth> &ForceIn)
         : _gAcc(Gauge.getAccessor()), _finAcc(ForceIn.getAccessor()) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         using GInd = GIndexer<All, HaloDepth>;
 
-        gSite site = GInd::getSite(siteMu.isite);
+        const auto site = GInd::siteOf(siteMu);
 
         int mu = siteMu.mu;
         int nu = (mu + nu_h) % 4;
@@ -84,7 +86,7 @@ class scaled_force_field {
                        floatT coefficient)
         : _forceAcc(ForceIn.getAccessor()), _coefficient(coefficient) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         return _coefficient * _forceAcc.getLink(siteMu);
     }
 };
@@ -97,7 +99,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
   public:
     rho_middle_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &ForceNu);
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 // D3 without its middle-link branches. The three middle branches are streamed
@@ -146,7 +148,9 @@ class accumulate_scaled_force {
                             Contribution contribution, floatT coefficient)
         : _accumulatorAcc(Accumulator.getAccessor()), _contribution(contribution), _coefficient(coefficient) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    // Generic in the site type where the contribution is (see laneSite.h).
+    template <class SiteMu, class = std::enable_if_t<std::is_invocable_v<Contribution &, SiteMu>>>
+    __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         return _accumulatorAcc.getLink(siteMu) + _coefficient * _contribution(siteMu);
     }
 };
@@ -168,7 +172,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
   public:
     rho_side_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &ForceNu);
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
@@ -177,10 +181,11 @@ rho_side_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::rho_side_force(G
     : _SU3Accessor(GaugeIn.getAccessor()), _forceNuAccessor(ForceNu.getAccessor()) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> rho_side_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> rho_side_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     // The output direction is now the inner rho direction.
     int targetRho = siteMu.mu;
@@ -191,7 +196,7 @@ __host__ __device__ SU3<floatT> rho_side_force<floatT, onDevice, HaloDepth, comp
     bool found = invertRhoDirection<nu_h, rho_h>(targetRho, centerMu, outerNu);
 
     if (!found)
-        return su3_zero<floatT>();
+        return su3_zero<siteReal_t<floatT, SiteMu>>();
 
     /*
      * The side derivative of D_rho[U_mu] has exactly the
@@ -213,7 +218,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
   public:
     rho_dressed_primal(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn);
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
@@ -221,10 +226,11 @@ rho_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::rho_dressed_
     : _SU3Accessor(GaugeIn.getAccessor()) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> rho_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> rho_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     // This field is indexed by the original central direction mu.
     int mu = siteMu.mu;
@@ -238,16 +244,16 @@ __host__ __device__ SU3<floatT> rho_dressed_primal<floatT, onDevice, HaloDepth, 
     return rhoDressPrimalGather<floatT, HaloDepth, comp>(_SU3Accessor, site, mu, rho);
 }
 
-template <class floatT, size_t HaloDepth, CompressionType compGauge = R18, CompressionType compDressed = R18, CompressionType compForce = R18>
-__host__ __device__ SU3<floatT> outerNuSideDressedGather(SU3Accessor<floatT, compGauge> gAcc, SU3Accessor<floatT, compDressed> xAcc,
-                                                         SU3Accessor<floatT, compForce> fAcc, gSite site, int sideMu, int middleNu) {
+template <class floatT, size_t HaloDepth, CompressionType compGauge = R18, CompressionType compDressed = R18, CompressionType compForce = R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> outerNuSideDressedGather(SU3Accessor<floatT, compGauge> gAcc, SU3Accessor<floatT, compDressed> xAcc,
+                                                         SU3Accessor<floatT, compForce> fAcc, Site site, int sideMu, int middleNu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite origin = site;
-    gSite up = GInd::site_up(site, middleNu);
-    gSite right = GInd::site_up(site, sideMu);
-    gSite down = GInd::site_dn(site, middleNu);
-    gSite rightDn = GInd::site_dn(right, middleNu);
+    Site origin = site;
+    Site up = GInd::site_up(site, middleNu);
+    Site right = GInd::site_up(site, sideMu);
+    Site down = GInd::site_dn(site, middleNu);
+    Site rightDn = GInd::site_dn(right, middleNu);
 
     /*
      * These are exactly the four SIDE terms of the
@@ -258,7 +264,7 @@ __host__ __device__ SU3<floatT> outerNuSideDressedGather(SU3Accessor<floatT, com
      * there is NO overall minus here.
      */
 
-    SU3<floatT> temp = fAcc.getLinkDagger(GInd::getSiteMu(right, middleNu)) * gAcc.getLinkDagger(GInd::getSiteMu(up, sideMu)) *
+    SU3<siteReal_t<floatT, Site>> temp = fAcc.getLinkDagger(GInd::getSiteMu(right, middleNu)) * gAcc.getLinkDagger(GInd::getSiteMu(up, sideMu)) *
                        xAcc.getLinkDagger(GInd::getSiteMu(origin, middleNu));
 
     temp += xAcc.getLink(GInd::getSiteMu(right, middleNu)) * gAcc.getLinkDagger(GInd::getSiteMu(up, sideMu)) * fAcc.getLink(GInd::getSiteMu(origin, middleNu));
@@ -282,7 +288,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     outer_nu_side_dressed_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &Dressed,
                                 Gaugefield<floatT, onDevice, HaloDepth> &ForceIn);
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
@@ -292,10 +298,11 @@ outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::out
     : _SU3Accessor(GaugeIn.getAccessor()), _dressedAccessor(Dressed.getAccessor()), _forceAccessor(ForceIn.getAccessor()) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> outer_nu_side_dressed_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     /*
      * Output link is the OUTER side direction nu.
@@ -323,7 +330,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     sigma_middle_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &ForceR)
         : _SU3Accessor(GaugeIn.getAccessor()), _forceRAccessor(ForceR.getAccessor()) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h> class sigma_side_force {
@@ -335,10 +342,10 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
     sigma_side_force(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &ForceR)
         : _SU3Accessor(GaugeIn.getAccessor()), _forceRAccessor(ForceR.getAccessor()) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         typedef GIndexer<All, HaloDepth> GInd;
 
-        gSite site = GInd::getSite(siteMu.isite);
+        const auto site = GInd::siteOf(siteMu);
 
         int targetSigma = siteMu.mu;
         int centerMu;
@@ -376,7 +383,7 @@ class combined_middle_sigma_force {
           _sigmaSide(GaugeIn, ForceR),
           _c5(c5), _c7(c7) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         return _c5 * _forceRAcc.getLink(siteMu)
              + _c7 * (_sigmaMiddle(siteMu) + _sigmaSide(siteMu));
     }
@@ -389,7 +396,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
   public:
     sigma_dressed_primal(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn) : _SU3Accessor(GaugeIn.getAccessor()) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h> class rho_side_sigma_dressed_force {
@@ -403,7 +410,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
                                  Gaugefield<floatT, onDevice, HaloDepth> &ForceNu)
         : _SU3Accessor(GaugeIn.getAccessor()), _sigmaAccessor(SigmaPrimal.getAccessor()), _forceNuAccessor(ForceNu.getAccessor()) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h> class rho_sigma_dressed_primal {
@@ -414,7 +421,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, i
   public:
     rho_sigma_dressed_primal(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &SigmaPrimal);
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 // The D5 and D7 rho-side derivatives have the same upstream force F_N.
@@ -439,7 +446,7 @@ class combined_rho_side_force {
           _d7RhoSide(GaugeIn, SigmaPrimal, ForceNu),
           _c5(c5), _c7(c7) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         return _c5 * _d5RhoSide(siteMu) + _c7 * _d7RhoSide(siteMu);
     }
 };
@@ -465,7 +472,7 @@ class combined_rho_dressed_primal {
         : _d5Primal(GaugeIn), _d7Primal(GaugeIn, SigmaPrimal),
           _c5(c5), _c7(c7) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         return _c5 * _d5Primal(siteMu) - _c7 * _d7Primal(siteMu);
     }
 };
@@ -488,16 +495,17 @@ class combined_outer_nu_primal {
     floatT _c5;
     floatT _c7;
 
-    __host__ __device__ SU3<floatT> nestedDressedPrimal(
-        gSite site, int mu, int rho, int sigma) {
+    template <class Site>
+    __host__ __device__ SU3<siteReal_t<floatT, Site>> nestedDressedPrimal(
+        Site site, int mu, int rho, int sigma) {
         using GInd = GIndexer<All, HaloDepth>;
 
-        const gSite upRho = GInd::site_up(site, rho);
-        const gSite upMu = GInd::site_up(site, mu);
-        const gSite dnRho = GInd::site_dn(site, rho);
-        const gSite dnRhoUpMu = GInd::site_up(dnRho, mu);
+        const Site upRho = GInd::site_up(site, rho);
+        const Site upMu = GInd::site_up(site, mu);
+        const Site dnRho = GInd::site_dn(site, rho);
+        const Site dnRhoUpMu = GInd::site_up(dnRho, mu);
 
-        SU3<floatT> dressed =
+        SU3<siteReal_t<floatT, Site>> dressed =
             _gAcc.getLink(GInd::getSiteMu(site, rho))
             * rhoDressPrimalGather<floatT, HaloDepth, comp>(
                 _gAcc, upRho, mu, sigma)
@@ -519,14 +527,14 @@ class combined_outer_nu_primal {
         : _gAcc(GaugeIn.getAccessor()),
           _c3(c3), _c5(c5), _c7(c7) {}
 
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu) {
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu) {
         using GInd = GIndexer<All, HaloDepth>;
 
-        const gSite site = GInd::getSite(siteMu.isite);
+        const auto site = GInd::siteOf(siteMu);
         const int mu = siteMu.mu;
         const int nu = (mu + nu_h) % 4;
 
-        SU3<floatT> result =
+        SU3<siteReal_t<floatT, SiteMu>> result =
             -_c3 * _gAcc.getLink(GInd::getSiteMu(site, mu));
 
 #pragma unroll
@@ -560,7 +568,7 @@ template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp> c
 
   public:
     contribution_lepagelink(Gaugefield<floatT, onDevice, HaloDepth, comp> &GaugeIn, Gaugefield<floatT, onDevice, HaloDepth> &ForceIn);
-    __host__ __device__ SU3<floatT> operator()(gSiteMu siteMu);
+    template <class SiteMu> __host__ __device__ SU3<siteReal_t<floatT, SiteMu>> operator()(SiteMu siteMu);
 };
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int part> class contribution_5link {
@@ -685,6 +693,7 @@ class HisqForce {
 
     HisqSmearing<floatT, onDevice, HaloDepth, R18, R18, R18, U3R14> &_smearing;
     AdvancedMultiShiftCG<floatT, rdeg> &_cg;
+    HisqMixedMultiShiftSolver<floatT, onDevice, HaloDepth, HaloDepthSpin, rdeg> _cgMixed;
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, 1> &_dslash;
     HisqDSlash<floatT, onDevice, Even, HaloDepth, HaloDepthSpin, rdeg> &_dslash_multi;
     RhmcParameters _rhmc_param;

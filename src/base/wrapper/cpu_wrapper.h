@@ -9,6 +9,7 @@
 #include <cstring>
 #include <new>
 #include <utility>
+#include "cpuProfile.h"
 
 #define __host__
 #define __device__
@@ -79,9 +80,13 @@ inline const char* gpuGetErrorName(gpuError_t e) {
 inline const char* gpuGetErrorString(gpuError_t e) { return gpuGetErrorName(e); }
 inline gpuError_t gpuGetLastError() { return gpuSuccess; }
 inline gpuError_t gpuDeviceSynchronize() { return gpuSuccess; }
+// 64-byte alignment: one AVX-512 register / cache line. One extra line of slack lets
+// vector loads that cover a few unused elements past the last one stay inside the block.
+inline constexpr size_t cpuAllocAlignment = 64;
 inline gpuError_t gpuMalloc(void** p, size_t n) {
     if (!p) return cpuInvalidValue;
-    *p = std::malloc(n ? n : 1);
+    const size_t rounded = (n + cpuAllocAlignment - 1) / cpuAllocAlignment * cpuAllocAlignment;
+    *p = std::aligned_alloc(cpuAllocAlignment, rounded + cpuAllocAlignment);
     return *p ? gpuSuccess : cpuOutOfMemory;
 }
 inline gpuError_t gpuMallocHost(void** p, size_t n) { return gpuMalloc(p,n); }
@@ -89,7 +94,21 @@ inline gpuError_t gpuFree(void* p) { std::free(p); return gpuSuccess; }
 inline gpuError_t gpuFreeHost(void* p) { return gpuFree(p); }
 inline gpuError_t gpuMemcpy(void* dst, const void* src, size_t n, CpuMemcpyKind) {
     if (!n) return gpuSuccess;
+    cpuProfile::Scope profile("gpuMemcpy");
     if (!dst || !src) return cpuInvalidValue;
+    auto* d = static_cast<unsigned char*>(dst);
+    const auto* s = static_cast<const unsigned char*>(src);
+    // Large non-overlapping copies (field copies) are split over the OpenMP threads.
+    constexpr size_t chunk = size_t(1) << 18;
+    if (n >= 4 * chunk && (d + n <= s || s + n <= d)) {
+        const size_t nChunks = (n + chunk - 1) / chunk;
+#pragma omp parallel for schedule(static)
+        for (size_t c = 0; c < nChunks; ++c) {
+            const size_t begin = c * chunk;
+            std::memcpy(d + begin, s + begin, begin + chunk < n ? chunk : n - begin);
+        }
+        return gpuSuccess;
+    }
     std::memmove(dst,src,n);
     return gpuSuccess;
 }

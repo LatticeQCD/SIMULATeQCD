@@ -10,24 +10,24 @@
 #include "../../base/indexer/bulkIndexer.h"
 #include "../../base/math/su3Accessor.h"
 
-template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18>
-__host__ __device__ SU3<floatT> linkDerivativeLepage(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, gSite site, int mu, int nu) {
+template<class floatT,size_t HaloDepth,CompressionType compIn=R18, CompressionType compForce=R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> linkDerivativeLepage(SU3Accessor<floatT,compIn> gAcc, SU3Accessor<floatT,compForce> finAccessor, Site site, int mu, int nu) {
     typedef GIndexer<All,HaloDepth> GInd;
-    SU3<floatT> temp;
-    gSite origin = site;
-    gSite up = GInd::site_up(site,nu);
-    gSite down = GInd::site_dn(site,nu);
-    gSite right = GInd::site_up(site,mu);
-    gSite rightUp = GInd::site_up(right,nu);
-    gSite rightDn = GInd::site_dn(right,nu);
-    gSite rightDnDn = GInd::site_dn(rightDn,nu);
-    gSite rightright = GInd::site_up(right,mu);
-    gSite rightrightDn = GInd::site_dn(rightright,nu);
-    gSite left = GInd::site_dn(site,mu);
-    gSite leftUp = GInd::site_up(left,nu);
-    gSite leftDn = GInd::site_dn(left,nu);
-    gSite UpUp = GInd::site_up(up,nu);
-    gSite DnDn = GInd::site_dn(down,nu);
+    SU3<siteReal_t<floatT, Site>> temp;
+    Site origin = site;
+    Site up = GInd::site_up(site,nu);
+    Site down = GInd::site_dn(site,nu);
+    Site right = GInd::site_up(site,mu);
+    Site rightUp = GInd::site_up(right,nu);
+    Site rightDn = GInd::site_dn(right,nu);
+    Site rightDnDn = GInd::site_dn(rightDn,nu);
+    Site rightright = GInd::site_up(right,mu);
+    Site rightrightDn = GInd::site_dn(rightright,nu);
+    Site left = GInd::site_dn(site,mu);
+    Site leftUp = GInd::site_up(left,nu);
+    Site leftDn = GInd::site_dn(left,nu);
+    Site UpUp = GInd::site_up(up,nu);
+    Site DnDn = GInd::site_dn(down,nu);
 
     //term 6
     temp=gAcc.getLink(GInd::getSiteMu(right, nu))

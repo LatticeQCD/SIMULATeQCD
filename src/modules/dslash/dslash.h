@@ -6,6 +6,7 @@
 #pragma once
 
 #include "../inverter/inverter.h"
+#include "cpuHisqDslash.h"
 
 #define C_1000 (0.5)
 
@@ -137,6 +138,9 @@ public:
     //! Does not use the mass
     virtual void Dslash(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
+    Gauge_t<R18> &getGaugeSmeared() { return _gauge_smeared; }
+    Gauge_t<U3R14> &getGaugeNaik() { return _gauge_Naik; }
+
     void Dslash_nostack(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
     void Dslash_stacked(SpinorLHS_t &lhs, const SpinorRHS_t &rhs, bool update = false);
 
@@ -145,6 +149,13 @@ public:
     virtual void applyMdaggM_stacked(SpinorRHS_t &spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
 
     virtual void applyMdaggM(SpinorRHS_t & spinorOut, const SpinorRHS_t &spinorIn, bool update = false);
+
+#ifdef CPU_HISQ_DSLASH_SIMD
+    bool finishesInputHalos() const override {
+        return NStacks * NStacks_blockdim == 1 && cpuSimd::enabled() && cpuSimd::overlapEnabled()
+               && _tmpSpin.getComm().getNumberProcesses() > 1;
+    }
+#endif
     
     template<Layout LatLayout>
     HisqDslashFunctor<floatT, LatLayout, HaloDepthGauge, HaloDepthSpin>

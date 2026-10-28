@@ -3,6 +3,7 @@
  *
  */
 #include "inverter.h"
+#include "../../spinor/cpuSpinorKernels.h"
 #define BLOCKSIZE 64
 
 template<class floatT, size_t NStacks>
@@ -31,7 +32,7 @@ void ConjugateGradient<floatT, NStacks>::invert(LinearOperator<Spinor_t>& dslash
     SimpleArray<floatT, NStacks> remain;
 
     for (int i = 0; i < max_iter; i++) {
-        vp.updateAll(COMM_BOTH | Hyperplane);
+        updateInputHalos(dslash, vp);
         dslash.applyMdaggM(vap, vp, false);
 
         dot = vp.dotProductStacked(vap);
@@ -118,6 +119,49 @@ struct StackMinusFloatTimeStack
 };
 
 
+//! One pass over all active shifts of the multi-shift CG: x_j += alpha_j p_j, then
+//! p_j = beta_j p_j + z_j r. Same arithmetic, in the same order, as axpyThisLoop followed by
+//! axupbyThisLoop, but p_j is read once instead of twice.
+template<class floatT, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+struct MultiShiftUpdateNoReturn {
+    Vect3arrayAcc<floatT> _x, _p, _r;
+    SimpleArray<floatT, NStacks> _alpha, _z, _beta;
+    size_t _maxStack;
+    typedef GIndexer<LatLayout, HaloDepth> GInd;
+
+    MultiShiftUpdateNoReturn(Vect3arrayAcc<floatT> x, Vect3arrayAcc<floatT> p, Vect3arrayAcc<floatT> r,
+                             SimpleArray<floatT, NStacks> alpha, SimpleArray<floatT, NStacks> z,
+                             SimpleArray<floatT, NStacks> beta, size_t maxStack)
+        : _x(x), _p(p), _r(r), _alpha(alpha), _z(z), _beta(beta), _maxStack(maxStack) {}
+
+    __host__ __device__ void operator()(gSiteStack &site) {
+        const Vect3<floatT> r = _r.getElement(GInd::getSiteStack(site, 0));
+        static_for<0, NStacks>::apply([&](auto stack) {
+            if (stack < _maxStack) {
+                const gSiteStack siteStack = GInd::getSiteStack(site, stack);
+                const Vect3<floatT> p = _p.getElement(siteStack);
+                Vect3<floatT> x = _x.getElement(siteStack);
+                x += _alpha[stack] * p;
+                _x.setElement(siteStack, x);
+                _p.setElement(siteStack, p * _beta[stack] + r * _z[stack]);
+            }
+        });
+    }
+};
+
+template<class floatT, bool onDevice, Layout LatLayout, size_t HaloDepth, size_t NStacks>
+void multiShiftUpdate(Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &x,
+                      Spinorfield<floatT, onDevice, LatLayout, HaloDepth, NStacks> &p,
+                      Spinorfield<floatT, onDevice, LatLayout, HaloDepth, 1> &r,
+                      const SimpleArray<floatT, NStacks> &alpha, const SimpleArray<floatT, NStacks> &z,
+                      const SimpleArray<floatT, NStacks> &beta, size_t maxStack) {
+    CalcGSiteStackFull<LatLayout, HaloDepth> calcGSite;
+    iterateFunctorNoReturn<onDevice, 64>(
+        MultiShiftUpdateNoReturn<floatT, LatLayout, HaloDepth, NStacks>(
+            x.getAccessor(), p.getAccessor(), r.getAccessor(), alpha, z, beta, maxStack),
+        calcGSite, x.getNumberLatticePointsFull(), 1);
+}
+
 template<class floatT, size_t NStacks>
 template <typename SpinorIn_t, typename SpinorOut_t>
 void AdvancedMultiShiftCG<floatT, NStacks>::invert(
@@ -166,22 +210,44 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
 
     spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
+    // CPU: three fused passes per iteration (cpuSpinorKernels.h); the update also refreshes pi0.
+#ifdef USE_CPU
+    const bool fused = cpuBlas::fusedEnabled();
+#else
+    constexpr bool fused = false;
+#endif
+    if (fused) pi0.template copyFromStackToStackDevice<NStacks,0,0>(pi);
 
     do {
         cg++;
 
-        pi0.template copyFromStackToStackDevice<NStacks,0,0>(pi);
-        pi0.updateAll(COMM_BOTH | Hyperplane);
+        if (!fused) pi0.template copyFromStackToStackDevice<NStacks,0,0>(pi);
+        updateInputHalos(dslash, pi0);
 
         dslash.applyMdaggM(s, pi0, false);
 
-        s = sigma[0] * pi0 - s;
+#ifdef USE_CPU
+        if (fused) {
+            pAp = cpuBlas::shiftedRealDot(s, pi0, sigma[0]);
+        } else
+#endif
+        {
+            s = sigma[0] * pi0 - s;
 
-        pAp = pi0.realdotProduct(s); //Optimization: do dot product but dont copy result to host
+            pAp = pi0.realdotProduct(s); //Optimization: do dot product but dont copy result to host
+        }
 
         B[0] = - norm_r2 / pAp; //use device-resident result to do this on the gpu
 
-        r.axpyThisB(B[0], s); //fuse with this kernel call
+#ifdef USE_CPU
+        if (fused) {
+            lambda2 = cpuBlas::axpyNorm(r, B[0], s);
+        } else
+#endif
+        {
+            r.axpyThisB(B[0], s); //fuse with this kernel call
+            lambda2 = r.realdotProduct(r); //Optimization: do dot product but dont copy result to host
+        }
 
         // r.fusedDotProdAndaxpy(pi0, s, pAp_ptr, norm_r2_ptr);
 
@@ -195,15 +261,10 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
             B[j]   = B[0] * rr_1;
         }
         Bm1 = B[0];
-        lambda2 = r.realdotProduct(r); //Optimization: do dot product but dont copy result to host
         a[0]  = lambda2 / norm_r2;
         norm_r2 = lambda2;
 
         // r.realDotProductNoCopy(r, norm_r2_ptr);
-
-        spinorOut.axpyThisLoop(((floatT)(-1.0))*B, pi,max_term); // move this up
-        //     spinorOut[i] = spinorOut[i] - B[i] * pi[i];
-
 
         //################################
         for (int j=1; j<max_term; j++) {
@@ -211,9 +272,13 @@ void AdvancedMultiShiftCG<floatT, NStacks>::invert(
         }
         //################################
 
-
-        pi.template axupbyThisLoop(Z, a, r, max_term); //fuse with dot product
-        //     pi[i] = Z[i] * r + a[i] * pi[i];
+        // spinorOut[i] = spinorOut[i] - B[i] * pi[i]; pi[i] = Z[i] * r + a[i] * pi[i]
+#ifdef USE_CPU
+        if (fused) {
+            cpuBlas::multiShiftUpdate(spinorOut, pi, r, ((floatT)(-1.0))*B, Z, a, max_term, pi0);
+        } else
+#endif
+        multiShiftUpdate(spinorOut, pi, r, ((floatT)(-1.0))*B, Z, a, max_term);
 
 
         //################################
@@ -275,12 +340,31 @@ void ConjugateGradient<floatT, NStacks>::invert_new(
     spinorOut.template iterateWithConst<BLOCKSIZE>(vect3_zero<floatT>());
 
 
+#ifdef USE_CPU
+    // CPU, double: three fused passes per iteration (cpuSpinorKernels.h).
+    [[maybe_unused]] const bool fused = std::is_same_v<floatT, double> && cpuBlas::fusedEnabled();
+#endif
+
     do {
         cg++;
 
         pi.updateAll(COMM_BOTH | Hyperplane);
 
         dslash.applyMdaggM(s, pi, false);
+
+#ifdef USE_CPU
+        if constexpr (std::is_same_v<floatT, double>) {
+            if (fused) {
+                pAp = cpuBlas::realDotStacked(pi, s);
+                B = -1.0* norm_r2 / pAp;
+                lambda2 = cpuBlas::axpyNormStacked(r, B, s);
+                a = lambda2 / norm_r2;
+                norm_r2 = lambda2;
+                cpuBlas::cgUpdateStacked(spinorOut, pi, r, -1.0*B, a);
+                continue;
+            }
+        }
+#endif
 
         dot = pi.dotProductStacked(s);
 

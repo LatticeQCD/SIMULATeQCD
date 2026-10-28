@@ -14,6 +14,11 @@ void HisqSmearing<floatT, onDevice, HaloDepth, comp, compLvl1, compLvl2, compNai
     _gauge_lvl1.iterateOverBulkAllMu(
         hisq_smearing::RecursiveFat7Lvl1<floatT, HaloDepth, comp>(
             _gauge_base.getAccessor(), _Lvl1));
+    if (_kept) {
+        _kept->lvl1 = _gauge_lvl1;
+        _kept->base = _gauge_base;
+        _keptValid = true;
+    }
 
     // Preserve the projection, staggered phases and Naik construction order.
     _gauge_lvl1.iterateOverBulkAllMu(

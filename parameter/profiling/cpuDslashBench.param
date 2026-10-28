@@ -1,0 +1,8 @@
+#
+# cpuDslashBench.param
+#
+#      Lattice: Nx Ny Nz Nt
+#        Nodes: Number of MPI ranks per direction (t is not split)
+#
+Lattice     = 32 32 32 8
+Nodes       = 1 1 1 1

@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 # CPU workstation or allocated CPU job; never submits jobs or compiles.
+# CPU_LAUNCH / CPU_LAUNCH_SERIAL prefix the MPI tests / single-rank tests (e.g. 'srun -n 1').
+# The 8^3x4 fixtures cannot be split (local extent must exceed 2*HaloDepth = 8), so keep
+# CPU_NODES at '1 1 1 1'; runCpuMultiRankTests.sh checks multi-rank runs on 24^3x4.
+# Threads per rank follow OMP_NUM_THREADS; CPU_RESULTS overrides the output directory.
 set -euo pipefail
 export LC_ALL=C
 if [[ $# -lt 1 || $# -gt 2 ]]; then
@@ -9,13 +13,17 @@ fi
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 build=$(cd -- "$1" && pwd -P)
 mode=${2:-references}
+nodes=${CPU_NODES:-1 1 1 1}
+read -r -a launch <<< "${CPU_LAUNCH:-}"
+read -r -a launchSerial <<< "${CPU_LAUNCH_SERIAL:-}"
 case "$mode" in references|historical) ;; *) echo "Unknown mode: $mode" >&2; exit 2 ;; esac
 grep -qx 'BACKEND:STRING=cpu' "$build/CMakeCache.txt" || { echo "Not a CPU build" >&2; exit 2; }
 for target in cpuBackendTest dslashTest inverterTest rhmcTest; do
     [[ -x "$build/testing/$target" ]] || { echo "Missing $target; build cpuRhmcTests first" >&2; exit 2; }
 done
-out="$build/cpu-rhmc-results"
+out=${CPU_RESULTS:-"$build/cpu-rhmc-results"}
 mkdir -p "$out/run" "$out/parameter/tests" "$out/test_conf"
+out=$(cd -- "$out" && pwd -P)
 # Clear prior results so a failed rerun cannot leave an old PASS or summary.
 rm -f -- "$out/RESULT.txt" "$out/NUMBERS.txt" \
     "$out/"{runtime,dslash,inverter,rhmc}.{log,txt}
@@ -31,6 +39,7 @@ for fixture in "${fixtures[@]}"; do
     ln -sfn "$repo/test_conf/$fixture" "$out/test_conf/$fixture"
 done
 cp "$build/CMakeCache.txt" "$out/CMakeCache.txt"
+echo "Nodes=$nodes launch=${CPU_LAUNCH:-none} OMP_NUM_THREADS=${OMP_NUM_THREADS:-unset}" > "$out/layout.txt"
 git -C "$repo" rev-parse HEAD > "$out/commit.txt"
 git -C "$repo" status --short > "$out/worktree-status.txt"
 sha256sum "$build/testing/"{cpuBackendTest,dslashTest,inverterTest,rhmcTest} \
@@ -55,11 +64,12 @@ run_test() {
         echo "FAIL: nonfinite value, failed check, or solver limit in $label" >&2; exit 1
     fi
 }
-run_test runtime 'CPU runtime regression: PASS' "$build/testing/cpuBackendTest"
-run_test dslash 'Dslash regression: PASS' "$build/testing/dslashTest" \
+run_test runtime 'CPU runtime regression: PASS' "${launchSerial[@]}" "$build/testing/cpuBackendTest"
+# dslashTest uses HaloDepth 0, so it is a single-rank test (as in runTestsSingleGPU.bash).
+run_test dslash 'Dslash regression: PASS' "${launchSerial[@]}" "$build/testing/dslashTest" \
     ../parameter/tests/dslashTest.param 'Nodes=1 1 1 1'
-run_test inverter 'Inverter regression: PASS' "$build/testing/inverterTest" \
-    ../parameter/tests/inverterTest.param 'Nodes=1 1 1 1' 'Lattice=8 8 8 4'
+run_test inverter 'Inverter regression: PASS' "${launch[@]}" "$build/testing/inverterTest" \
+    ../parameter/tests/inverterTest.param "Nodes=$nodes" 'Lattice=8 8 8 4'
 if [[ $mode == references ]]; then
     refs="$repo/test_conf/rhmc_trajectory_references"
     for mu in 0 0.4; do
@@ -73,8 +83,9 @@ if [[ $mode == references ]]; then
     done
     echo 'Double precision: one trajectory per case, 1/10 MD steps, mu0=0/0.4.'
     echo 'Each case restarts from gauge12750; these are NOT ten consecutive trajectories.'
-    run_test rhmc 'RHMC legacy-reference regression suite: PASS' "$build/testing/rhmcTest" \
-        --trajectory-regression-suite ../parameter/tests/rhmcTrajectoryReference.param "$refs" --double-only
+    run_test rhmc 'RHMC legacy-reference regression suite: PASS' "${launch[@]}" "$build/testing/rhmcTest" \
+        --trajectory-regression-suite ../parameter/tests/rhmcTrajectoryReference.param "$refs" --double-only \
+        "Nodes=$nodes"
 else
     echo 'Historical 10^4 test: reversibility checks followed by ten complete updates.'
     run_test rhmc 'ALL TESTS PASSED' "$build/testing/rhmcTest" ../parameter/tests/rhmcTest.param

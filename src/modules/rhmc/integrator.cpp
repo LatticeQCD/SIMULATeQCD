@@ -1,4 +1,5 @@
 #include "integrator.h"
+#include "../../gauge/cpuGaugeForce.h"
 
 
 template<class floatT, size_t HaloDepth, CompressionType comp=R18>
@@ -440,6 +441,9 @@ void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::PQPQ
 template<class floatT, bool onDevice, Layout LatticeLayout, size_t HaloDepth, size_t HaloDepthSpin>
 void integrator<floatT, onDevice, LatticeLayout, HaloDepth, HaloDepthSpin>::updateP_gaugeforce(floatT stepsize){
 
+#ifdef CPU_HISQ_DSLASH_SIMD
+    if (!cpuGaugeForce<floatT, HaloDepth>(ipdot, _gaugeField, static_cast<floatT>(_rhmc_param.beta())))
+#endif
     ipdot.iterateOverBulkAllMu(get_gauge_Force<floatT,HaloDepth,R18>(gAcc, _rhmc_param.beta()));
 
     evolveP(stepsize);

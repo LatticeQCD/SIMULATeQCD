@@ -21,6 +21,7 @@
 #include <vector>
 #include "../latticeDimension.h"
 #include "../latticeParameters.h"
+#include "laneSite.h"
 
 /// ---------------------------------------------------------------------------------------- SITE STRUCTURES AND METHODS
 
@@ -519,6 +520,22 @@ public:
         return getSiteMu(getSite(x, y, z, t), mu);
     }
 
+    //! The site of a link, as getSite(siteMu.isite); generic functors use it for every site type.
+    __device__ __host__ inline static gSite siteOf(const gSiteMu &siteMu) {
+        return getSite(siteMu.isite);
+    }
+#ifdef CPU_LANE_SIMD
+    inline static cpuSimd::LaneSite siteOf(const cpuSimd::LaneSiteMu &siteMu) {
+        return siteMu;
+    }
+    inline static cpuSimd::LaneSiteMu getSiteMu(const cpuSimd::LaneSite &site, size_t mu) {
+        cpuSimd::LaneSiteMu siteMu;
+        static_cast<cpuSimd::LaneSite &>(siteMu) = site;
+        siteMu.mu = static_cast<int>(mu);
+        return siteMu;
+    }
+#endif
+
     __device__ __host__ inline static gSiteMu getSiteSpatialMu(size_t isite, size_t mu) {
         gSite site(getSiteSpatial(isite));
         size_t indexmufull = indexMu_Full(site, mu);
@@ -898,6 +915,11 @@ public:
         sitexyzt tmp = site_move<mu_steps>(s.coordFull, mu);
         return getSiteMuFull(tmp.x, tmp.y, tmp.z, tmp.t, s.mu);
     }
+#ifdef CPU_LANE_SIMD
+    template<int mu_steps> inline static cpuSimd::LaneSite site_move(const cpuSimd::LaneSite &s, const int mu) {
+        return s.moved(mu, mu_steps);
+    }
+#endif
     template<int mu_steps> __device__ __host__ inline static gSiteStack site_move(const gSiteStack &s, const int mu) {
         sitexyzt tmp = site_move<mu_steps>(s.coordFull, mu);
         return getSiteStackFull(tmp.x, tmp.y, tmp.z, tmp.t, s.stack);

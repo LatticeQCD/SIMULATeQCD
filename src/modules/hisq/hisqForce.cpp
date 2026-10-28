@@ -26,9 +26,10 @@ contribution_lepagelink<floatT, onDevice, HaloDepth, comp>::contribution_lepagel
     : _SU3Accessor(GaugeIn.getAccessor()), _forceAccessor(ForceIn.getAccessor()) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp>
-__host__ __device__ SU3<floatT> contribution_lepagelink<floatT, onDevice, HaloDepth, comp>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> contribution_lepagelink<floatT, onDevice, HaloDepth, comp>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
     return lepagelinkContribution<floatT, HaloDepth, comp>(_SU3Accessor, _forceAccessor, site, siteMu.mu, _c_lp);
 }
 
@@ -213,7 +214,10 @@ HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::H
 
       _spinor_x(GaugeBase.getComm()), _spinor_y(GaugeBase.getComm(), "SHARED_tmp"), _createF2(_GaugeLvl1, _TmpForce), _finalizeF3(_GaugeU3P, _TmpForce),
       _createNaikF1(_GaugeU3P, _TmpForce), F1_create_3Link(_GaugeU3P, Force), F1_lepagelink(_GaugeU3P, Force),
-      _smearing(smearing), _cg(cg), _dslash(dslash), _dslash_multi(dslash_multi), _rhmc_param(rhmc_param), _rat(rat) {}
+      _smearing(smearing), _cg(cg), _dslash(dslash), _dslash_multi(dslash_multi), _rhmc_param(rhmc_param), _rat(rat) {
+    // Let updateForce reuse the level-1 smearing of the integrator's SmearAll.
+    _smearing.keepLevel1(true);
+}
 
 template <class floatT, bool onDevice, size_t HaloDepth, size_t HaloDepthSpin, CompressionType comp, bool runTesting, const int rdeg>
 void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rdeg>::make_f0(Spinorfield<floatT, onDevice, Even, HaloDepthSpin> &SpinorIn,
@@ -242,7 +246,17 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
         }
     }
 
-    _cg.invert(_dslash, _spinor_x, SpinorIn, shifts, _rhmc_param.cgMax(), _rhmc_param.residue_force());
+    bool solved = false;
+    if constexpr (std::is_same_v<floatT, double>) {
+        if (_rhmc_param.cgMixedPrec()) {
+            _cgMixed.invert(_dslash, _spinor_x, SpinorIn, shifts, _rhmc_param.cgMax(), _rhmc_param.residue_force(),
+                            _rhmc_param.cgMixedPrec_delta());
+            solved = true;
+        }
+    }
+    if (!solved) {
+        _cg.invert(_dslash, _spinor_x, SpinorIn, shifts, _rhmc_param.cgMax(), _rhmc_param.residue_force());
+    }
 
     _dslash_multi.Dslash(_spinor_y, _spinor_x, true);
 
@@ -263,10 +277,11 @@ rho_middle_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::rho_middle_for
     : _SU3Accessor(GaugeIn.getAccessor()), _forceNuAccessor(ForceNu.getAccessor()) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> rho_middle_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> rho_middle_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
     int mu = siteMu.mu;
 
     int nu = (mu + nu_h) % 4;
@@ -279,10 +294,11 @@ __host__ __device__ SU3<floatT> rho_middle_force<floatT, onDevice, HaloDepth, co
 }
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> sigma_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> sigma_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     int mu = siteMu.mu;
 
@@ -294,28 +310,29 @@ __host__ __device__ SU3<floatT> sigma_dressed_primal<floatT, onDevice, HaloDepth
 
     int sigma = 6 - mu - nu - rho;
 
-    gSite site_p_sigma = GInd::site_up(site, sigma);
+    const auto site_p_sigma = GInd::site_up(site, sigma);
 
-    gSite site_p_mu = GInd::site_up(site, mu);
+    const auto site_p_mu = GInd::site_up(site, mu);
 
-    gSite site_m_sigma = GInd::site_dn(site, sigma);
+    const auto site_m_sigma = GInd::site_dn(site, sigma);
 
-    gSite site_m_sigma_p_mu = GInd::site_up(site_m_sigma, mu);
+    const auto site_m_sigma_p_mu = GInd::site_up(site_m_sigma, mu);
 
-    SU3<floatT> pos = _SU3Accessor.getLink(GInd::getSiteMu(site, sigma)) * _SU3Accessor.getLink(GInd::getSiteMu(site_p_sigma, mu)) *
+    SU3<siteReal_t<floatT, SiteMu>> pos = _SU3Accessor.getLink(GInd::getSiteMu(site, sigma)) * _SU3Accessor.getLink(GInd::getSiteMu(site_p_sigma, mu)) *
                       _SU3Accessor.getLinkDagger(GInd::getSiteMu(site_p_mu, sigma));
 
-    SU3<floatT> neg = _SU3Accessor.getLinkDagger(GInd::getSiteMu(site_m_sigma, sigma)) * _SU3Accessor.getLink(GInd::getSiteMu(site_m_sigma, mu)) *
+    SU3<siteReal_t<floatT, SiteMu>> neg = _SU3Accessor.getLinkDagger(GInd::getSiteMu(site_m_sigma, sigma)) * _SU3Accessor.getLink(GInd::getSiteMu(site_m_sigma, mu)) *
                       _SU3Accessor.getLink(GInd::getSiteMu(site_m_sigma_p_mu, sigma));
 
     return pos + neg;
 }
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> rho_side_sigma_dressed_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     // We are producing force on the rho side link.
     int targetRho = siteMu.mu;
@@ -326,17 +343,17 @@ __host__ __device__ SU3<floatT> rho_side_sigma_dressed_force<floatT, onDevice, H
     bool found = invertRhoDirection<nu_h, rho_h>(targetRho, centerMu, outerNu);
 
     if (!found)
-        return su3_zero<floatT>();
+        return su3_zero<siteReal_t<floatT, SiteMu>>();
 
-    gSite upCenter = GInd::site_up(site, centerMu);
+    const auto upCenter = GInd::site_up(site, centerMu);
 
-    gSite right = GInd::site_up(site, targetRho);
+    const auto right = GInd::site_up(site, targetRho);
 
-    gSite downCenter = GInd::site_dn(site, centerMu);
+    const auto downCenter = GInd::site_dn(site, centerMu);
 
-    gSite rightDn = GInd::site_up_dn(site, targetRho, centerMu);
+    const auto rightDn = GInd::site_up_dn(site, targetRho, centerMu);
 
-    SU3<floatT> temp = _forceNuAccessor.getLinkDagger(GInd::getSiteMu(right, centerMu)) * _SU3Accessor.getLinkDagger(GInd::getSiteMu(upCenter, targetRho)) *
+    SU3<siteReal_t<floatT, SiteMu>> temp = _forceNuAccessor.getLinkDagger(GInd::getSiteMu(right, centerMu)) * _SU3Accessor.getLinkDagger(GInd::getSiteMu(upCenter, targetRho)) *
                        _sigmaAccessor.getLinkDagger(GInd::getSiteMu(site, centerMu));
 
     temp += _sigmaAccessor.getLink(GInd::getSiteMu(right, centerMu)) * _SU3Accessor.getLinkDagger(GInd::getSiteMu(upCenter, targetRho)) *
@@ -357,10 +374,11 @@ rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::rho_si
     : _SU3Accessor(GaugeIn.getAccessor()), _sigmaAccessor(SigmaPrimal.getAccessor()) {}
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> rho_sigma_dressed_primal<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     int mu = siteMu.mu;
 
@@ -378,11 +396,11 @@ __host__ __device__ SU3<floatT> rho_sigma_dressed_primal<floatT, onDevice, HaloD
     // U_rho^\dagger(x+mu)
     // ------------------------------------------------------------
 
-    gSite upRho = GInd::site_up(site, rho);
+    const auto upRho = GInd::site_up(site, rho);
 
-    gSite upMu = GInd::site_up(site, mu);
+    const auto upMu = GInd::site_up(site, mu);
 
-    SU3<floatT> positive = _SU3Accessor.getLink(GInd::getSiteMu(site, rho))
+    SU3<siteReal_t<floatT, SiteMu>> positive = _SU3Accessor.getLink(GInd::getSiteMu(site, rho))
 
                            * _sigmaAccessor.getLink(GInd::getSiteMu(upRho, mu))
 
@@ -396,11 +414,11 @@ __host__ __device__ SU3<floatT> rho_sigma_dressed_primal<floatT, onDevice, HaloD
     // U_rho(x-rho+mu)
     // ------------------------------------------------------------
 
-    gSite dnRho = GInd::site_dn(site, rho);
+    const auto dnRho = GInd::site_dn(site, rho);
 
-    gSite dnRhoUpMu = GInd::site_up(dnRho, mu);
+    const auto dnRhoUpMu = GInd::site_up(dnRho, mu);
 
-    SU3<floatT> negative = _SU3Accessor.getLinkDagger(GInd::getSiteMu(dnRho, rho))
+    SU3<siteReal_t<floatT, SiteMu>> negative = _SU3Accessor.getLinkDagger(GInd::getSiteMu(dnRho, rho))
 
                            * _sigmaAccessor.getLink(GInd::getSiteMu(dnRho, mu))
 
@@ -662,10 +680,11 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 }
 
 template <class floatT, bool onDevice, size_t HaloDepth, CompressionType comp, int nu_h, int rho_h>
-__host__ __device__ SU3<floatT> sigma_middle_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(gSiteMu siteMu) {
+template <class SiteMu>
+__host__ __device__ SU3<siteReal_t<floatT, SiteMu>> sigma_middle_force<floatT, onDevice, HaloDepth, comp, nu_h, rho_h>::operator()(SiteMu siteMu) {
     typedef GIndexer<All, HaloDepth> GInd;
 
-    gSite site = GInd::getSite(siteMu.isite);
+    const auto site = GInd::siteOf(siteMu);
 
     int mu = siteMu.mu;
 
@@ -687,8 +706,10 @@ void HisqForce<floatT, onDevice, HaloDepth, HaloDepthSpin, comp, runTesting, rde
 
     make_f0(SpinorIn, Force, _TmpForce, isLight);
 
-    // Level 1 smearing.
-    _smearing.template SmearLvl1<R18>(_GaugeLvl1);
+    // Level 1 smearing: reuse the field of the last SmearAll if U has not changed since.
+    if (!_smearing.copyLevel1IfCurrent(_GaugeLvl1)) {
+        _smearing.template SmearLvl1<R18>(_GaugeLvl1);
+    }
 
     // U3 projection.
     _smearing.template ProjectU3<R18, R18>(_GaugeLvl1, _GaugeU3P);

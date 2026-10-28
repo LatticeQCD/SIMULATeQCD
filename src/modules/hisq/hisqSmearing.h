@@ -12,6 +12,8 @@
 #include "../../gauge/constructs/projectU3.h"
 #include "smearParameters.h"
 #include "hisqSmearingRecursive.h"
+#include "../../base/latticeContainer.h"
+#include <memory>
 
 // Staples that appear in the fat link. Each staple object is one local staple.
 template<class floatT, size_t HaloDepth, CompressionType comp, int linkNumber, int partNumber = 0>
@@ -47,6 +49,27 @@ struct U3ProjectStruct{
         SU3<floatT> temp;
         temp = projectU3<floatT, HaloDepth>(gauge_acc, site, site.mu);
         return temp;
+    }
+};
+
+//! Number of the four links at a site that differ (in any entry) between two fields.
+template<class floatT, size_t HaloDepth, CompressionType comp>
+struct CountDifferentLinks {
+    SU3Accessor<floatT, comp> _a, _b;
+    CountDifferentLinks(SU3Accessor<floatT, comp> a, SU3Accessor<floatT, comp> b) : _a(a), _b(b) {}
+    __device__ __host__ int operator()(gSite site) {
+        typedef GIndexer<All, HaloDepth> GInd;
+        int count = 0;
+        for (int mu = 0; mu < 4; mu++) {
+            const gSiteMu siteMu = GInd::getSiteMu(site, mu);
+            const SU3<floatT> x = _a.getLink(siteMu), y = _b.getLink(siteMu);
+            bool same = true;
+            for (int i = 0; i < 3; i++)
+                for (int j = 0; j < 3; j++)
+                    same = same && real(x(i, j)) == real(y(i, j)) && imag(x(i, j)) == imag(y(i, j));
+            count += same ? 0 : 1;
+        }
+        return count;
     }
 };
 
@@ -92,6 +115,19 @@ private:
     staple<floatT, HaloDepth, compLvl1, -3> stapleNaik;
     staple<floatT, HaloDepth, compLvl1, -5> stapleLepage;
 
+    // With keepLevel1(true), SmearAll also keeps the unprojected level-1 field and a copy of
+    // the base field it was computed from, so that the HISQ force can reuse level 1 instead
+    // of recomputing it (see copyLevel1IfCurrent).
+    struct KeptLevel1 {
+        Gaugefield<floatT, onDevice, HaloDepth, comp> base;
+        Gaugefield<floatT, onDevice, HaloDepth, compLvl1> lvl1;
+        LatticeContainer<onDevice, int> differences;
+        explicit KeptLevel1(CommunicationBase &comm)
+            : base(comm, "HisqSmearingKeptBase"), lvl1(comm, "HisqSmearingKeptLvl1"), differences(comm) {}
+    };
+    std::unique_ptr<KeptLevel1> _kept;
+    bool _keptValid = false;
+
  public:
     HisqSmearing(Gaugefield<floatT, onDevice, HaloDepth, comp> &gauge_base,Gaugefield<floatT, onDevice, HaloDepth, compLvl2> &gauge_lvl2,
 		         Gaugefield<floatT, onDevice, HaloDepth, compNaik> &gauge_naik, floatT naik_epsilon = 0.0)
@@ -136,6 +172,29 @@ private:
     void SmearAllLegacy(floatT mu_f=0.0, bool multiplyPhase = true);
 
     // Also reconstructs the level-1 links needed by the HISQ force.
+    void keepLevel1(bool on) {
+        if (on && !_kept) _kept = std::make_unique<KeptLevel1>(_gauge_base.getComm());
+        if (!on) _kept.reset();
+        _keptValid = false;
+    }
+
+    //! gauge_out = level-1 smearing of the current base field, copied from the last SmearAll
+    //! if the base field is bit-for-bit unchanged since then. Returns false (and leaves
+    //! gauge_out untouched) otherwise.
+    bool copyLevel1IfCurrent(Gaugefield<floatT, onDevice, HaloDepth, compLvl1> &gauge_out) {
+        if (!_kept || !_keptValid) return false;
+        const size_t elems = GIndexer<All, HaloDepth>::getLatData().vol4;
+        _kept->differences.adjustSize(elems);
+        _kept->differences.template iterateOverBulk<All, HaloDepth>(
+            CountDifferentLinks<floatT, HaloDepth, comp>(_gauge_base.getAccessor(), _kept->base.getAccessor()));
+        int differences = 0;
+        _kept->differences.reduce(differences, elems);
+        if (differences != 0) return false;
+        gauge_out = _kept->lvl1;
+        gauge_out.updateAll();
+        return true;
+    }
+
     template<CompressionType comp_tmp>
     void SmearLvl1(Gaugefield<floatT, onDevice, HaloDepth, comp_tmp> &gauge_out) {
         gauge_out.iterateOverBulkAllMu(

@@ -14,6 +14,9 @@
 #include <vector>
 #include <cstring>
 #include "communicationBase.h"
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 Logger rootLogger(OFF);
 Logger stdLogger(ALL);
@@ -21,8 +24,18 @@ Logger stdLogger(ALL);
 CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) : _forceHalos(forceHalos) {
 
     int ret;
+#ifdef USE_CPU
+    // The master thread calls MPI inside OpenMP regions (progress of overlapped halo exchanges).
+    int provided;
+    ret = MPI_Init_thread(argc, argv, MPI_THREAD_FUNNELED, &provided);
+    _MPI_fail(ret, "MPI_Init_thread");
+    if (provided < MPI_THREAD_FUNNELED) {
+        throw std::runtime_error("MPI does not provide MPI_THREAD_FUNNELED");
+    }
+#else
     ret = MPI_Init(argc, argv);
     _MPI_fail(ret, "MPI_Init");
+#endif
 
     ret = MPI_Comm_rank(MPI_COMM_WORLD, &myInfo.world_rank);
     _MPI_fail(ret, "MPI_Comm_rank");
@@ -41,11 +54,11 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) :
     rootLogger.info("Initializing MPI with (", world_size, " proc)");
 
 #ifdef USE_CPU
-    rootLogger.info("Backend: CPU (serial synchronous HISQ prototype)");
-    if (world_size != 1) {
-        MPI_Abort(MPI_COMM_WORLD, 1);
-        throw std::runtime_error("CPU HISQ milestone supports one MPI rank only");
-    }
+#ifdef _OPENMP
+    rootLogger.info("Backend: CPU (MPI + OpenMP, ", omp_get_max_threads(), " threads per rank)");
+#else
+    rootLogger.info("Backend: CPU (MPI, one thread per rank)");
+#endif
 #endif
 
     /// Get the name of the processor

@@ -14,8 +14,8 @@
 #include "derivative7link.h"
 #include "derivativeLepagelink.h"
 
-template <class floatT, size_t HaloDepth, CompressionType compIn = R18>
-__host__ __device__ SU3<floatT> rhoDressPrimalGather(SU3Accessor<floatT, compIn> gAcc, gSite site, int mu, int rho) {
+template <class floatT, size_t HaloDepth, CompressionType compIn = R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> rhoDressPrimalGather(SU3Accessor<floatT, compIn> gAcc, Site site, int mu, int rho) {
     typedef GIndexer<All, HaloDepth> GInd;
 
     // +rho staple:
@@ -23,7 +23,7 @@ __host__ __device__ SU3<floatT> rhoDressPrimalGather(SU3Accessor<floatT, compIn>
     // U_rho(x)
     // U_mu(x+rho)
     // U_rho^\dagger(x+mu)
-    SU3<floatT> temp = gAcc.getLink(GInd::getSiteMu(site, rho)) * gAcc.getLink(GInd::getSiteMu(GInd::site_up(site, rho), mu)) *
+    SU3<siteReal_t<floatT, Site>> temp = gAcc.getLink(GInd::getSiteMu(site, rho)) * gAcc.getLink(GInd::getSiteMu(GInd::site_up(site, rho), mu)) *
                        gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up(site, mu), rho));
 
     // -rho staple:
@@ -80,8 +80,8 @@ template <int nu_h, int rho_h> __host__ __device__ bool invertRhoDirection(int t
     return false;
 }
 
-template <class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18>
-__host__ __device__ SU3<floatT> rhoMiddleGather(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> fNAcc, gSite site, int mu, int rho) {
+template <class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> rhoMiddleGather(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> fNAcc, Site site, int mu, int rho) {
     typedef GIndexer<All, HaloDepth> GInd;
 
     // Negative-rho branch:
@@ -89,7 +89,7 @@ __host__ __device__ SU3<floatT> rhoMiddleGather(SU3Accessor<floatT, compIn> gAcc
     // U_rho^\dagger(y-rho+mu)
     // F_N(y-rho)
     // U_rho(y-rho)
-    SU3<floatT> temp = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site, mu, rho), rho)) *
+    SU3<siteReal_t<floatT, Site>> temp = gAcc.getLinkDagger(GInd::getSiteMu(GInd::site_up_dn(site, mu, rho), rho)) *
                        fNAcc.getLink(GInd::getSiteMu(GInd::site_dn(site, rho), mu)) * gAcc.getLink(GInd::getSiteMu(GInd::site_dn(site, rho), rho));
 
     // Positive-rho branch:
@@ -104,25 +104,25 @@ __host__ __device__ SU3<floatT> rhoMiddleGather(SU3Accessor<floatT, compIn> gAcc
     return floatT(-1.0) * temp;
 }
 
-template <class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18>
-__host__ __device__ SU3<floatT> outerNuMiddleGather(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> finAccessor, gSite site, int mu, int nu) {
+template <class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> outerNuMiddleGather(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> finAccessor, Site site, int mu, int nu) {
     using GInd = GIndexer<All, HaloDepth>;
 
     // Here 'site' is y: the location of the inner N_{mu,nu}.
-    gSite y = site;
+    Site y = site;
 
-    gSite yDnNu = GInd::site_dn(y, nu);
-    gSite yUpNu = GInd::site_up(y, nu);
+    Site yDnNu = GInd::site_dn(y, nu);
+    Site yUpNu = GInd::site_up(y, nu);
 
-    gSite yUpMu = GInd::site_up(y, mu);
-    gSite yDnNuUpMu = GInd::site_up(yDnNu, mu);
+    Site yUpMu = GInd::site_up(y, mu);
+    Site yDnNuUpMu = GInd::site_up(yDnNu, mu);
 
     // Parent staple whose origin is y - nu:
     //
     // U_nu^\dagger(y-nu+mu)
     // F_mu(y-nu)
     // U_nu(y-nu)
-    SU3<floatT> fromPlus =
+    SU3<siteReal_t<floatT, Site>> fromPlus =
         gAcc.getLinkDagger(GInd::getSiteMu(yDnNuUpMu, nu)) * finAccessor.getLink(GInd::getSiteMu(yDnNu, mu)) * gAcc.getLink(GInd::getSiteMu(yDnNu, nu));
 
     // Parent staple whose origin is y + nu:
@@ -130,23 +130,23 @@ __host__ __device__ SU3<floatT> outerNuMiddleGather(SU3Accessor<floatT, compIn> 
     // U_nu(y+mu)
     // F_mu(y+nu)
     // U_nu^\dagger(y)
-    SU3<floatT> fromMinus =
+    SU3<siteReal_t<floatT, Site>> fromMinus =
         gAcc.getLink(GInd::getSiteMu(yUpMu, nu)) * finAccessor.getLink(GInd::getSiteMu(yUpNu, mu)) * gAcc.getLinkDagger(GInd::getSiteMu(y, nu));
 
     return floatT(-1.0) * (fromPlus + fromMinus);
 }
 
-template <class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18>
-__host__ __device__ SU3<floatT> outerNuSideGather(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> finAccessor, gSite site, int mu, int nu) {
+template <class floatT, size_t HaloDepth, CompressionType compIn = R18, CompressionType compForce = R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> outerNuSideGather(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> finAccessor, Site site, int mu, int nu) {
     using GInd = GIndexer<All, HaloDepth>;
 
-    gSite origin = site;
-    gSite up = GInd::site_up(site, nu);
-    gSite right = GInd::site_up(site, mu);
-    gSite down = GInd::site_dn(site, nu);
-    gSite rightDn = GInd::site_dn(right, nu);
+    Site origin = site;
+    Site up = GInd::site_up(site, nu);
+    Site right = GInd::site_up(site, mu);
+    Site down = GInd::site_dn(site, nu);
+    Site rightDn = GInd::site_dn(right, nu);
 
-    SU3<floatT> side = su3_zero<floatT>();
+    SU3<siteReal_t<floatT, Site>> side = su3_zero<siteReal_t<floatT, Site>>();
 
     // Legacy linkDerivative3 term 1
     side +=
@@ -242,10 +242,10 @@ __host__ __device__ SU3<floatT> threeLinkContribution(SU3Accessor<floatT, compIn
     return c1 * finAccessor.getLink(GInd::getSiteMu(site, mu)) - c3 * derivative_staple3;
 };
 
-template <class floatT, size_t HaloDepth, CompressionType compIn = R14, CompressionType compForce = R18>
-__host__ __device__ SU3<floatT> lepagelinkContribution(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> finAccessor, gSite site, int mu,
+template <class floatT, size_t HaloDepth, CompressionType compIn = R14, CompressionType compForce = R18, class Site = gSite>
+__host__ __device__ SU3<siteReal_t<floatT, Site>> lepagelinkContribution(SU3Accessor<floatT, compIn> gAcc, SU3Accessor<floatT, compForce> finAccessor, Site site, int mu,
                                                        floatT c_lp) {
-    SU3<floatT> derivative_lp = su3_zero<floatT>();
+    SU3<siteReal_t<floatT, Site>> derivative_lp = su3_zero<siteReal_t<floatT, Site>>();
     for (int nu_h = 1; nu_h < 4; nu_h++) {
         int nu = (mu + nu_h) % 4;
         derivative_lp += linkDerivativeLepage<floatT, HaloDepth, compIn, compForce>(gAcc, finAccessor, site, mu, nu);

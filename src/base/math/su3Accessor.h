@@ -4,6 +4,7 @@
 
 #pragma once
 #include "su3Constructor.h"
+#include "simdLane.h"
 
 #define BACKWARD_CONST 16
 
@@ -74,6 +75,40 @@ public:
     __host__ __device__ inline SU3<floatT_compute> operator()(const gSiteMu &siteMu) const {
         return static_cast<SU3<floatT_compute>>(this->reconstruct(siteMu));
     }
+
+#ifdef CPU_LANE_SIMD
+    //! The links (or their daggers) at the W sites of a lane site, see simdLane.h. R18 only.
+    inline SU3<cpuSimd::Lane<floatT_memory>> getLink(const cpuSimd::LaneSiteMu &siteMu) const {
+        const floatT_memory *entries[9];
+        laneEntries(entries);
+        return cpuSimd::loadLanes<floatT_memory>(entries, siteMu, false);
+    }
+
+    inline SU3<cpuSimd::Lane<floatT_memory>> getLinkDagger(const cpuSimd::LaneSiteMu &siteMu) const {
+        const floatT_memory *entries[9];
+        laneEntries(entries);
+        return cpuSimd::loadLanes<floatT_memory>(entries, siteMu, true);
+    }
+
+    inline SU3<cpuSimd::Lane<floatT_memory>> operator()(const cpuSimd::LaneSiteMu &siteMu) const {
+        return getLink(siteMu);
+    }
+
+    inline void setLink(const cpuSimd::LaneSiteMu &siteMu, const SU3<cpuSimd::Lane<floatT_memory>> &mat) {
+        static_assert(comp == R18, "lane stores need R18 storage");
+        floatT_memory *entries[9];
+        for (int e = 0; e < 9; ++e) entries[e] = reinterpret_cast<floatT_memory *>(this->_elements[e]);
+        cpuSimd::storeLanes<floatT_memory>(entries, siteMu, mat);
+    }
+
+private:
+    inline void laneEntries(const floatT_memory *entries[9]) const {
+        static_assert(comp == R18, "lane loads need R18 storage");
+        for (int e = 0; e < 9; ++e) entries[e] = reinterpret_cast<const floatT_memory *>(this->_elements[e]);
+    }
+
+public:
+#endif
 
     template<Layout LatLayout, size_t HaloDepth, class floatT_compute=floatT_memory>
     __host__ __device__ inline SU3<floatT_compute> getLinkPath(gSite &site, int dir) const {

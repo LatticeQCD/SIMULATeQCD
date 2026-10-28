@@ -2,15 +2,16 @@
 
 #include "../../gauge/gaugefield.h"
 #include "smearParameters.h"
+#include <type_traits>
 
 // Recursive Fat7 path definitions shared by production smearing and its test.
 // The path arithmetic is taken unchanged from main_hisqSmearingTest.cpp.
 namespace hisq_smearing {
 
-template <class floatT, size_t HaloDepth, CompressionType comp>
+template <class floatT, size_t HaloDepth, CompressionType comp, class Site = gSite>
 __host__ __device__
-    gSite
-    shift_site(gSite site, int dir, int sign)
+    Site
+    shift_site(Site site, int dir, int sign)
 {
     using GInd = GIndexer<All, HaloDepth>;
 
@@ -20,16 +21,16 @@ __host__ __device__
         return GInd::site_dn(site, dir);
 }
 
-template <class floatT, size_t HaloDepth, CompressionType comp>
+template <class floatT, size_t HaloDepth, CompressionType comp, class Site = gSite>
 __host__ __device__
-    SU3<floatT>
+    SU3<siteReal_t<floatT, Site>>
     dress_link(
         SU3Accessor<floatT, comp> gAcc,
-        gSite site,
+        Site site,
         int mu,
         int dir,
         int sign,
-        const SU3<floatT> &inner)
+        const SU3<siteReal_t<floatT, Site>> &inner)
 {
     using GInd = GIndexer<All, HaloDepth>;
 
@@ -40,12 +41,12 @@ __host__ __device__
         // inner goes x+dir -> x+dir+mu
         // U_dir^\dagger(x+mu) closes the staple.
 
-        gSite upMu = GInd::site_up(site, mu);
+        Site upMu = GInd::site_up(site, mu);
 
-        SU3<floatT> left =
+        SU3<siteReal_t<floatT, Site>> left =
             gAcc.getLink(GInd::getSiteMu(site, dir));
 
-        SU3<floatT> right =
+        SU3<siteReal_t<floatT, Site>> right =
             gAcc.getLinkDagger(GInd::getSiteMu(upMu, dir));
 
         return left * inner * right;
@@ -57,13 +58,13 @@ __host__ __device__
         // inner goes x-dir -> x-dir+mu
         // U_dir(x-dir+mu) closes the staple.
 
-        gSite downDir = GInd::site_dn(site, dir);
-        gSite downDirUpMu = GInd::site_up(downDir, mu);
+        Site downDir = GInd::site_dn(site, dir);
+        Site downDirUpMu = GInd::site_up(downDir, mu);
 
-        SU3<floatT> left =
+        SU3<siteReal_t<floatT, Site>> left =
             gAcc.getLinkDagger(GInd::getSiteMu(downDir, dir));
 
-        SU3<floatT> right =
+        SU3<siteReal_t<floatT, Site>> right =
             gAcc.getLink(GInd::getSiteMu(downDirUpMu, dir));
 
         return left * inner * right;
@@ -92,17 +93,20 @@ struct RecursiveFat7Lvl1
     {
     }
 
+    // Lane sites (laneSite.h) only for R18 input.
+    template <class SiteMu, class = std::enable_if_t<comp == R18 || !isLaneSite<SiteMu>>>
     __host__ __device__
-        SU3<floatT>
-        operator()(gSiteMu siteMu)
+        SU3<siteReal_t<floatT, SiteMu>>
+        operator()(SiteMu siteMu)
     {
         using GInd = GIndexer<All, HaloDepth>;
+        using Real = siteReal_t<floatT, SiteMu>;
 
         const int mu = siteMu.mu;
-        const gSite x = GInd::getSite(siteMu.isite);
+        const auto x = GInd::siteOf(siteMu);
 
         // 1-link term
-        SU3<floatT> result =
+        SU3<Real> result =
             c1 * gAcc.getLink(GInd::getSiteMu(x, mu));
 
         // Outer transverse direction: nu
@@ -115,12 +119,12 @@ struct RecursiveFat7Lvl1
             for (int sNu = -1; sNu <= 1; sNu += 2)
             {
 
-                const gSite y =
+                const auto y =
                     shift_site<floatT, HaloDepth, comp>(x, nu, sNu);
 
                 // If we stop here, dressing by nu generates the
                 // ordinary 3-link contribution.
-                SU3<floatT> innerNu =
+                SU3<Real> innerNu =
                     c3 * gAcc.getLink(GInd::getSiteMu(y, mu));
 
                 // Next transverse direction: rho
@@ -133,13 +137,13 @@ struct RecursiveFat7Lvl1
                     for (int sRho = -1; sRho <= 1; sRho += 2)
                     {
 
-                        const gSite z =
+                        const auto z =
                             shift_site<floatT, HaloDepth, comp>(
                                 y, rho, sRho);
 
                         // Dressing this by rho and then nu
                         // generates the 5-link contribution.
-                        SU3<floatT> innerRho =
+                        SU3<Real> innerRho =
                             c5 * gAcc.getLink(
                                      GInd::getSiteMu(z, mu));
 
@@ -157,7 +161,7 @@ struct RecursiveFat7Lvl1
                                  sSigma += 2)
                             {
 
-                                const gSite w =
+                                const auto w =
                                     shift_site<
                                         floatT,
                                         HaloDepth,
@@ -167,7 +171,7 @@ struct RecursiveFat7Lvl1
                                         sSigma);
 
                                 // Central link of the 7-link path.
-                                SU3<floatT> leaf =
+                                SU3<Real> leaf =
                                     c7 * gAcc.getLink(
                                              GInd::getSiteMu(w, mu));
 
@@ -240,20 +244,23 @@ struct RecursiveFat7Lvl2
     {
     }
 
+    // Lane sites (laneSite.h) only for R18 input.
+    template <class SiteMu, class = std::enable_if_t<comp == R18 || !isLaneSite<SiteMu>>>
     __host__ __device__
-        SU3<floatT>
-        operator()(gSiteMu siteMu)
+        SU3<siteReal_t<floatT, SiteMu>>
+        operator()(SiteMu siteMu)
     {
         using GInd = GIndexer<All, HaloDepth>;
+        using Real = siteReal_t<floatT, SiteMu>;
 
         const int mu = siteMu.mu;
-        const gSite x = GInd::getSite(siteMu.isite);
+        const auto x = GInd::siteOf(siteMu);
 
         // ========================================================
         // 1-link
         // ========================================================
 
-        SU3<floatT> result =
+        SU3<Real> result =
             c1 * gAcc.getLink(
                      GInd::getSiteMu(x, mu));
 
@@ -276,7 +283,7 @@ struct RecursiveFat7Lvl2
 
             for (int sNu = -1; sNu <= 1; sNu += 2)
             {
-                const gSite y =
+                const auto y =
                     shift_site<floatT, HaloDepth, comp>(
                         x,
                         nu,
@@ -291,7 +298,7 @@ struct RecursiveFat7Lvl2
                 //
                 // ------------------------------------------------
 
-                SU3<floatT> innerNu =
+                SU3<Real> innerNu =
                     c3 * gAcc.getLink(
                              GInd::getSiteMu(y, mu));
 
@@ -311,13 +318,13 @@ struct RecursiveFat7Lvl2
                 // dressing below.
                 // ------------------------------------------------
 
-                const gSite y2 =
+                const auto y2 =
                     shift_site<floatT, HaloDepth, comp>(
                         y,
                         nu,
                         sNu);
 
-                SU3<floatT> lepageCenter =
+                SU3<Real> lepageCenter =
                     cLp * gAcc.getLink(
                               GInd::getSiteMu(y2, mu));
 
@@ -347,7 +354,7 @@ struct RecursiveFat7Lvl2
                          sRho <= 1;
                          sRho += 2)
                     {
-                        const gSite z =
+                        const auto z =
                             shift_site<
                                 floatT,
                                 HaloDepth,
@@ -360,7 +367,7 @@ struct RecursiveFat7Lvl2
                         // 5-link center
                         // -----------------------------------------
 
-                        SU3<floatT> innerRho =
+                        SU3<Real> innerRho =
                             c5 * gAcc.getLink(
                                      GInd::getSiteMu(z, mu));
 
@@ -382,7 +389,7 @@ struct RecursiveFat7Lvl2
                                  sSigma <= 1;
                                  sSigma += 2)
                             {
-                                const gSite w =
+                                const auto w =
                                     shift_site<
                                         floatT,
                                         HaloDepth,
@@ -391,7 +398,7 @@ struct RecursiveFat7Lvl2
                                         sigma,
                                         sSigma);
 
-                                SU3<floatT> leaf =
+                                SU3<Real> leaf =
                                     c7 * gAcc.getLink(
                                              GInd::getSiteMu(
                                                  w,

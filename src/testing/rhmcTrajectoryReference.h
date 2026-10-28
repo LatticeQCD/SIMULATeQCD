@@ -16,7 +16,7 @@ int rhmc_trajectory_reference(CommunicationBase &comm, RhmcParameters &param,
                               RationalCoeff &rat, const std::string &prefix,
                               bool save, double fieldTolerance,
                               double observableTolerance, const char *precision,
-                              double condensateTolerance = -1.0) {
+                              double condensateTolerance = -1.0, bool compareToDouble = false) {
     if (condensateTolerance < 0.0) condensateTolerance = observableTolerance;
     constexpr size_t halo = 2;
     initIndexer(4, param, comm);
@@ -57,7 +57,7 @@ int rhmc_trajectory_reference(CommunicationBase &comm, RhmcParameters &param,
         rootLogger.info("Reference CHI_UD[", i, "]: ", sformatScientific(chi[i]));
 
     // Fail on a wrong reference case/settings, rather than silently comparing
-    // unrelated trajectories. One-rank 8^3x4 inputs are enforced by the caller.
+    // unrelated trajectories. A global 8^3x4 lattice is enforced by the caller.
     std::ostringstream identity;
     identity << std::setprecision(17) << "RHMC_REFERENCE_V1 " << precision << ' '
              << param.mu_f() << ' ' << param.no_md() << ' ' << param.seed() << ' '
@@ -66,7 +66,7 @@ int rhmc_trajectory_reference(CommunicationBase &comm, RhmcParameters &param,
              << param.no_sw() << ' ' << param.integrator() << ' '
              << param.residue() << ' ' << param.residue_force() << ' '
              << param.cgMax() << ' ' << param.residue_meas() << ' '
-             << param.cgMax_meas() << ' ' << param.cgMixedPrec() << ' '
+             << param.cgMax_meas() << ' ' << (compareToDouble ? false : param.cgMixedPrec()) << ' '
              << param.cgMixedPrec_delta() << ' ' << param.no_pf() << ' '
              << param.gauge_file() << ' ' << param.rat_file();
     bool pass = true;
@@ -113,11 +113,12 @@ int rhmc_trajectory_reference(CommunicationBase &comm, RhmcParameters &param,
     computedHost = gauge;
     referenceHost = reference;
     using GInd = GIndexer<All, halo>;
+    const auto local = GInd::getLatData();
     double maxDifference = 0.0;
-    for (size_t t = 0; t < 4; ++t)
-    for (size_t z = 0; z < 8; ++z)
-    for (size_t y = 0; y < 8; ++y)
-    for (size_t x = 0; x < 8; ++x)
+    for (size_t t = 0; t < local.lt; ++t)
+    for (size_t z = 0; z < local.lz; ++z)
+    for (size_t y = 0; y < local.ly; ++y)
+    for (size_t x = 0; x < local.lx; ++x)
     for (size_t mu = 0; mu < 4; ++mu) {
         const auto siteMu = GInd::getSiteMu(GInd::getSite(x, y, z, t), mu);
         const auto a = computedHost.getAccessor().template getLink<double>(siteMu);
@@ -131,6 +132,8 @@ int rhmc_trajectory_reference(CommunicationBase &comm, RhmcParameters &param,
             if (im > maxDifference) maxDifference = im;
         }
     }
+    maxDifference = comm.globalMaximum(maxDifference);
+    pass = comm.globalMinimum(pass ? 1.0 : 0.0) > 0.5;
     rootLogger.info("RHMC full-field max absolute component difference: ",
                     sformatScientific(maxDifference));
     rootLogger.info("RHMC field tolerance: ", fieldTolerance,
@@ -153,16 +156,23 @@ int rhmc_trajectory_reference(CommunicationBase &comm, RhmcParameters &param,
 // or a physics proof. Strict author mode remains available below.
 inline int rhmc_trajectory_regression_suite(CommunicationBase &comm, int argc, char **argv) {
     try {
-        const bool doubleOnly = argc == 5 && std::string(argv[4]) == "--double-only";
-        if (argc != 4 && !doubleOnly)
-            throw std::runtime_error("Usage: rhmcTest --trajectory-regression-suite PARAM REFERENCE_DIRECTORY [--double-only]");
+        if (argc < 4)
+            throw std::runtime_error("Usage: rhmcTest --trajectory-regression-suite PARAM REFERENCE_DIRECTORY "
+                                     "[--double-only] [Key=value ...]");
+        // Key=value arguments override the parameter file, e.g. 'Nodes=1 1 1 2'.
+        bool doubleOnly = false;
+        std::vector<char *> readArgs{argv[0], argv[2]};
+        for (int i = 4; i < argc; ++i) {
+            if (std::string(argv[i]) == "--double-only") doubleOnly = true;
+            else readArgs.push_back(argv[i]);
+        }
         RhmcParameters param;
-        param.readfile(comm, argv[2]);
+        param.readfile(comm, argv[2], static_cast<int>(readArgs.size()), readArgs.data());
         comm.init(param.nodeDim());
         initIndexer(4, param, comm);
         const auto lat = GIndexer<All, 2>::getLatData();
-        if (lat.globvol4 != 2048 || lat.lx != 8 || lat.ly != 8 || lat.lz != 8 || lat.lt != 4 || param.cgMixedPrec())
-            throw std::runtime_error("Regression fixtures require one rank, 8x8x8x4 and cgMixedPrec=0");
+        if (lat.globLX != 8 || lat.globLY != 8 || lat.globLZ != 8 || lat.globLT != 4 || param.cgMixedPrec())
+            throw std::runtime_error("Regression fixtures require a global 8x8x8x4 lattice and cgMixedPrec=0");
         RationalCoeff rat;
         rat.readfile(comm, param.rat_file());
         rat.check_rat(param);
@@ -199,7 +209,7 @@ inline int rhmc_trajectory_reference_main(CommunicationBase &comm, int argc, cha
         // Custom options precede the usual parameter file/override arguments.
         const int firstParameter = save ? 4 : 6;
         if (argc <= firstParameter)
-            throw std::runtime_error("Usage: rhmcTest --save-trajectory-reference PREFIX {float|double} PARAM [overrides], or --check-trajectory-reference PREFIX {float|double} FIELD_TOL OBS_ABS_TOL PARAM [overrides]");
+            throw std::runtime_error("Usage: rhmcTest --save-trajectory-reference PREFIX {float|double} PARAM [overrides], or --check-trajectory-reference PREFIX {float|double} FIELD_TOL OBS_ABS_TOL PARAM [overrides] [--chi-tolerance=CHI_ABS_TOL]");
         const std::string precision(argv[3]);
         if (precision != "float" && precision != "double")
             throw std::runtime_error("Precision must be float or double");
@@ -208,26 +218,41 @@ inline int rhmc_trajectory_reference_main(CommunicationBase &comm, int argc, cha
         if (!save && (!(fieldTolerance > 0) || !std::isfinite(fieldTolerance) ||
                       !(observableTolerance > 0) || !std::isfinite(observableTolerance)))
             throw std::runtime_error("Supply positive finite calibrated tolerances");
+        // CHI_UD comes from CG solves converged to residue_meas, so it can need a looser
+        // tolerance than the plaquette; by default it uses OBS_ABS_TOL.
+        const std::string chiFlag = "--chi-tolerance=";
+        double condensateTolerance = -1.0;
+        // --compare-to-double: check a cgMixedPrec=1 run against a reference saved in double.
+        bool compareToDouble = false;
         std::vector<char *> parameterArgs{argv[0]};
-        for (int i = firstParameter; i < argc; ++i) parameterArgs.push_back(argv[i]);
+        for (int i = firstParameter; i < argc; ++i) {
+            const std::string arg(argv[i]);
+            if (!save && i > firstParameter && arg == "--compare-to-double") {
+                compareToDouble = true;
+            } else if (!save && i > firstParameter && arg.rfind(chiFlag, 0) == 0) {
+                condensateTolerance = std::stod(arg.substr(chiFlag.size()));
+                if (!(condensateTolerance > 0) || !std::isfinite(condensateTolerance))
+                    throw std::runtime_error("Supply a positive finite --chi-tolerance");
+            } else {
+                parameterArgs.push_back(argv[i]);
+            }
+        }
         RhmcParameters param;
         param.readfile(comm, argv[firstParameter], parameterArgs.size(), parameterArgs.data());
         comm.init(param.nodeDim());
         initIndexer(4, param, comm);
-        const auto &lat = GIndexer<All, 2>::getLatData();
-        if (lat.globvol4 != 8 * 8 * 8 * 4 || lat.lx != 8 || lat.ly != 8 ||
-            lat.lz != 8 || lat.lt != 4 ||
-            (param.no_md() != 1 && param.no_md() != 10) ||
-            (param.mu_f() != 0.0 && param.mu_f() != 0.4) || param.cgMixedPrec())
-            throw std::runtime_error("Reference cases require one rank, 8x8x8x4, no_md=1/10, mu0=0/0.4, cgMixedPrec=0");
+        // Any lattice and Nodes layout: a reference saved on one rank can check a
+        // multi-rank run of the same lattice (the RNG is seeded over the global volume).
+        if (param.cgMixedPrec() && !compareToDouble)
+            throw std::runtime_error("Reference cases require cgMixedPrec=0 (or --compare-to-double)");
         RationalCoeff rat;
         rat.readfile(comm, param.rat_file());
         rat.check_rat(param);
         if (precision == "float")
             return rhmc_trajectory_reference<float>(comm, param, rat, argv[2], save,
-                fieldTolerance, observableTolerance, "float");
+                fieldTolerance, observableTolerance, "float", condensateTolerance, compareToDouble);
         return rhmc_trajectory_reference<double>(comm, param, rat, argv[2], save,
-            fieldTolerance, observableTolerance, "double");
+            fieldTolerance, observableTolerance, "double", condensateTolerance, compareToDouble);
     } catch (const std::exception &error) {
         rootLogger.error("RHMC trajectory reference: FAIL: ", error.what());
         return 1;
