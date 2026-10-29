@@ -967,6 +967,8 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
         rootLogger.info(logStream.str());
 
+        hdf5File.flush();
+
         continueFlow = gradFlow.continueFlow(); //! check if the max flow time has been reached
         if (continueFlow){
             flow_time += gradFlow.updateFlow(); //! integrate flow equation up to next flow time
