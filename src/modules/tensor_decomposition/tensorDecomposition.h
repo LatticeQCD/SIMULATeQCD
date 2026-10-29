@@ -1,9 +1,19 @@
-//
-// created by Jonas Winter on 22.10.2025
-// based on https://arxiv.org/abs/2606.10526
-//
+/*
+ * tensorDecomposition.h
+ * 
+ * Jonas Winter
+ * 
+ * Performes a tensor decomposition based on https://arxiv.org/abs/2606.10526.
+ * Effectively transforms (τ, r-vector)-dependent field G_μνρσ
+ * into 10 (for averaged τ) or 14 (for general τ) so-called component functions G^X which depend on only
+ * - (r^2) (for averaged τ),
+ * - or (τ, r^2) (for general τ, Matsubara mode off),
+ * - or (ω_E, r^2) (for general τ, Matsubara mode on).
+ * 
+ */
 
 #pragma once
+#include <algorithm>
 #include <stdexcept>
 #include "../../base/math/tensor4x4Symx4x4SymComplex.h"
 
@@ -515,21 +525,13 @@ class TensorDecomposition {
             typedef GIndexer<All> GInd;
             sitexyzt globL = GInd::getLatData().globalLatticeXYZT();
 
-            int r2max;
-
             // maximum spatial r^2 value due to spatial periodicity is
             // (glx/2)^2 + (gly/2)^2 + (glz/2)^2 with global extents glx, gly, glz
             // r2max = getNormSquared(getSpatialPart(globL)) / 4;
-            // other maximum spatial r^2 value is (N_{space,min}/2)^2 with the smallest, spatial extent N_{space,min}
-            if (globL[0] < globL[1] && globL[0] < globL[2]) {
-                r2max = globL[0] * globL[0] / 4;
-            } else if (globL[1] < globL[0] && globL[1] < globL[2]) {
-                r2max = globL[1] * globL[1] / 4;
-            } else {
-                r2max = globL[2] * globL[2] / 4;
-            }
+            // another maximum spatial r^2 value is (N_{space,min}/2)^2 with the smallest, spatial extent N_{space,min}
+            int Lmin = std::min({globL[0], globL[1], globL[2]});
 
-            return r2max;
+            return Lmin * Lmin / 4;
         }
 
         // main function: get all r^2-dependent component functions for all projectors in the averaged tau scenario
