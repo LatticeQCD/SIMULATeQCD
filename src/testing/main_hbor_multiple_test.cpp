@@ -67,7 +67,8 @@ int main(int argc, char *argv[]) {
     /// Reset the configuration and repeat test, this time after one HB sweep.
     gauge.readconf_nersc("../test_conf/gauge12750");
     gauge.updateAll();
-    gUpdate.updateHB(dev_state.state, beta0); /// HB update the entire gauge field
+    /// HB update the entire gauge field, without retries as in hbor_single_test, which wrote config_HBORTestHB
+    gUpdate.updateHB(dev_state.state, beta0, false, false);
     hostgauge=gauge;
     refgauge.readconf_nersc("config_HBORTestHB");
     refgauge.updateAll();
