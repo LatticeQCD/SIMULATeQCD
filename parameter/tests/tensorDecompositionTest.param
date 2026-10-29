@@ -1,0 +1,9 @@
+#
+# tensorDecompositionTest.param
+#
+#    Lattice: Nx Ny Nz Nt. Two equal spatial extents that are smaller than the third, so that getR2max()
+#             has to handle a tie (finding B10).
+#      Nodes: Number of nodes per direction (single rank only)
+#
+Lattice = 8 8 12 4
+Nodes   = 1 1 1 1

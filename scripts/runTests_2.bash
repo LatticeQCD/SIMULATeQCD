@@ -93,6 +93,12 @@ echo
 echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
 runByLayout "_gfixTestMulti" "4s"
 
+# The single-GPU run of the FFT test is in runTests_3.bash; here it runs over all 2-GPU layouts.
+((jtest++))
+echo
+echo "${cyan}Test set "${jtest}" of "${numberOfTestRoutines}":${endc}"
+runByLayout "_fourierTest" "2"
+
 # This one is a bit of a special case testing 2 and 4 GPU runs.
 createExec="_hisqSmearingMultiCreate"
 createOut="OUT"${createExec}

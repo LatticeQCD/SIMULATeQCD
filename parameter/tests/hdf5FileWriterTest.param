@@ -1,0 +1,22 @@
+#
+# hdf5FileWriterTest.param
+#
+# Only the lattice and the parameters that HDF5FileWriter::writeAttributes stores are needed; no configuration is read.
+#
+#                Lattice: Nx Ny Nz Nt
+#                  Nodes: Number of nodes per direction (single rank only)
+#
+Lattice   = 8 8 8 4
+Nodes     = 1 1 1 1
+beta      = 3.360
+Gaugefile = ../test_conf/nersc.l8t4b3360_bieHB
+conf_nr   = 1
+
+force                 = zeuthen
+RK_method             = adaptive_stepsize
+start_step_size       = 0.01
+accuracy              = 0.00001
+measurements_dir      = ./
+measurement_intervall = 0 1
+
+energyMomentumTensorCorrFunctionsGeneralTauMatsubara = 1

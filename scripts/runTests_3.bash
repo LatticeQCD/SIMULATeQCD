@@ -15,8 +15,11 @@ source "../scripts/testingTools.bash"
 # Associative arrays are like Python dictionaries. Associate to each test script the number of GPUs you want to use,
 # and give any special directions needed for the splitting.
 declare -A testRoutines
-testRoutines[_fourierEMTTest]="1"
-testRoutines[_haloTest]="1"
+testRoutines[_fourierTest]="1"
+testRoutines[_tensorDecompositionTest]="1"
+testRoutines[_emtCorrelatorTest]="1"
+testRoutines[_topChargeCorrelatorTest]="1"
+testRoutines[_hdf5FileWriterTest]="1"
 
 numberOfTestRoutines="${#testRoutines[@]}"
 numberOfTestRoutines="$((${numberOfTestRoutines}+${#testRoutinesNoParam[@]}))"

@@ -1,0 +1,9 @@
+#
+# fourierTest.param
+#
+#    Lattice: Nx Ny Nz Nt. 12 and 20 exercise the non-power-of-two part of the FFT; all extents stay even
+#             when the lattice is split over 2 ranks in any direction.
+#      Nodes: Number of nodes per direction
+#
+Lattice = 8 12 20 4
+Nodes   = 1 1 1 1

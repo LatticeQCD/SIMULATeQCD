@@ -1,0 +1,13 @@
+#
+# topChargeCorrelatorTest.param
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of nodes per direction (single rank only)
+#  Gaugefile: Path to input configuration
+#     format: Format of input configuration
+#
+Lattice    = 8 8 8 4
+Nodes      = 1 1 1 1
+Gaugefile  = ../test_conf/nersc.l8t4b3360_bieHB
+format     = nersc
+endianness = auto
