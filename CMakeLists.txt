@@ -568,7 +568,7 @@ SIMULATeQCD_target_compile_definitions(gfixTestSingle PRIVATE HALODEPTH_0=1 DOUB
 add_to_compound_SIMULATeQCD_target(tests gfixTestSingle)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_gradientFlowTest.cpp src/modules/observables/topology.cpp src/modules/observables/weinberg.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
-add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/topology.cpp src/modules/observables/weinberg.cpp src/modules/gauge_updates/pureGaugeUpdates.cpp)
+add_SIMULATeQCD_executable(gradientFlowTest src/testing/main_gradientFlowTest.cpp src/modules/observables/topology.cpp src/modules/observables/weinberg.cpp)
 set_SIMULATeQCD_property(gradientFlowTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(gradientFlowTest PRIVATE HALODEPTH_1=1 HALODEPTH_2=1 HALODEPTH_3=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 WILSON_FLOW=1 ZEUTHEN_FLOW=1 FIXED_STEPSIZE=1 ADAPTIVE_STEPSIZE=1)
 add_to_compound_SIMULATeQCD_target(tests gradientFlowTest)
