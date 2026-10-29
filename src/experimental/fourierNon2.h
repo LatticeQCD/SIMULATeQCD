@@ -292,6 +292,14 @@ __global__ void fourierPolymorph(
     int sign = 1
 ) {
 
+    // every thread holds 2*LZ elements in local memory (v and v0 below), which the GPU reserves for all resident threads
+    // this should be kept below 32kB, such that it stays below most GPU VRAM limits
+    static_assert(
+        2 * LZ * sizeof(elemType) <= 32 * 1024,
+        "fourierPolymorph: element type too large for the per-thread buffers, "
+        "use performFourierTransformTensor4x4Symx4x4SymHalfPolymorph instead"
+    );
+
     typedef GIndexer<All> GInd;
 
     size_t site = blockDim.x * blockIdx.x + threadIdx.x;

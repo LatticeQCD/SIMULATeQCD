@@ -1101,10 +1101,15 @@ template void FourierClass<double>::performFourierTransformDirectionPolymorph<1,
 template void FourierClass<double>::performFourierTransformDirectionPolymorph<2, Matrix4x4SymComplex<double>>(LatticeContainer<true, Matrix4x4SymComplex<double>> & redBase, int sign);
 template void FourierClass<double>::performFourierTransformDirectionPolymorph<3, Matrix4x4SymComplex<double>>(LatticeContainer<true, Matrix4x4SymComplex<double>> & redBase, int sign);
 
-template void FourierClass<double>::performFourierTransformDirectionPolymorph<0, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
-template void FourierClass<double>::performFourierTransformDirectionPolymorph<1, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
-template void FourierClass<double>::performFourierTransformDirectionPolymorph<2, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
-template void FourierClass<double>::performFourierTransformDirectionPolymorph<3, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+/* 
+* The polymorphic Fourier instantiations are disabled for the Tensor4x4Symx4x4SymComplex<double>.
+* The called polymorphic Fourier method fourierPolymorph in fourierNon2.h reserves 2 * LZ * size(elemType) of memory per GPU thread.
+* For elemType = Tensor4x4Symx4x4SymComplex<double> and LZ = 64, this reaches 32kB per thread, which is too much for V100 (32GB) cards.
+*/
+// template void FourierClass<double>::performFourierTransformDirectionPolymorph<0, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+// template void FourierClass<double>::performFourierTransformDirectionPolymorph<1, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+// template void FourierClass<double>::performFourierTransformDirectionPolymorph<2, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
+// template void FourierClass<double>::performFourierTransformDirectionPolymorph<3, Tensor4x4Symx4x4SymComplex<double>>(LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> & redBase, int sign);
 
 
 template void FourierClass<double>::performFourierTransformMatrix4x4SymComponentwise<SpatialTemporal::Both>(
@@ -1171,21 +1176,26 @@ template void FourierClass<double>::performFourierTransformPolymorph<Matrix4x4Sy
     int sign
 );
 
-template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Both>(
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
-    int sign
-);
-template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Spatial>(
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
-    int sign
-);
-template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Temporal>(
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
-    LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
-    int sign
-);
+/* 
+* The polymorphic Fourier instantiations are disabled for the Tensor4x4Symx4x4SymComplex<double>.
+* The called polymorphic Fourier method fourierPolymorph in fourierNon2.h reserves 2 * LZ * size(elemType) of memory per GPU thread.
+* For elemType = Tensor4x4Symx4x4SymComplex<double> and LZ = 64, this reaches 32kB per thread, which is too much for V100 (32GB) cards.
+*/
+// template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Both>(
+//     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+//     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+//     int sign
+// );
+// template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Spatial>(
+//     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+//     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+//     int sign
+// );
+// template void FourierClass<double>::performFourierTransformPolymorph<Tensor4x4Symx4x4SymComplex<double>, SpatialTemporal::Temporal>(
+//     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
+//     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeOut,
+//     int sign
+// );
 
 template void FourierClass<double>::performFourierTransformTensor4x4Symx4x4SymHalfPolymorph<SpatialTemporal::Both>(
     LatticeContainer<true, Tensor4x4Symx4x4SymComplex<double>> &latticeIn,
