@@ -1003,12 +1003,19 @@ int main(int argc, char *argv[]) {
             lp.start_step_size.set(lp.measurement_intervall()[1]);
         }
 
-        size_t input_HaloDepth = 1;
-        if (input_force == wilson && (lp.topCharge_imp() || lp.topChargeTimeSlices_imp() || lp.topCharge_imp_imp() || lp.topChargeTimeSlices_imp_imp() || lp.energyMomentumTensorCorrFunctionsAveragedTau() || lp.energyMomentumTensorCorrFunctionsGeneralTau() || lp.topChargeImpCorrFunctionsGeneralTau())) {
-            input_HaloDepth = 2;
-        } else if (input_force == zeuthen ) {
-            input_HaloDepth = 3;
-        }
+        // halo depth needed by the observables:
+        // plaquette/clover/EMT           -> 1
+        // 1x2 clover (topCharge_imp)     -> 2
+        // 1x3 clover (topCharge_imp_imp) -> 3
+        size_t obsHalo = 1;
+        if (lp.topCharge_imp() || lp.topChargeTimeSlices_imp() || lp.topCharge_imp_block()
+            || lp.topChargeImpCorrFunctionsGeneralTau()) obsHalo = std::max<size_t>(obsHalo, 2);
+        if (lp.topCharge_imp_imp() || lp.topChargeTimeSlices_imp_imp() || lp.topCharge_imp_imp_block())
+            obsHalo = std::max<size_t>(obsHalo, 3);
+
+        const size_t flowHalo = (input_force == zeuthen) ? 3 : 1;
+
+        const size_t input_HaloDepth = std::max(flowHalo, obsHalo);
 
         //! loop over all templates and choose the one specified by the user
         static_for<1, 4>::apply([&](auto i){
