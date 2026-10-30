@@ -5,6 +5,9 @@
  * flow time, plaquette, clover and topological charge against refValues_gradFlow.h. Starting from a stored
  * configuration keeps the test independent of the gauge-update code.
  *
+ * It also checks that the flow lands exactly once on every measured flow time (see runMeasuredTimes), also when that
+ * time is not a necessary flow time or not a multiple of the step size.
+ *
  * To regenerate the reference values, run with print_reference=1: the comparison is skipped and the values are
  * written to <measurements_dir>/refValues_gradFlow.h, which replaces src/testing/refValues_gradFlow.h.
  *
@@ -121,6 +124,49 @@ bool run(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
     return failed;
 }
 
+// The flow has to land exactly on every measured flow time, also when it is not a necessary flow time, not a multiple of
+// the step size, or given in both lists. Needs no reference values.
+template<class floatT, size_t HaloDepth, RungeKuttaMethod RKmethod, Force force>
+bool runMeasuredTimes(Gaugefield<floatT, USE_GPU, HaloDepth> &gauge,
+                      gradientFlowParam<floatT> &lp,
+                      const std::vector<floatT> &necessaryTimes,
+                      const std::vector<floatT> &measuredTimes,
+                      const floatT tolerance) {
+
+    gradientFlow<floatT, HaloDepth, RKmethod, force> gFlow(gauge, lp.start_step_size(), lp.measurement_intervall()[0],
+    lp.measurement_intervall()[1], necessaryTimes, measuredTimes, lp.accuracy());
+
+    floatT flow_time = lp.measurement_intervall()[0];
+    std::vector<floatT> hitTimes;
+    bool continueFlow = true;
+
+    while (continueFlow) {
+        continueFlow = gFlow.continueFlow();
+        if (gFlow.checkIfMeasuredTime()) {
+            hitTimes.push_back(flow_time);
+        }
+        flow_time += gFlow.updateFlow();
+        gauge.updateAll();
+    }
+
+    bool failed = false;
+    for (floatT measured : measuredTimes) {
+        int hits = 0;
+        for (floatT hit : hitTimes) {
+            if (isApproximatelyEqual(hit, measured, tolerance)) hits++;
+        }
+        if (hits != 1) {
+            rootLogger.error("Measured flow time ", measured, " was hit ", hits, " times, expected once.");
+            failed = true;
+        }
+    }
+    if (hitTimes.size() != measuredTimes.size()) {
+        rootLogger.error("checkIfMeasuredTime() was true ", hitTimes.size(), " times, expected ", measuredTimes.size());
+        failed = true;
+    }
+    return failed;
+}
+
 void writeReferenceFile(const std::string &fileName, const std::vector<std::vector<double>> &values) {
     std::ofstream file(fileName);
     file << "/*\n"
@@ -206,6 +252,20 @@ bool run_test(int argc, char* argv[], CommunicationBase &commBase, const floatT 
         writeReferenceFile(fileName, generated);
         rootLogger.info("Wrote ", generated.size(), " reference rows to ", fileName);
     }
+
+    //! measured flow times: 0.123 is neither a necessary time nor a multiple of the step size 0.05,
+    //! 0.5 is in both lists and must not produce a zero-length step.
+    const std::vector<floatT> necessaryTimes = {0.5, 1.0};
+    const std::vector<floatT> measuredTimes = {0.123, 0.5};
+    static_for<0, 3>::apply([&](auto i){
+        const auto RK_method = static_cast<RungeKuttaMethod>(static_cast<int>(i));
+        gauge.readconf_nersc("../test_conf/l20t20b06498a_nersc.302500");
+        gauge.updateAll();
+        rootLogger.info(">>>>>>>>>>> measured flow times, RK_method=", RungeKuttaMethods[i], ", Force=", Forces[0], " <<<<<<<<<<<");
+        bool tmpfailed = runMeasuredTimes<floatT, HaloDepth, RK_method, wilson>
+                (gauge, lp, necessaryTimes, measuredTimes, tolerance);
+        failed = failed || tmpfailed;
+    });
     return failed;
 }
 

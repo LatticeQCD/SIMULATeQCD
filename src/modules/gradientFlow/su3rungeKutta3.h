@@ -62,10 +62,28 @@ public:
 
         _gaugeB_device = _gaugeA_device;
 
-        _necessary_flow_times = necessaryFlowTime;
         _measured_flow_times = measuredFlowTimes;
 
+        // measured flow times have to be landed on exactly, so they are necessary flow times as well
+        _necessary_flow_times = necessaryFlowTime;
+        _necessary_flow_times.insert(_necessary_flow_times.end(), measuredFlowTimes.begin(), measuredFlowTimes.end());
+
         std::sort(_necessary_flow_times.begin(), _necessary_flow_times.end());
+        // remove duplicates from necessary flow-times after inserting the measured flow-times into them
+        _necessary_flow_times.erase(
+            std::unique(
+                _necessary_flow_times.begin(), _necessary_flow_times.end(),
+                [&](floatT a, floatT b) { return isApproximatelyEqual(a, b, tolerance); }
+            ),
+            _necessary_flow_times.end()
+        );
+
+        // flow times beyond the stop time are never reached
+        for (floatT t : _measured_flow_times) {
+            if (isDefinitelyGreaterThan(t, _stop, tolerance)) {
+                rootLogger.warn("Measured flow time ", t, " is larger than the stop time ", _stop, " and will not be reached.");
+            }
+        }
 
         _maxTimeReached = false;
 
