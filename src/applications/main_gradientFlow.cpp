@@ -427,9 +427,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
         vecCounts = std::vector<int>(r2max+1);
         EMTCorr.getR2Counts(vecCounts);
     
-        if (lp.useHDF5()) {
-            hdf5File.writeR2CountsAndValues(vecCounts);
-        }
+        hdf5File.writeR2CountsAndValues(vecCounts);
     }
 
     std::vector<std::vector<COMPLEX(PREC)>> vecEMTCorrAveragedTau;
