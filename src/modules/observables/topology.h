@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <array>
 #include "../../base/latticeContainer.h"
 #include "../../gauge/gaugefield.h"
 #include "fieldStrengthTensor.h"
@@ -46,6 +47,12 @@ public:
 
     template<bool improved = false, bool improved_O6 = false>
     void topChargeTimeSlices(std::vector<floatT> &result);
+
+    // Slice sums of q(x) along all four directions: result[mu][n] = sum_{x, x_mu = n} q(x) (global coordinates,
+    // summed over all ranks). Used for the spatial (z) topological-charge correlator / control variates of the
+    // disconnected pseudoscalar loops (mdwf-lma, 2026-11-06). Always recomputes the density.
+    template<bool improved = false, bool improved_O6 = false>
+    void topChargeSlices(std::array<std::vector<floatT>, 4> &result);
 };
 
 

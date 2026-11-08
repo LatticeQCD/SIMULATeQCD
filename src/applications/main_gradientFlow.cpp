@@ -13,6 +13,7 @@
 #include "../simulateqcd.h"
 #include "../modules/gradientFlow/gradientFlow.h"
 #include "../modules/observables/topology.h"
+#include <array>
 #include "../modules/observables/weinberg.h"
 #include "../modules/observables/blocking.h"
 #include "../modules/observables/energyMomentumTensor.h"
@@ -51,6 +52,7 @@ struct gradientFlowParam : LatticeParameters {
     Parameter<bool> topCharge;
     Parameter<bool> topChargeTimeSlices;
     Parameter<bool> topCharge_imp;
+    Parameter<bool> topChargeSlices_imp;   //! slice sums of the improved q(x) along x, y, z, t (mdwf-lma)
     Parameter<bool> topChargeTimeSlices_imp;
     Parameter<bool> topCharge_imp_imp;
     Parameter<bool> topChargeTimeSlices_imp_imp;
@@ -115,6 +117,7 @@ struct gradientFlowParam : LatticeParameters {
         addDefault(topCharge, "topCharge", false);
         addDefault(topChargeTimeSlices, "topChargeTimeSlices", false);
         addDefault(topCharge_imp, "topCharge_imp", false);
+        addDefault(topChargeSlices_imp, "topChargeSlices_imp", false);
         addDefault(topChargeTimeSlices_imp, "topChargeTimeSlices_imp", false);
         addDefault(topCharge_imp_imp, "topCharge_imp_imp", false);
         addDefault(topChargeTimeSlices_imp_imp, "topChargeTimeSlices_imp_imp", false);
@@ -168,7 +171,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
 
     //! -------------------------------prepare file output--------------------------------------------------------------
 
-    std::stringstream prefix, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
+    std::stringstream prefix, datNameTopChSlicesXYZT, datName, datNameConf, datNameCloverSlices, datNameTopChSlices, datNameTopChSlices_imp, datNameTopChSlices_imp_imp,
             datNameBlockShear, datNameBlockBulk, datName_normEMT, datNameColElecCorrSlices_naive, datNameColMagnCorrSlices_naive,
             datNamePolyCorrSinglet, datNamePolyCorrOctet, datNamePolyCorrAverage, datNameColElecCorrSlices_clover,
             datNameColMagnCorrSlices_clover, datNameBlockTopCharge, datNameEMTUTimeSlices, datNameEMTETimeSlices,
@@ -191,6 +194,7 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
     datNameCloverSlices << lp.measurements_dir() << prefix.str() << "_CloverTimeSlices" << lp.fileExt();
     datNameTopChSlices << lp.measurements_dir() << prefix.str() << "_TopChTimeSlices" << lp.fileExt();
     datNameTopChSlices_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImp" << lp.fileExt();
+    datNameTopChSlicesXYZT << lp.measurements_dir() << prefix.str() << "_TopChSlicesImpXYZT" << lp.fileExt();
     datNameTopChSlices_imp_imp << lp.measurements_dir() << prefix.str() << "_TopChTimeSlicesImpImp" << lp.fileExt();
     datNameWeinbergSlices << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlices" << lp.fileExt();
     datNameWeinbergSlices_imp << lp.measurements_dir() << prefix.str() << "_WeinbergTimeSlicesImp" << lp.fileExt();
@@ -306,6 +310,20 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
             headerThSl << "Nt=" + std::to_string(nt) + " ";
         }
         headerThSl.endLine();
+    }
+
+    FileWriter fileTopChSlXYZT(gauge.getComm(), lp);
+    if (lp.topChargeSlices_imp()) {
+        fileTopChSlXYZT.createFile(datNameTopChSlicesXYZT.str());
+        LineFormatter headerXYZT = fileTopChSlXYZT.header();
+        headerXYZT << "Flow time ";
+        const char *dirName = "xyzt";
+        for (int mu = 0; mu < 4; mu++) {
+            for (int n = 0; n < lp.latDim[mu]; n++) {
+                headerXYZT << std::string(1, dirName[mu]) + "=" + std::to_string(n) + " ";
+            }
+        }
+        headerXYZT.endLine();
     }
 
     FileWriter fileTopChSl_imp(gauge.getComm(), lp);
@@ -574,6 +592,23 @@ void run(CommunicationBase &commBase, gradientFlowParam<floatT> &lp) {
                 newLineTh << elem;
             }
             topology.dontRecomputeField();
+        }
+
+        if (lp.topChargeSlices_imp()) {
+            std::array<std::vector<floatT>, 4> resultXYZT;
+            topology.recomputeField();
+            topology.template topChargeSlices<true,false>(resultXYZT);
+            LineFormatter newLineXYZT = fileTopChSlXYZT.tag("");
+            newLineXYZT << flow_time;
+            floatT sumZ = 0;
+            for (int mu = 0; mu < 4; mu++) {
+                for (auto &elem : resultXYZT[mu]) {
+                    newLineXYZT << elem;
+                    if (mu == 2) sumZ += elem;
+                }
+            }
+            logStream << std::scientific << std::setprecision(14) << "   topCharge_imp (sum of z slices) = " << sumZ;
+            topology.recomputeField();
         }
 
         if (lp.topCharge_imp() && !lp.topCharge_imp_block()) {
