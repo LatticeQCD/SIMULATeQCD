@@ -18,6 +18,13 @@
  *       <out_prefix>_condensate_slices.tsv  as measure_condensate_slices_mdwf.py (I_id, I_raw, P5_raw with dir "all",
  *                                           L_raw / L5_raw = eta^+ S eta / eta^+ g5 S eta summed over x_mu slices)
  *
+ *   pion_dynamics = 1: point source `piondyn_source` ("random" = hash of piondyn_seed and label, or "x,y,z,t"), mass
+ *     `piondyn_mass` (default mres_mass), 12 solves (MDWFPionDynamics.h):
+ *       <out_prefix>_piondyn.tsv            as measure_charge_spectral_mdwf.py (= measure_pion_dynamics_mdwf.py + rho/a1):
+ *                                           temporal P, A0, V0, Vi, Ai correlators with local, J5q and Mobius conserved
+ *                                           currents at |n|^2 <= piondyn_n2max; along z (p = 0) PP, SS, A0A0, J5qP, AzP,
+ *                                           AzcP, V0V0, V0cV0, A0cA0 and the V/A/Vc/Ac tensor diagonals (2026-11-07)
+ *
  * c5 = b5 - 1 (MDWFMobiusMapping.h). Solver: mixed_precision = 1 (single-precision CG with double reliable updates,
  * same stopping rule on the true residual) or 0 (double). force_halos = 0 (default): no halo buffers on one GPU.
  *
@@ -27,6 +34,7 @@
 
 #include "../simulateqcd.h"
 #include "../experimental/mdwf/MDWFMeasurements.h"
+#include "../experimental/mdwf/MDWFPionDynamics.h"
 #include "../experimental/mdwf/MDWFMixedPrecisionSolver.h"
 #include "../gauge/gaugeAction.h"
 
@@ -78,6 +86,13 @@ public:
     Parameter<int> nrv_connected;
     Parameter<std::string> slice_dirs;
 
+    Parameter<int> pion_dynamics;
+    Parameter<double> piondyn_mass;
+    Parameter<std::string> piondyn_source;
+    Parameter<std::string> piondyn_seed;
+    Parameter<int> piondyn_n2max;
+    Parameter<double> piondyn_precision;
+
     MDWFMeasureParameters() {
         addDefault(M5, "M5", 1.8);
         addDefault(b5, "b5", 1.9);
@@ -111,6 +126,13 @@ public:
         addDefault(condensate_precision, "condensate_precision", 1e-8);
         addDefault(nrv_connected, "nrv_connected", -1);
         addDefault(slice_dirs, "slice_dirs", std::string(""));
+
+        addDefault(pion_dynamics, "pion_dynamics", 0);
+        addDefault(piondyn_mass, "piondyn_mass", 0.0);
+        addDefault(piondyn_source, "piondyn_source", std::string("random"));
+        addDefault(piondyn_seed, "piondyn_seed", std::string("piondyn"));
+        addDefault(piondyn_n2max, "piondyn_n2max", 4);
+        addDefault(piondyn_precision, "piondyn_precision", 1e-8);
     }
 };
 
@@ -257,6 +279,68 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                         scr << head << n << "\t" << channels[ch] << "\t" << mdwfE18(r.channels[ch][mu][n]) << "\n";
                     }
                 }
+            }
+        }
+    }
+
+    if (param.pion_dynamics() != 0) {
+        const double mass = param.piondyn_mass.isSet() ? param.piondyn_mass() : param.mres_mass();
+        std::array<int, 4> x0{};
+        const int ext[4] = {static_cast<int>(lat.globLX), static_cast<int>(lat.globLY), static_cast<int>(lat.globLZ),
+                            static_cast<int>(lat.globLT)};
+        if (param.piondyn_source() == "random") {
+            // Not GPT's numpy generator: a SplitMix64 stream from FNV-1a("<piondyn_seed>:<label>").
+            uint64_t h = mdwfSeedFromString(param.piondyn_seed() + ":" + label);
+            for (int i = 0; i < 4; i++) {
+                h = mdwfSplitMix64(h);
+                x0[i] = static_cast<int>(h % static_cast<uint64_t>(ext[i]));
+            }
+        } else {
+            std::string raw = param.piondyn_source();   // "x,y,z,t" or GPT's "x.y.z.t" (no spaces: one token)
+            std::replace(raw.begin(), raw.end(), ',', ' ');
+            std::replace(raw.begin(), raw.end(), '.', ' ');
+            std::istringstream in(raw);
+            for (int i = 0; i < 4; i++) {
+                if (!(in >> x0[i]) || x0[i] < 0 || x0[i] >= ext[i]) {
+                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure: piondyn_source must be random or x,y,z,t"
+                                                             " inside the lattice, got ", param.piondyn_source()));
+                }
+            }
+        }
+        rootLogger.info("mdwfMeasure: pion dynamics, source (", x0[0], ",", x0[1], ",", x0[2], ",", x0[3], ") (",
+                        param.piondyn_source(), "), mass ", mass, ", n2max ", param.piondyn_n2max());
+        Meas meas(fermionGauge, param.M5(), mass, param.b5(), param.csw(), "MDWF_meas_pd");
+        if constexpr (Mixed) {
+            meas.solver().setDelta(param.reliable_delta());
+        }
+        using Spinor5 = MDWFSpinor<double, true, All, HaloDepth, Ls>;
+        Spinor5 q0(commBase, "MDWF_pd_q0"), q1(commBase, "MDWF_pd_q1"), q2(commBase, "MDWF_pd_q2"),
+            q3(commBase, "MDWF_pd_q3");
+        LatticeContainer<true, COMPLEX(double)> acc(commBase, "MDWF_pd_acc"), red(commBase, "MDWF_pd_red");
+        const MDWFPionResult r = mdwfMeasurePionDynamics<HaloDepth, Ls>(
+            meas, fermionGauge, {&q0, &q1, &q2, &q3}, acc, red, x0, mass, param.b5(), param.piondyn_n2max(),
+            param.max_iter(), param.piondyn_precision());
+        rootLogger.info("mdwfMeasure: pion dynamics: 12 solves, ", r.iterations, " iterations, max residue ",
+                        r.maxResidue, ", ", r.seconds, " s; ", r.rows.size(), " rows; max PCAC deviation ",
+                        r.maxPcacDeviation, "; max axial-charge WI deviation ", r.maxPcacDeviationA0,
+                        "; max z-PCAC deviation ", r.maxPcacDeviationZ, "; VzcVz conservation ", r.maxVzConservation);
+        if (commBase.IamRoot()) {
+            const std::string file = prefix + "_piondyn.tsv";
+            std::ofstream out(file + ".part");
+            if (!out) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure cannot write ", file, ".part"));
+            }
+            out << "label\tconf\tmass\tLs\tM5\tb5\tc5\tsrc_x\tsrc_y\tsrc_z\tsrc_t\tdirection\tn2\tn_vec\tchannel\tcoord"
+                   "\tre\tim\n";
+            const std::string head = physics(mass) + "\t" + std::to_string(x0[0]) + "\t" + std::to_string(x0[1]) + "\t"
+                                     + std::to_string(x0[2]) + "\t" + std::to_string(x0[3]) + "\t";
+            for (const MDWFPionRow &row : r.rows) {
+                out << head << row.direction << "\t" << row.n2 << "\t" << row.nvec << "\t" << row.channel << "\t"
+                    << row.coord << "\t" << mdwfE18(real(row.value)) << "\t" << mdwfE18(imag(row.value)) << "\n";
+            }
+            out.close();
+            if (!out || std::rename((file + ".part").c_str(), file.c_str()) != 0) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure cannot write ", file));
             }
         }
     }
