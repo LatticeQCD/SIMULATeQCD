@@ -1,0 +1,135 @@
+name: CUDA tests (simulated H100)
+
+# Optional, non-required check. The hosted runners have no GPU, so this builds
+# a small subset of the src/testing programs for CUDA and runs them on a
+# simulated NVIDIA H100 (https://github.com/pantheongpu/pantheonsim) with a
+# single MPI rank. A simulator cannot reproduce hardware-specific behaviour or
+# timing, so it complements real-GPU testing and does not replace it.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'parameter/**'
+      - 'CMakeLists.txt'
+      - '.github/workflows/gpu-sim.yml'
+
+concurrency:
+  group: gpu-sim-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  cuda-sim:
+    name: CUDA 13.0 on a simulated H100
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      CCACHE_DIR: ${{ github.workspace }}/.ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 1G
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          lfs: false
+
+      # Only the two gauge configurations the selected tests read.
+      - name: Fetch the needed test configurations
+        run: git lfs pull --include="test_conf/gauge12750,test_conf/l20t20b06498a_nersc.302500"
+
+      - name: Set up the simulated GPU and CUDA toolkit
+        uses: pantheongpu/setup-pantheonsim@ca87fe3143b29166822b923d6050945c5179408c # v0.1.5
+        with:
+          gpu: nvidia/h100
+          cuda-toolkit: "13.0"
+
+      # The project includes the NVTX header (nvtx3/nvToolsExt.h), which the
+      # toolkit set up above does not ship.
+      - name: Install MPI, NVTX and build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libopenmpi-dev openmpi-bin cuda-nvtx-13-0 ccache ninja-build
+          ls /usr/local/cuda-13.0/include/nvtx3 | head -3
+
+      - name: Restore ccache
+        uses: actions/cache/restore@v4
+        with:
+          path: .ccache
+          key: ccache-gpu-sim-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            ccache-gpu-sim-${{ github.ref_name }}-
+            ccache-gpu-sim-
+
+      # CUDA 13 removed cudaDeviceProp::computeMode, which
+      # NeighborInfo::IsGPUCapableP2P uses, so this skips that one check
+      # (the simulated device is in the default compute mode anyway).
+      - name: Work around computeMode (removed in CUDA 13)
+        run: |
+          sed -i 's/if (myProp.computeMode != gpuComputeModeDefault) {/if (false) {/' src/base/communication/neighborInfo.h
+          git diff --stat
+
+      # ARCHITECTURE=90 makes the project pass -arch=sm_90, which also embeds
+      # the PTX the simulator runs. The simulator needs a shared CUDA runtime.
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CUDA_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared \
+            -DARCHITECTURE=90
+
+      # The full suite takes hours to compile, so only a few small tests are
+      # built. The "_" targets share the CodeBase object library.
+      - name: Build
+        run: |
+          ccache --zero-stats
+          cmake --build build -j3 --target _dotProductTest _dslashTest _linkPathTest _memManTest _generalFunctorTest
+          ccache --show-stats
+
+      # The test programs return 0 even when a check fails, so the logs are
+      # checked for the failure messages as well. The dot product test only
+      # prints its results: each Gaussian spinor dotted with itself should be
+      # about 3 * 64^3 * 32 / 2 = 12582912 on the even sublattice.
+      - name: Test
+        working-directory: build/testing
+        env:
+          OMPI_MCA_rmaps_base_oversubscribe: "1"
+        run: |
+          set -o pipefail
+          cp ../parameter/ua_s8t4.norm ../parameter/us_s8t4.norm .
+          status=0
+          run() {
+            name=$1; shift
+            echo "::group::$name"
+            if ! vgpu run ./_$name "$@" 2>&1 | tee "$name.log"; then
+              echo "::error::$name exited with an error"; status=1
+            fi
+            if grep -E "ERROR:|[Ff]ailed|FAILED" "$name.log"; then
+              echo "::error::$name reported a failure"; status=1
+            fi
+            echo "::endgroup::"
+          }
+          run memManTest
+          run dotProductTest
+          run dslashTest ../parameter/tests/dslashTest.param Nodes="1 1 1 1"
+          run linkPathTest ../parameter/tests/linkPathTest.param Nodes="1 1 1 1"
+          run generalFunctorTest ../parameter/tests/generalFunctorTest.param Nodes="1 1 1 1"
+          grep -q "Test of Dslash against old values: .*passed" dslashTest.log || { echo "::error::no dslash pass message"; status=1; }
+          grep -q "Dslash test.*PASSED" generalFunctorTest.log || { echo "::error::no dslash pass message in generalFunctorTest"; status=1; }
+          n=$(grep -c "INFO: dot (" dotProductTest.log)
+          bad=$(grep "INFO: dot (" dotProductTest.log | sed 's/.*dot (\([^,]*\),.*/\1/' | awk '{d=($1-12582912)/12582912; if (d<0) d=-d; if (d>0.005) c++} END{print c+0}')
+          echo "dot product lines: $n, outside 0.5% of 12582912: $bad"
+          if [ "$n" -ne 104 ] || [ "$bad" -ne 0 ]; then echo "::error::unexpected dot product results"; status=1; fi
+          exit $status
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: .ccache
+          key: ccache-gpu-sim-${{ github.ref_name }}-${{ github.run_id }}
