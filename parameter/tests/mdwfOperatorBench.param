@@ -9,3 +9,5 @@ mf          = 0.00084525
 n_apply     = 200
 n_warm      = 10
 force_halos = 0
+ls          = 16       # 12, 16 or 24
+grid_only   = 0        # 1: only the launch-mode comparison of the fused path

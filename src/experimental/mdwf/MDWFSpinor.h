@@ -11,6 +11,7 @@
 
 #include "../../spinor/spinorfield.h"
 #include "MDWFHaloExchange.h"
+#include "MDWFStackGrid.h"
 
 #include <cstdlib>
 #include <string>
@@ -133,12 +134,25 @@ void mdwfOverlapHop(Spinorfield<floatT, true, LOut, HaloDepth, 12, Ls> &out,
     if (!(mdwfOverlapEnabled() && mdwfFastHaloEnabled() && !mdwfSpinorHaloAllTypes() && comm.getNumberProcesses() > 1
           && comm.gpuAwareMPIAvail() && !comm.useGpuP2P())) {
         mdwfUpdateHalo(in);
-        out.template iterateOverBulk<BlockSize>(op);
+        if (mdwfStackGrid()) {
+            mdwfStackGridLaunch(out, op, MDWFStackGridSite<LOut, HaloDepth>{}, out.getNumberLatticePoints(), Ls);
+        } else {
+            out.template iterateOverBulk<BlockSize>(op);
+        }
         return;
     }
     MDWFSiteLists<LOut, HaloDepth> &lists = MDWFSiteLists<LOut, HaloDepth>::get(comm.nodes());
     MDWFOverlapStreams &st = MDWFOverlapStreams::get();
     WriteAtReadStack writeAtRead;
+    // op on the sites of a list, all stacks, on st.stream (MDWF_STACK_GRID: one stack per block row)
+    auto hopList = [&](const unsigned *list, size_t n) {
+        if (mdwfStackGrid()) {
+            mdwfStackGridLaunch(out, op, MDWFStackGridListSite<LOut, HaloDepth>{list}, n, Ls, st.stream);
+        } else {
+            out.template iterateFunctor<BlockSize>(op, MDWFCalcListSiteStack<LOut, HaloDepth>{list}, writeAtRead, n,
+                                                   Ls, 1, st.stream);
+        }
+    };
 
     if (mdwfOverlapPriorityEnabled()) {
         // Both streams start after the default-stream work that wrote in (and last read out). The interior is queued
@@ -150,16 +164,14 @@ void mdwfOverlapHop(Spinorfield<floatT, true, LOut, HaloDepth, 12, Ls> &out,
         gpuStreamWaitEvent(st.comm, st.ready, 0);
         gpuStreamWaitEvent(st.stream, st.ready, 0);
         if (lists.nInterior > 0) {
-            out.template iterateFunctor<BlockSize>(op, MDWFCalcListSiteStack<LOut, HaloDepth>{lists.interior},
-                                                   writeAtRead, lists.nInterior, Ls, 1, st.stream);
+            hopList(lists.interior, lists.nInterior);
         }
         MDWFHaloPending pending = mdwfFastHaloStart(in, st.comm, haloMode);   // syncs only the comm stream (the pack)
         mdwfFastHaloFinish(in, pending, st.comm);                    // MPI wait, unpack on the comm stream
         gpuEventRecord(st.unpacked, st.comm);
         gpuStreamWaitEvent(st.stream, st.unpacked, 0);
         if (lists.nBoundary > 0) {
-            out.template iterateFunctor<BlockSize>(op, MDWFCalcListSiteStack<LOut, HaloDepth>{lists.boundary},
-                                                   writeAtRead, lists.nBoundary, Ls, 1, st.stream);
+            hopList(lists.boundary, lists.nBoundary);
         }
         gpuEventRecord(st.done, st.stream);
         gpuStreamWaitEvent(0, st.done, 0);
@@ -170,15 +182,13 @@ void mdwfOverlapHop(Spinorfield<floatT, true, LOut, HaloDepth, 12, Ls> &out,
     // then starts only after the interior and the overlap is lost (4 GPUs 2.13 -> 2.44 ms per CG iteration).
     MDWFHaloPending pending = mdwfFastHaloStart(in, 0, haloMode);   // ends with a sync of the default stream: in and out are final
     if (lists.nInterior > 0) {
-        out.template iterateFunctor<BlockSize>(op, MDWFCalcListSiteStack<LOut, HaloDepth>{lists.interior}, writeAtRead,
-                                               lists.nInterior, Ls, 1, st.stream);
+        hopList(lists.interior, lists.nInterior);
     }
     mdwfFastHaloFinish(in, pending);                    // MPI wait, unpack on the default stream
     gpuEventRecord(st.unpacked, 0);
     gpuStreamWaitEvent(st.stream, st.unpacked, 0);
     if (lists.nBoundary > 0) {
-        out.template iterateFunctor<BlockSize>(op, MDWFCalcListSiteStack<LOut, HaloDepth>{lists.boundary}, writeAtRead,
-                                               lists.nBoundary, Ls, 1, st.stream);
+        hopList(lists.boundary, lists.nBoundary);
     }
     gpuEventRecord(st.done, st.stream);
     gpuStreamWaitEvent(0, st.done, 0);                 // later default-stream work sees the complete out

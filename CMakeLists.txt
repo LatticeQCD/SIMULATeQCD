@@ -743,7 +743,7 @@ add_mdwf_executable(mdwfMeasure mdwf ${MDWF_DEFS_SOLVE_LS24})
 add_mdwf_executable(mdwfDiracModes mdwf ${MDWF_DEFS_SOLVE})
 add_mdwf_executable(mdwfKernelSpectrum mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfSpectralBounds mdwf ${MDWF_DEFS})
-add_mdwf_executable(mdwfOperatorBench mdwf ${MDWF_DEFS_BENCH})
+add_mdwf_executable(mdwfOperatorBench mdwf ${MDWF_DEFS_BENCH} NSTACKS_12=1 NSTACKS_24=1)
 add_mdwf_executable(mdwfProfileBench mdwf ${MDWF_DEFS_BENCH})
 
 # Tests: operator
