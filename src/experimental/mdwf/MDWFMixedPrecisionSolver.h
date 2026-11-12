@@ -95,6 +95,10 @@ struct MDWFMixedCGUpdate {
     void launch() {
         typedef GIndexer<T::layout, T::halo> GInd;
         const size_t sites = (T::layout == All) ? GInd::getLatData().vol4 : GInd::getLatData().sizeh;
+        if (mdwfStackGrid()) {
+            mdwfStackGridLaunchNoReturn(*this, MDWFStackGridSite<T::layout, T::halo>{}, sites, T::stacks);
+            return;
+        }
         CalcGSiteStack<T::layout, T::halo> calc;
         iterateFunctorNoReturn<true, (DEFAULT_NBLOCKS / T::stacks) * T::stacks>(*this, calc, sites, T::stacks);
     }
@@ -313,7 +317,15 @@ public:
                 rNorm = trueNorm;
                 rNormUpdate = trueNorm;
             } else {
-                pF.template iterateOverBulk<BlockSize>(MDWFMixedCGDirection<SpinorF>(rF, pF, static_cast<float>(beta)));
+                if (mdwfStackGrid()) {
+                    using TF = MDWFSpinorTraits<SpinorF>;
+                    mdwfStackGridLaunch(pF, MDWFMixedCGDirection<SpinorF>(rF, pF, static_cast<float>(beta)),
+                                        MDWFStackGridSite<TF::layout, TF::halo>{}, pF.getNumberLatticePoints(),
+                                        TF::stacks);
+                } else {
+                    pF.template iterateOverBulk<BlockSize>(
+                        MDWFMixedCGDirection<SpinorF>(rF, pF, static_cast<float>(beta)));
+                }
                 rNorm = rNormNext;
             }
         }

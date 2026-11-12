@@ -10,6 +10,7 @@
 #pragma once
 
 #include "MDWFLinearOperator.h"
+#include "MDWFStackGrid.h"
 
 #include <cstdlib>
 #include <memory>
@@ -100,8 +101,13 @@ public:
             }
             const size_t n = left.getNumberElements();
             _reduction->adjustSize(n);
-            _reduction->template iterateOverBulkStacked<T::layout, T::halo, T::stacks>(
-                MDWFDot5DFunctor<typename T::floatT, T::elems>(left, right));
+            if (mdwfStackGrid()) {
+                mdwfStackGridLaunch(*_reduction, MDWFDot5DFunctor<typename T::floatT, T::elems>(left, right),
+                                    MDWFStackGridSite<T::layout, T::halo>{}, left.getNumberLatticePoints(), T::stacks);
+            } else {
+                _reduction->template iterateOverBulkStacked<T::layout, T::halo, T::stacks>(
+                    MDWFDot5DFunctor<typename T::floatT, T::elems>(left, right));
+            }
             COMPLEX(double) result = 0.0;
             _reduction->reduce(result, n);
             return result;

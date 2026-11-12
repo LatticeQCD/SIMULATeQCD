@@ -1,5 +1,5 @@
 /*
- * Stack-in-grid launch of the MDWF 5D kernels (MDWF_STACK_GRID=1; default off = SIMULATeQCD's launch).
+ * Stack-in-grid launch of the MDWF 5D kernels: default on; MDWF_STACK_GRID=0 restores SIMULATeQCD's launch.
  *
  * SIMULATeQCD launches a stacked kernel with blockDim = (BlockSize / Ls sites, Ls stacks) (RunFunctors::iterateFunctor,
  * iterateFunctorNoReturn, Spinorfield::iterateOverBulk). The spinor memory is stack-major SoA
@@ -28,11 +28,13 @@
 
 #define MDWF_STACK_GRID_MAX_BLOCK 256
 
-// Settable at run time (the operator benchmark switches it); initial value from the environment.
+// Settable at run time (the operator benchmark switches it); initial value from the environment: on unless
+// MDWF_STACK_GRID=0. Covered: Wilson hops (mdwfOverlapHop), fused Schur kernels, the mixed-CG vector updates and the
+// single-reduction 5D dot product.
 inline bool &mdwfStackGrid() {
     static bool on = [] {
         const char *env = std::getenv("MDWF_STACK_GRID");
-        return env != nullptr && std::string(env) == "1";
+        return env == nullptr || std::string(env) != "0";
     }();
     return on;
 }
@@ -73,7 +75,7 @@ __global__ void __launch_bounds__(MDWF_STACK_GRID_MAX_BLOCK)
     if (i >= n) {
         return;
     }
-    const gSiteStack site = calc(i, stackFastest ? blockIdx.x : blockIdx.y);
+    gSiteStack site = calc(i, stackFastest ? blockIdx.x : blockIdx.y);   // non-const: some functors take gSiteStack &
     res.setElement(site, op(site));
 }
 
@@ -85,7 +87,8 @@ __global__ void __launch_bounds__(MDWF_STACK_GRID_MAX_BLOCK)
     if (i >= n) {
         return;
     }
-    op(calc(i, stackFastest ? blockIdx.x : blockIdx.y));
+    gSiteStack site = calc(i, stackFastest ? blockIdx.x : blockIdx.y);
+    op(site);
 }
 #endif
 
