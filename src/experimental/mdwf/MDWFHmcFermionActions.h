@@ -44,6 +44,8 @@
 #include <chrono>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 // One-flavour RHMC action (MDWFRhmcFermionActions.h); unused by the two-flavour actions.
@@ -128,6 +130,16 @@ struct MDWFHmcParameters {
     double mixed_delta = 0.1;
     double force_precision = 0.0;
     int chrono_size = 0;
+    // Cheaper end-point actions (both default off: then bit-identical to the code before):
+    // action_from_noise: the driver's H at the start of a trajectory uses S = |eta|^2 for every pseudofermion factor
+    //   whose heatbath makes that an algebraic identity (light two-flavour ratio factors / Hasenbusch ladder, DSDR
+    //   ratios; c_sw = 0 only); the solve S = psi^+ chi would reproduce it to the solver tolerance. Factors without
+    //   the identity (EOFA, whose heatbath is a rational approximation; the strange RHMC) still solve.
+    // action_chrono: the end-point action solve of a light ratio factor starts from its chronological force-solve
+    //   history (the last MD force solve is the same linear system at the same gauge field); guess only, the history
+    //   is not changed, so the MD is unchanged. Needs mixed_precision and chrono_size > 0.
+    bool action_from_noise = false;
+    bool action_chrono = false;
     // Step scheme of the multi-level integrator (MDWFHmcDriver::evolveLevel), as GPT's integrator/symplectic/schemes.py:
     // 0 = leapfrog P(h/2) I(h) P(h/2); 1 = OMF2 P(l h) I(h/2) P((1 - 2l) h) I(h/2) P(l h), l = omf2_lambda; 2 = OMF2
     // force-gradient P(h/6) I(h/2) Pfg(2h/3) I(h/2) P(h/6), Pfg = kick with the force at exp(i (h^2/24) Pf) U, Pf =
@@ -151,6 +163,27 @@ struct MDWFHmcParameters {
  * Every object that owns fields therefore uses a unique prefix, and no field
  * name may contain another field name of the same object as a substring.
  */
+/*
+ * Start-of-trajectory action of a fermion action (MDWFHmcParameters::action_from_noise): actions with
+ * initialAction() return S without a solve where the heatbath makes S = |eta|^2 exact; any other action solves
+ * (action()).
+ */
+template<class Action, class = void>
+struct MDWFHasInitialAction : std::false_type {};
+
+template<class Action>
+struct MDWFHasInitialAction<Action, std::void_t<decltype(std::declval<Action &>().initialAction())>>
+    : std::true_type {};
+
+template<class Action>
+double mdwfInitialAction(Action &action) {
+    if constexpr (MDWFHasInitialAction<Action>::value) {
+        return action.initialAction();
+    } else {
+        return action.action();
+    }
+}
+
 inline std::string mdwfHmcInstancePrefix(const std::string &base) {
     static unsigned long counter = 0;
     return base + "_i" + std::to_string(counter++);

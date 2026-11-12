@@ -134,6 +134,8 @@ public:
     Parameter<double> mixed_delta;
     Parameter<double> force_precision;
     Parameter<int> chrono_size;
+    Parameter<int> action_from_noise;
+    Parameter<int> action_chrono;
     DynamicParameter<double> hasenbusch_masses;
     Parameter<int> light_form;            // light ratio factors: 1 = GPT form (default), 0 = original SQ form
     DynamicParameter<int> term_level;
@@ -193,6 +195,8 @@ public:
         addDefault(mixed_delta, "mixed_delta", 0.1);
         addDefault(force_precision, "force_precision", 0.0);
         addDefault(chrono_size, "chrono_size", 0);
+        addDefault(action_from_noise, "action_from_noise", 0);
+        addDefault(action_chrono, "action_chrono", 0);
         addOptional(hasenbusch_masses, "hasenbusch_masses");
         addDefault(light_form, "light_form", 1);
         addOptional(term_level, "term_level");
@@ -402,6 +406,13 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
     if (param.chrono_size > 0 && !param.mixed_precision) {
         throw std::runtime_error(stdLogger.fatal("chrono_size > 0 needs mixed_precision = 1"));
     }
+    param.action_from_noise = runParam.action_from_noise() != 0;
+    param.action_chrono = runParam.action_chrono() != 0;
+    if (param.action_chrono && param.chrono_size <= 0) {
+        throw std::runtime_error(stdLogger.fatal("action_chrono = 1 needs chrono_size > 0 (and mixed_precision = 1)"));
+    }
+    rootLogger.info("MDWF 2+1 HMC run: action_from_noise = ", param.action_from_noise ? 1 : 0, ", action_chrono = ",
+                    param.action_chrono ? 1 : 0);
     param.symanzik_gauge = runParam.symanzik_gauge() != 0;
     param.rectangle_gauge = runParam.rectangle_gauge() != 0;
     param.gauge_c1 = runParam.gauge_c1();

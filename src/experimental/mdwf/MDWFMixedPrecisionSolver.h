@@ -637,7 +637,8 @@ public:
     // Schur-normal adapter (in the same operator order). The single-precision operator is shared: its order is set here.
     template<class AdapterD>
     MDWFCoupledMixedCGResult solve(EvenOdd &eo, AdapterD &adapterD, SpinorD &x, SpinorD &b, int maxIter,
-                                   double precision, History *history, bool mmdag = false) {
+                                   double precision, History *history, bool mmdag = false,
+                                   bool pushHistory = true) {
         _gaugeF.convert_precision(eo.gauge());
         mdwfUpdateHalo(_gaugeF);
         _eoF.refreshFrom(eo);
@@ -654,7 +655,7 @@ public:
         names.xF = fname("mixed_cg_x");
         MDWFCoupledMixedCG<AdapterD, AdapterF> cg(names);
         _last = cg.invert(adapterD, _adapterF, x, b, maxIter, precision, _delta, true, useGuess);
-        if (history != nullptr && _last.converged) {
+        if (history != nullptr && pushHistory && _last.converged) {
             history->push(x);
         }
         return _last;

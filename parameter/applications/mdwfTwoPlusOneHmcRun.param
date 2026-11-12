@@ -113,6 +113,11 @@ precision         = 1e-10
 force_precision   = 1e-8
 mixed_precision   = 1
 chrono_size       = 6
+# Cheaper end-point actions (0 = off, bit-identical to before): action_from_noise = 1 takes S = |eta|^2 at the start
+# of a trajectory for the light ratio and DSDR factors (exact identity after the heatbath; EOFA still solves);
+# action_chrono = 1 starts the end-of-trajectory light action solves from the force-solve history (needs chrono_size).
+action_from_noise = 0
+action_chrono     = 0
 #mixed_delta      = 0.1
 max_iter          = 100000
 

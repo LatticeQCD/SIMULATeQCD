@@ -463,6 +463,15 @@ public:
         return {kineticEnergy(), gaugeAction(), fermionAction()};
     }
 
+    // Start of a trajectory, right after heatbath(): action_from_noise skips the solves where S = |eta|^2 is exact.
+    MDWFHmcEnergy initialEnergy() {
+        if (!_param.action_from_noise) {
+            return energy();
+        }
+        _fermionGauge.sync();
+        return {kineticEnergy(), gaugeAction(), mdwfInitialAction(_fermion)};
+    }
+
     void evolveQ(double stepsize) {
         _gaugeVersion++;
         _gauge.iterateOverBulkAllMu(MDWFHmcEvolveQ<HaloDepth>(_gauge.getAccessor(), _momenta.getAccessor(), stepsize));
@@ -911,7 +920,7 @@ public:
         const int forceEvaluationsBefore = _forceEvaluations;
 
         start = std::chrono::steady_clock::now();
-        const MDWFHmcEnergy before = energy();
+        const MDWFHmcEnergy before = initialEnergy();
         _actionSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
         integrate(_param.steps);
         start = std::chrono::steady_clock::now();

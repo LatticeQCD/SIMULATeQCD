@@ -342,15 +342,18 @@ private:
         _eo1.refresh();
     }
 
-    // (eo^+ eo) out = in; MD force solves use force_precision and the chronological guess.
-    void solve(EvenOdd &eo, Adapter &adapter, Spinor &out, Spinor &in, const char *what, bool forceSolve = false) {
+    // (eo^+ eo) out = in; MD force solves use force_precision and the chronological guess. guessOnly (action solve
+    // with action_chrono): start from the force history without adding to it.
+    void solve(EvenOdd &eo, Adapter &adapter, Spinor &out, Spinor &in, const char *what, bool forceSolve = false,
+               bool guessOnly = false) {
         const double precision = (forceSolve && _param.force_precision > 0.0) ? _param.force_precision
                                                                              : _param.precision;
         if (_mixed != nullptr) {
             const auto start = std::chrono::steady_clock::now();
             const MDWFCoupledMixedCGResult result = _mixed->solve(eo, adapter, out, in, _param.max_iter, precision,
-                                                                  forceSolve ? _forceHistory.get() : nullptr,
-                                                                  gptForm());
+                                                                  (forceSolve || guessOnly) ? _forceHistory.get()
+                                                                                            : nullptr,
+                                                                  gptForm(), !guessOnly);
             _lastIterations = std::max(_lastIterations, result.iterations);
             rootLogger.info("MDWF even/odd ratio solve (", _prefix, " ", what, "): ", result.iterations,
                             " single-precision iterations, ", result.reliableUpdates, " reliable updates, ",
@@ -480,10 +483,22 @@ public:
         refresh();
         _lastIterations = 0;
         _eo1.schur(_psi, _phi, !gptForm());   // psi = B^+ phi, or B phi (GPT form)
-        solve(_eoF, _adapterF, _chi, _psi, "action");
+        solve(_eoF, _adapterF, _chi, _psi, "action", false, _param.action_chrono && _forceHistory != nullptr);
         _lastPseudofermionAction = real<double>(_adapterF.dotProduct5D(_psi, _chi));
         _lastDetAction = (_param.csw != 0.0) ? 2.0 * (_eoF.logDetW() - _eo1.logDetW()) : 0.0;
         return _lastPseudofermionAction + _lastDetAction;
+    }
+
+    // Action right after heatbath() at the same gauge field: both forms give psi = A eta or A^+ eta, so S = |eta|^2
+    // exactly (action_from_noise; c_sw = 0, else the solve).
+    double initialAction() {
+        if (!_param.action_from_noise || _param.csw != 0.0) {
+            return action();
+        }
+        _lastIterations = 0;
+        _lastPseudofermionAction = _noiseNorm2;
+        _lastDetAction = 0.0;
+        return _lastPseudofermionAction;
     }
 
     double lastPseudofermionAction() const {
@@ -645,6 +660,14 @@ public:
         double sum = 0.0;
         for (auto &f : _factors) {
             sum += f->action();
+        }
+        return sum;
+    }
+
+    double initialAction() {
+        double sum = 0.0;
+        for (auto &f : _factors) {
+            sum += f->initialAction();
         }
         return sum;
     }

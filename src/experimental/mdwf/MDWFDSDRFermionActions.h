@@ -463,6 +463,16 @@ public:
         return _lastAction;
     }
 
+    // Right after heatbath() at the same gauge field psi = Mhat_f eta, so S = |eta|^2 exactly (action_from_noise).
+    double initialAction() {
+        if (!_param.action_from_noise) {
+            return action();
+        }
+        _lastIterations = 0;
+        _lastAction = _noiseNorm2;
+        return _lastAction;
+    }
+
     double lastPseudofermionAction() const {
         return _lastAction;
     }
@@ -597,6 +607,14 @@ public:
         double sum = 0.0;
         for (auto &f : _factors) {
             sum += f->action();
+        }
+        return sum;
+    }
+
+    double initialAction() {
+        double sum = 0.0;
+        for (auto &f : _factors) {
+            sum += f->initialAction();
         }
         return sum;
     }
