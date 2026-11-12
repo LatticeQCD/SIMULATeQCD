@@ -75,7 +75,8 @@
  * Usage (from the build's applications directory):
  *   ./mdwfTwoPlusOneHmcRun <param file> [key=value ...]
  * Parameters: see parameter/applications/mdwfTwoPlusOneHmcRun.param. Ls is a compile-time
- * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only, Ls = 24 for the DSDR + EOFA path only.
+ * template: Ls = 8 (default) for all paths, Ls = 16 for the DSDR path only, Ls = 24 for the DSDR + EOFA path only,
+ * Ls = 12 for the EOFA path without DSDR only (Hasenbusch + EOFA, no dsdr_twists).
  * Several ranks need c_sw = 0.
  */
 
@@ -321,6 +322,11 @@ template<size_t HaloDepth, size_t Ls>
 using MDWFEvenOddHasenbuschEofaTwoPlusOneFermionAction =
     MDWFSumFermionAction<HaloDepth, MDWFEvenOddHasenbuschTwoFlavorFermionAction<HaloDepth, Ls>,
                          MDWFEofaRatioFermionAction<HaloDepth, Ls>>;
+
+// Without DSDR (no dsdr_twists): light Hasenbusch ladder + EOFA.
+template<size_t HaloDepth, size_t Ls>
+using MDWFEvenOddHasenbuschEofaTwoPlusOneHmc =
+    MDWFHmcDriver<HaloDepth, Ls, MDWFEvenOddHasenbuschEofaTwoPlusOneFermionAction<HaloDepth, Ls>>;
 
 template<size_t HaloDepth, size_t Ls>
 using MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc =
@@ -774,15 +780,24 @@ int main(int argc, char **argv) {
         if (dsdr && param.even_odd() == 0) {
             throw std::runtime_error(stdLogger.fatal("dsdr_twists needs even_odd = 1"));
         }
-        if (param.Ls() != 8 && !(dsdr && param.Ls() == 16) && !(dsdr && param.strange_eofa() != 0 && param.Ls() == 24)) {
+        const bool eofa = param.strange_eofa() != 0;
+        if (param.Ls() != 8 && !(dsdr && param.Ls() == 16) && !(dsdr && eofa && param.Ls() == 24) &&
+            !(!dsdr && eofa && param.Ls() == 12)) {
             throw std::runtime_error(stdLogger.fatal("Ls = ", param.Ls(), " not instantiated (Ls = 8, Ls = 16 with "
-                                                     "dsdr_twists, or Ls = 24 with dsdr_twists and strange_eofa = 1)"));
+                                                     "dsdr_twists, Ls = 24 with dsdr_twists and strange_eofa = 1, or "
+                                                     "Ls = 12 with strange_eofa = 1 and no dsdr_twists)"));
         }
-        if (param.strange_eofa() != 0 && !(dsdr && hasenbusch)) {
-            throw std::runtime_error(stdLogger.fatal("strange_eofa = 1 is instantiated with hasenbusch_masses and "
-                                                     "dsdr_twists (even_odd = 1, c_sw = 0)"));
+        if (eofa && !hasenbusch) {
+            throw std::runtime_error(stdLogger.fatal("strange_eofa = 1 is instantiated with hasenbusch_masses "
+                                                     "(even_odd = 1, c_sw = 0)"));
         }
-        if (param.strange_eofa() != 0 && param.Ls() == 24) {
+        if (eofa && !dsdr && param.Ls() != 12) {
+            throw std::runtime_error(stdLogger.fatal("strange_eofa = 1 without dsdr_twists is instantiated for Ls = 12 "
+                                                     "only, got Ls = ", param.Ls()));
+        }
+        if (eofa && !dsdr) {
+            runMDWFTwoPlusOneHmcRun<12, MDWFEvenOddHasenbuschEofaTwoPlusOneHmc<HaloDepth, 12>, true>(commBase, param);
+        } else if (param.strange_eofa() != 0 && param.Ls() == 24) {
             runMDWFTwoPlusOneHmcRun<24, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 24>, true>(commBase, param);
         } else if (param.strange_eofa() != 0 && param.Ls() == 16) {
             runMDWFTwoPlusOneHmcRun<16, MDWFEvenOddHasenbuschDSDREofaTwoPlusOneHmc<HaloDepth, 16>, true>(commBase, param);
