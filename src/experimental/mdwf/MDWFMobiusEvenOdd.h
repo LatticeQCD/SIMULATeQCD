@@ -741,6 +741,20 @@ private:
         CalcGSiteStack<L, HaloDepthSpin> calcSiteStack;
         static_assert(Ls <= DEFAULT_NBLOCKS, "dense M_xx^-1 kernel: one block holds all Ls slices of a site");
         constexpr size_t block = (DEFAULT_NBLOCKS / Ls) * Ls;   // performFunctorNoReturn launch bound
+        if (mdwfStackGrid()) {
+            const MDWFStackGridSite<L, HaloDepthSpin> calc{};
+            if (dagger) {
+                mdwfStackGridLaunchNoReturn(
+                    MDWFMooeeInverseDenseKernel<floatT, L, HaloDepthSpin, Ls, true>(out, in, cPlus, cMinus, mPlus, mMinus),
+                    calc, elems, Ls);
+            } else {
+                mdwfStackGridLaunchNoReturn(
+                    MDWFMooeeInverseDenseKernel<floatT, L, HaloDepthSpin, Ls, false>(out, in, cPlus, cMinus, mPlus,
+                                                                                     mMinus),
+                    calc, elems, Ls);
+            }
+            return;
+        }
         if (dagger) {
             iterateFunctorNoReturn<true, block>(
                 MDWFMooeeInverseDenseKernel<floatT, L, HaloDepthSpin, Ls, true>(out, in, cPlus, cMinus, mPlus, mMinus),
@@ -772,9 +786,15 @@ private:
         constexpr size_t block = (DEFAULT_NBLOCKS / Ls) * Ls;
         if (!dagger) {
             CalcGSiteStack<Even, HaloDepthSpin> calcSiteStack;
-            iterateFunctorNoReturn<true, block>(
-                MDWFFusedDinMxx<floatT, Even, HaloDepthSpin, Ls>(_e1, _e2, in, b, c, p, q, _mf, _mfMinus),
-                calcSiteStack, elems, Ls);
+            if (mdwfStackGrid()) {
+                mdwfStackGridLaunchNoReturn(
+                    MDWFFusedDinMxx<floatT, Even, HaloDepthSpin, Ls>(_e1, _e2, in, b, c, p, q, _mf, _mfMinus),
+                    MDWFStackGridSite<Even, HaloDepthSpin>{}, elems, Ls);
+            } else {
+                iterateFunctorNoReturn<true, block>(
+                    MDWFFusedDinMxx<floatT, Even, HaloDepthSpin, Ls>(_e1, _e2, in, b, c, p, q, _mf, _mfMinus),
+                    calcSiteStack, elems, Ls);
+            }
             mdwfOverlapHop<BLOCKSIZE>(_o2, _e1,
                 MDWFFusedHop<floatT, Odd, Even, HaloDepthGauge, HaloDepthSpin, Ls, false, false>(_gauge, _e1, _o2), MDWFHaloHalf);
             denseApply<Odd>(_o3, _o2, ePlus, eMinus, false);
@@ -786,8 +806,14 @@ private:
             denseApply<Odd>(_o3, _o2, ePlus, eMinus, true);
             mdwfOverlapHop<BLOCKSIZE>(_e1, _o3,
                 MDWFFusedHop<floatT, Even, Odd, HaloDepthGauge, HaloDepthSpin, Ls, false, false>(_gauge, _o3, _e1), MDWFHaloHalf);
-            out.template iterateOverBulk<BLOCKSIZE>(
-                MDWFFusedMxxDagMinusDinDagG5<floatT, Even, HaloDepthSpin, Ls>(in, _e1, b, c, p, q, _mf, _mfMinus));
+            if (mdwfStackGrid()) {
+                mdwfStackGridLaunch(out,
+                    MDWFFusedMxxDagMinusDinDagG5<floatT, Even, HaloDepthSpin, Ls>(in, _e1, b, c, p, q, _mf, _mfMinus),
+                    MDWFStackGridSite<Even, HaloDepthSpin>{}, elems, Ls);
+            } else {
+                out.template iterateOverBulk<BLOCKSIZE>(
+                    MDWFFusedMxxDagMinusDinDagG5<floatT, Even, HaloDepthSpin, Ls>(in, _e1, b, c, p, q, _mf, _mfMinus));
+            }
         }
     }
 

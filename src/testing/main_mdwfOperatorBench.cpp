@@ -2,7 +2,11 @@
  * MDWF operator benchmark: the even/odd Schur normal operator Mhat^+ Mhat (MDWFMobiusSchurNormalOperator,
  * the operator of every light and EOFA CG iteration) on one GPU, in double and single precision, fused (four kernels
  * per Mhat, MDWFMobiusCloverEvenOdd::fusedSchur) and unfused (block path M_ee - M_eo M_oo^-1 M_oe, mdwfFusedSchur() =
- * false), c_sw = 0, Ls = 16.
+ * false), c_sw = 0, Ls = 16 (parameter ls: 12, 16 or 24).
+ *
+ * Launch modes of the fused path (MDWFStackGrid.h): default SIMULATeQCD launch (blockDim = (BlockSize / Ls sites, Ls))
+ * and MDWF_STACK_GRID with blocks of 64 / 128 / 256 sites at one stack. Every mode must give the bit-identical result
+ * ("F3 grid ... maxdiff 0"); timed per mode ("F3 grid ... ms_per_normal").
  *
  * Reported per variant: ms per Mhat^+ Mhat, effective bandwidth (model bytes / time), model GFLOP/s. Reference: the
  * achievable memory bandwidth of the same GPU, measured here with a field copy (a = b) and an axpy (a += x b) on 5D
@@ -36,6 +40,8 @@ public:
     Parameter<int> n_apply;
     Parameter<int> n_warm;
     Parameter<int> force_halos;
+    Parameter<int> ls;
+    Parameter<int> grid_only;
 
     MDWFOperatorBenchParameters() {
         addDefault(M5, "M5", 1.8);
@@ -44,6 +50,8 @@ public:
         addDefault(n_apply, "n_apply", 200);
         addDefault(n_warm, "n_warm", 10);
         addDefault(force_halos, "force_halos", 0);
+        addDefault(ls, "ls", 16);
+        addDefault(grid_only, "grid_only", 0);   // 1: only the fused-path launch-mode comparison (no stream / block path)
     }
 };
 
@@ -108,6 +116,39 @@ void benchPrecision(CommunicationBase &commBase, Gaugefield<double, true, HaloDe
     const double modelBytes = 19.0 * F + 4.0 * G;
     const double modelFlops = 0.5 * vol4 / ranks * Ls * 2.0 * (2640.0 + 48.0 * Ls + 168.0);
 
+    // Launch modes of the fused path: bit-identity against the default launch, and time per Mhat^+ Mhat.
+    {
+        mdwfFusedSchur() = true;
+        const bool gridBefore = mdwfStackGrid();
+        const unsigned blockBefore = mdwfStackGridBlock();
+        SpinorE diff(commBase, std::string("bench_diff_") + prec);
+        const unsigned blocks[] = {0, 64, 128, 256};   // 0 = default launch
+        for (const unsigned block : blocks) {
+            mdwfStackGrid() = block != 0;
+            if (block != 0) {
+                mdwfStackGridBlock() = block;
+            }
+            normal.apply(out, in);
+            if (block == 0) {
+                ref = out;
+            }
+            diff = out;
+            diff.template axpyThisB<64>(static_cast<floatT>(-1.0), ref);
+            double num = 0.0, den = 0.0;
+            for (const COMPLEX(double) &d : diff.dotProductStacked(diff)) num += real<double>(d);
+            for (const COMPLEX(double) &d : ref.dotProductStacked(ref)) den += real<double>(d);
+            const double t = timePerCall([&] { normal.apply(out, in); }, param.n_warm(), param.n_apply());
+            rootLogger.info("F3 grid ", prec, " Ls ", Ls, " block ", block, (block == 0 ? " (default)" : " (stack grid)"),
+                            " |diff|^2 ", num, " rel ", std::sqrt(num / den), (num == 0.0 ? " IDENTICAL" : " DIFFERENT"),
+                            " ms_per_normal ", 1e3 * t, " eff_GBs ", modelBytes / t / 1e9);
+        }
+        mdwfStackGrid() = gridBefore;
+        mdwfStackGridBlock() = blockBefore;
+    }
+    if (param.grid_only() != 0) {
+        return;
+    }
+
     // achievable bandwidth: copy (read F + write F) and axpy (read 2F + write F) on the same field size
     const double tCopy = timePerCall([&] { out = in; }, param.n_warm(), param.n_apply());
     const double tAxpy = timePerCall([&] { out.template axpyThisB<64>(static_cast<floatT>(0.5), in); },
@@ -161,9 +202,20 @@ int main(int argc, char **argv) {
         gauge.updateAll();
 
         rootLogger.info("F3 setup lattice ", param.latDim()[0], "x", param.latDim()[1], "x", param.latDim()[2], "x",
-                        param.latDim()[3], " Ls 16 ranks ", commBase.getNumberProcesses(), " n_apply ", param.n_apply());
-        benchPrecision<double, HaloDepth, 16>(commBase, gauge, param, d_rand.state);
-        benchPrecision<float, HaloDepth, 16>(commBase, gauge, param, d_rand.state);
+                        param.latDim()[3], " Ls ", param.ls(), " ranks ", commBase.getNumberProcesses(), " n_apply ",
+                        param.n_apply());
+        if (param.ls() == 16) {
+            benchPrecision<double, HaloDepth, 16>(commBase, gauge, param, d_rand.state);
+            benchPrecision<float, HaloDepth, 16>(commBase, gauge, param, d_rand.state);
+        } else if (param.ls() == 24) {
+            benchPrecision<double, HaloDepth, 24>(commBase, gauge, param, d_rand.state);
+            benchPrecision<float, HaloDepth, 24>(commBase, gauge, param, d_rand.state);
+        } else if (param.ls() == 12) {
+            benchPrecision<double, HaloDepth, 12>(commBase, gauge, param, d_rand.state);
+            benchPrecision<float, HaloDepth, 12>(commBase, gauge, param, d_rand.state);
+        } else {
+            throw std::runtime_error(stdLogger.fatal("mdwfOperatorBench: ls = 12, 16 or 24"));
+        }
         rootLogger.info("F3 done");
         return 0;
     }
