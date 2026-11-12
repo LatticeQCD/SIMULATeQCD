@@ -426,6 +426,10 @@ public:
         return _first.action() + _second.action();
     }
 
+    double initialAction() {
+        return mdwfInitialAction(_first) + mdwfInitialAction(_second);
+    }
+
     void force(HostGauge &ipdotHost, const HostGauge &gaugeHost) {
         _first.force(ipdotHost, gaugeHost);
         _second.force(_ipdotPart, gaugeHost);
