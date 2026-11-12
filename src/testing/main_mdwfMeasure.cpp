@@ -22,7 +22,7 @@
  * same stopping rule on the true residual) or 0 (double). force_halos = 0 (default): no halo buffers on one GPU.
  *
  * Usage (from the build's testing directory):  ./mdwfMeasure <param file> [key=value ...]
- * Parameters: parameter/tests/mdwfMeasure.param. Single rank; ls = 8, 16 or 24.
+ * Parameters: parameter/tests/mdwfMeasure.param. Single rank; ls = 8, 12, 16 or 24.
  */
 
 #include "../simulateqcd.h"
@@ -409,12 +409,14 @@ int main(int argc, char **argv) {
         const bool mixed = param.mixed_precision() != 0;
         if (param.ls() == 8) {
             mixed ? runMDWFMeasure<8, true>(commBase, param) : runMDWFMeasure<8, false>(commBase, param);
+        } else if (param.ls() == 12) {
+            mixed ? runMDWFMeasure<12, true>(commBase, param) : runMDWFMeasure<12, false>(commBase, param);
         } else if (param.ls() == 16) {
             mixed ? runMDWFMeasure<16, true>(commBase, param) : runMDWFMeasure<16, false>(commBase, param);
         } else if (param.ls() == 24) {
             mixed ? runMDWFMeasure<24, true>(commBase, param) : runMDWFMeasure<24, false>(commBase, param);
         } else {
-            throw std::runtime_error(stdLogger.fatal("mdwfMeasure supports ls = 8, 16 or 24, got ", param.ls()));
+            throw std::runtime_error(stdLogger.fatal("mdwfMeasure supports ls = 8, 12, 16 or 24, got ", param.ls()));
         }
         return 0;
     }
