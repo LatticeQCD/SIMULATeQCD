@@ -38,20 +38,19 @@
  *
  * c5 = b5 - 1 (MDWFMobiusMapping.h). Solver: mixed_precision = 1 (single-precision CG with double reliable updates,
  * same stopping rule on the true residual) or 0 (double). force_halos = 0 (default): no halo buffers on one GPU.
- *
- * Usage (from the build's testing directory):  ./mdwfMeasure <param file> [key=value ...]
- * Parameters: parameter/tests/mdwfMeasure.param. Single rank; ls = 8, 12, 16 or 24.
  */
 
 #include "../simulateqcd.h"
 #include "../experimental/mdwf/MDWFMeasurements.h"
 #include "../experimental/mdwf/MDWFPionDynamics.h"
 #include "../experimental/mdwf/MDWFScreeningMomentum.h"
+#include "../experimental/mdwf/MDWFLowModes.h"
 #include "../experimental/mdwf/MDWFMixedPrecisionSolver.h"
 #include "../gauge/gaugeAction.h"
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <fstream>
@@ -109,6 +108,15 @@ public:
     Parameter<int> piondyn_n2max;
     Parameter<double> piondyn_precision;
 
+    Parameter<int> lma;
+    Parameter<int> lma_nmodes;
+    Parameter<double> lma_precision;
+    Parameter<double> lma_tol;
+    Parameter<int> lma_nbasis;
+    Parameter<int> lma_nkeep;
+    Parameter<int> lma_max_restarts;
+    Parameter<int> lma_selftest;
+
     MDWFMeasureParameters() {
         addDefault(M5, "M5", 1.8);
         addDefault(b5, "b5", 1.9);
@@ -153,6 +161,15 @@ public:
         addDefault(piondyn_seed, "piondyn_seed", std::string("piondyn"));
         addDefault(piondyn_n2max, "piondyn_n2max", 4);
         addDefault(piondyn_precision, "piondyn_precision", 1e-8);
+
+        addDefault(lma, "lma", 0);
+        addDefault(lma_nmodes, "lma_nmodes", 16);
+        addDefault(lma_precision, "lma_precision", 1e-10);
+        addDefault(lma_tol, "lma_tol", 1e-8);
+        addDefault(lma_nbasis, "lma_nbasis", 0);
+        addDefault(lma_nkeep, "lma_nkeep", 0);
+        addDefault(lma_max_restarts, "lma_max_restarts", 50);
+        addDefault(lma_selftest, "lma_selftest", 0);
     }
 };
 
@@ -447,6 +464,149 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
         }
     }
 
+    // ------------------------------------------------------------------------------------------------------------
+    // Low modes and low-mode averaging (MDWFLowModes.h, branch mdwf-lma). Modes of the light operator at mres_mass;
+    // they are kept for the low-mode-exact light loops of the condensate block.
+    // ------------------------------------------------------------------------------------------------------------
+    auto parseDirs = [](const std::string &raw, const char *what) {
+        std::vector<int> out;
+        for (const char d : raw) {
+            const size_t mu = std::string("xyzt").find(d);
+            if (mu == std::string::npos) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure: ", what, " must be letters of xyzt, got ", raw));
+            }
+            out.push_back(static_cast<int>(mu));
+        }
+        return out;
+    };
+    std::unique_ptr<Meas> lmaMeas;
+    std::unique_ptr<MDWFLowModes<HaloDepth, Ls, Solver>> lma;
+    std::vector<double> lmaMu;
+    std::array<std::array<std::vector<COMPLEX(double)>, 2>, 4> lmaExact;   // [mu][Gamma = 1, g5][n]
+    std::vector<std::pair<std::string, double>> lmaChecks;
+    if (param.lma() != 0) {
+        const auto t0 = std::chrono::steady_clock::now();
+        lmaMeas.reset(new Meas(fermionGauge, param.M5(), param.mres_mass(), param.b5(), param.csw(), "MDWF_meas_lma"));
+        if constexpr (Mixed) {
+            lmaMeas->solver().setDelta(param.reliable_delta());
+        }
+        MDWFLowModeParameters lp;
+        lp.nModes = param.lma_nmodes();
+        lp.precision = param.lma_precision();
+        lp.tol = param.lma_tol();
+        lp.nBasis = param.lma_nbasis();
+        lp.nKeep = param.lma_nkeep();
+        lp.maxRestarts = param.lma_max_restarts();
+        lp.maxIter = param.max_iter();
+        lma.reset(new MDWFLowModes<HaloDepth, Ls, Solver>(*lmaMeas, store, param.mres_mass(), lp));
+        lma->compute(mdwfSeedFromString(label + "_lma"));
+        const int N = lma->size();
+        double maxRes = 0.0;
+        for (const auto &in : lma->info) {
+            lmaMu.push_back(in.mu);
+            maxRes = std::max(maxRes, in.residual);
+        }
+        const double tModes = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        rootLogger.info("mdwfMeasure: LMA: ", N, " modes, ", lma->solves(), " solves, ", lma->iterations(),
+                        " iterations, ", tModes, " s, max mode residual ", maxRes);
+        lmaChecks.emplace_back("nmodes", N);
+        lmaChecks.emplace_back("solves_modes", lma->solves());
+        lmaChecks.emplace_back("iterations_modes", lma->iterations());
+        lmaChecks.emplace_back("seconds_modes", tModes);
+        lmaChecks.emplace_back("max_mode_residual", maxRes);
+
+        const std::array<int, 4> x0 = {param.source[0], param.source[1], param.source[2], param.source[3]};
+        const std::vector<std::string> channels = mdwfParseChannels(param.screening_channels());
+        const std::vector<int> dirs = parseDirs(param.directions(), "directions");
+        const std::vector<std::array<COMPLEX(double), 12>> psiAt = lma->valuesAt(x0);
+        std::vector<int> nSub;
+        for (int ns : {N / 4, N / 2, N}) {
+            if (ns > 0 && (nSub.empty() || ns != nSub.back())) {
+                nSub.push_back(ns);
+            }
+        }
+        const double V4 = static_cast<double>(lat.globvol4);
+        const char *dirLabel[4] = {"spatial_x", "spatial_y", "spatial_z", "temporal_t"};
+        std::ofstream modesOut, lmaOut;
+        if (commBase.IamRoot()) {
+            modesOut.open(prefix + "_lowmodes.tsv");
+            lmaOut.open(prefix + "_lma_screening.tsv");
+            if (!modesOut || !lmaOut) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure cannot write ", prefix, "_lowmodes/_lma_*.tsv"));
+            }
+            modesOut << "label\tconf\tmass\tLs\tM5\tb5\tc5\tmode\tmu\tchirality\tlambda\tm_res_mode\tresidual\n";
+            for (int k = 0; k < N; k++) {
+                const auto &in = lma->info[k];
+                modesOut << physics(param.mres_mass()) << "\t" << k << "\t" << mdwfE18(in.mu) << "\t"
+                         << mdwfE18(in.chirality) << "\t" << mdwfE18(in.lambda) << "\t" << mdwfE18(in.mresMode) << "\t"
+                         << mdwfE18(in.residual) << "\n";
+            }
+            lmaOut << "label\tconf\tmass\tLs\tM5\tb5\tc5\tsrc_x\tsrc_y\tsrc_z\tsrc_t\tdirection\tcorr_dir\tcoord\tchannel"
+                      "\tnmodes\tLL_pt\tLL_a2a\n";
+        }
+        {   // per-mode z profiles psi^+ psi and psi^+ g5 psi (basis-independent per mode; cross-code check with GPT)
+            const std::vector<std::vector<COMPLEX(double)>> dz = lma->spinDensities(2, true);
+            const MDWFSpinMatrix one = mdwfSpinIdentity(), g5m = mdwfGammaMatrix("5");
+            if (commBase.IamRoot()) {
+                std::ofstream prof(prefix + "_lowmode_profiles.tsv");
+                prof << "label\tmode\tdir\tcoord\tpsidag_psi\tpsidag_g5_psi\n";
+                for (int k = 0; k < N; k++) {
+                    const std::vector<COMPLEX(double)> p1 = mdwfLmaBilinear(dz, N, k, k, one);
+                    const std::vector<COMPLEX(double)> p5 = mdwfLmaBilinear(dz, N, k, k, g5m);
+                    for (size_t n = 0; n < p1.size(); n++) {
+                        prof << label << "\t" << k << "\tz\t" << n << "\t" << mdwfE18(real(p1[n])) << "\t"
+                             << mdwfE18(real(p5[n])) << "\n";
+                    }
+                }
+            }
+        }
+        double maxImag = 0.0, selftestPoint = 0.0;
+        const std::string src = std::to_string(x0[0]) + "\t" + std::to_string(x0[1]) + "\t" + std::to_string(x0[2])
+                                + "\t" + std::to_string(x0[3]);
+        for (const int mu : dirs) {
+            const std::vector<std::vector<COMPLEX(double)>> d = lma->spinDensities(mu, false);
+            std::vector<MDWFLmaChannelResult> res;
+            for (const std::string &ch : channels) {
+                res.push_back(mdwfLmaChannel(d, N, lmaMu, psiAt, ch, V4, nSub));
+                maxImag = std::max(maxImag, res.back().maxImag);
+            }
+            if (param.lma_selftest() != 0) {
+                const std::vector<std::vector<double>> ex = mdwfLmaExplicitPointLL(*lma, store, psiAt, channels, mu);
+                for (size_t ch = 0; ch < channels.size(); ch++) {
+                    double num = 0.0, den = 0.0;
+                    for (size_t n = 0; n < ex[ch].size(); n++) {
+                        num = std::max(num, std::abs(ex[ch][n] - res[ch].pointLL.back()[n]));
+                        den = std::max(den, std::abs(ex[ch][n]));
+                    }
+                    selftestPoint = std::max(selftestPoint, num / std::max(den, 1e-300));
+                }
+            }
+            if (commBase.IamRoot()) {
+                const std::string head = physics(param.mres_mass()) + "\t" + src + "\t" + dirLabel[mu] + "\t"
+                                         + std::to_string(mu) + "\t";
+                for (size_t ch = 0; ch < channels.size(); ch++) {
+                    for (size_t s = 0; s < nSub.size(); s++) {
+                        for (size_t n = 0; n < res[ch].pointLL[s].size(); n++) {
+                            lmaOut << head << n << "\t" << channels[ch] << "\t" << nSub[s] << "\t"
+                                   << mdwfE18(res[ch].pointLL[s][n]) << "\t" << mdwfE18(res[ch].a2aLL[s][n]) << "\n";
+                        }
+                    }
+                }
+            }
+        }
+        for (const int mu : parseDirs(param.slice_dirs(), "slice_dirs")) {
+            lmaExact[mu] = mdwfLmaExactLoops(lma->spinDensities(mu, true), N, lmaMu);
+        }
+        lmaChecks.emplace_back("max_imag_over_real_LL", maxImag);
+        if (param.lma_selftest() != 0) {
+            lmaChecks.emplace_back("selftest_pointLL_explicit_vs_formula", selftestPoint);
+            rootLogger.info("mdwfMeasure: LMA self-test: point LL explicit vs formula, max relative deviation ",
+                            selftestPoint);
+        }
+        lmaChecks.emplace_back("seconds_lma_total",
+                               std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
+    }
+
     if (param.condensate() != 0) {
         auto masses = mdwfParseMasses(param.condensate_masses());
         const std::string seedString = param.noise_seed().empty() ? label + "_noise" : param.noise_seed();
@@ -508,6 +668,23 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                                                          "_condensate_slices.tsv"));
             }
             slices << "label\tflavor\tmass\trnd_vec_idx\toperator\tdir\tcoord\treal\timag\n";
+            if (lma) {   // exact low-mode loops once per configuration (rnd_vec_idx -1)
+                for (const auto &m : masses) {
+                    if (std::abs(m.mass - param.mres_mass()) > 1e-12 * std::max(1.0, std::abs(param.mres_mass()))) {
+                        continue;
+                    }
+                    const std::string sh = label + "\t" + m.name + "\t" + mdwfG16(m.mass) + "\t-1\t";
+                    for (const int mu : sliceDirs) {
+                        for (int g = 0; g < (pseudo ? 2 : 1); g++) {
+                            for (size_t n = 0; n < lmaExact[mu][g].size(); n++) {
+                                slices << sh << (g ? "L5_lowexact" : "L_lowexact") << "\t" << "xyzt"[mu] << "\t" << n
+                                       << "\t" << mdwfE18(real(lmaExact[mu][g][n])) << "\t"
+                                       << mdwfE18(imag(lmaExact[mu][g][n])) << "\n";
+                            }
+                        }
+                    }
+                }
+            }
         }
         if (commBase.IamRoot()) {
             out.open(prefix + "_condensates.tsv");
@@ -518,6 +695,8 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                    "\trnd_vec_idx\toperator\treal\timag\n";
         }
         double maxSliceDev = 0.0;
+        bool lmaLoopTested = false;
+        double lmaLoopTest = 0.0;
         for (int i = param.i_start(); i < param.i_start() + maxNrv; i++) {
             bool noiseWritten = false;
             const bool conn = connected && (param.nrv_connected() < 0 || i < param.i_start() + param.nrv_connected());
@@ -534,7 +713,34 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                                 v.iterations, " iterations, ", v.seconds, " s");
                 // Slice-resolved loops from the store (column 0 = eta, column 1 = S eta), as GPT's slice script.
                 std::vector<std::pair<std::string, std::vector<COMPLEX(double)>>> sliceRows;
+                const bool lmaLoops = lma && std::abs(masses[f].mass - param.mres_mass())
+                                                 <= 1e-12 * std::max(1.0, std::abs(param.mres_mass()));
+                std::vector<COMPLEX(double)> lmaC;   // c_k = psi_k^+ g5 eta of this vector
                 for (const int mu : sliceDirs) {
+                    std::array<std::vector<COMPLEX(double)>, 2> low;
+                    if (lmaLoops) {
+                        low = mdwfLmaNoiseLowPart(*lma, store, 0, mu, lmaC);
+                        if (param.lma_selftest() != 0 && !lmaLoopTested) {
+                            // S_L eta into store column 3, then the direct slice loops (test L2, loops)
+                            for (int k = 0; k < lma->size(); k++) {
+                                store.template iterateOverBulk<BLOCKSIZE>(MDWFColumnAxpy<HaloDepth, Ls>(
+                                    store, *lma->psi[k], 3, lmaC[k] / lmaMu[k], k == 0));
+                            }
+                            double num = 0.0, den = 0.0;
+                            for (int g = 0; g < 2; g++) {
+                                const std::vector<COMPLEX(double)> dir = mdwfColumnInnerSlices<HaloDepth, Ls>(
+                                    reduction, store, 0, 3, g == 1, mu);
+                                for (size_t n = 0; n < dir.size(); n++) {
+                                    num = std::max(num, abs(dir[n] - low[g][n]));
+                                    den = std::max(den, abs(dir[n]));
+                                }
+                            }
+                            lmaLoopTest = num / std::max(den, 1e-300);
+                            lmaLoopTested = true;
+                            rootLogger.info("mdwfMeasure: LMA self-test: noise low part direct vs formula, max "
+                                            "relative deviation ", lmaLoopTest);
+                        }
+                    }
                     for (int g5 = 0; g5 < (pseudo ? 2 : 1); g5++) {
                         std::vector<COMPLEX(double)> sl = mdwfColumnInnerSlices<HaloDepth, Ls>(
                             reduction, store, 0, 1, g5 == 1, mu);
@@ -569,6 +775,14 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                                     }
                                 }
                             }
+                        }
+                        if (lmaLoops) {
+                            std::vector<COMPLEX(double)> lsl(sl.size());
+                            for (size_t n = 0; n < sl.size(); n++) {
+                                lsl[n] = sl[n] - low[g5][n] + lmaExact[mu][g5][n];
+                            }
+                            sliceRows.emplace_back(std::string(g5 ? "L5_raw_lma\t" : "L_raw_lma\t") + "xyzt"[mu],
+                                                   std::move(lsl));
                         }
                         sliceRows.emplace_back(std::string(g5 ? "L5_raw\t" : "L_raw\t") + "xyzt"[mu], std::move(sl));
                     }
@@ -623,6 +837,9 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                 out.flush();
             }
         }
+        if (lma && param.lma_selftest() != 0 && lmaLoopTested) {
+            lmaChecks.emplace_back("selftest_noise_lowpart_direct_vs_formula", lmaLoopTest);
+        }
         if (!sliceDirs.empty()) {
             rootLogger.info("mdwfMeasure: slice loops along ", param.slice_dirs(),
                             ", max relative deviation of the slice sums from the 4D traces ", maxSliceDev);
@@ -635,6 +852,13 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                 throw std::runtime_error(stdLogger.fatal("mdwfMeasure: momentum loops at n = 0 differ from the slice "
                                                          "loops by ", maxSliceMomDev));
             }
+        }
+    }
+    if (lma && commBase.IamRoot()) {
+        std::ofstream chk(prefix + "_lma_checks.tsv");
+        chk << "label\tkey\tvalue\n";
+        for (const auto &kv : lmaChecks) {
+            chk << label << "\t" << kv.first << "\t" << mdwfE18(kv.second) << "\n";
         }
     }
     rootLogger.info("mdwfMeasure: done");
