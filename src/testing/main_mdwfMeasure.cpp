@@ -38,6 +38,13 @@
  *
  * c5 = b5 - 1 (MDWFMobiusMapping.h). Solver: mixed_precision = 1 (single-precision CG with double reliable updates,
  * same stopping rule on the true residual) or 0 (double). force_halos = 0 (default): no halo buffers on one GPU.
+ * stack_grid (2026-11-15, MDWFStackGrid.h): launch of the 5D operator kernels, mixed-CG vector updates and 5D dot with
+ * the Ls stacks in the grid. -1 (default) = environment MDWF_STACK_GRID (unset = on), 0 = SIMULATeQCD's launch, 1 = on.
+ * stack_grid_block = 32 | 64 | 128 | 256 sites per block (0 = environment MDWF_STACK_GRID_BLOCK, default 128). A pure
+ * re-mapping of the threads: the output is bit-identical for every setting; only the time changes.
+ *
+ * Usage (from the build's testing directory):  ./mdwfMeasure <param file> [key=value ...]
+ * Parameters: parameter/tests/mdwfMeasure.param. Single rank; ls = 8, 12, 16 or 24.
  */
 
 #include "../simulateqcd.h"
@@ -78,6 +85,8 @@ public:
     Parameter<int> mixed_precision;
     Parameter<double> reliable_delta;
     Parameter<int> max_iter;
+    Parameter<int> stack_grid;
+    Parameter<int> stack_grid_block;
 
     Parameter<int> mres_screening;
     Parameter<double> mres_mass;
@@ -131,6 +140,8 @@ public:
         addDefault(mixed_precision, "mixed_precision", 1);
         addDefault(reliable_delta, "reliable_delta", 0.1);
         addDefault(max_iter, "max_iter", 50000);
+        addDefault(stack_grid, "stack_grid", -1);
+        addDefault(stack_grid_block, "stack_grid_block", 0);
 
         addDefault(mres_screening, "mres_screening", 1);
         addDefault(mres_mass, "mres_mass", 0.00084525);
@@ -874,6 +885,22 @@ int main(int argc, char **argv) {
         commBase.init(param.nodeDim());
         const int HaloDepth = 2;
         initIndexer(HaloDepth, param, commBase);
+
+        if (param.stack_grid() == 0 || param.stack_grid() == 1) {
+            mdwfStackGrid() = param.stack_grid() == 1;
+        } else if (param.stack_grid() != -1) {
+            throw std::runtime_error(stdLogger.fatal("stack_grid must be -1, 0 or 1, got ", param.stack_grid()));
+        }
+        if (param.stack_grid_block() != 0) {
+            const int b = param.stack_grid_block();
+            if (b != 32 && b != 64 && b != 128 && b != 256) {
+                throw std::runtime_error(stdLogger.fatal("stack_grid_block must be 0, 32, 64, 128 or 256, got ", b));
+            }
+            mdwfStackGridBlock() = static_cast<unsigned>(b);
+        }
+        rootLogger.info("mdwfMeasure: stack-grid launch ", mdwfStackGrid() ? "on" : "off", ", block ",
+                        mdwfStackGridBlock(), " sites (stack_grid = ", param.stack_grid(), ", stack_grid_block = ",
+                        param.stack_grid_block(), ")");
 
         const bool mixed = param.mixed_precision() != 0;
         if (param.ls() == 8) {

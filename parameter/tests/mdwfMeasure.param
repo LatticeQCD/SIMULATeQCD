@@ -25,6 +25,10 @@ seed                 = 20261007
 measurements_dir     = ./
 label                = mdwfMeasureTest
 mixed_precision      = 0
+# stack_grid: -1 = environment MDWF_STACK_GRID (default on), 0 = off, 1 = on; stack_grid_block: 0 = environment
+# (default 128) or 32/64/128/256 sites per block. Bit-identical output for every setting (MDWFStackGrid.h).
+stack_grid           = -1
+stack_grid_block     = 0
 mres_screening       = 1
 mres_mass            = 0.1
 source               = 0 0 0 0
