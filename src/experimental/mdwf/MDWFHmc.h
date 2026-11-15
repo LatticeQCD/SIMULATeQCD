@@ -45,6 +45,7 @@
 
 #include "MDWFSpinor.h"
 
+#include "MDWFDeflationDump.h"
 #include "MDWFFermionBoundary.h"
 #include "MDWFHmcFermionActions.h"
 #include "../../gauge/gaugeAction.h"
@@ -53,6 +54,8 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <fstream>
+#include <iomanip>
 #include <random>
 #include <stdexcept>
 #include <memory>
@@ -357,6 +360,9 @@ private:
     // Force-gradient step: summed force of the level and the gauge field before the displacement.
     std::unique_ptr<Gauge> _fgForce;
     std::unique_ptr<Gauge> _fgSavedGauge;
+    // Bookkeeping for the opt-in deflation dump (MDWFDeflationDump.h); no effect on the trajectory.
+    double _mdClock = 0.0;      // sum of the Q steps
+    bool _inForceGradient = false;
 
     // sqrt of the mean over bulk links of -tr(K K) for anti-Hermitian K (cf. forceinfo in integrator.cpp), all ranks.
     double forceRms(const HostGauge &ipdot) {
@@ -465,6 +471,7 @@ public:
 
     void evolveQ(double stepsize) {
         _gaugeVersion++;
+        _mdClock += stepsize;
         _gauge.iterateOverBulkAllMu(MDWFHmcEvolveQ<HaloDepth>(_gauge.getAccessor(), _momenta.getAccessor(), stepsize));
         mdwfUpdateHalo(_gauge);
     }
@@ -682,11 +689,19 @@ public:
 private:
     void computeTermForce(size_t t) {
         if (_termVersion[t] != _gaugeVersion) {
+            MDWFDeflationDumpControl &dump = mdwfDeflationDump();
+            const bool dumpThis = dump.enabled && static_cast<int>(t) < dump.terms;
+            if (dumpThis) {
+                deflationDumpState(t);
+            }
             const auto start = std::chrono::steady_clock::now();
             const long long cgStart = mdwfCoupledCGIterationCount();
             _fermionGauge.sync();
             _gaugeHost = _fermionGauge.get();
             mdwfForceTerm(_fermion, t, _ipdotHost, _gaugeHost);
+            if (dumpThis) {
+                deflationDumpIndex(t, std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count());
+            }
             _termCgIterations[t] += mdwfCoupledCGIterationCount() - cgStart;
             const double rms = forceRms(_ipdotHost);
             _termMaxForceRms[t] = std::max(_termMaxForceRms[t], rms);
@@ -701,6 +716,46 @@ private:
             _termSeconds[t] += seconds;
             _fermionForceSeconds += seconds;
         }
+    }
+
+    // Deflation dump (MDWFDeflationDump.h): U and P once per gauge field, then arm the dump of the solve of term t.
+    void deflationDumpState(size_t t) {
+        MDWFDeflationDumpControl &dump = mdwfDeflationDump();
+        if (!dump.clockSet) {
+            dump.mdTimeStart = _mdClock;
+            dump.clockSet = true;
+        }
+        if (dump.gaugeVersion != _gaugeVersion) {
+            dump.eval++;
+            dump.gaugeVersion = _gaugeVersion;
+            const std::string base = mdwfDeflationDumpEval(dump.dir, dump.eval);
+            mdwfDumpGauge<HaloDepth>(_commBase, _gauge, base + "_U", _prefix + "_defl_stage_u");
+            mdwfDumpGauge<HaloDepth>(_commBase, _momenta, base + "_P", _prefix + "_defl_stage_p");
+        }
+        dump.armed = true;
+        dump.term = static_cast<int>(t);
+        dump.solveIterations = -1;
+    }
+
+    void deflationDumpIndex(size_t t, double seconds) {
+        MDWFDeflationDumpControl &dump = mdwfDeflationDump();
+        if (dump.armed) {
+            throw std::runtime_error(stdLogger.fatal("MDWF deflation dump: force term ", t, " has no ratio-factor "
+                                                     "solve to dump (defl_dump_terms must cover Hasenbusch factors "
+                                                     "of an even/odd ladder only)"));
+        }
+        if (_commBase.IamRoot()) {
+            std::ofstream index(dump.dir + "/index.tsv", std::ios::app);
+            index << dump.eval << "\t" << t << "\t" << (_inForceGradient ? 1 : 0) << "\t" << std::setprecision(17)
+                  << _mdClock - dump.mdTimeStart << "\t" << _gaugeVersion << "\t" << dump.solveIterations << "\t"
+                  << std::setprecision(6) << seconds << std::endl;
+            if (!index) {
+                throw std::runtime_error(stdLogger.fatal("MDWF deflation dump: cannot write ", dump.dir, "/index.tsv"));
+            }
+        }
+        rootLogger.info("MDWF deflation dump: evaluation ", dump.eval, ", term ", t, ", kind ",
+                        _inForceGradient ? 1 : 0, ", MD time ", _mdClock - dump.mdTimeStart, ", solver iterations ",
+                        dump.solveIterations);
     }
 
     void kickTerm(size_t t, double stepsize) {
@@ -746,7 +801,9 @@ private:
         _gaugeVersion++;
         _gauge.iterateOverBulkAllMu(MDWFHmcDisplaceFG<HaloDepth>(_gauge.getAccessor(), _fgForce->getAccessor(), c));
         mdwfUpdateHalo(_gauge);
+        _inForceGradient = true;
         kick(stepsize);
+        _inForceGradient = false;
         _gauge = *_fgSavedGauge;
         mdwfUpdateHalo(_gauge);
         _gaugeVersion++;

@@ -158,6 +158,10 @@ public:
     Parameter<int> save_series;
     Parameter<int> reversibility_check;
     Parameter<std::string> output_name;
+    Parameter<int> defl_dump;             // 1: deflation dump (MDWFDeflationDump.h) during trajectory defl_dump_traj
+    Parameter<int> defl_dump_terms;       // force terms 0 ... defl_dump_terms - 1 (light Hasenbusch factors)
+    Parameter<int> defl_dump_traj;        // trajectory of this run (1 = the first)
+    Parameter<std::string> defl_dump_dir; // relative to measurements_dir
 
     MDWFTwoPlusOneRunParameters() {
         addDefault(M5, "M5", 1.8);
@@ -217,6 +221,10 @@ public:
         addDefault(save_series, "save_series", 0);
         addDefault(reversibility_check, "reversibility_check", 0);
         addDefault(output_name, "output_name", std::string("mdwfTwoPlusOneHmcRun.dat"));
+        addDefault(defl_dump, "defl_dump", 0);
+        addDefault(defl_dump_terms, "defl_dump_terms", 2);
+        addDefault(defl_dump_traj, "defl_dump_traj", 1);
+        addDefault(defl_dump_dir, "defl_dump_dir", std::string("defl_dump"));
     }
 };
 
@@ -639,7 +647,40 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
                             " s, longest trajectory ", longestTrajectory, " s, max_seconds ", maxSeconds, ")");
             break;
         }
+        // Opt-in deflation dump (default off: the control stays disabled and the HMC is unchanged).
+        if (runParam.defl_dump() != 0 && traj == runParam.defl_dump_traj()) {
+            if (!EvenOdd || param.hasenbusch_masses.empty()
+                || runParam.defl_dump_terms() > static_cast<int>(param.hasenbusch_masses.size()) + 1
+                || runParam.defl_dump_terms() < 1) {
+                throw std::runtime_error(stdLogger.fatal("defl_dump needs the even/odd Hasenbusch ladder and 1 <= "
+                                                         "defl_dump_terms <= number of light factors"));
+            }
+            MDWFDeflationDumpControl &dump = mdwfDeflationDump();
+            dump = MDWFDeflationDumpControl();
+            dump.dir = runParam.measurements_dir() + "/" + runParam.defl_dump_dir();
+            dump.terms = runParam.defl_dump_terms();
+            if (commBase.IamRoot()) {
+                std::ofstream index(dump.dir + "/index.tsv", std::ios::out | std::ios::trunc);
+                index << "# MDWF deflation dump, trajectory " << traj + runParam.traj_offset() << " (run trajectory "
+                      << traj << "), terms 0 ... " << dump.terms - 1 << ", light_form " << param.light_form
+                      << ", Ls " << Ls << ", tau " << param.tau << ", fermion_steps " << param.steps << ", md_scheme "
+                      << param.md_scheme << "\n# eval\tterm\tkind\tmd_time\tgauge_version\tsolver_iterations\t"
+                      << "force_seconds" << std::endl;
+                if (!index) {
+                    throw std::runtime_error(stdLogger.fatal("defl_dump: cannot write ", dump.dir, "/index.tsv (the "
+                                                             "directory must exist)"));
+                }
+            }
+            commBase.globalBarrier();
+            dump.enabled = true;
+            rootLogger.info("MDWF 2+1 HMC run: deflation dump of trajectory ", traj, " into ", dump.dir);
+        }
         const MDWFHmcTrajectoryResult result = hmc.trajectory(traj > nNoMetro, acceptRng);
+        if (mdwfDeflationDump().enabled) {
+            mdwfDeflationDump().enabled = false;
+            rootLogger.info("MDWF 2+1 HMC run: deflation dump done, ", mdwfDeflationDump().eval + 1,
+                            " gauge fields");
+        }
         const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime).count();
         longestTrajectory = std::max(longestTrajectory, commBase.reduceMax(seconds));
         completed = traj;

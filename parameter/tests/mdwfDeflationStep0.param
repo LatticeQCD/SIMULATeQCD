@@ -1,0 +1,42 @@
+# mdwfDeflationStep0: analysis of the MD positions dumped by mdwfTwoPlusOneHmcRun defl_dump = 1 (deflation study,
+# Step 0; modes and output files: header of src/testing/main_mdwfDeflationStep0.cpp).
+#   mode               eig | angles | track | calib | refresh
+#   Ls, M5, b5, mf, hasenbusch_masses, antiperiodic_t, light_form   as the HMC run (term t uses mass m_t of the ladder)
+#   dump_dir           the HMC's dump (eNNN_U, eNNN_t<t>_rhs, ...);  out_dir: eigenvectors and tables (must exist)
+#   terms              force terms (default 0 1)
+#   evals              eig: evaluations to do; angles, track: the chain (track starts at its first entry)
+#   pairs              angles: extra pairs a b a b ...
+#   lags, cg_lags      positions in the chain (default 1 2 4 8; cg_lags default = lags)
+#   k_list, k_max      subspace sizes (default 16 32 64); eig computes k_max
+#   eig_tol, eig_restarts, nbasis, nkeep, cheb_strength, cheb_lo (0: automatic filter edge)
+#   cg_precision, cg_max_iter, cg_init (1: also "deflated initial guess + plain CG"), rhs_random, rhs_actual, seed
+#   Gaugefile          calib only: NERSC configuration
+#   refresh            evals = target evaluations; refresh_source (source evaluation), refresh_ns (32), refresh_methods
+#                      (cg cheb), refresh_n_cg / refresh_n_cheb (snapshot lists), cheb_lo (0: largest eigenvalue of the
+#                      source set), cheb_hi (0: 1.15 x Lanczos estimate), refresh_write (1), eig_dir (default out_dir)
+Lattice          = 32 32 32 8
+Nodes            = 1 2 2 1
+mode             = eig
+Ls               = 24
+M5               = 1.8
+b5               = 2.5
+mf               = -0.0005185
+hasenbusch_masses = 0.0008
+antiperiodic_t   = 1
+light_form       = 1
+force_halos      = 0
+dump_dir         = ./defl_dump
+out_dir          = ./step0
+k_max            = 64
+eig_tol          = 1e-11
+eig_restarts     = 60
+nbasis           = 0
+nkeep            = 0
+cheb_strength    = 4.0
+cheb_lo          = 0.0
+cg_precision     = 1e-8
+cg_max_iter      = 200000
+cg_init          = 0
+rhs_random       = 1
+rhs_actual       = 1
+seed             = 20261110
