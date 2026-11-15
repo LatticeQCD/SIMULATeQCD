@@ -748,6 +748,17 @@ add_mdwf_executable(mdwfProfileBench mdwf ${MDWF_DEFS_BENCH})
 # Deflation study, Step 0 (DSDRMDWFruns/SQCDruns/deflation/DESIGN.md): analysis of the HMC's defl_dump and its unit test.
 add_mdwf_executable(mdwfDeflationStep0 mdwf ${MDWF_DEFS_SOLVE_LS24})
 add_mdwf_executable(mdwfDeflationStep0Test mdwftests ${MDWF_DEFS_SOLVE_LS24})
+# Multigrid Stage 0 (DSDRMDWFruns/SQCDruns/multigrid/DESIGN.md): two-grid study, single rank. The dense coarse solve uses
+# cuSOLVER; only this study target links it (production code must not depend on it).
+set(MDWF_TWOGRID_DEFS ${MDWF_DEFS_SOLVE_LS24})
+if (USE_CUDA)
+    list(APPEND MDWF_TWOGRID_DEFS MDWF_TWOGRID_CUSOLVER=1)
+endif()
+add_mdwf_executable(mdwfTwoGridStudy mdwf ${MDWF_TWOGRID_DEFS})
+if (USE_CUDA)
+    target_link_libraries(mdwfTwoGridStudy CUDA::cusolver)
+    target_link_libraries(_mdwfTwoGridStudy CUDA::cusolver)
+endif()
 
 # Tests: operator
 add_mdwf_executable(mdwfWilsonKernelNormalizationTest mdwftests ${MDWF_DEFS})
