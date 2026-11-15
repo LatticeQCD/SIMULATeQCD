@@ -18,6 +18,17 @@
  *       <out_prefix>_condensate_slices.tsv  as measure_condensate_slices_mdwf.py (I_id, I_raw, P5_raw with dir "all",
  *                                           L_raw / L5_raw = eta^+ S eta / eta^+ g5 S eta summed over x_mu slices)
  *
+ *   screening_n2max > 0 (2026-11-12, MDWFScreeningMomentum.h; default 0 = off, output above unchanged): from the same
+ *     point-source solves, the connected correlators of `screening_mom_channels` (default "minimal" = I, 5, X, Y, Z, T)
+ *     along every slicing direction of `screening_mom_dirs` (default "xyz") at every transverse momentum n
+ *     (n_mu = 0, |n|^2 <= screening_n2max, including n = 0):
+ *       <out_prefix>_screening_mom.tsv      label conf mass Ls M5 b5 c5 src_x..src_t direction corr_dir nx ny nz n2
+ *                                           channel coord re im;  sum_{x_mu = x0_mu + coord} G(x) exp(i p.(x - x0))
+ *   slice_n2max > 0 (2026-11-12; default 0 = off): the noise loops of slice_dirs also at transverse momenta
+ *     0 < |n|^2 <= slice_n2max (both n and -n):
+ *       <out_prefix>_condensate_slices_mom.tsv  label flavor mass rnd_vec_idx operator dir nx ny nz coord real imag;
+ *                                           L_raw / L5_raw = sum_{x with x_mu = coord} exp(i p.x) eta^+ (g5) S eta
+ *
  *   pion_dynamics = 1: point source `piondyn_source` ("random" = hash of piondyn_seed and label, or "x,y,z,t"), mass
  *     `piondyn_mass` (default mres_mass), 12 solves (MDWFPionDynamics.h):
  *       <out_prefix>_piondyn.tsv            as measure_charge_spectral_mdwf.py (= measure_pion_dynamics_mdwf.py + rho/a1):
@@ -35,6 +46,7 @@
 #include "../simulateqcd.h"
 #include "../experimental/mdwf/MDWFMeasurements.h"
 #include "../experimental/mdwf/MDWFPionDynamics.h"
+#include "../experimental/mdwf/MDWFScreeningMomentum.h"
 #include "../experimental/mdwf/MDWFMixedPrecisionSolver.h"
 #include "../gauge/gaugeAction.h"
 
@@ -74,6 +86,9 @@ public:
     Parameter<std::string> directions;
     Parameter<std::string> screening_channels;
     Parameter<double> screening_precision;
+    Parameter<int> screening_n2max;
+    Parameter<std::string> screening_mom_dirs;
+    Parameter<std::string> screening_mom_channels;
 
     Parameter<int> condensate;
     Parameter<std::string> condensate_masses;
@@ -85,6 +100,7 @@ public:
     Parameter<double> condensate_precision;
     Parameter<int> nrv_connected;
     Parameter<std::string> slice_dirs;
+    Parameter<int> slice_n2max;
 
     Parameter<int> pion_dynamics;
     Parameter<double> piondyn_mass;
@@ -115,6 +131,9 @@ public:
         addDefault(directions, "directions", std::string("z"));
         addDefault(screening_channels, "screening_channels", std::string("old"));
         addDefault(screening_precision, "screening_precision", 1e-12);
+        addDefault(screening_n2max, "screening_n2max", 0);
+        addDefault(screening_mom_dirs, "screening_mom_dirs", std::string("xyz"));
+        addDefault(screening_mom_channels, "screening_mom_channels", std::string("minimal"));
 
         addDefault(condensate, "condensate", 1);
         addDefault(condensate_masses, "condensate_masses", std::string("light:0.00084525,strange:0.04122"));
@@ -126,6 +145,7 @@ public:
         addDefault(condensate_precision, "condensate_precision", 1e-8);
         addDefault(nrv_connected, "nrv_connected", -1);
         addDefault(slice_dirs, "slice_dirs", std::string(""));
+        addDefault(slice_n2max, "slice_n2max", 0);
 
         addDefault(pion_dynamics, "pion_dynamics", 0);
         addDefault(piondyn_mass, "piondyn_mass", 0.0);
@@ -251,8 +271,29 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
         if constexpr (Mixed) {
             meas.solver().setDelta(param.reliable_delta());
         }
+        // Transverse-momentum screening correlators (MDWFScreeningMomentum.h), contractions only.
+        const bool mom = param.screening_n2max() > 0;
+        std::vector<int> momDirs;
+        std::vector<std::string> momChannels;
+        std::unique_ptr<LatticeContainer<true, COMPLEX(double)>> momAcc, momRed;
+        std::unique_ptr<MDWFScreeningMomentum<HaloDepth, Ls>> momMeas;
+        if (mom) {
+            for (const char d : param.screening_mom_dirs()) {
+                const size_t mu = std::string("xyz").find(d);
+                if (mu == std::string::npos) {
+                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure: screening_mom_dirs must be letters of xyz, "
+                                                             "got ", param.screening_mom_dirs()));
+                }
+                momDirs.push_back(static_cast<int>(mu));
+            }
+            momChannels = mdwfParseChannels(param.screening_mom_channels());
+            momAcc.reset(new LatticeContainer<true, COMPLEX(double)>(commBase, "MDWF_sm_acc"));
+            momRed.reset(new LatticeContainer<true, COMPLEX(double)>(commBase, "MDWF_sm_red"));
+            momMeas.reset(new MDWFScreeningMomentum<HaloDepth, Ls>(*momAcc, *momRed, momChannels));
+        }
         const MDWFPointMeasurementResult r = mdwfMeasurePointSource<HaloDepth, Ls>(
-            meas, store, x0, channels, param.max_iter(), param.screening_precision());
+            meas, store, x0, channels, param.max_iter(), param.screening_precision(),
+            mom ? std::function<void(int)>([&](int) { momMeas->addColour(store); }) : std::function<void(int)>());
         rootLogger.info("mdwfMeasure: point source (", x0[0], ",", x0[1], ",", x0[2], ",", x0[3], "), mass ",
                         param.mres_mass(), ": 12 solves, ", r.iterations, " iterations, max residue ", r.maxResidue,
                         ", ", r.seconds, " s; ", channels.size(), " channels");
@@ -278,6 +319,67 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                     for (size_t n = 0; n < r.channels[ch][mu].size(); n++) {
                         scr << head << n << "\t" << channels[ch] << "\t" << mdwfE18(r.channels[ch][mu][n]) << "\n";
                     }
+                }
+            }
+        }
+        if (mom) {
+            // Projections (all ranks), then the file (root). Check: n = 0 real part vs the screening_spatial sums.
+            const std::string src = std::to_string(x0[0]) + "\t" + std::to_string(x0[1]) + "\t"
+                                    + std::to_string(x0[2]) + "\t" + std::to_string(x0[3]);
+            std::ostringstream body;
+            double maxDev = 0.0;
+            int nChecked = 0;
+            size_t nrows = 0;
+            for (const int mu : momDirs) {
+                const std::vector<std::array<int, 3>> moms = mdwfTransverseMomenta(mu, param.screening_n2max(), true);
+                for (size_t ch = 0; ch < momChannels.size(); ch++) {
+                    for (const auto &n : moms) {
+                        const std::vector<COMPLEX(double)> c = momMeas->project(static_cast<int>(ch), mu, n, x0);
+                        const int n2 = n[0] * n[0] + n[1] * n[1] + n[2] * n[2];
+                        if (n2 == 0) {
+                            const auto it = std::find(channels.begin(), channels.end(), momChannels[ch]);
+                            if (it != channels.end()) {
+                                const auto &ref = r.channels[it - channels.begin()][mu];   // global coordinate
+                                const int N = static_cast<int>(ref.size());
+                                double scale = 1e-300, dev = 0.0;
+                                for (int k = 0; k < N; k++) {
+                                    scale = std::max(scale, std::abs(ref[k]));
+                                }
+                                for (int k = 0; k < N; k++) {
+                                    dev = std::max(dev, std::abs(real(c[k]) - ref[(x0[mu] + k) % N]));
+                                }
+                                maxDev = std::max(maxDev, dev / scale);
+                                nChecked++;
+                            }
+                        }
+                        const std::string head = physics(param.mres_mass()) + "\t" + src + "\t" + dirLabel[mu] + "\t"
+                                                 + std::to_string(mu) + "\t" + std::to_string(n[0]) + "\t"
+                                                 + std::to_string(n[1]) + "\t" + std::to_string(n[2]) + "\t"
+                                                 + std::to_string(n2) + "\t" + momChannels[ch] + "\t";
+                        for (size_t k = 0; k < c.size(); k++) {
+                            body << head << k << "\t" << mdwfE18(real(c[k])) << "\t" << mdwfE18(imag(c[k])) << "\n";
+                            nrows++;
+                        }
+                    }
+                }
+            }
+            rootLogger.info("mdwfMeasure: screening momentum: ", nrows, " rows (", momChannels.size(),
+                            " channels, directions ", param.screening_mom_dirs(), ", n2max ", param.screening_n2max(),
+                            "); n = 0 check against screening_spatial: ", nChecked,
+                            " correlators, max |dev| / max |C| = ", maxDev);
+            if (nChecked > 0 && !(maxDev < 1e-10)) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure: screening momentum n = 0 projection differs "
+                                                         "from screening_spatial by ", maxDev));
+            }
+            if (commBase.IamRoot()) {
+                const std::string file = prefix + "_screening_mom.tsv";
+                std::ofstream out(file + ".part");
+                out << "label\tconf\tmass\tLs\tM5\tb5\tc5\tsrc_x\tsrc_y\tsrc_z\tsrc_t\tdirection\tcorr_dir\tnx\tny\tnz"
+                       "\tn2\tchannel\tcoord\tre\tim\n"
+                    << body.str();
+                out.close();
+                if (!out || std::rename((file + ".part").c_str(), file.c_str()) != 0) {
+                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure cannot write ", file));
                 }
             }
         }
@@ -377,7 +479,28 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                 meas.back()->solver().setDelta(param.reliable_delta());
             }
         }
-        std::ofstream out, slices;
+        const bool sliceMom = param.slice_n2max() > 0 && !sliceDirs.empty();
+        std::vector<std::vector<std::array<int, 3>>> sliceMoms(4);
+        LatticeContainer<true, COMPLEX(double)> momRed(commBase, "MDWF_sm_loops");
+        if (sliceMom) {
+            for (const int mu : sliceDirs) {
+                if (mu > 2) {
+                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure: slice_n2max needs spatial slice_dirs"));
+                }
+                sliceMoms[mu] = mdwfTransverseMomenta(mu, param.slice_n2max(), false);
+            }
+            momRed.adjustSize(lat.vol4);
+        }
+        double maxSliceMomDev = 0.0;
+        std::ofstream out, slices, slicesMom;
+        if (commBase.IamRoot() && sliceMom) {
+            slicesMom.open(prefix + "_condensate_slices_mom.tsv");
+            if (!slicesMom) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure cannot write ", prefix,
+                                                         "_condensate_slices_mom.tsv"));
+            }
+            slicesMom << "label\tflavor\tmass\trnd_vec_idx\toperator\tdir\tnx\tny\tnz\tcoord\treal\timag\n";
+        }
         if (commBase.IamRoot() && !sliceDirs.empty()) {
             slices.open(prefix + "_condensate_slices.tsv");
             if (!slices) {
@@ -421,8 +544,37 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                         }
                         const COMPLEX(double) total = g5 ? v.p5 : v.raw;
                         maxSliceDev = std::max(maxSliceDev, abs(sum - total) / std::max(abs(total), 1e-300));
+                        if (sliceMom) {
+                            // n = 0 through the momentum path must reproduce the slice loops
+                            const std::vector<COMPLEX(double)> z0 = mdwfLoopMomentumSlices<HaloDepth, Ls>(
+                                momRed, store, 0, 1, g5 == 1, mu, {0, 0, 0});
+                            double scale = 1e-300, dev = 0.0;
+                            for (size_t k = 0; k < sl.size(); k++) {
+                                scale = std::max(scale, abs(sl[k]));
+                                dev = std::max(dev, abs(z0[k] - sl[k]));
+                            }
+                            maxSliceMomDev = std::max(maxSliceMomDev, dev / scale);
+                            for (const auto &n : sliceMoms[mu]) {
+                                const std::vector<COMPLEX(double)> lm = mdwfLoopMomentumSlices<HaloDepth, Ls>(
+                                    momRed, store, 0, 1, g5 == 1, mu, n);
+                                if (slicesMom.is_open()) {
+                                    const std::string sh = label + "\t" + masses[f].name + "\t"
+                                                           + mdwfG16(masses[f].mass) + "\t" + std::to_string(i) + "\t"
+                                                           + (g5 ? "L5_raw\t" : "L_raw\t") + "xyzt"[mu] + "\t"
+                                                           + std::to_string(n[0]) + "\t" + std::to_string(n[1]) + "\t"
+                                                           + std::to_string(n[2]) + "\t";
+                                    for (size_t k = 0; k < lm.size(); k++) {
+                                        slicesMom << sh << k << "\t" << mdwfE18(real(lm[k])) << "\t"
+                                                  << mdwfE18(imag(lm[k])) << "\n";
+                                    }
+                                }
+                            }
+                        }
                         sliceRows.emplace_back(std::string(g5 ? "L5_raw\t" : "L_raw\t") + "xyzt"[mu], std::move(sl));
                     }
+                }
+                if (slicesMom.is_open()) {
+                    slicesMom.flush();
                 }
                 if (!commBase.IamRoot()) {
                     continue;
@@ -474,6 +626,15 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
         if (!sliceDirs.empty()) {
             rootLogger.info("mdwfMeasure: slice loops along ", param.slice_dirs(),
                             ", max relative deviation of the slice sums from the 4D traces ", maxSliceDev);
+        }
+        if (sliceMom) {
+            rootLogger.info("mdwfMeasure: slice loops at transverse momenta |n|^2 <= ", param.slice_n2max(),
+                            " (", sliceMoms[sliceDirs[0]].size(), " momenta per direction); n = 0 check against the"
+                            " slice loops: max |dev| / max |L| = ", maxSliceMomDev);
+            if (!(maxSliceMomDev < 1e-10)) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure: momentum loops at n = 0 differ from the slice "
+                                                         "loops by ", maxSliceMomDev));
+            }
         }
     }
     rootLogger.info("mdwfMeasure: done");
