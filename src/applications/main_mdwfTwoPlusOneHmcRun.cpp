@@ -80,6 +80,7 @@
  * Several ranks need c_sw = 0.
  */
 
+#include <cstdlib>
 #include "../simulateqcd.h"
 #include "../experimental/mdwf/MDWFDSDRFermionActions.h"
 #include "../experimental/mdwf/MDWFEofaFermionAction.h"
@@ -656,7 +657,25 @@ void runMDWFTwoPlusOneHmcRun(CommunicationBase &commBase, MDWFTwoPlusOneRunParam
                             " s, longest trajectory ", longestTrajectory, " s, max_seconds ", maxSeconds, ")");
             break;
         }
-        const MDWFHmcTrajectoryResult result = hmc.trajectory(traj > nNoMetro, acceptRng);
+        // MDWF_DUMP_ON_FAIL=<path> (2026-11-14, diagnostics): if the trajectory throws (e.g. a solve that did not
+        // converge), write the gauge field as it is at that moment of the MD (the HMC evolves `gauge` in place) to
+        // <path>.<trajectory>, full 3x3 links in double precision, then rethrow. All ranks throw together (the residue is
+        // a global reduction), so the collective write is safe.
+        const MDWFHmcTrajectoryResult result = [&]() {
+            try {
+                return hmc.trajectory(traj > nNoMetro, acceptRng);
+            } catch (const std::exception &err) {
+                const char *dump = std::getenv("MDWF_DUMP_ON_FAIL");
+                if (dump != nullptr && *dump != '\0') {
+                    const std::string path = std::string(dump) + "." + std::to_string(traj + runParam.traj_offset());
+                    rootLogger.error("MDWF 2+1 HMC run: trajectory ", traj + runParam.traj_offset(), " failed (",
+                                     err.what(), "); writing the MD gauge field to ", path);
+                    mdwfUpdateHalo(gauge);
+                    gauge.writeconf_nersc(path, 3, 2);
+                }
+                throw;
+            }
+        }();
         const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime).count();
         longestTrajectory = std::max(longestTrajectory, commBase.reduceMax(seconds));
         completed = traj;
