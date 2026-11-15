@@ -61,6 +61,7 @@
 
 #include "MDWFSpinor.h"
 
+#include "MDWFDeflationDump.h"
 #include "MDWFMixedPrecisionSolver.h"
 #include "MDWFMobiusEvenOdd.h"
 #include "MDWFRhmcFermionActions.h"
@@ -514,7 +515,20 @@ public:
         refresh();
         _lastIterations = 0;
         _eo1.schur(_psi, _phi, !gptForm());
+        // Opt-in deflation dump (MDWFDeflationDump.h): right-hand side and solution of this force solve.
+        MDWFDeflationDumpControl &dump = mdwfDeflationDump();
+        const bool dumpThis = dump.armed;
+        dump.armed = false;
+        if (dumpThis) {
+            mdwfDumpEvenSpinor<HaloDepth, Ls>(_commBase, _psi, mdwfDeflationDumpTerm(dump.dir, dump.eval, dump.term, "rhs"),
+                                              _prefix + "_defl_stage_r");
+        }
         solve(_eoF, _adapterF, _chi, _psi, "force", true);
+        if (dumpThis) {
+            mdwfDumpEvenSpinor<HaloDepth, Ls>(_commBase, _chi, mdwfDeflationDumpTerm(dump.dir, dump.eval, dump.term, "sol"),
+                                              _prefix + "_defl_stage_s");
+            dump.solveIterations = _lastIterations;
+        }
         _eoF.schur(_mchi, _chi, gptForm());
 
         Terms terms(_buffers);

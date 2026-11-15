@@ -1,0 +1,19 @@
+# mdwfDeflationStep0Test: unit test of the deflation Step 0 tools (field dumps, compact vectors, eigensolver, deflated
+# CG, tracking). Dump files go to measurements_dir (must exist). Any Nodes layout.
+#   roughness   gauge field U = exp(i roughness P) 1 with Gaussian P
+#   md_step     second field U' = exp(i md_step P') U for the tracking checks
+#   k           eigenpairs
+Lattice          = 8 8 8 8
+Nodes            = 1 1 1 1
+measurements_dir = ./
+Ls               = 8
+M5               = 1.8
+b5               = 1.5
+mf               = 0.02
+antiperiodic_t   = 1
+light_form       = 1
+force_halos      = 0
+k                = 8
+roughness        = 0.3
+md_step          = 0.02
+seed             = 20261110

@@ -745,6 +745,9 @@ add_mdwf_executable(mdwfKernelSpectrum mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfSpectralBounds mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfOperatorBench mdwf ${MDWF_DEFS_BENCH} NSTACKS_12=1 NSTACKS_24=1)
 add_mdwf_executable(mdwfProfileBench mdwf ${MDWF_DEFS_BENCH})
+# Deflation study, Step 0 (DSDRMDWFruns/SQCDruns/deflation/DESIGN.md): analysis of the HMC's defl_dump and its unit test.
+add_mdwf_executable(mdwfDeflationStep0 mdwf ${MDWF_DEFS_SOLVE_LS24})
+add_mdwf_executable(mdwfDeflationStep0Test mdwftests ${MDWF_DEFS_SOLVE_LS24})
 
 # Tests: operator
 add_mdwf_executable(mdwfWilsonKernelNormalizationTest mdwftests ${MDWF_DEFS})
