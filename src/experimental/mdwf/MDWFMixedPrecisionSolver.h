@@ -104,6 +104,40 @@ struct MDWFMixedCGUpdate {
     }
 };
 
+// Update and |r|^2 in one pass: on unless MDWF_FUSED_NORM=0; used only with the stack grid and the single reduction.
+inline bool &mdwfFusedNorm() {
+    static bool on = [] {
+        const char *env = std::getenv("MDWF_FUSED_NORM");
+        return env == nullptr || std::string(env) != "0";
+    }();
+    return on;
+}
+
+// x += a p, r -= a s (as MDWFMixedCGUpdate) and returns the |r|^2 element of the NEW r for the 5D reduction
+// (adapter.realReduce5D). The element is re-read from r and formed by the expression of MDWFDot5DFunctor
+// (getElement<double>(site) * getElement<double>(site)), so the sum equals adapter.norm2(r) bit for bit; saves the
+// separate norm kernel (one read of r) and its launch.
+template<class Spinor>
+struct MDWFMixedCGUpdateNorm {
+    using T = MDWFSpinorTraits<Spinor>;
+    using floatT = typename T::floatT;
+    VectArrayAcc<floatT, T::elems> _x, _p, _r, _s;
+    floatT _a;
+
+    MDWFMixedCGUpdateNorm(Spinor &x, const Spinor &p, Spinor &r, const Spinor &s, floatT a)
+        : _x(x.getAccessor()), _p(p.getAccessor()), _r(r.getAccessor()), _s(s.getAccessor()), _a(a) {}
+
+    __host__ __device__ COMPLEX(double) operator()(gSiteStack &site) {
+        Vect<floatT, T::elems> x = _x.getElement(site);
+        x += _a * _p.getElement(site);
+        _x.setElement(site, x);
+        Vect<floatT, T::elems> r = _r.getElement(site);
+        r -= _a * _s.getElement(site);
+        _r.setElement(site, r);
+        return _r.template getElement<double>(site) * _r.template getElement<double>(site);
+    }
+};
+
 // p = r + b p.
 template<class Spinor>
 struct MDWFMixedCGDirection {
@@ -287,8 +321,14 @@ public:
                 throw std::runtime_error(stdLogger.fatal("MDWF mixed CG: non-positive <p, A p> = ", pAp));
             }
             const double alpha = rNorm / pAp;
-            MDWFMixedCGUpdate<SpinorF>(xF, pF, rF, sF, static_cast<float>(alpha)).launch();
-            const double rNormNext = adapterF.norm2(rF);
+            double rNormNext;
+            if (mdwfFusedNorm() && mdwfStackGrid() && mdwfSingleReduction()) {
+                rNormNext = adapterF.realReduce5D(
+                    rF, MDWFMixedCGUpdateNorm<SpinorF>(xF, pF, rF, sF, static_cast<float>(alpha)));
+            } else {
+                MDWFMixedCGUpdate<SpinorF>(xF, pF, rF, sF, static_cast<float>(alpha)).launch();
+                rNormNext = adapterF.norm2(rF);
+            }
             const double beta = rNormNext / rNorm;
 
             if (rNormNext < delta * delta * rNormUpdate || rNormNext <= targetNorm) {

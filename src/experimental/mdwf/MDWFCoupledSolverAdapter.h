@@ -138,5 +138,24 @@ public:
         return realDotProduct5D(spinor, spinor);
     }
 
+    // Real part of the sum over all (site, stack) of op(site), op launched on the stack grid over the sites of
+    // `like` and written into the same reduction container, with the same CubReduce as dotProduct5D: an op that
+    // returns the per-element value of MDWFDot5DFunctor gives a result bit-identical to dotProduct5D. Used to fuse a
+    // vector update with the norm of its result (needs the stack grid and the single reduction).
+    template<class Functor>
+    double realReduce5D(Spinor &like, Functor op) {
+        using T = MDWFSpinorTraits<Spinor>;
+        if (!_reduction) {
+            _reduction = std::make_shared<LatticeContainer<true, COMPLEX(double)>>(like.getComm());
+        }
+        const size_t n = like.getNumberElements();
+        _reduction->adjustSize(n);
+        mdwfStackGridLaunch(*_reduction, op, MDWFStackGridSite<T::layout, T::halo>{}, like.getNumberLatticePoints(),
+                            T::stacks);
+        COMPLEX(double) result = 0.0;
+        _reduction->reduce(result, n);
+        return real<double>(result);
+    }
+
     void invert(Spinor &, const Spinor &, int, double) = delete;
 };
