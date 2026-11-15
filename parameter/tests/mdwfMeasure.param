@@ -31,6 +31,13 @@ source               = 0 0 0 0
 directions           = z
 screening_channels   = old
 screening_precision  = 1e-12
+# Transverse-momentum screening (MDWFScreeningMomentum.h, 2026-11-12): screening_n2max > 0 writes <prefix>_screening_mom.tsv
+# (channels screening_mom_channels along screening_mom_dirs, |n_perp|^2 <= screening_n2max incl. n = 0); slice_n2max > 0
+# writes <prefix>_condensate_slices_mom.tsv (noise loops of slice_dirs at 0 < |n_perp|^2 <= slice_n2max). Default 0 = off.
+screening_n2max      = 0
+screening_mom_dirs   = xyz
+screening_mom_channels = minimal
+slice_n2max          = 0
 condensate           = 1
 condensate_masses    = light:0.1,strange:0.3
 nrv                  = 2

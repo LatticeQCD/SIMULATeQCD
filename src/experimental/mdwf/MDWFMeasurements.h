@@ -31,6 +31,7 @@
 
 #include <array>
 #include <cstdint>
+#include <functional>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -368,7 +369,8 @@ MDWFPointMeasurementResult mdwfMeasurePointSource(MDWFResidualMassMeasurement<Ha
                                                   MDWFSpinor<double, true, All, HaloDepth, Ls> &store,
                                                   const std::array<int, 4> &x0,
                                                   const std::vector<std::string> &channels, int maxIter,
-                                                  double precision) {
+                                                  double precision,
+                                                  const std::function<void(int)> &afterColour = nullptr) {
     static_assert(Ls >= 4, "the column store needs four stacks");
     typedef GIndexer<All, HaloDepth> GInd;
     const LatticeData lat = GInd::getLatData();
@@ -416,6 +418,9 @@ MDWFPointMeasurementResult mdwfMeasurePointSource(MDWFResidualMassMeasurement<Ha
                     result.channels[ch][mu][n] += s[n];
                 }
             }
+        }
+        if (afterColour) {   // e.g. MDWFScreeningMomentum::addColour (store stacks 0..3 = this colour's columns)
+            afterColour(colour);
         }
     }
     return result;
