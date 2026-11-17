@@ -40,6 +40,14 @@ CommunicationBase::CommunicationBase(int *argc, char ***argv, bool forceHalos) :
     rootLogger.info("Git commit version: ", GIT_HASH);
     rootLogger.info("Initializing MPI with (", world_size, " proc)");
 
+#ifdef USE_CPU
+    rootLogger.info("Backend: CPU (serial synchronous HISQ prototype)");
+    if (world_size != 1) {
+        MPI_Abort(MPI_COMM_WORLD, 1);
+        throw std::runtime_error("CPU HISQ milestone supports one MPI rank only");
+    }
+#endif
+
     /// Get the name of the processor
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int name_len;

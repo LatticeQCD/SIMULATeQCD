@@ -392,7 +392,7 @@ void grnd_state<onDevice>::spam_to_file(const CommunicationBase &comm, const Lat
 
 class RNDHeader;
 
-#ifndef CPUONLY
+#if !defined(CPUONLY) || defined(USE_CPU)
 template class grnd_state<true>;
 #endif
 template class grnd_state<false>;

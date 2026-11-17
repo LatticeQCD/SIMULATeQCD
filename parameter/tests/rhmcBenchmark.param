@@ -1,0 +1,38 @@
+# Controlled one-trajectory RHMC benchmark on the 52^3 x 8 HISQ-force
+# benchmark configuration. Each rhmcBenchmark process reloads the same gauge
+# field and reinitializes this seed before timing HMC.update().
+
+Lattice = 52 52 52 8
+Nodes = 1 1 1 1
+Topology = 0 0 0 0
+
+beta = 6.315
+mass_ud = 0.00591
+mass_s = 0.0591
+no_pf = 1
+
+step_size = 0.02
+no_md = 10
+no_step_sf = 5
+no_sw = 10
+integrator = 0
+
+residue = 1e-12
+residue_force = 1e-7
+cgMax = 6500
+residue_meas = 1e-12
+cgMax_meas = 20000
+cgMixedPrec = 0
+cgMixedPrec_delta = 0.1
+
+always_acc = 0
+rat_file = ../parameter/sample_force_test.rat
+
+seed = 1337
+rand_flag = 0
+load_conf = 2
+gauge_file = ../test_conf/l528f21b6315m00282m0759_001.
+conf_nr = 1610
+
+no_updates = 1
+write_every = 1000

@@ -1,0 +1,16 @@
+#
+# hisqSmearingRecursiveTest.param
+#
+#    Lattice: Nx Ny Nz Nt
+#      Nodes: Number of sublattices per direction
+#
+Lattice = 52 52 52 8
+Nodes = 1 1 1 1
+
+Gaugefile = ../test_conf/l528f21b6315m00282m0759_001.1610
+
+Topology = 0 0 0 0
+endianness = auto
+prec_out = 0
+measurements_dir = ./
+use_unit_conf = 0

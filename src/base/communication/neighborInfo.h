@@ -472,6 +472,8 @@ inline void NeighborInfo::checkP2P() {
       , "UVA ", (myProp.unifiedAddressing ? "YES" : "NO"));
 #elif defined USE_HIP
       , "UVA ", "Unknown (HIP does not support this!)");
+#elif defined USE_CPU
+      , "CPU backend");
 #endif
 }
 

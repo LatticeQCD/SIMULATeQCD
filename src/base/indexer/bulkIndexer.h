@@ -1656,7 +1656,7 @@ public:
 #ifdef __GPU_ARCH__
         return site_move<1, -2>(s, mu, nu);
 #else
-        return site_up_dn_dn(s, mu, mu, nu);
+        return site_up_dn_dn(s, mu, nu, nu);
 #endif
     }
     template<class T> __device__ __host__ inline static T site_2up(const T &s, const int mu) {

@@ -454,7 +454,8 @@ __device__ __host__ Vect3<floatT> conj(const Vect3<floatT> &x)
 }
 
 
-#ifdef __GPUCC__
+// CPU translation units also need the stream-operator template definitions.
+#if defined(__GPUCC__) || defined(USE_CPU)
 
 template <class floatT>
 __host__ std::ostream &operator << (std::ostream &s, const Vect3<floatT> &x)

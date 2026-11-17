@@ -7,6 +7,7 @@
 #include "../modules/rhmc/rhmc.h"
 #include "../modules/observables/polyakovLoop.h"
 #include "testing.h"
+#include "rhmcTrajectoryReference.h"
 
 
 template<class floatT, int HaloDepth>
@@ -137,9 +138,18 @@ int main(int argc, char *argv[]) {
     stdLogger.setVerbosity(INFO);
     CommunicationBase commBase(&argc, &argv);
 
+    if (argc > 1 && std::string(argv[1]) == "--trajectory-regression-suite")
+        return rhmc_trajectory_regression_suite(commBase, argc, argv);
+
+    // Opt-in frozen legacy references; the historical path below is unchanged.
+    if (argc > 1 && (std::string(argv[1]) == "--save-trajectory-reference" ||
+                     std::string(argv[1]) == "--check-trajectory-reference")) {
+        return rhmc_trajectory_reference_main(commBase, argc, argv);
+    }
+
     RhmcParameters param;
 
-    param.readfile(commBase, "../parameter/null", argc, argv);
+    param.readfile(commBase, "../parameter/rhmcTest.param", argc, argv);
 
     const int HaloDepth = 2;
 

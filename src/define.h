@@ -6,6 +6,9 @@
  */
 
 #pragma once
+#ifdef USE_CPU
+#include "base/wrapper/gpu_wrapper.h"
+#endif
 #include "base/IO/logging.h"
 #include "explicit_instantiation_macros.h"
 

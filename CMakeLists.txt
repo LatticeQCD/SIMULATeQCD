@@ -16,10 +16,14 @@ execute_process(
 
 message(STATUS "Using git version ${GIT_HASH}")
 
-set(BACKEND "cuda" CACHE STRING "Specify what API should be used in the backend. Possible choices are cuda, hip_nvidia (experimental!) and hip_amd (experimental!)")
+set(BACKEND "cuda" CACHE STRING "Backend: cuda, hip_nvidia, hip_amd, or cpu (experimental HISQ tests)")
 
 # Determine the backend for GPU acceleration
-if (BACKEND STREQUAL "cuda")
+if (BACKEND STREQUAL "cpu")
+    set(USE_CPU ON)
+    add_definitions(-DUSE_CPU -DCPUONLY)
+    message(STATUS "Using experimental CPU backend (HISQ tests only)")
+elseif (BACKEND STREQUAL "cuda")
     set(USE_CUDA ON)
     add_definitions(-DUSE_CUDA)
     message(STATUS "Using CUDA backend")
@@ -45,7 +49,9 @@ endif()
 
 
 
-if (USE_CUDA)
+if (USE_CPU)
+    project(SIMULATeQCD LANGUAGES CXX)
+elseif (USE_CUDA)
     project(SIMULATeQCD LANGUAGES CXX CUDA)
 
     # Required by profiling targets using the default halo-depth template
@@ -125,13 +131,16 @@ elseif (USE_HIP_AMD)
     set(CMAKE_HIP_ARCHITECTURES "${ARCHITECTURE}")
 endif()
 
-if(NOT ARCHITECTURE)
+if(NOT ARCHITECTURE AND NOT USE_CPU)
     message(FATAL_ERROR "No GPU architecture set!")
 endif()
 
 set(USE_GPU_AWARE_MPI OFF CACHE BOOL "Set to ON to build gpu-aware MPI code (default = OFF)")
 if (USE_GPU_AWARE_MPI)
     add_definitions(-DUSE_GPU_AWARE_MPI)
+endif()
+if(USE_CPU)
+    set(USE_GPU_P2P OFF CACHE BOOL "GPU Direct P2P (unavailable on CPU)")
 endif()
 set(USE_GPU_P2P ON CACHE BOOL "Set to ON to build with GPU Direct P2P (default = ON)")
 if (USE_GPU_P2P)
@@ -290,6 +299,11 @@ set(ALL_HALODEPTHS
 
 
 #-------------------------------------------------------------------------------COMPILATION TARGET DEFINITIONS: CODEBASE
+
+if(USE_CPU)
+    include(cmake/CPUHisq.cmake)
+    return()
+endif()
 
 
 FUNCTION(set_SIMULATeQCD_gpu_backend TARGET)
@@ -596,6 +610,16 @@ set_SIMULATeQCD_property(hisqForce PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing"
 SIMULATeQCD_target_compile_definitions(hisqForce PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(tests hisqForce)
 
+set_SIMULATeQCD_gpu_backend(src/testing/main_hisqForceBenchmark.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/hisq/hisqForce.cpp)
+add_SIMULATeQCD_executable(hisqForceBenchmark src/testing/main_hisqForceBenchmark.cpp ${SOURCE_FILES_DSLASH} src/modules/inverter/inverter.cpp src/modules/hisq/hisqForce.cpp)
+set_SIMULATeQCD_property(hisqForceBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqForceBenchmark PRIVATE HALODEPTHSPIN_4=1 HALODEPTH_0=1 SINGLEPREC=1 DOUBLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_hisqForceLargeCompare.cpp)
+add_SIMULATeQCD_executable(hisqForceLargeCompare src/testing/main_hisqForceLargeCompare.cpp)
+set_SIMULATeQCD_property(hisqForceLargeCompare PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqForceLargeCompare PRIVATE HALODEPTH_0=1 DOUBLEPREC=1 COMP_R18=1)
+
 set_SIMULATeQCD_gpu_backend(src/testing/main_hisqSmearingTestMulti.cpp src/spinor/spinorfield.cpp)
 add_SIMULATeQCD_executable(hisqSmearingMulti src/testing/main_hisqSmearingTestMulti.cpp src/spinor/spinorfield.cpp)
 set_SIMULATeQCD_property(hisqSmearingMulti PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
@@ -613,6 +637,12 @@ add_SIMULATeQCD_executable(hisqSmearingTest src/testing/main_hisqSmearingTest.cp
 set_SIMULATeQCD_property(hisqSmearingTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
 SIMULATeQCD_target_compile_definitions(hisqSmearingTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 add_to_compound_SIMULATeQCD_target(tests hisqSmearingTest)
+
+# Separate recursive-vs-explicit smearing checks; large tests are opt-in.
+set_SIMULATeQCD_gpu_backend(src/testing/main_hisqSmearingRecursiveTest.cpp src/modules/hisq/hisqSmearing.cpp)
+add_SIMULATeQCD_executable(hisqSmearingRecursiveTest src/testing/main_hisqSmearingRecursiveTest.cpp src/modules/hisq/hisqSmearing.cpp)
+set_SIMULATeQCD_property(hisqSmearingRecursiveTest PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(hisqSmearingRecursiveTest PRIVATE HALODEPTH_0=1 HALODEPTH_2=1 HALODEPTH_4=1 DOUBLEPREC=1 COMP_R18=1)
 
 set_SIMULATeQCD_gpu_backend(src/testing/main_hypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
 add_SIMULATeQCD_executable(hypSmearingTest src/testing/main_hypSmearingTest.cpp src/modules/hyp/hypSmearing.cpp)
@@ -940,6 +970,16 @@ add_SIMULATeQCD_executable(rhmc src/applications/main_rhmc.cpp ${SOURCE_FILES_RH
 set_SIMULATeQCD_property(rhmc PROPERTIES RUNTIME_OUTPUT_DIRECTORY "applications")
 SIMULATeQCD_target_compile_definitions(rhmc PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
 add_to_compound_SIMULATeQCD_target(applications rhmc)
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_rhmcBenchmark.cpp)
+add_SIMULATeQCD_executable(rhmcBenchmark src/testing/main_rhmcBenchmark.cpp ${SOURCE_FILES_RHMC})
+set_SIMULATeQCD_property(rhmcBenchmark PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(rhmcBenchmark PRIVATE HALODEPTH_2=1 HALODEPTHSPIN_4=1 DOUBLEPREC=1 SINGLEPREC=1 COMP_R18=1 COMP_R14=1 COMP_U3R14=1 NSTACKS_1=1 NSTACKS_10=1 NSTACKS_12=1 NSTACKS_14=1 ${ALL_LAYOUTS})
+
+set_SIMULATeQCD_gpu_backend(src/testing/main_rhmcTrajectoryCompare.cpp)
+add_SIMULATeQCD_executable(rhmcTrajectoryCompare src/testing/main_rhmcTrajectoryCompare.cpp)
+set_SIMULATeQCD_property(rhmcTrajectoryCompare PROPERTIES RUNTIME_OUTPUT_DIRECTORY "testing")
+SIMULATeQCD_target_compile_definitions(rhmcTrajectoryCompare PRIVATE HALODEPTH_2=1 SINGLEPREC=1 COMP_R18=1)
 
 set_SIMULATeQCD_gpu_backend(src/applications/main_sampleTopology.cpp)
 add_SIMULATeQCD_executable(sampleTopology src/applications/main_sampleTopology.cpp ${SOURCE_FILES_GFLOW} ${SOURCE_FILES_GENERATEQUENCHED})

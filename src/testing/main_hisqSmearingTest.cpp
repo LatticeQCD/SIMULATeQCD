@@ -98,11 +98,10 @@ int main(int argc, char *argv[]) {
     bool pass = compare_fields<PREC,HaloDepth,true,R18>(gauge_Lv2,gauge_smeared_reference_device);
 
     if (pass) {
-        rootLogger.info(CoutColors::green, "Test passed!", CoutColors::reset);
+        rootLogger.info(CoutColors::green, "Historical HISQ smearing regression: PASS", CoutColors::reset);
     } else {
-        rootLogger.error("Test failed!");
+        rootLogger.error("Historical HISQ smearing regression: FAIL");
         return 1;
     }
     return 0;
 }
-
