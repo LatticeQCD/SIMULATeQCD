@@ -739,7 +739,18 @@ set(MDWF_DEFS_BENCH SINGLEPREC=1 NSTACKS_1=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EV
 
 # Programs
 add_mdwf_executable(mdwfResidualMass mdwf ${MDWF_DEFS_SOLVE})
-add_mdwf_executable(mdwfMeasure mdwf ${MDWF_DEFS_SOLVE_LS24})
+# Multigrid measurement solves (2026-11-17, MDWFMultigridSolver.h, mg_solver = 1): dense coarse solve with cuSOLVER.
+# OFF (default): mdwfMeasure is built exactly as before (mg_solver = 1 stops with an error).
+option(MDWF_MG_CUSOLVER "Build mdwfMeasure with the multigrid solver (links cuSOLVER; default OFF)" OFF)
+set(MDWF_MEASURE_DEFS ${MDWF_DEFS_SOLVE_LS24})
+if (MDWF_MG_CUSOLVER AND USE_CUDA)
+    list(APPEND MDWF_MEASURE_DEFS MDWF_MG_SOLVER=1 MDWF_TWOGRID_CUSOLVER=1)
+endif()
+add_mdwf_executable(mdwfMeasure mdwf ${MDWF_MEASURE_DEFS})
+if (MDWF_MG_CUSOLVER AND USE_CUDA)
+    target_link_libraries(mdwfMeasure CUDA::cusolver)
+    target_link_libraries(_mdwfMeasure CUDA::cusolver)
+endif()
 add_mdwf_executable(mdwfDiracModes mdwf ${MDWF_DEFS_SOLVE})
 add_mdwf_executable(mdwfKernelSpectrum mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfSpectralBounds mdwf ${MDWF_DEFS})

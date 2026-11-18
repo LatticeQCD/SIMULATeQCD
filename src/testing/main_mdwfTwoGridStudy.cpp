@@ -21,6 +21,10 @@
  *                    eval is kept and every later eval is solved twice: variant "stale" (old A_c) and "fresh" (A_c
  *                    probed again with the new A, i.e. stale vectors).
  *                    Rows to <out_dir>/twogrid_<tag>.tsv.
+ *                    plain_mixed = 1 (rhs = point): also the production solve of mdwfMeasure (MDWFMobiusEvenOddMixedSolver,
+ *                    mixed precision, reliable_delta, stack-grid launch as configured) on the same column; its
+ *                    single-precision iterations, seconds, true residual and |x_e - x_e(two-grid)| are appended to the row.
+ *                    profile = 1: seconds of the cycle parts (smoother, residual A, coarse correction, vector updates).
  *   mode = convert   (any node layout) eigenvector set <set_base> (mdwfDeflWriteSet format, needs the writer's layout)
  *                    -> <convert_out>/v<k> in the layout-free MDWFFieldDump format, k < set_count, and
  *                    <convert_out>/lambda.tsv.
@@ -34,6 +38,7 @@
 #include "../experimental/mdwf/MDWFDeflationDump.h"
 #include "../experimental/mdwf/MDWFResidualMass.h"
 #include "../experimental/mdwf/MDWFMobiusEvenOdd.h"
+#include "../experimental/mdwf/MDWFMixedPrecisionSolver.h"
 
 #include <cstdio>
 #include <fstream>
@@ -84,6 +89,9 @@ public:
     Parameter<std::string> set_base;
     Parameter<int> set_count;
     Parameter<std::string> convert_out;
+    Parameter<int> plain_mixed;
+    Parameter<double> reliable_delta;
+    Parameter<int> profile;
 
     MDWFTwoGridStudyParameters() {
         add(mode, "mode");
@@ -124,6 +132,9 @@ public:
         addDefault(set_base, "set_base", std::string(""));
         addDefault(set_count, "set_count", 0);
         addDefault(convert_out, "convert_out", std::string("."));
+        addDefault(plain_mixed, "plain_mixed", 0);
+        addDefault(reliable_delta, "reliable_delta", 0.1);
+        addDefault(profile, "profile", 0);
     }
 };
 
@@ -219,6 +230,19 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
     rootLogger.info("MDWF two-grid study: mode ", mode, ", Ls ", Ls, ", mass ", param.mass(), ", operator ",
                     mmdag ? "Mhat Mhat^+" : "Mhat^+ Mhat", ", lambda_max <~ ", hi / 1.1, ", smoother [", smLo, ", ",
                     hi, "]");
+
+    if (param.profile() != 0) {   // seconds per application of A (double, compact vectors incl. pack/unpack)
+        Vec a(commBase), b(commBase);
+        op.apply(a, start);
+        gpuDeviceSynchronize();
+        const auto t0 = std::chrono::steady_clock::now();
+        for (int i = 0; i < 10; i++) {
+            op.apply(a, start);
+        }
+        gpuDeviceSynchronize();
+        rootLogger.info("MDWF two-grid study: double application of A (compact) ",
+                        1e3 * std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count() / 10, " ms");
+    }
 
     // ---------------------------------------------------------------- selftest
     if (mode == "selftest") {
@@ -318,6 +342,10 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
     if (rhsKind != "dump") {
         evals = {setupEval};
     }
+    // production-solver baseline (plain_mixed = 1, rhs = point): per rhs index
+    struct Mixed { int iterations = 0; double seconds = 0.0, residual = 0.0; std::vector<double> xe; };
+    std::map<int, Mixed> mixed;
+    std::unique_ptr<MDWFMobiusEvenOddMixedSolver<HaloDepth, HaloDepth, Ls>> mixedSolver;
     auto makeRhs = [&](int eval, std::vector<std::unique_ptr<Vec>> &out, std::vector<std::string> &names) {
         out.clear();
         names.clear();
@@ -362,6 +390,33 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
                 out.emplace_back(new Vec(commBase));
                 out.back()->pack(te);
                 names.push_back("point_c" + std::to_string(a));
+                const int idx = static_cast<int>(out.size()) - 1;
+                if (param.plain_mixed() != 0 && idx < param.plain_cg() && mixed.find(idx) == mixed.end()) {
+                    if (!mixedSolver) {
+                        mixedSolver.reset(new MDWFMobiusEvenOddMixedSolver<HaloDepth, HaloDepth, Ls>(
+                            fermionGauge, param.M5(), param.mass(), param.b5(), 0.0, "MDWF_tg_mixed",
+                            param.reliable_delta()));
+                    }
+                    typename EvenOdd::SpinorAll xall(commBase, "MDWF_tg_mixed_x");
+                    gpuDeviceSynchronize();
+                    const auto t0 = std::chrono::steady_clock::now();
+                    mixedSolver->solve(xall, imported, param.max_iter(), param.precision());
+                    gpuDeviceSynchronize();
+                    Mixed m;
+                    m.seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+                    m.iterations = mixedSolver->lastIterations();
+                    EvenOdd::split(be, bo, xall);   // be = x_e
+                    Vec xe(commBase), ax(commBase);
+                    xe.pack(be);
+                    op.apply(ax, xe);
+                    ax.axpy(MDWFDeflC(-1.0, 0.0), *out.back());
+                    m.residual = std::sqrt(ax.norm2() / std::max(out.back()->norm2(), 1.0));
+                    xe.toHost(m.xe);
+                    rootLogger.info("MDWF two-grid study: production mixed solve ", names.back(), ": ", m.iterations,
+                                    " single-precision iterations, ", m.seconds, " s (incl. pre/post), true residual ",
+                                    m.residual);
+                    mixed[idx] = std::move(m);
+                }
             }
         } else {
             throw std::runtime_error(stdLogger.fatal("rhs must be point, dump or noise"));
@@ -428,7 +483,8 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
         if (fresh) {
             out << "tag\tsetup_eval\teval\trhs\tvariant\tsetup\tsetup_n\tblock\tns\tcoarse_dim\tdegree\tsmoother_lo\t"
                    "smoother_hi\tsetup_apps\tprobe_apps\tsetup_s\tortho_s\tprobe_s\tfactor_s\thermiticity\touter_it\t"
-                   "apps\tsolve_s\ttrue_res\tconverged\tplain_apps\tplain_s\tplain_res\tgain_apps\tdiff_vs_plain"
+                   "apps\tsolve_s\ttrue_res\tconverged\tplain_apps\tplain_s\tplain_res\tgain_apps\tdiff_vs_plain\t"
+                   "mixed_it\tmixed_s\tmixed_res\tdiff_vs_mixed\tt_smooth\tt_apply\tt_coarse\tt_vector"
                 << std::endl;
         }
     }
@@ -439,6 +495,7 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
 
     for (const int ns : nsList) {
         TG tg(commBase, block);
+        tg.setProfile(param.profile() != 0);
         if (2 * tg.nBlocks() * ns > param.max_coarse_dim()) {
             rootLogger.info("MDWF two-grid study: skip ns = ", ns, " (coarse dimension ", 2 * tg.nBlocks() * ns,
                             " > max_coarse_dim)");
@@ -505,6 +562,7 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
                             plain[key] = std::move(p);
                         }
                         Vec x(commBase);
+                        tg.resetProfile();
                         const MDWFTwoGridSolveResult r = mdwfTwoGridFCG<HaloDepth, Ls>(
                             tg, op, x, *rhs[i], param.precision(), param.max_iter(), commBase);
                         double diff = -1.0;
@@ -521,6 +579,19 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
                             plainSeconds = it->second.r.seconds;
                             plainRes = it->second.r.trueResidual;
                         }
+                        int mixedIt = -1;
+                        double mixedSeconds = -1.0, mixedRes = -1.0, diffMixed = -1.0;
+                        auto im = mixed.find(static_cast<int>(i));
+                        if (im != mixed.end() && eval == setupEval) {
+                            Vec y(commBase);
+                            y.fromHost(im->second.xe);
+                            const double ny = y.norm2();
+                            y.axpy(MDWFDeflC(-1.0, 0.0), x);
+                            diffMixed = std::sqrt(y.norm2() / ny);
+                            mixedIt = im->second.iterations;
+                            mixedSeconds = im->second.seconds;
+                            mixedRes = im->second.residual;
+                        }
                         rootLogger.info("MDWF two-grid study: eval ", eval, " ", names[i], " ", variant, " ns ", ns,
                                         " d ", d, " lo ", lo, ": ", r.iterations, " outer it, ", r.applications,
                                         " applications, ", r.seconds, " s, residual ", r.trueResidual,
@@ -536,7 +607,9 @@ void runMDWFTwoGridStudy(CommunicationBase &commBase, MDWFTwoGridStudyParameters
                                 << r.seconds << "\t" << r.trueResidual << "\t" << (r.converged ? 1 : 0) << "\t"
                                 << plainApps << "\t" << plainSeconds << "\t" << plainRes << "\t"
                                 << (plainApps > 0 ? double(plainApps) / r.applications : -1.0) << "\t" << diff
-                                << std::endl;
+                                << "\t" << mixedIt << "\t" << mixedSeconds << "\t" << mixedRes << "\t" << diffMixed
+                                << "\t" << tg.profSmooth() << "\t" << tg.profApply() << "\t" << tg.profCoarse() << "\t"
+                                << tg.profVector() << std::endl;
                         }
                     }
                 }

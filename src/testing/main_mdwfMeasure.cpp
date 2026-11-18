@@ -24,6 +24,11 @@
  *     (n_mu = 0, |n|^2 <= screening_n2max, including n = 0):
  *       <out_prefix>_screening_mom.tsv      label conf mass Ls M5 b5 c5 src_x..src_t direction corr_dir nx ny nz n2
  *                                           channel coord re im;  sum_{x_mu = x0_mu + coord} G(x) exp(i p.(x - x0))
+ *   t in screening_mom_dirs / slice_dirs (2026-11-17): temporal correlators / loops at every spatial momentum
+ *     |n|^2 <= n2max (direction temporal_t, corr_dir 3), for the temporal sigma_l(tau, p); default output unchanged.
+ *   slice_mom_temporal = 1 (2026-11-17; default 0 = off): the noise loops also sliced along t at every spatial momentum
+ *     |n|^2 <= slice_n2max INCLUDING n = 0, written only to <out_prefix>_condensate_slices_mom.tsv (dir t), so the
+ *     production _condensate_slices.tsv is unchanged. Check: the n = 0 t-slices sum to the 4D traces (< 1e-10).
  *   slice_n2max > 0 (2026-11-12; default 0 = off): the noise loops of slice_dirs also at transverse momenta
  *     0 < |n|^2 <= slice_n2max (both n and -n):
  *       <out_prefix>_condensate_slices_mom.tsv  label flavor mass rnd_vec_idx operator dir nx ny nz coord real imag;
@@ -42,6 +47,10 @@
  * the Ls stacks in the grid. -1 (default) = environment MDWF_STACK_GRID (unset = on), 0 = SIMULATeQCD's launch, 1 = on.
  * stack_grid_block = 32 | 64 | 128 | 256 sites per block (0 = environment MDWF_STACK_GRID_BLOCK, default 128). A pure
  * re-mapping of the threads: the output is bit-identical for every setting; only the time changes.
+ * mg_solver (2026-11-17, MDWFMultigridSolver.h; needs the build option MDWF_MG_CUSOLVER=ON): 1 = the solves at masses
+ * |m_f| <= mg_mass_max (light, m_res) use the two-grid FCG (one coarse space per mass, shared by all blocks), the others
+ * the mixed CG; 0 (default) = mixed CG everywhere (output byte-identical). Same stopping rule; mixed_precision = 1 only.
+ * mg_block "4,4,4,8", mg_ns 32, mg_setup_iterations 1000, mg_degree 1, mg_smoother_ratio 30, mg_seed 20261115.
  *
  * Usage (from the build's testing directory):  ./mdwfMeasure <param file> [key=value ...]
  * Parameters: parameter/tests/mdwfMeasure.param. Single rank; ls = 8, 12, 16 or 24.
@@ -53,6 +62,9 @@
 #include "../experimental/mdwf/MDWFScreeningMomentum.h"
 #include "../experimental/mdwf/MDWFLowModes.h"
 #include "../experimental/mdwf/MDWFMixedPrecisionSolver.h"
+#ifdef MDWF_MG_SOLVER
+#include "../experimental/mdwf/MDWFMultigridSolver.h"
+#endif
 #include "../gauge/gaugeAction.h"
 
 #include <algorithm>
@@ -109,6 +121,7 @@ public:
     Parameter<int> nrv_connected;
     Parameter<std::string> slice_dirs;
     Parameter<int> slice_n2max;
+    Parameter<int> slice_mom_temporal;
 
     Parameter<int> pion_dynamics;
     Parameter<double> piondyn_mass;
@@ -125,6 +138,14 @@ public:
     Parameter<int> lma_nkeep;
     Parameter<int> lma_max_restarts;
     Parameter<int> lma_selftest;
+    Parameter<int> mg_solver;
+    Parameter<double> mg_mass_max;
+    Parameter<std::string> mg_block;
+    Parameter<int> mg_ns;
+    Parameter<int> mg_setup_iterations;
+    Parameter<int> mg_degree;
+    Parameter<double> mg_smoother_ratio;
+    Parameter<int> mg_seed;
 
     MDWFMeasureParameters() {
         addDefault(M5, "M5", 1.8);
@@ -142,6 +163,14 @@ public:
         addDefault(max_iter, "max_iter", 50000);
         addDefault(stack_grid, "stack_grid", -1);
         addDefault(stack_grid_block, "stack_grid_block", 0);
+        addDefault(mg_solver, "mg_solver", 0);
+        addDefault(mg_mass_max, "mg_mass_max", 0.01);
+        addDefault(mg_block, "mg_block", std::string("4,4,4,8"));
+        addDefault(mg_ns, "mg_ns", 32);
+        addDefault(mg_setup_iterations, "mg_setup_iterations", 1000);
+        addDefault(mg_degree, "mg_degree", 1);
+        addDefault(mg_smoother_ratio, "mg_smoother_ratio", 30.0);
+        addDefault(mg_seed, "mg_seed", 20261115);
 
         addDefault(mres_screening, "mres_screening", 1);
         addDefault(mres_mass, "mres_mass", 0.00084525);
@@ -165,6 +194,7 @@ public:
         addDefault(nrv_connected, "nrv_connected", -1);
         addDefault(slice_dirs, "slice_dirs", std::string(""));
         addDefault(slice_n2max, "slice_n2max", 0);
+        addDefault(slice_mom_temporal, "slice_mom_temporal", 0);
 
         addDefault(pion_dynamics, "pion_dynamics", 0);
         addDefault(piondyn_mass, "piondyn_mass", 0.0);
@@ -234,8 +264,13 @@ std::string mdwfE18(double v) {   // Python f"{v:.18e}"
 template<size_t Ls, bool Mixed>
 void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
     const size_t HaloDepth = 2;
-    using Solver = std::conditional_t<Mixed, MDWFMobiusEvenOddMixedSolver<HaloDepth, HaloDepth, Ls>,
-                                      MDWFMobiusEvenOddSolver<double, HaloDepth, HaloDepth, Ls>>;
+#ifdef MDWF_MG_SOLVER
+    // = MDWFMobiusEvenOddMixedSolver unless mg_solver = 1 (mdwfMultigridConfig().enabled)
+    using MixedSolver = MDWFMobiusEvenOddMGSolver<HaloDepth, HaloDepth, Ls>;
+#else
+    using MixedSolver = MDWFMobiusEvenOddMixedSolver<HaloDepth, HaloDepth, Ls>;
+#endif
+    using Solver = std::conditional_t<Mixed, MixedSolver, MDWFMobiusEvenOddSolver<double, HaloDepth, HaloDepth, Ls>>;
     using Meas = MDWFResidualMassMeasurement<HaloDepth, Ls, Solver>;
     using Gauge = Gaugefield<double, true, HaloDepth, R18>;
     typedef GIndexer<All, HaloDepth> GInd;
@@ -307,9 +342,9 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
         std::unique_ptr<MDWFScreeningMomentum<HaloDepth, Ls>> momMeas;
         if (mom) {
             for (const char d : param.screening_mom_dirs()) {
-                const size_t mu = std::string("xyz").find(d);
+                const size_t mu = std::string("xyzt").find(d);
                 if (mu == std::string::npos) {
-                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure: screening_mom_dirs must be letters of xyz, "
+                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure: screening_mom_dirs must be letters of xyzt, "
                                                              "got ", param.screening_mom_dirs()));
                 }
                 momDirs.push_back(static_cast<int>(mu));
@@ -651,20 +686,25 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
             }
         }
         const bool sliceMom = param.slice_n2max() > 0 && !sliceDirs.empty();
+        const bool sliceMomT = param.slice_mom_temporal() != 0;
+        if (sliceMomT && std::find(sliceDirs.begin(), sliceDirs.end(), 3) != sliceDirs.end()) {
+            throw std::runtime_error(stdLogger.fatal("mdwfMeasure: slice_mom_temporal = 1 with t in slice_dirs (rows twice)"));
+        }
         std::vector<std::vector<std::array<int, 3>>> sliceMoms(4);
+        const std::vector<std::array<int, 3>> sliceMomsT =
+            sliceMomT ? mdwfTransverseMomenta(3, param.slice_n2max(), true) : std::vector<std::array<int, 3>>();
         LatticeContainer<true, COMPLEX(double)> momRed(commBase, "MDWF_sm_loops");
         if (sliceMom) {
             for (const int mu : sliceDirs) {
-                if (mu > 2) {
-                    throw std::runtime_error(stdLogger.fatal("mdwfMeasure: slice_n2max needs spatial slice_dirs"));
-                }
                 sliceMoms[mu] = mdwfTransverseMomenta(mu, param.slice_n2max(), false);
             }
+        }
+        if (sliceMom || sliceMomT) {
             momRed.adjustSize(lat.vol4);
         }
-        double maxSliceMomDev = 0.0;
+        double maxSliceMomDev = 0.0, maxSliceTDev = 0.0;
         std::ofstream out, slices, slicesMom;
-        if (commBase.IamRoot() && sliceMom) {
+        if (commBase.IamRoot() && (sliceMom || sliceMomT)) {
             slicesMom.open(prefix + "_condensate_slices_mom.tsv");
             if (!slicesMom) {
                 throw std::runtime_error(stdLogger.fatal("mdwfMeasure cannot write ", prefix,
@@ -798,6 +838,32 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
                         sliceRows.emplace_back(std::string(g5 ? "L5_raw\t" : "L_raw\t") + "xyzt"[mu], std::move(sl));
                     }
                 }
+                if (sliceMomT) {   // temporal loops at every spatial momentum, n = 0 included
+                    for (int g5 = 0; g5 < (pseudo ? 2 : 1); g5++) {
+                        for (const auto &n : sliceMomsT) {
+                            const std::vector<COMPLEX(double)> lm = mdwfLoopMomentumSlices<HaloDepth, Ls>(
+                                momRed, store, 0, 1, g5 == 1, 3, n);
+                            if (n[0] == 0 && n[1] == 0 && n[2] == 0) {
+                                COMPLEX(double) sum(0.0, 0.0);
+                                for (const auto &z : lm) {
+                                    sum += z;
+                                }
+                                const COMPLEX(double) total = g5 ? v.p5 : v.raw;
+                                maxSliceTDev = std::max(maxSliceTDev, abs(sum - total) / std::max(abs(total), 1e-300));
+                            }
+                            if (slicesMom.is_open()) {
+                                const std::string sh = label + "\t" + masses[f].name + "\t" + mdwfG16(masses[f].mass)
+                                                       + "\t" + std::to_string(i) + "\t" + (g5 ? "L5_raw\t" : "L_raw\t")
+                                                       + "t\t" + std::to_string(n[0]) + "\t" + std::to_string(n[1])
+                                                       + "\t" + std::to_string(n[2]) + "\t";
+                                for (size_t k = 0; k < lm.size(); k++) {
+                                    slicesMom << sh << k << "\t" << mdwfE18(real(lm[k])) << "\t" << mdwfE18(imag(lm[k]))
+                                              << "\n";
+                                }
+                            }
+                        }
+                    }
+                }
                 if (slicesMom.is_open()) {
                     slicesMom.flush();
                 }
@@ -855,6 +921,15 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
             rootLogger.info("mdwfMeasure: slice loops along ", param.slice_dirs(),
                             ", max relative deviation of the slice sums from the 4D traces ", maxSliceDev);
         }
+        if (sliceMomT) {
+            rootLogger.info("mdwfMeasure: temporal slice loops at ", sliceMomsT.size(), " spatial momenta |n|^2 <= ",
+                            param.slice_n2max(), " (n = 0 included); n = 0 t-slice sums vs the 4D traces: max relative "
+                            "deviation ", maxSliceTDev);
+            if (!(maxSliceTDev < 1e-10)) {
+                throw std::runtime_error(stdLogger.fatal("mdwfMeasure: temporal loops at n = 0 differ from the 4D traces "
+                                                         "by ", maxSliceTDev));
+            }
+        }
         if (sliceMom) {
             rootLogger.info("mdwfMeasure: slice loops at transverse momenta |n|^2 <= ", param.slice_n2max(),
                             " (", sliceMoms[sliceDirs[0]].size(), " momenta per direction); n = 0 check against the"
@@ -872,6 +947,9 @@ void runMDWFMeasure(CommunicationBase &commBase, MDWFMeasureParameters &param) {
             chk << label << "\t" << kv.first << "\t" << mdwfE18(kv.second) << "\n";
         }
     }
+#ifdef MDWF_MG_SOLVER
+    mdwfMultigridRelease<HaloDepth, Ls>();
+#endif
     rootLogger.info("mdwfMeasure: done");
 }
 
@@ -903,6 +981,31 @@ int main(int argc, char **argv) {
                         param.stack_grid_block(), ")");
 
         const bool mixed = param.mixed_precision() != 0;
+        if (param.mg_solver() != 0) {
+#ifdef MDWF_MG_SOLVER
+            if (param.mg_solver() != 1 || !mixed) {
+                throw std::runtime_error(stdLogger.fatal("mg_solver must be 0 or 1 and needs mixed_precision = 1"));
+            }
+            MDWFMultigridConfig &mg = mdwfMultigridConfig();
+            mg.enabled = true;
+            mg.massMax = param.mg_mass_max();
+            mg.block.clear();
+            std::stringstream blk(param.mg_block());
+            for (std::string item; std::getline(blk, item, ',');) {
+                mg.block.push_back(std::stoi(item));
+            }
+            mg.ns = param.mg_ns();
+            mg.setupIterations = param.mg_setup_iterations();
+            mg.degree = param.mg_degree();
+            mg.smootherRatio = param.mg_smoother_ratio();
+            mg.seed = static_cast<uint64_t>(param.mg_seed());
+            rootLogger.info("mdwfMeasure: multigrid on for |m_f| <= ", mg.massMax, ": block ", param.mg_block(), ", ns ",
+                            mg.ns, ", setup ", mg.setupIterations, " CG iterations, smoother degree ", mg.degree,
+                            " on [lambda_max / ", mg.smootherRatio, ", lambda_max], seed ", param.mg_seed());
+#else
+            throw std::runtime_error(stdLogger.fatal("mg_solver = 1 needs a build with -DMDWF_MG_CUSOLVER=ON"));
+#endif
+        }
         if (param.ls() == 8) {
             mixed ? runMDWFMeasure<8, true>(commBase, param) : runMDWFMeasure<8, false>(commBase, param);
         } else if (param.ls() == 12) {

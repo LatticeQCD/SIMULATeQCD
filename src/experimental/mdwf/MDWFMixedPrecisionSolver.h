@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <functional>
 #include <stdexcept>
 #include <complex>
 #include <memory>
@@ -500,6 +501,24 @@ private:
     int _lastReliableUpdates;
     double _lastResidue;
 
+public:
+    // Optional replacement of the Schur-normal CG (2026-11-17, multigrid: MDWFMultigridSolver.h). Unset (default):
+    // the mixed CG below, unchanged. Set: runCG calls it with the same arguments (x on exit = the solution).
+    struct ExternalResult {
+        int iterations;
+        double residue;
+        bool converged;
+    };
+    using ExternalSolve = std::function<ExternalResult(SpinorE &, const SpinorE &, int, double, const char *)>;
+
+protected:
+    void setExternalSolve(ExternalSolve f) {
+        _external = std::move(f);
+    }
+
+private:
+    ExternalSolve _external;
+
     void refresh() {
         _eo.refresh();
         _gaugeF.convert_precision(_gauge);
@@ -508,6 +527,17 @@ private:
     }
 
     void runCG(SpinorE &x, const SpinorE &b, int maxIter, double precision, const char *what) {
+        if (_external) {
+            const ExternalResult r = _external(x, b, maxIter, precision, what);
+            _lastIterations += r.iterations;
+            _lastResidue = r.residue;
+            if (!r.converged) {
+                throw std::runtime_error(stdLogger.fatal("MDWF even/odd ", what, " solve (external solver) did not "
+                                                         "converge: iterations = ", r.iterations, ", residue = ",
+                                                         r.residue));
+            }
+            return;
+        }
         // SHARED work buffers, as MDWFEvenOddMixedSchurSolver: private default names alias in MemoryManagement's
         // getSmartName when they share a prefix, which broke the fast mixed CG (EOFA NaN, E6).
         MDWFMixedCGWorkNames names;

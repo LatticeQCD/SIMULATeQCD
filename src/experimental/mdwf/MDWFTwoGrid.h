@@ -260,6 +260,26 @@ private:
     std::unique_ptr<Vec> _t1, _t2, _t3, _t4, _t5;   // work vectors (_t2.._t4: smoother, _t1, _t5: cycle)
     double _lo = 0.0, _hi = 0.0;
     int _degree = 1;
+    // profile (study): seconds per part of the cycle, with a device synchronisation around each part
+    bool _profile = false;
+    double _tSmooth = 0.0, _tApply = 0.0, _tCoarse = 0.0, _tVector = 0.0;
+    std::chrono::steady_clock::time_point _tMark;
+
+    void mark() {
+        if (_profile) {
+            gpuDeviceSynchronize();
+            _tMark = std::chrono::steady_clock::now();
+        }
+    }
+
+    void lap(double &acc) {
+        if (_profile) {
+            gpuDeviceSynchronize();
+            const auto now = std::chrono::steady_clock::now();
+            acc += std::chrono::duration<double>(now - _tMark).count();
+            _tMark = now;
+        }
+    }
 
     static std::string uname(const char *w) {
         return mdwfDeflUniqueName(w);
@@ -683,23 +703,41 @@ public:
         }
     }
 
+    // Profile of precondition(): smoother, residual applications of A, coarse correction (restrict + solve +
+    // prolong), vector updates. Study only (adds device synchronisations).
+    void setProfile(bool on) { _profile = on; }
+    void resetProfile() { _tSmooth = _tApply = _tCoarse = _tVector = 0.0; }
+    double profSmooth() const { return _tSmooth; }
+    double profApply() const { return _tApply; }
+    double profCoarse() const { return _tCoarse; }
+    double profVector() const { return _tVector; }
+
     // z = M r (symmetric two-grid cycle; 2 d applications of A).
     void precondition(Op &op, Vec &z, const Vec &r) {
         Vec &t = *_t1, &y = *_t2;
+        mark();
         smooth(op, z, r);
+        lap(_tSmooth);
         op.apply(y, z);
+        lap(_tApply);
         t = r;
         t.axpy(MDWFDeflC(-1.0, 0.0), y);
+        lap(_tVector);
         restrict_(c1(), t);
         _dense.solve(c1());
         prolong(z, c1(), true);
+        lap(_tCoarse);
         op.apply(y, z);
+        lap(_tApply);
         t = r;
         t.axpy(MDWFDeflC(-1.0, 0.0), y);
+        lap(_tVector);
         // post-smoothing (smooth works in _t2.._t4; t is _t1, the result goes to _t5)
         Vec &post = *_t5;
         smooth(op, post, t);
+        lap(_tSmooth);
         z.axpy(MDWFDeflC(1.0, 0.0), post);
+        lap(_tVector);
     }
 
     // Coarse correction only: z = P A_c^-1 R r (no application of A).

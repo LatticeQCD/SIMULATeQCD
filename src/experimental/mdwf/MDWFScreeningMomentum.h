@@ -17,7 +17,10 @@
  *   pairs i != j as  sum_z L_i(n, z) L_j(-n, z + dz)  (both n and -n are written); at n != 0 there is no vacuum
  *   subtraction. At n = 0 the loops equal the existing L_raw / L5_raw slices (checked in the driver).
  *
- * Momenta: every integer vector n with n_mu = 0, n_t = 0 and 0 < |n|^2 <= n2max (spatial slicing directions only).
+ * Momenta: every integer vector n with n_mu = 0, n_t = 0 and 0 < |n|^2 <= n2max. Temporal direction (mu = 3,
+ * 2026-11-17, sigma softening, Measurements/analysis/sigma_softening): every spatial n with |n|^2 <= n2max, so that
+ * C(mu = t, n, tau) is the temporal correlator at spatial momentum p and L(t, n, t) the temporal loop at momentum p
+ * (temporal isoscalar sigma_l(tau, p) = connected + disconnected from the same solves).
  * Single rank (as MDWFMeasurements.h).
  */
 
@@ -33,11 +36,12 @@
 
 static const int MDWF_SM_MAX_TERMS = 8;
 
-// Transverse momenta of slicing direction mu (0, 1, 2): n_mu = 0, ordered by |n|^2, then lexicographically.
+// Momenta of slicing direction mu: n_mu = 0 for mu = 0, 1, 2 (transverse); every spatial n for mu = 3 (temporal).
+// Ordered by |n|^2, then lexicographically.
 inline std::vector<std::array<int, 3>> mdwfTransverseMomenta(int mu, int n2max, bool includeZero) {
     std::vector<std::array<int, 3>> out;
-    if (mu < 0 || mu > 2) {
-        throw std::runtime_error(stdLogger.fatal("MDWF screening momentum: only spatial slicing directions, got ", mu));
+    if (mu < 0 || mu > 3) {
+        throw std::runtime_error(stdLogger.fatal("MDWF screening momentum: slicing direction 0..3, got ", mu));
     }
     int nmax = 0;
     while ((nmax + 1) * (nmax + 1) <= n2max) {
@@ -48,7 +52,7 @@ inline std::vector<std::array<int, 3>> mdwfTransverseMomenta(int mu, int n2max, 
             for (int b = -nmax; b <= nmax; b++) {
                 for (int c = -nmax; c <= nmax; c++) {
                     const std::array<int, 3> n = {a, b, c};
-                    if (n[mu] != 0 || a * a + b * b + c * c != n2) {
+                    if ((mu < 3 && n[mu] != 0) || a * a + b * b + c * c != n2) {
                         continue;
                     }
                     out.push_back(n);
