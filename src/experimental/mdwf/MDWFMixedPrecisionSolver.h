@@ -37,6 +37,9 @@
 #include "MDWFSpinor.h"
 
 #include "MDWFMobiusEvenOdd.h"
+#ifdef MDWF_HMC_MG_RESCUE
+#include "MDWFHmcMGRescue.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -60,6 +63,8 @@ struct MDWFCoupledMixedCGResult {
     double lambdaMin = 0.0;     // extreme Ritz values of the CG Lanczos matrix (MDWF_CG_LANCZOS)
     double lambdaMax = 0.0;
     int fallbackIterations = 0; // double-precision CG iterations after a failed mixed solve (MDWF_CG_DOUBLE_FALLBACK)
+    int mgOuterIterations = 0;  // two-grid FCG outer iterations of the HMC MG rescue (MDWFHmcMGRescue.h)
+    double mgSeconds = 0.0;     // wall time of the HMC MG rescue, setup included
 };
 
 /*
@@ -721,6 +726,9 @@ private:
     AdapterF _adapterF;
     double _delta;
     MDWFCoupledMixedCGResult _last;
+#ifdef MDWF_HMC_MG_RESCUE
+    std::unique_ptr<MDWFHmcMGRescueContext<HaloDepth, Ls>> _rescue;   // kept between rescues (MDWF_HMC_MG_REUSE)
+#endif
 
     static std::string dname(const std::string &role) {
         return EvenOdd::sharedEvenName(role);
@@ -823,10 +831,22 @@ public:
         names.sF = fname("mixed_cg_s");
         names.xF = fname("mixed_cg_x");
         MDWFCoupledMixedCG<AdapterD, AdapterF> cg(names);
-        _last = cg.invert(adapterD, _adapterF, x, b, maxIter, precision, _delta, true, useGuess);
+        int mixedMaxIter = maxIter;
+#ifdef MDWF_HMC_MG_RESCUE
+        const bool rescue = mgRescueEligible(eo);   // false when MDWF_HMC_MG_RESCUE is off: maxIter unchanged
+        if (rescue && mdwfHmcMGRescueConfig().mixedMaxIter > 0) {
+            mixedMaxIter = std::min(maxIter, mdwfHmcMGRescueConfig().mixedMaxIter);
+        }
+#endif
+        _last = cg.invert(adapterD, _adapterF, x, b, mixedMaxIter, precision, _delta, true, useGuess);
         if (!_last.converged && mdwfCGRobust().doubleFallback) {
             doubleFallback(adapterD, x, b, maxIter, precision);
         }
+#ifdef MDWF_HMC_MG_RESCUE
+        if (!_last.converged && rescue) {
+            mgRescue(eo, adapterD, x, b, precision, mmdag);
+        }
+#endif
         if (history != nullptr && pushHistory && _last.converged) {
             history->push(x);
         }
@@ -838,6 +858,79 @@ public:
     }
 
 private:
+#ifdef MDWF_HMC_MG_RESCUE
+    static bool mgRescueEligible(EvenOdd &eo) {
+        const MDWFHmcMGRescueConfig &c = mdwfHmcMGRescueConfig();
+        return c.enabled && std::abs(static_cast<double>(eo.massPlus())) <= c.massMax &&
+               eo.massPlus() == eo.massMinus() && eo.cloverCoefficient() == 0.0;
+    }
+
+    // x holds the unconverged mixed solution: solve A d = b - A x with the two-grid FCG to the tolerance that gives
+    // |b - A (x + d)|^2 <= precision^2 max(|b|^2, 1) (the stopping rule of the mixed CG), checked with adapterD.
+    template<class AdapterD>
+    void mgRescue(EvenOdd &eo, AdapterD &adapterD, SpinorD &x, SpinorD &b, double precision, bool mmdag) {
+        using Ctx = MDWFHmcMGRescueContext<HaloDepth, Ls>;
+        using Vec = MDWFCompactVec<HaloDepth, Ls>;
+        const MDWFHmcMGRescueConfig &c = mdwfHmcMGRescueConfig();
+        CommunicationBase &comm = b.getComm();
+        const auto t0 = std::chrono::steady_clock::now();
+        const double M5 = static_cast<double>(eo.domainWallHeight());
+        const double mass = static_cast<double>(eo.massPlus());
+        const double b5 = static_cast<double>(eo.params().b5);
+        const double bNorm = adapterD.norm2(b);
+        // r = b - A x (double, the HMC's operator), packed: the pool spinors are not held across the MG solve
+        Vec rv(comm), dv(comm);
+        double rNorm = 0.0;
+        auto residual = [&]() {
+            SpinorD r(comm, dname("pool6"));
+            SpinorD ax(comm, dname("pool9"));
+            mdwfPrepareInput(adapterD, x);
+            adapterD.apply(ax, x, false);
+            r = b;
+            r.template axpyThisB<64>(-1.0, ax);
+            rNorm = adapterD.norm2(r);
+            rv.pack(r);
+        };
+        residual();
+        rootLogger.info("MDWF HMC MG rescue: mixed CG not converged after ", _last.iterations, " iterations (residue ",
+                        _last.residue, "), mass ", mass, ", mmdag ", mmdag ? 1 : 0);
+        int outer = 0;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            const bool fresh = !_rescue || !c.reuse || attempt == 1 ||
+                               !_rescue->matches(eo.gauge(), M5, mass, b5, mmdag);
+            if (fresh) {
+                _rescue.reset();   // free the old space first (GPU memory)
+                _rescue = std::make_unique<Ctx>(eo.gauge(), M5, mass, b5, mmdag, c);
+            } else {
+                _rescue->refreshCoarse();
+            }
+            const double precD = precision * std::sqrt(std::max(bNorm, 1.0) / std::max(rNorm, 1.0));
+            const MDWFTwoGridSolveResult res = _rescue->solve(dv, rv, precD);
+            outer += res.iterations;
+            {
+                SpinorD d(comm, dname("pool7"));
+                dv.unpack(d);
+                x += d;
+            }
+            mdwfUpdateHalo(x);
+            residual();
+            _last.residue = std::sqrt(rNorm / std::max(bNorm, 1.0));
+            _last.converged = rNorm <= precision * precision * std::max(bNorm, 1.0);
+            rootLogger.info("MDWF HMC MG rescue: attempt ", attempt, fresh ? " (full setup)" : " (reused space)", ", ",
+                            res.iterations, " outer iterations, ", res.applications, " applications, ", res.seconds,
+                            " s, FCG true residual ", res.trueResidual, "; HMC operator true residue ", _last.residue,
+                            ", converged ", _last.converged ? 1 : 0);
+            if (_last.converged || fresh) {
+                break;   // a fresh space is not retried
+            }
+        }
+        _last.mgOuterIterations = outer;
+        _last.mgSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        rootLogger.info("MDWF HMC MG rescue: done, ", outer, " outer iterations, ", _last.mgSeconds, " s, converged ",
+                        _last.converged ? 1 : 0);
+    }
+#endif
+
     // MDWF_CG_DOUBLE_FALLBACK: x holds the unconverged mixed solution; solve A d = b - A x in double precision with
     // the tolerance that gives |b - A (x + d)|^2 <= precision^2 max(|b|^2, 1), the stopping rule of the mixed CG.
     template<class AdapterD>

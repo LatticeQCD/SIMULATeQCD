@@ -1,6 +1,12 @@
 /*
  * Two-grid preconditioner for the MDWF Schur normal operator A (Stage 0 of DSDRMDWFruns/SQCDruns/multigrid/DESIGN.md):
- * an offline study tool, single rank. Nothing here is used by the HMC or the production measurements.
+ * written as the Stage 0 study tool; used by mdwfMeasure (mg_solver, single rank) and, since 2026-11-18, by the HMC
+ * MG rescue (MDWFHmcMGRescue.h, multi rank).
+ *
+ * Multi rank (2026-11-18): every block must lie inside one rank's sub-lattice. A rank restricts only over its own
+ * blocks (the coarse vector, indexed by the global block, is zeroed first and summed over the ranks), prolongation is
+ * local (the coarse vector is replicated), A_c is assembled and factorised on the root rank only, and the coarse solve
+ * runs on the root and is broadcast. With one rank every code path below is the single-rank one, unchanged.
  *
  * Coarse space (HDCG type, Boyle / Yamaguchi arXiv:2103.05034). The even sites of the lattice are cut into 4D blocks
  * b of extent block[mu] (each >= 4 where there is more than one block in that direction, so that A, which couples
@@ -67,7 +73,8 @@ struct MDWFTwoGridSiteCoord {   // global coordinates of even site i
 // out[(bc * ns + k)] = <W_k|v> over block b = bc / 2, chirality chi = bc % 2 (all s). Grid (ns, 2 nBlocks).
 __global__ void __launch_bounds__(MDWF_TWOGRID_THREADS)
     mdwfTwoGridRestrictKernel(const double *const *W, const double *v, const int *blockSites, int sitesPerBlock,
-                              size_t sizeh, int Ls, int ns, double *out) {
+                              size_t sizeh, int Ls, int ns, double *out, const int *localToGlobal = nullptr) {
+    // multi rank: blockIdx.y runs over (local block, chirality); the output goes to the global block localToGlobal[b]
     const int k = blockIdx.x;
     const int bc = blockIdx.y;
     const int b = bc >> 1, chi = bc & 1;
@@ -97,7 +104,7 @@ __global__ void __launch_bounds__(MDWF_TWOGRID_THREADS)
         __syncthreads();
     }
     if (threadIdx.x == 0) {
-        const size_t o = static_cast<size_t>(bc) * ns + k;
+        const size_t o = (localToGlobal ? static_cast<size_t>(2 * localToGlobal[b] + chi) : static_cast<size_t>(bc)) * ns + k;
         out[2 * o] = sre[0];
         out[2 * o + 1] = sim[0];
     }
@@ -248,9 +255,13 @@ public:
 
 private:
     CommunicationBase &_comm;
+    bool _multi = false;                 // more than one rank (see the header comment)
     int _block[4];
     int _nb[4];
     int _nBlocks = 0, _sitesPerBlock = 0, _ns = 0;
+    int _nLocalBlocks = 0;               // blocks of this rank (= _nBlocks with one rank)
+    gMemoryPtr<true> _dLocalToGlobal;    // multi rank: local block -> global block
+    mutable std::vector<double> _hostC;  // multi rank: host buffer of a coarse vector (reduction, broadcast)
     size_t _sizeh;
     std::vector<int> _blockOfSite;       // host copy
     std::vector<int> _coarseOfBlock;     // block -> (bx, by, bz, bt), 4 per block
@@ -303,6 +314,24 @@ private:
     // c (device, coarse) <- R v using basis pointers Wp
     void restrictWith(const double *const *Wp, int ns, double *c, const Vec &v) const {
 #ifdef __GPUCC__
+        if (_multi) {
+            const size_t nd = 2 * static_cast<size_t>(2 * _nBlocks) * ns;   // doubles of the (global) coarse vector
+            mdwfTwoGridCheck(gpuMemset(c, 0, sizeof(double) * nd), "MDWF two-grid: coarse zero");
+            if (_nLocalBlocks > 0) {
+                dim3 grid(static_cast<unsigned>(ns), static_cast<unsigned>(2 * _nLocalBlocks));
+                mdwfTwoGridRestrictKernel<<<grid, MDWF_TWOGRID_THREADS>>>(
+                    Wp, v.ptr(), _dBlockSites->template getPointer<int>(), _sitesPerBlock, _sizeh, static_cast<int>(Ls),
+                    ns, c, _dLocalToGlobal->template getPointer<int>());
+                mdwfTwoGridCheck(gpuGetLastError(), "MDWF two-grid: restrict kernel");
+            }
+            _hostC.resize(nd);
+            mdwfTwoGridCheck(gpuMemcpy(_hostC.data(), c, sizeof(double) * nd, gpuMemcpyDeviceToHost),
+                             "MDWF two-grid: coarse reduction copy");
+            _comm.reduce(_hostC.data(), static_cast<int>(nd));
+            mdwfTwoGridCheck(gpuMemcpy(c, _hostC.data(), sizeof(double) * nd, gpuMemcpyHostToDevice),
+                             "MDWF two-grid: coarse reduction copy back");
+            return;
+        }
         dim3 grid(static_cast<unsigned>(ns), static_cast<unsigned>(2 * _nBlocks));
         mdwfTwoGridRestrictKernel<<<grid, MDWF_TWOGRID_THREADS>>>(
             Wp, v.ptr(), _dBlockSites->template getPointer<int>(), _sitesPerBlock, _sizeh, static_cast<int>(Ls), ns, c);
@@ -330,6 +359,48 @@ private:
         return _dWptr->template getPointer<const double *>();
     }
 
+    // In place: c <- A_c^-1 c. Multi rank: solved on the root (which holds the factor) and broadcast.
+    void coarseSolve(double *c) {
+        if (!_multi) {
+            _dense.solve(c);
+            return;
+        }
+        const size_t n = static_cast<size_t>(coarseDim());
+        std::vector<std::complex<double>> h(n);
+        if (_comm.IamRoot()) {
+            _dense.solve(c);
+            mdwfTwoGridCheck(gpuMemcpy(h.data(), c, sizeof(C) * n, gpuMemcpyDeviceToHost), "MDWF two-grid: coarse copy");
+        }
+        _comm.root2all(h);
+        if (!_comm.IamRoot()) {
+            mdwfTwoGridCheck(gpuMemcpy(c, h.data(), sizeof(C) * n, gpuMemcpyHostToDevice), "MDWF two-grid: coarse copy");
+        }
+    }
+
+    // Factorises A_c (root only with several ranks); a factorisation error stops every rank (no hang in root2all).
+    double factorCoarse(const std::vector<C> &a, int n) {
+        if (!_multi) {
+            return _dense.factor(a, n);
+        }
+        double seconds = 0.0;
+        bool ok = true;
+        std::string what;
+        if (_comm.IamRoot()) {
+            try {
+                seconds = _dense.factor(a, n);
+            } catch (const std::exception &e) {
+                ok = false;
+                what = e.what();
+            }
+        }
+        _comm.root2all(ok);
+        if (!ok) {
+            throw std::runtime_error(stdLogger.fatal("MDWF two-grid: coarse factorisation failed on the root rank ", what));
+        }
+        _comm.root2all(seconds);
+        return seconds;
+    }
+
 public:
     // block: extent per direction (x, y, z, t); must divide the (single-rank) lattice.
     MDWFTwoGrid(CommunicationBase &comm, const std::vector<int> &block)
@@ -339,8 +410,9 @@ public:
           _dWptr(MemoryManagement::getMemAt<true>(uname("tgwp"))),
           _dC1(MemoryManagement::getMemAt<true>(uname("tgc1"))),
           _dC2(MemoryManagement::getMemAt<true>(uname("tgc2"))) {
-        if (comm.getNumberProcesses() != 1) {
-            throw std::runtime_error(stdLogger.fatal("MDWF two-grid: single rank only (Stage 0)"));
+        _multi = comm.getNumberProcesses() != 1;
+        if (_multi) {
+            _dLocalToGlobal = MemoryManagement::getMemAt<true>(uname("tgl2g"));
         }
         if (block.size() != 4) {
             throw std::runtime_error(stdLogger.fatal("MDWF two-grid: block needs 4 extents"));
@@ -382,17 +454,66 @@ public:
             _blockOfSite[i] = b;
             count[b]++;
         }
-        _sitesPerBlock = count[0];
-        for (int b = 0; b < _nBlocks; b++) {
-            if (count[b] != _sitesPerBlock) {
+        std::vector<int> sites;
+        if (!_multi) {
+            _nLocalBlocks = _nBlocks;
+            _sitesPerBlock = count[0];
+            for (int b = 0; b < _nBlocks; b++) {
+                if (count[b] != _sitesPerBlock) {
+                    throw std::runtime_error(stdLogger.fatal("MDWF two-grid: blocks hold different numbers of even sites"));
+                }
+            }
+            sites.resize(static_cast<size_t>(_nBlocks) * _sitesPerBlock);
+            std::fill(count.begin(), count.end(), 0);
+            for (size_t i = 0; i < _sizeh; i++) {
+                const int b = _blockOfSite[i];
+                sites[static_cast<size_t>(b) * _sitesPerBlock + count[b]++] = static_cast<int>(i);
+            }
+        } else {
+            // every block must lie inside one rank: its local count = its global count
+            std::vector<double> global(count.begin(), count.end());
+            _comm.reduce(global.data(), _nBlocks);
+            std::vector<int> localToGlobal, localOf(_nBlocks, -1);
+            int bad = 0;
+            for (int b = 0; b < _nBlocks; b++) {
+                if (count[b] > 0) {
+                    if (static_cast<double>(count[b]) != global[b]) {
+                        bad++;
+                    }
+                    localOf[b] = static_cast<int>(localToGlobal.size());
+                    localToGlobal.push_back(b);
+                }
+            }
+            const double badAll = _comm.reduce(static_cast<double>(bad));
+            if (badAll > 0.0) {
+                throw std::runtime_error(stdLogger.fatal("MDWF two-grid: ", badAll, " blocks cross a rank boundary "
+                                                         "(block extents must divide the local lattice)"));
+            }
+            _nLocalBlocks = static_cast<int>(localToGlobal.size());
+            _sitesPerBlock = _nLocalBlocks > 0 ? count[localToGlobal[0]] : 0;
+            double spbMin = _sitesPerBlock, spbMax = _sitesPerBlock;
+            for (int lb = 0; lb < _nLocalBlocks; lb++) {
+                if (count[localToGlobal[lb]] != _sitesPerBlock) {
+                    spbMax = 1e30;
+                }
+            }
+            spbMin = -_comm.reduceMax(-spbMin);
+            spbMax = _comm.reduceMax(spbMax);
+            if (spbMin != spbMax) {
                 throw std::runtime_error(stdLogger.fatal("MDWF two-grid: blocks hold different numbers of even sites"));
             }
-        }
-        std::vector<int> sites(static_cast<size_t>(_nBlocks) * _sitesPerBlock);
-        std::fill(count.begin(), count.end(), 0);
-        for (size_t i = 0; i < _sizeh; i++) {
-            const int b = _blockOfSite[i];
-            sites[static_cast<size_t>(b) * _sitesPerBlock + count[b]++] = static_cast<int>(i);
+            sites.resize(static_cast<size_t>(_nLocalBlocks) * _sitesPerBlock);
+            std::vector<int> fill(_nLocalBlocks, 0);
+            for (size_t i = 0; i < _sizeh; i++) {
+                const int lb = localOf[_blockOfSite[i]];
+                sites[static_cast<size_t>(lb) * _sitesPerBlock + fill[lb]++] = static_cast<int>(i);
+            }
+            _dLocalToGlobal->template adjustSize<int>(std::max(_nLocalBlocks, 1));
+            if (_nLocalBlocks > 0) {
+                mdwfTwoGridCheck(gpuMemcpy(_dLocalToGlobal->template getPointer<int>(), localToGlobal.data(),
+                                           sizeof(int) * _nLocalBlocks, gpuMemcpyHostToDevice),
+                                 "MDWF two-grid: local block map copy");
+            }
         }
         _dBlockOfSite->template adjustSize<int>(_sizeh);
         _dBlockSites->template adjustSize<int>(sites.size());
@@ -415,7 +536,7 @@ public:
                     }
         rootLogger.info("MDWF two-grid: blocks ", _block[0], "x", _block[1], "x", _block[2], "x", _block[3], " x Ls ",
                         Ls, ", ", _nBlocks, " blocks (", _nb[0], "x", _nb[1], "x", _nb[2], "x", _nb[3], "), ",
-                        _sitesPerBlock, " even sites per block");
+                        _sitesPerBlock, " even sites per block", _multi ? ", multi rank" : "");
     }
 
     int nBlocks() const { return _nBlocks; }
@@ -606,7 +727,8 @@ public:
                 slot = b;
             }
         }
-        std::vector<C> a(static_cast<size_t>(n) * n, C(0.0, 0.0));
+        const bool keepA = !_multi || _comm.IamRoot();   // multi rank: A_c only on the root
+        std::vector<C> a(keepA ? static_cast<size_t>(n) * n : 0, C(0.0, 0.0));
         std::vector<C> e(n), r(n);
         Vec &v = *_t1, &av = *_t2;
         for (int col = 0; col < ncolors; col++) {
@@ -625,7 +747,7 @@ public:
                     restrict_(c1(), av);
                     mdwfTwoGridCheck(gpuMemcpy(r.data(), c1(), sizeof(C) * n, gpuMemcpyDeviceToHost),
                                      "MDWF two-grid: probe result copy");
-                    for (int bp = 0; bp < _nBlocks; bp++) {
+                    for (int bp = 0; bp < _nBlocks && keepA; bp++) {
                         const int b = source[static_cast<size_t>(bp) * ncolors + col];
                         if (b < 0) {
                             continue;
@@ -641,7 +763,7 @@ public:
         }
         stats.probeApplications += op.applications() - a0;
         double amax = 0.0, dev = 0.0;
-        for (int j = 0; j < n; j++) {
+        for (int j = 0; j < n && keepA; j++) {
             for (int i = 0; i <= j; i++) {
                 const C x = a[i + static_cast<size_t>(j) * n], y = a[j + static_cast<size_t>(i) * n];
                 amax = std::max(amax, std::abs(x));
@@ -649,7 +771,7 @@ public:
             }
         }
         stats.hermiticity = amax > 0.0 ? dev / amax : 0.0;
-        for (int j = 0; j < n; j++) {   // exact Hermitian part
+        for (int j = 0; j < n && keepA; j++) {   // exact Hermitian part
             for (int i = 0; i < j; i++) {
                 const C h = 0.5 * (a[i + static_cast<size_t>(j) * n] + std::conj(a[j + static_cast<size_t>(i) * n]));
                 a[i + static_cast<size_t>(j) * n] = h;
@@ -660,7 +782,10 @@ public:
         stats.probeSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
         rootLogger.info("MDWF two-grid: A_c (dimension ", n, ") from ", ncolors * 2 * _ns, " probes (", ncolors,
                         " colours), Hermiticity defect ", stats.hermiticity);
-        stats.factorSeconds += _dense.factor(a, n);
+        if (_multi) {
+            _comm.root2all(stats.hermiticity);
+        }
+        stats.factorSeconds += factorCoarse(a, n);
         if (matrix != nullptr) {
             matrix->swap(a);
         }
@@ -671,7 +796,7 @@ public:
         if (a.size() != static_cast<size_t>(coarseDim()) * coarseDim()) {
             throw std::runtime_error(stdLogger.fatal("MDWF two-grid: setCoarse: wrong matrix size"));
         }
-        _dense.factor(a, coarseDim());
+        factorCoarse(a, coarseDim());
     }
 
     void setSmoother(double lo, double hi, int degree) {
@@ -724,7 +849,7 @@ public:
         t.axpy(MDWFDeflC(-1.0, 0.0), y);
         lap(_tVector);
         restrict_(c1(), t);
-        _dense.solve(c1());
+        coarseSolve(c1());
         prolong(z, c1(), true);
         lap(_tCoarse);
         op.apply(y, z);
@@ -743,7 +868,7 @@ public:
     // Coarse correction only: z = P A_c^-1 R r (no application of A).
     void coarseCorrection(Vec &z, const Vec &r) {
         restrict_(c1(), r);
-        _dense.solve(c1());
+        coarseSolve(c1());
         prolong(z, c1(), false);
     }
 

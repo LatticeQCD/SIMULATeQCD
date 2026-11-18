@@ -844,7 +844,18 @@ if (NOT MDWF_REMEZ_MISSING)
     add_dependencies(mdwftests mdwfRemezTest)
 
     # Targets with the RHMC strange quark, EOFA, Hasenbusch or DSDR: link the Remez library.
-    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_DEFS_SOLVE_LS24})
+    # HMC multigrid rescue (2026-11-18, MDWFHmcMGRescue.h; runtime switch MDWF_HMC_MG_RESCUE=1, off = bit-identical).
+    # OFF (default): mdwfTwoPlusOneHmcRun is built exactly as before.
+    option(MDWF_HMC_MG_RESCUE "Build mdwfTwoPlusOneHmcRun with the multigrid rescue of stalled light solves (links cuSOLVER)" OFF)
+    set(MDWF_HMC_DEFS ${MDWF_DEFS_SOLVE_LS24})
+    if (MDWF_HMC_MG_RESCUE AND USE_CUDA)
+        list(APPEND MDWF_HMC_DEFS MDWF_HMC_MG_RESCUE=1 MDWF_TWOGRID_CUSOLVER=1)
+    endif()
+    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_HMC_DEFS})
+    if (MDWF_HMC_MG_RESCUE AND USE_CUDA)
+        target_link_libraries(mdwfTwoPlusOneHmcRun CUDA::cusolver)
+        target_link_libraries(_mdwfTwoPlusOneHmcRun CUDA::cusolver)
+    endif()
     add_mdwf_executable(mdwfOneFlavorRhmcActionTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfTwoPlusOneHmcTrajectoryTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfEvenOddActionTest mdwftests SINGLEPREC=1 ${MDWF_DEFS_EO})
