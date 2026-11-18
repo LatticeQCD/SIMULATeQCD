@@ -1,0 +1,17 @@
+# mdwfTwoGridStudy.param -- multigrid Stage 0 two-grid study (main_mdwfTwoGridStudy.cpp, MDWFTwoGrid.h).
+# Default: the unit test on a small random gauge field.  Lists (ns_list, degrees, ...) belong in the file.
+Lattice          = 8 8 8 8
+Nodes            = 1 1 1 1
+mode             = selftest
+ls               = 8
+M5               = 1.8
+b5               = 1.5
+mass             = 0.05
+normal_form      = 0
+antiperiodic_t   = 1
+start            = random
+seed             = 20261115
+block            = 4,4,4,4
+ns_list          = 4
+degrees          = 4
+max_iter         = 20000

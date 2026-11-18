@@ -739,12 +739,37 @@ set(MDWF_DEFS_BENCH SINGLEPREC=1 NSTACKS_1=1 NSTACKS_16=1 LAYOUT_ALL=1 LAYOUT_EV
 
 # Programs
 add_mdwf_executable(mdwfResidualMass mdwf ${MDWF_DEFS_SOLVE})
-add_mdwf_executable(mdwfMeasure mdwf ${MDWF_DEFS_SOLVE_LS24})
+# Multigrid measurement solves (2026-11-17, MDWFMultigridSolver.h, mg_solver = 1): dense coarse solve with cuSOLVER.
+# OFF (default): mdwfMeasure is built exactly as before (mg_solver = 1 stops with an error).
+option(MDWF_MG_CUSOLVER "Build mdwfMeasure with the multigrid solver (links cuSOLVER; default OFF)" OFF)
+set(MDWF_MEASURE_DEFS ${MDWF_DEFS_SOLVE_LS24})
+if (MDWF_MG_CUSOLVER AND USE_CUDA)
+    list(APPEND MDWF_MEASURE_DEFS MDWF_MG_SOLVER=1 MDWF_TWOGRID_CUSOLVER=1)
+endif()
+add_mdwf_executable(mdwfMeasure mdwf ${MDWF_MEASURE_DEFS})
+if (MDWF_MG_CUSOLVER AND USE_CUDA)
+    target_link_libraries(mdwfMeasure CUDA::cusolver)
+    target_link_libraries(_mdwfMeasure CUDA::cusolver)
+endif()
 add_mdwf_executable(mdwfDiracModes mdwf ${MDWF_DEFS_SOLVE})
 add_mdwf_executable(mdwfKernelSpectrum mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfSpectralBounds mdwf ${MDWF_DEFS})
 add_mdwf_executable(mdwfOperatorBench mdwf ${MDWF_DEFS_BENCH} NSTACKS_12=1 NSTACKS_24=1)
 add_mdwf_executable(mdwfProfileBench mdwf ${MDWF_DEFS_BENCH})
+# Deflation study, Step 0 (DSDRMDWFruns/SQCDruns/deflation/DESIGN.md): analysis of the HMC's defl_dump and its unit test.
+add_mdwf_executable(mdwfDeflationStep0 mdwf ${MDWF_DEFS_SOLVE_LS24})
+add_mdwf_executable(mdwfDeflationStep0Test mdwftests ${MDWF_DEFS_SOLVE_LS24})
+# Multigrid Stage 0 (DSDRMDWFruns/SQCDruns/multigrid/DESIGN.md): two-grid study, single rank. The dense coarse solve uses
+# cuSOLVER; only this study target links it (production code must not depend on it).
+set(MDWF_TWOGRID_DEFS ${MDWF_DEFS_SOLVE_LS24})
+if (USE_CUDA)
+    list(APPEND MDWF_TWOGRID_DEFS MDWF_TWOGRID_CUSOLVER=1)
+endif()
+add_mdwf_executable(mdwfTwoGridStudy mdwf ${MDWF_TWOGRID_DEFS})
+if (USE_CUDA)
+    target_link_libraries(mdwfTwoGridStudy CUDA::cusolver)
+    target_link_libraries(_mdwfTwoGridStudy CUDA::cusolver)
+endif()
 
 # Tests: operator
 add_mdwf_executable(mdwfWilsonKernelNormalizationTest mdwftests ${MDWF_DEFS})
@@ -819,7 +844,18 @@ if (NOT MDWF_REMEZ_MISSING)
     add_dependencies(mdwftests mdwfRemezTest)
 
     # Targets with the RHMC strange quark, EOFA, Hasenbusch or DSDR: link the Remez library.
-    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_DEFS_SOLVE_LS24})
+    # HMC multigrid rescue (2026-11-18, MDWFHmcMGRescue.h; runtime switch MDWF_HMC_MG_RESCUE=1, off = bit-identical).
+    # OFF (default): mdwfTwoPlusOneHmcRun is built exactly as before.
+    option(MDWF_HMC_MG_RESCUE "Build mdwfTwoPlusOneHmcRun with the multigrid rescue of stalled light solves (links cuSOLVER)" OFF)
+    set(MDWF_HMC_DEFS ${MDWF_DEFS_SOLVE_LS24})
+    if (MDWF_HMC_MG_RESCUE AND USE_CUDA)
+        list(APPEND MDWF_HMC_DEFS MDWF_HMC_MG_RESCUE=1 MDWF_TWOGRID_CUSOLVER=1)
+    endif()
+    add_mdwf_application(mdwfTwoPlusOneHmcRun ${MDWF_HMC_DEFS})
+    if (MDWF_HMC_MG_RESCUE AND USE_CUDA)
+        target_link_libraries(mdwfTwoPlusOneHmcRun CUDA::cusolver)
+        target_link_libraries(_mdwfTwoPlusOneHmcRun CUDA::cusolver)
+    endif()
     add_mdwf_executable(mdwfOneFlavorRhmcActionTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfTwoPlusOneHmcTrajectoryTest mdwftests ${MDWF_DEFS})
     add_mdwf_executable(mdwfEvenOddActionTest mdwftests SINGLEPREC=1 ${MDWF_DEFS_EO})

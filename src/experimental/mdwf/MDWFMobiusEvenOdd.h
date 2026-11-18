@@ -997,6 +997,15 @@ public:
         return _mfMinus;
     }
 
+    // Domain-wall height and clover coefficient as constructed (2026-11-18, HMC MG rescue: MDWFHmcMGRescue.h).
+    floatT domainWallHeight() const {
+        return _M5;
+    }
+
+    floatT cloverCoefficient() const {
+        return _csw;
+    }
+
     Gauge &gauge() const {
         return _gauge;
     }

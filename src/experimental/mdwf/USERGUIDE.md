@@ -122,5 +122,10 @@ stderr or a nonzero exit status). No `runERR` files: everything passed. The laun
   `Gaugefile_out` is written into `measurements_dir`.
 - Optional environment variables: `MDWF_REMEZ_CACHE=<dir>` keeps the Remez approximations on disk,
   `SIMULATEQCD_LEAN_HALO=1` selects the lean halo exchange (GPU-aware MPI without P2P).
+- Speed options, validated in `HMC_SPEED_VALIDATION.md`:
+  - `MDWF_STACK_GRID` (environment, default 1) launches the 5D kernels with Ls in the grid. It is bit-identical to
+    `MDWF_STACK_GRID=0`.
+  - `action_from_noise = 1` and `action_chrono = 1` (parameter file, default 0) skip or shorten the end-point action
+    solves of `mdwfTwoPlusOneHmcRun`. The MD is unchanged.
 - The `*.md` files in this directory are the design notes (conventions, even/odd scheme, determinant
   factorization, force checks).

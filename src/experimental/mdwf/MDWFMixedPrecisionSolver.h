@@ -37,9 +37,14 @@
 #include "MDWFSpinor.h"
 
 #include "MDWFMobiusEvenOdd.h"
+#ifdef MDWF_HMC_MG_RESCUE
+#include "MDWFHmcMGRescue.h"
+#endif
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <functional>
 #include <stdexcept>
 #include <complex>
 #include <memory>
@@ -52,7 +57,96 @@ struct MDWFCoupledMixedCGResult {
     int reliableUpdates;     // double-precision residual recomputations
     double residue;          // true relative residual sqrt(|b - A x|^2 / max(|b|^2, 1)) of the last update
     bool converged;
+    // Robustness diagnostics (2026-11-14, MDWF_CG_* environment switches below; all zero when the switches are off).
+    int restarts = 0;           // stall restarts (MDWF_CG_STALL)
+    int maxGap = 0;             // largest number of iterations between two reliable updates (or to the end)
+    double lambdaMin = 0.0;     // extreme Ritz values of the CG Lanczos matrix (MDWF_CG_LANCZOS)
+    double lambdaMax = 0.0;
+    int fallbackIterations = 0; // double-precision CG iterations after a failed mixed solve (MDWF_CG_DOUBLE_FALLBACK)
+    int mgOuterIterations = 0;  // two-grid FCG outer iterations of the HMC MG rescue (MDWFHmcMGRescue.h)
+    double mgSeconds = 0.0;     // wall time of the HMC MG rescue, setup included
 };
+
+/*
+ * Robustness switches of the mixed CG, read once from the environment; all off by default, and then the solver is
+ * bit-identical to before (2026-11-14, after b1671_ml80 force solves of the lightest Hasenbusch factor stalled: the
+ * single-precision residual never fell by delta again after 5-6 reliable updates and the solve ran into max_iter).
+ *   MDWF_CG_STALL=N            (fast mixed CG) after N iterations without a reliable update, force one and restart the
+ *                              CG from the true residual (p = r). 0 = off.
+ *   MDWF_CG_DOUBLE_FALLBACK=1  a mixed solve that did not converge (MDWFEvenOddMixedSchurSolver::solve) is finished by a
+ *                              double-precision CG for the correction, with the same stopping rule. 0 = off.
+ *   MDWF_CG_LANCZOS=1          (fast mixed CG) keep alpha, beta of every iteration and log the extreme eigenvalues of the
+ *                              CG Lanczos tridiagonal matrix (estimates of lambda_min, lambda_max of A), the restarts and the
+ *                              largest gap between reliable updates, once per solve. Diagnostics only; arithmetic unchanged.
+ */
+struct MDWFCGRobustOptions {
+    int stall = 0;
+    bool doubleFallback = false;
+    bool lanczos = false;
+};
+
+inline const MDWFCGRobustOptions &mdwfCGRobust() {
+    static const MDWFCGRobustOptions opts = [] {
+        MDWFCGRobustOptions o;
+        if (const char *e = std::getenv("MDWF_CG_STALL")) { o.stall = std::max(0, std::atoi(e)); }
+        if (const char *e = std::getenv("MDWF_CG_DOUBLE_FALLBACK")) { o.doubleFallback = std::string(e) == "1"; }
+        if (const char *e = std::getenv("MDWF_CG_LANCZOS")) { o.lanczos = std::string(e) == "1"; }
+        if (o.stall > 0 || o.doubleFallback || o.lanczos) {
+            rootLogger.info("MDWF mixed CG robustness: MDWF_CG_STALL = ", o.stall, ", MDWF_CG_DOUBLE_FALLBACK = ",
+                            o.doubleFallback ? 1 : 0, ", MDWF_CG_LANCZOS = ", o.lanczos ? 1 : 0);
+        }
+        return o;
+    }();
+    return opts;
+}
+
+/*
+ * Extreme eigenvalues of the Lanczos tridiagonal matrix of a CG run: T_kk = 1/alpha_k + beta_{k-1}/alpha_{k-1},
+ * T_k,k+1 = sqrt(beta_k)/alpha_k (beta_k: the coefficient of p_{k+1} = r_{k+1} + beta_k p_k; beta = 0 at a restart
+ * splits T into independent blocks). Sturm-sequence bisection, O(n) per step.
+ */
+inline std::pair<double, double> mdwfCGLanczosExtremes(const std::vector<double> &alpha, const std::vector<double> &beta) {
+    const size_t n = alpha.size();
+    if (n == 0) {
+        return {0.0, 0.0};
+    }
+    std::vector<double> d(n), e2(n, 0.0);
+    double lo = 0.0, hi = 0.0;
+    for (size_t k = 0; k < n; k++) {
+        d[k] = 1.0 / alpha[k] + (k > 0 ? beta[k - 1] / alpha[k - 1] : 0.0);
+        if (k + 1 < n) {
+            e2[k] = beta[k] / (alpha[k] * alpha[k]);
+        }
+    }
+    for (size_t k = 0; k < n; k++) {   // Gershgorin interval
+        const double rad = (k > 0 ? std::sqrt(e2[k - 1]) : 0.0) + (k + 1 < n ? std::sqrt(e2[k]) : 0.0);
+        lo = (k == 0) ? d[k] - rad : std::min(lo, d[k] - rad);
+        hi = (k == 0) ? d[k] + rad : std::max(hi, d[k] + rad);
+    }
+    auto below = [&](double x) {   // number of eigenvalues < x
+        size_t count = 0;
+        double q = 1.0;
+        for (size_t k = 0; k < n; k++) {
+            q = d[k] - x - (k > 0 ? e2[k - 1] / q : 0.0);
+            if (q == 0.0) {
+                q = -1e-300;
+            }
+            if (q < 0.0) {
+                count++;
+            }
+        }
+        return count;
+    };
+    auto bisect = [&](size_t target) {   // smallest x with below(x) >= target
+        double a = lo, b = hi;
+        for (int it = 0; it < 200 && b - a > 1e-15 * std::max(std::abs(a), std::abs(b)); it++) {
+            const double m = 0.5 * (a + b);
+            if (below(m) >= target) { b = m; } else { a = m; }
+        }
+        return 0.5 * (a + b);
+    };
+    return {bisect(1), bisect(n)};
+}
 
 // Field names of the mixed CG work vectors: 4 double (r, p, accum, A x) and 4 single (r, p, A p, x). The defaults are
 // private per call; callers that know which shared buffers are idle during the solve can pass SHARED_ names.
@@ -308,6 +402,24 @@ public:
             }
             return {0, 0, relative(rNorm), true};
         }
+        const MDWFCGRobustOptions &robust = mdwfCGRobust();
+        int lastUpdate = 0, maxGap = 0, restarts = 0;
+        std::vector<double> lzAlpha, lzBeta;
+        auto finish = [&](MDWFCoupledMixedCGResult res) {
+            res.restarts = restarts;
+            res.maxGap = std::max(maxGap, res.iterations - lastUpdate);
+            if (robust.lanczos && !lzAlpha.empty()) {
+                lzBeta.resize(lzAlpha.size(), 0.0);
+                const std::pair<double, double> ext = mdwfCGLanczosExtremes(lzAlpha, lzBeta);
+                res.lambdaMin = ext.first;
+                res.lambdaMax = ext.second;
+                rootLogger.info("MDWF mixed CG spectrum: ", res.iterations, " iterations, lambda_min ~ ", ext.first,
+                                ", lambda_max ~ ", ext.second, ", kappa ~ ", ext.second / ext.first, ", reliable updates ",
+                                res.reliableUpdates, ", largest gap ", res.maxGap, ", stall restarts ", restarts,
+                                ", converged ", res.converged ? 1 : 0, ", residue ", res.residue);
+            }
+            return res;
+        };
 
         for (int iteration = 0; iteration < maxIter; iteration++) {
             mdwfPrepareInput(adapterF, pF);
@@ -330,8 +442,14 @@ public:
                 rNormNext = adapterF.norm2(rF);
             }
             const double beta = rNormNext / rNorm;
+            if (robust.lanczos) {
+                lzAlpha.push_back(alpha);
+            }
+            const bool stalled = robust.stall > 0 && iteration + 1 - lastUpdate >= robust.stall;
 
-            if (rNormNext < delta * delta * rNormUpdate || rNormNext <= targetNorm) {
+            if (rNormNext < delta * delta * rNormUpdate || rNormNext <= targetNorm || stalled) {
+                maxGap = std::max(maxGap, iteration + 1 - lastUpdate);
+                lastUpdate = iteration + 1;
                 xs.convert_precision(xF);
                 x += xs;
                 xF = static_cast<float>(0.0) * rF;
@@ -345,18 +463,33 @@ public:
                     if (update) {
                         mdwfUpdateHalo(x);
                     }
-                    return {iteration + 1, reliableUpdates, relative(trueNorm), true};
+                    return finish({iteration + 1, reliableUpdates, relative(trueNorm), true});
                 }
-                p.convert_precision(pF);
-                const double pr = real<double>(adapterD.dotProduct5D(p, r));
-                p.template axpyThisB<BlockSize>(-pr / trueNorm, r);
-                p *= COMPLEX(double)(beta, 0.0);
-                p += r;
+                const bool restart = stalled && !(rNormNext < delta * delta * rNormUpdate);
+                if (restart) {
+                    // Stall: drop the search history and restart from the true residual.
+                    restarts++;
+                    rootLogger.info("MDWF mixed CG: no reliable update for ", robust.stall, " iterations, restart ",
+                                    restarts, " at iteration ", iteration + 1, ", true residue ", relative(trueNorm));
+                    p = r;
+                } else {
+                    p.convert_precision(pF);
+                    const double pr = real<double>(adapterD.dotProduct5D(p, r));
+                    p.template axpyThisB<BlockSize>(-pr / trueNorm, r);
+                    p *= COMPLEX(double)(beta, 0.0);
+                    p += r;
+                }
+                if (robust.lanczos) {
+                    lzBeta.push_back(restart ? 0.0 : trueNorm / rNorm);
+                }
                 pF.convert_precision(p);
                 rF.convert_precision(r);
                 rNorm = trueNorm;
                 rNormUpdate = trueNorm;
             } else {
+                if (robust.lanczos) {
+                    lzBeta.push_back(beta);
+                }
                 if (mdwfStackGrid()) {
                     using TF = MDWFSpinorTraits<SpinorF>;
                     mdwfStackGridLaunch(pF, MDWFMixedCGDirection<SpinorF>(rF, pF, static_cast<float>(beta)),
@@ -376,7 +509,7 @@ public:
         adapterD.apply(ax, x, false);
         r = b;
         r.template axpyThisB<BlockSize>(-1.0, ax);
-        return {maxIter, reliableUpdates, relative(adapterD.norm2(r)), false};
+        return finish({maxIter, reliableUpdates, relative(adapterD.norm2(r)), false});
     }
 
 private:
@@ -413,6 +546,24 @@ private:
     int _lastReliableUpdates;
     double _lastResidue;
 
+public:
+    // Optional replacement of the Schur-normal CG (2026-11-17, multigrid: MDWFMultigridSolver.h). Unset (default):
+    // the mixed CG below, unchanged. Set: runCG calls it with the same arguments (x on exit = the solution).
+    struct ExternalResult {
+        int iterations;
+        double residue;
+        bool converged;
+    };
+    using ExternalSolve = std::function<ExternalResult(SpinorE &, const SpinorE &, int, double, const char *)>;
+
+protected:
+    void setExternalSolve(ExternalSolve f) {
+        _external = std::move(f);
+    }
+
+private:
+    ExternalSolve _external;
+
     void refresh() {
         _eo.refresh();
         _gaugeF.convert_precision(_gauge);
@@ -421,6 +572,17 @@ private:
     }
 
     void runCG(SpinorE &x, const SpinorE &b, int maxIter, double precision, const char *what) {
+        if (_external) {
+            const ExternalResult r = _external(x, b, maxIter, precision, what);
+            _lastIterations += r.iterations;
+            _lastResidue = r.residue;
+            if (!r.converged) {
+                throw std::runtime_error(stdLogger.fatal("MDWF even/odd ", what, " solve (external solver) did not "
+                                                         "converge: iterations = ", r.iterations, ", residue = ",
+                                                         r.residue));
+            }
+            return;
+        }
         // SHARED work buffers, as MDWFEvenOddMixedSchurSolver: private default names alias in MemoryManagement's
         // getSmartName when they share a prefix, which broke the fast mixed CG (EOFA NaN, E6).
         MDWFMixedCGWorkNames names;
@@ -604,6 +766,9 @@ private:
     AdapterF _adapterF;
     double _delta;
     MDWFCoupledMixedCGResult _last;
+#ifdef MDWF_HMC_MG_RESCUE
+    std::unique_ptr<MDWFHmcMGRescueContext<HaloDepth, Ls>> _rescue;   // kept between rescues (MDWF_HMC_MG_REUSE)
+#endif
 
     static std::string dname(const std::string &role) {
         return EvenOdd::sharedEvenName(role);
@@ -706,7 +871,22 @@ public:
         names.sF = fname("mixed_cg_s");
         names.xF = fname("mixed_cg_x");
         MDWFCoupledMixedCG<AdapterD, AdapterF> cg(names);
-        _last = cg.invert(adapterD, _adapterF, x, b, maxIter, precision, _delta, true, useGuess);
+        int mixedMaxIter = maxIter;
+#ifdef MDWF_HMC_MG_RESCUE
+        const bool rescue = mgRescueEligible(eo);   // false when MDWF_HMC_MG_RESCUE is off: maxIter unchanged
+        if (rescue && mdwfHmcMGRescueConfig().mixedMaxIter > 0) {
+            mixedMaxIter = std::min(maxIter, mdwfHmcMGRescueConfig().mixedMaxIter);
+        }
+#endif
+        _last = cg.invert(adapterD, _adapterF, x, b, mixedMaxIter, precision, _delta, true, useGuess);
+        if (!_last.converged && mdwfCGRobust().doubleFallback) {
+            doubleFallback(adapterD, x, b, maxIter, precision);
+        }
+#ifdef MDWF_HMC_MG_RESCUE
+        if (!_last.converged && rescue) {
+            mgRescue(eo, adapterD, x, b, precision, mmdag);
+        }
+#endif
         if (history != nullptr && pushHistory && _last.converged) {
             history->push(x);
         }
@@ -715,5 +895,111 @@ public:
 
     const MDWFCoupledMixedCGResult &last() const {
         return _last;
+    }
+
+private:
+#ifdef MDWF_HMC_MG_RESCUE
+    static bool mgRescueEligible(EvenOdd &eo) {
+        const MDWFHmcMGRescueConfig &c = mdwfHmcMGRescueConfig();
+        return c.enabled && std::abs(static_cast<double>(eo.massPlus())) <= c.massMax &&
+               eo.massPlus() == eo.massMinus() && eo.cloverCoefficient() == 0.0;
+    }
+
+    // x holds the unconverged mixed solution: solve A d = b - A x with the two-grid FCG to the tolerance that gives
+    // |b - A (x + d)|^2 <= precision^2 max(|b|^2, 1) (the stopping rule of the mixed CG), checked with adapterD.
+    template<class AdapterD>
+    void mgRescue(EvenOdd &eo, AdapterD &adapterD, SpinorD &x, SpinorD &b, double precision, bool mmdag) {
+        using Ctx = MDWFHmcMGRescueContext<HaloDepth, Ls>;
+        using Vec = MDWFCompactVec<HaloDepth, Ls>;
+        const MDWFHmcMGRescueConfig &c = mdwfHmcMGRescueConfig();
+        CommunicationBase &comm = b.getComm();
+        const auto t0 = std::chrono::steady_clock::now();
+        const double M5 = static_cast<double>(eo.domainWallHeight());
+        const double mass = static_cast<double>(eo.massPlus());
+        const double b5 = static_cast<double>(eo.params().b5);
+        const double bNorm = adapterD.norm2(b);
+        // r = b - A x (double, the HMC's operator), packed: the pool spinors are not held across the MG solve
+        Vec rv(comm), dv(comm);
+        double rNorm = 0.0;
+        auto residual = [&]() {
+            SpinorD r(comm, dname("pool6"));
+            SpinorD ax(comm, dname("pool9"));
+            mdwfPrepareInput(adapterD, x);
+            adapterD.apply(ax, x, false);
+            r = b;
+            r.template axpyThisB<64>(-1.0, ax);
+            rNorm = adapterD.norm2(r);
+            rv.pack(r);
+        };
+        residual();
+        rootLogger.info("MDWF HMC MG rescue: mixed CG not converged after ", _last.iterations, " iterations (residue ",
+                        _last.residue, "), mass ", mass, ", mmdag ", mmdag ? 1 : 0);
+        int outer = 0;
+        for (int attempt = 0; attempt < 2; attempt++) {
+            const bool fresh = !_rescue || !c.reuse || attempt == 1 ||
+                               !_rescue->matches(eo.gauge(), M5, mass, b5, mmdag);
+            if (fresh) {
+                _rescue.reset();   // free the old space first (GPU memory)
+                _rescue = std::make_unique<Ctx>(eo.gauge(), M5, mass, b5, mmdag, c);
+            } else {
+                _rescue->refreshCoarse();
+            }
+            const double precD = precision * std::sqrt(std::max(bNorm, 1.0) / std::max(rNorm, 1.0));
+            const MDWFTwoGridSolveResult res = _rescue->solve(dv, rv, precD);
+            outer += res.iterations;
+            {
+                SpinorD d(comm, dname("pool7"));
+                dv.unpack(d);
+                x += d;
+            }
+            mdwfUpdateHalo(x);
+            residual();
+            _last.residue = std::sqrt(rNorm / std::max(bNorm, 1.0));
+            _last.converged = rNorm <= precision * precision * std::max(bNorm, 1.0);
+            rootLogger.info("MDWF HMC MG rescue: attempt ", attempt, fresh ? " (full setup)" : " (reused space)", ", ",
+                            res.iterations, " outer iterations, ", res.applications, " applications, ", res.seconds,
+                            " s, FCG true residual ", res.trueResidual, "; HMC operator true residue ", _last.residue,
+                            ", converged ", _last.converged ? 1 : 0);
+            if (_last.converged || fresh) {
+                break;   // a fresh space is not retried
+            }
+        }
+        _last.mgOuterIterations = outer;
+        _last.mgSeconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+        rootLogger.info("MDWF HMC MG rescue: done, ", outer, " outer iterations, ", _last.mgSeconds, " s, converged ",
+                        _last.converged ? 1 : 0);
+    }
+#endif
+
+    // MDWF_CG_DOUBLE_FALLBACK: x holds the unconverged mixed solution; solve A d = b - A x in double precision with
+    // the tolerance that gives |b - A (x + d)|^2 <= precision^2 max(|b|^2, 1), the stopping rule of the mixed CG.
+    template<class AdapterD>
+    void doubleFallback(AdapterD &adapterD, SpinorD &x, SpinorD &b, int maxIter, double precision) {
+        CommunicationBase &comm = b.getComm();
+        SpinorD r(comm, dname("pool6"));
+        SpinorD ax(comm, dname("pool9"));
+        SpinorD d(comm, dname("pool7"));
+        auto residual = [&]() {
+            mdwfPrepareInput(adapterD, x);
+            adapterD.apply(ax, x, false);
+            r = b;
+            r.template axpyThisB<64>(-1.0, ax);
+            return adapterD.norm2(r);
+        };
+        const double bNorm = adapterD.norm2(b);
+        const double rNorm = residual();
+        const double precD = precision * std::sqrt(std::max(bNorm, 1.0) / std::max(rNorm, 1.0));
+        rootLogger.info("MDWF mixed CG: not converged after ", _last.iterations, " iterations (residue ", _last.residue,
+                        "), double-precision fallback for the correction, tolerance ", precD);
+        MDWFCoupledCG<double, AdapterD> dcg;
+        const MDWFCoupledCGResult<double> dres = dcg.invert(adapterD, d, r, maxIter, precD, true);
+        x += d;
+        mdwfUpdateHalo(x);
+        const double trueNorm = residual();
+        _last.residue = std::sqrt(trueNorm / std::max(bNorm, 1.0));
+        _last.converged = trueNorm <= precision * precision * std::max(bNorm, 1.0);
+        _last.fallbackIterations = dres.iterations;
+        rootLogger.info("MDWF mixed CG: double-precision fallback ", dres.iterations, " iterations, true residue ",
+                        _last.residue, ", converged ", _last.converged ? 1 : 0);
     }
 };
